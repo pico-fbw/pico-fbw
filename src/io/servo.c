@@ -1,9 +1,15 @@
+/**
+ * Huge thanks to 'markushi' on GitHub for developing the bulk of this servo library! (slightly modified by MylesAndMore)
+ * Check them out here: https://github.com/markushi/pico-servo
+*/
+
 #include "hardware/clocks.h"
 #include "hardware/gpio.h"
 #include "hardware/irq.h"
 #include "hardware/pwm.h"
 
 #include "servo.h"
+#include "../config.h"
 
 // Set the frequency, making "top" as large as possible for maximum resolution.
 // Maximum "top" is set at 65534 to be able to achieve 100% duty with 65535.
@@ -23,8 +29,9 @@ servo_enable(const uint gpio_pin)
     gpio_set_function(gpio_pin, GPIO_FUNC_PWM);
     const uint8_t slice = pwm_gpio_to_slice_num(gpio_pin);
 
-    // target frequency is 50 hz to reflect 20ms PWM signal
-    const uint freq = 50;
+    // Target frequency is 50 hz by default to reflect 20ms PWM signal,
+    // subsequent changes of config values can modify this frequency.
+    const uint freq = SERVO_HZ;
     uint32_t source_hz = clock_get_hz(clk_sys);
 
     uint32_t div16_top = 16 * source_hz / freq;

@@ -1,3 +1,8 @@
+/**
+ * Huge thanks to 'markushi' on GitHub for developing the bulk of this servo library! (slightly modified by MylesAndMore)
+ * Check them out here: https://github.com/markushi/pico-servo
+*/
+
 #ifndef PICO_SERVO_H
 #define PICO_SERVO_H
 
