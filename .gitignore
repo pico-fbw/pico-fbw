@@ -69,3 +69,4 @@ _deps
 
 ### Other ###
 build/
+.vscode

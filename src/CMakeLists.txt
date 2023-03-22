@@ -9,4 +9,9 @@ pico_add_extra_outputs(${PROJECT_NAME})
 # Import libraries
 target_link_libraries(${PROJECT_NAME}
     pico_stdlib
+    hardware_pwm
+    fbw_io
 )
+
+# Point CMake to other project directories
+add_subdirectory(io)
