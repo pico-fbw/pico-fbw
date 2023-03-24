@@ -11,21 +11,13 @@
 #include "servo.h"
 #include "../config.h"
 
-// Set the frequency, making "top" as large as possible for maximum resolution.
-// Maximum "top" is set at 65534 to be able to achieve 100% duty with 65535.
-#define SERVO_TOP_MAX 65534
-
-int
-servo_disable(const uint gpio_pin)
-{
+int servo_disable(const uint gpio_pin) {
     const uint8_t slice = pwm_gpio_to_slice_num(gpio_pin);
     pwm_set_enabled(slice, false);
     return 0;
 }
 
-int
-servo_enable(const uint gpio_pin)
-{
+int servo_enable(const uint gpio_pin) {
     gpio_set_function(gpio_pin, GPIO_FUNC_PWM);
     const uint8_t slice = pwm_gpio_to_slice_num(gpio_pin);
 
@@ -62,18 +54,10 @@ servo_enable(const uint gpio_pin)
     return 0;
 }
 
-/**
- * Sets the position of the servo using the the duty cycle of the PWM signal.
- *
- * @param degree: value between 0 and 180
- * **/
-int
-servo_set_position(const uint gpio_pin, const uint16_t degree)
-{
-    // values has to be between 0 and 180
+int servo_set(const uint gpio_pin, const uint16_t degree) {
+    // values have to be between 0 and 180
     // SERVO_TOP_MAX = 100% full duty cycle
 
-    // TODO check if integer division is of any practical relevance
     const uint16_t oneMs = SERVO_TOP_MAX / 20;
     const uint16_t duty_u16 = oneMs + (oneMs * degree) / 180;
 

@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include "pico/stdlib.h"
 
 #include "io/servo.h"
@@ -7,11 +6,14 @@
 
 int main() { 
     // Initialize power LED
-    const uint LED_PIN = PICO_DEFAULT_LED_PIN;
-    gpio_init(LED_PIN);
-    gpio_set_dir(LED_PIN, GPIO_OUT);
-    gpio_put(LED_PIN, 1); 
-    // Initialize serial port over USB for debugging (may not keep in final build)
+    #ifndef PICO_DEFAULT_LED_PIN;
+    #warning No default LED pin found. Power LED functionality may be impacted.
+    #endif
+    gpio_init(PICO_DEFAULT_LED_PIN);
+    gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
+    gpio_put(PICO_DEFAULT_LED_PIN, 1);
+    // Initialize serial port over USB for debugging
+    // TODO: Do NOT keep this in the final build! USB has a high overhead and I'm not exactly tethering my plane to a USB cable...
     stdio_init_all();
 
     // Set up I/O
@@ -28,22 +30,8 @@ int main() {
     servo_enable(SERVO_ELEV_PIN);
     servo_enable(SERVO_RUD_PIN);
 
-    bool clockwise = true;
-    uint angle = 0;
+    // Test code for direct law (passthrough mode)
 
-    while (true) {
-        printf("%u\n",angle);
-        servo_set_position(SERVO_AIL_PIN, angle);
-        sleep_ms(5);
-        if (clockwise) {
-            angle++;
-        } else {
-            angle--;
-        }
-        if (angle == 0 || angle == 180) {
-            clockwise = !clockwise;
-            sleep_ms(2500);
-        }
-    }
+
     return 0;
 }
