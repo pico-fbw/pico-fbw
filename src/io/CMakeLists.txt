@@ -9,6 +9,7 @@ add_library(fbw_io
 target_link_libraries(fbw_io
     pico_stdlib
     hardware_pwm
+    hardware_i2c
     hardware_pio
 )
 

@@ -15,7 +15,7 @@
 #endif
 
 
-// @section servo
+/** @section servo */
 
 // The frequency to run your servos at (most are 50 and you shouldn't have to touch this).
 static const int SERVO_HZ = 50;
@@ -35,3 +35,14 @@ static const int SERVO_ELEV_PIN = 11;
 
 // Pin that the PWM wire on the RUDDER servo is connected to.
 static const int SERVO_RUD_PIN = 10;
+
+
+/** @section sensor */
+
+// If not defined, all IMU functionality is disabled (why?).
+#define IMU_ENABLE
+
+// Define whichever IMU type you are using...
+#ifdef IMU_ENABLE
+  #define BNO055
+#endif
