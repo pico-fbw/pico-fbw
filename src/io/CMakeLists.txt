@@ -2,6 +2,7 @@
 add_library(fbw_io
     servo.c
     pwm.c
+    imu.c
 )
 
 # Import libraries

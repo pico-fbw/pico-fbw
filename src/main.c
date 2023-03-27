@@ -6,8 +6,8 @@
 
 int main() { 
     // Initialize power LED
-    #ifndef PICO_DEFAULT_LED_PIN;
-    #warning No default LED pin found. Power LED functionality may be impacted.
+    #ifndef PICO_DEFAULT_LED_PIN
+      #warning No default LED pin found. Power LED functionality may be impacted.
     #endif
     gpio_init(PICO_DEFAULT_LED_PIN);
     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
@@ -17,10 +17,8 @@ int main() {
     stdio_init_all();
 
     // Set up I/O
-    // TODO: Set the pins for analog input (servos and 1 extra from rx)
-    // possibly use example code here: https://github.com/raspberrypi/pico-examples/blob/master/pwm/measure_duty_cycle/measure_duty_cycle.c
     
-    // Set the pins for servos/PWM outputs
+    // Set the pins for servo/PWM outputs
     #ifdef DUAL_AIL
       servo_enable(SERVO_AIL_L_PIN);
       servo_enable(SERVO_AIL_R_PIN);
@@ -30,8 +28,16 @@ int main() {
     servo_enable(SERVO_ELEV_PIN);
     servo_enable(SERVO_RUD_PIN);
 
-    // Test code for direct law (passthrough mode)
 
+    // Test code for direct law (passthrough mode)
+    gpio_init(0);
+    gpio_set_dir(0, GPIO_IN);
+    gpio_init(1);
+    gpio_set_dir(1, GPIO_OUT);
+
+    while (true) {
+      gpio_put(1, gpio_get(0));
+    }
 
     return 0;
 }
