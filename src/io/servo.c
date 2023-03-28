@@ -11,13 +11,13 @@
 #include "servo.h"
 #include "../config.h"
 
-int servo_disable(const uint gpio_pin) {
+int servoDisable(const uint gpio_pin) {
     const uint8_t slice = pwm_gpio_to_slice_num(gpio_pin);
     pwm_set_enabled(slice, false);
     return 0;
 }
 
-int servo_enable(const uint gpio_pin) {
+int servoEnable(const uint gpio_pin) {
     gpio_set_function(gpio_pin, GPIO_FUNC_PWM);
     const uint8_t slice = pwm_gpio_to_slice_num(gpio_pin);
 
@@ -54,7 +54,7 @@ int servo_enable(const uint gpio_pin) {
     return 0;
 }
 
-int servo_set(const uint gpio_pin, const uint16_t degree) {
+int servoSet(const uint gpio_pin, const uint16_t degree) {
     // values have to be between 0 and 180
     // SERVO_TOP_MAX = 100% full duty cycle
 

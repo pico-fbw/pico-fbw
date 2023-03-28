@@ -3,6 +3,9 @@
  * Check them out here: https://github.com/markushi/pico-servo
 */
 
+#ifndef servo_h
+#define servo_h
+
 /**
  * Set the frequency, making "top" as large as possible for maximum resolution.
  * Maximum "top" is set at 65534 to be able to achieve 100% duty with 65535.
@@ -15,7 +18,7 @@
  * 
  * @return 0 if the operation was successful
 */
-int servo_enable(const uint gpio_pin);
+int servoEnable(const uint gpio_pin);
 
 /**
  * Enable Servo control.
@@ -23,7 +26,7 @@ int servo_enable(const uint gpio_pin);
  * 
  * @return 0 if the operation was successful
 */
-int servo_disable(const uint gpio_pin);
+int servoDisable(const uint gpio_pin);
 
 /**
  * Sets the position of the servo using the the duty cycle of the PWM signal.
@@ -33,4 +36,6 @@ int servo_disable(const uint gpio_pin);
  *
  * @return 0 if the operation was successful
 */
-int servo_set(const uint gpio_pin, const uint16_t degree);
+int servoSet(const uint gpio_pin, const uint16_t degree);
+
+#endif

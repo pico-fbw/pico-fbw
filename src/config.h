@@ -3,6 +3,9 @@
  * It's mostly here for convenience, to ease configuration in different scenarios, for example using different brand or layout servos.
 */
 
+#ifndef CONFIG
+#define CONFIG
+
 // @section config
 
 // Enable this if you are using two seperate servos for aileron control. Disabled by default.
@@ -44,5 +47,7 @@ static const int SERVO_RUD_PIN = 10;
 
 // Define whichever IMU type you are using...
 #ifdef IMU_ENABLE
-  #define BNO055
+  #define IMU_BNO055
 #endif
+
+#endif // CONFIG
