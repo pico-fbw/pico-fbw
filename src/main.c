@@ -6,11 +6,8 @@
 #include "config.h"
 
 int main() {
-    // Initialize serial port over USB for debugging
-    // TODO: Do NOT keep this in the final build! USB has a high overhead and I'm not exactly tethering my plane to a USB cable...
-    stdio_init_all();
-    sleep_ms(5000);
-
+    // Save time of 850ms after boot (for later)
+    absolute_time_t imu_safe = make_timeout_time_ms(850);
     // Initialize power LED
     #ifndef PICO_DEFAULT_LED_PIN
       #warning No default LED pin found. Power LED functionality may be impacted.
@@ -19,24 +16,39 @@ int main() {
     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
     gpio_put(PICO_DEFAULT_LED_PIN, 1);
 
-    // Set up I/O
-    
+    // Set up I/O --
+    // Initialize serial port over USB for debugging
+    // TODO: Do NOT keep this in the final build! USB has a high overhead and I'm not exactly tethering my plane to a USB cable...
+    stdio_init_all();
+
     // Set the pins for servo/PWM outputs
     #ifdef DUAL_AIL
-      servoEnable(SERVO_AIL_L_PIN);
-      servoEnable(SERVO_AIL_R_PIN);
+      servo_enable(SERVO_AIL_L_PIN);
+      servo_enable(SERVO_AIL_R_PIN);
     #else
-      servoEnable(SERVO_AIL_PIN);
+      servo_enable(SERVO_AIL_PIN);
     #endif
-    servoEnable(SERVO_ELEV_PIN);
-    servoEnable(SERVO_RUD_PIN);
+    servo_enable(SERVO_ELEV_PIN);
+    servo_enable(SERVO_RUD_PIN);
 
-    printf("imuInit has returned: %d\n", imuInit());
-    printf("imuConfigure has returned: %d\n", imuConfigure());
+    // Wait before initializing IMU to give it time to boot
+    sleep_until(imu_safe);
+    // Initialize and configure IMU unit
+    if (imu_init() == 0) {
+        if (imu_configure() == 0) {
+            // Enter main program loop
+            while (true) {
+                inertialAngles angles = imu_getInertialAngles();
+                printf("Heading: %.2f, Roll: %.2f, Pitch: %.2f\n", angles.heading, angles.roll, angles.pitch);
+                sleep_ms(100);
+            }
+        } else {
+            return 1;
+        }
+    } else {
+        return 1;
+    }
 
-    // Note for me tomorrow--I'm dead inside so I can't code anymore but here have this fun video that should help
-    // <3 past you :)
-    // https://www.youtube.com/watch?v=092xFEmAS98
-
+    // How did we get here?
     return 0;
 }
