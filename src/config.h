@@ -40,7 +40,7 @@ static const int SERVO_ELEV_PIN = 11;
 static const int SERVO_RUD_PIN = 10;
 
 
-/** @section sensor */
+/** @section sensors */
 
 // If not defined, all IMU functionality is disabled (why?).
 #define IMU_ENABLE

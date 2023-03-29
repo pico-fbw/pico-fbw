@@ -18,7 +18,7 @@
  * 
  * @return 0 if the operation was successful
 */
-int servoEnable(const uint gpio_pin);
+int servo_enable(const uint gpio_pin);
 
 /**
  * Enable Servo control.
@@ -26,7 +26,7 @@ int servoEnable(const uint gpio_pin);
  * 
  * @return 0 if the operation was successful
 */
-int servoDisable(const uint gpio_pin);
+int servo_disable(const uint gpio_pin);
 
 /**
  * Sets the position of the servo using the the duty cycle of the PWM signal.
@@ -36,6 +36,6 @@ int servoDisable(const uint gpio_pin);
  *
  * @return 0 if the operation was successful
 */
-int servoSet(const uint gpio_pin, const uint16_t degree);
+int servo_set(const uint gpio_pin, const uint16_t degree);
 
 #endif
