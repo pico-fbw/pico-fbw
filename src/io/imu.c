@@ -8,49 +8,49 @@
 int imu_init() {
     // Check if the IMU is NOT enabled, if so, immediately throw an error (preprocessor error as well)
     #ifndef IMU_ENABLE
-      #warning IMU features are disabled, was this intentional?
-      return 1;
+        #warning IMU features are disabled, was this intentional?
+        return 1;
     #endif
     // Check if the BNO055 unit is defined, if so,
     #ifdef IMU_BNO055
-      // Check for default i2c constants
-      #if !defined(i2c_default) || !defined(PICO_DEFAULT_I2C_SDA_PIN) || !defined(PICO_DEFAULT_I2C_SCL_PIN)
-        #warning No I2C defaults found, functionality may be impacted.
-      #endif
-      // Now, initialize i2c on default pins (typically 4 and 5)
-      i2c_init(i2c_default, CHIP_FREQ_KHZ * 1000);
-      gpio_set_function(PICO_DEFAULT_I2C_SDA_PIN, GPIO_FUNC_I2C);
-      gpio_set_function(PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C);
-      gpio_pull_up(PICO_DEFAULT_I2C_SDA_PIN);
-      gpio_pull_up(PICO_DEFAULT_I2C_SCL_PIN);
-      bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
-      // Query the ID register for expected values to confirm identity/check comms
-      uint8_t id;
-      int result = i2c_write_timeout_us(i2c_default, CHIP_REGISTER, &ID_REGISTER, 1, true, 1000000);
-      if (result == PICO_ERROR_GENERIC) {
-          return PICO_ERROR_GENERIC;
-      } else if (result == PICO_ERROR_TIMEOUT) {
-          return PICO_ERROR_TIMEOUT;
-      } else {
-            result = i2c_read_timeout_us(i2c_default, CHIP_REGISTER, &id, 1, false, 1000000);
-            sleep_us(100);
-            if (result == PICO_ERROR_GENERIC) {
-                return PICO_ERROR_GENERIC;
-            } else if (result== PICO_ERROR_TIMEOUT) {
-                return PICO_ERROR_TIMEOUT;
-            } else {
-                if (id == CHIP_ID) {
-                    return 0;
-                } else {
-                    return 1;
-                }
-            }
-      }
+		// Check for default i2c constants
+		#if !defined(i2c_default) || !defined(PICO_DEFAULT_I2C_SDA_PIN) || !defined(PICO_DEFAULT_I2C_SCL_PIN)
+			#warning No I2C defaults found, functionality may be impacted.
+		#endif
+		// Now, initialize i2c on default pins (typically 4 and 5)
+		i2c_init(i2c_default, CHIP_FREQ_KHZ * 1000);
+		gpio_set_function(PICO_DEFAULT_I2C_SDA_PIN, GPIO_FUNC_I2C);
+		gpio_set_function(PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C);
+		gpio_pull_up(PICO_DEFAULT_I2C_SDA_PIN);
+		gpio_pull_up(PICO_DEFAULT_I2C_SCL_PIN);
+		bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
+		// Query the ID register for expected values to confirm identity/check comms
+		uint8_t id;
+		int result = i2c_write_timeout_us(i2c_default, CHIP_REGISTER, &ID_REGISTER, 1, true, 1000000);
+		if (result == PICO_ERROR_GENERIC) {
+			return PICO_ERROR_GENERIC;
+		} else if (result == PICO_ERROR_TIMEOUT) {
+			return PICO_ERROR_TIMEOUT;
+		} else {
+				result = i2c_read_timeout_us(i2c_default, CHIP_REGISTER, &id, 1, false, 1000000);
+				sleep_us(100);
+				if (result == PICO_ERROR_GENERIC) {
+					return PICO_ERROR_GENERIC;
+				} else if (result== PICO_ERROR_TIMEOUT) {
+					return PICO_ERROR_TIMEOUT;
+				} else {
+					if (id == CHIP_ID) {
+						return 0;
+					} else {
+						return 1;
+					}
+				}
+		}
     #else
-      // If no BNO055 is defined, check if IMU is enabled, if so, stop compilation b/c that is an invalid combination (but IMU not enabled with no IMU selected is fine)
-      #ifdef IMU_ENABLE
-        #error No IMU module was defined. Please define an IMU module to use or disable IMU functionality.
-      #endif
+		// If no BNO055 is defined, check if IMU is enabled, if so, stop compilation b/c that is an invalid combination (but IMU not enabled with no IMU selected is fine)
+		#ifdef IMU_ENABLE
+			#error No IMU module was defined. Please define an IMU module to use or disable IMU functionality.
+		#endif
     #endif
 }
 

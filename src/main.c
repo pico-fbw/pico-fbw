@@ -10,7 +10,7 @@ int main() {
     absolute_time_t imu_safe = make_timeout_time_ms(850);
     // Initialize power LED
     #ifndef PICO_DEFAULT_LED_PIN
-      #warning No default LED pin found. Power LED functionality may be impacted.
+      	#warning No default LED pin found. Power LED functionality may be impacted.
     #endif
     gpio_init(PICO_DEFAULT_LED_PIN);
     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
@@ -23,13 +23,13 @@ int main() {
 
     // Set the pins for servo/PWM outputs
     #ifdef DUAL_AIL
-      servo_enable(SERVO_AIL_L_PIN);
-      servo_enable(SERVO_AIL_R_PIN);
+		servo_enable(SERVO_AIL_L_PIN);
+		servo_enable(SERVO_AIL_R_PIN);
     #else
-      servo_enable(SERVO_AIL_PIN);
+      	servo_enable(SERVO_AIL_PIN);
     #endif
-    servo_enable(SERVO_ELEV_PIN);
-    servo_enable(SERVO_RUD_PIN);
+		servo_enable(SERVO_ELEV_PIN);
+		servo_enable(SERVO_RUD_PIN);
 
     // Wait before initializing IMU to give it time to boot
     sleep_until(imu_safe);

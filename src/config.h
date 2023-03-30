@@ -14,7 +14,7 @@
 // Enable this if you will be using a channel on your tx/rx to change control modes. Enabled by default.
 #define MODE_SWITCH_ENABLE
 #ifdef MODE_SWITCH_ENABLE
-  static const int MODE_SWITCH_PIN = 14;
+  	static const int MODE_SWITCH_PIN = 14;
 #endif
 
 
@@ -24,13 +24,13 @@
 static const int SERVO_HZ = 50;
 
 #ifdef DUAL_AIL
-  // Pin that the PWM wire on the AILERON LEFT servo is connected to.
-  static const int SERVO_AIL_L_PIN = 12;
-  // Pin that the PWM wire on the AILERON RIGHT servo is connected to.
-  static const int SERVO_AIL_R_PIN = 13;
+	// Pin that the PWM wire on the AILERON LEFT servo is connected to.
+	static const int SERVO_AIL_L_PIN = 12;
+	// Pin that the PWM wire on the AILERON RIGHT servo is connected to.
+	static const int SERVO_AIL_R_PIN = 13;
 #else
-  // Pin that the PWM wire on the AILERON servo is connected to.
-  static const int SERVO_AIL_PIN = 13;
+	// Pin that the PWM wire on the AILERON servo is connected to.
+	static const int SERVO_AIL_PIN = 13;
 #endif
 
 // Pin that the PWM wire on the ELEVATOR servo is connected to.
@@ -47,7 +47,7 @@ static const int SERVO_RUD_PIN = 10;
 
 // Define whichever IMU type you are using...
 #ifdef IMU_ENABLE
-  #define IMU_BNO055
+  	#define IMU_BNO055
 #endif
 
 #endif // config_h
