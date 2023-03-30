@@ -1,5 +1,8 @@
 #include "../config.h"
 
+#ifndef imu_h
+#define imu_h
+
 #ifdef IMU_BNO055
   static const uint CHIP_FREQ_KHZ = 400; // Default I2C freq of the BNO055 is 400KHz
 
@@ -61,3 +64,5 @@ int imu_changeMode(uint8_t mode);
  * @return Number of bytes written, or PICO_ERROR_GENERIC if address not acknowledged, no device present.
 */
 int imu_write(uint8_t address, uint8_t value);
+
+#endif // imu_h

@@ -3,8 +3,8 @@
  * It's mostly here for convenience, to ease configuration in different scenarios, for example using different brand or layout servos.
 */
 
-#ifndef CONFIG
-#define CONFIG
+#ifndef config_h
+#define config_h
 
 // @section config
 
@@ -50,4 +50,4 @@ static const int SERVO_RUD_PIN = 10;
   #define IMU_BNO055
 #endif
 
-#endif // CONFIG
+#endif // config_h

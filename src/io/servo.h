@@ -62,4 +62,4 @@ int servo_disable(const uint gpio_pin);
 */
 int servo_set(const uint gpio_pin, const uint16_t degree);
 
-#endif
+#endif // servo_h
