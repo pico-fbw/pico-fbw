@@ -23,7 +23,7 @@
  * **/
 
 /**
- * Huge thanks to 'GitJer' on GitHub for writing this PIO and giving me a starting point for the PWM input code!
+ * Huge thanks to 'GitJer' on GitHub for giving me a starting point for the PWM input code!
  * Check them out here: https://github.com/GitJer/Some_RPI-Pico_stuff/tree/main/PwmIn/PwmIn_4pins
 */
 

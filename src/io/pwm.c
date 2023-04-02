@@ -23,7 +23,7 @@
  * **/
 
 /**
- * Huge thanks to 'GitJer' on GitHub for writing this PIO and giving me a starting point for the PWM input code!
+ * Huge thanks to 'GitJer' on GitHub for giving me a starting point for the PWM input code!
  * Check them out here: https://github.com/GitJer/Some_RPI-Pico_stuff/tree/main/PwmIn/PwmIn_4pins
 */
 
@@ -124,5 +124,7 @@ float pwm_readP(uint pin) {
 }
 
 float pwm_readDeg(uint pin) {
-    return (((((float)pulsewidth[pin] * 0.000000016) - 0.001) / 0.001) * 180.0f + 2);
+    // TODO: make a script to automatically find the center of the PWM signal and adjust for it here
+    // (eg. tell user to center axis, take avg of what is recorded over a ~5s period, then use that as an offset)
+    return (((((float)pulsewidth[pin] * 0.000000016) - 0.001) / 0.001) * 180.0f);
 }

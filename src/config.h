@@ -3,6 +3,8 @@
  * It's mostly here for convenience, to ease configuration in different scenarios, for example using different brand or layout servos.
 */
 
+/* IMPORTANT NOTE: All pins signifiy GPIO pin values, not physical pins!! */
+
 #ifndef config_h
 #define config_h
 
@@ -11,7 +13,10 @@
 // Enable this if you will be using a channel on your tx/rx to change control modes. Enabled by default.
 #define MODE_SWITCH_ENABLE
 #ifdef MODE_SWITCH_ENABLE
-  	static const int MODE_SWITCH_PIN = 14;
+  	static const int MODE_SWITCH_PIN = 15;
+	// Define if the switch you are using is a two-position or three-position switch.
+	#define SWITCH_3_POS
+	// #define SWITCH_2_POS
 #endif
 
 
@@ -30,8 +35,6 @@ static const int INPUT_RUD_PIN = 7;
 
 // The frequency to run your servos at (most are 50 and you shouldn't have to touch this).
 static const int SERVO_HZ = 50;
-
-/* IMPORTANT NOTE: All of these pins signifiy GPIO pin values, not physical pins!! */
 
 // Pin that the PWM wire on the AILERON servo is connected to.
 static const int SERVO_AIL_PIN = 13;

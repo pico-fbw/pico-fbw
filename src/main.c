@@ -22,8 +22,13 @@ int main() {
     stdio_init_all();
 
     // Set up PWM inputs
-    uint pin_list[] = {INPUT_AIL_PIN};
-    pwm_enable(pin_list, 1);
+    #ifdef MODE_SWITCH_ENABLE
+        uint pin_list[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN< INPUT_RUD_PIN, MODE_SWITCH_PIN};
+        pwm_enable(pin_list, 4);
+    #else 
+        uint pin_list[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN< INPUT_RUD_PIN};
+        pwm_enable(pin_list, 3);
+    #endif
 
     // Set up and test PWM (servo) outputs
     const uint8_t servos[] = {SERVO_AIL_PIN, SERVO_ELEV_PIN, SERVO_RUD_PIN};

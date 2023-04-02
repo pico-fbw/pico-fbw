@@ -14,25 +14,25 @@ uint cmode = 0;
 // Same thing with IMU data itself, bad until proven
 bool imuDataSafe = false;
 
-// Timer var for IMU reconnection
-struct repeating_timer imuTimer;
+// // Timer var for IMU reconnection
+// struct repeating_timer imuTimer;
 
 /* End variable definitions. */
 
-/**
- * Attempts to reconnect to the IMU and resume normal mode. Usually called from the timer created when switching to direct mode.
-*/
-bool imuReconnect(struct repeating_timer *t) {
-    if (imu_init() == 0) {
-        if (imu_configure() == 0) {
-            // If IMU is able to successfully reconnect, cancel the reconnection timer and resume normal mode
-            cancel_repeating_timer(&imuTimer);
-            setIMUSafe(true);
-            setMode(1);
-        }
-    }
-    return true;
-}
+// /**
+//  * Attempts to reconnect to the IMU and resume normal mode. Usually called from the timer created when switching to direct mode.
+// */
+// bool imuReconnect(struct repeating_timer *t) {
+//     if (imu_init() == 0) {
+//         if (imu_configure() == 0) {
+//             // If IMU is able to successfully reconnect, cancel the reconnection timer and resume normal mode
+//             cancel_repeating_timer(&imuTimer);
+//             setIMUSafe(true);
+//             setMode(1);
+//         }
+//     }
+//     return true;
+// }
 
 void setMode(uint mode) {
     // Set the current working mode

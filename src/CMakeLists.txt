@@ -9,7 +9,6 @@ pico_add_extra_outputs(${PROJECT_NAME})
 # Import libraries
 target_link_libraries(${PROJECT_NAME}
     pico_stdlib
-    hardware_pwm
     fbw_io
     fbw_lib
     fbw_modes
