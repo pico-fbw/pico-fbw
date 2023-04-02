@@ -40,7 +40,7 @@ static PIO pio;
 static uint32_t pulsewidth[4], period[4];
 uint gb_num_pins;
 
-static void pio_irq_handler() {
+static void pwm_internal_handler() {
     int state_machine = -1;
     // check which IRQ was raised:
     for (int i = 0; i < 4; i++) {
@@ -57,7 +57,7 @@ static void pio_irq_handler() {
     }
 }
 
-int pwmEnable(uint *pin_list, uint num_pins) {
+void pwm_enable(uint *pin_list, uint num_pins) {
     gb_num_pins = num_pins;
     // pio 0 is used
     pio = pio0;
@@ -86,14 +86,14 @@ int pwmEnable(uint *pin_list, uint num_pins) {
         pio_sm_set_enabled(pio, i, true);
     }
     // set the IRQ handler
-    irq_set_exclusive_handler(PIO0_IRQ_0, pio_irq_handler);
+    irq_set_exclusive_handler(PIO0_IRQ_0, pwm_internal_handler);
     // enable the IRQ
     irq_set_enabled(PIO0_IRQ_0, true);
     // allow irqs from the low 4 state machines
     pio0_hw->inte0 = PIO_IRQ0_INTE_SM0_BITS | PIO_IRQ0_INTE_SM1_BITS | PIO_IRQ0_INTE_SM2_BITS | PIO_IRQ0_INTE_SM3_BITS ;
 }
 
-void readPWM(float *readings, uint pin) {
+void pwm_read(float *readings, uint pin) {
     if (pin < gb_num_pins) {
         // determine whole period
         period[pin] += pulsewidth[pin];
@@ -107,18 +107,22 @@ void readPWM(float *readings, uint pin) {
     }
 }
 
-float readPW(uint pin) {
+float pwm_readPW(uint pin) {
     // the measurements are taken with 2 clock cycles per timer tick
     // hence, it is 2*0.000000008
     return ((float)pulsewidth[pin] * 0.000000016);
 }
 
-float readD(uint pin) {
+float pwm_readD(uint pin) {
     return ((float)pulsewidth[pin] / (float)period[pin]);
 }
 
-float readP(uint pin) {
+float pwm_readP(uint pin) {
     // the measurements are taken with 2 clock cycles per timer tick
     // hence, it is 2*0.000000008
     return ((float)period[pin] * 0.000000016);
+}
+
+float pwm_readDeg(uint pin) {
+    return (((((float)pulsewidth[pin] * 0.000000016) - 0.001) / 0.001) * 180.0f + 2);
 }

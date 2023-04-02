@@ -31,26 +31,44 @@
 #ifndef pwm_h
 #define pwm_h
 
-#include <stdio.h>
+/**
+ * Enables PWM input functionality on the specified pins.
+ * Up to four can be used; this is for one PIO machine (pio0).
+ * @param pin_list the list of pins to enable PWM input on
+ * @param num_pins the number of pins you are enabling PWM input on (likely just the size of the list)
+*/
+void pwm_enable(uint *pin_list, uint num_pins);
 
-#include "pico/stdlib.h"
-#include "hardware/pio.h"
+/**
+ * @param readings pointer to the array where the method will store its data.
+ * @param pin the pin to read from
+ * @return all PWM values from the PIO machine on the specified pin.
+*/
+void pwm_read(float *readings, uint pin);
 
-int pwmEnable(uint *pin_list, uint num_pins);
+/**
+ * @param pin the pin to read from
+ * @return the pulsewidth of the specified pin.
+*/
+float pwm_readPW(uint pin);
 
+/**
+ * @param pin the pin to read from
+ * @return the duty cycle of the specified pin.
+*/
+float pwm_readD(uint pin);
 
-void readPWM(float *readings, uint pin);
+/**
+ * @param pin the pin to read from
+ * @return the period of the specified pin.
+*/
+float pwm_readP(uint pin);
 
+/**
+ * @param pin the pin to read from
+ * @return the calculated degree value derived from the pulsewidth on that pin.
+*/
+float pwm_readDeg(uint pin);
 
-float readPW(uint pin);
-
-
-float readD(uint pin);
-
-
-float readP(uint pin);
-
-
-static void pio_irq_handler();
 
 #endif // pwm_h

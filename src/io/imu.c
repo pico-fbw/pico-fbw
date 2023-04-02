@@ -3,19 +3,15 @@
 #include "hardware/i2c.h"
 
 #include "imu.h"
+#include "../modes/modes.h"
 #include "../config.h"
 
 int imu_init() {
-    // Check if the IMU is NOT enabled, if so, immediately throw an error (preprocessor error as well)
-    #ifndef IMU_ENABLE
-        #warning IMU features are disabled, was this intentional?
-        return 1;
-    #endif
     // Check if the BNO055 unit is defined, if so,
     #ifdef IMU_BNO055
 		// Check for default i2c constants
 		#if !defined(i2c_default) || !defined(PICO_DEFAULT_I2C_SDA_PIN) || !defined(PICO_DEFAULT_I2C_SCL_PIN)
-			#warning No I2C defaults found, functionality may be impacted.
+			#warning No I2C defaults found, IMU functionality may be impacted.
 		#endif
 		// Now, initialize i2c on default pins (typically 4 and 5)
 		i2c_init(i2c_default, CHIP_FREQ_KHZ * 1000);
@@ -32,26 +28,26 @@ int imu_init() {
 		} else if (result == PICO_ERROR_TIMEOUT) {
 			return PICO_ERROR_TIMEOUT;
 		} else {
-				result = i2c_read_timeout_us(i2c_default, CHIP_REGISTER, &id, 1, false, 1000000);
-				sleep_us(100);
-				if (result == PICO_ERROR_GENERIC) {
-					return PICO_ERROR_GENERIC;
-				} else if (result== PICO_ERROR_TIMEOUT) {
-					return PICO_ERROR_TIMEOUT;
-				} else {
-					if (id == CHIP_ID) {
-						return 0;
-					} else {
-						return 1;
-					}
-				}
+            result = i2c_read_timeout_us(i2c_default, CHIP_REGISTER, &id, 1, false, 1000000);
+            if (result == PICO_ERROR_GENERIC) {
+                return PICO_ERROR_GENERIC;
+            } else if (result== PICO_ERROR_TIMEOUT) {
+                return PICO_ERROR_TIMEOUT;
+            } else {
+                if (id == CHIP_ID) {
+                    return 0;
+                } else {
+                    return 1;
+                }
+            }
 		}
     #else
-		// If no BNO055 is defined, check if IMU is enabled, if so, stop compilation b/c that is an invalid combination (but IMU not enabled with no IMU selected is fine)
-		#ifdef IMU_ENABLE
-			#error No IMU module was defined. Please define an IMU module to use or disable IMU functionality.
-		#endif
+		#error No IMU module was defined. Please define an IMU module to continue.
     #endif
+}
+
+void imu_deinit() {
+    i2c_deinit(i2c_default);
 }
 
 int imu_configure() {
@@ -70,14 +66,19 @@ int imu_configure() {
     imu_write(0x3B, 0b00000001);
     sleep_ms(30);
     // Set operation to NDOF
-    imu_changeMode(MODE_NDOF);
+    return imu_changeMode(MODE_NDOF);
 }
 
 struct inertialAngles imu_getInertialAngles() {
     // Get Euler data from IMU
     uint8_t euler_data[6];
-    i2c_write_blocking(i2c_default, CHIP_REGISTER, &EULER_REGISTER, 1, true);
-    i2c_read_blocking(i2c_default, CHIP_REGISTER, euler_data, 6, false);
+    int timeoutstat0 = i2c_write_timeout_us(i2c_default, CHIP_REGISTER, &EULER_REGISTER, 1, true, 10000);
+    int timeoutstat1 = i2c_read_timeout_us(i2c_default, CHIP_REGISTER, euler_data, 6, false, 10000);
+    // Check if any I2C related errors occured, if so, set IMU as unsafe and return an error
+    if (timeoutstat0 == PICO_ERROR_GENERIC || timeoutstat0 == PICO_ERROR_TIMEOUT || timeoutstat1 == PICO_ERROR_GENERIC || timeoutstat1 == PICO_ERROR_TIMEOUT) {
+        setIMUSafe(false);
+        return (struct inertialAngles){0};
+    }
     int16_t heading = (euler_data[1] << 8) | euler_data[0];
     int16_t roll = (euler_data[3] << 8) | euler_data[2];
     int16_t pitch = (euler_data[5] << 8) | euler_data[4];
@@ -87,8 +88,7 @@ struct inertialAngles imu_getInertialAngles() {
     float roll_degrees = (float)roll / 16.0;
     float pitch_degrees = (float)pitch / 16.0;
     // Compose into data struct and return
-    struct inertialAngles angles = {heading_degrees, roll_degrees, pitch_degrees};
-    return angles;
+    return (struct inertialAngles){heading_degrees, roll_degrees, pitch_degrees};
 }
 
 int imu_changeMode(uint8_t mode) {

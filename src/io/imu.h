@@ -30,6 +30,11 @@
 int imu_init();
 
 /**
+ * Deinitalizes the IMU unit.
+*/
+void imu_deinit();
+
+/**
  * Configures the IMU to send inertial reference data.
  * @return 0 if success, 1 if failure.
 */
