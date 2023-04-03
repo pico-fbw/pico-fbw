@@ -27,14 +27,18 @@
  * Check them out here: https://github.com/GitJer/Some_RPI-Pico_stuff/tree/main/PwmIn/PwmIn_4pins
 */
 
-#include <stdio.h>
-
 #include "pico/stdlib.h"
 #include "hardware/pio.h"
 #include "hardware/irq.h"
+#include "hardware/flash.h"
+#include "hardware/sync.h"
+
+#include "led.h"
 
 #include "pwm.h"
 #include "pwm.pio.h"
+
+/* Begin PWM input functions */
 
 static PIO pio;
 static uint32_t pulsewidth[4], period[4];
@@ -113,7 +117,7 @@ float pwm_readPW(uint pin) {
     return ((float)pulsewidth[pin] * 0.000000016);
 }
 
-float pwm_readD(uint pin) {
+float pwm_readDC(uint pin) {
     return ((float)pulsewidth[pin] / (float)period[pin]);
 }
 
@@ -124,7 +128,72 @@ float pwm_readP(uint pin) {
 }
 
 float pwm_readDeg(uint pin) {
-    // TODO: make a script to automatically find the center of the PWM signal and adjust for it here
-    // (eg. tell user to center axis, take avg of what is recorded over a ~5s period, then use that as an offset)
     return (((((float)pulsewidth[pin] * 0.000000016) - 0.001) / 0.001) * 180.0f);
+}
+
+/* Begin calibration/flash functions */
+// TODO: make the calibration function calibrate all input pins
+
+// Set the flash offset to the last flash sector to be safe, this is where we will store our PWM calibration data
+#define FLASH_OFFSET (PICO_FLASH_SIZE_BYTES - FLASH_SECTOR_SIZE)
+// Create a pointer variable which points to the location in flash where we will store our calibration data
+uint8_t *pwm_calibration_data = (uint8_t *) (XIP_BASE + FLASH_OFFSET);
+
+void pwm_calibrate(uint pin, float deviation, uint num_samples, uint sample_delay_ms, uint run_times) {
+    // Start blinking LED to signify we are calibrating
+    led_blink(100);
+    float final_difference = 0.0f;
+    // These loops simply poll the specified pin based on the specifications we have provided in the function
+    for (uint t = 0; t < run_times; t++) {
+        float total_difference = 0.0f;
+        for (uint i = 0; i < num_samples; i++) {
+            total_difference += deviation - pwm_readDeg(pin);
+            sleep_ms(sample_delay_ms);
+        }
+        // Add the total difference recorded divided by the samples we took (average) to the final difference, we will average this later
+        final_difference = final_difference + (total_difference / num_samples);
+    }
+    // Create an array to store our calibration data
+    float calibration_data[FLASH_PAGE_SIZE/sizeof(float)];
+    // The first four bytes will signify if we have run a calibration before, a value of 1 corresponds to true in this case
+    calibration_data[0] = 1;
+    // Second four bytes will store our value (now averaged)
+    calibration_data[1] = final_difference / run_times;
+    // Disable interrupts because they can mess with our writing
+    uint32_t intr = save_and_disable_interrupts();
+    // Write our data and restore interrupts
+    flash_range_program(FLASH_OFFSET, (uint8_t *)calibration_data, FLASH_PAGE_SIZE);
+    restore_interrupts (intr);
+    led_blink_stop();
+}
+
+int pwm_checkCalibration() {
+    // Get the address where the config flag is stored
+    float* calibration_done_ptr = (float*) pwm_calibration_data;
+    // Retrieve and return the actual flag
+    float calibration_done = *calibration_done_ptr;
+    // Return true/false based on what value we actually saw vs. what we expect
+    if (calibration_done == 1) {
+        return true;
+    // Usually, this will turn out to be 255/0xFF if the flash has not been programmed yet
+    } else {
+        return false;
+    }
+}
+
+float pwm_getCalibrationValue() {
+    // Move the pointer forward by 4 bytes to skip the calibration value and just get the config
+    float* calibration_val_ptr = (float*) (pwm_calibration_data + 4);
+    // Retrieve and return the actual calibration value
+    float calibration_val = *calibration_val_ptr;
+    return calibration_val;
+}
+
+void pwm_resetCalibration() {
+    // Disable interrupts because they can mess with erasing
+    uint32_t intr = save_and_disable_interrupts();
+    // Erase the sector we store PWM calibration offsets in
+    flash_range_erase(FLASH_OFFSET, FLASH_SECTOR_SIZE);
+    // Re-enable interrupts
+    restore_interrupts (intr);
 }

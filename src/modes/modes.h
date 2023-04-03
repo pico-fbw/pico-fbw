@@ -18,6 +18,6 @@ uint getMode();
 /**
  * Defines if the IMU data is safe to use or not.
 */
-void setIMUSafe(bool state);
+void setIMUSafe(int state);
 
 #endif // modes_h

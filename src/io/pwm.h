@@ -41,34 +41,60 @@ void pwm_enable(uint *pin_list, uint num_pins);
 
 /**
  * @param readings pointer to the array where the method will store its data.
- * @param pin the pin to read from
+ * @param pin the number of the pin to read from the earlier specified pin_list
  * @return all PWM values from the PIO machine on the specified pin.
 */
 void pwm_read(float *readings, uint pin);
 
 /**
- * @param pin the pin to read from
+ * @param pin the number of the pin to read from the earlier specified pin_list
  * @return the pulsewidth of the specified pin.
 */
 float pwm_readPW(uint pin);
 
 /**
- * @param pin the pin to read from
+ * @param pin the number of the pin to read from the earlier specified pin_list
  * @return the duty cycle of the specified pin.
 */
-float pwm_readD(uint pin);
+float pwm_readDC(uint pin);
 
 /**
- * @param pin the pin to read from
+ * @param pin the number of the pin to read from the earlier specified pin_list
  * @return the period of the specified pin.
 */
 float pwm_readP(uint pin);
 
 /**
- * @param pin the pin to read from
+ * @param pin the number of the pin to read from the earlier specified pin_list
  * @return the calculated degree value derived from the pulsewidth on that pin.
 */
 float pwm_readDeg(uint pin);
 
+/**
+ * Samples a pin for deviation from a specified value for a specified number of samples, then saves that offset value to flash.
+ * @param pin the number of the pin to calibrate from the earlier specified pin_list
+ * @param deviation the value we should be seeing on the pin
+ * @param num_samples the number of times to sample the pin for deviation
+ * @param sample_delay_ms the delay between samples
+ * @param run_times the amount of times to run a sampling function (num_samples), will be averaged at the end
+*/
+void pwm_calibrate(uint pin, float deviation, uint num_samples, uint sample_delay_ms, uint run_times);
+
+/**
+ * Checks if the PWM calibration has been run before.
+ * @return 1 if calibration has been run previously, 0 if not.
+*/
+int pwm_checkCalibration();
+
+/**
+ * @return the calibration value from PWM calibration.
+ * Be aware that this value may not be cohesive; this function does not check to see whether or not a calibration has been done, so it is able to return random data.
+*/
+float pwm_getCalibrationValue();
+
+/**
+ * Resets the PWM calibration values and status (the sector in flash that holds these values).
+*/
+void pwm_resetCalibration();
 
 #endif // pwm_h

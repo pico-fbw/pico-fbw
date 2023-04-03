@@ -44,6 +44,21 @@ int main() {
         sleep_ms(300);
     }
 
+    // If PWM has not been previously calibrated (likely first boot),
+    if (!pwm_checkCalibration()) {
+        // Wait a few s for tx/rx to set itself up
+        sleep_ms(3000);
+        // Calibrate PWM (offset of 90 degrees, 2000 samples with 5ms delay and 5 times sample, this should take about 60s)
+        pwm_calibrate(0, 90.0f, 2000, 5, 5);
+        // Check to make sure the calibration has written successfully, if not then blink LED medium and stop execution (with an infinite loop)
+        if (!pwm_checkCalibration) {
+            led_blink(500);
+            while (true) {
+                tight_loop_contents();
+            }
+        }
+    }
+
     // Wait before initializing IMU to give it time to boot just in case we haven't reached enough time yet
     sleep_until(imu_safe);
     // Initialize and configure IMU unit

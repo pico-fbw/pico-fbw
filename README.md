@@ -16,7 +16,8 @@ This is still very much a work in progress/alpha project! Feel free to bookmark 
   - Possibly do some multicore code? I know C is very fast but if it's not too hard, it might be useful to split the workload between the two cores. One core solely handles I/O (taking input from rx and actuating servos) and the other core does all of the FBW math, PID, etc.
 - Scalability and flexibility (eg. should be able to redefine what pins to connect servos to, number of servos for different purposes, etc.)
   - Add some auto tuning capabilities--namely tuning the midpoint of the PWM input signal and possibly a guide/semi auto tuned PID
-    - Try and make use of the EEPROM to store these tuning values
+    - Try and make use of the flash to store these tuning values
+    - For the PID values, maybe make another program to store them in the 2nd to last sector of flash (last sector is PWM tuning currently); eg you can type PID values into the serial port. it should probably be better than forcing people to download and compile source...
 - Eventual motor control?
 
 I'm keeping the list relatively short for now because this is my first microcontroller project/C project so I don't want to have too much over my head. Plus, I can already see the PID loops being painful enough. Good luck to me :)

@@ -18,6 +18,7 @@ void led_init() {
 }
 
 void led_blink(uint32_t freq_ms) {
+    led_blink_stop();
     add_repeating_timer_ms(freq_ms, led_callback, NULL, &timer);
 }
 

@@ -12,6 +12,8 @@ target_link_libraries(fbw_io
     hardware_pwm
     hardware_i2c
     hardware_pio
+    hardware_flash
+    hardware_sync
 )
 
 # Auto generate the header file for the pio-asm
