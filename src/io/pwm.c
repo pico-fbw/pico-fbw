@@ -133,7 +133,6 @@ float pwm_readDeg(uint pin) {
 }
 
 /* Begin calibration/flash functions */
-// TODO: make the calibration function calibrate all input pins
 
 // Set the flash offset to the last flash sector to be safe, this is where we will store our PWM calibration data
 #define FLASH_OFFSET (PICO_FLASH_SIZE_BYTES - FLASH_SECTOR_SIZE)
@@ -154,9 +153,9 @@ void pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint
         uint pins[] = {0, 1, 2};
         uint num_pins = 3;
     #endif
-    for (uint pin = 0; i < num_pins; i++) {
+    for (uint pin = 0; pin < num_pins; pin++) {
         // If we are testing the switch, set the deviation to zero so it works for both a two and three-pos switch
-        if (i = 3) {
+        if (pin = 3) {
             deviation = 0.0f;
         }
         // Reset the final difference for every pin we test
@@ -173,7 +172,7 @@ void pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint
             final_difference = final_difference + (total_difference / num_samples);
         }
         // Get our final average and save it to the correct byte in our array which we write to flash
-        calibration_data[i + 1] = final_difference / run_times;
+        calibration_data[pin + 1] = final_difference / run_times;
     }
     // The first four bytes will signify if we have run a calibration before, a value of 1 corresponds to true in this case so we add that to the array
     calibration_data[0] = 1;

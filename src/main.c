@@ -49,7 +49,7 @@ int main() {
         // Wait a few s for tx/rx to set itself up
         sleep_ms(3000);
         // Calibrate PWM (offset of 90 degrees, 2000 samples with 5ms delay and 5 times sample, this should take about 60s)
-        pwm_calibrate(0, 90.0f, 2000, 5, 5);
+        pwm_calibrate(90.0f, 2000, 5, 5);
         // Check to make sure the calibration has written successfully, if not then blink LED medium and stop execution (with an infinite loop)
         if (!pwm_checkCalibration) {
             led_blink(500);
