@@ -34,6 +34,7 @@
 #include "hardware/sync.h"
 
 #include "led.h"
+#include "../config.h"
 
 #include "pwm.h"
 #include "pwm.pio.h"
@@ -139,29 +140,46 @@ float pwm_readDeg(uint pin) {
 // Create a pointer variable which points to the location in flash where we will store our calibration data
 uint8_t *pwm_calibration_data = (uint8_t *) (XIP_BASE + FLASH_OFFSET);
 
-void pwm_calibrate(uint pin, float deviation, uint num_samples, uint sample_delay_ms, uint run_times) {
+void pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint run_times) {
     // Start blinking LED to signify we are calibrating
     led_blink(100);
-    float final_difference = 0.0f;
-    // These loops simply poll the specified pin based on the specifications we have provided in the function
-    for (uint t = 0; t < run_times; t++) {
-        float total_difference = 0.0f;
-        for (uint i = 0; i < num_samples; i++) {
-            total_difference += deviation - pwm_readDeg(pin);
-            sleep_ms(sample_delay_ms);
-        }
-        // Add the total difference recorded divided by the samples we took (average) to the final difference, we will average this later
-        final_difference = final_difference + (total_difference / num_samples);
-    }
-    // Create an array to store our calibration data
+    // Create an array to store our calibration data which we will later write to flash
+    // The array is created with the size of the amount of floats we can store in one page (one writable area) of flash
     float calibration_data[FLASH_PAGE_SIZE/sizeof(float)];
-    // The first four bytes will signify if we have run a calibration before, a value of 1 corresponds to true in this case
+    // Complete the calibration for all pins, account for mode switch reading or not
+    #ifdef MODE_SWITCH_ENABLE
+       uint pins[] = {0, 1, 2, 3};
+       uint num_pins = 4;
+    #else
+        uint pins[] = {0, 1, 2};
+        uint num_pins = 3;
+    #endif
+    for (uint pin = 0; i < num_pins; i++) {
+        // If we are testing the switch, set the deviation to zero so it works for both a two and three-pos switch
+        if (i = 3) {
+            deviation = 0.0f;
+        }
+        // Reset the final difference for every pin we test
+        float final_difference = 0.0f;
+        // These loops simply poll the specified pin based on the specifications we have provided in the function
+        for (uint t = 0; t < run_times; t++) {
+            // Reset the total difference every time we run a time
+            float total_difference = 0.0f;
+            for (uint i = 0; i < num_samples; i++) {
+                total_difference += deviation - pwm_readDeg(pin);
+                sleep_ms(sample_delay_ms);
+            }
+            // Add the total difference recorded divided by the samples we took (average) to the final difference
+            final_difference = final_difference + (total_difference / num_samples);
+        }
+        // Get our final average and save it to the correct byte in our array which we write to flash
+        calibration_data[i + 1] = final_difference / run_times;
+    }
+    // The first four bytes will signify if we have run a calibration before, a value of 1 corresponds to true in this case so we add that to the array
     calibration_data[0] = 1;
-    // Second four bytes will store our value (now averaged)
-    calibration_data[1] = final_difference / run_times;
     // Disable interrupts because they can mess with our writing
     uint32_t intr = save_and_disable_interrupts();
-    // Write our data and restore interrupts
+    // Write our data (cast to an 8bit uint because that's the only type you can write to flash) and restore interrupts
     flash_range_program(FLASH_OFFSET, (uint8_t *)calibration_data, FLASH_PAGE_SIZE);
     restore_interrupts (intr);
     led_blink_stop();
@@ -181,9 +199,9 @@ int pwm_checkCalibration() {
     }
 }
 
-float pwm_getCalibrationValue() {
-    // Move the pointer forward by 4 bytes to skip the calibration value and just get the config
-    float* calibration_val_ptr = (float*) (pwm_calibration_data + 4);
+float pwm_getCalibrationValue(uint pin) {
+    // Move the pointer forward by 4 + 4 * pin bytes to skip the calibration value and just get the requested config (because floats are 4 bytes)
+    float* calibration_val_ptr = (float*) (pwm_calibration_data + (4 + 4 * pin));
     // Retrieve and return the actual calibration value
     float calibration_val = *calibration_val_ptr;
     return calibration_val;

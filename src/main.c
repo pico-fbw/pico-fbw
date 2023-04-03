@@ -24,10 +24,10 @@ int main() {
     // Set up PWM inputs
     #ifdef MODE_SWITCH_ENABLE
         uint pin_list[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN< INPUT_RUD_PIN, MODE_SWITCH_PIN};
-        pwm_enable(pin_list, 4);
+        pwm_enable(pin_list, 3);
     #else 
         uint pin_list[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN< INPUT_RUD_PIN};
-        pwm_enable(pin_list, 3);
+        pwm_enable(pin_list, 2);
     #endif
 
     // Set up and test PWM (servo) outputs

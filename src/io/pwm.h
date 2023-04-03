@@ -71,14 +71,13 @@ float pwm_readP(uint pin);
 float pwm_readDeg(uint pin);
 
 /**
- * Samples a pin for deviation from a specified value for a specified number of samples, then saves that offset value to flash.
- * @param pin the number of the pin to calibrate from the earlier specified pin_list
+ * Samples all initalized pins for deviation from a specified value for a specified number of samples, then saves that offset value to flash.
  * @param deviation the value we should be seeing on the pin
  * @param num_samples the number of times to sample the pin for deviation
  * @param sample_delay_ms the delay between samples
  * @param run_times the amount of times to run a sampling function (num_samples), will be averaged at the end
 */
-void pwm_calibrate(uint pin, float deviation, uint num_samples, uint sample_delay_ms, uint run_times);
+void pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint run_times);
 
 /**
  * Checks if the PWM calibration has been run before.
@@ -88,9 +87,10 @@ int pwm_checkCalibration();
 
 /**
  * @return the calibration value from PWM calibration.
+ * @param pin the pin (0-3 to get the value of)
  * Be aware that this value may not be cohesive; this function does not check to see whether or not a calibration has been done, so it is able to return random data.
 */
-float pwm_getCalibrationValue();
+float pwm_getCalibrationValue(uint pin);
 
 /**
  * Resets the PWM calibration values and status (the sector in flash that holds these values).
