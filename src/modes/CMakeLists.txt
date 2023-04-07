@@ -8,4 +8,6 @@ add_library(fbw_modes
 # Import libraries
 target_link_libraries(fbw_modes
     pico_stdlib
+    pico_multicore
+    fbw_lib
 )

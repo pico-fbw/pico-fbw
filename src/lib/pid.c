@@ -64,7 +64,7 @@ void PID_Init(PID_TypeDef *uPID)
 	
 }
 
-void PID(PID_TypeDef *uPID, double *Input, double *Output, double *Setpoint, double Kp, double Ki, double Kd, PIDPON_TypeDef POn, PIDCD_TypeDef ControllerDirection)
+void PID(PID_TypeDef *uPID, float *Input, float *Output, float *Setpoint, float Kp, float Ki, float Kd, PIDPON_TypeDef POn, PIDCD_TypeDef ControllerDirection)
 {
 	/* ~~~~~~~~~~ Set parameter ~~~~~~~~~~ */
 	uPID->MyOutput   = Output;
@@ -83,7 +83,7 @@ void PID(PID_TypeDef *uPID, double *Input, double *Output, double *Setpoint, dou
 	
 }
 
-void PID2(PID_TypeDef *uPID, double *Input, double *Output, double *Setpoint, double Kp, double Ki, double Kd, PIDCD_TypeDef ControllerDirection)
+void PID2(PID_TypeDef *uPID, float *Input, float *Output, float *Setpoint, float Kp, float Ki, float Kd, PIDCD_TypeDef ControllerDirection)
 {
 	PID(uPID, Input, Output, Setpoint, Kp, Ki, Kd, _PID_P_ON_E, ControllerDirection);
 }
@@ -95,10 +95,10 @@ uint8_t PID_Compute(PID_TypeDef *uPID)
 	uint32_t now;
 	uint32_t timeChange;
 	
-	double input;
-	double error;
-	double dInput;
-	double output;
+	float input;
+	float error;
+	float dInput;
+	float output;
 	
 	/* ~~~~~~~~~~ Check PID mode ~~~~~~~~~~ */
 	if (!uPID->InAuto)
@@ -195,7 +195,7 @@ PIDMode_TypeDef PID_GetMode(PID_TypeDef *uPID)
 }
 
 /* ~~~~~~~~~~~~~~~~ PID Limits ~~~~~~~~~~~~~~~~~ */
-void PID_SetOutputLimits(PID_TypeDef *uPID, double Min, double Max)
+void PID_SetOutputLimits(PID_TypeDef *uPID, float Min, float Max)
 {
 	/* ~~~~~~~~~~ Check value ~~~~~~~~~~ */
 	if (Min >= Max)
@@ -237,14 +237,14 @@ void PID_SetOutputLimits(PID_TypeDef *uPID, double Min, double Max)
 }
 
 /* ~~~~~~~~~~~~~~~~ PID Tunings ~~~~~~~~~~~~~~~~ */
-void PID_SetTunings(PID_TypeDef *uPID, double Kp, double Ki, double Kd)
+void PID_SetTunings(PID_TypeDef *uPID, float Kp, float Ki, float Kd)
 {
 	PID_SetTunings2(uPID, Kp, Ki, Kd, uPID->POn);
 }
-void PID_SetTunings2(PID_TypeDef *uPID, double Kp, double Ki, double Kd, PIDPON_TypeDef POn)
+void PID_SetTunings2(PID_TypeDef *uPID, float Kp, float Ki, float Kd, PIDPON_TypeDef POn)
 {
 	
-	double SampleTimeInSec;
+	float SampleTimeInSec;
 	
 	/* ~~~~~~~~~~ Check value ~~~~~~~~~~ */
 	if (Kp < 0 || Ki < 0 || Kd < 0)
@@ -261,7 +261,7 @@ void PID_SetTunings2(PID_TypeDef *uPID, double Kp, double Ki, double Kd, PIDPON_
 	uPID->DispKd = Kd;
 	
 	/* ~~~~~~~~~ Calculate time ~~~~~~~~ */
-	SampleTimeInSec = ((double)uPID->SampleTime) / 1000;
+	SampleTimeInSec = ((float)uPID->SampleTime) / 1000;
 	
 	uPID->Kp = Kp;
 	uPID->Ki = Ki * SampleTimeInSec;
@@ -304,13 +304,13 @@ PIDCD_TypeDef PID_GetDirection(PID_TypeDef *uPID)
 void PID_SetSampleTime(PID_TypeDef *uPID, int32_t NewSampleTime)
 {
 	
-	double ratio;
+	float ratio;
 	
 	/* ~~~~~~~~~~ Check value ~~~~~~~~~~ */
 	if (NewSampleTime > 0)
 	{
 		
-		ratio = (double)NewSampleTime / (double)uPID->SampleTime;
+		ratio = (float)NewSampleTime / (float)uPID->SampleTime;
 		
 		uPID->Ki *= ratio;
 		uPID->Kd /= ratio;
@@ -321,15 +321,15 @@ void PID_SetSampleTime(PID_TypeDef *uPID, int32_t NewSampleTime)
 }
 
 /* ~~~~~~~~~~~~~ Get Tunings Param ~~~~~~~~~~~~~ */
-double PID_GetKp(PID_TypeDef *uPID)
+float PID_GetKp(PID_TypeDef *uPID)
 {
 	return uPID->DispKp;
 }
-double PID_GetKi(PID_TypeDef *uPID)
+float PID_GetKi(PID_TypeDef *uPID)
 {
 	return uPID->DispKi;
 }
-double PID_GetKd(PID_TypeDef *uPID)
+float PID_GetKd(PID_TypeDef *uPID)
 {
 	return uPID->DispKd;
 }

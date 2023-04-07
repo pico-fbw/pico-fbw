@@ -66,6 +66,8 @@ int main() {
         if (imu_configure() == 0) {
             // If IMU passes init and configure tests, set IMU data as safe to use
             setIMUSafe(true);
+            // Initialize normal mode
+            mode_normalInit();
             // Set into normal mode
             setMode(1);
         // If IMU does not pass both tests,

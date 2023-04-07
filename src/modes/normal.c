@@ -1,39 +1,97 @@
 #include "pico/stdlib.h"
+#include "pico/multicore.h"
 
 #include "../io/imu.h"
 #include "../io/pwm.h"
 #include "../io/servo.h"
+#include "../lib/pid.h"
 #include "../config.h"
+#include "modes.h"
 
 #include "normal.h"
 
+
 inertialAngles angles;
+PID_TypeDef rollPID;
+PID_TypeDef pitchPID;
+
 float rollAngle;
 float pitchAngle;
-float yawAngle;
 float rollIn;
 float pitchIn;
-float yawIn;
 
-uint16_t rollOut;
-uint16_t pitchOut;
-uint16_t yawOut;
+float rollSetpoint;
+float pitchSetpoint;
+float rollOut;
+float pitchOut;
 
 void mode_normal() {
-    // Get input data from IMU and rx
+    // Refresh input data from IMU and rx
     angles = imu_getInertialAngles();
     rollAngle = angles.roll;
     pitchAngle = angles.pitch;
-    yawAngle = angles.heading;
-    rollIn = pwm_readDeg(0);
-    pitchIn = pwm_readDeg(1);
-    yawIn = pwm_readDeg(2);
+    rollIn = pwm_readDeg(0) - 90;
+    pitchIn = pwm_readDeg(1) - 90;
 
-    // TODO: PID control with gyro w/ integrated user input (obviously), and checking for if values are wayyy too out of spec and revert to direct
-    // (like > 70 bank, -15 < 30 pitch, etc. b/c thats what airbus has), because the system's thresholds should keep it from going that far
-    // so if it's gone that far it should step down
+    // Failsafe to check if actual IMU values are too out of spec and revert to direct.
+    // The PID loops should keep us from getting to this point, so we should disable if we ever get here.
+    // IMU data could also be at fault
+    if (rollAngle > 72 || rollAngle < -72 || pitchAngle > 35 || pitchAngle < -20) {
+        setIMUSafe(false);
+    }
 
-    servo_set(SERVO_AIL_PIN, rollOut;
-    servo_set(SERVO_ELEV_PIN, angles.pitch + 90);
-    servo_set(SERVO_RUD_PIN, angles.heading + 90);
+    // Use the rx inputs to set the setpoint control values
+    // TODO: find the optimal setpoint smoothing values, they will really depend on how often it can be evaluated
+    rollSetpoint += rollIn * SETPOINT_SMOOTHING_VALUE;
+    pitchSetpoint += pitchIn * SETPOINT_SMOOTHING_VALUE;
+    // Make sure the PID setpoints aren't set to unsafe values
+    if (rollSetpoint > ROLL_UPPER_LIMIT || rollSetpoint < ROLL_LOWER_LIMIT || pitchSetpoint > PITCH_UPPER_LIMIT || pitchSetpoint < PITCH_LOWER_LIMIT) {
+        // If the roll values are unsafe, we do allow setting up to 67 but constant input is required, so check for that
+        if (rollSetpoint > ROLL_UPPER_LIMIT_HOLD) {
+            if (!(rollIn >= rollSetpoint)) {
+                rollSetpoint -= SETPOINT_SMOOTHING_VALUE;
+            }
+        } else if (rollSetpoint < ROLL_LOWER_LIMIT_HOLD) {
+            if (!(rollIn <= rollSetpoint)) {
+                rollSetpoint += SETPOINT_SMOOTHING_VALUE;
+            }
+        }
+        // Pitch is simply limited to the unsafe thresholds
+        if (pitchSetpoint > PITCH_UPPER_LIMIT) {
+            pitchSetpoint -= SETPOINT_SMOOTHING_VALUE;
+        } else if (pitchSetpoint < PITCH_LOWER_LIMIT) {
+            pitchSetpoint += SETPOINT_SMOOTHING_VALUE;  
+        }
+    }
+
+    // All input processing is complete, send the final outputs to the servos
+    servo_set(SERVO_AIL_PIN, (uint16_t) rollOut);
+    servo_set(SERVO_ELEV_PIN, (uint16_t) pitchOut);
+    // For now, normal mode does not control the rudder and simply passes it through from the user,
+    // mostly because I'm too dumb to understand aerodynamics to implement that (yet!)
+    servo_set(SERVO_RUD_PIN, pwm_readDeg(2) + 90);
+}
+
+// Internal function that we will later push to the second core to compute the PID math for all controllers
+void computePID() {
+    PID_Compute(&rollPID);
+    PID_Compute(&pitchPID);
+}
+
+void mode_normalInit() {
+    // Set up PID controllers for roll and pitch io
+    // TODO: make some sample PID tunings (oh no...)
+    PID(&rollPID, &rollAngle, &rollOut, &rollSetpoint, 1, 10, 0, _PID_P_ON_E, _PID_CD_DIRECT);
+    PID_SetMode(&rollPID, _PID_MODE_AUTOMATIC);
+    PID_SetOutputLimits(&rollPID, -70, 70);
+    // TODO: not actually entirely sure on what the sample time does, I didn't have to do it last time so try and figure it out for sure
+    PID_SetSampleTime(&rollPID, 1);
+
+    PID(&pitchPID, &pitchAngle, &pitchOut, &pitchSetpoint, 1, 10, 0, _PID_P_ON_E, _PID_CD_DIRECT);
+    PID_SetMode(&pitchPID, _PID_MODE_AUTOMATIC);
+    PID_SetOutputLimits(&pitchPID, -70, 70);
+    PID_SetSampleTime(&pitchPID, 1);
+
+    // Wake the second core and tell it to compute PID values, that's all it will be doing
+    multicore_launch_core1(computePID);
 }

@@ -220,23 +220,23 @@ typedef struct
 	uint32_t        LastTime;
 	uint32_t        SampleTime;
 
-	double          DispKp;
-	double          DispKi;
-	double          DispKd;
+	float          DispKp;
+	float          DispKi;
+	float          DispKd;
 
-	double          Kp;
-	double          Ki;
-	double          Kd;
+	float          Kp;
+	float          Ki;
+	float          Kd;
 
-	double          *MyInput;
-	double          *MyOutput;
-	double          *MySetpoint;
+	float          *MyInput;
+	float          *MyOutput;
+	float          *MySetpoint;
 
-	double          OutputSum;
-	double          LastInput;
+	float          OutputSum;
+	float          LastInput;
 
-	double          OutMin;
-	double          OutMax;
+	float          OutMin;
+	float          OutMax;
 	
 }PID_TypeDef;
 
@@ -248,8 +248,8 @@ typedef struct
 /* :::::::::::::: Init ::::::::::::: */
 void PID_Init(PID_TypeDef *uPID);
 
-void PID(PID_TypeDef *uPID, double *Input, double *Output, double *Setpoint, double Kp, double Ki, double Kd, PIDPON_TypeDef POn, PIDCD_TypeDef ControllerDirection);
-void PID2(PID_TypeDef *uPID, double *Input, double *Output, double *Setpoint, double Kp, double Ki, double Kd, PIDCD_TypeDef ControllerDirection);
+void PID(PID_TypeDef *uPID, float *Input, float *Output, float *Setpoint, float Kp, float Ki, float Kd, PIDPON_TypeDef POn, PIDCD_TypeDef ControllerDirection);
+void PID2(PID_TypeDef *uPID, float *Input, float *Output, float *Setpoint, float Kp, float Ki, float Kd, PIDCD_TypeDef ControllerDirection);
 
 /* ::::::::::: Computing ::::::::::: */
 uint8_t PID_Compute(PID_TypeDef *uPID);
@@ -259,11 +259,11 @@ void            PID_SetMode(PID_TypeDef *uPID, PIDMode_TypeDef Mode);
 PIDMode_TypeDef PID_GetMode(PID_TypeDef *uPID);
 
 /* :::::::::: PID Limits ::::::::::: */
-void PID_SetOutputLimits(PID_TypeDef *uPID, double Min, double Max);
+void PID_SetOutputLimits(PID_TypeDef *uPID, float Min, float Max);
 
 /* :::::::::: PID Tunings :::::::::: */
-void PID_SetTunings(PID_TypeDef *uPID, double Kp, double Ki, double Kd);
-void PID_SetTunings2(PID_TypeDef *uPID, double Kp, double Ki, double Kd, PIDPON_TypeDef POn);
+void PID_SetTunings(PID_TypeDef *uPID, float Kp, float Ki, float Kd);
+void PID_SetTunings2(PID_TypeDef *uPID, float Kp, float Ki, float Kd, PIDPON_TypeDef POn);
 
 /* ::::::::: PID Direction ::::::::: */
 void          PID_SetControllerDirection(PID_TypeDef *uPID, PIDCD_TypeDef Direction);
@@ -273,9 +273,9 @@ PIDCD_TypeDef PID_GetDirection(PID_TypeDef *uPID);
 void PID_SetSampleTime(PID_TypeDef *uPID, int32_t NewSampleTime);
 
 /* ::::::: Get Tunings Param ::::::: */
-double PID_GetKp(PID_TypeDef *uPID);
-double PID_GetKi(PID_TypeDef *uPID);
-double PID_GetKd(PID_TypeDef *uPID);
+float PID_GetKp(PID_TypeDef *uPID);
+float PID_GetKi(PID_TypeDef *uPID);
+float PID_GetKd(PID_TypeDef *uPID);
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ End of the program ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 

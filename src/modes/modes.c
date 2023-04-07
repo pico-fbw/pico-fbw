@@ -62,7 +62,7 @@ uint getMode() {
 
 void setIMUSafe(int state) {
     imuDataSafe = state;
-    // Automatically de-init i2c and set into normal mode if IMU is deemed unsafe
+    // Automatically de-init i2c and set into direct mode if IMU is deemed unsafe
     if (!state) {
         imu_deinit();
         setMode(0);
