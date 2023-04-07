@@ -23,11 +23,11 @@ int main() {
 
     // Set up PWM inputs
     #ifdef MODE_SWITCH_ENABLE
-        uint pin_list[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN< INPUT_RUD_PIN, MODE_SWITCH_PIN};
-        pwm_enable(pin_list, 3);
+        uint pin_list[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, MODE_SWITCH_PIN};
+        pwm_enable(pin_list, 4);
     #else 
-        uint pin_list[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN< INPUT_RUD_PIN};
-        pwm_enable(pin_list, 2);
+        uint pin_list[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN};
+        pwm_enable(pin_list, 3);
     #endif
 
     // Set up and test PWM (servo) outputs
@@ -86,6 +86,42 @@ int main() {
             // Normal mode
             mode_normal();
         }
+        // Check every cycle to see if the mode needs to be swiched
+        #ifdef MODE_SWITCH_ENABLE
+            #ifdef SWITCH_2_POS
+                if (pwm_readDeg(3) < 90) {
+                    // Lower pos, direct
+                    // Keep from spamming mode changes
+                    if (getMode() != 0) {
+                        setMode(0);
+                    }
+                    setMode(0);
+                } else {
+                    // Upper pos, normal
+                    if (getMode() != 1) {
+                        setMode(1);
+                    }
+                }
+            #endif // switch_2_pos
+            #ifdef SWITCH_3_POS
+                // Similar to two-way switch except different logic for three pos
+                if (pwm_readDeg(3) < 85) {
+                    // Lower pos, direct
+                    // Keep from spamming mode changes
+                    if (getMode() != 0) {
+                        setMode(0);
+                    }
+                    setMode(0);
+                } else if (pwm_readDeg(3) > 95) {
+                    // Upper pos, unused (possibly autopilot in future?)
+                } else {
+                    // Middle pos, normal
+                    if (getMode() != 1) {
+                        setMode(1);
+                    }
+                }
+            #endif // switch_3_pos
+        #endif // mode_switch_enable
     }
 
     // How did we get here?

@@ -19,6 +19,10 @@
 	// #define SWITCH_2_POS
 #endif
 
+// Define if you want the system to calibrate each of your input PWM channels seperately.
+// If not defined, the system will only sample channel 0 (aileron) and apply those values to everything.
+#define CONFIGURE_INPUTS_SEPERATELY
+
 
 /** @section input */
 

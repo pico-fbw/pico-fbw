@@ -145,13 +145,20 @@ void pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint
     // Create an array to store our calibration data which we will later write to flash
     // The array is created with the size of the amount of floats we can store in one page (one writable area) of flash
     float calibration_data[FLASH_PAGE_SIZE/sizeof(float)];
-    // Complete the calibration for all pins, account for mode switch reading or not
-    #ifdef MODE_SWITCH_ENABLE
-       uint pins[] = {0, 1, 2, 3};
-       uint num_pins = 4;
+    // Check if we are calibrating per pin or not
+    #ifdef CONFIGURE_INPUTS_SEPERATELY
+        // If yes, complete the calibration for all pins, account for mode switch reading or not
+        #ifdef MODE_SWITCH_ENABLE
+        uint pins[] = {0, 1, 2, 3};
+        uint num_pins = 4;
+        #else
+            uint pins[] = {0, 1, 2};
+            uint num_pins = 3;
+        #endif
     #else
-        uint pins[] = {0, 1, 2};
-        uint num_pins = 3;
+        // If not, only register pin 0 to calibrate 
+        uint pins[] = {0};
+        uint num_pins = 1;
     #endif
     for (uint pin = 0; pin < num_pins; pin++) {
         // If we are testing the switch, set the deviation to zero so it works for both a two and three-pos switch

@@ -35,11 +35,11 @@ bool imuDataSafe = false;
 // }
 
 void setMode(uint mode) {
-    // Set the current working mode
-    cmode = mode;
     // Any code that needs to run on the switching of modes goes here--
     if (mode == 0) {
-        // Mode has been set to direct, revert flight controls and quick blink LED (IMU error after startup)
+        // Set the current working mode
+        cmode = mode;
+        // Mode has been set to direct, quick blink LED (IMU error after startup)
         led_blink(250);
         /*
         THIS METHOD IS UNUSED, I2C protocol freezes up after a disconnection and I couldn't find a solution, so it is disabled for now
@@ -48,8 +48,12 @@ void setMode(uint mode) {
         add_repeating_timer_ms(5000, imuReconnect, NULL, &imuTimer);
         */
     } else if (mode == 1) {
-        // Mode has been set to normal
-        led_blink_stop();
+        // Make sure it is okay to set to normal mode
+        if (imuDataSafe) {
+            cmode = mode;
+            // Mode has been set to normal
+            led_blink_stop();
+        }
     }
 }
 uint getMode() {
