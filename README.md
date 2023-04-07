@@ -6,13 +6,13 @@ This is still very much a work in progress/alpha project! Feel free to bookmark 
 
 ## Development Goals
 
-- [] At least 2, maybe 3 control modes
+- [ ] At least 2, maybe 3 control modes
   - [x] Direct: inputs from rx are transmitted directly to servos with minimal delay
     - Do direct first, then see if I can do normal?
-  - [] Normal: inputs from rx are monitored by computer and corrected for things such as limits, holding bank/pitch, etc. (look up what airbus normal law does lol)
-  - [] Autopilot: very primitive for now if I can, but more of just an auto level mode (there aren't enough sensors to allow pathing yet, maybe add a GPS for pos/alt down the road?)
+  - [ ] Normal: inputs from rx are monitored by computer and corrected for things such as limits, holding bank/pitch, etc. (look up what airbus normal law does lol)
+  - [ ] Autopilot: very primitive for now if I can, but more of just an auto level mode (there aren't enough sensors to allow pathing yet, maybe add a GPS for pos/alt down the road?)
 - [x] Control modes should be toggleable by a switch on tx
-- [] Efficient and fast code so there is minimal delay between input, processing, and output (it shouldn't affect flying and reaction time)
+- [ ] Efficient and fast code so there is minimal delay between input, processing, and output (it shouldn't affect flying and reaction time)
   - Possibly do some multicore code? I know C is very fast but if it's not too hard, it might be useful to split the workload between the two cores. One core solely handles I/O (taking input from rx and actuating servos) and the other core does all of the FBW math, PID, etc. 
 - [x] Scalability and flexibility (eg. should be able to redefine what pins to connect servos to, number of servos for different purposes, etc.)
   - [x] Add some auto tuning capabilities--namely tuning the midpoint of the PWM input signal and possibly a guide/semi auto tuned PID
