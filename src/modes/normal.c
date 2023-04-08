@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
 
@@ -41,31 +42,40 @@ void mode_normal() {
     }
 
     // Use the rx inputs to set the setpoint control values
-    // TODO: find the optimal setpoint smoothing values, they will really depend on how often it can be evaluated
-    rollSetpoint += rollIn * SETPOINT_SMOOTHING_VALUE;
-    pitchSetpoint += pitchIn * SETPOINT_SMOOTHING_VALUE;
+    // Deadband calculation so we don't get crazy values due to PWM fluctuations
+    if (rollIn > DEADBAND_VALUE || rollIn < -DEADBAND_VALUE) {
+        rollSetpoint += rollIn * SETPOINT_SMOOTHING_VALUE;
+    }
+    if (pitchIn > DEADBAND_VALUE || pitchIn < -DEADBAND_VALUE) {
+        pitchSetpoint += pitchIn * SETPOINT_SMOOTHING_VALUE;
+    }
     // Make sure the PID setpoints aren't set to unsafe values
-    if (rollSetpoint > ROLL_UPPER_LIMIT || rollSetpoint < ROLL_LOWER_LIMIT || pitchSetpoint > PITCH_UPPER_LIMIT || pitchSetpoint < PITCH_LOWER_LIMIT) {
+    if (rollSetpoint > ROLL_UPPER_LIMIT || rollSetpoint < ROLL_LOWER_LIMIT) {
         // If the roll values are unsafe, we do allow setting up to 67 but constant input is required, so check for that
-        if (rollSetpoint > ROLL_UPPER_LIMIT_HOLD) {
-            if (!(rollIn >= rollSetpoint)) {
-                rollSetpoint -= SETPOINT_SMOOTHING_VALUE;
-            }
-        } else if (rollSetpoint < ROLL_LOWER_LIMIT_HOLD) {
-            if (!(rollIn <= rollSetpoint)) {
-                rollSetpoint += SETPOINT_SMOOTHING_VALUE;
+        if (!(abs(rollIn) >= abs(rollSetpoint))) {
+            if (rollSetpoint > 0) {
+                rollSetpoint -= 0.05;
+            } else if (rollSetpoint < 0) {
+                rollSetpoint += 0.05;
             }
         }
+        if (rollSetpoint > ROLL_UPPER_LIMIT_HOLD) {
+            rollSetpoint = ROLL_UPPER_LIMIT_HOLD;
+        } else if (rollSetpoint < ROLL_LOWER_LIMIT_HOLD) {
+            rollSetpoint = ROLL_LOWER_LIMIT_HOLD;
+        }
+    }
+    if (pitchSetpoint > PITCH_UPPER_LIMIT || pitchSetpoint < PITCH_LOWER_LIMIT) {
         // Pitch is simply limited to the unsafe thresholds
         if (pitchSetpoint > PITCH_UPPER_LIMIT) {
-            pitchSetpoint -= SETPOINT_SMOOTHING_VALUE;
+            pitchSetpoint = PITCH_UPPER_LIMIT;
         } else if (pitchSetpoint < PITCH_LOWER_LIMIT) {
-            pitchSetpoint += SETPOINT_SMOOTHING_VALUE;  
+            pitchSetpoint = PITCH_LOWER_LIMIT;
         }
     }
 
     // All input processing is complete, send the final outputs to the servos
-    servo_set(SERVO_AIL_PIN, (uint16_t) rollOut);
+    servo_set(SERVO_AIL_PIN, (uint16_t)(rollSetpoint + 90));
     servo_set(SERVO_ELEV_PIN, (uint16_t) pitchOut);
     // For now, normal mode does not control the rudder and simply passes it through from the user,
     // mostly because I'm too dumb to understand aerodynamics to implement that (yet!)
@@ -74,8 +84,10 @@ void mode_normal() {
 
 // Internal function that we will later push to the second core to compute the PID math for all controllers
 void computePID() {
-    PID_Compute(&rollPID);
-    PID_Compute(&pitchPID);
+    while (true) {
+        PID_Compute(&rollPID);
+        PID_Compute(&pitchPID);
+    }
 }
 
 void mode_normalInit() {

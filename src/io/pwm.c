@@ -129,7 +129,7 @@ float pwm_readP(uint pin) {
 }
 
 float pwm_readDeg(uint pin) {
-    return (((((float)pulsewidth[pin] * 0.000000016) - 0.001) / 0.001) * 180.0f);
+    return ((((((float)pulsewidth[pin] * 0.000000016) - 0.001) / 0.001) * 180.0f) + pwm_getCalibrationValue(pin));
 }
 
 /* Begin calibration/flash functions */

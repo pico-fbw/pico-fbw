@@ -23,11 +23,16 @@
 // If not defined, the system will only sample channel 0 (aileron) and apply those values to everything.
 #define CONFIGURE_INPUTS_SEPERATELY
 
-/** The value that decides how much values from the reciever are scaled down before being added to the setpoint value.
+/**
+ * The value that decides how much values from the reciever are scaled down before being added to the setpoint value.
  * If that made absolutely no sense--basically, smaller values mean handling will be more like a larger plane, and larger values mean
  * handling will be more like a typical RC plane. This shouldn't be much higher than 1 (if at all).
 */
-#define SETPOINT_SMOOTHING_VALUE 0.2
+#define SETPOINT_SMOOTHING_VALUE 0.00065
+
+// If the degrees reading from any of the inputs are below this value, the inputs will be disregarded.
+// Only applies in normal mode.
+#define DEADBAND_VALUE 1
 
 
 /** @section input */
