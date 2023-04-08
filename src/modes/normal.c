@@ -43,7 +43,7 @@ void mode_normal() {
     if (rollIn > DEADBAND_VALUE || rollIn < -DEADBAND_VALUE) {
         // If the input is not within the deadband, add the smoothed input value on top of the current setpoint
         // We must smooth the value because this calculation is done many times per second, so no smoothing would result
-        // in extremely touchy controls.
+        // in extremely (and I do really mean extreme) touchy controls.
         rollSetpoint += rollIn * SETPOINT_SMOOTHING_VALUE;
     }
     if (pitchIn > DEADBAND_VALUE || pitchIn < -DEADBAND_VALUE) {
@@ -79,7 +79,7 @@ void mode_normal() {
     servo_set(SERVO_AIL_PIN, (uint16_t)(rollPID.out + 90));
     servo_set(SERVO_ELEV_PIN, (uint16_t)(pitchPID.out + 90));
     // For now, normal mode does not control the rudder and simply passes it through from the user,
-    // mostly because I'm too dumb to understand aerodynamics to implement that (yet!)
+    // mostly because I'm too dumb to understand aerodynamics to implement that (yet)
     servo_set(SERVO_RUD_PIN, pwm_readDeg(2) + 90);
 }
 
@@ -93,11 +93,10 @@ void computePID() {
 
 void mode_normalInit() {
     // Set up PID controllers for roll and pitch io
-    PIDController rollPID = { 2.0f, 0.5f, 0.25f, 0.02f, ROLL_LOWER_LIMIT_HOLD, ROLL_UPPER_LIMIT_HOLD, ROLL_LOWER_LIMIT_HOLD / 2, ROLL_UPPER_LIMIT / 2, 0.01f };
+    rollPID = (PIDController){roll_kP, roll_kI, roll_kD, roll_tau, ROLL_LOWER_LIMIT_HOLD, ROLL_UPPER_LIMIT_HOLD, roll_integMin, roll_integMax, roll_kT};
     pid_init(&rollPID);
-    PIDController pitchPID = { 2.0f, 0.5f, 0.25f, 0.02f, PITCH_LOWER_LIMIT, PITCH_UPPER_LIMIT, PITCH_LOWER_LIMIT / 2, PITCH_UPPER_LIMIT / 2, 0.01f };
+    pitchPID = (PIDController){pitch_kP, pitch_kI, pitch_kD, pitch_tau, PITCH_LOWER_LIMIT, PITCH_LOWER_LIMIT, pitch_integMin, pitch_integMax, pitch_kT};
     pid_init(&pitchPID);
-
     // Wake the second core and tell it to compute PID values, that's all it will be doing
     multicore_launch_core1(computePID);
 }

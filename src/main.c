@@ -68,8 +68,6 @@ int main() {
             setIMUSafe(true);
             // Initialize normal mode
             mode_normalInit();
-            // Set into normal mode
-            setMode(1);
         // If IMU does not pass both tests,
         } else {
             // Slow blink LED: IMU init error
