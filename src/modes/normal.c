@@ -11,10 +11,9 @@
 
 #include "normal.h"
 
-
 inertialAngles angles;
-PID_TypeDef rollPID;
-PID_TypeDef pitchPID;
+PIDController rollPID;
+PIDController pitchPID;
 
 float rollAngle;
 float pitchAngle;
@@ -23,8 +22,6 @@ float pitchIn;
 
 float rollSetpoint;
 float pitchSetpoint;
-float rollOut;
-float pitchOut;
 
 void mode_normal() {
     // Refresh input data from IMU and rx
@@ -42,14 +39,18 @@ void mode_normal() {
     }
 
     // Use the rx inputs to set the setpoint control values
-    // Deadband calculation so we don't get crazy values due to PWM fluctuations
+    // Deadband calculations so we don't get crazy values due to PWM fluctuations
     if (rollIn > DEADBAND_VALUE || rollIn < -DEADBAND_VALUE) {
+        // If the input is not within the deadband, add the smoothed input value on top of the current setpoint
+        // We must smooth the value because this calculation is done many times per second, so no smoothing would result
+        // in extremely touchy controls.
         rollSetpoint += rollIn * SETPOINT_SMOOTHING_VALUE;
     }
     if (pitchIn > DEADBAND_VALUE || pitchIn < -DEADBAND_VALUE) {
         pitchSetpoint += pitchIn * SETPOINT_SMOOTHING_VALUE;
     }
-    // Make sure the PID setpoints aren't set to unsafe values
+    // Make sure the PID setpoints aren't set to unsafe values so we don't get weird outputs from PID,
+    // this is also where our bank/pitch protections come in.
     if (rollSetpoint > ROLL_UPPER_LIMIT || rollSetpoint < ROLL_LOWER_LIMIT) {
         // If the roll values are unsafe, we do allow setting up to 67 but constant input is required, so check for that
         if (!(abs(rollIn) >= abs(rollSetpoint))) {
@@ -75,8 +76,8 @@ void mode_normal() {
     }
 
     // All input processing is complete, send the final outputs to the servos
-    servo_set(SERVO_AIL_PIN, (uint16_t)(rollSetpoint + 90));
-    servo_set(SERVO_ELEV_PIN, (uint16_t) pitchOut);
+    servo_set(SERVO_AIL_PIN, (uint16_t)(rollPID.out + 90));
+    servo_set(SERVO_ELEV_PIN, (uint16_t)(pitchPID.out + 90));
     // For now, normal mode does not control the rudder and simply passes it through from the user,
     // mostly because I'm too dumb to understand aerodynamics to implement that (yet!)
     servo_set(SERVO_RUD_PIN, pwm_readDeg(2) + 90);
@@ -85,24 +86,17 @@ void mode_normal() {
 // Internal function that we will later push to the second core to compute the PID math for all controllers
 void computePID() {
     while (true) {
-        PID_Compute(&rollPID);
-        PID_Compute(&pitchPID);
+        pid_update(&rollPID, rollSetpoint, rollAngle);
+        pid_update(&pitchPID, pitchSetpoint, pitchAngle);
     }
 }
 
 void mode_normalInit() {
     // Set up PID controllers for roll and pitch io
-    // TODO: make some sample PID tunings (oh no...)
-    PID(&rollPID, &rollAngle, &rollOut, &rollSetpoint, 1, 10, 0, _PID_P_ON_E, _PID_CD_DIRECT);
-    PID_SetMode(&rollPID, _PID_MODE_AUTOMATIC);
-    PID_SetOutputLimits(&rollPID, -70, 70);
-    // TODO: not actually entirely sure on what the sample time does, I didn't have to do it last time so try and figure it out for sure
-    PID_SetSampleTime(&rollPID, 1);
-
-    PID(&pitchPID, &pitchAngle, &pitchOut, &pitchSetpoint, 1, 10, 0, _PID_P_ON_E, _PID_CD_DIRECT);
-    PID_SetMode(&pitchPID, _PID_MODE_AUTOMATIC);
-    PID_SetOutputLimits(&pitchPID, -70, 70);
-    PID_SetSampleTime(&pitchPID, 1);
+    PIDController rollPID = { 2.0f, 0.5f, 0.25f, 0.02f, ROLL_LOWER_LIMIT_HOLD, ROLL_UPPER_LIMIT_HOLD, ROLL_LOWER_LIMIT_HOLD / 2, ROLL_UPPER_LIMIT / 2, 0.01f };
+    pid_init(&rollPID);
+    PIDController pitchPID = { 2.0f, 0.5f, 0.25f, 0.02f, PITCH_LOWER_LIMIT, PITCH_UPPER_LIMIT, PITCH_LOWER_LIMIT / 2, PITCH_UPPER_LIMIT / 2, 0.01f };
+    pid_init(&pitchPID);
 
     // Wake the second core and tell it to compute PID values, that's all it will be doing
     multicore_launch_core1(computePID);
