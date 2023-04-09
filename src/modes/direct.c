@@ -12,5 +12,4 @@ void mode_direct() {
     // gives a negligable decrease in latency :(
     servo_set(SERVO_AIL_PIN, pwm_readDeg(0));
     servo_set(SERVO_ELEV_PIN, pwm_readDeg(1));
-    servo_set(SERVO_RUD_PIN, pwm_readDeg(2));
 }

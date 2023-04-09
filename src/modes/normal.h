@@ -11,4 +11,9 @@ void mode_normal();
 */
 void mode_normalInit();
 
+/**
+ * Partly resets the inner workings of normal mode (namely the setpoints).
+*/
+void mode_normalReset();
+
 #endif // normal_h

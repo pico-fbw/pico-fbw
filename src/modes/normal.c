@@ -78,9 +78,6 @@ void mode_normal() {
     // All input processing is complete, send the final outputs to the servos
     servo_set(SERVO_AIL_PIN, (uint16_t)(rollPID.out + 90));
     servo_set(SERVO_ELEV_PIN, (uint16_t)(pitchPID.out + 90));
-    // For now, normal mode does not control the rudder and simply passes it through from the user,
-    // mostly because I'm too dumb to understand aerodynamics to implement that (yet)
-    servo_set(SERVO_RUD_PIN, pwm_readDeg(2) + 90);
 }
 
 // Internal function that we will later push to the second core to compute the PID math for all controllers
@@ -95,8 +92,13 @@ void mode_normalInit() {
     // Set up PID controllers for roll and pitch io
     rollPID = (PIDController){roll_kP, roll_kI, roll_kD, roll_tau, ROLL_LOWER_LIMIT_HOLD, ROLL_UPPER_LIMIT_HOLD, roll_integMin, roll_integMax, roll_kT};
     pid_init(&rollPID);
-    pitchPID = (PIDController){pitch_kP, pitch_kI, pitch_kD, pitch_tau, PITCH_LOWER_LIMIT, PITCH_LOWER_LIMIT, pitch_integMin, pitch_integMax, pitch_kT};
+    pitchPID = (PIDController){pitch_kP, pitch_kI, pitch_kD, pitch_tau, PITCH_LOWER_LIMIT, PITCH_UPPER_LIMIT, pitch_integMin, pitch_integMax, pitch_kT};
     pid_init(&pitchPID);
     // Wake the second core and tell it to compute PID values, that's all it will be doing
     multicore_launch_core1(computePID);
+}
+
+void mode_normalReset() {
+    rollSetpoint = 0.0f;
+    pitchSetpoint = 0.0f;
 }

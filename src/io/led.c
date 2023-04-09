@@ -10,7 +10,7 @@ bool led_callback(struct repeating_timer *t) {
 
 void led_init() {
     #ifndef PICO_DEFAULT_LED_PIN
-      	#warning No default LED pin found. Power LED functionality may be impacted.
+      	#warning "No default LED pin found. Power LED functionality may be impacted."
     #endif
     gpio_init(PICO_DEFAULT_LED_PIN);
     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);

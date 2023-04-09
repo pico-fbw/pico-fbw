@@ -3,6 +3,7 @@
 #include "../io/imu.h"
 #include "../io/servo.h"
 #include "../io/led.h"
+#include "normal.h"
 #include "../config.h"
 
 #include "modes.h"
@@ -41,6 +42,9 @@ void setMode(uint mode) {
         cmode = mode;
         // Mode has been set to direct, quick blink LED (IMU error after startup)
         led_blink(250);
+        // Reset normal mode
+        // This is just in case we go back to normal mode, we don't want to keep the previous setpoints and have the system snap back to them/
+        mode_normalReset();
         /*
         THIS METHOD IS UNUSED, I2C protocol freezes up after a disconnection and I couldn't find a solution, so it is disabled for now
 

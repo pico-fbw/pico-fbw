@@ -129,8 +129,12 @@ float pwm_readP(uint pin) {
 }
 
 float pwm_readDeg(uint pin) {
-    // return ((((((float)pulsewidth[pin] * 0.000000016) - 0.001) / 0.001) * 180.0f) + pwm_getCalibrationValue(pin));
     return (180000 * ((float)pulsewidth[pin] * 0.000000016 - 0.001) + pwm_getCalibrationValue(pin));
+}
+
+// Function to read the raw degree value without any calibrations applied, only used internally in calibration for now.
+float pwm_readDegRaw(uint pin) {
+    return (180000 * ((float)pulsewidth[pin] * 0.000000016 - 0.001));
 }
 
 /* Begin calibration/flash functions */
@@ -150,20 +154,17 @@ void pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint
     #ifdef CONFIGURE_INPUTS_SEPERATELY
         // If yes, complete the calibration for all pins, account for mode switch reading or not
         #ifdef MODE_SWITCH_ENABLE
-        uint pins[] = {0, 1, 2, 3};
-        uint num_pins = 4;
+            uint num_pins = 4;
         #else
-            uint pins[] = {0, 1, 2};
             uint num_pins = 3;
         #endif
     #else
         // If not, only register pin 0 to calibrate 
-        uint pins[] = {0};
         uint num_pins = 1;
     #endif
     for (uint pin = 0; pin < num_pins; pin++) {
         // If we are testing the switch, set the deviation to zero so it works for both a two and three-pos switch
-        if (pin = 3) {
+        if (pin == 3) {
             deviation = 0.0f;
         }
         // Reset the final difference for every pin we test
@@ -173,7 +174,7 @@ void pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint
             // Reset the total difference every time we run a time
             float total_difference = 0.0f;
             for (uint i = 0; i < num_samples; i++) {
-                total_difference += deviation - pwm_readDeg(pin);
+                total_difference += deviation - pwm_readDegRaw(pin);
                 sleep_ms(sample_delay_ms);
             }
             // Add the total difference recorded divided by the samples we took (average) to the final difference
@@ -182,8 +183,8 @@ void pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint
         // Get our final average and save it to the correct byte in our array which we write to flash
         calibration_data[pin + 1] = final_difference / run_times;
     }
-    // The first four bytes will signify if we have run a calibration before, a value of 1 corresponds to true in this case so we add that to the array
-    calibration_data[0] = 1;
+    // The first four bytes will signify if we have run a calibration before, a value of 0.5 corresponds to true in this case so we add that to the array
+    calibration_data[0] = 0.5f;
     // Disable interrupts because they can mess with our writing
     uint32_t intr = save_and_disable_interrupts();
     // Write our data (cast to an 8bit uint because that's the only type you can write to flash) and restore interrupts
@@ -198,7 +199,7 @@ int pwm_checkCalibration() {
     // Retrieve and return the actual flag
     float calibration_done = *calibration_done_ptr;
     // Return true/false based on what value we actually saw vs. what we expect
-    if (calibration_done == 1) {
+    if (calibration_done == 0.5f) {
         return true;
     // Usually, this will turn out to be 255/0xFF if the flash has not been programmed yet
     } else {
@@ -207,8 +208,12 @@ int pwm_checkCalibration() {
 }
 
 float pwm_getCalibrationValue(uint pin) {
+    // Check if we originally only calibrated one PWM and if so, set pin to that regardless
+    #ifndef CONFIGURE_INPUTS_SEPERATELY
+        pin = 0;
+    #endif    
     // Move the pointer forward by 4 + 4 * pin bytes to skip the calibration value and just get the requested config (because floats are 4 bytes)
-    float* calibration_val_ptr = (float*) (pwm_calibration_data + (4 + 4 * pin));
+    float* calibration_val_ptr = (float*) (pwm_calibration_data + (4 + sizeof(float) * pin));
     // Retrieve and return the actual calibration value
     float calibration_val = *calibration_val_ptr;
     return calibration_val;
