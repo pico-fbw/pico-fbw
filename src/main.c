@@ -52,7 +52,7 @@ int main() {
         pwm_calibrate(90.0f, 2000, 5, 5);
         // Check to make sure the calibration has written successfully, if not then blink LED medium and stop execution (with an infinite loop)
         if (!pwm_checkCalibration) {
-            led_blink(50);
+            led_blink(500);
             while (true) {
                 tight_loop_contents();
             }
