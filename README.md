@@ -48,7 +48,7 @@ It may seem daunting to to modify your existing setup to incorporate this, but r
 
 ## Building & Configuring
 
-You can find all of the information about building and configuring the project on our wiki page [here](https://github.com/MylesAndMore/pico-fbw/wiki/_Building-&-Configuring.
+You can find all of the information about building and configuring the project on our wiki page [here](https://github.com/MylesAndMore/pico-fbw/wiki/_Building-&-Configuring).
 
 ## Issues, Feedback, and Features
 
