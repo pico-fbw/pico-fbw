@@ -19,8 +19,9 @@ Now, with that out of the way, let's get into the features of the system!
   - It can be easily activated with the use of a switch on the transmitter
   - It can also be automatically activated if the system senses bad data
 - Fast and efficient computation leads to minimal input lag on the controls
-- Flexibility; the system can easily be reconfigured through a configuration file to suit your and your aircraft's needs.
-- Fully open-source codebase
+- Flexibility; the system can easily be reconfigured through a configuration file to suit your and your aircraft's needs
+- Extensive documentation to make setup and usage easy
+- Fully open-source codebase with fully commented code
 
 ## Materials
 
