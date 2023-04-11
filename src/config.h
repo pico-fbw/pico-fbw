@@ -30,6 +30,10 @@
 */
 #define SETPOINT_SMOOTHING_VALUE 0.00075
 
+// The value that decides how much the aileron inputs are scaled down to become the rudder inputs.
+// Only applies during turns in normal mode.
+#define RUDDER_SMOOTHING_VALUE 0.1
+
 // If the degrees reading from any of the inputs are below this value, the inputs will be disregarded.
 // Only applies in normal mode.
 #define DEADBAND_VALUE 2
@@ -66,26 +70,33 @@
  * If an angle of 72 degrees of bank, 35 degrees of pitch up, or 20 degrees of pitch down is detected from the IMU,
  * the system will revert back to direct mode. This is done for safety and computational/reliability reasons.
  * 
- * Most of the default values are the same values from an Airbus A320 aricraft--thanks to the FlyByWire team for the great info!
+ * Most of the default values are the same values from an Airbus A320 aricraft--thanks to the FlyByWire team for the great documentation!
 */
 
 // The maximum roll angle that the system will attempt to stabilize. A constant input is required above this.
-#define ROLL_UPPER_LIMIT 33
+#define ROLL_LIMIT 33
 
 // The maximum roll angle that the system will hold, nothing higher is allowed.
-#define ROLL_UPPER_LIMIT_HOLD 67
-
-// The minimum roll angle that the system will attempt to stabilize.
-#define ROLL_LOWER_LIMIT -33
-
-// The minimum roll angle that the system will hold, nothing higher is allowed.
-#define ROLL_LOWER_LIMIT_HOLD -67
+#define ROLL_LIMIT_HOLD 67
 
 // The maximum pitch angle that the system will hold and stabilize, nothing higher is allowed.
 #define PITCH_UPPER_LIMIT 30
 
-// The minimum pitch angle that the system will hold and stabilize, nothing higher is allowed.
+// The minimum pitch angle that the system will hold and stabilize, nothing lower is allowed.
+// This value DOES need to be negative!!
 #define PITCH_LOWER_LIMIT -15
+
+/* Note that all control limits are bypassed in direct mode. */
+
+// The maximum degree value the system is allowed to move the ailerons to.
+#define AIL_LIMIT 30
+
+// The maximum degree value the system is allowed to move the elevators to.
+#define ELEV_LIMIT 20
+
+// The maximum rudder input the yaw damper/turn coordinator is allowed to make.
+#define RUD_LIMIT 15
+
 
 
 /** @section tuning 
@@ -112,6 +123,15 @@
 #define pitch_integMin -50.0
 #define pitch_integMax 50.0
 #define pitch_kT 0.01
+
+// PID tuning values for the yaw axis PID controller.
+#define yaw_kP 1.0
+#define yaw_kI 0.0025
+#define yaw_kD 0.001
+#define yaw_tau 0.001
+#define yaw_integMin -50.0
+#define yaw_integMax 50.0
+#define yaw_kT 0.01
 
 
 /** @section sensors */

@@ -69,26 +69,42 @@ int imu_configure() {
     return imu_changeMode(MODE_NDOF);
 }
 
-struct inertialAngles imu_getInertialAngles() {
-    // Get Euler data from IMU
+struct inertialAngles imu_getAngles() {
+    // Get angle data from IMU
     uint8_t euler_data[6];
-    int timeoutstat0 = i2c_write_timeout_us(i2c_default, CHIP_REGISTER, &EULER_REGISTER, 1, true, 10000);
-    int timeoutstat1 = i2c_read_timeout_us(i2c_default, CHIP_REGISTER, euler_data, 6, false, 10000);
-    // Check if any I2C related errors occured, if so, set IMU as unsafe and return an error
-    if (timeoutstat0 == PICO_ERROR_GENERIC || timeoutstat0 == PICO_ERROR_TIMEOUT || timeoutstat1 == PICO_ERROR_GENERIC || timeoutstat1 == PICO_ERROR_TIMEOUT) {
+    int timeout0 = i2c_write_timeout_us(i2c_default, CHIP_REGISTER, &EULER_BEGIN_REGISTER, 1, true, 10000);
+    int timeout1 = i2c_read_timeout_us(i2c_default, CHIP_REGISTER, euler_data, 6, false, 10000);
+    // Check if any I2C related errors occured, if so, set IMU as unsafe and return no data
+    if (timeout0 == PICO_ERROR_GENERIC || timeout0 == PICO_ERROR_TIMEOUT || timeout1 == PICO_ERROR_GENERIC || timeout1 == PICO_ERROR_TIMEOUT) {
         setIMUSafe(false);
         return (struct inertialAngles){0};
     }
+    // Perform the necessary bit shifts to combine the high byte and low byte into one signed integer
     int16_t heading = (euler_data[1] << 8) | euler_data[0];
     int16_t roll = (euler_data[3] << 8) | euler_data[2];
     int16_t pitch = (euler_data[5] << 8) | euler_data[4];
 
-    // Convert Euler data into angles
+    // Convert raw data into angles
     float heading_degrees = (float)heading / 16.0;
     float roll_degrees = (float)roll / 16.0;
     float pitch_degrees = (float)pitch / 16.0;
     // Compose into data struct and return
     return (struct inertialAngles){heading_degrees, roll_degrees, pitch_degrees};
+}
+
+struct inertialAccel imu_getAccel() {
+    // Same process as getting Euler data
+    uint8_t accel_data[6];
+    int timeout0 = i2c_write_timeout_us(i2c_default, CHIP_REGISTER, &ACCEL_BEGIN_REGISTER, 1, true, 10000);
+    int timeout1 = i2c_read_timeout_us(i2c_default, CHIP_REGISTER, accel_data, 6, false, 10000);
+    if (timeout0 == PICO_ERROR_GENERIC || timeout0 == PICO_ERROR_TIMEOUT || timeout1 == PICO_ERROR_GENERIC || timeout1 == PICO_ERROR_TIMEOUT) {
+        setIMUSafe(false);
+        return (struct inertialAccel){0};
+    }
+    int16_t accelX = (accel_data[1] << 8) | accel_data[0];
+    int16_t accelY = (accel_data[3] << 8) | accel_data[2];
+    int16_t accelZ = (accel_data[5] << 8) | accel_data[4];
+    return (struct inertialAccel){accelX, accelY, accelZ};
 }
 
 int imu_changeMode(uint8_t mode) {

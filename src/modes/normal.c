@@ -12,24 +12,33 @@
 #include "normal.h"
 
 inertialAngles angles;
+inertialAccel accel;
 PIDController rollPID;
 PIDController pitchPID;
+PIDController yawPID;
 
 float rollAngle;
 float pitchAngle;
+float yawAccel;
 float rollIn;
 float pitchIn;
+float yawIn;
 
 float rollSetpoint;
 float pitchSetpoint;
 
+float yawOut;
+
 void mode_normal() {
     // Refresh input data from IMU and rx
-    angles = imu_getInertialAngles();
+    angles = imu_getAngles();
+    accel = imu_getAccel();
     rollAngle = angles.roll;
     pitchAngle = angles.pitch;
+    yawAccel = accel.y;
     rollIn = pwm_readDeg(0) - 90;
     pitchIn = pwm_readDeg(1) - 90;
+    yawIn = pwm_readDeg(2) - 90;
 
     // Failsafe to check if actual IMU values are too out of spec and revert to direct.
     // The PID loops should keep us from getting to this point, so we should disable if we ever get here.
@@ -49,9 +58,12 @@ void mode_normal() {
     if (pitchIn > DEADBAND_VALUE || pitchIn < -DEADBAND_VALUE) {
         pitchSetpoint += pitchIn * SETPOINT_SMOOTHING_VALUE;
     }
+    // Yaw is different--if we detect any aileron input whatsoever, we wil override what PID wants with the user input
+    // For this reason, the yaw deadband calculation is towards the end of the function (because we calculate inputs next)
+
     // Make sure the PID setpoints aren't set to unsafe values so we don't get weird outputs from PID,
     // this is also where our bank/pitch protections come in.
-    if (rollSetpoint > ROLL_UPPER_LIMIT || rollSetpoint < ROLL_LOWER_LIMIT) {
+    if (rollSetpoint > ROLL_LIMIT || rollSetpoint < -ROLL_LIMIT) {
         // If the roll values are unsafe, we do allow setting up to 67 but constant input is required, so check for that
         if (!(abs(rollIn) >= abs(rollSetpoint))) {
             if (rollSetpoint > 0) {
@@ -60,10 +72,10 @@ void mode_normal() {
                 rollSetpoint += 0.05;
             }
         }
-        if (rollSetpoint > ROLL_UPPER_LIMIT_HOLD) {
-            rollSetpoint = ROLL_UPPER_LIMIT_HOLD;
-        } else if (rollSetpoint < ROLL_LOWER_LIMIT_HOLD) {
-            rollSetpoint = ROLL_LOWER_LIMIT_HOLD;
+        if (rollSetpoint > ROLL_LIMIT_HOLD) {
+            rollSetpoint = ROLL_LIMIT_HOLD;
+        } else if (rollSetpoint < -ROLL_LIMIT_HOLD) {
+            rollSetpoint = -ROLL_LIMIT_HOLD;
         }
     }
     if (pitchSetpoint > PITCH_UPPER_LIMIT || pitchSetpoint < PITCH_LOWER_LIMIT) {
@@ -75,9 +87,26 @@ void mode_normal() {
         }
     }
 
-    // All input processing is complete, send the final outputs to the servos
+    // Yaw deadband calculation (described earlier)
+    if (yawIn > DEADBAND_VALUE || yawIn < -DEADBAND_VALUE) {
+        yawOut = yawIn;
+    } else {
+        // If there is no user input on rudder axis, first check if we are in a turn or not
+        // Keep in mind this is different than if the system is making inputs on ailerons! We only want this to activate during turns, not stabilizations.
+        if (rollSetpoint > DEADBAND_VALUE || rollSetpoint < -DEADBAND_VALUE) {
+            // If we are in a turn, set the yaw value to a reduced version of our aileron value in an attempt to coordinate our turn
+            yawOut = rollSetpoint * RUDDER_SMOOTHING_VALUE;
+        } else {
+            // If not, we must be in level flight, so we will set the PID output values to our output (rudder servo)
+            // This is more like an actual yaw damper that helps to eliminate yaw in stable flight
+            yawOut = yawPID.out;
+        }
+    }
+
+    // All input processing is now complete, send the final outputs to the servos
     servo_set(SERVO_AIL_PIN, (uint16_t)(rollPID.out + 90));
     servo_set(SERVO_ELEV_PIN, (uint16_t)(pitchPID.out + 90));
+    servo_set(SERVO_RUD_PIN, (uint16_t)(yawOut + 90));
 }
 
 // Internal function that we will later push to the second core to compute the PID math for all controllers
@@ -85,15 +114,19 @@ void computePID() {
     while (true) {
         pid_update(&rollPID, rollSetpoint, rollAngle);
         pid_update(&pitchPID, pitchSetpoint, pitchAngle);
+        // TODO: I probably need to limit/lower/deadband the acceleration value because I feel like it will be wayyy too twitchy, but I can't test at the moment
+        pid_update(&yawPID, 0.0f, yawAccel);
     }
 }
 
 void mode_normalInit() {
     // Set up PID controllers for roll and pitch io
-    rollPID = (PIDController){roll_kP, roll_kI, roll_kD, roll_tau, ROLL_LOWER_LIMIT_HOLD, ROLL_UPPER_LIMIT_HOLD, roll_integMin, roll_integMax, roll_kT};
+    rollPID = (PIDController){roll_kP, roll_kI, roll_kD, roll_tau, -AIL_LIMIT, AIL_LIMIT, roll_integMin, roll_integMax, roll_kT};
     pid_init(&rollPID);
-    pitchPID = (PIDController){pitch_kP, pitch_kI, pitch_kD, pitch_tau, PITCH_LOWER_LIMIT, PITCH_UPPER_LIMIT, pitch_integMin, pitch_integMax, pitch_kT};
+    pitchPID = (PIDController){pitch_kP, pitch_kI, pitch_kD, pitch_tau, -ELEV_LIMIT, ELEV_LIMIT, pitch_integMin, pitch_integMax, pitch_kT};
     pid_init(&pitchPID);
+    yawPID = (PIDController){yaw_kP, yaw_kI, yaw_kD, yaw_tau, -RUD_LIMIT, RUD_LIMIT, yaw_integMin, yaw_integMax, yaw_kT};
+    pid_init(&yawPID);
     // Wake the second core and tell it to compute PID values, that's all it will be doing
     multicore_launch_core1(computePID);
 }

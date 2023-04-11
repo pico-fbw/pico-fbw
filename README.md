@@ -2,36 +2,54 @@
 
 A fly-by-wire system for RC airplanes designed to run on the Rasperry Pi Pico microcontroller.
 
-This is still very much a work in progress/alpha project! Feel free to bookmark this and keep up on development, and be sure to let me know of any suggestions you may have. Thanks for stopping by!
+## **DISCLAIMER**
 
-## Development Goals
+This system is able to control most aspects of your aircraft. Even though there are limitations in place, *please* exercise extra caution when operating the aicraft so as not to harm yourself, others, or your aircraft! I have gone through extensive testing to make the system as safe as possible, but be aware that at the end of the day *you* are responsible for your own aircraft and any damages caused by it.
 
-- [x] At least 2, maybe 3 control modes
-  - [x] Direct: inputs from rx are transmitted directly to servos with minimal delay
-    - Do direct first, then see if I can do normal?
-  - [x] Normal: inputs from rx are monitored by computer and corrected for things such as limits, holding bank/pitch, etc. (look up what airbus normal law does lol)
-- [x] Control modes should be toggleable by a switch on tx
-- [x] Efficient and fast code so there is minimal delay between input, processing, and output (it shouldn't affect flying and reaction time)
-  - [x] Possibly do some multicore code? I know C is very fast but if it's not too hard, it might be useful to split the workload between the two cores. One core solely handles I/O (taking input from rx and actuating servos) and the other core does all of the FBW math, PID, etc.
-- [x] Scalability and flexibility (eg. should be able to redefine what pins to connect servos to, number of servos for different purposes, etc.)
-  - [x] Add some auto tuning capabilities--namely tuning the midpoint of the PWM input signal and possibly a guide/semi auto tuned PID
-    - [x] Try and make use of the flash to store these tuning values
-    - For the PID values, maybe make another program to store them in the 2nd to last sector of flash (last sector is PWM tuning currently); eg you can type PID values into the serial port. it should probably be better than forcing people to download and compile source...
-
-Future development ideas:
-
-- [ ] Rudder control? This would be in the form of a yaw damper. I can't currently think of how I would implement this, but this is pretty high on features I want in here. I left a lot of the original groundwork to control a rudder in the code for this exact reason.
-- [ ] Motor/throttle control?
-- [ ] Autopilot: maybe add a GPS module for pos/alt and make some sort of path/mission planner
-  - [ ] Adding on to that, more modes for the autopilot? Something like Ardupilot with auto takeoff, climb, cruise, approach, landing--efficively making it an autonomous drone basically.
-  - [ ] Integration with a more powerful chip? Like having another piece of software running on a Pi zero for example (and hopefully not C omg), this might actually be necessary if I want to do some higher level stuff like nested PIDs for gps, LNAV/VNAV so as to not overload the microprocessor. It also makes me look cooler.
-
-Eventually, this readme should have a:
-
-## Download
-
-## Setup
+Now, with that out of the way, let's get into the features of the system!
 
 ## Features
 
-## Building/Prerequisites
+- Typical features of a real-world fly-by-wire aircraft, such as:
+  - Limiting of pitch and bank angles
+  - Automatic in-flight stabilization using an onboard sensor unit
+  - Holding of requested angles
+  - Auto-coordinated turns using a yaw damper
+- Implementation of direct mode (user inputs are transmitted directly to flight controls)
+  - It can be easily activated with the use of a switch on the transmitter
+  - It can also be automatically activated if the system senses bad data
+- Fast and efficient computation leads to minimal input lag on the controls
+- Flexibility; the system can easily be reconfigured through a configuration file to suit your and your aircraft's needs.
+- Fully open-source codebase
+
+## Materials
+
+You will need a few materials in addition to your current RC plane setup. They are as follows:
+
+- Raspberry Pi Pico microcontroller (w/ data-capable micro-USB cable to flash the program)
+- BNO055 sensor
+- ~16 female-to-female jumper wires (aka DuPont connector)
+
+You can find a guide to sourcing these parts as well as my tested/preferred sources on our [materials wiki page](https://github.com/MylesAndMore/pico-fbw/wiki/Materials).
+
+## Download
+
+You can always find the latest stable release of the software on our releases page [here](https://github.com/MylesAndMore/pico-fbw/releases/latest).
+
+This binary is pre-built so you can drag and drop it onto your Pico as-is, but be aware it only ships with recomended configuration values. These values may need to be altered in your case as different aircraft behave very differently, and the values that work for me may not work for you. So please, be careful, and test thoroughly! Do not hesitate to reconfigure if you need to.
+
+## Setup
+
+The Pico acts like a person in the middle. Instead of your servos, ESC, and such being wired up directly to your reciever, instead, your reciever is wired up to the Pico so it can recieve and compute those inputs, and your output devices (like servos) are also wired up to the Pico so it can control them.
+
+It may seem daunting to to modify your existing setup to incorporate this, but rest assured, it is relatively simple and will not take you long. I've created a guide for you to check out [here](https://github.com/MylesAndMore/pico-fbw/wiki/_Setup) that outlines exactly how to wire things up and get going with the project!
+
+## Building & Configuring
+
+You can find all of the information about building and configuring the project on our wiki page [here](https://github.com/MylesAndMore/pico-fbw/wiki/_Building-&-Configuring.
+
+## Issues, Feedback, and Features
+
+If you experience any issues, have any ideas for new features, or just any general feedback about the project in general, don't hesitate to reach out! You can submit an issue on our [issues page](https://github.com/MylesAndMore/pico-fbw/issues/new)--just please be sure to label your issure accordingly. And if you are a developer looking to suggest or improve on our code, feel free to leave us an issue or [pull request](https://github.com/MylesAndMore/pico-fbw/compare)!
+
+Thanks for stopping by :)

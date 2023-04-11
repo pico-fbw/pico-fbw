@@ -20,7 +20,8 @@
 	static const uint8_t AXIS_MAP_CONF_REGISTER = 0x41;
 	static const uint8_t AXIS_MAP_SIGN_REGISTER = 0x42;
 
-	static const uint8_t EULER_REGISTER = 0x1A;
+	static const uint8_t EULER_BEGIN_REGISTER = 0x1A;
+	static const uint8_t ACCEL_BEGIN_REGISTER = 0x08;
 #endif
 
 /**
@@ -41,7 +42,7 @@ void imu_deinit();
 int imu_configure();
 
 /**
- * A struct containing heading, roll, and pitch angles of the aircraft (when filled using its corresponding method.)
+ * A struct containing heading, roll, and pitch angles of the aircraft (when filled using its corresponding method).
 */
 typedef struct inertialAngles {
     float heading;
@@ -50,10 +51,25 @@ typedef struct inertialAngles {
 } inertialAngles;
 
 /**
+ * A struct containing acceleration values on the X, Y, and Z axes (when filled using its corresponding method).
+*/
+typedef struct inertialAccel {
+	float x;
+	float y;
+	float z;
+} inertialAccel;
+
+/**
  * Gets the current angles of spatial orientation from the IMU.
  * @return an inertialAngles struct containing heading, roll, and pitch data.
 */
-struct inertialAngles imu_getInertialAngles();
+struct inertialAngles imu_getAngles();
+
+/**
+ * Gets the current acceleration values from the IMU.
+ * @return an intertialAccel struct containing acceleration data for the X, Y, and Z axes.
+*/
+struct inertialAccel imu_getAccel();
 
 /**
  * Changes the working mode of the IMU.
