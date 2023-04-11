@@ -21,7 +21,7 @@
 	static const uint8_t AXIS_MAP_SIGN_REGISTER = 0x42;
 
 	static const uint8_t EULER_BEGIN_REGISTER = 0x1A;
-	static const uint8_t ACCEL_BEGIN_REGISTER = 0x08;
+	static const uint8_t ACCEL_BEGIN_REGISTER = 0x28;
 #endif
 
 /**

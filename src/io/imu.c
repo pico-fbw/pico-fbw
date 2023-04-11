@@ -101,9 +101,13 @@ struct inertialAccel imu_getAccel() {
         setIMUSafe(false);
         return (struct inertialAccel){0};
     }
-    int16_t accelX = (accel_data[1] << 8) | accel_data[0];
-    int16_t accelY = (accel_data[3] << 8) | accel_data[2];
-    int16_t accelZ = (accel_data[5] << 8) | accel_data[4];
+    int16_t x = (accel_data[1] << 8) | accel_data[0];
+    int16_t y = (accel_data[3] << 8) | accel_data[2];
+    int16_t z = (accel_data[5] << 8) | accel_data[4];
+
+    float accelX = x / 100.00;
+    float accelY = y / 100.00;
+    float accelZ = z / 100.00;
     return (struct inertialAccel){accelX, accelY, accelZ};
 }
 

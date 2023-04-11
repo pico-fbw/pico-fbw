@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdbool.h>
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
 
@@ -12,30 +13,30 @@
 #include "normal.h"
 
 inertialAngles angles;
-inertialAccel accel;
 PIDController rollPID;
 PIDController pitchPID;
 PIDController yawPID;
 
 float rollAngle;
 float pitchAngle;
-float yawAccel;
+float yawAngle;
 float rollIn;
 float pitchIn;
 float yawIn;
 
 float rollSetpoint;
 float pitchSetpoint;
+float yawSetpoint;
 
+bool yawdamp_on = false;
 float yawOut;
 
 void mode_normal() {
     // Refresh input data from IMU and rx
     angles = imu_getAngles();
-    accel = imu_getAccel();
     rollAngle = angles.roll;
     pitchAngle = angles.pitch;
-    yawAccel = accel.y;
+    yawAngle = angles.heading;
     rollIn = pwm_readDeg(0) - 90;
     pitchIn = pwm_readDeg(1) - 90;
     yawIn = pwm_readDeg(2) - 90;
@@ -94,11 +95,19 @@ void mode_normal() {
         // If there is no user input on rudder axis, first check if we are in a turn or not
         // Keep in mind this is different than if the system is making inputs on ailerons! We only want this to activate during turns, not stabilizations.
         if (rollSetpoint > DEADBAND_VALUE || rollSetpoint < -DEADBAND_VALUE) {
-            // If we are in a turn, set the yaw value to a reduced version of our aileron value in an attempt to coordinate our turn
-            yawOut = rollSetpoint * RUDDER_SMOOTHING_VALUE;
+            // If we are in a turn, 
+            // first set the yaw damper as disabled,
+            yawdamp_on = false;
+            // then set the yaw value to a reduced version of our aileron value in an attempt to coordinate our turn
+            yawOut = rollPID.out * RUDDER_SMOOTHING_VALUE;
         } else {
+            // If the yaw damper is set as off still, that means we have just transitioned to this phase, so we should update the yaw setpoint
+            if (!yawdamp_on) {
+                yawSetpoint = yawAngle;
+            }
             // If not, we must be in level flight, so we will set the PID output values to our output (rudder servo)
             // This is more like an actual yaw damper that helps to eliminate yaw in stable flight
+            yawdamp_on = true;
             yawOut = yawPID.out;
         }
     }
@@ -114,8 +123,7 @@ void computePID() {
     while (true) {
         pid_update(&rollPID, rollSetpoint, rollAngle);
         pid_update(&pitchPID, pitchSetpoint, pitchAngle);
-        // TODO: I probably need to limit/lower/deadband the acceleration value because I feel like it will be wayyy too twitchy, but I can't test at the moment
-        pid_update(&yawPID, 0.0f, yawAccel);
+        pid_update(&yawPID, yawSetpoint, yawAngle);
     }
 }
 
@@ -134,4 +142,5 @@ void mode_normalInit() {
 void mode_normalReset() {
     rollSetpoint = 0.0f;
     pitchSetpoint = 0.0f;
+    yawSetpoint = 0.0f;
 }

@@ -52,10 +52,19 @@ int main() {
         pwm_calibrate(90.0f, 2000, 5, 5);
         // Check to make sure the calibration has written successfully, if not then blink LED medium and stop execution (with an infinite loop)
         if (!pwm_checkCalibration) {
-            led_blink(500);
+            led_blink(50);
             while (true) {
                 tight_loop_contents();
             }
+        }
+    }
+
+    // Check to make sure PWM calibration values seem alright, otherwise stop execution like above because bad things could happen...
+    // This is mainly to protect extremely high calibration values from being used, such as if a channel was accidentally unplugged during calubration
+    if (pwm_getCalibrationValue(0) > MAX_CALIBRATION_OFFSET || pwm_getCalibrationValue(0) < -MAX_CALIBRATION_OFFSET || pwm_getCalibrationValue(1) > MAX_CALIBRATION_OFFSET || pwm_getCalibrationValue(1) < -MAX_CALIBRATION_OFFSET || pwm_getCalibrationValue(2) > MAX_CALIBRATION_OFFSET || pwm_getCalibrationValue(2) < -MAX_CALIBRATION_OFFSET || pwm_getCalibrationValue(3) > MAX_CALIBRATION_OFFSET || pwm_getCalibrationValue(3) < -MAX_CALIBRATION_OFFSET) {
+        led_blink(500);
+        while (true) {
+            tight_loop_contents();
         }
     }
 

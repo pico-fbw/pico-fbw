@@ -24,15 +24,22 @@
 #define CONFIGURE_INPUTS_SEPERATELY
 
 /**
+ * The maximum value the system will accept as a calibration offset value for PWM input signals.
+ * If any of the calibration (aileron, elevator, rudder, or switch) channels are larger than this value, the system will throw an error and fail to initialize.
+ * Increase this value if you are experiening this error, however note you may be unprotected from bad calibration data and this can create large issues.
+*/
+#define MAX_CALIBRATION_OFFSET 20
+
+/**
  * The value that decides how much values from the reciever are scaled down before being added to the setpoint value.
  * If that made absolutely no sense--basically, smaller values mean handling will be more like a larger plane, and larger values mean
  * handling will be more like a typical RC plane. This shouldn't be much higher than 1 (if at all).
 */
 #define SETPOINT_SMOOTHING_VALUE 0.00075
 
-// The value that decides how much the aileron inputs are scaled down to become the rudder inputs.
+// The value that decides how much the aileron inputs are scaled up/down to become the rudder inputs.
 // Only applies during turns in normal mode.
-#define RUDDER_SMOOTHING_VALUE 0.1
+#define RUDDER_SMOOTHING_VALUE 1.5
 
 // If the degrees reading from any of the inputs are below this value, the inputs will be disregarded.
 // Only applies in normal mode.
@@ -86,16 +93,16 @@
 // This value DOES need to be negative!!
 #define PITCH_LOWER_LIMIT -15
 
-/* Note that all control limits are bypassed in direct mode. */
+/* Note that all control limits apply to both directions, specify how much the SERVOS move, and are bypassed in direct mode. */
 
 // The maximum degree value the system is allowed to move the ailerons to.
-#define AIL_LIMIT 30
+#define AIL_LIMIT 25
 
 // The maximum degree value the system is allowed to move the elevators to.
-#define ELEV_LIMIT 20
+#define ELEV_LIMIT 15
 
 // The maximum rudder input the yaw damper/turn coordinator is allowed to make.
-#define RUD_LIMIT 15
+#define RUD_LIMIT 50
 
 
 

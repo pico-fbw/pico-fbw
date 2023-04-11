@@ -28,7 +28,8 @@ You will need a few materials in addition to your current RC plane setup. They a
 
 - Raspberry Pi Pico microcontroller (w/ data-capable micro-USB cable to flash the program)
 - BNO055 sensor
-- ~16 female-to-female jumper wires (aka DuPont connector)
+- ~7 female-to-female jumper wires (aka DuPont connector)
+- ~9 male-to-female jumper wires (aka DuPont connector)
 
 You can find a guide to sourcing these parts as well as my tested/preferred sources on our [materials wiki page](https://github.com/MylesAndMore/pico-fbw/wiki/Materials).
 
