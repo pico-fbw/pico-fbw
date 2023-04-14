@@ -4,6 +4,7 @@ add_library(fbw_io
     pwm.c
     imu.c
     led.c
+    flash.c
 )
 
 # Import libraries

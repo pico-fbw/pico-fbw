@@ -30,10 +30,9 @@
 #include "pico/stdlib.h"
 #include "hardware/pio.h"
 #include "hardware/irq.h"
-#include "hardware/flash.h"
-#include "hardware/sync.h"
 
 #include "led.h"
+#include "flash.h"
 #include "../config.h"
 
 #include "pwm.h"
@@ -137,19 +136,15 @@ float pwm_readDegRaw(uint pin) {
     return (180000 * ((float)pulsewidth[pin] * 0.000000016 - 0.001));
 }
 
-/* Begin calibration/flash functions */
-
-// Set the flash offset to the last flash sector to be safe, this is where we will store our PWM calibration data
-#define FLASH_OFFSET (PICO_FLASH_SIZE_BYTES - FLASH_SECTOR_SIZE)
-// Create a pointer variable which points to the location in flash where we will store our calibration data
-uint8_t *pwm_calibration_data = (uint8_t *) (XIP_BASE + FLASH_OFFSET);
+/* Begin calibration functions */
 
 void pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint run_times) {
     // Start blinking LED to signify we are calibrating
     led_blink(100);
-    // Create an array to store our calibration data which we will later write to flash
-    // The array is created with the size of the amount of floats we can store in one page (one writable area) of flash
-    float calibration_data[FLASH_PAGE_SIZE/sizeof(float)];
+    // Create an array where we will arrange our data to later write
+    float calibration_data[CONFIG_SECTOR_SIZE];
+    // The first four bytes will signify if we have run a calibration before, a value of 0.5 corresponds to true in this case so we add that to the array
+    calibration_data[0] = 0.5f;
     // Check if we are calibrating per pin or not
     #ifdef CONFIGURE_INPUTS_SEPERATELY
         // If yes, complete the calibration for all pins, account for mode switch reading or not
@@ -183,25 +178,17 @@ void pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint
         // Get our final average and save it to the correct byte in our array which we write to flash
         calibration_data[pin + 1] = final_difference / run_times;
     }
-    // The first four bytes will signify if we have run a calibration before, a value of 0.5 corresponds to true in this case so we add that to the array
-    calibration_data[0] = 0.5f;
-    // Disable interrupts because they can mess with our writing
-    uint32_t intr = save_and_disable_interrupts();
-    // Write our data (cast to an 8bit uint because that's the only type you can write to flash) and restore interrupts
-    flash_range_program(FLASH_OFFSET, (uint8_t *)calibration_data, FLASH_PAGE_SIZE);
-    restore_interrupts (intr);
+    // Write calibration data to sector "0", last sector of flash
+    flash_write(0, calibration_data);
     led_blink_stop();
 }
 
 int pwm_checkCalibration() {
-    // Get the address where the config flag is stored
-    float* calibration_done_ptr = (float*) pwm_calibration_data;
-    // Retrieve and return the actual flag
-    float calibration_done = *calibration_done_ptr;
-    // Return true/false based on what value we actually saw vs. what we expect
-    if (calibration_done == 0.5f) {
+    // Read the first value from the first sector of flash, this holds the value that is changed when calibration is completed, and
+    // return true/false based on what value we actually saw vs. what we expect
+    if (flash_read(0, 0) == 0.5f) {
         return true;
-    // Usually, this will turn out to be 255/0xFF if the flash has not been programmed yet
+    // Usually, this will turn out to be either 0 if the flash has not been programmed yet or 1 if it has been previously erased/reset
     } else {
         return false;
     }
@@ -211,19 +198,12 @@ float pwm_getCalibrationValue(uint pin) {
     // Check if we originally only calibrated one PWM and if so, set pin to that regardless
     #ifndef CONFIGURE_INPUTS_SEPERATELY
         pin = 0;
-    #endif    
-    // Move the pointer forward by 4 + 4 * pin bytes to skip the calibration value and just get the requested config (because floats are 4 bytes)
-    float* calibration_val_ptr = (float*) (pwm_calibration_data + (4 + sizeof(float) * pin));
-    // Retrieve and return the actual calibration value
-    float calibration_val = *calibration_val_ptr;
-    return calibration_val;
+    #endif
+    // Read the value of pin + 1 from the first sector, this will ensure we don't read the calibration flag instead
+    return flash_read(0, pin + 1);
 }
 
 void pwm_resetCalibration() {
-    // Disable interrupts because they can mess with erasing
-    uint32_t intr = save_and_disable_interrupts();
-    // Erase the sector we store PWM calibration offsets in
-    flash_range_erase(FLASH_OFFSET, FLASH_SECTOR_SIZE);
-    // Re-enable interrupts
-    restore_interrupts (intr);
+    // PWM calibration values (and its respective flag) are stored in sector "0" of flash so we erase that to reset everything
+    flash_erase(0);
 }
