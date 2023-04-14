@@ -86,8 +86,8 @@ void pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint
 int pwm_checkCalibration();
 
 /**
- * @return the calibration value from PWM calibration.
  * @param pin the pin (0-3 to get the value of)
+ * @return the calibration value from PWM calibration.
  * Be aware that this value may not be cohesive; this function does not check to see whether or not a calibration has been done, so it is able to return random data.
 */
 float pwm_getCalibrationValue(uint pin);
