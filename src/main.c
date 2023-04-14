@@ -104,7 +104,6 @@ int main() {
                     if (getMode() != 0) {
                         setMode(0);
                     }
-                    setMode(0);
                 } else {
                     // Upper pos, normal
                     if (getMode() != 1) {
@@ -120,7 +119,6 @@ int main() {
                     if (getMode() != 0) {
                         setMode(0);
                     }
-                    setMode(0);
                 } else if (pwm_readDeg(3) > 95) {
                     // Upper pos, unused (possibly autopilot in future?)
                 } else {
