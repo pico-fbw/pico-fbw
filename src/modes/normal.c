@@ -37,6 +37,10 @@ void mode_normal() {
     rollAngle = angles.roll;
     pitchAngle = angles.pitch;
     yawAngle = angles.heading;
+    // Convert the yaw angle to a value from -180 to 180 like all other dead instead of 0 to 359 (heading)
+    if (yawAngle >= 180) {
+        yawAngle -= 360;
+    }
     rollIn = pwm_readDeg(0) - 90;
     pitchIn = pwm_readDeg(1) - 90;
     yawIn = pwm_readDeg(2) - 90;
@@ -143,4 +147,5 @@ void mode_normalReset() {
     rollSetpoint = 0.0f;
     pitchSetpoint = 0.0f;
     yawSetpoint = 0.0f;
+    yawdamp_on = false;
 }
