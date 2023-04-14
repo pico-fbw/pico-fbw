@@ -95,7 +95,7 @@ int main() {
             // Normal mode
             mode_normal();
         }
-        // Check every cycle to see if the mode needs to be swiched
+        // Enable/disable correct mode switching code
         #ifdef MODE_SWITCH_ENABLE
             #ifdef SWITCH_2_POS
                 if (pwm_readDeg(3) < 90) {
@@ -120,7 +120,10 @@ int main() {
                         setMode(0);
                     }
                 } else if (pwm_readDeg(3) > 95) {
-                    // Upper pos, unused (possibly autopilot in future?)
+                    // Autopilot/tuning modes (will automatically switch between both in modes.c)
+                    if (getMode() != 2) {
+                        setMode(2);
+                    }
                 } else {
                     // Middle pos, normal
                     if (getMode() != 1) {

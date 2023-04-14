@@ -3,6 +3,8 @@ add_library(fbw_modes
     modes.c
     direct.c
     normal.c
+    auto.c
+    tune.c
 )
 
 # Import libraries

@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include "pico/stdlib.h"
 
 #include "../io/imu.h"
@@ -40,10 +41,11 @@ void setMode(uint mode) {
     if (mode == 0) {
         // Set the current working mode
         cmode = mode;
-        // Mode has been set to direct, quick blink LED (IMU error after startup)
-        led_blink(250);
-        // Reset normal mode
-        // This is just in case we go back to normal mode, we don't want to keep the previous setpoints and have the system snap back to them/
+        // Only set LED as blinking if the IMU has encountered an error, not if the user purposely enters direct mode
+        if (!imuDataSafe) {
+            led_blink(250);
+        }
+        // Reset normal mode, this is just in case we go back to normal mode, we don't want to keep the previous setpoints and have the system snap back to them/
         mode_normalReset();
         /*
         THIS METHOD IS UNUSED, I2C protocol freezes up after a disconnection and I couldn't find a solution, so it is disabled for now
@@ -58,6 +60,12 @@ void setMode(uint mode) {
             // Mode has been set to normal
             led_blink_stop();
         }
+    } else if (mode == 2) {
+        if (imuDataSafe) {
+            cmode = mode;
+            led_blink_stop();
+        }
+        // TODO: auto enter tuning mode if PID tuning has not been done yet, do this once I figure out specifics of how that data is stored
     }
 }
 uint getMode() {
