@@ -6,10 +6,7 @@
 #include "io/imu.h"
 #include "io/led.h"
 #include "modes/modes.h"
-#include "modes/direct.h"
 #include "modes/normal.h"
-#include "modes/auto.h"
-#include "modes/tune.h"
 #include "config.h"
 
 int main() {
@@ -90,53 +87,28 @@ int main() {
 
     // Enter main program loop
     while (true) {
-        if (getMode() == 0) {
-            // Direct mode
-            mode_direct();
-        } else if (getMode() == 1) {
-            // Normal mode
-            mode_normal();
-        } else if (getMode() == 2) {
-            // Auto mode
-            mode_auto();
-        } else if (getMode() == 3)  {
-            // Tune mode
-            mode_tune();
-        }
         // Enable/disable correct mode switching code
         #ifdef MODE_SWITCH_ENABLE
             #ifdef SWITCH_2_POS
                 if (pwm_readDeg(3) < 90) {
-                    // Lower pos, direct
-                    // Keep from spamming mode changes
-                    if (getMode() != 0) {
-                        setMode(0);
-                    }
+                    // Lower pos
+                    mode(DIRECT);
                 } else {
-                    // Upper pos, normal
-                    if (getMode() != 1) {
-                        setMode(1);
-                    }
+                    // Upper pos
+                    mode(NORMAL);
                 }
             #endif // switch_2_pos
             #ifdef SWITCH_3_POS
                 // Similar to two-way switch except different logic for three pos
                 if (pwm_readDeg(3) < 85) {
-                    // Lower pos, direct
-                    // Keep from spamming mode changes
-                    if (getMode() != 0) {
-                        setMode(0);
-                    }
+                    // Lower pos
+                    mode(DIRECT);
                 } else if (pwm_readDeg(3) > 95) {
-                    // Autopilot/tuning modes (will automatically switch between both in modes.c)
-                    if (getMode() != 2) {
-                        setMode(2);
-                    }
+                    // Upper pos
+                    mode(AUTO);
                 } else {
-                    // Middle pos, normal
-                    if (getMode() != 1) {
-                        setMode(1);
-                    }
+                    // Middle pos
+                    mode(NORMAL);
                 }
             #endif // switch_3_pos
         #endif // mode_switch_enable

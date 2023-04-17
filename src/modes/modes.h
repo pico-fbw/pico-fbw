@@ -1,22 +1,20 @@
 #ifndef modes_h
 #define modes_h
 
-/**
- * Sets the current mode of the FBW system.
- * 0 - direct
- * 1 - normal
-*/
-void setMode(uint mode);
+// Define internal mode aliases
+#define DIRECT 0
+#define NORMAL 1
+#define AUTO 2
+#define TUNE 3
 
 /**
- * Gets the current mode of the FBW system.
- * 0 - direct
- * 1 - normal
+ * Runs the specified mode of the system.
+ * Additionally, if the system is not already set into the specified mode, it will run the mode starting code.
 */
-uint getMode();
+void mode(uint smode);
 
 /**
- * Defines if the IMU data is safe to use or not.
+ * Declares whether or not the IMU data is safe to use.
 */
 void setIMUSafe(int state);
 
