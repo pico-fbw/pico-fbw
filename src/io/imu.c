@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include "pico/stdlib.h"
 #include "pico/binary_info.h"
 #include "hardware/i2c.h"
@@ -50,7 +51,7 @@ void imu_deinit() {
     i2c_deinit(i2c_default);
 }
 
-int imu_configure() {
+bool imu_configure() {
     // Use internal oscillator
     imu_write(SYS_REGISTER, 0x40);
     // Reset all interrupt status bits
@@ -111,7 +112,7 @@ struct inertialAccel imu_getAccel() {
     return (struct inertialAccel){accelX, accelY, accelZ};
 }
 
-int imu_changeMode(uint8_t mode) {
+bool imu_changeMode(uint8_t mode) {
     imu_write(OPR_MODE_REGISTER, mode);
     sleep_ms(100);
     // Check to ensure mode has changed properly by reading it back
@@ -119,9 +120,9 @@ int imu_changeMode(uint8_t mode) {
     i2c_write_blocking(i2c_default, CHIP_REGISTER, &OPR_MODE_REGISTER, 1, true);
     i2c_read_blocking(i2c_default, CHIP_REGISTER, &currentMode, 1, false);
     if (currentMode == mode) {
-        return 0;
+        return true;
     } else {
-        return 1;
+        return false;
     }
 }
 

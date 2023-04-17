@@ -26,6 +26,7 @@
  * Huge thanks to 'markushi' on GitHub for developing the bulk of this servo library! (slightly modified by MylesAndMore)
  * Check them out here: https://github.com/markushi/pico-servo
 */
+#include <stdbool.h>
 
 #include "hardware/clocks.h"
 #include "hardware/gpio.h"
@@ -35,13 +36,13 @@
 #include "servo.h"
 #include "../config.h"
 
-int servo_disable(const uint gpio_pin) {
+bool servo_disable(const uint gpio_pin) {
     const uint8_t slice = pwm_gpio_to_slice_num(gpio_pin);
     pwm_set_enabled(slice, false);
-    return 0;
+    return true;
 }
 
-int servo_enable(const uint gpio_pin) {
+bool servo_enable(const uint gpio_pin) {
     gpio_set_function(gpio_pin, GPIO_FUNC_PWM);
     const uint8_t slice = pwm_gpio_to_slice_num(gpio_pin);
 
@@ -75,10 +76,10 @@ int servo_enable(const uint gpio_pin) {
     pwm_hw->slice[slice].div = div16_top;
     pwm_hw->slice[slice].top = top;
 
-    return 0;
+    return true;
 }
 
-int servo_set(const uint gpio_pin, const uint16_t degree) {
+bool servo_set(const uint gpio_pin, const uint16_t degree) {
     // values have to be between 0 and 180
     // SERVO_TOP_MAX = 100% full duty cycle
 

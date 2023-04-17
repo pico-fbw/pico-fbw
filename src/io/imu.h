@@ -37,9 +37,9 @@ void imu_deinit();
 
 /**
  * Configures the IMU to send inertial reference data.
- * @return 0 if success, 1 if failure.
+ * @return true if success, false if failure.
 */
-int imu_configure();
+bool imu_configure();
 
 /**
  * A struct containing heading, roll, and pitch angles of the aircraft (when filled using its corresponding method).
@@ -74,9 +74,9 @@ struct inertialAccel imu_getAccel();
 /**
  * Changes the working mode of the IMU.
  * @param mode The code of the mode to change into (for example, 0x0C for NDOF).
- * @return 0 if success, 1 if failure.
+ * @return true if success, false if failure.
 */
-int imu_changeMode(uint8_t mode);
+bool imu_changeMode(uint8_t mode);
 
 /**
  * A low(er)-level method that writes a value directly to the IMU over I2C.

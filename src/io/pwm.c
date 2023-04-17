@@ -27,6 +27,7 @@
  * Check them out here: https://github.com/GitJer/Some_RPI-Pico_stuff/tree/main/PwmIn/PwmIn_4pins
 */
 
+#include <stdbool.h>
 #include "pico/stdlib.h"
 #include "hardware/pio.h"
 #include "hardware/irq.h"
@@ -183,7 +184,7 @@ void pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint
     led_blink_stop();
 }
 
-int pwm_checkCalibration() {
+bool pwm_checkCalibration() {
     // Read the first value from the first sector of flash, this holds the value that is changed when calibration is completed, and
     // return true/false based on what value we actually saw vs. what we expect
     if (flash_read(0, 0) == 0.5f) {
@@ -201,9 +202,4 @@ float pwm_getCalibrationValue(uint pin) {
     #endif
     // Read the value of pin + 1 from the first sector, this will ensure we don't read the calibration flag instead
     return flash_read(0, pin + 1);
-}
-
-void pwm_resetCalibration() {
-    // PWM calibration values (and its respective flag) are stored in sector "0" of flash so we erase that to reset everything
-    flash_erase(0);
 }

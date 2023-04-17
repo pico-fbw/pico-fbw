@@ -31,7 +31,7 @@ int main() {
 
     // Set up and test PWM (servo) outputs
     const uint8_t servos[] = {SERVO_AIL_PIN, SERVO_ELEV_PIN, SERVO_RUD_PIN};
-    const uint16_t degrees[] = {135, 45};
+    const uint8_t degrees[] = {135, 45};
     for (int s = 0; s < 3; s++) {
         servo_enable(servos[s]);
     }
@@ -40,7 +40,7 @@ int main() {
             servo_set(servos[s], degrees[d]);
         }
         // This delay is purposely not long enough for the servos to reach that final degree value, the test is just to see if they move in both directions
-        sleep_ms(300);
+        sleep_ms(200);
     }
 
     // If PWM has not been previously calibrated (likely first boot),
@@ -71,7 +71,7 @@ int main() {
     sleep_until(imu_safe);
     // Initialize and configure IMU unit
     if (imu_init() == 0) {
-        if (imu_configure() == 0) {
+        if (imu_configure()) {
             // If IMU passes init and configure tests, set IMU data as safe to use
             setIMUSafe(true);
             // Initialize normal mode
