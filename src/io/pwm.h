@@ -81,9 +81,9 @@ void pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint
 
 /**
  * Checks if the PWM calibration has been run before.
- * @return 1 if calibration has been run previously, 0 if not.
+ * @return true if calibration has been run previously, false if not.
 */
-int pwm_checkCalibration();
+bool pwm_checkCalibration();
 
 /**
  * @param pin the pin (0-3 to get the value of)
@@ -91,10 +91,5 @@ int pwm_checkCalibration();
  * Be aware that this value may not be cohesive; this function does not check to see whether or not a calibration has been done, so it is able to return random data.
 */
 float pwm_getCalibrationValue(uint pin);
-
-/**
- * Resets the PWM calibration values and status (the sector in flash that holds these values).
-*/
-void pwm_resetCalibration();
 
 #endif // pwm_h

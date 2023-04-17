@@ -1,7 +1,7 @@
 #include "pico/stdlib.h"
 #include "pico/bootrom.h"
 
-#include "io/pwm.h"
+#include "io/flash.h"
 
 #if !PICO_NO_FLASH
     #warning "It is advised to build the reset program into SRAM and not flash."
@@ -11,8 +11,9 @@
 #endif
 
 int main() {
-    // Erase flash containing PWM calibration data
-    pwm_resetCalibration();
+    // Erase only the flash sectors containing pwm and pid calibration values
+    flash_erase(0);
+    flash_erase(1);
     // Flash LED a few times to indicate success
     gpio_init(PICO_DEFAULT_LED_PIN);
     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);

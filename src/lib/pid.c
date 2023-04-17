@@ -42,7 +42,7 @@ void pid_init(PIDController *pid) {
 
 }
 
-float pid_update(PIDController *pid, float setpoint, float measurement) {
+void pid_update(PIDController *pid, float setpoint, float measurement) {
 
 	/*
 	* Error signal

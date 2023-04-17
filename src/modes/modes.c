@@ -77,9 +77,13 @@ void mode(uint smode) {
         case AUTO:
             if (cmode != AUTO) {
                 if (imuDataSafe) {
-                    cmode = smode;
+                    // Enter auto mode if tuning has been done before, otherwise automatically enter tuning mode
+                    if (mode_tuneCheckCalibration()) {
+                        cmode = AUTO;
+                    } else {
+                        cmode = TUNE;
+                    }
                     led_blink_stop();
-                    // TODO: auto enter tuning mode if PID tuning has not been done yet, do this once I figure out specifics of how that data is stored
                 } else {
                     mode(0);
                 }
