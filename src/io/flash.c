@@ -9,7 +9,7 @@ void flash_write(uint sector, float data[]) {
     // Disable interrupts because they can mess with our writing
     uint32_t intr = save_and_disable_interrupts();
     // Write our data (cast to an 8bit uint because that's the only type you can write to flash) and then restore interrupts
-    flash_range_program(offset, (uint8_t *) (data), FLASH_PAGE_SIZE);
+    flash_range_program(offset, (uint8_t *) (data), FLASH_SECTOR_SIZE);
     restore_interrupts (intr);
 }
 

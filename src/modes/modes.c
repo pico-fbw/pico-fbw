@@ -59,11 +59,16 @@ void setMode(uint mode) {
             cmode = mode;
             // Mode has been set to normal
             led_blink_stop();
+        } else {
+            // If we are unable to set to normal mode, revert to direct mode
+            setMode(0);
         }
     } else if (mode == 2) {
         if (imuDataSafe) {
             cmode = mode;
             led_blink_stop();
+        } else {
+            setMode(0);
         }
         // TODO: auto enter tuning mode if PID tuning has not been done yet, do this once I figure out specifics of how that data is stored
     }

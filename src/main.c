@@ -8,6 +8,8 @@
 #include "modes/modes.h"
 #include "modes/direct.h"
 #include "modes/normal.h"
+#include "modes/auto.h"
+#include "modes/tune.h"
 #include "config.h"
 
 int main() {
@@ -94,6 +96,12 @@ int main() {
         } else if (getMode() == 1) {
             // Normal mode
             mode_normal();
+        } else if (getMode() == 2) {
+            // Auto mode
+            mode_auto();
+        } else if (getMode() == 3)  {
+            // Tune mode
+            mode_tune();
         }
         // Enable/disable correct mode switching code
         #ifdef MODE_SWITCH_ENABLE
