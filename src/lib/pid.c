@@ -96,7 +96,4 @@ void pid_update(PIDController *pid, float setpoint, float measurement) {
     pid->prevError       = error;
     pid->prevMeasurement = measurement;
 
-	/* Return controller output */
-    return pid->out;
-
 }

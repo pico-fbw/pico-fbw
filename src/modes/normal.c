@@ -37,7 +37,7 @@ void mode_normal() {
     rollAngle = angles.roll;
     pitchAngle = angles.pitch;
     yawAngle = angles.heading;
-    // Convert the yaw angle to a value from -180 to 180 like all other dead instead of 0 to 359 (heading)
+    // Convert the yaw angle to a value from -180 to 180 like all other values instead of 0 to 359 (heading)
     if (yawAngle >= 180) {
         yawAngle -= 360;
     }

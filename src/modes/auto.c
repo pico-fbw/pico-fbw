@@ -6,5 +6,5 @@
 
 void mode_auto() {
     // Auto mode is not implemented yet! Switch back to normal mode.
-    mode(1);
+    mode(NORMAL);
 }
