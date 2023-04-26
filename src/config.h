@@ -105,7 +105,6 @@
 #define RUD_LIMIT 50
 
 
-
 /** @section tuning 
  * Changing these values are for experts ONLY!! The system's behavior can be radically altered through these values which could cause
  * crashes or even injuries, so PLEASE be careful with these values and test thoroughly!
@@ -113,32 +112,41 @@
  * It is suggested that you read up on what each of these values do in a PID control loop before attempting to alter them if you wish.
 */
 
-// PID tuning values for the roll axis PID controller.
-#define roll_kP 1.0
-#define roll_kI 0.0025
-#define roll_kD 0.001
-#define roll_tau 0.001
-#define roll_integMin -50.0
-#define roll_integMax 50.0
-#define roll_kT 0.01
+// PID auto tuning rules
+// #define PID_AUTOTUNE // comment if you want to manually set PID gains. Only do this if you really know what you're doing!!
+#ifdef PID_AUTOTUNE
+	// Some more sample values can be found in the pidtune.h file.
+	#define TUNING_KP 100
+	#define TUNING_KI 40
+	#define TUNING_KD 60
+#else
+	// PID tuning values for the roll axis PID controller.
+	#define roll_kP 1.0
+	#define roll_kI 0.0025
+	#define roll_kD 0.001
+	#define roll_tau 0.001
+	#define roll_integMin -50.0
+	#define roll_integMax 50.0
+	#define roll_kT 0.01
 
-// PID tuning values for the pitch axis PID controller.
-#define pitch_kP 1.0
-#define pitch_kI 0.0025
-#define pitch_kD 0.001
-#define pitch_tau 0.001
-#define pitch_integMin -50.0
-#define pitch_integMax 50.0
-#define pitch_kT 0.01
+	// PID tuning values for the pitch axis PID controller.
+	#define pitch_kP 1.0
+	#define pitch_kI 0.0025
+	#define pitch_kD 0.001
+	#define pitch_tau 0.001
+	#define pitch_integMin -50.0
+	#define pitch_integMax 50.0
+	#define pitch_kT 0.01
 
-// PID tuning values for the yaw axis PID controller.
-#define yaw_kP 1.0
-#define yaw_kI 0.0025
-#define yaw_kD 0.001
-#define yaw_tau 0.001
-#define yaw_integMin -50.0
-#define yaw_integMax 50.0
-#define yaw_kT 0.01
+	// PID tuning values for the yaw axis PID controller.
+	#define yaw_kP 1.0
+	#define yaw_kI 0.0025
+	#define yaw_kD 0.001
+	#define yaw_tau 0.001
+	#define yaw_integMin -50.0
+	#define yaw_integMax 50.0
+	#define yaw_kT 0.01
+#endif
 
 
 /** @section sensors */

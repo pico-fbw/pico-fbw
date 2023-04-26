@@ -131,6 +131,7 @@ void computePID() {
     }
 }
 
+// TODO: redo how constants are pulled in because we bave autotuning now
 void mode_normalInit() {
     // Set up PID controllers for roll and pitch io
     rollPID = (PIDController){roll_kP, roll_kI, roll_kD, roll_tau, -AIL_LIMIT, AIL_LIMIT, roll_integMin, roll_integMax, roll_kT};
