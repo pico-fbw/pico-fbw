@@ -1,20 +1,41 @@
 #include <stdbool.h>
 #include "pico/stdlib.h"
 
+#include "modes.h"
 #include "../io/flash.h"
+#include "../io/pwm.h"
+#include "../lib/pidtune.h"
 #include "../config.h"
 
 #include "tune.h"
 
-void mode_tune() {
-    // Create an array to store the tuning data
-    float tuning_data[CONFIG_SECTOR_SIZE];
+float rollIn;
+float pitchIn;
+// An array to store the tuning data later
+float tuning_data[CONFIG_SECTOR_SIZE];
+
+void mode_tuneInit() {
     // The first four bytes will signify if we have run a calibration before, a value of 0.3 floating point corresponds to true in this case so we add that to the array
     tuning_data[0] = 0.3f;
-    // TODO: while loop to wait until PID tuning is complete and then--
+    // TODO: other autotune init things
 
-    // Flash the tuning data to the second sector of flash
-    flash_write(1, tuning_data);
+}
+
+void mode_tune() {
+    // Check if there are any control inputs being made, if so, stop tuning revert to direct mode
+    rollIn = pwm_readDeg(0) - 90;
+    pitchIn = pwm_readDeg(1) - 90;
+    if (rollIn > DEADBAND_VALUE || rollIn < -DEADBAND_VALUE || pitchIn > DEADBAND_VALUE || pitchIn < -DEADBAND_VALUE) {
+        pidtune_cancel();
+        mode(DIRECT);
+    } else {
+        pidtune_runtime();
+    }
+    // TODO: this if statement should activate when tuning is complete
+    if (false) {
+        // Flash the tuning data to the second sector of flash
+        flash_write(1, tuning_data);
+    }
 }
 
 bool mode_tuneCheckCalibration() {

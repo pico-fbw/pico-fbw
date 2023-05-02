@@ -2,6 +2,11 @@
 #define tune_h
 
 /**
+ * Initializes parameters to begin auto tuning.
+*/
+void mode_tuneInit();
+
+/**
  * Executes one cycle of the tune mode.
 */
 void mode_tune();
