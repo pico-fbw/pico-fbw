@@ -3,15 +3,15 @@
 
 /**
  * Some example PID auto tuning rules:
- * { {  44, 24,   0 } },  // ZIEGLER_NICHOLS_PI
- * { {  34, 40, 160 } },  // ZIEGLER_NICHOLS_PID
- * { {  64,  9,   0 } },  // TYREUS_LUYBEN_PI
- * { {  44,  9, 126 } },  // TYREUS_LUYBEN_PID
- * { {  66, 80,   0 } },  // CIANCONE_MARLIN_PI
- * { {  66, 88, 162 } },  // CIANCONE_MARLIN_PID
- * { {  28, 50, 133 } },  // PESSEN_INTEGRAL_PID
- * { {  60, 40,  60 } },  // SOME_OVERSHOOT_PID
- * { { 100, 40,  60 } }   // NO_OVERSHOOT_PID
+ * { {  44, 24,   0 } }  ZIEGLER_NICHOLS_PI
+ * { {  34, 40, 160 } }  ZIEGLER_NICHOLS_PID
+ * { {  64,  9,   0 } }  TYREUS_LUYBEN_PI
+ * { {  44,  9, 126 } }  TYREUS_LUYBEN_PID
+ * { {  66, 80,   0 } }  CIANCONE_MARLIN_PI
+ * { {  66, 88, 162 } }  CIANCONE_MARLIN_PID
+ * { {  28, 50, 133 } }  PESSEN_INTEGRAL_PID
+ * { {  60, 40,  60 } }  SOME_OVERSHOOT_PID
+ * { { 100, 40,  60 } }   NO_OVERSHOOT_PID
 */
 
 // TODO: do I need to move any of these to the config file; are they that important?
@@ -74,6 +74,8 @@ static const float CONST_PI          = 3.14159265358979323846;
 static const float CONST_SQRT2_DIV_2 = 0.70710678118654752440;
 
 
+// TODO: documentation of autotune functions
+
 /**
  * 
 */
@@ -90,7 +92,9 @@ void pidtune_cancel();
 bool pidtune_runtime();
 
 /**
- * 
+ * Calculates offset of oscillation in process value as a proportion of the amplitude approximation.
+ * Assumes a trapezoidal oscillation that is stationary over the last 2 relay cycles. 
+ * Needs constant phase lag, so recent changes to noiseBand are bad
 */
 float pidtune_processValueOffset(float avgStep1, float avgStep2);
 
@@ -102,7 +106,17 @@ void pidtune_setOutputStep(float step);
 /**
  * 
 */
-void pidtune_setControlType(unsigned char type);
+void pidtune_setKpDivisor(uint8_t kPdiv);
+
+/**
+ * 
+*/
+void pidtune_setKiDivisor(uint8_t kIdiv);
+
+/**
+ * 
+*/
+void pidtune_setKdDivisor(uint8_t kDdiv);
 
 /**
  * 
