@@ -63,7 +63,7 @@ float workingNoiseBand;
 float workingOstep;
 float inducedAmplitude;
 uint16_t KpDiv, TiDiv, TdDiv;
-float Kp, Ti, Td;
+float Kp, Ti, Td = 0.0f;
   
 #ifdef AUTOTUNE_RELAY_BIAS  
     float relayBias;
@@ -166,12 +166,10 @@ bool pidtune_runtime() {
                                 // TODO: work on this? an issue with the library but still I can probably fix it
                                 float relayHigh = outputStart + workingOstep + relayBias;
                                 float relayLow  = outputStart - workingOstep + relayBias;
-                                if (relayHigh > outMax)
-                                {
+                                if (relayHigh > outMax) {
                                     relayHigh = outMax;
                                 }
-                                if (relayLow  < outMin)
-                                {
+                                if (relayLow  < outMin) {
                                     relayHigh = outMin;
                                 }
                                 workingOstep = 0.5 * (relayHigh - relayLow);
@@ -491,10 +489,10 @@ float pidtune_getKp() {
     return Kp;
 }
 
-float pidtune_getKi() {
+float pidtune_getTi() {
     return Kp / Ti;
 }
 
-float pidtune_getKd() {
+float pidtune_getTd() {
     return Kp * Td;
 }

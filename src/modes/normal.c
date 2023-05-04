@@ -131,7 +131,7 @@ void computePID() {
     }
 }
 
-// TODO: redo how constants are pulled in because we bave autotuning now
+// TODO: redo how constants are pulled in because we have autotuning now
 // also maybe disallow running normal mode without either autotuning completed or manual tuning specified?
 void mode_normalInit() {
     // Set up PID controllers for roll and pitch io

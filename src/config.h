@@ -113,13 +113,14 @@
 */
 
 // PID auto tuning rules
-// #define PID_AUTOTUNE // comment if you want to manually set PID gains. Only do this if you really know what you're doing!!
+#define PID_AUTOTUNE // comment if you want to manually set PID gains. Only do this if you really know what you're doing!!
 #ifdef PID_AUTOTUNE
 	// Some more sample values can be found in the pidtune.h file.
 	#define TUNING_KP 100
-	#define TUNING_KI 40
-	#define TUNING_KD 60
-#else
+	#define TUNING_TI 40
+	#define TUNING_TD 60
+// TODO: put this else back once we can pull autotuned values into normal mode	
+// #else
 	// PID tuning values for the roll axis PID controller.
 	#define roll_kP 1.0
 	#define roll_kI 0.0025

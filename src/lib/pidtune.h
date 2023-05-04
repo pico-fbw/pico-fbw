@@ -46,7 +46,6 @@
 #define AUTOTUNE_MAX_WAIT_MINUTES 5
 
 
-
 enum Peak {
     MINIMUM = -1,
     NOT_A_PEAK = 0,
@@ -74,20 +73,23 @@ static const float CONST_PI          = 3.14159265358979323846;
 static const float CONST_SQRT2_DIV_2 = 0.70710678118654752440;
 
 
-// TODO: documentation of autotune functions
+// TODO: finish documentation of autotune functions
 
 /**
- * 
+ * Initializes the PID tuning process.
+ * @param input pointer to input value
+ * @param output pointer to output value
 */
-void pidtune_init(float* input, float* output);
+void pidtune_init(float* Input, float* Output);
 
 /**
- * 
+ * Cancels the PID tuning process.
 */
 void pidtune_cancel();
 
 /**
- * 
+ * Runs one cycle of the PID tuning process.
+ * @return false if the calibration is currently running, true otherwise.
 */
 bool pidtune_runtime();
 
@@ -99,48 +101,48 @@ bool pidtune_runtime();
 float pidtune_processValueOffset(float avgStep1, float avgStep2);
 
 /**
- * 
+ * Sets the output step size.
 */
 void pidtune_setOutputStep(float step);
 
 /**
- * 
+ * Sets the PID tuning rule, Kp divisor.
 */
 void pidtune_setKpDivisor(uint8_t kPdiv);
 
 /**
- * 
+ * Sets the PID tuning rule, Ti divisor.
 */
-void pidtune_setKiDivisor(uint8_t kIdiv);
+void pidtune_setTiDivisor(uint8_t tIdiv);
 
 /**
- * 
+ * Sets the PID tuning rule, Td divisor.
 */
-void pidtune_setKdDivisor(uint8_t kDdiv);
+void pidtune_setTdDivisor(uint8_t tDdiv);
 
 /**
- * 
+ * Sets the PID noise band.
 */
 void pidtune_setNoiseBand(float band);
 
 /**
- * 
+ * Sets the PID tuning lookback time in seconds.
 */
 void pidtune_setLookbackSec(int sec);
 
 /**
- * 
+ * @return the final PID tuning rule, Kp.
 */
 float pidtune_getKp();
 
 /**
- * 
+ * @return the final PID tuning rule, Ti.
 */
-float pidtune_getKi();
+float pidtune_getTi();
 
 /**
- * 
+ * @return the final PID tuning rule, Td.
 */
-float pidtune_getKd();
+float pidtune_getTd();
 
 #endif // pidtune_h
