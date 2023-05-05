@@ -74,8 +74,6 @@ int main() {
         if (imu_configure()) {
             // If IMU passes init and configure tests, set IMU data as safe to use
             setIMUSafe(true);
-            // Initialize normal mode
-            mode_normalInit();
         // If IMU does not pass both tests,
         } else {
             // Slow blink LED: IMU init error

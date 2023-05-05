@@ -12,6 +12,9 @@
 
 #include "normal.h"
 
+// Keeps the state of if normal mode has been initialized or not
+bool normalInitialized = false;
+
 inertialAngles angles;
 PIDController rollPID;
 PIDController pitchPID;
@@ -32,6 +35,11 @@ bool yawdamp_on = false;
 float yawOut;
 
 void mode_normal() {
+    // Initialize normal mode if we haven't already
+    if (!normalInitialized) {
+        mode_normalInit();
+        normalInitialized = true;
+    }
     // Refresh input data from IMU and rx
     angles = imu_getAngles();
     rollAngle = angles.roll;
@@ -134,6 +142,12 @@ void computePID() {
 // TODO: redo how constants are pulled in because we have autotuning now
 // also maybe disallow running normal mode without either autotuning completed or manual tuning specified?
 void mode_normalInit() {
+    #ifdef PID_AUTOTUNE
+        // If autotuning is enabled, first make sure it's been completed before we allow normal mode
+        
+        // Now pull in constants from autotuning
+        
+    #endif
     // Set up PID controllers for roll and pitch io
     rollPID = (PIDController){roll_kP, roll_kI, roll_kD, roll_tau, -AIL_LIMIT, AIL_LIMIT, roll_integMin, roll_integMax, roll_kT};
     pid_init(&rollPID);
