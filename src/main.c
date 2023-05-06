@@ -110,6 +110,8 @@ int main() {
                 }
             #endif // switch_3_pos
         #endif // mode_switch_enable
+        // TODO: currently, literally nothing happens if mode switching is disabled...maybe fix that?
+        // idea would be to enter autotune first (if applicable), then normal, then direct if that fails
     }
 
     // How did we get here?

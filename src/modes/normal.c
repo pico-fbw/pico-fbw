@@ -114,7 +114,7 @@ void mode_normal() {
             // first set the yaw damper as disabled,
             yawdamp_on = false;
             // then set the yaw value to a reduced version of our aileron value in an attempt to coordinate our turn
-            yawOut = rollPID.out * RUDDER_SMOOTHING_VALUE;
+            yawOut = rollPID.out * RUDDER_TURNING_VALUE;
         } else {
             // If the yaw damper is set as off still, that means we have just transitioned to this phase, so we should update the yaw setpoint
             if (!yawdamp_on) {
