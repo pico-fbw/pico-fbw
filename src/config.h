@@ -112,42 +112,72 @@
  * It is suggested that you read up on what each of these values do in a PID control loop before attempting to alter them if you wish.
 */
 
-// PID auto tuning rules
 #define PID_AUTOTUNE // comment if you want to manually set PID gains. Only do this if you really know what you're doing!!
 #ifdef PID_AUTOTUNE
-	// Some more sample values can be found in the pidtune.h file.
+	// PID autotuning parameters. Some more sample values can be found at the top of the pidtune.h file.
 	#define TUNING_KP 100
 	#define TUNING_TI 40
 	#define TUNING_TD 60
-// TODO: put this else back once we can pull autotuned values into normal mode	
-// #else
+
+	// TODO: make sure these values work?
+	/**
+	 * Defining this option implements relay bias.
+	 * This is useful to adjust the relay output values during the auto tuning to recover symmetric oscillations.
+	 * This can compensate for load disturbance and equivalent signals arising from nonlinear or non-stationary processes.
+	 * Any improvement in the tunings seems quite modest but sometimes unbalanced oscillations can be persuaded to converge where they might not otherwise have done so.
+	*/ 
+	#define AUTOTUNE_RELAY_BIAS
+
+	/**
+	 * Average amplitude of successive peaks must differ by no more than this proportion,
+	 * relative to half the difference between maximum and minimum of last 2 cycles.
+	*/ 
+	#define AUTOTUNE_PEAK_AMPLITUDE_TOLERANCE 0.05
+
+	/** 
+	 * Ratio of up/down relay step duration should differ by no more than this tolerance.
+	 * Biasing the relay con give more accurate estimates of the tuning parameters but setting the tolerance too low will prolong the autotune procedure unnecessarily.
+	 * This parameter also sets the minimum bias in the relay as a proportion of its amplitude.
+	*/ 
+	#define AUTOTUNE_STEP_ASYMMETRY_TOLERANCE 0.50
+
+	/**
+	 * Auto tune terminates if waiting too long between peaks or relay steps.
+	 * Set a larger value for processes with long delays or time constants.
+	*/ 
+	#define AUTOTUNE_MAX_WAIT_MINUTES 0.1
+#else
 	// PID tuning values for the roll axis PID controller.
 	#define roll_kP 1.0
 	#define roll_kI 0.0025
 	#define roll_kD 0.001
-	#define roll_tau 0.001
-	#define roll_integMin -50.0
-	#define roll_integMax 50.0
-	#define roll_kT 0.01
 
 	// PID tuning values for the pitch axis PID controller.
 	#define pitch_kP 1.0
 	#define pitch_kI 0.0025
 	#define pitch_kD 0.001
-	#define pitch_tau 0.001
-	#define pitch_integMin -50.0
-	#define pitch_integMax 50.0
-	#define pitch_kT 0.01
-
-	// PID tuning values for the yaw axis PID controller.
-	#define yaw_kP 1.0
-	#define yaw_kI 0.0025
-	#define yaw_kD 0.001
-	#define yaw_tau 0.001
-	#define yaw_integMin -50.0
-	#define yaw_integMax 50.0
-	#define yaw_kT 0.01
 #endif
+
+// Miscellaneous roll PID tuning values.
+#define roll_tau 0.001
+#define roll_integMin -50.0
+#define roll_integMax 50.0
+#define roll_kT 0.01
+
+// Miscellaneous pitch PID tuning values.
+#define pitch_tau 0.001
+#define pitch_integMin -50.0
+#define pitch_integMax 50.0
+#define pitch_kT 0.01
+
+// PID tuning values for the yaw axis PID controller.
+#define yaw_kP 1.0
+#define yaw_kI 0.0025
+#define yaw_kD 0.001
+#define yaw_tau 0.001
+#define yaw_integMin -50.0
+#define yaw_integMax 50.0
+#define yaw_kT 0.01
 
 
 /** @section sensors */

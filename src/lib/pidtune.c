@@ -41,458 +41,461 @@
 
 #include "pidtune.h"
 
-float *input;
-float *output;
-float setpoint;
+#ifdef PID_AUTOTUNE
+    float *input;
+    float *output;
+    float setpoint;
 
-float oStep;
-float noiseBand;
-unsigned char nLookBack;
+    float oStep;
+    float noiseBand;
+    unsigned char nLookBack;
 
-enum AutoTunerState state; // state of autotuner finite state machine
-uint64_t lastTime;
-uint64_t sampleTime;
-enum Peak peakType;
-uint64_t lastPeakTime[5]; // peak time, most recent in array element 0
-float lastPeaks[5]; // peak value, most recent in array element 0
-unsigned char peakCount;
-float lastInputs[101]; // process values, most recent in array element 0
-unsigned char inputCount;
-float outputStart;
-float workingNoiseBand;
-float workingOstep;
-float inducedAmplitude;
-uint16_t KpDiv, TiDiv, TdDiv;
-float Kp, Ti, Td = 0.0f;
-  
-#ifdef AUTOTUNE_RELAY_BIAS  
-    float relayBias;
-    unsigned long lastStepTime[5]; // step time, most recent in array element 0
-    float sumInputSinceLastStep[5]; // integrated process values, most recent in array element 0
-    unsigned char stepCount;
-#endif
+    enum AutoTunerState state; // state of autotuner finite state machine
+    uint64_t lastTime;
+    uint64_t sampleTime;
+    enum Peak peakType;
+    uint64_t lastPeakTime[5]; // peak time, most recent in array element 0
+    float lastPeaks[5]; // peak value, most recent in array element 0
+    unsigned char peakCount;
+    float lastInputs[101]; // process values, most recent in array element 0
+    unsigned char inputCount;
+    float outputStart;
+    float workingNoiseBand;
+    float workingOstep;
+    float inducedAmplitude;
+    uint16_t KpDiv, TiDiv, TdDiv;
+    float Kp, Ti, Td = 0.0f;
+    
+    #ifdef AUTOTUNE_RELAY_BIAS  
+        float relayBias;
+        unsigned long lastStepTime[5]; // step time, most recent in array element 0
+        float sumInputSinceLastStep[5]; // integrated process values, most recent in array element 0
+        unsigned char stepCount;
+    #endif
 
 
-void pidtune_init(float* Input, float* Output) {
-    input = Input;
-    output = Output;
-    // Set default values, they can be overridden with other functions
-    // (Normally we would specify a default control type but I have removed that from the original)
-    noiseBand = 0.5;
-    state = AUTOTUNER_OFF;
-    oStep = 10.0;
-    pidtune_setLookbackSec(10);
-}
-
-void pidtune_cancel() {
-    state = AUTOTUNER_OFF;
-}
-
-bool pidtune_runtime() {
-    // Get current time in ms (since Pico has been powered)
-    uint64_t now = (time_us_64() / 1000);
-    // If the autotuner hasn't been run before, initialize working variables the first time around
-    if (state == AUTOTUNER_OFF) { 
-        peakType = NOT_A_PEAK;
-        inputCount = 0;
-        peakCount = 0;
-        setpoint = *input;
-        outputStart = *output;
-        lastPeakTime[0] = now;
-        workingNoiseBand = noiseBand;
-        workingOstep = oStep;
-        state = RELAY_STEP_UP;
-
-        #if defined (AUTOTUNE_RELAY_BIAS) 
-            relayBias = 0.0;
-            stepCount = 0;   
-            lastStepTime[0] = now;
-            sumInputSinceLastStep[0] = 0.0;
-        #endif
-    }
-    else if ((now - lastTime) < sampleTime) {
-        // Return false if we're not ready for a new input yet
-        return false;
+    void pidtune_init(float* Input, float* Output) {
+        input = Input;
+        output = Output;
+        // Set default values, they can be overridden with other functions
+        // (Normally we would specify a default control type but I have removed that from the original)
+        noiseBand = 0.5;
+        state = AUTOTUNER_OFF;
+        oStep = 10.0;
+        pidtune_setLookbackSec(10);
     }
 
-    // Otherwise, get new input
-    lastTime = now;
-    float refVal = *input;
-
-    #ifdef AUTOTUNE_RELAY_BIAS
-        // used to calculate relay bias
-        sumInputSinceLastStep[0] += refVal;
-    #endif  
-
-    bool justChanged = false; 
-    // Check input and change relay state if necessary
-    if ((state == RELAY_STEP_UP) && (refVal > setpoint + workingNoiseBand)) {
-        state = RELAY_STEP_DOWN;
-        justChanged = true;
-    } else if ((state == RELAY_STEP_DOWN) && (refVal < setpoint - workingNoiseBand)) {
-        state = RELAY_STEP_UP;
-        justChanged = true;
+    void pidtune_cancel() {
+        state = AUTOTUNER_OFF;
     }
-    if (justChanged) {
+
+    bool pidtune_runtime() {
+        // Get current time in ms (since Pico has been powered)
+        uint64_t now = (time_us_64() / 1000);
+        // If the autotuner hasn't been run before, initialize working variables the first time around
+        if (state == AUTOTUNER_OFF) { 
+            peakType = NOT_A_PEAK;
+            inputCount = 0;
+            peakCount = 0;
+            setpoint = *input;
+            outputStart = *output;
+            lastPeakTime[0] = now;
+            workingNoiseBand = noiseBand;
+            workingOstep = oStep;
+            state = RELAY_STEP_UP;
+
+            #if defined (AUTOTUNE_RELAY_BIAS) 
+                relayBias = 0.0;
+                stepCount = 0;   
+                lastStepTime[0] = now;
+                sumInputSinceLastStep[0] = 0.0;
+            #endif
+        }
+        else if ((now - lastTime) < sampleTime) {
+            // Return false if we're not ready for a new input yet
+            return false;
+        }
+
+        // Otherwise, get new input
+        lastTime = now;
+        float refVal = *input;
+
         #ifdef AUTOTUNE_RELAY_BIAS
-            // check symmetry of oscillation
-            // and introduce relay bias if necessary
-            if (stepCount > 4) {
-                float avgStep1 = 0.5 * (float) ((lastStepTime[0] - lastStepTime[1]) + (lastStepTime[2] - lastStepTime[3]));
-                float avgStep2 = 0.5 * (float) ((lastStepTime[1] - lastStepTime[2]) + (lastStepTime[3] - lastStepTime[4]));
-                if ((avgStep1 > 1e-10) && (avgStep2 > 1e-10)) {
-                    float asymmetry = (avgStep1 > avgStep2) ?
-                                        (avgStep1 - avgStep2) / avgStep1 : (avgStep2 - avgStep1) / avgStep2;
+            // used to calculate relay bias
+            sumInputSinceLastStep[0] += refVal;
+        #endif  
 
-                    if (asymmetry > AUTOTUNE_STEP_ASYMMETRY_TOLERANCE) {
-                        /**
-                         * Relay steps are asymmetric
-                         * Calculate relay bias using:
-                         * "Autotuning of PID Controllers: A Relay Feedback Approach", by Cheng-Ching Yu, 2nd Edition, equation 7.39, p. 148
-                        */
+        bool justChanged = false; 
+        // Check input and change relay state if necessary
+        if ((state == RELAY_STEP_UP) && (refVal > setpoint + workingNoiseBand)) {
+            state = RELAY_STEP_DOWN;
+            justChanged = true;
+        } else if ((state == RELAY_STEP_DOWN) && (refVal < setpoint - workingNoiseBand)) {
+            state = RELAY_STEP_UP;
+            justChanged = true;
+        }
+        if (justChanged) {
+            #ifdef AUTOTUNE_RELAY_BIAS
+                // check symmetry of oscillation
+                // and introduce relay bias if necessary
+                if (stepCount > 4) {
+                    float avgStep1 = 0.5 * (float) ((lastStepTime[0] - lastStepTime[1]) + (lastStepTime[2] - lastStepTime[3]));
+                    float avgStep2 = 0.5 * (float) ((lastStepTime[1] - lastStepTime[2]) + (lastStepTime[3] - lastStepTime[4]));
+                    if ((avgStep1 > 1e-10) && (avgStep2 > 1e-10)) {
+                        float asymmetry = (avgStep1 > avgStep2) ?
+                                            (avgStep1 - avgStep2) / avgStep1 : (avgStep2 - avgStep1) / avgStep2;
 
-                        // Calculate change in relay bias
-                        float deltaRelayBias = - pidtune_processValueOffset(avgStep1, avgStep2) * workingOstep;
-                        if (state == RELAY_STEP_DOWN) {
-                            deltaRelayBias = -deltaRelayBias;
-                        }
-                        
-                        if (abs(deltaRelayBias) > workingOstep * AUTOTUNE_STEP_ASYMMETRY_TOLERANCE) {
-                            // Change is large enough to bother with
-                            relayBias += deltaRelayBias;
-                            /*
-                                // Adjust step height with respect to output limits
-                                // (commented out because the auto tuner does not necessarily know what the output limits are)
-                                // TODO: work on this? an issue with the library but still I can probably fix it
-                                float relayHigh = outputStart + workingOstep + relayBias;
-                                float relayLow  = outputStart - workingOstep + relayBias;
-                                if (relayHigh > outMax) {
-                                    relayHigh = outMax;
-                                }
-                                if (relayLow  < outMin) {
-                                    relayHigh = outMin;
-                                }
-                                workingOstep = 0.5 * (relayHigh - relayLow);
-                                relayBias = relayHigh - outputStart - workingOstep;
+                        if (asymmetry > AUTOTUNE_STEP_ASYMMETRY_TOLERANCE) {
+                            /**
+                             * Relay steps are asymmetric
+                             * Calculate relay bias using:
+                             * "Autotuning of PID Controllers: A Relay Feedback Approach", by Cheng-Ching Yu, 2nd Edition, equation 7.39, p. 148
                             */
 
-                            // Reset relay step counter to give the process value oscillation time to settle with the new relay bias value
-                            stepCount = 0;
+                            // Calculate change in relay bias
+                            float deltaRelayBias = - pidtune_processValueOffset(avgStep1, avgStep2) * workingOstep;
+                            if (state == RELAY_STEP_DOWN) {
+                                deltaRelayBias = -deltaRelayBias;
+                            }
+                            
+                            if (abs(deltaRelayBias) > workingOstep * AUTOTUNE_STEP_ASYMMETRY_TOLERANCE) {
+                                // Change is large enough to bother with
+                                relayBias += deltaRelayBias;
+                                /*
+                                    // Adjust step height with respect to output limits
+                                    // (commented out because the auto tuner does not necessarily know what the output limits are)
+                                    // TODO: work on this? an issue with the library but still I can probably fix it
+                                    float relayHigh = outputStart + workingOstep + relayBias;
+                                    float relayLow  = outputStart - workingOstep + relayBias;
+                                    if (relayHigh > outMax) {
+                                        relayHigh = outMax;
+                                    }
+                                    if (relayLow  < outMin) {
+                                        relayHigh = outMin;
+                                    }
+                                    workingOstep = 0.5 * (relayHigh - relayLow);
+                                    relayBias = relayHigh - outputStart - workingOstep;
+                                */
+
+                                // Reset relay step counter to give the process value oscillation time to settle with the new relay bias value
+                                stepCount = 0;
+                            }
                         }
                     }
                 }
-            }
 
-            // shift step time and integrated process value arrays
-            for (unsigned char i = (stepCount > 4 ? 4 : stepCount); i > 0; i--) {
-                lastStepTime[i] = lastStepTime[i - 1];
-                sumInputSinceLastStep[i] = sumInputSinceLastStep[i - 1];
-            }
-            stepCount++;
-            lastStepTime[0] = now;
-            sumInputSinceLastStep[0] = 0.0;
-
-        #endif // ifdef AUTOTUNE_RELAY_BIAS
-    } // if justChanged
-
-    // Set output
-    // TODO: respect output limits! (again, library fault but I can probably fix this)
-    if (((unsigned char) state & (STEADY_STATE_AFTER_STEP_UP | RELAY_STEP_UP)) > 0) {
-        #ifdef AUTOTUNE_RELAY_BIAS 
-            *output = outputStart + workingOstep + relayBias;
-        #else    
-            *output = outputStart + workingOstep;
-        #endif
-    } else if (state == RELAY_STEP_DOWN) {
-        #if defined (AUTOTUNE_RELAY_BIAS)    
-            *output = outputStart - workingOstep + relayBias;
-        #else
-            *output = outputStart - workingOstep;
-        #endif
-    }
-
-    // Store initial inputs
-    // We don't want to trust the maxes or mins until the input array is full
-    inputCount++;
-    if (inputCount <= nLookBack) {
-        lastInputs[nLookBack - inputCount] = refVal;
-        return false;
-    }
-
-    // Shift array of process values and identify peaks
-    inputCount = nLookBack;
-    bool isMax = true;
-    bool isMin = true;
-    for (int i = inputCount - 1; i >= 0; i--) {
-        float val = lastInputs[i];
-        if (isMax) {
-            isMax = (refVal >= val);
-        }
-        if (isMin)  {
-            isMin = (refVal <= val);
-        }
-        lastInputs[i + 1] = val;
-    }
-    lastInputs[0] = refVal; 
-
-    if (((unsigned char) state & (STEADY_STATE_AT_BASELINE | STEADY_STATE_AFTER_STEP_UP)) > 0) {
-        // Check that all the recent inputs are equal give or take expected noise
-        float iMax = lastInputs[0];
-        float iMin = lastInputs[0];
-        float avgInput = 0.0;
-        for (unsigned char i = 0; i <= inputCount; i++) {
-            float val = lastInputs[i];
-            if (iMax < val) {
-                iMax = val;
-            }
-            if (iMin > val) {
-                iMin = val;
-            }
-            avgInput += val;
-        } 
-        avgInput /= (float)(inputCount + 1);
-
-        // if recent inputs are stable
-        if ((iMax - iMin) <= 2.0 * workingNoiseBand) {
-            
-            #ifdef AUTOTUNE_RELAY_BIAS   
+                // shift step time and integrated process value arrays
+                for (unsigned char i = (stepCount > 4 ? 4 : stepCount); i > 0; i--) {
+                    lastStepTime[i] = lastStepTime[i - 1];
+                    sumInputSinceLastStep[i] = sumInputSinceLastStep[i - 1];
+                }
+                stepCount++;
                 lastStepTime[0] = now;
-            #endif
+                sumInputSinceLastStep[0] = 0.0;
 
-            if (state == STEADY_STATE_AT_BASELINE) {
-                state = STEADY_STATE_AFTER_STEP_UP;
-                lastPeaks[0] = avgInput;  
-                inputCount = 0;
+            #endif // ifdef AUTOTUNE_RELAY_BIAS
+        } // if justChanged
+
+        // Set output
+        // TODO: respect output limits! (again, library fault but I can probably fix this)
+        if (((unsigned char) state & (STEADY_STATE_AFTER_STEP_UP | RELAY_STEP_UP)) > 0) {
+            #ifdef AUTOTUNE_RELAY_BIAS 
+                *output = outputStart + workingOstep + relayBias;
+            #else    
+                *output = outputStart + workingOstep;
+            #endif
+        } else if (state == RELAY_STEP_DOWN) {
+            #if defined (AUTOTUNE_RELAY_BIAS)    
+                *output = outputStart - workingOstep + relayBias;
+            #else
+                *output = outputStart - workingOstep;
+            #endif
+        }
+
+        // Store initial inputs
+        // We don't want to trust the maxes or mins until the input array is full
+        inputCount++;
+        if (inputCount <= nLookBack) {
+            lastInputs[nLookBack - inputCount] = refVal;
+            return false;
+        }
+
+        // Shift array of process values and identify peaks
+        inputCount = nLookBack;
+        bool isMax = true;
+        bool isMin = true;
+        for (int i = inputCount - 1; i >= 0; i--) {
+            float val = lastInputs[i];
+            if (isMax) {
+                isMax = (refVal >= val);
+            }
+            if (isMin)  {
+                isMin = (refVal <= val);
+            }
+            lastInputs[i + 1] = val;
+        }
+        lastInputs[0] = refVal; 
+
+        if (((unsigned char) state & (STEADY_STATE_AT_BASELINE | STEADY_STATE_AFTER_STEP_UP)) > 0) {
+            // Check that all the recent inputs are equal give or take expected noise
+            float iMax = lastInputs[0];
+            float iMin = lastInputs[0];
+            float avgInput = 0.0;
+            for (unsigned char i = 0; i <= inputCount; i++) {
+                float val = lastInputs[i];
+                if (iMax < val) {
+                    iMax = val;
+                }
+                if (iMin > val) {
+                    iMin = val;
+                }
+                avgInput += val;
+            } 
+            avgInput /= (float)(inputCount + 1);
+
+            // if recent inputs are stable
+            if ((iMax - iMin) <= 2.0 * workingNoiseBand) {
+                
+                #ifdef AUTOTUNE_RELAY_BIAS   
+                    lastStepTime[0] = now;
+                #endif
+
+                if (state == STEADY_STATE_AT_BASELINE) {
+                    state = STEADY_STATE_AFTER_STEP_UP;
+                    lastPeaks[0] = avgInput;  
+                    inputCount = 0;
+                    return false;
+                }
+                // else state == STEADY_STATE_AFTER_STEP_UP
+                state = RELAY_STEP_DOWN;
+
+                #ifdef AUTOTUNE_RELAY_BIAS
+                    sumInputSinceLastStep[0] = 0.0;
+                #endif
+
+                return false;
+            } else {
                 return false;
             }
-            // else state == STEADY_STATE_AFTER_STEP_UP
-            state = RELAY_STEP_DOWN;
-
-            #ifdef AUTOTUNE_RELAY_BIAS
-                sumInputSinceLastStep[0] = 0.0;
-            #endif
-
-            return false;
-        } else {
-            return false;
         }
-    }
 
-    // Increment peak count and record peak time for both maxima and minima 
-    justChanged = false;
-    if (isMax) {
-        if (peakType == MINIMUM) {
-            justChanged = true;
-        }
-        peakType = MAXIMUM;
-    } else if (isMin) {
-        if (peakType == MAXIMUM) {
-            justChanged = true;
-        }
-        peakType = MINIMUM;
-    }
-
-    // Update peak times and values
-    if (justChanged) {
-        peakCount++;
-        // Shift peak time and peak value arrays
-        for (unsigned char i = (peakCount > 4 ? 4 : peakCount); i > 0; i--) {
-            lastPeakTime[i] = lastPeakTime[i - 1];
-            lastPeaks[i] = lastPeaks[i - 1];
-        }
-    }
-    if (isMax || isMin) {
-        lastPeakTime[0] = now;
-        lastPeaks[0] = refVal;
-    }
-
-    // Check for convergence of induced oscillation
-    // Convergence of amplitude is assessed on last 4 peaks (1.5 cycles)
-    float inducedAmplitude = 0.0;
-    float phaseLag;
-    if (
-    #ifdef AUTOTUNE_RELAY_BIAS
-        (stepCount > 4) &&
-    #endif
-    justChanged && 
-    (peakCount > 4)
-    ) { 
-        float absMax = lastPeaks[1];
-        float absMin = lastPeaks[1];
-        for (unsigned char i = 2; i <= 4; i++) {
-            float val = lastPeaks[i];
-            inducedAmplitude += abs( val - lastPeaks[i - 1]); 
-            if (absMax < val) {
-                absMax = val;
+        // Increment peak count and record peak time for both maxima and minima 
+        justChanged = false;
+        if (isMax) {
+            if (peakType == MINIMUM) {
+                justChanged = true;
             }
-            if (absMin > val) {
-                absMin = val;
+            peakType = MAXIMUM;
+        } else if (isMin) {
+            if (peakType == MAXIMUM) {
+                justChanged = true;
+            }
+            peakType = MINIMUM;
+        }
+
+        // Update peak times and values
+        if (justChanged) {
+            peakCount++;
+            // Shift peak time and peak value arrays
+            for (unsigned char i = (peakCount > 4 ? 4 : peakCount); i > 0; i--) {
+                lastPeakTime[i] = lastPeakTime[i - 1];
+                lastPeaks[i] = lastPeaks[i - 1];
             }
         }
-        inducedAmplitude /= 6.0;
-
-        // Check convergence criterion for amplitude of induced oscillation
-        if (((0.5 * (absMax - absMin) - inducedAmplitude) / inducedAmplitude) < AUTOTUNE_PEAK_AMPLITUDE_TOLERANCE) {
-            state = CONVERGED;
+        if (isMax || isMin) {
+            lastPeakTime[0] = now;
+            lastPeaks[0] = refVal;
         }
-    }
 
-    // If the autotune has not already converged, terminate after 10 cycles, or if too long between peaks, or if too long between relay steps
-    if (
-    #ifdef AUTOTUNE_RELAY_BIAS
-        ((now - lastStepTime[0]) > (unsigned long) (AUTOTUNE_MAX_WAIT_MINUTES * 60000)) ||
-    #endif
-    ((now - lastPeakTime[0]) > (unsigned long) (AUTOTUNE_MAX_WAIT_MINUTES * 60000)) ||
-    (peakCount >= 20)
-    ) {
-        state = FAILED;
-    }
+        // Check for convergence of induced oscillation
+        // Convergence of amplitude is assessed on last 4 peaks (1.5 cycles)
+        float inducedAmplitude = 0.0;
+        float phaseLag;
+        if (
+        #ifdef AUTOTUNE_RELAY_BIAS
+            (stepCount > 4) &&
+        #endif
+        justChanged && 
+        (peakCount > 4)
+        ) { 
+            float absMax = lastPeaks[1];
+            float absMin = lastPeaks[1];
+            for (unsigned char i = 2; i <= 4; i++) {
+                float val = lastPeaks[i];
+                inducedAmplitude += abs( val - lastPeaks[i - 1]); 
+                if (absMax < val) {
+                    absMax = val;
+                }
+                if (absMin > val) {
+                    absMin = val;
+                }
+            }
+            inducedAmplitude /= 6.0;
 
-    if (((unsigned char) state & (CONVERGED | FAILED)) == 0) {
-        return false;
-    }
+            // Check convergence criterion for amplitude of induced oscillation
+            if (((0.5 * (absMax - absMin) - inducedAmplitude) / inducedAmplitude) < AUTOTUNE_PEAK_AMPLITUDE_TOLERANCE) {
+                state = CONVERGED;
+            }
+        }
 
-    // Autotune algorithm has terminated, reset autotuner variables
-    *output = outputStart;
+        // If the autotune has not already converged, terminate after 10 cycles, or if too long between peaks, or if too long between relay steps
+        if (
+        #ifdef AUTOTUNE_RELAY_BIAS
+            ((now - lastStepTime[0]) > (unsigned long) (AUTOTUNE_MAX_WAIT_MINUTES * 60000)) ||
+        #endif
+        ((now - lastPeakTime[0]) > (unsigned long) (AUTOTUNE_MAX_WAIT_MINUTES * 60000)) ||
+        (peakCount >= 20)
+        ) {
+            state = FAILED;
+        }
 
-    if (state == FAILED) {
-        // Do not calculate gain parameters
+        if (((unsigned char) state & (CONVERGED | FAILED)) == 0) {
+            return false;
+        }
+
+        // Autotune algorithm has terminated, reset autotuner variables
+        *output = outputStart;
+
+        if (state == FAILED) {
+            // Do not calculate gain parameters
+            return true;
+        }
+
+        // Finish up by calculating tuning parameters:
+
+        // Calculate ultimate gain
+        float Ku = 4.0 * workingOstep / (inducedAmplitude * CONST_PI); 
+
+        // Calculate ultimate period in seconds
+        float Pu = (float) 0.5 * ((lastPeakTime[1] - lastPeakTime[3]) + (lastPeakTime[2] - lastPeakTime[4])) / 1000.0;  
+
+        // Calculate gain parameters using tuning rules
+
+        Kp = Ku / (float) KpDiv;
+        Ti = Pu / (float) TiDiv;
+        Td = TdDiv == 0 ? 0.0 : Pu / TdDiv;
+
+        // Converged
         return true;
     }
 
-    // Finish up by calculating tuning parameters:
+    #ifdef AUTOTUNE_RELAY_BIAS
+        float pidtune_processValueOffset(float avgStep1, float avgStep2) {   
+            if (avgStep1 < 1e-10) {
+                return 1.0;
+            }
+            if (avgStep2 < 1e-10) {
+                return -1.0;
+            }
+            // ratio of step durations
+            float r1 = avgStep1 / avgStep2;
+            float s1 = (sumInputSinceLastStep[1] + sumInputSinceLastStep[3]);
+            float s2 = (sumInputSinceLastStep[2] + sumInputSinceLastStep[4]);
+            if (s1 < 1e-10) {
+                return 1.0;
+            }
+            if (s2 < 1e-10) {
+                return -1.0;
+            }
+            // ratio of integrated process values
+            float r2 = s1 / s2;
 
-    // Calculate ultimate gain
-    float Ku = 4.0 * workingOstep / (inducedAmplitude * CONST_PI); 
+            /**
+             * This is the explanation of the math behind this function just in case you were wondering...
+             * I have no clue as to how it works, thanks so much to t0mpr1c3 once again for this!
+             * ~Myles
+             * 
+             * 
+             * Estimate process value offset assuming a trapezoidal response curve
+             * Assume trapezoidal wave with amplitude a, cycle period t, time at minimum/maximum m * t (0 <= m <= 1)
+             * 
+             * With no offset:
+             * Area under half wave of process value given by:
+             *   a * m * t/2 + a/2 * (1 - m) * t/2 = a * (1 + m) * t / 4
+             * 
+             * Now with offset d * a (-1 <= d <= 1): 
+             * Step time of relay half-cycle given by:
+             *   m * t/2 + (1 - d) * (1 - m) * t/2 = (1 - d + d * m) * t/2
+             * 
+             * => Ratio of step times in cycle given by:
+             * (1) r1 = (1 - d + d * m) / (1 + d - d * m)
+             * 
+             * Area under offset half wave = a * (1 - d) * m * t/2 + a/2 * (1 - d) * (1 - d) * (1 - m) * t/2
+             *                             = a * (1 - d) * (1 - d + m * (1 + d)) * t/4 
+             * 
+             * => Ratio of area under offset half waves given by:
+             * (2) r2 = (1 - d) * (1 - d + m * (1 + d)) / ((1 + d) * (1 + d + m * (1 - d)))
+             * 
+             * Want to calculate d as a function of r1, r2; not interested in m
+             * Rearranging (1) gives:
+             * (3) m = 1 - (1 / d) * (1 - r1) / (1 + r1)
+             * 
+             * Substitute (3) into (2):
+             * r2 = ((1 - d) * (1 - d + 1 + d - (1 + d) / d * (1 - r1) / (1 + r1)) / ((1 + d) * (1 + d + 1 - d - (1 - d) / d * (1 - r1) / (1 + r1)))   
+             * 
+             * After much algebra, we arrive at: 
+             * (4) (r1 * r2 + 3 * r1 + 3 * r2 + 1) * d^2 - 2 * (1 + r1)(1 - r2) * d + (1 - r1) * (1 - r2) = 0
+             * 
+             * Quadratic solution to (4):
+             * 5) d = ((1 + r1) * (1 - r2) +/- 2 * sqrt((1 - r2) * (r1^2 - r2))) / (r1 * r2 + 3 * r1 + 3 * r2 + 1)
+            */
 
-    // Calculate ultimate period in seconds
-    float Pu = (float) 0.5 * ((lastPeakTime[1] - lastPeakTime[3]) + (lastPeakTime[2] - lastPeakTime[4])) / 1000.0;  
-
-    // Calculate gain parameters using tuning rules
-
-    Kp = Ku / (float) KpDiv;
-    Ti = Pu / (float) TiDiv;
-    Td = TdDiv == 0 ? 0.0 : Pu / TdDiv;
-
-    // Converged
-    return true;
-}
-
-#ifdef AUTOTUNE_RELAY_BIAS
-    float pidtune_processValueOffset(float avgStep1, float avgStep2) {   
-        if (avgStep1 < 1e-10) {
-            return 1.0;
+            // Estimate offset as proportion of amplitude
+            float discriminant = (1.0 - r2) * (pow(r1, 2) - r2);
+            // Catch negative values
+            if (discriminant < 1e-10) {
+                discriminant = 0.0;
+            }
+            // Return estimated process value offset
+            return ((1.0 + r1) * (1.0 - r2) + ((r1 > 1.0) ? 1.0 : -1.0) * sqrt(discriminant)) / 
+                    (r1 * r2 + 3.0 * r1 + 3.0 * r2 + 1.0);
         }
-        if (avgStep2 < 1e-10) {
-            return -1.0;
-        }
-        // ratio of step durations
-        float r1 = avgStep1 / avgStep2;
-        float s1 = (sumInputSinceLastStep[1] + sumInputSinceLastStep[3]);
-        float s2 = (sumInputSinceLastStep[2] + sumInputSinceLastStep[4]);
-        if (s1 < 1e-10) {
-            return 1.0;
-        }
-        if (s2 < 1e-10) {
-            return -1.0;
-        }
-        // ratio of integrated process values
-        float r2 = s1 / s2;
+    #endif // AUTOTUNE_RELAY_BIAS
 
-        /**
-         * This is the explanation of the math behind this function just in case you were wondering...
-         * I have no clue as to how it works, thanks so much to t0mpr1c3 once again for this!
-         * ~Myles
-         * 
-         * 
-         * Estimate process value offset assuming a trapezoidal response curve
-         * Assume trapezoidal wave with amplitude a, cycle period t, time at minimum/maximum m * t (0 <= m <= 1)
-         * 
-         * With no offset:
-         * Area under half wave of process value given by:
-         *   a * m * t/2 + a/2 * (1 - m) * t/2 = a * (1 + m) * t / 4
-         * 
-         * Now with offset d * a (-1 <= d <= 1): 
-         * Step time of relay half-cycle given by:
-         *   m * t/2 + (1 - d) * (1 - m) * t/2 = (1 - d + d * m) * t/2
-         * 
-         * => Ratio of step times in cycle given by:
-         * (1) r1 = (1 - d + d * m) / (1 + d - d * m)
-         * 
-         * Area under offset half wave = a * (1 - d) * m * t/2 + a/2 * (1 - d) * (1 - d) * (1 - m) * t/2
-         *                             = a * (1 - d) * (1 - d + m * (1 + d)) * t/4 
-         * 
-         * => Ratio of area under offset half waves given by:
-         * (2) r2 = (1 - d) * (1 - d + m * (1 + d)) / ((1 + d) * (1 + d + m * (1 - d)))
-         * 
-         * Want to calculate d as a function of r1, r2; not interested in m
-         * Rearranging (1) gives:
-         * (3) m = 1 - (1 / d) * (1 - r1) / (1 + r1)
-         * 
-         * Substitute (3) into (2):
-         * r2 = ((1 - d) * (1 - d + 1 + d - (1 + d) / d * (1 - r1) / (1 + r1)) / ((1 + d) * (1 + d + 1 - d - (1 - d) / d * (1 - r1) / (1 + r1)))   
-         * 
-         * After much algebra, we arrive at: 
-         * (4) (r1 * r2 + 3 * r1 + 3 * r2 + 1) * d^2 - 2 * (1 + r1)(1 - r2) * d + (1 - r1) * (1 - r2) = 0
-         * 
-         * Quadratic solution to (4):
-         * 5) d = ((1 + r1) * (1 - r2) +/- 2 * sqrt((1 - r2) * (r1^2 - r2))) / (r1 * r2 + 3 * r1 + 3 * r2 + 1)
-        */
-
-        // Estimate offset as proportion of amplitude
-        float discriminant = (1.0 - r2) * (pow(r1, 2) - r2);
-        // Catch negative values
-        if (discriminant < 1e-10) {
-            discriminant = 0.0;
-        }
-        // Return estimated process value offset
-        return ((1.0 + r1) * (1.0 - r2) + ((r1 > 1.0) ? 1.0 : -1.0) * sqrt(discriminant)) / 
-                (r1 * r2 + 3.0 * r1 + 3.0 * r2 + 1.0);
+    void pidtune_setOutputStep(float step) {
+        oStep = step;
     }
-#endif // AUTOTUNE_RELAY_BIAS
 
-void pidtune_setOutputStep(float step) {
-    oStep = step;
-}
-
-void pidtune_setKpDivisor(uint8_t kPdiv) {
-    KpDiv = kPdiv;
-}
-
-void pidtune_setTiDivisor(uint8_t tIdiv) {
-    TiDiv = tIdiv;
-}
-
-void pidtune_setTdDivisor(uint8_t tDdiv) {
-    TdDiv = tDdiv;
-}
-
-void pidtune_setNoiseBand(float band) {
-    noiseBand = band;
-}
-
-void pidtune_setLookbackSec(int sec) {
-    if (sec < 1) {
-        sec = 1;
+    void pidtune_setKpDivisor(uint8_t kPdiv) {
+        KpDiv = kPdiv;
     }
-    if (sec < 25) {
-        nLookBack = sec * 4;
-        sampleTime = 250;
+
+    void pidtune_setTiDivisor(uint8_t tIdiv) {
+        TiDiv = tIdiv;
     }
-    else {
-        nLookBack = 100;
-        sampleTime = sec * 10;
+
+    void pidtune_setTdDivisor(uint8_t tDdiv) {
+        TdDiv = tDdiv;
     }
-}
 
-float pidtune_getKp() {
-    return Kp;
-}
+    void pidtune_setNoiseBand(float band) {
+        noiseBand = band;
+    }
 
-float pidtune_getTi() {
-    return Kp / Ti;
-}
+    void pidtune_setLookbackSec(int sec) {
+        if (sec < 1) {
+            sec = 1;
+        }
+        if (sec < 25) {
+            nLookBack = sec * 4;
+            sampleTime = 250;
+        }
+        else {
+            nLookBack = 100;
+            sampleTime = sec * 10;
+        }
+    }
 
-float pidtune_getTd() {
-    return Kp * Td;
-}
+    float pidtune_getKp() {
+        return Kp;
+    }
+
+    float pidtune_getTi() {
+        return Kp / Ti;
+    }
+
+    float pidtune_getTd() {
+        return Kp * Td;
+    }
+
+#endif // PID_AUTOTUNE

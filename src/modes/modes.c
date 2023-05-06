@@ -89,8 +89,10 @@ void mode(uint smode) {
                 }
             }
             mode_auto();
+        #ifdef PID_AUTOTUNE    
         case TUNE:
-            mode_tune();    
+            mode_tune();
+        #endif    
     }
 }
 

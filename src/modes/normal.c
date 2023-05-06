@@ -6,9 +6,12 @@
 #include "../io/imu.h"
 #include "../io/pwm.h"
 #include "../io/servo.h"
+#include "../io/flash.h"
+#include "../io/led.h"
 #include "../lib/pid.h"
 #include "../config.h"
 #include "modes.h"
+#include "tune.h"
 
 #include "normal.h"
 
@@ -139,19 +142,25 @@ void computePID() {
     }
 }
 
-// TODO: redo how constants are pulled in because we have autotuning now
-// also maybe disallow running normal mode without either autotuning completed or manual tuning specified?
 void mode_normalInit() {
     #ifdef PID_AUTOTUNE
         // If autotuning is enabled, first make sure it's been completed before we allow normal mode
-        
-        // Now pull in constants from autotuning
-        
+        if (mode_tuneCheckCalibration()) {
+            // Now pull in constants from autotuning
+            rollPID = (PIDController){flash_read(1, 1), flash_read(1, 2), flash_read(1, 3), roll_tau, -AIL_LIMIT, AIL_LIMIT, roll_integMin, roll_integMax, roll_kT};
+            pitchPID = (PIDController){flash_read(2, 1), flash_read(2, 2), flash_read(2, 3), pitch_tau, -ELEV_LIMIT, ELEV_LIMIT, pitch_integMin, pitch_integMax, pitch_kT};
+        } else {
+            // Otherwise, throw an error and revert to direct
+            led_blink(2000);
+            mode(DIRECT);
+        }
+    #else
+        // If autotuning is disabled, pull in constants from manual tuning
+        rollPID = (PIDController){roll_kP, roll_kI, roll_kD, roll_tau, -AIL_LIMIT, AIL_LIMIT, roll_integMin, roll_integMax, roll_kT};
+        pitchPID = (PIDController){pitch_kP, pitch_kI, pitch_kD, pitch_tau, -ELEV_LIMIT, ELEV_LIMIT, pitch_integMin, pitch_integMax, pitch_kT};
     #endif
-    // Set up PID controllers for roll and pitch io
-    rollPID = (PIDController){roll_kP, roll_kI, roll_kD, roll_tau, -AIL_LIMIT, AIL_LIMIT, roll_integMin, roll_integMax, roll_kT};
+    // Set up PID controllers
     pid_init(&rollPID);
-    pitchPID = (PIDController){pitch_kP, pitch_kI, pitch_kD, pitch_tau, -ELEV_LIMIT, ELEV_LIMIT, pitch_integMin, pitch_integMax, pitch_kT};
     pid_init(&pitchPID);
     yawPID = (PIDController){yaw_kP, yaw_kI, yaw_kD, yaw_tau, -RUD_LIMIT, RUD_LIMIT, yaw_integMin, yaw_integMax, yaw_kT};
     pid_init(&yawPID);
