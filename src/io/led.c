@@ -1,5 +1,5 @@
-#include "pico/stdlib.h"
 #include <stdbool.h>
+#include "pico/stdlib.h"
 
 #include "led.h"
 

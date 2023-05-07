@@ -29,8 +29,6 @@
     static const float CONST_SQRT2_DIV_2 = 0.70710678118654752440;
 
 
-    // TODO: finish documentation of autotune functions
-
     /**
      * Initializes the PID tuning process.
      * @param input pointer to input value

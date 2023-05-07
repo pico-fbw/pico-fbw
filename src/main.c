@@ -109,9 +109,17 @@ int main() {
                     mode(NORMAL);
                 }
             #endif // switch_3_pos
+        #else
+            // If mode switching is disabled and tuning is enabled, try to enter tuning mode
+            // This will automatically fall back internally (using the mode switcher) to normal mode if tuning has been completed,
+            // and to direct mode if the IMU is unsafe, resulting in automatic mode switching (still not recommended though)
+            #ifdef PID_AUTOTUNE
+                mode(TUNE);
+            #else
+                // Otherwise, it's a similar story except tuning is skipped
+                mode(NORMAL);
+            #endif
         #endif // mode_switch_enable
-        // TODO: currently, literally nothing happens if mode switching is disabled...maybe fix that?
-        // idea would be to enter autotune first (if applicable), then normal, then direct if that fails
     }
 
     // How did we get here?

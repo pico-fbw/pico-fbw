@@ -2,7 +2,7 @@
 #define tune_h
 
 /**
- * Executes one cycle of the tune mode.
+ * Executes the tune mode.
 */
 void mode_tune();
 

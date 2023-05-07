@@ -8,8 +8,9 @@ void mode_normal();
 
 /**
  * Initializes the PID controllers and other variables required to operate the normal mode.
+ * @return true if initialization was successful, false otherwise.
 */
-void mode_normalInit();
+bool mode_normalInit();
 
 /**
  * Partly resets the inner workings of normal mode (namely the setpoints).

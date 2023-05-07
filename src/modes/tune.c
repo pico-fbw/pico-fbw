@@ -19,6 +19,8 @@
     float pitchIn;
 
     void mode_tune() {
+        // Start blinking LED to signify we are calibrating
+        led_blink(100);
         // The first four bytes of our data array will signify if we have run a calibration before, a value of 0.3 floating point corresponds to true in this case so we add that to the array
         float tuning_data[CONFIG_SECTOR_SIZE];
         tuning_data[0] = 0.3f;
@@ -49,7 +51,7 @@
                 if (rollIn > DEADBAND_VALUE || rollIn < -DEADBAND_VALUE || pitchIn > DEADBAND_VALUE || pitchIn < -DEADBAND_VALUE) {
                     pidtune_cancel();
                     mode(DIRECT);
-                    break;
+                    return;
                 }
             }
             // Make sure the calibration didn't fail, we can do this by checking to ensure the constants aren't zero
@@ -60,11 +62,14 @@
                 tuning_data[3] = pidtune_getTd();
                 flash_write(i, tuning_data);
             } else {
-                // If calibration did fail, throw an error code and revert to direct mode
+                // If calibration did fail, throw an error and revert to direct mode
                 led_blink(2000);
                 mode(DIRECT);
+                return;
             }
         }
+        // Stop blinking LED
+        led_blink_stop();
         // Exit to normal mode
         mode(NORMAL);
     }

@@ -15,8 +15,9 @@
 
 #include "normal.h"
 
-// Keeps the state of if normal mode has been initialized or not
+// Keeps the state of if normal mode has been initialized or not and if it is the first time initializing
 bool normalInitialized = false;
+bool firstTimeInit = true;
 
 inertialAngles angles;
 PIDController rollPID;
@@ -40,8 +41,11 @@ float yawOut;
 void mode_normal() {
     // Initialize normal mode if we haven't already
     if (!normalInitialized) {
-        mode_normalInit();
-        normalInitialized = true;
+        if (mode_normalInit()) {
+            normalInitialized = true;
+        } else {
+            return;
+        }
     }
     // Refresh input data from IMU and rx
     angles = imu_getAngles();
@@ -142,7 +146,7 @@ void computePID() {
     }
 }
 
-void mode_normalInit() {
+bool mode_normalInit() {
     #ifdef PID_AUTOTUNE
         // If autotuning is enabled, first make sure it's been completed before we allow normal mode
         if (mode_tuneCheckCalibration()) {
@@ -150,9 +154,14 @@ void mode_normalInit() {
             rollPID = (PIDController){flash_read(1, 1), flash_read(1, 2), flash_read(1, 3), roll_tau, -AIL_LIMIT, AIL_LIMIT, roll_integMin, roll_integMax, roll_kT};
             pitchPID = (PIDController){flash_read(2, 1), flash_read(2, 2), flash_read(2, 3), pitch_tau, -ELEV_LIMIT, ELEV_LIMIT, pitch_integMin, pitch_integMax, pitch_kT};
         } else {
-            // Otherwise, throw an error and revert to direct
-            led_blink(2000);
+            // Throw an error if this is our first time, otherwise don't so we don't spam the LED function (it just won't do anything then)
+            if (firstTimeInit) {
+                led_blink(2000);
+                firstTimeInit = false;
+            }
+            // Otherwise, revert to direct
             mode(DIRECT);
+            return false;
         }
     #else
         // If autotuning is disabled, pull in constants from manual tuning
@@ -166,6 +175,7 @@ void mode_normalInit() {
     pid_init(&yawPID);
     // Wake the second core and tell it to compute PID values, that's all it will be doing
     multicore_launch_core1(computePID);
+    return true;
 }
 
 void mode_normalReset() {

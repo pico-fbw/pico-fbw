@@ -12,12 +12,13 @@
 
 int main() {
     // Erase only the flash sectors containing pwm and pid calibration values
-    flash_erase(0);
-    flash_erase(1);
+    for (uint8_t i = 0; i < 3; i++) {
+        flash_erase(i);
+    }
     // Flash LED a few times to indicate success
     gpio_init(PICO_DEFAULT_LED_PIN);
     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
-    for (int i = 0; i < 10; ++i) {
+    for (int i = 0; i < 10; i++) {
         gpio_put(PICO_DEFAULT_LED_PIN, 1);
         sleep_ms(200);
         gpio_put(PICO_DEFAULT_LED_PIN, 0);

@@ -11,16 +11,16 @@ int imu_init() {
     // Check if the BNO055 unit is defined, if so,
     #ifdef IMU_BNO055
 		// Check for default i2c constants
-		#if !defined(i2c_default) || !defined(PICO_DEFAULT_I2C_SDA_PIN) || !defined(PICO_DEFAULT_I2C_SCL_PIN)
+		#ifndef i2c_default
 			#warning "No I2C defaults found, IMU functionality may be impacted."
 		#endif
 		// Now, initialize i2c on default pins (typically 4 and 5)
 		i2c_init(i2c_default, CHIP_FREQ_KHZ * 1000);
-		gpio_set_function(PICO_DEFAULT_I2C_SDA_PIN, GPIO_FUNC_I2C);
-		gpio_set_function(PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C);
-		gpio_pull_up(PICO_DEFAULT_I2C_SDA_PIN);
-		gpio_pull_up(PICO_DEFAULT_I2C_SCL_PIN);
-		bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
+		gpio_set_function(IMU_SDA_PIN, GPIO_FUNC_I2C);
+		gpio_set_function(IMU_SCL_PIN, GPIO_FUNC_I2C);
+		gpio_pull_up(IMU_SDA_PIN);
+		gpio_pull_up(IMU_SCL_PIN);
+		bi_decl(bi_2pins_with_func(IMU_SDA_PIN, IMU_SCL_PIN, GPIO_FUNC_I2C));
 		// Query the ID register for expected values to confirm identity/check comms
 		uint8_t id;
 		int result = i2c_write_timeout_us(i2c_default, CHIP_REGISTER, &ID_REGISTER, 1, true, 1000000);

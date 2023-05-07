@@ -10,7 +10,7 @@
 // Enable this if you will be using a channel on your tx/rx to change control modes (why would you not?). Enabled by default.
 #define MODE_SWITCH_ENABLE
 #ifdef MODE_SWITCH_ENABLE
-  	#define MODE_SWITCH_PIN 15
+  	#define MODE_SWITCH_PIN 7
 	// Define the type of switch you are using, a 3-pos is recommended.
 	#define SWITCH_3_POS
 	// #define SWITCH_2_POS
@@ -52,7 +52,7 @@
 #define INPUT_ELEV_PIN 3
 
 // Pin that the PWM wire from the reciever RUDDER channel is connected to.
-#define INPUT_RUD_PIN 7
+#define INPUT_RUD_PIN 5
 
 /** @section servo */
 
@@ -60,13 +60,13 @@
 #define SERVO_HZ 50
 
 // Pin that the PWM wire on the AILERON servo is connected to.
-#define SERVO_AIL_PIN 13
+#define SERVO_AIL_PIN 2
 
 // Pin that the PWM wire on the ELEVATOR servo is connected to.
-#define SERVO_ELEV_PIN 12
+#define SERVO_ELEV_PIN 4
 
 // Pin that the PWM wire on the RUDDER servo is connected to.
-#define SERVO_RUD_PIN 11
+#define SERVO_RUD_PIN 6
 
 
 /** @section limits 
@@ -132,7 +132,7 @@
 	// TODO: make sure these values actually work?
 
 	/**
-	 * Defining this option implements relay bias.
+	 * Defining this option implements relay bias (comment to disable).
 	 * This is useful to adjust the relay output values during the auto tuning to recover symmetric oscillations.
 	 * This can compensate for load disturbance and equivalent signals arising from nonlinear or non-stationary processes.
 	 * Any improvement in the tunings seems quite modest but sometimes unbalanced oscillations can be persuaded to converge where they might not otherwise have done so.
@@ -192,6 +192,11 @@
 
 
 /** @section sensors */
+
+// SDA and SCL pins of the IMU.
+// Note that these pins must line up with the Pico's I2C0 interface, see a pinout if you're not sure.
+#define IMU_SDA_PIN 8
+#define IMU_SCL_PIN 9
 
 // IMU types
 // Define whichever IMU type you are using.

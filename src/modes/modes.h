@@ -11,7 +11,7 @@
  * Runs the specified mode of the system.
  * Additionally, if the system is not already set into the specified mode, it will run the mode starting code.
 */
-void mode(uint smode);
+void mode(uint8_t smode);
 
 /**
  * Declares whether or not the IMU data is safe to use.

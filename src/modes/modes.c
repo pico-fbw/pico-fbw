@@ -16,7 +16,7 @@
 
 // Variable to store the system's current mode regardless of the mode currently being requested
 // Mode is direct by default until we prove the IMU data is safe
-uint cmode = 0;
+uint8_t cmode = DIRECT;
 // Same thing with IMU data itself, bad until proven
 bool imuDataSafe = false;
 
@@ -40,7 +40,7 @@ bool imuDataSafe = false;
 //     return true;
 // }
 
-void mode(uint smode) {
+void mode(uint8_t smode) {
     // If the selected mode is the same as the current mode, run the specified mode's cycle function
     switch(smode) {
         case DIRECT:
@@ -48,7 +48,7 @@ void mode(uint smode) {
             if (cmode != DIRECT) {
                 // Set the current working mode
                 cmode = smode;
-                // Only set LED as blinking if the IMU has encountered an error, not if the user purposely enters direct mode
+                // Set LED as blinking if the IMU has encountered an error, not if the user purposely enters direct mode
                 if (!imuDataSafe) {
                     led_blink(250);
                 }
@@ -61,19 +61,20 @@ void mode(uint smode) {
                 // add_repeating_timer_ms(5000, imuReconnect, NULL, &imuTimer);
             }
             mode_direct();
+            break;
         case NORMAL:
             if (cmode != NORMAL) {
                 // Make sure it is okay to set to normal mode
                 if (imuDataSafe) {
                     cmode = smode;
-                    // Mode has been set to normal
-                    led_blink_stop();
                 } else {
                     // If we are unable to set to normal mode, revert to direct mode
-                    mode(0);
+                    // We use recursive function calling here so that the direct mode init code runs
+                    mode(DIRECT);
                 }
             }
             mode_normal();
+            break;
         case AUTO:
             if (cmode != AUTO) {
                 if (imuDataSafe) {
@@ -84,15 +85,31 @@ void mode(uint smode) {
                         cmode = TUNE;
                     }
                     led_blink_stop();
+                    break;
                 } else {
-                    mode(0);
+                    mode(DIRECT);
                 }
             }
             mode_auto();
+            break;
         #ifdef PID_AUTOTUNE    
         case TUNE:
-            mode_tune();
-        #endif    
+            // smode might not equal TUNE if we are switching from auto mode so we set it directly
+            cmode = TUNE;
+            // This logic is here for safety and also for if tuning mode gets called directly in the case of no mode switching,
+            // these checks will pass if it has been automatically entered from auto mode
+            if (imuDataSafe) {
+                if (!mode_tuneCheckCalibration()) {
+                    mode_tune();
+                } else {
+                    // Recursive function calling so checks can be done
+                    mode(NORMAL);
+                }
+            } else {
+                mode(DIRECT);
+            }
+            break;
+        #endif
     }
 }
 
@@ -101,6 +118,6 @@ void setIMUSafe(int state) {
     // Automatically de-init i2c and set into direct mode if IMU is deemed unsafe
     if (!state) {
         imu_deinit();
-        mode(0);
+        mode(DIRECT);
     }
 }
