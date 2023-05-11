@@ -1,6 +1,6 @@
 # pico-fbw
 
-A fly-by-wire system for RC airplanes designed to run on the Rasperry Pi Pico microcontroller.
+A fly-by-wire system designed for RC airplanes, for the Rasperry Pi Pico microcontroller.
 
 ## **DISCLAIMER**
 
@@ -54,4 +54,4 @@ You can find all of the information about building and configuring the project o
 
 If you experience any issues, have any ideas for new features, or just any general feedback about the project in general, don't hesitate to reach out! You can submit an issue on our [issues page](https://github.com/MylesAndMore/pico-fbw/issues/new)--just please be sure to label your issure accordingly. And if you are a developer looking to suggest or improve on our code, feel free to leave us an issue or [pull request](https://github.com/MylesAndMore/pico-fbw/compare)!
 
-Thanks for stopping by :)
+Thanks for checking out my project, hope you enjoy! :)
