@@ -62,6 +62,7 @@ void mode(uint8_t smode) {
             }
             mode_direct();
             break;
+        // TODO: normal mode should be able to activate auto tuning if two way switch is enabled    
         case NORMAL:
             if (cmode != NORMAL) {
                 // Make sure it is okay to set to normal mode
