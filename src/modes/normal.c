@@ -117,8 +117,14 @@ void mode_normal() {
             // If we are in a turn, 
             // first set the yaw damper as disabled,
             yawdamp_on = false;
-            // then set the yaw value to a reduced version of our aileron value in an attempt to coordinate our turn
+            // then set the yaw value to a reduced version of our aileron value to coordinate our turn
             yawOut = rollPID.out * RUDDER_TURNING_VALUE;
+            // If the yaw setpoint is larger than the limit, bring it back within limits (for the PID controlled outputs this is done within the PID library)
+            if (yawOut > RUD_LIMIT) {
+                yawOut = RUD_LIMIT;
+            } else if (yawOut < -RUD_LIMIT) {
+                yawOut = -RUD_LIMIT;
+            }
         } else {
             // If the yaw damper is set as off still, that means we have just transitioned to this phase, so we should update the yaw setpoint
             if (!yawdamp_on) {
@@ -168,10 +174,10 @@ bool mode_normalInit() {
         rollPID = (PIDController){roll_kP, roll_kI, roll_kD, roll_tau, -AIL_LIMIT, AIL_LIMIT, roll_integMin, roll_integMax, roll_kT};
         pitchPID = (PIDController){pitch_kP, pitch_kI, pitch_kD, pitch_tau, -ELEV_LIMIT, ELEV_LIMIT, pitch_integMin, pitch_integMax, pitch_kT};
     #endif
+    yawPID = (PIDController){yaw_kP, yaw_kI, yaw_kD, yaw_tau, -RUD_LIMIT, RUD_LIMIT, yaw_integMin, yaw_integMax, yaw_kT};
     // Set up PID controllers
     pid_init(&rollPID);
     pid_init(&pitchPID);
-    yawPID = (PIDController){yaw_kP, yaw_kI, yaw_kD, yaw_tau, -RUD_LIMIT, RUD_LIMIT, yaw_integMin, yaw_integMax, yaw_kT};
     pid_init(&yawPID);
     // Wake the second core and tell it to compute PID values, that's all it will be doing
     multicore_launch_core1(computePID);

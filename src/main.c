@@ -81,41 +81,27 @@ int main() {
 
     // Enter main program loop
     while (true) {
-        // Enable/disable correct mode switching code
-        #ifdef MODE_SWITCH_ENABLE
-            #ifdef SWITCH_2_POS
-                if (pwm_readDeg(3) < 90) {
-                    // Lower pos
-                    mode(DIRECT);
-                } else {
-                    // Upper pos
-                    mode(NORMAL);
-                }
-            #endif // switch_2_pos
-            #ifdef SWITCH_3_POS
-                // Similar to two-way switch except different logic for three pos
-                if (pwm_readDeg(3) < 85) {
-                    // Lower pos
-                    mode(DIRECT);
-                } else if (pwm_readDeg(3) > 95) {
-                    // Upper pos
-                    mode(AUTO);
-                } else {
-                    // Middle pos
-                    mode(NORMAL);
-                }
-            #endif // switch_3_pos
-        #else
-            // If mode switching is disabled and tuning is enabled, try to enter tuning mode
-            // This will automatically fall back internally (using the mode switcher) to normal mode if tuning has been completed,
-            // and to direct mode if the IMU is unsafe, resulting in automatic mode switching (still not recommended though)
-            #ifdef PID_AUTOTUNE
-                mode(TUNE);
-            #else
-                // Otherwise, it's a similar story except tuning is skipped
+        #ifdef SWITCH_2_POS
+            if (pwm_readDeg(3) < 90) {
+                // Lower pos
+                mode(DIRECT);
+            } else {
+                // Upper pos
                 mode(NORMAL);
-            #endif
-        #endif // mode_switch_enable
+            }
+        #endif // switch_2_pos
+        #ifdef SWITCH_3_POS
+            if (pwm_readDeg(3) < 85) {
+                // Lower pos
+                mode(DIRECT);
+            } else if (pwm_readDeg(3) > 95) {
+                // Upper pos
+                mode(AUTO);
+            } else {
+                // Middle pos
+                mode(NORMAL);
+            }
+        #endif // switch_3_pos
     }
 
     // How did we get here?

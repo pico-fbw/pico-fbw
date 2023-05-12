@@ -26,14 +26,15 @@ void flash_write(uint sector, float data[]);
  * Reads back one value from a previously written data array.
  * @param sector the "sector" to read from
  * @param val the value of data to read back. This should be the index of the same value from when you originally wrote the data.
- * @return the requested data according to the parametets.
+ * @return the requested data according to the parameters.
  * Do note that this function only does a bit of math to figure out where your requested data is; it has no protections from reading garbage data,
  * program data, or no data at all. Be careful!
 */
 float flash_read(uint sector, uint val);
 
 /**
- * 
+ * Erases a given sector of flash.
+ * @param sector the "sector" to erase.
 */
 void flash_erase(uint sector);
 

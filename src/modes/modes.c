@@ -47,7 +47,7 @@ void mode(uint8_t smode) {
             // If the current mode is not the selected mode, run the mode switching code for that mode and change the mode
             if (cmode != DIRECT) {
                 // Set the current working mode
-                cmode = smode;
+                cmode = DIRECT;
                 // Set LED as blinking if the IMU has encountered an error, not if the user purposely enters direct mode
                 if (!imuDataSafe) {
                     led_blink(250);
@@ -61,13 +61,21 @@ void mode(uint8_t smode) {
                 // add_repeating_timer_ms(5000, imuReconnect, NULL, &imuTimer);
             }
             mode_direct();
-            break;
-        // TODO: normal mode should be able to activate auto tuning if two way switch is enabled    
+            break;   
         case NORMAL:
             if (cmode != NORMAL) {
                 // Make sure it is okay to set to normal mode
                 if (imuDataSafe) {
-                    cmode = smode;
+                    // If we are running a two-pos switch, behavior is similar to auto mode's tuning logic, otherwise, just set the mode
+                    #ifdef SWITCH_2_POS
+                        if (mode_tuneCheckCalibration()) {
+                            cmode = NORMAL;
+                        } else {
+                            cmode = TUNE;
+                        }
+                    #else
+                        cmode = NORMAL;
+                    #endif
                 } else {
                     // If we are unable to set to normal mode, revert to direct mode
                     // We use recursive function calling here so that the direct mode init code runs

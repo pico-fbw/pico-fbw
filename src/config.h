@@ -51,7 +51,8 @@
 // Pin that the PWM wire from the reciever RUDDER channel is connected to.
 #define INPUT_RUD_PIN 5
 
-/** @section servo */
+
+/** @section servo/output */
 
 // The frequency to run your servos at (most are 50 and you shouldn't have to touch this).
 #define SERVO_HZ 50
@@ -67,28 +68,26 @@
 
 
 /** @section limits 
- * Keep in mind that there are hard limits imposed within normal mode.
- * If an angle of 72 degrees of bank, 35 degrees of pitch up, or 20 degrees of pitch down is detected from the IMU,
- * the system will revert back to direct mode.
- * This is done for safety, PLEASE do not modify those values (outside of this file) for the safety of yourself and others!
+ * Keep in mind that there are hard limits imposed within normal mode that are not accessible within this configuration.
+ * If an angle of 72 degrees of bank, 35 degrees of pitch up, or 20 degrees of pitch down is detected from the IMU, the system will revert back to direct mode.
  * 
- * Most of the default values are the same values from an Airbus A320 aricraft--thanks to the FlyByWire team for the great documentation!
+ * Most of the default values are the same values from an Airbus A320 aricraft--thanks to the MSFS FlyByWire team for their great documentation!
 */
 
-// The maximum roll angle that the system will attempt to stabilize. A constant input is required above this.
+// The maximum roll angle that the system will attempt to stabilize.
+// A constant input is required to keep a roll within this and the ROLL_LIMIT_HOLD value.
 #define ROLL_LIMIT 33
-
-// The maximum roll angle that the system will hold, nothing higher is allowed.
+// The maximum roll angle that the system will allow, nothing higher is allowed.
 #define ROLL_LIMIT_HOLD 67
 
 // The maximum pitch angle that the system will hold and stabilize, nothing higher is allowed.
 #define PITCH_UPPER_LIMIT 30
 
 // The minimum pitch angle that the system will hold and stabilize, nothing lower is allowed.
-// This value DOES need to be negative!!
+// This value DOES need to be negative!
 #define PITCH_LOWER_LIMIT -15
 
-/* Note that all control limits apply to both directions, specify how much the SERVOS move, and are bypassed in direct mode. */
+/* Note that all control limits apply to both movement directions, specify how much the SERVOS are allowed to move (not maximum angles!!), and are bypassed in direct mode. */
 
 // The maximum degree value the system is allowed to move the ailerons to.
 #define AIL_LIMIT 25
@@ -97,13 +96,12 @@
 #define ELEV_LIMIT 15
 
 // The maximum rudder input the yaw damper/turn coordinator is allowed to make.
-#define RUD_LIMIT 50
+#define RUD_LIMIT 20
 
 
 /** @section tuning 
  * Changing these values are for experts ONLY!! The system's behavior can be radically altered through these values
  * which could cause crashes or even injuries, so PLEASE be careful with these values and test thoroughly!
- * 
  * It is suggested that you read up on what each of these values do in a PID control loop before attempting to alter them if you wish.
 */
 
@@ -155,12 +153,12 @@
 	*/ 
 	#define AUTOTUNE_MAX_WAIT_MINUTES 0.1
 #else
-	// PID tuning values for the roll axis PID controller.
+	// PID constants for the roll axis.
 	#define roll_kP 1.0
 	#define roll_kI 0.0025
 	#define roll_kD 0.001
 
-	// PID tuning values for the pitch axis PID controller.
+	// PID constants for the pitch axis.
 	#define pitch_kP 1.0
 	#define pitch_kI 0.0025
 	#define pitch_kD 0.001
@@ -178,7 +176,7 @@
 #define pitch_integMax 50.0
 #define pitch_kT 0.01
 
-// PID tuning values for the yaw axis PID controller.
+// PID constants for the yaw axis.
 #define yaw_kP 1.0
 #define yaw_kI 0.0025
 #define yaw_kD 0.001
@@ -198,7 +196,7 @@
 // IMU types
 // Define whichever IMU type you are using.
 #define IMU_BNO055
-// More to come in the future...?
+// More to come in the future...? Let me know if there's an IMU you would like supported!
 
 
 
