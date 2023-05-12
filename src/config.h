@@ -7,17 +7,14 @@
 
 /** @section config */
 
-// Enable this if you will be using a channel on your tx/rx to change control modes (why would you not?). Enabled by default.
-#define MODE_SWITCH_ENABLE
-#ifdef MODE_SWITCH_ENABLE
-  	#define MODE_SWITCH_PIN 7
-	// Define the type of switch you are using, a 3-pos is recommended.
-	#define SWITCH_3_POS
-	// #define SWITCH_2_POS
-#endif
+// Define the type of mode switch you are using, a 3-pos is recommended.
+#define SWITCH_3_POS
+// #define SWITCH_2_POS
+// Pin that the PWM wire from the reciever SWITCH channel is connected to.
+#define MODE_SWITCH_PIN 7
 
 // Define if you want the system to calibrate each of your input PWM channels seperately.
-// If not defined, the system will only sample channel 0 (aileron) and apply those values to everything.
+// If not defined, the system will only sample channel 0 and apply those values to everything.
 #define CONFIGURE_INPUTS_SEPERATELY
 
 /**

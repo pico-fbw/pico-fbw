@@ -27,10 +27,11 @@ Now, with that out of the way, let's get into the features of the system!
 
 You will need a few materials in addition to your current RC plane setup. They are as follows:
 
-- Raspberry Pi Pico microcontroller (w/ data-capable micro-USB cable to flash the program)
-- BNO055 sensor
-- ~7 female-to-female jumper wires (aka DuPont connector)
-- ~10 male-to-female jumper wires (aka DuPont connector)
+- Raspberry Pi Pico microcontroller (with data-capable micro-USB cable to flash the program)
+- BNO055 sensor breakout
+- ~7 female-to-female jumper wires
+- ~10 male-to-female jumper wires
+- A switch on your transmitter and corresponding channel on your receiver
 
 You can find a guide to sourcing these parts as well as my tested/preferred sources on our [materials wiki page](https://github.com/MylesAndMore/pico-fbw/wiki/Materials).
 

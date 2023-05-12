@@ -148,12 +148,8 @@ void pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint
     calibration_data[0] = 0.5f;
     // Check if we are calibrating per pin or not
     #ifdef CONFIGURE_INPUTS_SEPERATELY
-        // If yes, complete the calibration for all pins, account for mode switch reading or not
-        #ifdef MODE_SWITCH_ENABLE
-            uint num_pins = 4;
-        #else
-            uint num_pins = 3;
-        #endif
+        // If yes, complete the calibration for all pins
+        uint num_pins = 4;
     #else
         // If not, only register pin 0 to calibrate 
         uint num_pins = 1;

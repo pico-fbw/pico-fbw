@@ -15,32 +15,28 @@ int main() {
     // Initialize power LED
     led_init();
 
-    // Set up I/O --
     // Initialize serial port over USB for debugging
     // TODO: Do NOT keep this in the final build! USB has a high overhead and I'm not exactly tethering my plane to a USB cable...
     stdio_init_all();
 
     // Set up PWM inputs
-    #ifdef MODE_SWITCH_ENABLE
-        uint pin_list[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, MODE_SWITCH_PIN};
-        pwm_enable(pin_list, 4);
-    #else 
-        uint pin_list[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN};
-        pwm_enable(pin_list, 3);
-    #endif
+    uint pin_list[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, MODE_SWITCH_PIN};
+    pwm_enable(pin_list, 4);
 
     // Set up and test PWM (servo) outputs
     const uint8_t servos[] = {SERVO_AIL_PIN, SERVO_ELEV_PIN, SERVO_RUD_PIN};
-    const uint8_t degrees[] = {135, 45};
-    for (int s = 0; s < 3; s++) {
+    const uint8_t degrees[] = {105, 75};
+    for (uint8_t s = 0; s < 3; s++) {
         servo_enable(servos[s]);
     }
-    for (int d = 0; d < 2; d++) {
-        for (int s = 0; s < 3; s++) {
+    for (uint8_t d = 0; d < 2; d++) {
+        for (uint8_t s = 0; s < 3; s++) {
             servo_set(servos[s], degrees[d]);
         }
-        // This delay is purposely not long enough for the servos to reach that final degree value, the test is just to see if they move in both directions
-        sleep_ms(200);
+        sleep_ms(100);
+    }
+    for (uint8_t s = 0; s < 3; s++) {
+            servo_set(servos[s], 90);
     }
 
     // If PWM has not been previously calibrated (likely first boot),
