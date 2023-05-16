@@ -188,16 +188,22 @@
 
 /** @section sensors */
 
-// SDA and SCL pins of the IMU.
-// Note that these pins must line up with the Pico's I2C0 interface, see a pinout if you're not sure.
-#define IMU_SDA_PIN 8
-#define IMU_SCL_PIN 9
-
-// IMU types
-// Define whichever IMU type you are using.
+// IMU types; uncomment whichever type you are using.
 #define IMU_BNO055
 // More to come in the future...? Let me know if there's an IMU you would like supported!
 
+/* Note that these pins must line up with the Pico's I2C0 interface, see a pinout if you're not sure! */
+#define IMU_SDA_PIN 8
+#define IMU_SCL_PIN 9
+
+
+/** @section connectivity */
+
+// Wi-Flight will be automatically enabled if you are using a Pico W, comment if you don't want this functionality.
+#define WIFLIGHT
+
+// Define your country to optimize Wi-Flight.
+// TODO
 
 
 /* End of configuration. */

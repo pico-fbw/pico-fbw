@@ -12,7 +12,7 @@ int imu_init() {
     #ifdef IMU_BNO055
 		// Check for default i2c constants
 		#ifndef i2c_default
-			#warning "No I2C defaults found, IMU functionality may be impacted."
+			#warning No I2C defaults found, IMU functionality will be impacted.
 		#endif
 		// Now, initialize i2c on default pins (typically 4 and 5)
 		i2c_init(i2c_default, CHIP_FREQ_KHZ * 1000);
@@ -43,7 +43,7 @@ int imu_init() {
             }
 		}
     #else
-		#error "No IMU module was defined. Please define an IMU module to continue."
+		#error No IMU module was defined.
     #endif
 }
 
