@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.13)
 
 # Import the Pico SDK
-include (pico_sdk_import.cmake)
+include(pico_sdk_import.cmake)
 
 # Define project, language(s), and version
 project(pico-fbw C CXX ASM)
