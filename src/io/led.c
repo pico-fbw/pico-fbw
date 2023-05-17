@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdbool.h>
 #include "pico/stdlib.h"
 
@@ -14,25 +15,17 @@
 #endif
 
 #ifdef LED_PIN
-    bool led_on = false;
     struct repeating_timer timer;
 #endif
 
 bool led_callback(struct repeating_timer *t) {
     #ifdef LED_PIN
-        if (led_on) {
-            #if defined(RASPBERRYPI_PICO)
-                gpio_put(LED_PIN, 0);
-            #elif defined(RASPBERRYPI_PICO_W)
-                cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
-            #endif
-        } else {
-            #if defined(RASPBERRYPI_PICO)
-                gpio_put(LED_PIN, 1);
-            #elif defined(RASPBERRYPI_PICO_W)
-                cyw43_arch_gpio_put(LED_PIN, 1);
-            #endif
-        }
+        #if defined(RASPBERRYPI_PICO)
+            gpio_xor_mask(1u << LED_PIN);
+        #elif defined(RASPBERRYPI_PICO_W)
+            cyw43_arch_gpio_put(LED_PIN, !cyw43_arch_gpio_get(LED_PIN));
+            printf("\n"); // I kid you not, the program just freezes without this print statement. No idea why.
+        #endif
     #endif
 }
 
@@ -46,7 +39,6 @@ void led_init() {
             cyw43_arch_init();
             cyw43_arch_gpio_put(LED_PIN, 1);
         #endif
-        led_on = true;
     #endif
 }
 
@@ -63,8 +55,7 @@ void led_blink_stop() {
         #if defined(RASPBERRYPI_PICO)
             gpio_put(LED_PIN, 1);
         #elif defined(RASPBERRYPI_PICO_W)
-            cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
+            cyw43_arch_gpio_put(LED_PIN, 1);
         #endif
-        led_on = true;
     #endif
 }

@@ -192,17 +192,18 @@
 #define IMU_BNO055
 // More to come in the future...? Let me know if there's an IMU you would like supported!
 
-/* Note that these pins must line up with the Pico's I2C0 interface, see a pinout if you're not sure! */
+// Note that these pins must line up with the Pico's I2C0 interface, see a pinout if you're not sure!
 #define IMU_SDA_PIN 8
 #define IMU_SCL_PIN 9
 
 
 /** @section connectivity */
 
-// Wi-Flight will be automatically enabled if you are using a Pico W, comment if you don't want this functionality.
-#define WIFLIGHT
+// Wi-Fly will be automatically enabled if you are using a Pico W, comment out if you don't want this functionality.
+// You do NOT have to comment if you are using a standard Pico, the system will detect it automatically.
+#define WIFLY
 
-// Define your country to optimize Wi-Flight.
+// Define your country to optimize Wi-Fly
 // TODO
 
 
