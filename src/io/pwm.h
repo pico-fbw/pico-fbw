@@ -76,8 +76,10 @@ float pwm_readDeg(uint pin);
  * @param num_samples the number of times to sample the pin for deviation
  * @param sample_delay_ms the delay between samples
  * @param run_times the amount of times to run a sampling function (num_samples), will be averaged at the end
+ * 
+ * @return true if the calibration was successful, false if not
 */
-void pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint run_times);
+bool pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint run_times);
 
 /**
  * Checks if the PWM calibration has been run before.

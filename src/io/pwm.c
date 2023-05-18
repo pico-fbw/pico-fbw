@@ -137,9 +137,8 @@ float pwm_readDegRaw(uint pin) {
     return (180000 * ((float)pulsewidth[pin] * 0.000000016 - 0.001));
 }
 
-/* Begin calibration functions */
 
-void pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint run_times) {
+bool pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint run_times) {
     // Start blinking LED to signify we are calibrating
     led_blink(100);
     // Create an array where we will arrange our data to later write
@@ -163,11 +162,15 @@ void pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint
         float final_difference = 0.0f;
         // These loops simply poll the specified pin based on the specifications we have provided in the function
         for (uint t = 0; t < run_times; t++) {
-            // Reset the total difference every time we run a time
+            // Reset the total difference every time we run
             float total_difference = 0.0f;
             for (uint i = 0; i < num_samples; i++) {
-                total_difference += deviation - pwm_readDegRaw(pin);
+                total_difference += (deviation - pwm_readDegRaw(pin));
                 sleep_ms(sample_delay_ms);
+            }
+            // Check to see if the deviation is 270 (this value occurs with a pulsewidth of 0/1 aka not connected)
+            if ((total_difference / num_samples) == 270.0f) {
+                return false;
             }
             // Add the total difference recorded divided by the samples we took (average) to the final difference
             final_difference = final_difference + (total_difference / num_samples);
@@ -175,9 +178,14 @@ void pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint
         // Get our final average and save it to the correct byte in our array which we write to flash
         calibration_data[pin + 1] = final_difference / run_times;
     }
+    // Before we write, make sure values aren't way out of spec
+    if (calibration_data[1] > MAX_CALIBRATION_OFFSET || calibration_data[1] < -MAX_CALIBRATION_OFFSET || calibration_data[2] > MAX_CALIBRATION_OFFSET || calibration_data[2] < -MAX_CALIBRATION_OFFSET || calibration_data[3] > MAX_CALIBRATION_OFFSET || calibration_data[3] < -MAX_CALIBRATION_OFFSET || calibration_data[4] > MAX_CALIBRATION_OFFSET || calibration_data[4] < -MAX_CALIBRATION_OFFSET) {
+        return false;
+    }
     // Write calibration data to sector "0", last sector of flash
     flash_write(0, calibration_data);
     led_blink_stop();
+    return true;
 }
 
 bool pwm_checkCalibration() {

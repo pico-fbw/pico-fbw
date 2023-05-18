@@ -36,7 +36,6 @@ void led_init() {
             gpio_set_dir(LED_PIN, GPIO_OUT);
             gpio_put(LED_PIN, 1);
         #elif defined(RASPBERRYPI_PICO_W)
-            cyw43_arch_init();
             cyw43_arch_gpio_put(LED_PIN, 1);
         #endif
     #endif

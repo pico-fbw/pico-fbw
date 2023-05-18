@@ -13,6 +13,13 @@ target_link_libraries(${PROJECT_NAME}
     fbw_lib
     fbw_modes
 )
+# Import Pico W specific libraries and set compiler definitions
+if ("$CACHE{PICO_BOARD}" STREQUAL "pico_w")
+    target_link_libraries(${PROJECT_NAME} pico_cyw43_arch_none)
+    if (WIFLY_ENABLED)
+        add_compile_definitions(WIFLY_ENABLED)
+    endif ()
+endif ()    
 
 # Point CMake to other project directories
 add_subdirectory(io)

@@ -106,7 +106,7 @@
 */
 
 #define PID_AUTOTUNE // comment out if you want to manually set PID gains. Only do this if you really know what you're doing!!
-#ifdef PID_AUTOTUNE
+#ifdef PID_AUTOTUNE // Do not edit!
 	/**
      * Some example PID auto tuning rules:
      * { {  44, 24,   0 } }  ZIEGLER_NICHOLS_PI
@@ -152,7 +152,7 @@
 	 * Set a larger value for processes with long delays or time constants.
 	*/ 
 	#define AUTOTUNE_MAX_WAIT_MINUTES 0.1
-#else
+#else // Do not edit!
 	// PID constants for the roll axis.
 	#define roll_kP 1.0
 	#define roll_kI 0.0025
@@ -162,7 +162,7 @@
 	#define pitch_kP 1.0
 	#define pitch_kI 0.0025
 	#define pitch_kD 0.001
-#endif
+#endif // Do not edit!
 
 // Miscellaneous roll PID tuning values.
 #define roll_tau 0.001
@@ -197,14 +197,20 @@
 #define IMU_SCL_PIN 9
 
 
-/** @section connectivity */
+/** @section Wi-Fly
+ * Wi-Fly is enabled by default when the Pico W is detected as the target board.
+ * It must be enabled/disabled through CMake and NOT the config file!
+ * The option to toggle this is WIFLY_ENABLED; Use -DWIFLY_ENABLED=ON or -DWIFLY_ENABLED=OFF through CMake command line or search for WIFLY_ENABLED in the GUI.
+ * The below settings apply only if Wi-Fly has been enabled through CMake.
+*/
 
-// Wi-Fly will be automatically enabled if you are using a Pico W, comment out if you don't want this functionality.
-// You do NOT have to comment if you are using a standard Pico, the system will detect it automatically.
-#define WIFLY
+#ifdef WIFLY_ENABLED // Do not edit!
 
-// Define your country to optimize Wi-Fly
-// TODO
+	// Define your country to optimize Wi-Fly (not required but recommended).
+	// See the list of available countries here: https://github.com/georgerobotics/cyw43-driver/blob/main/src/cyw43_country.h
+	#define WIFLY_COUNTRY CYW43_COUNTRY_WORLDWIDE
+
+#endif // Do not edit!
 
 
 /* End of configuration. */

@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
+#ifdef RASPBERRYPI_PICO_W
+    #include "pico/cyw43_arch.h"
+#endif
 
 #include "io/servo.h"
 #include "io/pwm.h"
@@ -12,6 +15,14 @@
 int main() {
     // Save time of 850ms after boot for later
     absolute_time_t imu_safe = make_timeout_time_ms(850);
+    // Initialize cyw43 arch if we are on the Pico W
+    #ifdef RASPBERRYPI_PICO_W
+        #ifdef WIFLY_ENABLED
+            cyw43_arch_init_with_country(WIFLY_COUNTRY);
+        #else
+            cyw43_arch_init();
+        #endif
+    #endif
     // Initialize power LED
     led_init();
 
@@ -36,7 +47,7 @@ int main() {
         sleep_ms(100);
     }
     for (uint8_t s = 0; s < 3; s++) {
-            servo_set(servos[s], 90);
+        servo_set(servos[s], 90);
     }
 
     // If PWM has not been previously calibrated (likely first boot),
@@ -44,9 +55,8 @@ int main() {
         // Wait a few s for tx/rx to set itself up
         sleep_ms(3000);
         // Calibrate PWM (offset of 90 degrees, 2000 samples with 5ms delay and 5 times sample, this should take about 60s)
-        pwm_calibrate(90.0f, 2000, 5, 5);
-        // Check to make sure the calibration has written successfully, if not then blink LED medium and stop execution (with an infinite loop)
-        if (!pwm_checkCalibration) {
+        // If either the calibration itself or the final check fails, throw error FBW-500
+        if (!pwm_calibrate(90.0f, 2000, 5, 5) || !pwm_checkCalibration()) {
             led_blink(500);
             while (true) {
                 tight_loop_contents();
