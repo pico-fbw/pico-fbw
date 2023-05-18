@@ -9,7 +9,6 @@
 #include "io/imu.h"
 #include "io/led.h"
 #include "modes/modes.h"
-#include "modes/normal.h"
 #include "config.h"
 
 int main() {
@@ -18,22 +17,19 @@ int main() {
     // Initialize cyw43 arch if we are on the Pico W
     #ifdef RASPBERRYPI_PICO_W
         #ifdef WIFLY_ENABLED
-            cyw43_arch_init_with_country(WIFLY_COUNTRY);
+            cyw43_arch_init_with_country(WIFLY_NETWORK_COUNTRY);
         #else
             cyw43_arch_init();
         #endif
     #endif
     // Initialize power LED
     led_init();
-
-    // Initialize serial port over USB for debugging
-    // TODO: Do NOT keep this in the final build! USB has a high overhead and I'm not exactly tethering my plane to a USB cable...
+    // Initialize any linked IO types
     stdio_init_all();
 
     // Set up PWM inputs
     uint pin_list[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, MODE_SWITCH_PIN};
     pwm_enable(pin_list, 4);
-
     // Set up and test PWM (servo) outputs
     const uint8_t servos[] = {SERVO_AIL_PIN, SERVO_ELEV_PIN, SERVO_RUD_PIN};
     const uint8_t degrees[] = {105, 75};
@@ -58,9 +54,7 @@ int main() {
         // If either the calibration itself or the final check fails, throw error FBW-500
         if (!pwm_calibrate(90.0f, 2000, 5, 5) || !pwm_checkCalibration()) {
             led_blink(500);
-            while (true) {
-                tight_loop_contents();
-            }
+            while (true);
         }
     }
 
@@ -68,9 +62,7 @@ int main() {
     // This is mainly to protect extremely high calibration values from being used, such as if a channel was accidentally unplugged during calubration
     if (pwm_getCalibrationValue(0) > MAX_CALIBRATION_OFFSET || pwm_getCalibrationValue(0) < -MAX_CALIBRATION_OFFSET || pwm_getCalibrationValue(1) > MAX_CALIBRATION_OFFSET || pwm_getCalibrationValue(1) < -MAX_CALIBRATION_OFFSET || pwm_getCalibrationValue(2) > MAX_CALIBRATION_OFFSET || pwm_getCalibrationValue(2) < -MAX_CALIBRATION_OFFSET || pwm_getCalibrationValue(3) > MAX_CALIBRATION_OFFSET || pwm_getCalibrationValue(3) < -MAX_CALIBRATION_OFFSET) {
         led_blink(500);
-        while (true) {
-            tight_loop_contents();
-        }
+        while (true);
     }
 
     // Wait before initializing IMU to give it time to boot just in case we haven't reached enough time yet

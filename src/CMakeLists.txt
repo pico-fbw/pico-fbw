@@ -35,7 +35,7 @@ add_executable(pico-fbw-reset
 )
 # Import libraries
 target_link_libraries(pico-fbw-reset
-    pico_stdlib
+    pico_bootrom
     fbw_io
 )
 # Set compile options for the pico-fbw-reset executable
@@ -44,7 +44,7 @@ target_compile_options(pico-fbw-reset
     -Wall
     -Wextra
 )
-# Set the executable to upload to RAM just in case, because we are dealing with erasing flash
+# Set the executable to upload to RAM because we are dealing with erasing flash
 pico_set_binary_type(pico-fbw-reset no_flash)
 # Option to build multiple files
 pico_add_extra_outputs(pico-fbw-reset)

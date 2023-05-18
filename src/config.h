@@ -106,7 +106,7 @@
 */
 
 #define PID_AUTOTUNE // comment out if you want to manually set PID gains. Only do this if you really know what you're doing!!
-#ifdef PID_AUTOTUNE // Do not edit!
+#ifdef PID_AUTOTUNE
 	/**
      * Some example PID auto tuning rules:
      * { {  44, 24,   0 } }  ZIEGLER_NICHOLS_PI
@@ -152,7 +152,7 @@
 	 * Set a larger value for processes with long delays or time constants.
 	*/ 
 	#define AUTOTUNE_MAX_WAIT_MINUTES 0.1
-#else // Do not edit!
+#else
 	// PID constants for the roll axis.
 	#define roll_kP 1.0
 	#define roll_kI 0.0025
@@ -162,7 +162,7 @@
 	#define pitch_kP 1.0
 	#define pitch_kI 0.0025
 	#define pitch_kD 0.001
-#endif // Do not edit!
+#endif
 
 // Miscellaneous roll PID tuning values.
 #define roll_tau 0.001
@@ -204,13 +204,22 @@
  * The below settings apply only if Wi-Fly has been enabled through CMake.
 */
 
-#ifdef WIFLY_ENABLED // Do not edit!
+#ifdef WIFLY_ENABLED
 
 	// Define your country to optimize Wi-Fly (not required but recommended).
 	// See the list of available countries here: https://github.com/georgerobotics/cyw43-driver/blob/main/src/cyw43_country.h
-	#define WIFLY_COUNTRY CYW43_COUNTRY_WORLDWIDE
+	#define WIFLY_NETWORK_COUNTRY CYW43_COUNTRY_WORLDWIDE
 
-#endif // Do not edit!
+	// Edit to change the name of the network Wi-Fly creates
+	#define WIFLY_NETWORK_NAME "pico-fbw"
+	// Comment out to disable Wi-Fly's password protection (not recommended)
+	#define WIFLY_NETWORK_USE_PASSWORD
+	#ifdef WIFLY_NETWORK_USE_PASSWORD
+		// Edit to change the password of the network Wi-Fly creates
+		#define WIFLY_NETWORK_PASSWORD "picofbw"
+	#endif
+
+#endif
 
 
 /* End of configuration. */

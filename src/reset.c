@@ -1,4 +1,3 @@
-#include "pico/stdlib.h"
 #include "pico/bootrom.h"
 
 #include "io/flash.h"
