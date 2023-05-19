@@ -23,11 +23,12 @@
 #define HTTP_GET "GET"
 #define HTTP_RESPONSE_HEADERS "HTTP/1.1 %d OK\nContent-Length: %d\nContent-Type: text/html; charset=utf-8\nConnection: close\n\n"
 #define LED_TEST_BODY "<html><body><h1>Hello from Pico W.</h1><p>Led is %s</p><p><a href=\"?led=%d\">Turn led %s</a></body></html>"
-#define PAGE_CONTENT "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width\"><title>Wi-Fly</title><style>body{background-color:black;}.text{color:white;font-family:system-ui;}#fplan{width:500px;height:400px;}</style></head><body><h2 class=text>Wi-Fly</h2><form><label class=text for=fplan>Paste flightplan here:</label><br><input type=text id=fplan name=fplan><br><br><input type=submit value=\"Upload flightplan\"></form></body></html>"
 #define LED_PARAM "led=%d"
 #define LED_TEST "/ledtest"
 #define LED_GPIO 0
 #define HTTP_RESPONSE_REDIRECT "HTTP/1.1 302 Redirect\nLocation: http://%s" LED_TEST "\n\n"
+
+#define PAGE_CONTENT "<html><head><meta name=\"viewport\" content=\"width=device-width\"><title>Wi-Fly</title><style>body{background-color:black;}.text{color:white;font-family:sans-serif;}#fplan{width:500px;height:400px;}</style></head><body><h2 class=text>Wi-Fly</h2><form><label class=text for=fplan>Paste flightplan here:</label><br><input type=text id=fplan name=fplan><br><br><input type=submit value=\"Upload flightplan\"></form></body></html>"
 
 static err_t tcp_close_client_connection(TCP_CONNECT_STATE_T *con_state, struct tcp_pcb *client_pcb, err_t close_err) {
     if (client_pcb) {
@@ -98,6 +99,11 @@ static int test_server_content(const char *request, const char *params, char *re
         }
     }
     return len;
+}
+
+static int wifly_server_content(const char *request, const char *params, char *result, size_t max_result_len) {
+    int len = 0;
+    // TODO
 }
 
 err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err) {

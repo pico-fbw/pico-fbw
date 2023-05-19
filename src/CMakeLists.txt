@@ -19,8 +19,9 @@ if ("$CACHE{PICO_BOARD}" STREQUAL "pico_w")
     target_link_libraries(${PROJECT_NAME} pico_cyw43_arch_none)
     if (WIFLY_ENABLED)
         add_compile_definitions(WIFLY_ENABLED)
+        include_directories(${CMAKE_CURRENT_LIST_DIR}/io/wifly)
     endif ()
-endif ()    
+endif ()
 
 # Point CMake to other project directories
 add_subdirectory(io)
