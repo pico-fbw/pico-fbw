@@ -144,7 +144,7 @@ void mode_normal() {
 }
 
 // Internal function that we will later push to the second core to compute the PID math for all controllers
-void computePID() {
+static void computePID() {
     while (true) {
         pid_update(&rollPID, rollSetpoint, rollAngle);
         pid_update(&pitchPID, pitchSetpoint, pitchAngle);

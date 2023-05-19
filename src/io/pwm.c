@@ -133,7 +133,7 @@ float pwm_readDeg(uint pin) {
 }
 
 // Function to read the raw degree value without any calibrations applied, only used internally in calibration for now.
-float pwm_readDegRaw(uint pin) {
+static float pwm_readDegRaw(uint pin) {
     return (180000 * ((float)pulsewidth[pin] * 0.000000016 - 0.001));
 }
 

@@ -48,10 +48,5 @@ target_compile_options(pico-fbw-reset
 pico_set_binary_type(pico-fbw-reset no_flash)
 # Option to build multiple files
 pico_add_extra_outputs(pico-fbw-reset)
-# Set include directories for the pico-fbw-reset executable
-target_include_directories(pico-fbw-reset
-    PRIVATE
-    include
-)
 # Install the pico-fbw-reset executable in the same directory as the main executable
 install(TARGETS pico-fbw-reset DESTINATION ${CMAKE_INSTALL_PREFIX})

@@ -16,6 +16,9 @@
 #include "wifly.h"
 #include "../../config.h"
 
+dhcp_server_t dhcp_server;
+dns_server_t dns_server;
+
 void wifly_init() {
     TCP_SERVER_T *state = calloc(1, sizeof(TCP_SERVER_T));
     if (!state) {
@@ -36,24 +39,19 @@ void wifly_init() {
     IP4_ADDR(ip_2_ip4(&mask), 255, 255, 255, 0);
 
     // Start the dhcp server
-    dhcp_server_t dhcp_server;
     dhcp_server_init(&dhcp_server, &state->gw, &mask);
-
     // Start the dns server
-    dns_server_t dns_server;
     dns_server_init(&dns_server, &state->gw);
 
     if (!tcp_server_open(state)) {
         printf("failed to open server\n");
     }
 
-    while(!state->complete);
-    
-    dns_server_deinit(&dns_server);
-    dhcp_server_deinit(&dhcp_server);
-    cyw43_arch_deinit();
+    // while(!state->complete);
 }
 
 void wifly_deinit() {
-
+    dns_server_deinit(&dns_server);
+    dhcp_server_deinit(&dhcp_server);
+    // cyw43_arch_deinit();
 }

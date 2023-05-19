@@ -8,37 +8,15 @@
 #include "normal.h"
 #include "auto.h"
 #include "tune.h"
-#include "../config.h"
 
 #include "modes.h"
-
-/* Define local variables--these should not be accessable to other files. */
+#include "../config.h"
 
 // Variable to store the system's current mode regardless of the mode currently being requested
 // Mode is direct by default until we prove the IMU data is safe
 uint8_t cmode = DIRECT;
 // Same thing with IMU data itself, bad until proven
 bool imuDataSafe = false;
-
-// // Timer var for IMU reconnection
-// struct repeating_timer imuTimer;
-
-/* End variable definitions. */
-
-// /**
-//  * Attempts to reconnect to the IMU and resume normal mode. Usually called from the timer created when switching to direct mode.
-// */
-// bool imuReconnect(struct repeating_timer *t) {
-//     if (imu_init() == 0) {
-//         if (imu_configure() == 0) {
-//             // If IMU is able to successfully reconnect, cancel the reconnection timer and resume normal mode
-//             cancel_repeating_timer(&imuTimer);
-//             setIMUSafe(true);
-//             setMode(1);
-//         }
-//     }
-//     return true;
-// }
 
 void mode(uint8_t smode) {
     // If the selected mode is the same as the current mode, run the specified mode's cycle function
@@ -54,11 +32,6 @@ void mode(uint8_t smode) {
                 }
                 // Reset normal mode, this is just in case we go back to normal mode, we don't want to keep the previous setpoints and have the system snap back to them/
                 mode_normalReset();
-                
-                // THIS FUNCTION IS UNUSED, I2C protocol freezes up after a disconnection and I couldn't find a solution,
-                // so it is disabled until I can find a workaround, I do think it is possible.
-                // // Set up interrupt to try and reconnect to IMU every 5s
-                // add_repeating_timer_ms(5000, imuReconnect, NULL, &imuTimer);
             }
             mode_direct();
             break;   

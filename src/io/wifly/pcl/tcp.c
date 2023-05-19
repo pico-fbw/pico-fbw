@@ -28,22 +28,6 @@
 #define LED_GPIO 0
 #define HTTP_RESPONSE_REDIRECT "HTTP/1.1 302 Redirect\nLocation: http://%s" LED_TEST "\n\n"
 
-typedef struct TCP_SERVER_T_ {
-    struct tcp_pcb *server_pcb;
-    bool complete;
-    ip_addr_t gw;
-} TCP_SERVER_T;
-
-typedef struct TCP_CONNECT_STATE_T_ {
-    struct tcp_pcb *pcb;
-    int sent_len;
-    char headers[128];
-    char result[256];
-    int header_len;
-    int result_len;
-    ip_addr_t *gw;
-} TCP_CONNECT_STATE_T;
-
 static err_t tcp_close_client_connection(TCP_CONNECT_STATE_T *con_state, struct tcp_pcb *client_pcb, err_t close_err) {
     if (client_pcb) {
         assert(con_state && con_state->pcb == client_pcb);
@@ -238,7 +222,7 @@ static err_t tcp_server_accept(void *arg, struct tcp_pcb *client_pcb, err_t err)
     return ERR_OK;
 }
 
-static bool tcp_server_open(void *arg) {
+bool tcp_server_open(void *arg) {
     TCP_SERVER_T *state = (TCP_SERVER_T*)arg;
     DEBUG_printf("starting server on port %u\n", TCP_PORT);
 

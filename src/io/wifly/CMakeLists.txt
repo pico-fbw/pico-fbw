@@ -5,9 +5,8 @@ add_library(fbw_wifly
     pcl/tcp.c
 )
 
-target_include_directories(fbw_wifly PRIVATE
+target_include_directories(fbw_wifly PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}
-    ${CMAKE_CURRENT_LIST_DIR}/pcl
 )
 
 target_link_libraries(fbw_wifly
