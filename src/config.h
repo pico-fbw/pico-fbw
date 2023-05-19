@@ -212,11 +212,11 @@
 
 	// Edit to change the name of the network Wi-Fly creates
 	#define WIFLY_NETWORK_NAME "pico-fbw"
-	// Comment out to disable Wi-Fly's password protection (not recommended)
-	#define WIFLY_NETWORK_USE_PASSWORD
+	// Uncomment to enable Wi-Fly's password protection
+	// #define WIFLY_NETWORK_USE_PASSWORD
 	#ifdef WIFLY_NETWORK_USE_PASSWORD
 		// Edit to change the password of the network Wi-Fly creates
-		#define WIFLY_NETWORK_PASSWORD "picofbw"
+		#define WIFLY_NETWORK_PASSWORD "password"
 	#endif
 
 #endif

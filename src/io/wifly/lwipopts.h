@@ -7,17 +7,17 @@
 
 // allow override in some examples
 #ifndef NO_SYS
-#define NO_SYS                      1
+    #define NO_SYS                  1
 #endif
 // allow override in some examples
 #ifndef LWIP_SOCKET
-#define LWIP_SOCKET                 0
+    #define LWIP_SOCKET             0
 #endif
 #if PICO_CYW43_ARCH_POLL
-#define MEM_LIBC_MALLOC             1
+    #define MEM_LIBC_MALLOC         1
 #else
-// MEM_LIBC_MALLOC is incompatible with non polling versions
-#define MEM_LIBC_MALLOC             0
+    // MEM_LIBC_MALLOC is incompatible with non polling versions
+    #define MEM_LIBC_MALLOC         0
 #endif
 #define MEM_ALIGNMENT               4
 #define MEM_SIZE                    4000
@@ -53,9 +53,9 @@
 #define LWIP_DHCP_DOES_ACD_CHECK    0
 
 #ifndef NDEBUG
-#define LWIP_DEBUG                  1
-#define LWIP_STATS                  1
-#define LWIP_STATS_DISPLAY          1
+    #define LWIP_DEBUG              1
+    #define LWIP_STATS              1
+    #define LWIP_STATS_DISPLAY      1
 #endif
 
 #define ETHARP_DEBUG                LWIP_DBG_OFF

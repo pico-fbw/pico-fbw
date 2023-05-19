@@ -8,6 +8,9 @@
 #include "io/pwm.h"
 #include "io/imu.h"
 #include "io/led.h"
+#ifdef WIFLY_ENABLED
+    #include "io/wifly/wifly.h"
+#endif    
 #include "modes/modes.h"
 #include "config.h"
 
@@ -26,7 +29,7 @@ int main() {
     led_init();
     // Initialize any linked IO types
     stdio_init_all();
-
+    
     // Set up PWM inputs
     uint pin_list[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, MODE_SWITCH_PIN};
     pwm_enable(pin_list, 4);

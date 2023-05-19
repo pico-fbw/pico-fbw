@@ -23,6 +23,7 @@
 #define HTTP_GET "GET"
 #define HTTP_RESPONSE_HEADERS "HTTP/1.1 %d OK\nContent-Length: %d\nContent-Type: text/html; charset=utf-8\nConnection: close\n\n"
 #define LED_TEST_BODY "<html><body><h1>Hello from Pico W.</h1><p>Led is %s</p><p><a href=\"?led=%d\">Turn led %s</a></body></html>"
+#define PAGE_CONTENT "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width\"><title>Wi-Fly</title><style>body{background-color:black;}.text{color:white;font-family:system-ui;}#fplan{width:500px;height:400px;}</style></head><body><h2 class=text>Wi-Fly</h2><form><label class=text for=fplan>Paste flightplan here:</label><br><input type=text id=fplan name=fplan><br><br><input type=submit value=\"Upload flightplan\"></form></body></html>"
 #define LED_PARAM "led=%d"
 #define LED_TEST "/ledtest"
 #define LED_GPIO 0

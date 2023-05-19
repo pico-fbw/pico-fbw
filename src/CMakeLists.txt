@@ -12,6 +12,7 @@ target_link_libraries(${PROJECT_NAME}
     fbw_io
     fbw_lib
     fbw_modes
+    fbw_wifly
 )
 # Import Pico W specific libraries and set compiler definitions
 if ("$CACHE{PICO_BOARD}" STREQUAL "pico_w")
