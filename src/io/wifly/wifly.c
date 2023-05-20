@@ -22,7 +22,7 @@ dns_server_t dns_server;
 void wifly_init() {
     TCP_SERVER_T *state = calloc(1, sizeof(TCP_SERVER_T));
     if (!state) {
-        printf("failed to allocate state\n");
+        ERROR_printf("failed to allocate state\n");
     }
 
     const char *ap_name = WIFLY_NETWORK_NAME;
@@ -44,10 +44,8 @@ void wifly_init() {
     dns_server_init(&dns_server, &state->gw);
 
     if (!tcp_server_open(state)) {
-        printf("failed to open server\n");
+        ERROR_printf("failed to open server\n");
     }
-
-    // while(!state->complete);
 }
 
 void wifly_deinit() {
