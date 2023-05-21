@@ -24,8 +24,11 @@
 #define POLL_TIME_S 5
 #define HTTP_GET "GET"
 #define HTTP_RESPONSE_HEADERS "HTTP/1.1 %d OK\nContent-Length: %d\nContent-Type: text/html; charset=utf-8\nConnection: close\n\n"
-#define REDIRECT "/wifly"
 #define HTTP_RESPONSE_REDIRECT "HTTP/1.1 302 Redirect\nLocation: http://%s" REDIRECT "\n\n"
+#define REDIRECT "/wifly"
+
+// Var that will keep track of if a flightplan has been submitted yet
+int fplanStatus = -1;
 
 static err_t tcp_close_client_connection(TCP_CONNECT_STATE_T *con_state, struct tcp_pcb *client_pcb, err_t close_err) {
     if (client_pcb) {
@@ -71,12 +74,34 @@ static int server_content(const char *request, const char *params, char *result,
     int len = 0;
     // Check if we need to redirect instead of serving page content
     if (strncmp(request, REDIRECT, sizeof(REDIRECT) - 1) == 0) {
-        len = snprintf(result, max_result_len, PAGE_CONTENT);
+        // If there are params, check to see if the flightplan data is there
+        if (params) {
+            if (strncmp(FPLAN_PARAM, params, sizeof(FPLAN_PARAM) - 1) == 0) {
+                // Check the global status to see if we've already accepted a flightplan
+                if (fplanStatus == 0) {
+                    WIFLY_DEBUG_printf("Flightplan submission detected, skipping parse; already recieved\n");
+                } else {
+                    WIFLY_DEBUG_printf("Flightplan submission detected, attempting to parse\n");
+                    // Attempt to parse the flightplan data and save the result to the global status
+                    fplanStatus = wifly_parseFplan(params);
+                }
+            }
+        }
+        // Serve page content based on the status of the flightplan submission
+        if (fplanStatus == -1) {
+            len = snprintf(result, max_result_len, PAGE_CONTENT, "Awaiting flightplan...");
+        } else if (fplanStatus == 0)  {
+            len = snprintf(result, max_result_len, PAGE_CONTENT, "Flightplan uploaded successfully!");
+        } else if (fplanStatus == 1) {
+            len = snprintf(result, max_result_len, PAGE_CONTENT, "Error: parse. Check formatting and try again.");
+        } else if (fplanStatus == 2) {
+            len = snprintf(result, max_result_len, PAGE_CONTENT, "Error: version mismatch! Please update your firmware.");
+        }
     }
     return len;
 }
 
-err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err) {
+static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err) {
     TCP_CONNECT_STATE_T *con_state = (TCP_CONNECT_STATE_T*)arg;
     if (!p) {
         TCP_DEBUG_printf("connection closed\n");

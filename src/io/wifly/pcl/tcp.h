@@ -11,7 +11,7 @@ typedef struct TCP_CONNECT_STATE_T_ {
     struct tcp_pcb *pcb;
     int sent_len;
     char headers[128];
-    char result[512];
+    char result[1024];
     int header_len;
     int result_len;
     ip_addr_t *gw;

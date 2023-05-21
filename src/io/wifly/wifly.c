@@ -6,8 +6,14 @@
  * SPDX-License-Identifier: BSD-3-Clause
 */
 
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
+
 #include "pico/cyw43_arch.h"
 #include "pico/stdlib.h"
+
+#include "../../lib/jsmn.h"
 
 #include "pcl/dhcp.h"
 #include "pcl/dns.h"
@@ -48,8 +54,79 @@ void wifly_init() {
     }
 }
 
+static inline void url_decode(char *str) {
+    char *p = str;
+    char *q = str;
+    while (*p != '\0') {
+        if (*p == '%') {
+            char hex[3];
+            hex[0] = *(p + 1);
+            hex[1] = *(p + 2);
+            hex[2] = '\0';
+            *q = strtol(hex, NULL, 16);
+            p += 2;
+        } else if (*p == '+') {
+            *q = ' ';
+        } else {
+            *q = *p;
+        }
+        p++;
+        q++;
+    }
+    *q = '\0';
+}
+
+int wifly_parseFplan(const char *fplan) {
+    // Find the start of the JSON string
+    const char *json_start = strstr(fplan, FPLAN_PARAM);
+    if (!json_start) {
+        // Prefix not found
+        return 1;
+    }
+    // Move the pointer to the start of the JSON string
+    // This effectively skips the "fplan=" prefix so we don't confuse the JSON parser later
+    json_start += strlen(FPLAN_PARAM);
+
+    // Now, URL decode the input string so we can parse it in JSON format instead of URL
+    char decoded[strlen(json_start) + 1];
+    strcpy(decoded, json_start);
+    url_decode(decoded);
+    WIFLY_DEBUG_printf("Encoded: %s\n", json_start);
+    WIFLY_DEBUG_printf("Decoded: %s\n", decoded);
+
+    // Initialize JSON parsing logic
+    jsmn_parser parser;
+    jsmntok_t tokens[strlen(json_start) + 1];
+    jsmn_init(&parser);
+    int token_count = jsmn_parse(&parser, decoded, strlen(decoded), tokens, sizeof(tokens)/sizeof(tokens[0]));
+    if (token_count < 0) {
+        // Parse error
+        return 1;
+    }
+
+    // Find the version field
+    for (int i = 0; i < token_count; i++) {
+        if (tokens[i].type == JSMN_STRING && tokens[i].size == 1 && strncmp("version", decoded + tokens[i].start, tokens[i].end - tokens[i].start) == 0) {
+            // Process the version
+            char version[9];
+            strncpy(version, decoded + tokens[i + 1].start, tokens[i + 1].end - tokens[i + 1].start);
+            version[tokens[i + 1].end - tokens[i + 1].start] = '\0';
+            float versionValue = strtof(version, NULL);
+            WIFLY_DEBUG_printf("Flight plan version: %f\n", versionValue);
+            if (versionValue != WIFLY_CURRENT_VERSION) {
+                // Version mismatch
+                return 2;
+            }
+            // Continue with parsing...
+            return 0;
+        }
+    }
+    // Parse error
+    return 1;
+}
+
 void wifly_deinit() {
     dns_server_deinit(&dns_server);
     dhcp_server_deinit(&dhcp_server);
     // cyw43_arch_deinit();
-}
+}    

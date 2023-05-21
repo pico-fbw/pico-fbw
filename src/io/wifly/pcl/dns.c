@@ -93,9 +93,10 @@ static int dns_socket_sendto(struct udp_pcb **udp, const void *buf, size_t len, 
         return err;
     }
 
-#if DUMP_DATA
-    dump_bytes(buf, len);
-#endif
+    #if DUMP_DATA
+        dump_bytes(buf, len);
+    #endif
+
     return len;
 }
 
@@ -111,9 +112,9 @@ static void dns_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p, 
         goto ignore_request;
     }
 
-#if DUMP_DATA
-    dump_bytes(dns_msg, msg_len);
-#endif
+    #if DUMP_DATA
+        dump_bytes(dns_msg, msg_len);
+    #endif
 
     uint16_t flags = lwip_ntohs(dns_hdr->flags);
     uint16_t question_count = lwip_ntohs(dns_hdr->question_count);

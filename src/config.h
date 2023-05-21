@@ -40,7 +40,10 @@
 #define DEADBAND_VALUE 2
 
 
-/** @section input */
+/** @section input 
+ * Note that all PWM input pins must be mapped to a GPIO pin on a PWM_B channel.
+ * At the time of writing this is simply odd number GPIO pins, but be sure to check a pinout just in case if you plan on modifying the pins.
+*/
 
 // Pin that the PWM wire from the reciever AILERON channel is connected to.
 #define INPUT_AIL_PIN 1
@@ -52,7 +55,9 @@
 #define INPUT_RUD_PIN 5
 
 
-/** @section servo/output */
+/** @section servo/output
+ * Output pins do not have the same limitation as input pins do.
+*/
 
 // The frequency to run your servos at (most are 50 and you shouldn't have to touch this).
 #define SERVO_HZ 50
@@ -105,7 +110,8 @@
  * It is suggested that you read up on what each of these values do in a PID control loop before attempting to alter them if you wish.
 */
 
-#define PID_AUTOTUNE // comment out if you want to manually set PID gains. Only do this if you really know what you're doing!!
+// TODO: this is commented out for now because I can't fix autotune for now lol, uncomment later
+// #define PID_AUTOTUNE // comment out if you want to manually set PID gains. Only do this if you really know what you're doing!!
 #ifdef PID_AUTOTUNE
 	/**
      * Some example PID auto tuning rules:

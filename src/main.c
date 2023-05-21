@@ -84,6 +84,11 @@ int main() {
         led_blink(1000);
     }
 
+    // If Wi-Fly is enabled, we initialize it here
+    #ifdef WIFLY_ENABLED
+        wifly_init();
+    #endif
+
     // Enter main program loop
     while (true) {
         #ifdef SWITCH_2_POS
