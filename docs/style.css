@@ -1,6 +1,6 @@
 body {
     background-color: black;
-    padding:0px 10px;
+    padding: 0px 10px;
 }
 
 .text {
@@ -19,4 +19,8 @@ body {
     padding: 8px 15px;
     text-align: center;
     font-size: 16px;
+}
+
+#map {
+    height:500px;
 }

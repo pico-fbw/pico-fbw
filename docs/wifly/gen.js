@@ -1,5 +1,13 @@
+/* Declare commonly used constants */
+
 const field = document.getElementById("fplan");
 const genButton = document.getElementById("generate");
+
+// Map initial zoom and location is here
+const map = L.map('map').setView([20, 0], 2);
+
+
+/* Function definitions */
 
 /**
  * @returns a Wi-Fly flightplan as a string
@@ -34,5 +42,25 @@ function genButtonCallback() {
     }
 }
 
+function map_init() {
+    // Set correct tiles
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+}
+
+function map_onClick(event) {
+    var coords = event.latlng;
+    // TODO: add clicked coords to an array and also display them on map, possibly connect them with a line?
+}
+
+
+/* Begin program execution */
+
 // Attach event listener to the generate button
 genButton.addEventListener("click", genButtonCallback);
+
+// Initialize the map and bind its click method
+map_init();
+map.on('click', map_onClick);
