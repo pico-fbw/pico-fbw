@@ -89,13 +89,13 @@ static int server_content(const char *request, const char *params, char *result,
         }
         // Serve page content based on the status of the flightplan submission
         if (fplanStatus == -1) {
-            len = snprintf(result, max_result_len, PAGE_CONTENT, "Awaiting flightplan...");
+            len = snprintf(result, max_result_len, PAGE_CONTENT, "#5A5A5A", "Awaiting flightplan...");
         } else if (fplanStatus == 0)  {
-            len = snprintf(result, max_result_len, PAGE_CONTENT, "Flightplan uploaded successfully!");
+            len = snprintf(result, max_result_len, PAGE_CONTENT, "#4CAF50", "Flightplan uploaded successfully!");
         } else if (fplanStatus == 1) {
-            len = snprintf(result, max_result_len, PAGE_CONTENT, "Error: parse. Check formatting and try again.");
+            len = snprintf(result, max_result_len, PAGE_CONTENT, "#D21404", "Error: parse. Check formatting and try again.");
         } else if (fplanStatus == 2) {
-            len = snprintf(result, max_result_len, PAGE_CONTENT, "Error: version mismatch! Please update your firmware.");
+            len = snprintf(result, max_result_len, PAGE_CONTENT, "#D24E01", "Error: version mismatch! Please update your firmware.");
         }
     }
     return len;

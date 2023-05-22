@@ -13,7 +13,7 @@
 #define DUMP_DATA 0 // 1
 
 // Content that is displayed to user, formatted as HTML
-#define PAGE_CONTENT "<!DOCTYPE html><html><head><meta name=\"viewport\" content=\"width=device-width\"><title>Wi-Fly</title><style>body{background-color:black;}.text{color:white;font-family:sans-serif;}#fplan{width:350px;height:500px;}</style></head><body><h2 class=text>Wi-Fly</h2><form><label class=text for=fplan>Paste flightplan here:</label><br><input type=text id=fplan name=fplan><br><br><input type=submit value=\"Upload flightplan\"></form><p class=text>%s</p></body></html>"
+#define PAGE_CONTENT "<!DOCTYPE html><html><head><meta name=\"viewport\" content=\"width=device-width\"><title>Wi-Fly</title><style>body{background-color:black;padding:0px 10px;}.text{color:white;font-family:sans-serif;}#fplan{width:350px;height:500px;}#upload{background-color:%s;padding:8px 15px;text-align:center;font-size:16px;}</style></head><body><h2 class=text>Wi-Fly</h2><form><input type=text id=fplan name=fplan placeholder=\"Paste your flightplan here...\"><br><br><input type=submit class=text id=upload value=Upload></form><p class=text>%s</p></body></html>"
 // HTTP parameter that defines flightplan in GET request
 #define FPLAN_PARAM "fplan="
 

@@ -1,8 +1,22 @@
 body {
     background-color: black;
+    padding:0px 10px;
 }
 
 .text {
     color: white;
     font-family: sans-serif;
+}
+
+#fplan {
+    width:350px;
+    height:500px;
+}
+
+#generate {
+    background-color: #5A5A5A;
+    color: white;
+    padding: 8px 15px;
+    text-align: center;
+    font-size: 16px;
 }
