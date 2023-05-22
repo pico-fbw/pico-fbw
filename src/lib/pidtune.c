@@ -1,3 +1,5 @@
+// TODO: try using this PID library it might be better: https://github.com/jackw01/arduino-pid-autotuner
+
 /*
  * This Library is ported from the AutotunerPID Toolkit by William Spinelli
  * (http://www.mathworks.com/matlabcentral/fileexchange/4652) 
