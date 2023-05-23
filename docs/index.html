@@ -16,16 +16,24 @@
 
         <div id="map"></div>
         <br>
+        <span>
+            <textarea class="manadd" id="manadd_lat" hint="Latitude"></textarea>
+            <textarea class="manadd" id="manadd_lng" hint="Longitude"></textarea>
+            <button id="manadd_btn">Add Waypoint</button>
+        </span>
+        <br><br>
         
         <textarea id="fplan" readonly></textarea>
-        <br><br><br>
+        <br><br>
 
-        <div id="buttons">
+        <div>
             <button id="generate">Generate Flightplan</button>
             <button id="regenerate">Re-generate</button>
         </div>
         <br><br>
 
+        <script src="wifly/map.js"></script>
         <script src="wifly/gen.js"></script>
+        <script src="wifly/btn.js"></script>
     </body>
 </html>
