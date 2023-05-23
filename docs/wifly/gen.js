@@ -1,10 +1,12 @@
 /* Declare constants and vars*/
 
 var fplan = {
-    // Versioncode is here, change when new release
+    // Versioncode is here, change when there is a new release
     version: "0.1a",
     waypoints: []
 };
+// Maximum length of the generated flightplan JSON (URL-encoded)
+const maxFplanLen = 8760;
 
 const field = document.getElementById("fplan");
 const genButton = document.getElementById("generate");
@@ -17,12 +19,21 @@ const maxZoom = 19;
 /* Function definitions */
 
 /**
- * @returns a Wi-Fly flightplan as a string
+ * Generates the current flightplan into JSON and puts it into the fplan field.
+ * If the flightplan is too long nothing will be generated.
+ * 
+ * @returns true if the flightplan was generated, false if it was not.
  */
 function wifly_genFplan() {
-    // TODO: only do this if it is under a certain length threshold (url-encoded)
     // Convert the object to JSON string
-    return JSON.stringify(fplan, null, 0);
+    var fplanJSON = JSON.stringify(fplan, null, 0);
+    // Encode it into a URL temporarily so we can check its length (this is how the Pico will recieve it)
+    if (encodeURI(fplanJSON).length > maxFplanLen) {
+        return false;
+    } else {
+        field.value = JSON.stringify(fplan, null, 0);
+        return true;
+    }
 }
 
 var genButtonCopyState = false;
@@ -41,8 +52,16 @@ function genButtonCallback() {
         return;
     }
     if (!genButtonCopyState) {
-        // Update the output field with the generated flight plan JSON
-        field.value = JSON.stringify(fplan, null, 0);
+        // Generate the flightplan and handle any errors
+        if (!wifly_genFplan()) {
+            genButton.style.backgroundColor = "#D21404";
+            genButton.innerHTML = "Flightplan too long!";
+            genTimeout = setTimeout(() => {
+                genButton.style.backgroundColor = "#5A5A5A";
+                genButton.innerHTML = "Generate Flightplan";
+            }, "4000");
+            return;
+        }
         // Update color and text of button to indicate successful generation
         clearTimeout(genTimeout); // This is so the button doesn't change back to generate if the user creates waypoints quickly
         genButton.style.backgroundColor = "#008CBA";
@@ -63,7 +82,15 @@ function genButtonCallback() {
 }
 var regenTimeout;
 function regenButtonCallback() {
-    field.value = JSON.stringify(fplan, null, 0);
+    if (!wifly_genFplan()) {
+        regenButton.style.backgroundColor = "#D21404";
+        regenButton.innerHTML = "Flightplan too long!";
+        regenTimeout = setTimeout(() => {
+            regenButton.style.backgroundColor = "#E49B0F";
+            regenButton.innerHTML = "Re-generate";
+        }, "4000");
+        return;
+    }
     clearTimeout(regenTimeout);
     regenButton.style.backgroundColor = "#4CAF50";
     regenButton.innerHTML = "Re-generated!";

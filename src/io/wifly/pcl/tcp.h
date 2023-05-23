@@ -10,8 +10,8 @@ typedef struct TCP_SERVER_T_ {
 typedef struct TCP_CONNECT_STATE_T_ {
     struct tcp_pcb *pcb;
     int sent_len;
-    char headers[4096];
-    char accHeaders[4096];
+    char headers[1460];
+    char* accHeaders;
     char result[1460];
     int header_len;
     int result_len;
@@ -20,7 +20,7 @@ typedef struct TCP_CONNECT_STATE_T_ {
 
 /**
  * Opens the TCP server.
- * @param arg The server object.
+ * @param arg The state object
 */
 bool tcp_server_open(void *arg);
 
