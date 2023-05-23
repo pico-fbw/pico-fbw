@@ -29,6 +29,9 @@
 
 // Var that will keep track of if a flightplan has been submitted yet
 int fplanStatus = -1;
+// Keeps track of if we are using accumulated headers and if they are complete yet
+bool useAccHeaders = false;
+bool accHeadersComplete = false;
 
 static err_t tcp_close_client_connection(TCP_CONNECT_STATE_T *con_state, struct tcp_pcb *client_pcb, err_t close_err) {
     if (client_pcb) {
@@ -71,9 +74,16 @@ static err_t tcp_server_sent(void *arg, struct tcp_pcb *pcb, u16_t len) {
 }
 
 static int server_content(const char *request, const char *params, char *result, size_t max_result_len) {
+    printf("Content params: %s\n", params);
     int len = 0;
     // Check if we need to redirect instead of serving page content
     if (strncmp(request, REDIRECT, sizeof(REDIRECT) - 1) == 0) {
+        // Check to see if we are expecting more packets, if so, hold generating any content until we recieve the full message
+        if (useAccHeaders) {
+            if (!accHeadersComplete) {
+                return len;
+            }
+        }
         // If there are params, check to see if the flightplan data is there
         if (params) {
             if (strncmp(FPLAN_PARAM, params, sizeof(FPLAN_PARAM) - 1) == 0) {
@@ -110,16 +120,32 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err
     assert(con_state && con_state->pcb == pcb);
     if (p->tot_len > 0) {
         TCP_DEBUG_printf("tcp_server_recv %d err %d\n", p->tot_len, err);
-        #if DUMP_DATA
+        #if TCP_DUMP_DATA
             for (struct pbuf *q = p; q != NULL; q = q->next) {
-                TCP_DEBUG_printf("in: %.*s\n", q->len, q->payload);
+                printf("in: %.*s\n\n\n", q->len, q->payload);
             }
         #endif
         // Copy the request into the buffer
         pbuf_copy_partial(p, con_state->headers, p->tot_len > sizeof(con_state->headers) - 1 ? sizeof(con_state->headers) - 1 : p->tot_len, 0);
 
+        // Check if this is flagged as the last packet, if not, we know to expect more inbound, so we:
+        if (!(p->flags & PBUF_FLAG_PUSH)) {
+            useAccHeaders = true;
+            strncat(con_state->accHeaders, con_state->headers, sizeof(con_state->accHeaders) - strlen(con_state->accHeaders) - 1);
+            TCP_DEBUG_printf("Current header: %s\n", con_state->accHeaders);
+        }
+
+        if (useAccHeaders && (p->flags & PBUF_FLAG_PUSH)) {
+            strncat(con_state->accHeaders, con_state->headers, sizeof(con_state->accHeaders) - strlen(con_state->accHeaders) - 1);
+            memcpy(con_state->headers, con_state->accHeaders, sizeof(con_state->accHeaders));
+            con_state->headers[sizeof(con_state->accHeaders) - 1] = '\0';
+            TCP_DEBUG_printf("Final header: %s\n", con_state->accHeaders);
+            accHeadersComplete = true;
+            // free(con_state->accHeaders);
+        }
+
         // Handle GET request
-        if (strncmp(HTTP_GET, con_state->headers, sizeof(HTTP_GET) - 1) == 0) {
+        if ((strncmp(HTTP_GET, con_state->headers, sizeof(HTTP_GET) - 1) == 0) || (useAccHeaders && (p->flags & PBUF_FLAG_PUSH))) {
             char *request = con_state->headers + sizeof(HTTP_GET); // + space
             char *params = strchr(request, '?');
             if (params) {

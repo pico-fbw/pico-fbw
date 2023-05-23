@@ -91,8 +91,8 @@ int wifly_parseFplan(const char *fplan) {
     char decoded[strlen(json_start) + 1];
     strcpy(decoded, json_start);
     url_decode(decoded);
-    WIFLY_DEBUG_printf("Encoded: %s\n", json_start);
-    WIFLY_DEBUG_printf("Decoded: %s\n", decoded);
+    WIFLY_DEBUG_printf("Flightplan data encoded: %s\n", json_start);
+    WIFLY_DEBUG_printf("Flightplan data decoded: %s\n", decoded);
 
     // Initialize JSON parsing logic
     jsmn_parser parser;
@@ -111,9 +111,8 @@ int wifly_parseFplan(const char *fplan) {
             char version[9];
             strncpy(version, decoded + tokens[i + 1].start, tokens[i + 1].end - tokens[i + 1].start);
             version[tokens[i + 1].end - tokens[i + 1].start] = '\0';
-            float versionValue = strtof(version, NULL);
-            WIFLY_DEBUG_printf("Flight plan version: %f\n", versionValue);
-            if (versionValue != WIFLY_CURRENT_VERSION) {
+            WIFLY_DEBUG_printf("Flightplan detected version: %s\n", version);
+            if (strcmp(version, WIFLY_CURRENT_VERSION) != 0) {
                 // Version mismatch
                 return 2;
             }

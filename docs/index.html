@@ -12,14 +12,19 @@
         <title>Wi-Fly Flightplan Generator</title>
     </head>
     <body>
-        <h2 class=text>Wi-Fly Flightplan Generator</h2>
+        <h2 class="text">Wi-Fly Flightplan Generator</h2>
 
         <div id="map"></div>
-        <br><br>
+        <br>
         
         <textarea id="fplan" readonly></textarea>
+        <br><br><br>
+
+        <div id="buttons">
+            <button id="generate">Generate Flightplan</button>
+            <button id="regenerate">Re-generate</button>
+        </div>
         <br><br>
-        <button id="generate">Generate Flightplan</button>
 
         <script src="wifly/gen.js"></script>
     </body>
