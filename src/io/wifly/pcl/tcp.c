@@ -131,7 +131,7 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err
         // We check first to see if it is the final header in an accumulation
         if (useAccHeaders && (p->flags & PBUF_FLAG_PUSH)) {
             // Add the final header to the accumulated headers
-            strncat(con_state->accHeaders, con_state->headers, strlen(con_state->headers));
+            strcat(con_state->accHeaders, con_state->headers);
             // Null termination
             con_state->accHeaders[strlen(con_state->accHeaders)] = '\0';
             #if TCP_DUMP_DATA
@@ -140,7 +140,7 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err
             // Set the final headers flag
             accHeadersFinal = true;
         }
-        // Check if this is flagged as the last packet, if not, we know to expect more inbound
+        // Check if this is flagged as the last packet, if not, expect more packets; use accumulated headers
         if (!(p->flags & PBUF_FLAG_PUSH)) {
             useAccHeaders = true;
             // Dynamically allocate the header accumulator for headers
@@ -162,7 +162,7 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err
                 }
             }
             // Add the current headers to the accumulated headers
-            strncat(con_state->accHeaders, con_state->headers, strlen(con_state->headers));
+            strcat(con_state->accHeaders, con_state->headers);
             #if TCP_DUMP_DATA
                 TCP_DEBUG_printf("[acc] Current header: %s\n", con_state->accHeaders);
             #endif
@@ -226,17 +226,17 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err
                     return tcp_close_client_connection(con_state, pcb, err);
                 }
             }
+
+            // Clean up acc headers if necessary
+            if (accHeadersFinal) {
+                // Free memory used by accumulated headers and reset accumulation flags
+                free(con_state->accHeaders);
+                con_state->accHeaders = NULL;
+                useAccHeaders = false;
+                accHeadersFinal = false;
+            }
         }
         tcp_recved(pcb, p->tot_len);
-        
-        // Reset acc headers and free memory if this was the last packet in a fragmented array
-        if (useAccHeaders && (p->flags & PBUF_FLAG_PUSH)) {
-            // Free memory used by accumulated headers and reset accumulation flags
-            free(con_state->accHeaders);
-            con_state->accHeaders = NULL;
-            useAccHeaders = false;
-            accHeadersFinal = false;
-        }
     }
     pbuf_free(p);
     return ERR_OK;

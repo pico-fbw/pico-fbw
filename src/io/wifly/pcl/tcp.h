@@ -10,9 +10,9 @@ typedef struct TCP_SERVER_T_ {
 typedef struct TCP_CONNECT_STATE_T_ {
     struct tcp_pcb *pcb;
     int sent_len;
-    char headers[1461];
+    char headers[1460];
     char* accHeaders;
-    char result[1461];
+    char result[1460];
     int header_len;
     int result_len;
     ip_addr_t *gw;

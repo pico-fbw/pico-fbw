@@ -1,15 +1,14 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width">
+        <title>Wi-Fly Flightplan Generator</title>
 
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
         
         <link rel="stylesheet" href="style.css">
-
-        <title>Wi-Fly Flightplan Generator</title>
     </head>
     <body>
         <h2 class="text">Wi-Fly Flightplan Generator</h2>
@@ -17,19 +16,18 @@
         <div id="map"></div>
         <br>
         <span>
-            <textarea class="manadd" id="manadd_lat" hint="Latitude"></textarea>
-            <textarea class="manadd" id="manadd_lng" hint="Longitude"></textarea>
+            <input type="number" min="-90" max="90" class="manadd" id="manadd_lat" hint="Latitude" />
+            <input type="number" min="-180" max="180" class="manadd" id="manadd_lng" hint="Longitude" />
             <button id="manadd_btn">Add Waypoint</button>
         </span>
         <br><br>
-        
-        <textarea id="fplan" readonly></textarea>
+
+        <span>
+            <button id="generate">Generate Flightplan</button>
+        </span>
         <br><br>
 
-        <div>
-            <button id="generate">Generate Flightplan</button>
-            <button id="regenerate">Re-generate</button>
-        </div>
+        <textarea id="fplan" readonly></textarea>
         <br><br>
 
         <script src="wifly/map.js"></script>

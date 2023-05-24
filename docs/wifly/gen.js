@@ -6,7 +6,8 @@ var fplan = {
     waypoints: []
 };
 // Maximum length of the generated flightplan JSON (URL-encoded)
-const maxFplanLen = 8760;
+// Please tell me if you're ever actually able to reach this lol
+const maxFplanLen = 16384;
 
 const field = document.getElementById("fplan");
 

@@ -18,6 +18,12 @@
 // HTTP parameter that defines flightplan in GET request
 #define FPLAN_PARAM "fplan="
 
+typedef struct {
+    double lat;
+    double lng;
+    double alt;
+} Waypoint;
+
 /**
  * Initializes the Wi-Fly system.
 */

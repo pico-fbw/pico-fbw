@@ -104,7 +104,6 @@ int wifly_parseFplan(const char *fplan) {
         return 1;
     }
 
-    // Find the version field
     for (int i = 0; i < token_count; i++) {
         if (tokens[i].type == JSMN_STRING && tokens[i].size == 1 && strncmp("version", decoded + tokens[i].start, tokens[i].end - tokens[i].start) == 0) {
             // Process the version
@@ -116,7 +115,38 @@ int wifly_parseFplan(const char *fplan) {
                 // Version mismatch
                 return 2;
             }
-            // Continue with parsing...
+            // Find the waypoints field
+            if (tokens[i].type == JSMN_ARRAY && strncmp("waypoints", decoded + tokens[i].start, tokens[i].end - tokens[i].start) == 0) {
+                // Process each waypoint
+                int waypoint_count = tokens[i].size;
+                Waypoint waypoints[waypoint_count];
+
+                int waypoint_index = 0;
+                for (int j = i + 1; j < i + 1 + waypoint_count * 6; j += 6) {
+                    if (tokens[j].type == JSMN_OBJECT) {
+                        for (int k = 0; k < 6; k++) {
+                            if (tokens[j + k].type == JSMN_STRING && tokens[j + k].size == 1) {
+                                if (strncmp("lat", decoded + tokens[j + k].start, tokens[j + k].end - tokens[j + k].start) == 0) {
+                                    double lat = atof(decoded + tokens[j + k + 1].start);
+                                    waypoints[waypoint_index].lat = lat;
+                                } else if (strncmp("lng", decoded + tokens[j + k].start, tokens[j + k].end - tokens[j + k].start) == 0) {
+                                    double lng = atof(decoded + tokens[j + k + 1].start);
+                                    waypoints[waypoint_index].lng = lng;
+                                } else if (strncmp("alt", decoded + tokens[j + k].start, tokens[j + k].end - tokens[j + k].start) == 0) {
+                                    double alt = atof(decoded + tokens[j + k + 1].start);
+                                    waypoints[waypoint_index].alt = alt;
+                                }
+                            }
+                        }
+                        waypoint_index++;
+                    }
+                }
+
+                // Print the parsed waypoints
+                for (int w = 0; w < waypoint_count; w++) {
+                    WIFLY_DEBUG_printf("Waypoint %d: lat=%f, lng=%f, alt=%f\n", w + 1, waypoints[w].lat, waypoints[w].lng, waypoints[w].alt);
+                }
+            }
             return 0;
         }
     }
