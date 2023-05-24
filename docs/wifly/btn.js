@@ -100,3 +100,5 @@ function manaddButtonCallback() {
 genButton.addEventListener("click", genButtonCallback);
 regenButton.addEventListener("click", regenButtonCallback);
 manaddButton.addEventListener("click", manaddButtonCallback);
+
+// TODO: when you click the screen, put down a waypoint where the entirety of the screen gets greyed out and then you slide to choose altitude

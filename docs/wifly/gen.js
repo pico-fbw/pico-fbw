@@ -31,3 +31,5 @@ function wifly_genFplan() {
         return true;
     }
 }
+
+// TODO: a user-readable way to display the generated flightplan, edit altitudes, etc.

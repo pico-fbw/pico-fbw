@@ -91,8 +91,8 @@ int wifly_parseFplan(const char *fplan) {
     char decoded[strlen(json_start) + 1];
     strcpy(decoded, json_start);
     url_decode(decoded);
-    WIFLY_DEBUG_printf("Flightplan data encoded: %s\n", json_start);
-    WIFLY_DEBUG_printf("Flightplan data decoded: %s\n", decoded);
+    WIFLY_DEBUG_printf("\n\nFlightplan data encoded: %s\n", json_start);
+    WIFLY_DEBUG_printf("\nFlightplan data decoded: %s\n\n", decoded);
 
     // Initialize JSON parsing logic
     jsmn_parser parser;

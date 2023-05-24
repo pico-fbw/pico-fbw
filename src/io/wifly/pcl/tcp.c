@@ -74,7 +74,7 @@ static err_t tcp_server_sent(void *arg, struct tcp_pcb *pcb, u16_t len) {
 }
 
 static int server_content(const char *request, const char *params, char *result, size_t max_result_len) {
-    printf("Content params: %s\n", params);
+    TCP_DEBUG_printf("Content params: %s\n", params);
     int len = 0;
     // Check if we need to redirect instead of serving page content
     if (strncmp(request, REDIRECT, sizeof(REDIRECT) - 1) == 0) {
@@ -128,6 +128,18 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err
         // Copy the request into the buffer
         pbuf_copy_partial(p, con_state->headers, p->tot_len > sizeof(con_state->headers) - 1 ? sizeof(con_state->headers) - 1 : p->tot_len, 0);
 
+        // We check first to see if it is the final header in an accumulation
+        if (useAccHeaders && (p->flags & PBUF_FLAG_PUSH)) {
+            // Add the final header to the accumulated headers
+            strncat(con_state->accHeaders, con_state->headers, strlen(con_state->headers));
+            // Null termination
+            con_state->accHeaders[strlen(con_state->accHeaders)] = '\0';
+            #if TCP_DUMP_DATA
+                printf("[acc] Final header: %s\n", con_state->accHeaders);
+            #endif
+            // Set the final headers flag
+            accHeadersFinal = true;
+        }
         // Check if this is flagged as the last packet, if not, we know to expect more inbound
         if (!(p->flags & PBUF_FLAG_PUSH)) {
             useAccHeaders = true;
@@ -141,7 +153,7 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err
                 }
                 con_state->accHeaders[0] = '\0';
             } else {
-                con_state->accHeaders = realloc(con_state->accHeaders, (strlen(con_state->headers) + strlen(con_state->accHeaders) + 1));
+                con_state->accHeaders = realloc(con_state->accHeaders, (strlen(con_state->headers) + strlen(con_state->accHeaders)));
                 if (con_state->accHeaders == NULL) {
                     free(con_state->accHeaders);
                     useAccHeaders = false;
@@ -150,25 +162,15 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err
                 }
             }
             // Add the current headers to the accumulated headers
-            strncat(con_state->accHeaders, con_state->headers, sizeof(con_state->accHeaders) - strlen(con_state->accHeaders) - 1);
-            TCP_DEBUG_printf("[acc] Current header: %s\n", con_state->accHeaders);
-        }
-
-        if (useAccHeaders && (p->flags & PBUF_FLAG_PUSH)) {
-            // Add the final header to the accumulated headers
-            strncat(con_state->accHeaders, con_state->headers, sizeof(con_state->accHeaders) - strlen(con_state->accHeaders) - 1);
-            // Copy the accumulated headers into the final headers
-            memcpy(con_state->headers, con_state->accHeaders, sizeof(con_state->accHeaders));
-            // Null termination
-            con_state->headers[sizeof(con_state->accHeaders) - 1] = '\0';
-            TCP_DEBUG_printf("[acc] Final header: %s\n", con_state->accHeaders);
-            // Set the final headers flag
-            accHeadersFinal = true;
+            strncat(con_state->accHeaders, con_state->headers, strlen(con_state->headers));
+            #if TCP_DUMP_DATA
+                TCP_DEBUG_printf("[acc] Current header: %s\n", con_state->accHeaders);
+            #endif
         }
 
         // Handle GET request
         if ((strncmp(HTTP_GET, con_state->headers, sizeof(HTTP_GET) - 1) == 0) || (useAccHeaders && (p->flags & PBUF_FLAG_PUSH))) {
-            char *request = con_state->headers + sizeof(HTTP_GET); // + space
+            char *request = (accHeadersFinal ? con_state->accHeaders : con_state->headers) + sizeof(HTTP_GET); // + space
             char *params = strchr(request, '?');
             if (params) {
                 if (*params) {
