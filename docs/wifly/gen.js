@@ -15,6 +15,7 @@ const field = document.getElementById("fplan");
 /* Function definitions */
 
 var fplanGenerated = false;
+
 /**
  * Generates the current flightplan into JSON and puts it into the fplan field.
  * If the flightplan is too long nothing will be generated.

@@ -98,14 +98,14 @@ static int server_content(const char *request, const char *params, char *result,
             }
         }
         // Serve page content based on the status of the flightplan submission
-        if (fplanStatus == -1) {
-            len = snprintf(result, max_result_len, PAGE_CONTENT, "#5A5A5A", "Awaiting flightplan...");
-        } else if (fplanStatus == 0)  {
+        if (fplanStatus == WIFLY_STATUS_AWAITING) {
+            len = snprintf(result, max_result_len, PAGE_CONTENT, "#5A5A5A", "<i>Awaiting flightplan...</i>");
+        } else if (fplanStatus == WIFLY_STATUS_OK)  {
             len = snprintf(result, max_result_len, PAGE_CONTENT, "#4CAF50", "Flightplan uploaded successfully!");
-        } else if (fplanStatus == 1) {
-            len = snprintf(result, max_result_len, PAGE_CONTENT, "#D21404", "Error: parse. Check formatting and try again.");
-        } else if (fplanStatus == 2) {
-            len = snprintf(result, max_result_len, PAGE_CONTENT, "#D24E01", "Error: version mismatch! Please update your firmware.");
+        } else if (fplanStatus == WIFLY_ERROR_PARSE) {
+            len = snprintf(result, max_result_len, PAGE_CONTENT, "#D21404", "<b>Error:</b> parse. Check formatting and try again.");
+        } else if (fplanStatus == WIFLY_ERROR_VERSION) {
+            len = snprintf(result, max_result_len, PAGE_CONTENT, "#D24E01", "<b>Error:</b> version mismatch! Please update your firmware.");
         }
     }
     return len;

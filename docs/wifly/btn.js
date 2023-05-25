@@ -4,7 +4,6 @@
 const btnTimeout = "3000";
 
 const genButton = document.getElementById("generate");
-const regenButton = document.getElementById("regenerate");
 const manaddButton = document.getElementById("manadd_btn");
 const manaddLat = document.getElementById("manadd_lat");
 const manaddLng = document.getElementById("manadd_lng");
@@ -12,66 +11,63 @@ const manaddLng = document.getElementById("manadd_lng");
 
 /* Function definitions */
 
+function changeButton(btn, color, text) {
+    btn.style.backgroundColor = color;
+    btn.innerHTML = text;
+}
+
 var genButtonCopyState = false;
 var genTimeout;
+
 function genButtonCallback() {
-    clearTimeout(genTimeout); // This is so the button doesn't change back to generate if the user creates waypoints quickly
+    // Clear timeout so the button doesn't change back to generate if the user creates waypoints quickly
+    clearTimeout(genTimeout);
     if (fplan.waypoints.length < 2) {
-        genButton.style.backgroundColor = "#D21404";
-        genButton.innerHTML = `Please select two or more waypoints (currently ${fplan.waypoints.length})!`;
+        changeButton(genButton, "#D21404", `Please select two or more waypoints (currently ${fplan.waypoints.length})!`);
         genTimeout = setTimeout(() => {
-            genButton.style.backgroundColor = "#E49B0F";
-            genButton.innerHTML = "Generate Flightplan";
+            changeButton(genButton, "#E49B0F", "Generate Flightplan");
         }, btnTimeout);
         return;
     }
     if (!genButtonCopyState) {
         // Generate the flightplan and handle any errors
         if (!wifly_genFplan()) {
-            genButton.style.backgroundColor = "#D21404";
-            genButton.innerHTML = "Flightplan too long!";
+            changeButton(genButton, "#D21404", "Flightplan too long!");
             genTimeout = setTimeout(() => {
-                genButton.style.backgroundColor = "#E49B0F";
-                genButton.innerHTML = "Generate Flightplan";
+                changeButton(genButton, "#E49B0F", "Generate Flightplan");
             }, btnTimeout);
             return;
         }
         // Update color and text of button to indicate successful generation
         field.style.display = "block";
-        genButton.style.backgroundColor = "#008CBA";
-        genButton.innerHTML = "Copy to clipboard";
+        changeButton(genButton, "#008CBA", "Copy to clipboard");
         fplanGenerated = true;
         genButtonCopyState = true;
     } else {
         navigator.clipboard.writeText(field.value).then(() => {
-            genButton.style.backgroundColor = "#4CAF50";
-            genButton.innerHTML = "Copied!";
+            changeButton(genButton, "#4CAF50", "Copied!");
             genTimeout = setTimeout(() => {
-                genButton.style.backgroundColor = "#008CBA";
-                genButton.innerHTML = "Copy to clipboard";
+                changeButton(genButton, "#008CBA", "Copy to clipboard");
             }, btnTimeout);
         });
     }
 }
 
 var manaddTimeout;
+
 function manaddButtonCallback() {
     clearTimeout(manaddTimeout);
     if (manaddLat.value == "" || manaddLng.value == "") {
-        manaddButton.style.backgroundColor = "#D21404";
-        manaddButton.innerHTML = `Please enter coordinates!`;
+        changeButton(manaddButton, "#D21404", "Please enter coordinates!");
         manaddTimeout = setTimeout(() => {
-            manaddButton.style.backgroundColor = "#A020F0";
-            manaddButton.innerHTML = "Add Waypoint";
+            changeButton(manaddButton, "#A020F0", "Add Waypoint");
         }, btnTimeout);
         return;
     } else {
         map_update(null, manaddLat.value, manaddLng.value);
-        manaddButton.style.backgroundColor = "#4CAF50";
-        manaddButton.innerHTML = `Added!`;
+        changeButton(manaddButton, "#4CAF50", "Added!");
         manaddTimeout = setTimeout(() => {
-            manaddButton.style.backgroundColor = "#A020F0";
-            manaddButton.innerHTML = "Add Waypoint";
+            changeButton(manaddButton, "#A020F0", "Add Waypoint");
         }, btnTimeout);
     }
 }

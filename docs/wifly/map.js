@@ -40,6 +40,7 @@ function map_init() {
 
 var markers = [];
 var polylines = [];
+
 function map_update(event, lat, lng) {
     var marker;
     if (lat == null && lng == null) {
@@ -54,44 +55,38 @@ function map_update(event, lat, lng) {
         marker = L.marker([lat, lng]).addTo(map);
     }
     // Add the marker to the marker array
-    var currentMarker = markers.push(marker);
+    markers.push(marker);
     // Draw lines between the markers
     if (markers.length > 1) {
         polylines.push(L.polyline(markers.map(marker => marker.getLatLng()), {color:'#D21404'}).addTo(map));
     }
     // Add a click listener to the marker so it can be removed later
-    marker.on('click', function() {
-        removeWaypoint(currentMarker - 1);
-    });
-    // If the flightplan has been generated and another waypoint    is added, make the regen button visible
+    marker.on('click', removeWaypoint.bind(marker));
+    // If the flightplan has been generated and another waypoint is added, make the regen button visible
     if (fplanGenerated) {
         genButtonCopyState = false;
-        genButton.style.backgroundColor = "#E49B0F";
-        genButton.innerHTML = "Generate Flightplan";
+        changeButton(genButton, "#E49B0F", "Generate Flightplan");
     }
 }
 
-function removeWaypoint(index) {
-    // Check if the index is valid
-    if (index >= 0 && index < fplan.waypoints.length) {
-        // Remove the waypoint from the flight plan
-        fplan.waypoints.splice(index, 1);
-        // Remove the marker from the map and the markers array
-        map.removeLayer(markers.splice(index, 1)[0]);
-        // Remove all existing polylines from the map
-        polylines.forEach(polyline => map.removeLayer(polyline));
-        polylines = [];
-        // Redraw the lines between the remaining markers
-        if (markers.length > 1) {
-            polylines.push(L.polyline(markers.map(marker => marker.getLatLng()), {color:'#D21404'}).addTo(map));
-        }
-        if (fplanGenerated) {
-            genButtonCopyState = false;
-            genButton.style.backgroundColor = "#E49B0F";
-            genButton.innerHTML = "Generate Flightplan";
-        }
+function removeWaypoint() {
+    // Remove the waypoint from the flight plan
+    fplan.waypoints.splice(markers.indexOf(this), 1);
+    // Remove the marker from the map and the markers array
+    map.removeLayer(this);
+    markers.splice(markers.indexOf(this), 1);
+    // Remove all existing polylines from the map
+    polylines.forEach(polyline => map.removeLayer(polyline));
+    polylines = [];
+    // Redraw the lines between the remaining markers
+    if (markers.length > 1) {
+        polylines.push(L.polyline(markers.map(marker => marker.getLatLng()), {color:'#D21404'}).addTo(map));
     }
-}  
+    if (fplanGenerated) {
+        genButtonCopyState = false;
+        changeButton(genButton, "#E49B0F", "Generate Flightplan");
+    }
+}
 
 
 /* Begin program execution */

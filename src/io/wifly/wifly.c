@@ -81,7 +81,7 @@ int wifly_parseFplan(const char *fplan) {
     const char *json_start = strstr(fplan, FPLAN_PARAM);
     if (!json_start) {
         // Prefix not found
-        return 1;
+        return WIFLY_ERROR_PARSE;
     }
     // Move the pointer to the start of the JSON string
     // This effectively skips the "fplan=" prefix so we don't confuse the JSON parser later
@@ -100,58 +100,42 @@ int wifly_parseFplan(const char *fplan) {
     jsmn_init(&parser);
     int token_count = jsmn_parse(&parser, decoded, strlen(decoded), tokens, sizeof(tokens)/sizeof(tokens[0]));
     if (token_count < 0) {
-        // Parse error
-        return 1;
+        return WIFLY_ERROR_PARSE;
     }
 
     for (int i = 0; i < token_count; i++) {
-        if (tokens[i].type == JSMN_STRING && tokens[i].size == 1 && strncmp("version", decoded + tokens[i].start, tokens[i].end - tokens[i].start) == 0) {
-            // Process the version
-            char version[9];
-            strncpy(version, decoded + tokens[i + 1].start, tokens[i + 1].end - tokens[i + 1].start);
-            version[tokens[i + 1].end - tokens[i + 1].start] = '\0';
-            WIFLY_DEBUG_printf("Flightplan detected version: %s\n", version);
-            if (strcmp(version, WIFLY_CURRENT_VERSION) != 0) {
-                // Version mismatch
-                return 2;
-            }
-            // Find the waypoints field
-            if (tokens[i].type == JSMN_ARRAY && strncmp("waypoints", decoded + tokens[i].start, tokens[i].end - tokens[i].start) == 0) {
-                // Process each waypoint
-                int waypoint_count = tokens[i].size;
-                Waypoint waypoints[waypoint_count];
-
-                int waypoint_index = 0;
-                for (int j = i + 1; j < i + 1 + waypoint_count * 6; j += 6) {
-                    if (tokens[j].type == JSMN_OBJECT) {
-                        for (int k = 0; k < 6; k++) {
-                            if (tokens[j + k].type == JSMN_STRING && tokens[j + k].size == 1) {
-                                if (strncmp("lat", decoded + tokens[j + k].start, tokens[j + k].end - tokens[j + k].start) == 0) {
-                                    double lat = atof(decoded + tokens[j + k + 1].start);
-                                    waypoints[waypoint_index].lat = lat;
-                                } else if (strncmp("lng", decoded + tokens[j + k].start, tokens[j + k].end - tokens[j + k].start) == 0) {
-                                    double lng = atof(decoded + tokens[j + k + 1].start);
-                                    waypoints[waypoint_index].lng = lng;
-                                } else if (strncmp("alt", decoded + tokens[j + k].start, tokens[j + k].end - tokens[j + k].start) == 0) {
-                                    double alt = atof(decoded + tokens[j + k + 1].start);
-                                    waypoints[waypoint_index].alt = alt;
-                                }
-                            }
-                        }
-                        waypoint_index++;
+        if (tokens[i].type == JSMN_STRING) {
+            // Get the field name
+            char field_name[20];
+            strncpy(field_name, decoded + tokens[i].start, tokens[i].end - tokens[i].start);
+            field_name[tokens[i].end - tokens[i].start] = '\0';
+            // Process the field based on its name
+            if (strcmp(field_name, "version") == 0) {
+                // Process the version
+                char version[9];
+                strncpy(version, decoded + tokens[i + 1].start, tokens[i + 1].end - tokens[i + 1].start);
+                version[tokens[i + 1].end - tokens[i + 1].start] = '\0';
+                WIFLY_DEBUG_printf("Flightplan version: %s\n", version);
+                if (strcmp(version, WIFLY_CURRENT_VERSION) != 0) {
+                    return WIFLY_ERROR_VERSION;
+                }
+            } else if (strcmp(field_name, "waypoints") == 0) {
+                // Process the waypoints array
+                if (tokens[i + 1].type == JSMN_ARRAY) {
+                    int waypoint_count = tokens[i + 1].size;
+                    WIFLY_DEBUG_printf("Flightplan contains %d waypoints\n", waypoint_count);
+                    // Process each waypoint
+                    for (int w = 0; w < waypoint_count; w++) {
+                        WIFLY_DEBUG_printf("Waypoint %d:\n", w + 1);
+                        // TODO: actually extract each waypoint's data I couldn't get it to work lol
                     }
-                }
-
-                // Print the parsed waypoints
-                for (int w = 0; w < waypoint_count; w++) {
-                    WIFLY_DEBUG_printf("Waypoint %d: lat=%f, lng=%f, alt=%f\n", w + 1, waypoints[w].lat, waypoints[w].lng, waypoints[w].alt);
+                } else {
+                    return WIFLY_ERROR_PARSE;
                 }
             }
-            return 0;
         }
     }
-    // Parse error
-    return 1;
+    return WIFLY_STATUS_OK;
 }
 
 void wifly_deinit() {
