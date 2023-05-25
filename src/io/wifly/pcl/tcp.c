@@ -54,7 +54,7 @@ static err_t tcp_close_client_connection(TCP_CONNECT_STATE_T *con_state, struct 
     return close_err;
 }
 
-static void tcp_server_close(TCP_SERVER_T *state) {
+void tcp_server_close(TCP_SERVER_T *state) {
     if (state->server_pcb) {
         tcp_arg(state->server_pcb, NULL);
         tcp_close(state->server_pcb);

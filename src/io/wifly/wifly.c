@@ -24,9 +24,10 @@
 
 dhcp_server_t dhcp_server;
 dns_server_t dns_server;
+TCP_SERVER_T *state;
 
 void wifly_init() {
-    TCP_SERVER_T *state = calloc(1, sizeof(TCP_SERVER_T));
+    state = calloc(1, sizeof(TCP_SERVER_T));
     if (!state) {
         ERROR_printf("failed to allocate state\n");
     }
@@ -103,16 +104,21 @@ int wifly_parseFplan(const char *fplan) {
         return WIFLY_ERROR_PARSE;
     }
 
-    for (int i = 0; i < token_count; i++) {
+    // Create an initial array to store waypoints
+    Waypoint waypoints[16]; // TODO: dynamic mem allocation for waypoints array
+    uint waypoint_count = 0;
+
+    // Process all tokens and extract any needed data (e.g. version)
+    // Things here are mostly self-explanatory
+    for (uint i = 0; i < token_count; i++) {
+        // Token field (name) iteration
         if (tokens[i].type == JSMN_STRING) {
-            // Get the field name
-            char field_name[20];
+            // Find version and check it
+            char field_name[10];
             strncpy(field_name, decoded + tokens[i].start, tokens[i].end - tokens[i].start);
             field_name[tokens[i].end - tokens[i].start] = '\0';
-            // Process the field based on its name
             if (strcmp(field_name, "version") == 0) {
-                // Process the version
-                char version[9];
+                char version[7];
                 strncpy(version, decoded + tokens[i + 1].start, tokens[i + 1].end - tokens[i + 1].start);
                 version[tokens[i + 1].end - tokens[i + 1].start] = '\0';
                 WIFLY_DEBUG_printf("Flightplan version: %s\n", version);
@@ -120,14 +126,60 @@ int wifly_parseFplan(const char *fplan) {
                     return WIFLY_ERROR_VERSION;
                 }
             } else if (strcmp(field_name, "waypoints") == 0) {
-                // Process the waypoints array
                 if (tokens[i + 1].type == JSMN_ARRAY) {
-                    int waypoint_count = tokens[i + 1].size;
+                    waypoint_count = tokens[i + 1].size;
                     WIFLY_DEBUG_printf("Flightplan contains %d waypoints\n", waypoint_count);
-                    // Process each waypoint
-                    for (int w = 0; w < waypoint_count; w++) {
-                        WIFLY_DEBUG_printf("Waypoint %d:\n", w + 1);
-                        // TODO: actually extract each waypoint's data I couldn't get it to work lol
+                    uint waypoint_token_index = i + 2; // Skip the array token
+                    // Waypoint iteration
+                    for (uint w = 0; w < waypoint_count; w++) {
+                        WIFLY_DEBUG_printf("Processing waypoint %d:\n", w + 1);
+                        if (tokens[waypoint_token_index].type == JSMN_OBJECT) {
+                            uint waypoint_token_count = tokens[waypoint_token_index].size;
+                            uint waypoint_field_token_index = waypoint_token_index + 1; // Skip the object token
+                            Waypoint waypoint;
+                            // Waypoint field iteration
+                            for (uint j = 0; j < waypoint_token_count; j++) {
+                                if (tokens[waypoint_field_token_index].type == JSMN_STRING) {
+                                    char waypoint_field_name[4];
+                                    strncpy(waypoint_field_name, decoded + tokens[waypoint_field_token_index].start,
+                                            tokens[waypoint_field_token_index].end - tokens[waypoint_field_token_index].start);
+                                    waypoint_field_name[tokens[waypoint_field_token_index].end - tokens[waypoint_field_token_index].start] = '\0';
+                                    if (strcmp(waypoint_field_name, "lat") == 0) {
+                                        char lat[20];
+                                        strncpy(lat, decoded + tokens[waypoint_field_token_index + 1].start,
+                                                tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start);
+                                        lat[tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start] = '\0';
+                                        // Store the latitude value into a waypoint struct
+                                        waypoint.lat = atof(lat);
+                                        WIFLY_DEBUG_printf("Latitude: %s\n", lat);
+                                    } else if (strcmp(waypoint_field_name, "lng") == 0) {
+                                        char lng[20];
+                                        strncpy(lng, decoded + tokens[waypoint_field_token_index + 1].start,
+                                                tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start);
+                                        lng[tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start] = '\0';
+                                        waypoint.lng = atof(lng);
+                                        WIFLY_DEBUG_printf("Longitude: %s\n", lng);
+                                    } else if (strcmp(waypoint_field_name, "alt") == 0) {
+                                        char alt[4];
+                                        strncpy(alt, decoded + tokens[waypoint_field_token_index + 1].start,
+                                                tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start);
+                                        alt[tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start] = '\0';
+                                        waypoint.alt = atoi(alt);
+                                        WIFLY_DEBUG_printf("Altitude: %s\n", alt);
+                                    } else {
+                                        return WIFLY_ERROR_PARSE;
+                                    }
+                                    // Advance to the next field
+                                    waypoint_field_token_index += 2;
+                                }
+                            }
+                            // Store the generated waypoint into a flightplan array
+                            waypoints[w] = waypoint;
+                            // Advance to the next waypoint
+                            waypoint_token_index += 7;
+                        } else {
+                            return WIFLY_ERROR_PARSE;
+                        }
                     }
                 } else {
                     return WIFLY_ERROR_PARSE;
@@ -135,11 +187,15 @@ int wifly_parseFplan(const char *fplan) {
             }
         }
     }
+    for (int i = 0; i < waypoint_count; i++) {
+        WIFLY_DEBUG_printf("Waypoint %d: lat=%.15f, lng=%.15f, alt=%d\n", i + 1, waypoints[i].lat, waypoints[i].lng, waypoints[i].alt);
+    }
     return WIFLY_STATUS_OK;
 }
 
 void wifly_deinit() {
     dns_server_deinit(&dns_server);
     dhcp_server_deinit(&dhcp_server);
+    tcp_server_close(state);
     // cyw43_arch_deinit();
 }    

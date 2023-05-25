@@ -38,5 +38,6 @@ body {
 }
 
 #map {
+    touch-action: none;
     height: 580px;
 }

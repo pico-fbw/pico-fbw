@@ -20,8 +20,14 @@ typedef struct TCP_CONNECT_STATE_T_ {
 
 /**
  * Opens the TCP server.
- * @param arg The state object
+ * @param arg The state object to open
 */
 bool tcp_server_open(void *arg);
+
+/**
+ * Closes the TCP server.
+ * @param state The state object to close
+*/
+void tcp_server_close(TCP_SERVER_T *state);
 
 #endif // tcp_h
