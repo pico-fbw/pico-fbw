@@ -106,6 +106,8 @@ static int server_content(const char *request, const char *params, char *result,
             len = snprintf(result, max_result_len, PAGE_CONTENT, "#D21404", "<b>Error:</b> parse. Check formatting and try again.");
         } else if (fplanStatus == WIFLY_ERROR_VERSION) {
             len = snprintf(result, max_result_len, PAGE_CONTENT, "#D24E01", "<b>Error:</b> version mismatch! Please update your firmware.");
+        } else if (fplanStatus == WIFLY_ERROR_MEM) {
+            len = snprintf(result, max_result_len, PAGE_CONTENT, "#D24E01", "<b>Error:</b> memory allocation failure! Please restart and try again.");
         }
     }
     return len;
