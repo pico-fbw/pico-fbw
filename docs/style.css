@@ -21,7 +21,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black overlay */
+    background-color: rgba(0, 0, 0, 0.75); /* Semi-transparent black overlay */
     z-index: 9999;
     display: none;
 }
@@ -60,6 +60,24 @@ body {
 }
 
 #alt-input {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
     height: 700px;
     width: 50px;
+}
+
+#alt-value {
+    position: absolute;
+    top: 10%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+}
+
+#alt-btn {
+    position: absolute;
+    top: 90%;
+    left: 50%;
+    transform: translate(-50%,-50%);
 }

@@ -112,3 +112,5 @@ map.on('click', map_addWpt);
 altIn.addEventListener("input", function() {
     altVal.innerHTML = this.value;
 });
+
+// TODO: allow exiting the alt slider by clicking/tapping outside of it, pressing enter, or pressing the button
