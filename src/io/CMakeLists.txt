@@ -17,12 +17,15 @@ target_link_libraries(fbw_io
     hardware_sync
 )
 
+# Auto generate the header file for the pio-asm
+pico_generate_pio_header(fbw_io ${CMAKE_CURRENT_LIST_DIR}/pwm.pio)
+
 # Import Pico W library
 if ("$CACHE{PICO_BOARD}" STREQUAL "pico" OR "$CACHE{PICO_BOARD}" STREQUAL "pico_w")
     message(NOTICE "[pico-fbw] Board is compatable!")
-    message(NOTICE "[pico-fbw] Building for target $CACHE{PICO_BOARD}")
+    message(NOTICE "[pico-fbw] Building for $CACHE{PICO_BOARD}")
 else ()
-    message(WARNING "[pico-fbw] No compatable board target found")
+    message(WARNING "[pico-fbw] No compatable board found")
 endif ()
 if ("$CACHE{PICO_BOARD}" STREQUAL "pico_w")
     target_link_libraries(fbw_io pico_cyw43_arch_none)
@@ -30,12 +33,9 @@ if ("$CACHE{PICO_BOARD}" STREQUAL "pico_w")
     option(WIFLY_ENABLED "Enable Wi-Fly support" ON)
     # check_symbol_exists(WIFLY "../config.h" WIFLY_ENABLED)
     if (WIFLY_ENABLED)
-        message(NOTICE "[pico-fbw] Wi-Fly build support enabled")
+        message(NOTICE "[pico-fbw] Wi-Fly enabled")
         add_subdirectory(wifly)
     else ()
-        message(NOTICE "[pico-fbw] Wi-Fly build support disabled")
+        message(NOTICE "[pico-fbw] Wi-Fly disabled")
     endif ()
 endif ()
-
-# Auto generate the header file for the pio-asm
-pico_generate_pio_header(fbw_io ${CMAKE_CURRENT_LIST_DIR}/pwm.pio)

@@ -1,5 +1,9 @@
 /* Declare constants and vars*/
 
+const overlay = document.getElementById("overlay");
+const altIn = document.getElementById("alt-input");
+const altVal = document.getElementById("alt-value");
+
 // Map initial zoom and location is here
 const map = L.map("map").setView([20, 0], 2);
 const maxZoom = 19;
@@ -41,7 +45,8 @@ function map_init() {
 var markers = [];
 var polylines = [];
 
-function map_update(event, lat, lng) {
+function map_addWpt(event, lat, lng) {
+    map_setAlt();
     var marker;
     if (lat == null && lng == null) {
         // Coordinates given from map
@@ -61,7 +66,8 @@ function map_update(event, lat, lng) {
         polylines.push(L.polyline(markers.map(marker => marker.getLatLng()), {color:'#D21404'}).addTo(map));
     }
     // Add a click listener to the marker so it can be removed later
-    marker.on('click', removeWaypoint.bind(marker));
+    marker.on('click', map_removeWpt.bind(marker));
+    
     // If the flightplan has been generated and another waypoint is added, make the regen button visible
     if (fplanGenerated) {
         genButtonCopyState = false;
@@ -69,7 +75,7 @@ function map_update(event, lat, lng) {
     }
 }
 
-function removeWaypoint() {
+function map_removeWpt() {
     // Remove the waypoint from the flight plan
     fplan.waypoints.splice(markers.indexOf(this), 1);
     // Remove the marker from the map and the markers array
@@ -88,9 +94,21 @@ function removeWaypoint() {
     }
 }
 
+function map_setAlt() {
+    // Show the overlay
+    overlay.style.display = "block";
+    
+    // overlay.style.display = "none";
+}
+
 
 /* Begin program execution */
 
 // Initialize the map and bind its click method
 map_init();
-map.on('click', map_update);
+map.on('click', map_addWpt);
+
+// Add event listener to show the current altitude of slider
+altIn.addEventListener("input", function() {
+    altVal.innerHTML = this.value;
+});

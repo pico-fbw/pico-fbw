@@ -11,24 +11,32 @@
         <link rel="stylesheet" href="style.css">
     </head>
     <body>
-        <h2 class="text">Wi-Fly Flightplan Generator</h2>
+        <div id="overlay">
+            <div>
+                <input class="input-range" id="alt-input" orient="vertical" type="range" step="0.5" value="5" min="1" max="10">
+                <span class="text" id="alt-value"></span>
+            </div>
+        </div>
+        <div>
+            <h2 class="text">Wi-Fly Flightplan Generator</h2>
 
-        <div id="map"></div>
-        <br>
-        <span>
-            <input type="number" min="-90" max="90" class="manadd" id="manadd_lat" hint="Latitude" />
-            <input type="number" min="-180" max="180" class="manadd" id="manadd_lng" hint="Longitude" />
-            <button id="manadd_btn">Add Waypoint</button>
-        </span>
-        <br><br>
+            <div id="map"></div>
+            <br>
+            <span>
+                <input type="number" min="-90" max="90" class="manadd" id="manadd_lat" hint="Latitude" />
+                <input type="number" min="-180" max="180" class="manadd" id="manadd_lng" hint="Longitude" />
+                <button id="manadd_btn">Add Waypoint</button>
+            </span>
+            <br><br>
 
-        <span>
-            <button id="generate">Generate Flightplan</button>
-        </span>
-        <br><br>
+            <span>
+                <button id="generate">Generate Flightplan</button>
+            </span>
+            <br><br>
 
-        <textarea id="fplan" readonly></textarea>
-        <br><br>
+            <textarea id="fplan" readonly></textarea>
+            <br><br>
+        </div>
 
         <script src="wifly/map.js"></script>
         <script src="wifly/gen.js"></script>

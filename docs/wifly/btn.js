@@ -1,7 +1,7 @@
 /* Declare constants and vars*/
 
 // Time in milliseconds before a button reverts to its previous state
-const btnTimeout = "3000";
+const btnTimeout = "2500";
 
 const genButton = document.getElementById("generate");
 const manaddButton = document.getElementById("manadd_btn");
@@ -23,7 +23,7 @@ function genButtonCallback() {
     // Clear timeout so the button doesn't change back to generate if the user creates waypoints quickly
     clearTimeout(genTimeout);
     if (fplan.waypoints.length < 2) {
-        changeButton(genButton, "#D21404", `Please select two or more waypoints (currently ${fplan.waypoints.length})!`);
+        changeButton(genButton, "#D21404", "Please select two or more waypoints!");
         genTimeout = setTimeout(() => {
             changeButton(genButton, "#E49B0F", "Generate Flightplan");
         }, btnTimeout);
@@ -64,7 +64,7 @@ function manaddButtonCallback() {
         }, btnTimeout);
         return;
     } else {
-        map_update(null, manaddLat.value, manaddLng.value);
+        map_addWpt(null, manaddLat.value, manaddLng.value);
         changeButton(manaddButton, "#4CAF50", "Added!");
         manaddTimeout = setTimeout(() => {
             changeButton(manaddButton, "#A020F0", "Add Waypoint");
