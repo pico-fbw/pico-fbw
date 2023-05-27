@@ -13,7 +13,7 @@
     <body>
         <div id="overlay">
             <div>
-                <h2 class="text" id="alt-value"></h2>
+                <h2 class="text" id="alt-value">-5</h2>
                 <input class="input-range" id="alt-input" orient="vertical" type="range" step="5" value="-5" min="-5" max="400">
                 <button id="alt-btn">OK</button>
             </div>
@@ -24,9 +24,9 @@
             <div id="map"></div>
             <br>
             <span>
-                <input type="number" min="-90" max="90" class="manadd" id="manadd_lat" hint="Latitude" />
-                <input type="number" min="-180" max="180" class="manadd" id="manadd_lng" hint="Longitude" />
-                <button id="manadd_btn">Add Waypoint</button>
+                <input class="manadd" id="manadd-lat" type="number" min="-90" max="90" hint="Latitude" />
+                <input class="manadd" id="manadd-lng" type="number" min="-180" max="180" hint="Longitude" />
+                <button id="manadd-btn">Add Waypoint</button>
             </span>
             <br><br>
 
@@ -36,7 +36,7 @@
             <br><br>
 
             <textarea id="fplan" readonly></textarea>
-            <br><br>
+            <br>
         </div>
 
         <script src="wifly/map.js"></script>

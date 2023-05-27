@@ -3,6 +3,7 @@
 const overlay = document.getElementById("overlay");
 const altIn = document.getElementById("alt-input");
 const altVal = document.getElementById("alt-value");
+const altBtn = document.getElementById("alt-btn");
 
 // Map initial zoom and location is here
 const map = L.map("map").setView([20, 0], 2);
@@ -13,21 +14,21 @@ const maxZoom = 19;
 
 function map_init() {
     // Add layers
-    const googleHybrid = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+    const googleHybrid = L.tileLayer("https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}", {
         maxZoom: maxZoom,
-        attribution: 'Imagery &copy; CNES / Airbus, Landsat / Copernicus, Maxar Technologies, Sanborn, TerraMetrics, U.S. Geological Survey, USDA/FPAC/GEO, Map data &copy; 2023 Google'
+        attribution: "Imagery &copy; CNES / Airbus, Landsat / Copernicus, Maxar Technologies, Sanborn, TerraMetrics, U.S. Geological Survey, USDA/FPAC/GEO, Map data &copy; 2023 Google"
     });
-    const googleSatellite = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+    const googleSatellite = L.tileLayer("https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", {
         maxZoom: maxZoom,
-        attribution: 'Imagery &copy; CNES / Airbus, Landsat / Copernicus, Maxar Technologies, Sanborn, TerraMetrics, U.S. Geological Survey, USDA/FPAC/GEO, Map data &copy; 2023'
+        attribution: "Imagery &copy; CNES / Airbus, Landsat / Copernicus, Maxar Technologies, Sanborn, TerraMetrics, U.S. Geological Survey, USDA/FPAC/GEO, Map data &copy; 2023"
     });
-    const googleMap = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+    const googleMap = L.tileLayer("https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}", {
         maxZoom: maxZoom,
-        attribution: 'Map data &copy; 2023 Google'
+        attribution: "Map data &copy; 2023 Google"
     });
-    const openMap = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    const openMap = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: maxZoom,
-        attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> and contributors'
+        attribution: "Map data &copy; <a href=\"http://www.openstreetmap.org/copyright\">OpenStreetMap</a> and contributors"
     })
     // Create layer control
     const mapLayers = {
@@ -46,33 +47,35 @@ var markers = [];
 var polylines = [];
 
 function map_addWpt(event, lat, lng) {
-    map_setAlt();
-    var marker;
-    if (lat == null && lng == null) {
-        // Coordinates given from map
-        // Push these coordinates to the flightplan
-        fplan.waypoints.push({lat: event.latlng.lat, lng: event.latlng.lng, alt: -1});
-        // Create a visual marker and add it to the map
-        marker = L.marker(event.latlng).addTo(map);
-    } else {
-        // Coordinates given manually, adjust accordingly
-        fplan.waypoints.push({lat: lat, lng: lng, alt: -1});
-        marker = L.marker([lat, lng]).addTo(map);
-    }
-    // Add the marker to the marker array
-    markers.push(marker);
-    // Draw lines between the markers
-    if (markers.length > 1) {
-        polylines.push(L.polyline(markers.map(marker => marker.getLatLng()), {color:'#D21404'}).addTo(map));
-    }
-    // Add a click listener to the marker so it can be removed later
-    marker.on('click', map_removeWpt.bind(marker));
-    
-    // If the flightplan has been generated and another waypoint is added, make the regen button visible
-    if (fplanGenerated) {
-        genButtonCopyState = false;
-        changeButton(genButton, "#E49B0F", "Generate Flightplan");
-    }
+    map_setAlt(function() {
+        var marker;
+        if (lat == null && lng == null) {
+            // Coordinates given from map
+            // Push these coordinates to the flightplan
+            fplan.waypoints.push({lat: event.latlng.lat, lng: event.latlng.lng, alt: altIn.value});
+            // Create a visual marker and add it to the map
+            marker = L.marker(event.latlng).addTo(map);
+        } else {
+            // Coordinates given manually, adjust accordingly
+            fplan.waypoints.push({lat: lat, lng: lng, alt: -1});
+            marker = L.marker([lat, lng]).addTo(map);
+        }
+        // Add the marker to the marker array
+        markers.push(marker);
+        
+        // Draw lines between the markers
+        if (markers.length > 1) {
+            polylines.push(L.polyline(markers.map(marker => marker.getLatLng()), {color:"#D21404"}).addTo(map));
+        }
+        // Add a click listener to the marker for the removal function so it can be removed later
+        marker.addEventListener("click", map_removeWpt.bind(marker));
+        
+        // If the flightplan has been generated and another waypoint is added, make the regen button visible
+        if (fplanGenerated) {
+            genButtonCopyState = false;
+            changeButton(genButton, "#E49B0F", "Generate Flightplan");
+        }
+    });
 }
 
 function map_removeWpt() {
@@ -81,12 +84,13 @@ function map_removeWpt() {
     // Remove the marker from the map and the markers array
     map.removeLayer(this);
     markers.splice(markers.indexOf(this), 1);
+
     // Remove all existing polylines from the map
     polylines.forEach(polyline => map.removeLayer(polyline));
     polylines = [];
     // Redraw the lines between the remaining markers
     if (markers.length > 1) {
-        polylines.push(L.polyline(markers.map(marker => marker.getLatLng()), {color:'#D21404'}).addTo(map));
+        polylines.push(L.polyline(markers.map(marker => marker.getLatLng()), {color:"#D21404"}).addTo(map));
     }
     if (fplanGenerated) {
         genButtonCopyState = false;
@@ -94,11 +98,42 @@ function map_removeWpt() {
     }
 }
 
-function map_setAlt() {
-    // Show the overlay
+function map_setAlt(callback) {
     overlay.style.display = "block";
-    
-    // overlay.style.display = "none";
+
+    altBtn.addEventListener("click", handleAltButtonClick);
+    function handleAltButtonClick() {
+        altSet();
+    }
+
+    overlay.addEventListener("click", handleOverlayClick);
+    function handleOverlayClick(event) {
+        if (event.target === overlay) {
+            altSet();
+        }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    function handleKeyDown(event) {
+        if (event.key === "Enter") {
+            altSet();
+        } else if (event.key === "Escape") {
+            overlay.style.display = "none";
+            removeEventListeners();
+        }
+    }
+
+    function altSet() {
+        overlay.style.display = "none";
+        callback();
+        removeEventListeners();
+    }
+
+    function removeEventListeners() {
+        altBtn.removeEventListener("click", handleAltButtonClick);
+        overlay.removeEventListener("click", handleOverlayClick);
+        document.removeEventListener("keydown", handleKeyDown);
+    }
 }
 
 
@@ -106,11 +141,9 @@ function map_setAlt() {
 
 // Initialize the map and bind its click method
 map_init();
-map.on('click', map_addWpt);
+map.addEventListener("click", map_addWpt);
 
 // Add event listener to show the current altitude of slider
 altIn.addEventListener("input", function() {
     altVal.innerHTML = this.value;
 });
-
-// TODO: allow exiting the alt slider by clicking/tapping outside of it, pressing enter, or pressing the button

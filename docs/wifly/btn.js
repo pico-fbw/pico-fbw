@@ -4,9 +4,9 @@
 const btnTimeout = "2500";
 
 const genButton = document.getElementById("generate");
-const manaddButton = document.getElementById("manadd_btn");
-const manaddLat = document.getElementById("manadd_lat");
-const manaddLng = document.getElementById("manadd_lng");
+const manaddButton = document.getElementById("manadd-btn");
+const manaddLat = document.getElementById("manadd-lat");
+const manaddLng = document.getElementById("manadd-lng");
 
 
 /* Function definitions */
@@ -60,14 +60,14 @@ function manaddButtonCallback() {
     if (manaddLat.value == "" || manaddLng.value == "") {
         changeButton(manaddButton, "#D21404", "Please enter coordinates!");
         manaddTimeout = setTimeout(() => {
-            changeButton(manaddButton, "#A020F0", "Add Waypoint");
+            changeButton(manaddButton, "#A041DB", "Add Waypoint");
         }, btnTimeout);
         return;
     } else {
         map_addWpt(null, manaddLat.value, manaddLng.value);
         changeButton(manaddButton, "#4CAF50", "Added!");
         manaddTimeout = setTimeout(() => {
-            changeButton(manaddButton, "#A020F0", "Add Waypoint");
+            changeButton(manaddButton, "#A041DB", "Add Waypoint");
         }, btnTimeout);
     }
 }
@@ -78,5 +78,3 @@ function manaddButtonCallback() {
 // Attach event listeners to buttons
 genButton.addEventListener("click", genButtonCallback);
 manaddButton.addEventListener("click", manaddButtonCallback);
-
-// TODO: when you click the screen, put down a waypoint where the entirety of the screen gets greyed out and then you slide to choose altitude
