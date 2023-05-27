@@ -65,10 +65,7 @@ function manaddButtonCallback() {
         return;
     } else {
         map_addWpt(null, manaddLat.value, manaddLng.value);
-        changeButton(manaddButton, "#4CAF50", "Added!");
-        manaddTimeout = setTimeout(() => {
-            changeButton(manaddButton, "#A041DB", "Add Waypoint");
-        }, btnTimeout);
+        // The button is changed in the map.js file so that it changes at the correct time after an alt is set
     }
 }
 

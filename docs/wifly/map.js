@@ -57,8 +57,12 @@ function map_addWpt(event, lat, lng) {
             marker = L.marker(event.latlng).addTo(map);
         } else {
             // Coordinates given manually, adjust accordingly
-            fplan.waypoints.push({lat: lat, lng: lng, alt: -1});
+            fplan.waypoints.push({lat: lat, lng: lng, alt: altIn.value});
             marker = L.marker([lat, lng]).addTo(map);
+            changeButton(manaddButton, "#4CAF50", "Added!");
+            manaddTimeout = setTimeout(() => {
+                changeButton(manaddButton, "#A041DB", "Add Waypoint");
+            }, btnTimeout);
         }
         // Add the marker to the marker array
         markers.push(marker);

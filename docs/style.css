@@ -17,6 +17,12 @@ body {
     height: 16px;
 }
 
+.input-range { 
+    appearance: slider-vertical;
+    -moz-appearance: slider-vertical;
+    -webkit-appearance: slider-vertical;
+}
+
 #overlay {
     position: fixed;
     top: 0;
@@ -28,10 +34,38 @@ body {
     display: none;
 }
 
-.input-range { 
-    appearance: slider-vertical;
-    -moz-appearance: slider-vertical;
-    -webkit-appearance: slider-vertical;
+#alt-input {
+    position: absolute;
+    width: 35px;
+    height: 85%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-55%,-50%);
+    opacity: 0.6;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+}
+#alt-input:hover {
+    opacity: 1;
+}
+
+#alt-value {
+    position: absolute;
+    top: 1.5%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+}
+#alt-btn {
+    position: absolute;
+    top: 96.6%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    background-color: #00ABF0;
+    border-radius: 8px;
+    color: white;
+    padding: 6px 8px;
+    text-align: center;
+    font-size: 12px;
 }
 
 #fplan {
@@ -63,59 +97,4 @@ body {
     touch-action: none;
     height: 580px;
     border-radius: 12px;
-}
-
-#alt-input {
-    -webkit-appearance: none;
-    position: absolute;
-    width: 35px;
-    height: 85%;
-    top: 50%;
-    left: 50%;
-    transform: translate(-55%,-50%);
-    appearance: none;
-    background: #d3d3d3;
-    border-radius: 8px;
-    outline: none;
-    opacity: 0.6;
-    -webkit-transition: .2s;
-    transition: opacity .2s;
-}
-#alt-input:hover {
-    opacity: 0.9;
-}
-#alt-input:-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 40px;
-    height: 40px;
-    background: #00ABF0;
-    cursor: pointer;
-}
-  
-#alt-input::-moz-range-thumb {
-    width: 40px;
-    height: 40px;
-    background: #00ABF0;
-    cursor: pointer;
-}
-
-#alt-value {
-    position: absolute;
-    top: 1.5%;
-    left: 50%;
-    transform: translate(-50%,-50%);
-}
-
-#alt-btn {
-    position: absolute;
-    top: 96.6%;
-    left: 50%;
-    transform: translate(-50%,-50%);
-    background-color: #00ABF0;
-    border-radius: 8px;
-    color: white;
-    padding: 6px 8px;
-    text-align: center;
-    font-size: 12px;
 }
