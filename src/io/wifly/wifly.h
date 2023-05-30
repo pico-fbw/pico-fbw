@@ -21,7 +21,7 @@
 #define WIFLY_ERROR_MEM 3
 
 // Content that is displayed to user, formatted as HTML
-#define PAGE_CONTENT "<!DOCTYPE html><html><head><meta name=\"viewport\" content=\"width=device-width\"><title>Wi-Fly</title><style>body{background-color:black;padding:0px 10px;font-family:sans-serif;margin:auto;width:92%%;}.text{color:white;}#fplan{width:99.6%%;height:500px;}#upload{background-color:%s;border-radius:8px;padding:8px 15px;text-align:center;font-size:16px;}</style></head><body><h2 class=text>Wi-Fly</h2><form><textarea id=fplan name=fplan placeholder=\"Paste your flightplan here...\"></textarea><br><br><input type=submit class=text id=upload value=Upload></form><p class=text>%s</p></body></html>"
+#define PAGE_CONTENT "<!DOCTYPE html><html><head><meta name=\"viewport\" content=\"width=device-width\"><title>Wi-Fly</title><style>body{background-color:black;padding:0px 10px;font-family:sans-serif;margin:auto;width:92%%;}.text{color:white;}#fplan{width:99.6%%;height:250px;}#upload{background-color:%s;border-radius:8px;padding:8px 15px;text-align:center;font-size:16px;}</style></head><body><h2 class=text>Wi-Fly</h2><form><textarea id=fplan name=fplan placeholder=\"Paste your flightplan here...\"></textarea><br><br><input type=submit class=text id=upload value=Upload></form><p class=text>%s</p></body></html>"
 // HTTP parameter that defines flightplan in GET request
 #define FPLAN_PARAM "fplan="
 

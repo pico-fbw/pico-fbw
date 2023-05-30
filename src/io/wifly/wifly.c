@@ -117,7 +117,7 @@ int wifly_parseFplan(const char *fplan) {
             strncpy(field_name, decoded + tokens[i].start, tokens[i].end - tokens[i].start);
             field_name[tokens[i].end - tokens[i].start] = '\0';
             if (strcmp(field_name, "version") == 0) {
-                char version[7];
+                char version[8];
                 strncpy(version, decoded + tokens[i + 1].start, tokens[i + 1].end - tokens[i + 1].start);
                 version[tokens[i + 1].end - tokens[i + 1].start] = '\0';
                 WIFLY_DEBUG_printf("Flightplan version: %s\n", version);
@@ -151,7 +151,7 @@ int wifly_parseFplan(const char *fplan) {
                                             tokens[waypoint_field_token_index].end - tokens[waypoint_field_token_index].start);
                                     waypoint_field_name[tokens[waypoint_field_token_index].end - tokens[waypoint_field_token_index].start] = '\0';
                                     if (strcmp(waypoint_field_name, "lat") == 0) {
-                                        char lat[20];
+                                        char lat[17];
                                         strncpy(lat, decoded + tokens[waypoint_field_token_index + 1].start,
                                                 tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start);
                                         lat[tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start] = '\0';
@@ -161,7 +161,7 @@ int wifly_parseFplan(const char *fplan) {
                                             printf("Latitude: %s\n", lat);
                                         #endif
                                     } else if (strcmp(waypoint_field_name, "lng") == 0) {
-                                        char lng[20];
+                                        char lng[17];
                                         strncpy(lng, decoded + tokens[waypoint_field_token_index + 1].start,
                                                 tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start);
                                         lng[tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start] = '\0';
