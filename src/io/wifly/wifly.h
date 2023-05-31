@@ -2,17 +2,17 @@
 #define wifly_h
 
 // Current supported Wi-Fly standard. If the server recieves a versioncode other than this, it will not accept the flightplan.
-#define WIFLY_CURRENT_VERSION "0.1a"
+#define WIFLY_CURRENT_VERSION "0.1"
 
 // Print misc debug messages to serial during Wi-Fly wireless operations
-#define WIFLY_DEBUG_printf // printf
-#define DHCP_DEBUG_printf // printf
-#define DNS_DEBUG_printf // printf
-#define TCP_DEBUG_printf // printf
-#define ERROR_printf // printf
-#define DUMP_DATA 0 // 1
-#define TCP_DUMP_DATA 0 // 1
-#define WIFLY_DUMP_DATA 0 // 1
+#define WIFLY_DEBUG_printf  // printf
+#define DHCP_DEBUG_printf   // printf
+#define DNS_DEBUG_printf    // printf
+#define TCP_DEBUG_printf    // printf
+#define ERROR_printf        // printf
+#define DUMP_DATA 0         // 1
+#define TCP_DUMP_DATA 0     // 1
+#define WIFLY_DUMP_DATA 0   // 1
 
 #define WIFLY_STATUS_AWAITING -1
 #define WIFLY_STATUS_OK 0
@@ -47,5 +47,11 @@ void wifly_deinit();
  * @return The outcome of parsing. 0 if successful, 1 if failure (syntax error), 2 if failure (version mismatch).
 */
 int wifly_parseFplan(const char *fplan);
+
+/**
+ * Gets the current flightplan (structured as a list of Waypoints).
+ * @return A pointer to the current flightplan, or NULL if there is none.
+*/
+Waypoint *wifly_getFplan();
 
 #endif // wifly_h

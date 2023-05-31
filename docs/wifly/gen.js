@@ -2,7 +2,7 @@
 
 var fplan = {
     // Versioncode is here, change when there is a new release
-    version: "0.1a",
+    version: "0.1",
     waypoints: []
 };
 // Maximum length of the generated flightplan JSON (URL-encoded)

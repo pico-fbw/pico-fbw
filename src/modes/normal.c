@@ -17,7 +17,7 @@
 
 // Keeps the state of if normal mode has been initialized or not and if it is the first time initializing
 bool normalInitialized = false;
-bool firstTimeInit = true;
+bool normal_firstTimeInit = true;
 
 inertialAngles angles;
 PIDController rollPID;
@@ -38,10 +38,58 @@ float yawSetpoint;
 bool yawdamp_on = false;
 float yawOut;
 
+
+// Internal function that we will later push to the second core to compute the PID math for all controllers
+static void normal_computePID() {
+    while (true) {
+        pid_update(&rollPID, rollSetpoint, rollAngle);
+        pid_update(&pitchPID, pitchSetpoint, pitchAngle);
+        pid_update(&yawPID, yawSetpoint, yawAngle);
+    }
+}
+
+bool normalInit() {
+    #ifdef PID_AUTOTUNE
+        // If autotuning is enabled, first make sure it's been completed before we allow normal mode
+        if (mode_tuneCheckCalibration()) {
+            // Now pull in constants from autotuning
+            rollPID = (PIDController){flash_read(1, 1), flash_read(1, 2), flash_read(1, 3), roll_tau, -AIL_LIMIT, AIL_LIMIT, roll_integMin, roll_integMax, roll_kT};
+            pitchPID = (PIDController){flash_read(2, 1), flash_read(2, 2), flash_read(2, 3), pitch_tau, -ELEV_LIMIT, ELEV_LIMIT, pitch_integMin, pitch_integMax, pitch_kT};
+        } else {
+            // The firstTimeInit variable is here so that we only call the led_blink function once, otherwise the LED simply won't change
+            if (normal_firstTimeInit) {
+                led_blink(2000);
+                normal_firstTimeInit = false;
+            }
+            // Revert to direct
+            mode(DIRECT);
+            return false;
+        }
+    #else
+        // If autotuning is disabled, pull in constants from manual tuning
+        rollPID = (PIDController){roll_kP, roll_kI, roll_kD, roll_tau, -AIL_LIMIT, AIL_LIMIT, roll_integMin, roll_integMax, roll_kT};
+        pitchPID = (PIDController){pitch_kP, pitch_kI, pitch_kD, pitch_tau, -ELEV_LIMIT, ELEV_LIMIT, pitch_integMin, pitch_integMax, pitch_kT};
+    #endif
+    yawPID = (PIDController){yaw_kP, yaw_kI, yaw_kD, yaw_tau, -RUD_LIMIT, RUD_LIMIT, yaw_integMin, yaw_integMax, yaw_kT};
+    // Set up PID controllers
+    pid_init(&rollPID);
+    pid_init(&pitchPID);
+    pid_init(&yawPID);
+    // Wake the second core and tell it to compute PID values, that's all it will be doing
+    multicore_launch_core1(normal_computePID);
+    return true;
+}
+
+void mode_normalDeinit() {
+    // Remove the normal mode initialized flag and reset the second core for use elsewhere
+    normalInitialized = false;
+    multicore_reset_core1();
+}
+
 void mode_normal() {
     // Initialize normal mode if we haven't already
     if (!normalInitialized) {
-        if (mode_normalInit()) {
+        if (normalInit()) {
             normalInitialized = true;
         } else {
             return;
@@ -141,47 +189,6 @@ void mode_normal() {
     servo_set(SERVO_AIL_PIN, (uint16_t)(rollPID.out + 90));
     servo_set(SERVO_ELEV_PIN, (uint16_t)(pitchPID.out + 90));
     servo_set(SERVO_RUD_PIN, (uint16_t)(yawOut + 90));
-}
-
-// Internal function that we will later push to the second core to compute the PID math for all controllers
-static void computePID() {
-    while (true) {
-        pid_update(&rollPID, rollSetpoint, rollAngle);
-        pid_update(&pitchPID, pitchSetpoint, pitchAngle);
-        pid_update(&yawPID, yawSetpoint, yawAngle);
-    }
-}
-
-bool mode_normalInit() {
-    #ifdef PID_AUTOTUNE
-        // If autotuning is enabled, first make sure it's been completed before we allow normal mode
-        if (mode_tuneCheckCalibration()) {
-            // Now pull in constants from autotuning
-            rollPID = (PIDController){flash_read(1, 1), flash_read(1, 2), flash_read(1, 3), roll_tau, -AIL_LIMIT, AIL_LIMIT, roll_integMin, roll_integMax, roll_kT};
-            pitchPID = (PIDController){flash_read(2, 1), flash_read(2, 2), flash_read(2, 3), pitch_tau, -ELEV_LIMIT, ELEV_LIMIT, pitch_integMin, pitch_integMax, pitch_kT};
-        } else {
-            // Throw an error if this is our first time, otherwise don't so we don't spam the LED function (it just won't do anything then)
-            if (firstTimeInit) {
-                led_blink(2000);
-                firstTimeInit = false;
-            }
-            // Otherwise, revert to direct
-            mode(DIRECT);
-            return false;
-        }
-    #else
-        // If autotuning is disabled, pull in constants from manual tuning
-        rollPID = (PIDController){roll_kP, roll_kI, roll_kD, roll_tau, -AIL_LIMIT, AIL_LIMIT, roll_integMin, roll_integMax, roll_kT};
-        pitchPID = (PIDController){pitch_kP, pitch_kI, pitch_kD, pitch_tau, -ELEV_LIMIT, ELEV_LIMIT, pitch_integMin, pitch_integMax, pitch_kT};
-    #endif
-    yawPID = (PIDController){yaw_kP, yaw_kI, yaw_kD, yaw_tau, -RUD_LIMIT, RUD_LIMIT, yaw_integMin, yaw_integMax, yaw_kT};
-    // Set up PID controllers
-    pid_init(&rollPID);
-    pid_init(&pitchPID);
-    pid_init(&yawPID);
-    // Wake the second core and tell it to compute PID values, that's all it will be doing
-    multicore_launch_core1(computePID);
-    return true;
 }
 
 void mode_normalReset() {

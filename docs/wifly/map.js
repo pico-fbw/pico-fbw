@@ -74,6 +74,8 @@ function map_addWpt(event, lat, lng) {
         // Add a click listener to the marker for the removal function so it can be removed later
         marker.addEventListener("click", map_removeWpt.bind(marker));
         
+        // Enable the unload prompt because a new waypoint (presumably unsaved) has been generated
+        promptBeforeUnload = true;
         // If the flightplan has been generated and another waypoint is added, make the regen button visible
         if (fplanGenerated) {
             genButtonCopyState = false;
@@ -124,6 +126,7 @@ function map_setAlt(callback) {
         } else if (event.key === "Escape") {
             overlay.style.display = "none";
             removeEventListeners();
+            promptBeforeUnload = false;
         }
     }
 

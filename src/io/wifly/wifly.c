@@ -26,7 +26,7 @@ dhcp_server_t dhcp_server;
 dns_server_t dns_server;
 TCP_SERVER_T *state;
 
-Waypoint *waypoints;
+Waypoint *waypoints = NULL;
 
 void wifly_init() {
     state = calloc(1, sizeof(TCP_SERVER_T));
@@ -55,6 +55,13 @@ void wifly_init() {
     if (!tcp_server_open(state)) {
         ERROR_printf("failed to open server\n");
     }
+}
+
+void wifly_deinit() {
+    dns_server_deinit(&dns_server);
+    dhcp_server_deinit(&dhcp_server);
+    tcp_server_close(state);
+    // cyw43_arch_deinit();
 }
 
 static inline void url_decode(char *str) {
@@ -205,9 +212,6 @@ int wifly_parseFplan(const char *fplan) {
     return WIFLY_STATUS_OK;
 }
 
-void wifly_deinit() {
-    dns_server_deinit(&dns_server);
-    dhcp_server_deinit(&dhcp_server);
-    tcp_server_close(state);
-    // cyw43_arch_deinit();
-}    
+Waypoint *wifly_getFplan() {
+    return waypoints;
+}

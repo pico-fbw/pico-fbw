@@ -8,6 +8,8 @@ const manaddButton = document.getElementById("manadd-btn");
 const manaddLat = document.getElementById("manadd-lat");
 const manaddLng = document.getElementById("manadd-lng");
 
+var promptBeforeUnload = false;
+
 
 /* Function definitions */
 
@@ -41,6 +43,7 @@ function genButtonCallback() {
         // Update color and text of button to indicate successful generation
         field.style.display = "block";
         changeButton(genButton, "#008CBA", "Copy to clipboard");
+        // Update global status vars
         fplanGenerated = true;
         genButtonCopyState = true;
     } else {
@@ -50,6 +53,8 @@ function genButtonCallback() {
                 changeButton(genButton, "#008CBA", "Copy to clipboard");
             }, btnTimeout);
         });
+        // Once the flightplan has been copied we know there is no chance of it being lost so we can remove the prompt on close/reload
+        promptBeforeUnload = false;
     }
 }
 
@@ -75,3 +80,12 @@ function manaddButtonCallback() {
 // Attach event listeners to buttons
 genButton.addEventListener("click", genButtonCallback);
 manaddButton.addEventListener("click", manaddButtonCallback);
+
+// Attach an event listener to bring up a confirmation dialog when a user tries to leave the page w/o generating
+window.onbeforeunload = function() {
+    if (promptBeforeUnload) {
+        return "";
+    } else {
+        return;
+    }
+};

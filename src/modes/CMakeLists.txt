@@ -14,3 +14,6 @@ target_link_libraries(fbw_modes
     fbw_lib
     fbw_io
 )
+if (WIFLY_ENABLED)
+    target_link_libraries(fbw_modes fbw_wifly)
+endif ()
