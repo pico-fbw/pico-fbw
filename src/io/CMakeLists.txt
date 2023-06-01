@@ -1,10 +1,11 @@
 # Point CMake to C files for building
 add_library(fbw_io
-    servo.c
-    pwm.c
+    flash.c
+    gps.c
     imu.c
     led.c
-    flash.c
+    pwm.c
+    servo.c
 )
 
 # Import libraries

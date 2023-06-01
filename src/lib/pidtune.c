@@ -37,7 +37,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <math.h>
-#include "pico/stdlib.h"
 
 #include "../config.h"
 

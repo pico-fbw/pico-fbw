@@ -1,13 +1,10 @@
 body {
     background-color: black;
+    color: white;
     padding: 0px 10px;
     font-family: sans-serif;
     margin: auto;
     width: 94%;
-}
-
-.text {
-    color: white;
 }
 
 .manadd {
@@ -17,10 +14,23 @@ body {
     height: 16px;
 }
 
-.input-range { 
+.input-range {
     appearance: slider-vertical;
     -moz-appearance: slider-vertical;
     -webkit-appearance: slider-vertical;
+}
+
+.centered {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+}
+
+#map {
+    touch-action: none;
+    height: 580px;
+    border-radius: 12px;
 }
 
 #overlay {
@@ -29,9 +39,21 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: rgba(0, 0, 0, 0.75);
     z-index: 9999;
     display: none;
+}
+
+#alt-slider {
+    display: none;
+}
+
+#notify {
+    display: none;
+}
+
+#alt-value {
+    top: 1.5%;
 }
 
 #alt-input {
@@ -41,20 +63,15 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-55%,-50%);
-    opacity: 0.6;
+    border: none;
+    opacity: 0.7;
     -webkit-transition: .2s;
     transition: opacity .2s;
 }
 #alt-input:hover {
-    opacity: 1;
+    opacity: 0.95;
 }
 
-#alt-value {
-    position: absolute;
-    top: 1.5%;
-    left: 50%;
-    transform: translate(-50%,-50%);
-}
 #alt-btn {
     position: absolute;
     top: 96.6%;
@@ -68,11 +85,6 @@ body {
     font-size: 12px;
 }
 
-#fplan {
-    display: none;
-    width: 99.6%;
-    height: 250px;
-}
 
 #generate {
     background-color: #5A5A5A;
@@ -93,8 +105,8 @@ body {
     font-size: 12px;
 }
 
-#map {
-    touch-action: none;
-    height: 580px;
-    border-radius: 12px;
+#fplan {
+    display: none;
+    width: 99.6%;
+    height: 250px;
 }

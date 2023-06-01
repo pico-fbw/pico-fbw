@@ -1,6 +1,9 @@
 /* Declare constants and vars*/
 
 const overlay = document.getElementById("overlay");
+const altSlider = document.getElementById("alt-slider");
+const notify = document.getElementById("notify");
+const notifyText = document.getElementById("notify-text");
 const altIn = document.getElementById("alt-input");
 const altVal = document.getElementById("alt-value");
 const altBtn = document.getElementById("alt-btn");
@@ -51,19 +54,31 @@ function map_addWpt(event, lat, lng) {
         var marker;
         if (lat == null && lng == null) {
             // Coordinates given from map
-            // Push these coordinates to the flightplan
-            fplan.waypoints.push({lat: event.latlng.lat, lng: event.latlng.lng, alt: altIn.value});
-            // Create a visual marker and add it to the map
-            marker = L.marker(event.latlng).addTo(map);
+            lat = event.latlng.lat;
+            lng = event.latlng.lng;
         } else {
-            // Coordinates given manually, adjust accordingly
-            fplan.waypoints.push({lat: lat, lng: lng, alt: altIn.value});
-            marker = L.marker([lat, lng]).addTo(map);
+            // Coordinates given manually
             changeButton(manaddButton, "#4CAF50", "Added!");
             manaddTimeout = setTimeout(() => {
                 changeButton(manaddButton, "#A041DB", "Add Waypoint");
             }, btnTimeout);
         }
+        // Check to make sure the coordinates are valid before accepting them
+        if (lat < -85.05112878 || lat > 85.05112878 || lng < -180 || lng > 180) {
+            notifyText.innerHTML = "Invalid coordinates. Please try again.";
+            overlay.style.display = "block";
+            notify.style.display = "block";
+            setTimeout(() => {
+                overlay.style.display = "none";
+                notify.style.display = "none";
+            }, 3500);
+            changeButton(manaddButton, "#A041DB", "Add Waypoint");
+            return;
+        }
+        // Push these coordinates to the flightplan
+        fplan.waypoints.push({lat: lat, lng: lng, alt: altIn.value});
+        // Create a visual marker and add it to the map
+        marker = L.marker([lat, lng]).addTo(map);
         // Add the marker to the marker array
         markers.push(marker);
         
@@ -102,10 +117,15 @@ function map_removeWpt() {
         genButtonCopyState = false;
         changeButton(genButton, "#E49B0F", "Generate Flightplan");
     }
+    // Check to see if we have removed all waypoints, if so update the reload dialog flag
+    if (fplan.waypoints.length == 0) {
+        promptBeforeUnload = false;
+    }
 }
 
 function map_setAlt(callback) {
     overlay.style.display = "block";
+    altSlider.style.display = "block";
 
     altBtn.addEventListener("click", handleAltButtonClick);
     function handleAltButtonClick() {
@@ -125,6 +145,7 @@ function map_setAlt(callback) {
             altSet();
         } else if (event.key === "Escape") {
             overlay.style.display = "none";
+            altSlider.style.display = "none";
             removeEventListeners();
             promptBeforeUnload = false;
         }
@@ -132,6 +153,7 @@ function map_setAlt(callback) {
 
     function altSet() {
         overlay.style.display = "none";
+        altSlider.style.display = "none";
         callback();
         removeEventListeners();
     }

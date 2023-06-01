@@ -69,6 +69,7 @@ function manaddButtonCallback() {
         }, btnTimeout);
         return;
     } else {
+        changeButton(manaddButton, "#1520A6", "Adding..");
         map_addWpt(null, manaddLat.value, manaddLng.value);
         // The button is changed in the map.js file so that it changes at the correct time after an alt is set
     }

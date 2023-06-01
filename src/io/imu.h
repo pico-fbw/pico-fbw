@@ -3,6 +3,9 @@
 #ifndef imu_h
 #define imu_h
 
+// The i2c bus that will be used for the IMU
+#define IMU_I2C i2c0
+
 #ifdef IMU_BNO055
 	static const uint CHIP_FREQ_KHZ = 400; // Default I2C freq of the BNO055 is 400KHz
 
@@ -63,13 +66,13 @@ typedef struct inertialAccel {
  * Gets the current angles of spatial orientation from the IMU.
  * @return an inertialAngles struct containing heading, roll, and pitch data.
 */
-struct inertialAngles imu_getAngles();
+inertialAngles imu_getAngles();
 
 /**
  * Gets the current acceleration values from the IMU.
  * @return an intertialAccel struct containing acceleration data for the X, Y, and Z axes.
 */
-struct inertialAccel imu_getAccel();
+inertialAccel imu_getAccel();
 
 /**
  * Changes the working mode of the IMU.
@@ -77,13 +80,5 @@ struct inertialAccel imu_getAccel();
  * @return true if success, false if failure.
 */
 bool imu_changeMode(uint8_t mode);
-
-/**
- * A low(er)-level method that writes a value directly to the IMU over I2C.
- * @param address The address to write to.
- * @param value The value to write.
- * @return Number of bytes written, or PICO_ERROR_GENERIC if address not acknowledged, no device present.
-*/
-int imu_write(uint8_t address, uint8_t value);
 
 #endif // imu_h

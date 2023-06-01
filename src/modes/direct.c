@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include "pico/stdlib.h"
 
 #include "../io/servo.h"

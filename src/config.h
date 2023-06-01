@@ -196,7 +196,11 @@
 
 // IMU types; uncomment whichever type you are using.
 #define IMU_BNO055
-// More to come in the future...? Let me know if there's an IMU you would like supported!
+
+// GPS types
+#define GPS_ADAFRUIT_ULT
+
+// More to come in the future...? Let me know if there's an IMU/GPS you would like supported!
 
 // Note that these pins must line up with the Pico's I2C0 interface, see a pinout if you're not sure!
 #define IMU_SDA_PIN 8

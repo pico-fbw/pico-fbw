@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <stdbool.h>
-#include "pico/stdlib.h"
 #include "pico/multicore.h"
 
 #include "../io/imu.h"
