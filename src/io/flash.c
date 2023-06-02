@@ -1,3 +1,6 @@
+#include <stdbool.h>
+#include <string.h>
+
 #include "hardware/flash.h"
 #include "hardware/sync.h"
 
@@ -13,6 +16,17 @@ void flash_write(uint sector, float data[]) {
     restore_interrupts (intr);
 }
 
+bool flash_write_string(uint sector, const char* data) {
+    if ((strlen(data) + 1) > (FLASH_SECTOR_SIZE/sizeof(char))) {
+        return false;
+    }
+    uint32_t offset = (PICO_FLASH_SIZE_BYTES - (FLASH_SECTOR_SIZE + sector * FLASH_SECTOR_SIZE));
+    uint32_t intr = save_and_disable_interrupts();
+    flash_range_program(offset, (const uint8_t*)data, FLASH_SECTOR_SIZE);
+    restore_interrupts(intr);
+    return true;
+}
+
 float flash_read(uint sector, uint val) {
     // Move the pointer forward to whatever address holds the requested value
     float* val_ptr = (float*) ((XIP_BASE + (PICO_FLASH_SIZE_BYTES - (FLASH_SECTOR_SIZE + sector * FLASH_SECTOR_SIZE))) + (sizeof(float) * val));
@@ -20,9 +34,20 @@ float flash_read(uint sector, uint val) {
     return *val_ptr;
 }
 
+const char *flash_read_string(uint sector) {
+    uint32_t offset = (PICO_FLASH_SIZE_BYTES - (FLASH_SECTOR_SIZE + sector * FLASH_SECTOR_SIZE));
+    return (const char*)offset;
+}
+
 void flash_erase(uint sector) {
     uint32_t offset = (PICO_FLASH_SIZE_BYTES - (FLASH_SECTOR_SIZE + sector * FLASH_SECTOR_SIZE));
     uint32_t intr = save_and_disable_interrupts();
     flash_range_erase(offset, FLASH_SECTOR_SIZE);
     restore_interrupts (intr);
+}
+
+void flash_reset() {
+    for (uint8_t i = 0; i <= 3; i++) {
+        flash_erase(i);
+    }
 }

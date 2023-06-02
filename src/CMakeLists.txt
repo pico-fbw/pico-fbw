@@ -29,7 +29,7 @@ add_subdirectory(lib)
 add_subdirectory(modes)
 
 
-# Add executable, target, etc for reset program
+# Reset program:
 
 # Define the pico-fbw-reset executable target
 add_executable(pico-fbw-reset
@@ -52,3 +52,7 @@ pico_set_binary_type(pico-fbw-reset no_flash)
 pico_add_extra_outputs(pico-fbw-reset)
 # Install the pico-fbw-reset executable in the same directory as the main executable
 install(TARGETS pico-fbw-reset DESTINATION ${CMAKE_INSTALL_PREFIX})
+
+add_custom_command(TARGET pico-fbw-reset POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E rename "${CMAKE_BINARY_DIR}/src/pico-fbw-reset.uf2" "${CMAKE_BINARY_DIR}/pico-fbw-reset.uf2"
+)

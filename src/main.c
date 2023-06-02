@@ -1,5 +1,7 @@
 #include <stdio.h>
+#include <string.h>
 #include "pico/stdlib.h"
+#include "hardware/watchdog.h"
 #ifdef RASPBERRYPI_PICO_W
     #include "pico/cyw43_arch.h"
 #endif
@@ -8,11 +10,13 @@
 #include "io/pwm.h"
 #include "io/imu.h"
 #include "io/led.h"
+#include "io/flash.h"
 #ifdef WIFLY_ENABLED
     #include "io/wifly/wifly.h"
 #endif    
 #include "modes/modes.h"
 #include "config.h"
+#include "version.h"
 
 int main() {
     // Save time of 850ms after boot for later
@@ -29,6 +33,16 @@ int main() {
     led_init();
     // Initialize any linked IO types
     stdio_init_all();
+
+    // Check to see if this is the first boot of pico-fbw
+    if (strcmp(flash_read_string(2), PICO_FBW_VERSION) != 0) {
+        // TODO: add a bootup flag to this so we don't nuke config on version upgrades lol
+        // If not, reset flash and write the flag, then reboot
+        flash_reset();
+        flash_write_string(3, PICO_FBW_VERSION);
+        watchdog_enable(1, 1);
+        while (true);
+    }
     
     // Set up PWM inputs
     uint pin_list[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, MODE_SWITCH_PIN};

@@ -1,9 +1,6 @@
 #ifndef wifly_h
 #define wifly_h
 
-// Current supported Wi-Fly standard. If the server recieves a versioncode other than this, it will not accept the flightplan.
-#define WIFLY_CURRENT_VERSION "0.1"
-
 // Print misc debug messages to serial during Wi-Fly wireless operations
 #define WIFLY_DEBUG_printf  // printf
 #define DHCP_DEBUG_printf   // printf

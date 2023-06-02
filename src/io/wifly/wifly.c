@@ -20,6 +20,7 @@
 
 #include "wifly.h"
 #include "../../config.h"
+#include "../../version.h"
 
 dhcp_server_t dhcp_server;
 dns_server_t dns_server;
@@ -85,6 +86,7 @@ static inline void url_decode(char *str) {
     *q = '\0';
 }
 
+// TODO: add a field and parsing logic for the pico-fbw version as well as the wifly version
 int wifly_parseFplan(const char *fplan) {
     // Find the start of the JSON string
     const char *json_start = strstr(fplan, FPLAN_PARAM);
@@ -127,7 +129,7 @@ int wifly_parseFplan(const char *fplan) {
                 strncpy(version, decoded + tokens[i + 1].start, tokens[i + 1].end - tokens[i + 1].start);
                 version[tokens[i + 1].end - tokens[i + 1].start] = '\0';
                 WIFLY_DEBUG_printf("Flightplan version: %s\n", version);
-                if (strcmp(version, WIFLY_CURRENT_VERSION) != 0) {
+                if (strcmp(version, WIFLY_VERSION) != 0) {
                     return WIFLY_ERROR_VERSION;
                 }
             } else if (strcmp(field_name, "waypoints") == 0) {
