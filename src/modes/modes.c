@@ -12,6 +12,8 @@
 #include "modes.h"
 #include "../config.h"
 
+// TODO: include protections for auto mode w/o wifly, implement deinit functions for normal and auto
+
 // Variable to store the system's current mode regardless of the mode currently being requested
 // Mode is direct by default until we prove the IMU data is safe
 uint8_t cmode = DIRECT;
@@ -39,16 +41,14 @@ void mode(uint8_t smode) {
             if (cmode != NORMAL) {
                 // Make sure it is okay to set to normal mode
                 if (imuDataSafe) {
-                    // If we are running a two-pos switch, behavior is similar to auto mode's tuning logic, otherwise, just set the mode
-                    #ifdef SWITCH_2_POS
-                        if (mode_tuneCheckCalibration()) {
-                            cmode = NORMAL;
-                        } else {
-                            cmode = TUNE;
-                        }
-                    #else
+                    // Enter auto mode if tuning has been done before, otherwise automatically enter tuning mode
+                    if (mode_tuneCheckCalibration()) {
                         cmode = NORMAL;
-                    #endif
+                    } else {
+                        cmode = TUNE;
+                    }
+                    led_blink_stop();
+                    break;
                 } else {
                     // If we are unable to set to normal mode, revert to direct mode
                     // We use recursive function calling here so that the direct mode init code runs
@@ -57,10 +57,10 @@ void mode(uint8_t smode) {
             }
             mode_normal();
             break;
+        #ifdef WIFLY_ENABLED    
         case AUTO:
             if (cmode != AUTO) {
                 if (imuDataSafe) {
-                    // Enter auto mode if tuning has been done before, otherwise automatically enter tuning mode
                     if (mode_tuneCheckCalibration()) {
                         cmode = AUTO;
                     } else {
@@ -74,6 +74,7 @@ void mode(uint8_t smode) {
             }
             mode_auto();
             break;
+        #endif    
         #ifdef PID_AUTOTUNE    
         case TUNE:
             // smode might not equal TUNE if we are switching from auto mode so we set it directly
@@ -95,7 +96,7 @@ void mode(uint8_t smode) {
     }
 }
 
-void setIMUSafe(int state) {
+void setIMUSafe(bool state) {
     imuDataSafe = state;
     // Automatically de-init i2c and set into direct mode if IMU is deemed unsafe
     if (!state) {

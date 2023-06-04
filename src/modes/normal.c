@@ -10,6 +10,7 @@
 #include "../lib/pid.h"
 #include "../config.h"
 #include "modes.h"
+#include "auto.h"
 #include "tune.h"
 
 #include "normal.h"
@@ -48,6 +49,7 @@ static void normal_computePID() {
 }
 
 bool normalInit() {
+    mode_autoDeinit();
     #ifdef PID_AUTOTUNE
         // If autotuning is enabled, first make sure it's been completed before we allow normal mode
         if (mode_tuneCheckCalibration()) {

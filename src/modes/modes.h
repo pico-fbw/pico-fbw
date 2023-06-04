@@ -16,6 +16,6 @@ void mode(uint8_t smode);
 /**
  * Declares whether or not the IMU data is safe to use.
 */
-void setIMUSafe(int state);
+void setIMUSafe(bool state);
 
 #endif // modes_h
