@@ -4,6 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width">
         <title>Wi-Fly Flightplan Generator</title>
+        <link rel="icon" type="image/x-icon" href="/web/ico.png">
 
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
@@ -18,17 +19,20 @@
                 <button id="alt-btn">OK</button>
             </div>
             <div id="notify">
-                <h2 class="centered" id="notify-text">Test</h2>
+                <h2 class="centered" id="notify-text"></h2>
             </div>
         </div>
         <div>
-            <h2>Wi-Fly Flightplan Generator</h2>
+            <div class="header">
+                <img class="icon" src="web/ico.png" alt="Wi-Fly icon">
+                <h2>Wi-Fly Flightplan Generator</h2>
+            </div>
 
             <div id="map"></div>
             <br>
             <span>
-                <input class="manadd" id="manadd-lat" type="number" min="-90" max="90" hint="Latitude" />
-                <input class="manadd" id="manadd-lng" type="number" min="-180" max="180" hint="Longitude" />
+                <input class="manadd" id="manadd-lat" type="number" min="-90" max="90">
+                <input class="manadd" id="manadd-lng" type="number" min="-180" max="180">
                 <button id="manadd-btn">Add Waypoint</button>
             </span>
             <br><br>

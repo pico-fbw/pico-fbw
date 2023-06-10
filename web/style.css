@@ -7,11 +7,15 @@ body {
     width: 94%;
 }
 
-.manadd {
-    background-color: #A9A9A9;
-    border-radius: 5px;
-    width: 25%;
-    height: 16px;
+.header {
+    display: flex;
+    align-items: center;
+}
+
+.icon {
+    width: 64px;
+    height: 64px;
+    margin: 15px 8px 15px 0px;
 }
 
 .input-range {
@@ -27,10 +31,11 @@ body {
     transform: translate(-50%,-50%);
 }
 
-#map {
-    touch-action: none;
-    height: 580px;
-    border-radius: 12px;
+.manadd {
+    background-color: #A9A9A9;
+    border-radius: 5px;
+    width: 25%;
+    height: 16px;
 }
 
 #overlay {
@@ -85,6 +90,11 @@ body {
     font-size: 12px;
 }
 
+#map {
+    touch-action: none;
+    height: 580px;
+    border-radius: 12px;
+}
 
 #generate {
     background-color: #5A5A5A;

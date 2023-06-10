@@ -25,19 +25,14 @@
 // This is the size we will use for our arrays that we will write to flash--it's the amount of floats we can fit in one flash page.
 #define CONFIG_SECTOR_SIZE FLASH_SECTOR_SIZE/sizeof(float)
 
+#define FBW_BOOT 3.1305210f // DO NOT CHANGE THIS VALUE! IT WILL BRICK ALL SYSTEMS!!!
+
 /**
  * Writes an array of data to a certain "sector". Note that this function assumes the data is a float array.
  * @param sector the "sector" to write to
  * @param data the array of data to write 
 */
 void flash_write(uint sector, float data[]);
-
-/**
- * Writes a string to a certain "sector".
- * @param sector the "sector" to write to
- * @param data the string to write
-*/
-bool flash_write_string(uint sector, const char* data);
 
 /**
  * Reads back one value from a previously written data array.
@@ -48,14 +43,6 @@ bool flash_write_string(uint sector, const char* data);
  * program data, or no data at all. Be careful!
 */
 float flash_read(uint sector, uint val);
-
-/**
- * Reads a string from a previously written data array.
- * @param sector the "sector" to read from
- * @return a pointer to the string stored in the specified sector of flash
- * Do note that this function returns a pointer to the string in flash memory, which is read-only unless using the specified flash write function.
-*/
-const char *flash_read_string(uint sector);
 
 /**
  * Erases a given sector of flash.

@@ -8,6 +8,7 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "pico/cyw43_arch.h"
@@ -86,7 +87,7 @@ static inline void url_decode(char *str) {
     *q = '\0';
 }
 
-// TODO: add a field and parsing logic for the pico-fbw version as well as the wifly version
+// TODO: add a field and parsing logic for the pico-fbw version as well
 int wifly_parseFplan(const char *fplan) {
     // Find the start of the JSON string
     const char *json_start = strstr(fplan, FPLAN_PARAM);
@@ -111,6 +112,9 @@ int wifly_parseFplan(const char *fplan) {
     jsmn_init(&parser);
     int token_count = jsmn_parse(&parser, decoded, strlen(decoded), tokens, sizeof(tokens)/sizeof(tokens[0]));
     if (token_count < 0) {
+        return WIFLY_ERROR_PARSE;
+    }
+    if (strlen(decoded) == 0 || decoded[0] != '{' || decoded[strlen(decoded) - 1] != '}') {
         return WIFLY_ERROR_PARSE;
     }
 

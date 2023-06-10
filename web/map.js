@@ -13,8 +13,6 @@ const map = L.map("map").setView([20, 0], 2);
 const maxZoom = 19;
 
 
-/* Function definitions */
-
 function map_init() {
     // Add layers
     const googleHybrid = L.tileLayer("https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}", {
@@ -94,7 +92,7 @@ function map_addWpt(event, lat, lng) {
         // If the flightplan has been generated and another waypoint is added, make the regen button visible
         if (fplanGenerated) {
             genButtonCopyState = false;
-            changeButton(genButton, "#E49B0F", "Generate Flightplan");
+            changeButton(genButton, "#A6710C", "Generate Flightplan");
         }
     });
 }
@@ -115,7 +113,7 @@ function map_removeWpt() {
     }
     if (fplanGenerated) {
         genButtonCopyState = false;
-        changeButton(genButton, "#E49B0F", "Generate Flightplan");
+        changeButton(genButton, "#A6710C", "Generate Flightplan");
     }
     // Check to see if we have removed all waypoints, if so update the reload dialog flag
     if (fplan.waypoints.length == 0) {
@@ -165,8 +163,6 @@ function map_setAlt(callback) {
     }
 }
 
-
-/* Begin program execution */
 
 // Initialize the map and bind its click method
 map_init();

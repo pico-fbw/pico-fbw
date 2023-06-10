@@ -222,13 +222,24 @@
 
 	// Edit to change the name of the network Wi-Fly creates
 	#define WIFLY_NETWORK_NAME "pico-fbw"
-	// Uncomment to enable Wi-Fly's password protection
+	// Uncomment to enable password protection on the network
 	// #define WIFLY_NETWORK_USE_PASSWORD
 	#ifdef WIFLY_NETWORK_USE_PASSWORD
-		// Edit to change the password of the network Wi-Fly creates
+		// Edit to change the password of the network
 		#define WIFLY_NETWORK_PASSWORD "password"
 	#endif
 
+#endif
+
+/** @section debug
+ * This section is for developers and troubleshooting the system, you can safely ignore it.
+*/
+#define MISC_DEBUG 1
+// TODO: add more debug/link this section to wifly debug or cmake usb options?
+#if MISC_DEBUG
+	#define FBW_DEBUG_printf printf
+#else
+	#define FBW_DEBUG_printf
 #endif
 
 

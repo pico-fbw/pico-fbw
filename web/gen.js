@@ -1,8 +1,7 @@
-/* Declare constants and vars*/
+const WIFLY_VERSION = "1.0"; // This should always be the same as the versioncode in version.h!!
 
 var fplan = {
-    // Versioncode is here, change when there is a new release
-    version: "0.1",
+    version: WIFLY_VERSION,
     waypoints: []
 };
 // Maximum length of the generated flightplan JSON (URL-encoded)
@@ -11,8 +10,6 @@ const maxFplanLen = 16384;
 
 const field = document.getElementById("fplan");
 
-
-/* Function definitions */
 
 var fplanGenerated = false;
 

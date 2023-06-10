@@ -53,6 +53,10 @@ pico_add_extra_outputs(pico-fbw-reset)
 # Install the pico-fbw-reset executable in the same directory as the main executable
 install(TARGETS pico-fbw-reset DESTINATION ${CMAKE_INSTALL_PREFIX})
 
+# At the end of the build process, move the final binaries to the buildroot
+add_custom_command(TARGET pico-fbw POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E rename "${CMAKE_BINARY_DIR}/src/pico-fbw.uf2" "${CMAKE_BINARY_DIR}/pico-fbw.uf2" # ${CMAKE_BINARY_DIR}/../pico-fbw.uf2
+)
 add_custom_command(TARGET pico-fbw-reset POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E rename "${CMAKE_BINARY_DIR}/src/pico-fbw-reset.uf2" "${CMAKE_BINARY_DIR}/pico-fbw-reset.uf2"
 )

@@ -1,5 +1,3 @@
-/* Declare constants and vars*/
-
 // Time in milliseconds before a button reverts to its previous state
 const btnTimeout = "2500";
 
@@ -10,8 +8,6 @@ const manaddLng = document.getElementById("manadd-lng");
 
 var promptBeforeUnload = false;
 
-
-/* Function definitions */
 
 function changeButton(btn, color, text) {
     btn.style.backgroundColor = color;
@@ -27,7 +23,7 @@ function genButtonCallback() {
     if (fplan.waypoints.length < 2) {
         changeButton(genButton, "#D21404", "Please select two or more waypoints!");
         genTimeout = setTimeout(() => {
-            changeButton(genButton, "#E49B0F", "Generate Flightplan");
+            changeButton(genButton, "#A6710C", "Generate Flightplan");
         }, btnTimeout);
         return;
     }
@@ -36,7 +32,7 @@ function genButtonCallback() {
         if (!wifly_genFplan()) {
             changeButton(genButton, "#D21404", "Flightplan too long!");
             genTimeout = setTimeout(() => {
-                changeButton(genButton, "#E49B0F", "Generate Flightplan");
+                changeButton(genButton, "#A6710C", "Generate Flightplan");
             }, btnTimeout);
             return;
         }
@@ -75,8 +71,6 @@ function manaddButtonCallback() {
     }
 }
 
-
-/* Begin program execution */
 
 // Attach event listeners to buttons
 genButton.addEventListener("click", genButtonCallback);
