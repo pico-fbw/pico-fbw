@@ -1,7 +1,10 @@
-const WIFLY_VERSION = "1.0"; // This should always be the same as the versioncode in version.h!!
+// These should always be the same as the versioncodes in version.h!!
+const FW_VERSION = "0.01";
+const WIFLY_VERSION = "1.0";
 
 var fplan = {
     version: WIFLY_VERSION,
+    version_fw: FW_VERSION,
     waypoints: []
 };
 // Maximum length of the generated flightplan JSON (URL-encoded)

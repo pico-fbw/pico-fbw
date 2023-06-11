@@ -1,10 +1,14 @@
 #include <stdbool.h>
+#include <stdio.h>
+
 #include "pico/stdlib.h"
 #include "pico/binary_info.h"
 #include "hardware/i2c.h"
 
-#include "imu.h"
 #include "../modes/modes.h"
+#include "../config.h"
+
+#include "imu.h"
 
 /**
  * A low(er)-level method that writes a value directly to the IMU over I2C.
@@ -18,8 +22,8 @@ int imu_write(uint8_t address, uint8_t value) {
 }
 
 int imu_init() {
+    FBW_DEBUG_printf("[i2c] initializing i2c subsystem\n");
     #ifdef IMU_BNO055
-		// Now, initialize i2c on default pins (typically 4 and 5)
 		i2c_init(IMU_I2C, CHIP_FREQ_KHZ * 1000);
 		gpio_set_function(IMU_SDA_PIN, GPIO_FUNC_I2C);
 		gpio_set_function(IMU_SCL_PIN, GPIO_FUNC_I2C);
@@ -27,6 +31,7 @@ int imu_init() {
 		gpio_pull_up(IMU_SCL_PIN);
 		bi_decl(bi_2pins_with_func(IMU_SDA_PIN, IMU_SCL_PIN, GPIO_FUNC_I2C));
 		// Query the ID register for expected values to confirm identity/check comms
+        FBW_DEBUG_printf("[imu] searching for BNO055\n");
 		uint8_t id;
 		int result = i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, &ID_REGISTER, 1, true, 1000000);
 		if (result == PICO_ERROR_GENERIC) {
@@ -57,20 +62,27 @@ void imu_deinit() {
 }
 
 bool imu_configure() {
-    // Use internal oscillator
-    imu_write(SYS_REGISTER, 0x40);
-    // Reset all interrupt status bits
-    imu_write(SYS_REGISTER, 0x01);
-    imu_write(PWR_MODE_REGISTER, PWR_MODE_NORMAL);
-    sleep_ms(50);
-    // Set default axis configuration
-    imu_write(AXIS_MAP_CONF_REGISTER, 0x24);
-    // Set default axis signs
-    imu_write(AXIS_MAP_SIGN_REGISTER, 0x00);
-    // Set accel units to mg (milli-Gs)
-    imu_write(0x3B, 0b00000001);
-    sleep_ms(30);
-    return imu_changeMode(MODE_NDOF);
+    FBW_DEBUG_printf("[imu] configuring IMU, watch for config data dump\n");
+    #ifdef IMU_BNO055
+        FBW_DEBUG_printf("[imu] config: using IMU internal oscillator\n");
+        imu_write(SYS_REGISTER, 0x40);
+        FBW_DEBUG_printf("[imu] config: resetting interrupts\n");
+        imu_write(SYS_REGISTER, 0x01);
+        FBW_DEBUG_printf("[imu] config: setting normal power mode\n");
+        imu_write(PWR_MODE_REGISTER, PWR_MODE_NORMAL);
+        sleep_ms(50);
+        FBW_DEBUG_printf("[imu] config: settinf default axis configuration\n");
+        imu_write(AXIS_MAP_CONF_REGISTER, 0x24);
+        FBW_DEBUG_printf("[imu] config: setting default axis signs\n");
+        imu_write(AXIS_MAP_SIGN_REGISTER, 0x00);
+        FBW_DEBUG_printf("[imu] config: setting acceleration units to milli-Gs\n");
+        imu_write(0x3B, 0b00000001);
+        sleep_ms(30);
+        FBW_DEBUG_printf("[imu] config: attempting to set NDOF mode\n");
+        return imu_changeMode(MODE_NDOF);
+    #else
+        #warning No sutable IMU could be found for configuration, this may cause problems later.
+    #endif
 }
 
 inertialAngles imu_getAngles() {

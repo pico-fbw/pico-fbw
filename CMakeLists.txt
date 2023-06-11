@@ -14,8 +14,9 @@ pico_sdk_init()
 # Point CMake to the source directory for building
 add_subdirectory(src)
 
-# Enable USB serial, disable UART serial (for debugging)
-# TODO: Do NOT keep this in the final build! USB has a high overhead and I'm not exactly tethering my plane to a USB cable...
-# I'll probably end up just disabling both because we don't need them.
+# If you are debugging the project, enable one of these options for a debug output!
+# TODO: Disable USB in final build
 pico_enable_stdio_usb(${PROJECT_NAME} 1)
+# pico_enable_stdio_usb(${PROJECT_NAME} 0)
 pico_enable_stdio_uart(${PROJECT_NAME} 0)
+# pico_enable_stdio_uart(${PROJECT_NAME} 1)

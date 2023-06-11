@@ -213,7 +213,6 @@
  * The option to toggle this is WIFLY_ENABLED; Use -DWIFLY_ENABLED=ON or -DWIFLY_ENABLED=OFF through CMake command line or search for WIFLY_ENABLED in the GUI.
  * The below settings apply only if Wi-Fly has been enabled through CMake.
 */
-
 #ifdef WIFLY_ENABLED
 
 	// Define your country to optimize Wi-Fly (not required but recommended).
@@ -232,14 +231,22 @@
 #endif
 
 /** @section debug
- * This section is for developers and troubleshooting the system, you can safely ignore it.
+ * This section for troubleshooting and project developers only.
+ * If you do require more debugging information, ensure you enable either USB or UART output in /CMakeLists.txt (one directory up).
+ * From there, you are welcome to enable/disable whatever debugging options you wish by commenting/uncommenting them.
 */
-#define MISC_DEBUG 1
-// TODO: add more debug/link this section to wifly debug or cmake usb options?
-#if MISC_DEBUG
-	#define FBW_DEBUG_printf printf
-#else
-	#define FBW_DEBUG_printf
+#if defined(LIB_PICO_STDIO_USB) || defined(LIB_PICO_STDIO_UART)
+
+	#define FBW_DEBUG_printf    printf
+
+	#define WIFLY_DEBUG_printf     // printf
+	#define WIFLY_DUMP_DATA     0  // 1
+	#define TCP_DEBUG_printf       // printf
+	#define TCP_DUMP_DATA       0  // 1
+	#define DHCP_DEBUG_printf      // printf
+	#define DNS_DEBUG_printf       // printf
+	#define DNS_DUMP_DATA       0  // 1
+
 #endif
 
 

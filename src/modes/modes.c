@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdio.h>
 #include "pico/stdlib.h"
 
 #include "../io/imu.h"
@@ -12,8 +13,6 @@
 #include "modes.h"
 #include "../config.h"
 
-// TODO: include protections for auto mode w/o wifly, implement deinit functions for normal and auto
-
 // Variable to store the system's current mode regardless of the mode currently being requested
 // Mode is direct by default until we prove the IMU data is safe
 uint8_t cmode = DIRECT;
@@ -26,7 +25,7 @@ void mode(uint8_t smode) {
         case DIRECT:
             // If the current mode is not the selected mode, run the mode switching code for that mode and change the mode
             if (cmode != DIRECT) {
-                // Set the current working mode
+                FBW_DEBUG_printf("[modes] entering direct mode \n");
                 cmode = DIRECT;
                 // Set LED as blinking if the IMU has encountered an error, not if the user purposely enters direct mode
                 if (!imuDataSafe) {
@@ -43,8 +42,10 @@ void mode(uint8_t smode) {
                 if (imuDataSafe) {
                     // Enter auto mode if tuning has been done before, otherwise automatically enter tuning mode
                     if (mode_tuneCheckCalibration()) {
+                        FBW_DEBUG_printf("[modes] entering normal mode \n");
                         cmode = NORMAL;
                     } else {
+                        FBW_DEBUG_printf("[modes] entering tune mode \n");
                         cmode = TUNE;
                     }
                     led_blink_stop();
@@ -62,8 +63,10 @@ void mode(uint8_t smode) {
             if (cmode != AUTO) {
                 if (imuDataSafe) {
                     if (mode_tuneCheckCalibration()) {
+                        FBW_DEBUG_printf("[modes] entering auto mode \n");
                         cmode = AUTO;
                     } else {
+                        FBW_DEBUG_printf("[modes] entering tune mode \n");
                         cmode = TUNE;
                     }
                     led_blink_stop();
@@ -78,6 +81,7 @@ void mode(uint8_t smode) {
         #ifdef PID_AUTOTUNE    
         case TUNE:
             // smode might not equal TUNE if we are switching from auto mode so we set it directly
+            FBW_DEBUG_printf("[modes] entering tune mode \n");
             cmode = TUNE;
             // This logic is here for safety and also for if tuning mode gets called directly in the case of no mode switching,
             // these checks will pass if it has been automatically entered from auto mode

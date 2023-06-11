@@ -16,6 +16,7 @@
 #include "dns.h"
 
 #include "../wifly.h"
+#include "../../../config.h"
 
 #include "tcp.h"
 
@@ -42,7 +43,7 @@ static err_t tcp_close_client_connection(TCP_CONNECT_STATE_T *con_state, struct 
         tcp_err(client_pcb, NULL);
         err_t err = tcp_close(client_pcb);
         if (err != ERR_OK) {
-            TCP_DEBUG_printf("close failed %d, calling abort\n", err);
+            FBW_DEBUG_printf("[tcp] ERROR: close failed %d, calling abort\n", err);
             tcp_abort(client_pcb);
             close_err = ERR_ABRT;
         }
@@ -63,17 +64,19 @@ void tcp_server_close(TCP_SERVER_T *state) {
 
 static err_t tcp_server_sent(void *arg, struct tcp_pcb *pcb, u16_t len) {
     TCP_CONNECT_STATE_T *con_state = (TCP_CONNECT_STATE_T*)arg;
-    TCP_DEBUG_printf("tcp_server_sent %u\n", len);
+    TCP_DEBUG_printf("[tcp] tcp_server_sent %u\n", len);
     con_state->sent_len += len;
     if (con_state->sent_len >= con_state->header_len + con_state->result_len) {
-        TCP_DEBUG_printf("all done\n");
+        TCP_DEBUG_printf("[tcp] all done\n");
         return tcp_close_client_connection(con_state, pcb, ERR_OK);
     }
     return ERR_OK;
 }
 
 static int server_content(const char *request, const char *params, char *result, size_t max_result_len) {
-    TCP_DEBUG_printf("Content params: %s\n", params);
+    #if TCP_DUMP_DATA
+        printf("[tcp] content params: %s\n", params);
+    #endif
     int len = 0;
     // Check if we need to redirect instead of serving page content
     if (strncmp(request, REDIRECT, sizeof(REDIRECT) - 1) == 0) {
@@ -88,9 +91,9 @@ static int server_content(const char *request, const char *params, char *result,
             if (strncmp(FPLAN_PARAM, params, sizeof(FPLAN_PARAM) - 1) == 0) {
                 // Check the global status to see if we've already accepted a flightplan
                 if (fplanStatus == 0) {
-                    WIFLY_DEBUG_printf("Flightplan submission detected, skipping parse; already recieved\n");
+                    WIFLY_DEBUG_printf("[wifly] Flightplan submission detected, skipping parse; already recieved\n");
                 } else {
-                    WIFLY_DEBUG_printf("Flightplan submission detected, attempting to parse\n");
+                    WIFLY_DEBUG_printf("[wifly] Flightplan submission detected, attempting to parse\n");
                     // Attempt to parse the flightplan data and save the result to the global status
                     fplanStatus = wifly_parseFplan(params);
                 }
@@ -100,13 +103,16 @@ static int server_content(const char *request, const char *params, char *result,
         if (fplanStatus == WIFLY_STATUS_AWAITING) {
             len = snprintf(result, max_result_len, PAGE_CONTENT, "#5A5A5A", "<i>Awaiting flightplan...</i>");
         } else if (fplanStatus == WIFLY_STATUS_OK)  {
-            len = snprintf(result, max_result_len, PAGE_CONTENT, "#4CAF50", "Flightplan uploaded successfully!");
+            len = snprintf(result, max_result_len, PAGE_CONTENT, "#4CAF50", "Flightplan successfully uploaded!");
         } else if (fplanStatus == WIFLY_ERROR_PARSE) {
             len = snprintf(result, max_result_len, PAGE_CONTENT, "#D21404", "<b>Error:</b> parse. Check formatting and try again.");
         } else if (fplanStatus == WIFLY_ERROR_VERSION) {
-            len = snprintf(result, max_result_len, PAGE_CONTENT, "#D24E01", "<b>Error:</b> version mismatch! Please update your firmware.");
+            len = snprintf(result, max_result_len, PAGE_CONTENT, "#D24E01", "<b>Error:</b> flightplan version incompatable! Please update your firmware.");
         } else if (fplanStatus == WIFLY_ERROR_MEM) {
-            len = snprintf(result, max_result_len, PAGE_CONTENT, "#D24E01", "<b>Error:</b> memory allocation failure! Please restart and try again.");
+            len = snprintf(result, max_result_len, PAGE_CONTENT, "#D24E01", "<b>Error:</b> out of memory! Please restart and try again.");
+        } else if (fplanStatus == WIFLY_ERROR_FW_VERSION) {
+            // TODO: change this to a yellow hex
+            len = snprintf(result, max_result_len, PAGE_CONTENT, "#D24E01", "<b>Warning:</b> there is a new firmware version available! It is advised to update your firmware. Flightplan successfully uploaded!");
         }
     }
     return len;
@@ -115,12 +121,12 @@ static int server_content(const char *request, const char *params, char *result,
 static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err) {
     TCP_CONNECT_STATE_T *con_state = (TCP_CONNECT_STATE_T*)arg;
     if (!p) {
-        TCP_DEBUG_printf("connection closed\n");
+        TCP_DEBUG_printf("[tcp] connection closed\n");
         return tcp_close_client_connection(con_state, pcb, ERR_OK);
     }
     assert(con_state && con_state->pcb == pcb);
     if (p->tot_len > 0) {
-        TCP_DEBUG_printf("tcp_server_recv %d err %d\n", p->tot_len, err);
+        TCP_DEBUG_printf("[tcp] tcp_server_recv %d err %d\n", p->tot_len, err);
         #if TCP_DUMP_DATA
             for (struct pbuf *q = p; q != NULL; q = q->next) {
                 printf("in: %.*s\n\n\n", q->len, q->payload);
@@ -136,7 +142,7 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err
             // Null termination
             con_state->accHeaders[strlen(con_state->accHeaders)] = '\0';
             #if TCP_DUMP_DATA
-                printf("[acc] Final header: %s\n", con_state->accHeaders);
+                printf("[tcp] {acc} final header: %s\n", con_state->accHeaders);
             #endif
             // Set the final headers flag
             accHeadersFinal = true;
@@ -165,7 +171,7 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err
             // Add the current headers to the accumulated headers
             strcat(con_state->accHeaders, con_state->headers);
             #if TCP_DUMP_DATA
-                TCP_DEBUG_printf("[acc] Current header: %s\n", con_state->accHeaders);
+                TCP_DEBUG_printf("[tcp] {acc} current header: %s\n", con_state->accHeaders);
             #endif
         }
 
@@ -187,12 +193,12 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err
 
             // Generate content
             con_state->result_len = server_content(request, params, con_state->result, sizeof(con_state->result));
-            TCP_DEBUG_printf("Request: %s?%s\n", request, params);
-            TCP_DEBUG_printf("Result: %d\n", con_state->result_len);
+            TCP_DEBUG_printf("[tcp] request: %s?%s\n", request, params);
+            TCP_DEBUG_printf("[tcp] result: %d\n", con_state->result_len);
 
             // Check we had enough buffer space
             if (con_state->result_len > sizeof(con_state->result) - 1) {
-                TCP_DEBUG_printf("Too much result data %d\n", con_state->result_len);
+                FBW_DEBUG_printf("[tcp] ERROR: too much result data %d\n", con_state->result_len);
                 return tcp_close_client_connection(con_state, pcb, ERR_CLSD);
             }
 
@@ -201,21 +207,21 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err
                 con_state->header_len = snprintf(con_state->headers, sizeof(con_state->headers), HTTP_RESPONSE_HEADERS,
                     200, con_state->result_len);
                 if (con_state->header_len > sizeof(con_state->headers) - 1) {
-                    TCP_DEBUG_printf("Too much header data %d\n", con_state->header_len);
+                    FBW_DEBUG_printf("[tcp] ERROR: too much header data %d\n", con_state->header_len);
                     return tcp_close_client_connection(con_state, pcb, ERR_CLSD);
                 }
             } else {
                 // Send redirect
                 con_state->header_len = snprintf(con_state->headers, sizeof(con_state->headers), HTTP_RESPONSE_REDIRECT,
                     ipaddr_ntoa(con_state->gw));
-                TCP_DEBUG_printf("Sending redirect %s", con_state->headers);
+                TCP_DEBUG_printf("[tcp] sending redirect %s", con_state->headers);
             }
 
             // Send the headers to the client
             con_state->sent_len = 0;
             err_t err = tcp_write(pcb, con_state->headers, con_state->header_len, 0);
             if (err != ERR_OK) {
-                TCP_DEBUG_printf("failed to write header data %d\n", err);
+                FBW_DEBUG_printf("[tcp] ERROR: failed to write header data %d\n", err);
                 return tcp_close_client_connection(con_state, pcb, err);
             }
 
@@ -223,7 +229,7 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err
             if (con_state->result_len) {
                 err = tcp_write(pcb, con_state->result, con_state->result_len, 0);
                 if (err != ERR_OK) {
-                    TCP_DEBUG_printf("failed to write result data %d\n", err);
+                    FBW_DEBUG_printf("[tcp] ERROR: failed to write result data %d\n", err);
                     return tcp_close_client_connection(con_state, pcb, err);
                 }
             }
@@ -245,14 +251,14 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err
 
 static err_t tcp_server_poll(void *arg, struct tcp_pcb *pcb) {
     TCP_CONNECT_STATE_T *con_state = (TCP_CONNECT_STATE_T*)arg;
-    TCP_DEBUG_printf("tcp_server_poll_fn\n");
+    TCP_DEBUG_printf("[tcp] tcp server polling\n");
     return tcp_close_client_connection(con_state, pcb, ERR_OK); // Just disconnect clent?
 }
 
 static void tcp_server_err(void *arg, err_t err) {
     TCP_CONNECT_STATE_T *con_state = (TCP_CONNECT_STATE_T*)arg;
     if (err != ERR_ABRT) {
-        TCP_DEBUG_printf("tcp_client_err_fn %d\n", err);
+        FBW_DEBUG_printf("[tcp] ERROR: %d\n", err);
         tcp_close_client_connection(con_state, con_state->pcb, err);
     }
 }
@@ -260,15 +266,15 @@ static void tcp_server_err(void *arg, err_t err) {
 static err_t tcp_server_accept(void *arg, struct tcp_pcb *client_pcb, err_t err) {
     TCP_SERVER_T *state = (TCP_SERVER_T*)arg;
     if (err != ERR_OK || client_pcb == NULL) {
-        TCP_DEBUG_printf("failure in accept\n");
+        FBW_DEBUG_printf("[tcp] failed to accept connection\n");
         return ERR_VAL;
     }
-    TCP_DEBUG_printf("client connected\n");
+    TCP_DEBUG_printf("[tcp] client connected\n");
 
     // Create the state for the connection
     TCP_CONNECT_STATE_T *con_state = calloc(1, sizeof(TCP_CONNECT_STATE_T));
     if (!con_state) {
-        TCP_DEBUG_printf("failed to allocate connect state\n");
+        FBW_DEBUG_printf("[tcp] ERROR: failed to allocate connect state\n");
         return ERR_MEM;
     }
     con_state->pcb = client_pcb; // for checking
@@ -286,23 +292,23 @@ static err_t tcp_server_accept(void *arg, struct tcp_pcb *client_pcb, err_t err)
 
 bool tcp_server_open(void *arg) {
     TCP_SERVER_T *state = (TCP_SERVER_T*)arg;
-    TCP_DEBUG_printf("starting server on port %u\n", TCP_PORT);
+    TCP_DEBUG_printf("[tcp] starting server on port %u\n", TCP_PORT);
 
     struct tcp_pcb *pcb = tcp_new_ip_type(IPADDR_TYPE_ANY);
     if (!pcb) {
-        TCP_DEBUG_printf("failed to create pcb\n");
+        FBW_DEBUG_printf("[tcp] ERROR: failed to create pcb\n");
         return false;
     }
 
     err_t err = tcp_bind(pcb, IP_ANY_TYPE, TCP_PORT);
     if (err) {
-        TCP_DEBUG_printf("failed to bind to port %d\n");
+        FBW_DEBUG_printf("[tcp] ERROR: failed to bind to port %d\n");
         return false;
     }
 
     state->server_pcb = tcp_listen_with_backlog(pcb, 1);
     if (!state->server_pcb) {
-        TCP_DEBUG_printf("failed to listen\n");
+        FBW_DEBUG_printf("[tcp] ERROR: failed to listen\n");
         if (pcb) {
             tcp_close(pcb);
         }

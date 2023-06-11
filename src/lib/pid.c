@@ -27,9 +27,14 @@
  * https://github.com/drbitboy/PID
 */
 
+#include <stdio.h>
+
+#include "../config.h"
+
 #include "pid.h"
 
 void pid_init(PIDController *pid) {
+	FBW_DEBUG_printf("[pid] initializing a PID controller\n");
 
 	/* Clear controller variables */
 	pid->integrator = 0.0f;

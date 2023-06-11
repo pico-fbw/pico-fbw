@@ -28,6 +28,8 @@
 */
 
 #include <stdbool.h>
+#include <stdio.h>
+
 #include "pico/stdlib.h"
 #include "hardware/pio.h"
 #include "hardware/irq.h"
@@ -64,37 +66,31 @@ static void pwm_internal_handler() {
 
 void pwm_enable(uint *pin_list, uint num_pins) {
     gb_num_pins = num_pins;
-    // pio 0 is used
     pio = pio0;
-    // load the pio program into the pio memory
+    FBW_DEBUG_printf("[pwm] loading PWM IN pio into pio0\n");
     uint offset = pio_add_program(pio, &pwm_program);
-    // start num_of_pins state machines
+    FBW_DEBUG_printf("[pwm] starting %d state machines\n", num_pins);
     for (int i = 0; i < num_pins; i++) {
-        // prepare state machine i
+        FBW_DEBUG_printf("[pwm] preparing state machine %d\n", i);
         pulsewidth[i] = 0;
         period[i] = 0;
-
-        // configure the used pins (pull down, controlled by PIO)
+        FBW_DEBUG_printf("[pwm] giving PIO control of pin %d\n", pin_list[i]);
         gpio_pull_down(pin_list[i]);
         pio_gpio_init(pio, pin_list[i]);
-        // make a sm config
+        FBW_DEBUG_printf("[pwm] setting state machine config\n");
         pio_sm_config c = pwm_program_get_default_config(offset);
-        // set the 'jmp' pin
+        FBW_DEBUG_printf("[pwm] setting state machine pins\n");
         sm_config_set_jmp_pin(&c, pin_list[i]);
-        // set the 'wait' pin (uses 'in' pins)
         sm_config_set_in_pins(&c, pin_list[i]);
-        // set shift direction
         sm_config_set_in_shift(&c, false, false, 0);
-        // init the pio sm with the config
+        FBW_DEBUG_printf("[pwm] initializing and enabling state machine\n");
         pio_sm_init(pio, i, offset, &c);
-        // enable the sm
         pio_sm_set_enabled(pio, i, true);
     }
-    // set the IRQ handler
+    FBW_DEBUG_printf("[pwm] state machines ok\n");
+    FBW_DEBUG_printf("[pwm] setting up and enabling PIO interrupts\n");
     irq_set_exclusive_handler(PIO0_IRQ_0, pwm_internal_handler);
-    // enable the IRQ
     irq_set_enabled(PIO0_IRQ_0, true);
-    // allow irqs from the low 4 state machines
     pio0_hw->inte0 = PIO_IRQ0_INTE_SM0_BITS | PIO_IRQ0_INTE_SM1_BITS | PIO_IRQ0_INTE_SM2_BITS | PIO_IRQ0_INTE_SM3_BITS ;
 }
 
@@ -139,6 +135,7 @@ static float pwm_readDegRaw(uint pin) {
 
 
 bool pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint run_times) {
+    FBW_DEBUG_printf("[pwm] pwm calibration begin\n");
     // Start blinking LED to signify we are calibrating
     led_blink(100);
     // Create an array where we will arrange our data to later write
@@ -154,6 +151,7 @@ bool pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint
         uint num_pins = 1;
     #endif
     for (uint pin = 0; pin < num_pins; pin++) {
+        FBW_DEBUG_printf("[pwm] calibrating pin %d out of %d\n", pin, num_pins);
         // If we are testing the switch, set the deviation to zero so it works for both a two and three-pos switch
         if (pin == 3) {
             deviation = 0.0f;
@@ -162,6 +160,7 @@ bool pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint
         float final_difference = 0.0f;
         // These loops simply poll the specified pin based on the specifications we have provided in the function
         for (uint t = 0; t < run_times; t++) {
+            FBW_DEBUG_printf("[pwm] running trial %d out of %d\n", t, run_times);
             // Reset the total difference every time we run
             float total_difference = 0.0f;
             for (uint i = 0; i < num_samples; i++) {
@@ -170,19 +169,23 @@ bool pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint
             }
             // Check to see if the deviation is 270 (this value occurs with a pulsewidth of 0/1 aka not connected)
             if ((total_difference / num_samples) == 270.0f) {
+                FBW_DEBUG_printf("ERROR: [FBW-500] pin %d's calibration value seems abnormal, is it connected?\n", pin);
                 return false;
             }
             // Add the total difference recorded divided by the samples we took (average) to the final difference
             final_difference = final_difference + (total_difference / num_samples);
         }
         // Get our final average and save it to the correct byte in our array which we write to flash
+        FBW_DEBUG_printf("[pwm] pin %d final offset is %f\n", pin, (final_difference / run_times));
         calibration_data[pin + 1] = final_difference / run_times;
     }
     // Before we write, make sure values aren't way out of spec
     if (calibration_data[1] > MAX_CALIBRATION_OFFSET || calibration_data[1] < -MAX_CALIBRATION_OFFSET || calibration_data[2] > MAX_CALIBRATION_OFFSET || calibration_data[2] < -MAX_CALIBRATION_OFFSET || calibration_data[3] > MAX_CALIBRATION_OFFSET || calibration_data[3] < -MAX_CALIBRATION_OFFSET || calibration_data[4] > MAX_CALIBRATION_OFFSET || calibration_data[4] < -MAX_CALIBRATION_OFFSET) {
+        FBW_DEBUG_printf("ERROR: [FBW-500] a calibration value is too high!\n");
         return false;
     }
     // Write calibration data to sector "0", last sector of flash
+    FBW_DEBUG_printf("[pwm] writing calibration data to flash\n");
     flash_write(0, calibration_data);
     led_blink_stop();
     return true;
