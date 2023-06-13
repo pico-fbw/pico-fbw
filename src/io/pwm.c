@@ -138,10 +138,8 @@ bool pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint
     FBW_DEBUG_printf("[pwm] pwm calibration begin\n");
     // Start blinking LED to signify we are calibrating
     led_blink(100);
-    // Create an array where we will arrange our data to later write
-    float calibration_data[CONFIG_SECTOR_SIZE];
-    // The first four bytes will signify if we have run a calibration before, a value of 0.5 corresponds to true in this case so we add that to the array
-    calibration_data[0] = 0.5f;
+    // Create an array where we will arrange our data to later write; the first four bytes will signify if we have run a calibration before
+    float calibration_data[CONFIG_SECTOR_SIZE] = {0.5f};
     // Check if we are calibrating per pin or not
     #ifdef CONFIGURE_INPUTS_SEPERATELY
         // If yes, complete the calibration for all pins

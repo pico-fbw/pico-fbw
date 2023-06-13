@@ -21,8 +21,7 @@
         // Start blinking LED to signify we are calibrating
         led_blink(100);
         // The first four bytes of our data array will signify if we have run a calibration before, a value of 0.3 floating point corresponds to true in this case so we add that to the array
-        float tuning_data[CONFIG_SECTOR_SIZE];
-        tuning_data[0] = 0.3f;
+        float tuning_data[CONFIG_SECTOR_SIZE] = {0.3f};\
         // Tune both roll and pitch PID
         for (uint8_t i = 1; i < 3; i++) {
             // Set up tuning, input variables depend on which PID we are tuning but everything else is the same

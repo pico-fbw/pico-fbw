@@ -236,6 +236,7 @@
  * From there, you are welcome to enable/disable whatever debugging options you wish by commenting/uncommenting them.
 */
 #if defined(LIB_PICO_STDIO_USB) || defined(LIB_PICO_STDIO_UART)
+	#define FBW_DEBUG
 
 	#define FBW_DEBUG_printf    printf
 
