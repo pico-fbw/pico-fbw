@@ -16,9 +16,11 @@ target_link_libraries(${PROJECT_NAME}
 # Import Pico W specific libraries and set compiler definitions
 if ("$CACHE{PICO_BOARD}" STREQUAL "pico_w")
     target_link_libraries(${PROJECT_NAME} pico_cyw43_arch_none)
+    # Only compile in Wi-Fly if it is enabled (which is default) 
+    option(WIFLY_ENABLED "Enable Wi-Fly (pico-fbw)" ON)
     if (WIFLY_ENABLED)
-        target_link_libraries(${PROJECT_NAME} fbw_wifly)
         add_compile_definitions(WIFLY_ENABLED)
+        # check_symbol_exists(WIFLY "../config.h" WIFLY_ENABLED)
         include_directories(${CMAKE_CURRENT_LIST_DIR}/io/wifly)
     endif ()
 endif ()
