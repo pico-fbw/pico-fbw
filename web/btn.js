@@ -1,3 +1,8 @@
+/**
+ * Source file of pico-fbw: https://github.com/MylesAndMore/pico-fbw
+ * Licensed under the GNU GPL-3.0
+*/
+
 // Time in milliseconds before a button reverts to its previous state
 const btnTimeout = "2500";
 

@@ -6,6 +6,11 @@
  * SPDX-License-Identifier: BSD-3-Clause
 */
 
+/**
+ * Source file of pico-fbw: https://github.com/MylesAndMore/pico-fbw
+ * Licensed under the GNU GPL-3.0
+*/
+
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>

@@ -1,4 +1,3 @@
-# Point CMake to C files for building
 add_library(fbw_modes
     modes.c
     direct.c
@@ -7,7 +6,6 @@ add_library(fbw_modes
     tune.c
 )
 
-# Import libraries
 target_link_libraries(fbw_modes
     pico_stdlib
     pico_multicore

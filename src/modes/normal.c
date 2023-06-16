@@ -1,5 +1,10 @@
 #include <stdlib.h>
 #include <stdbool.h>
+/**
+ * Source file of pico-fbw: https://github.com/MylesAndMore/pico-fbw
+ * Licensed under the GNU GPL-3.0
+*/
+
 #include "pico/multicore.h"
 
 #include "../io/imu.h"

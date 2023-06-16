@@ -1,4 +1,7 @@
-/* Declare constants and vars*/
+/**
+ * Source file of pico-fbw: https://github.com/MylesAndMore/pico-fbw
+ * Licensed under the GNU GPL-3.0
+*/
 
 const overlay = document.getElementById("overlay");
 const altSlider = document.getElementById("alt-slider");
@@ -73,11 +76,9 @@ function map_addWpt(event, lat, lng) {
             changeButton(manaddButton, "#A041DB", "Add Waypoint");
             return;
         }
-        // Push these coordinates to the flightplan
         fplan.waypoints.push({lat: lat, lng: lng, alt: altIn.value});
         // Create a visual marker and add it to the map
         marker = L.marker([lat, lng]).addTo(map);
-        // Add the marker to the marker array
         markers.push(marker);
         
         // Draw lines between the markers
@@ -100,7 +101,6 @@ function map_addWpt(event, lat, lng) {
 function map_removeWpt() {
     // Remove the waypoint from the flight plan
     fplan.waypoints.splice(markers.indexOf(this), 1);
-    // Remove the marker from the map and the markers array
     map.removeLayer(this);
     markers.splice(markers.indexOf(this), 1);
 
@@ -164,11 +164,9 @@ function map_setAlt(callback) {
 }
 
 
-// Initialize the map and bind its click method
 map_init();
 map.addEventListener("click", map_addWpt);
 
-// Add event listener to show the current altitude of slider
 altIn.addEventListener("input", function() {
     altVal.innerHTML = this.value;
 });

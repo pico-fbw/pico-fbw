@@ -238,8 +238,9 @@
 #if defined(LIB_PICO_STDIO_USB) || defined(LIB_PICO_STDIO_UART)
 	#define FBW_DEBUG
 
+	// Enabled by default:
 	#define FBW_DEBUG_printf    printf
-
+	// Uncomment/replace to enable:
 	#define WIFLY_DEBUG_printf     // printf
 	#define WIFLY_DUMP_DATA     0  // 1
 	#define TCP_DEBUG_printf       // printf
@@ -247,7 +248,17 @@
 	#define DHCP_DEBUG_printf      // printf
 	#define DNS_DEBUG_printf       // printf
 	#define DNS_DUMP_DATA       0  // 1
+	// Some more in-depth wireless debug options can be found in io/wifly/lwipopts.h
 
+#else
+	#define FBW_DEBUG_printf
+	#define WIFLY_DEBUG_printf
+	#define WIFLY_DUMP_DATA    0
+	#define TCP_DEBUG_printf
+	#define TCP_DUMP_DATA      0
+	#define DHCP_DEBUG_printf
+	#define DNS_DEBUG_printf
+	#define DNS_DUMP_DATA      0
 #endif
 
 
