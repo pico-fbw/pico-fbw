@@ -86,6 +86,34 @@ static inline void url_decode(char *str) {
     *q = '\0';
 }
 
+int wifly_genPageContent(char *result, size_t max_result_len, int status) {
+    int len;
+    switch(status) {
+        case WIFLY_STATUS_AWAITING:
+            len = snprintf(result, max_result_len, PAGE_CONTENT, WIFLY_HEX_INACTIVE, "<i>Awaiting flightplan...</i>");
+            break;
+        case WIFLY_STATUS_OK:
+            len = snprintf(result, max_result_len, PAGE_CONTENT, WIFLY_HEX_OK, "Flightplan successfully uploaded!");
+            break;
+        case WIFLY_ERROR_PARSE:
+            len = snprintf(result, max_result_len, PAGE_CONTENT, WIFLY_HEX_ERR, "<b>Error:</b> parse. Check formatting and try again.");
+            break;
+        case WIFLY_ERROR_VERSION:
+            len = snprintf(result, max_result_len, PAGE_CONTENT, WIFLY_HEX_ERR, "<b>Error:</b> flightplan version incompatable! Please update your firmware.");
+            break;
+        case WIFLY_ERROR_MEM:
+            len = snprintf(result, max_result_len, PAGE_CONTENT, WIFLY_HEX_ERR, "<b>Error:</b> out of memory! Please restart and try again.");
+            break;
+        case WIFLY_ERROR_FW_VERSION:
+            len = snprintf(result, max_result_len, PAGE_CONTENT, WIFLY_HEX_WARN, "<b>Warning:</b> there is a new firmware version available! It is advised to update your firmware. Flightplan successfully uploaded!");
+            break;                
+        default:
+            len = 0;
+            break;
+    }
+    return len;
+}
+
 int wifly_parseFplan(const char *fplan) {
     int status = -2;
     // Find the start of the JSON string

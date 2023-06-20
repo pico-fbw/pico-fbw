@@ -32,8 +32,7 @@
 #define HTTP_RESPONSE_REDIRECT "HTTP/1.1 302 Redirect\nLocation: http://%s" REDIRECT "\n\n"
 #define REDIRECT "/wifly"
 
-// Var that will keep track of if a flightplan has been submitted yet
-int fplanStatus = -1;
+int fplanStatus = -1; // Keeps track of if a flightplan has been submitted yet/if the submission was okay
 // Keeps track of if we are using accumulated headers and if they are complete yet
 bool useAccHeaders = false;
 bool accHeadersFinal = false;
@@ -95,30 +94,16 @@ static int server_content(const char *request, const char *params, char *result,
         if (params) {
             if (strncmp(FPLAN_PARAM, params, sizeof(FPLAN_PARAM) - 1) == 0) {
                 // Check the global status to see if we've already accepted a flightplan
-                if (fplanStatus == 0) {
+                if (fplanStatus == WIFLY_STATUS_OK) {
                     WIFLY_DEBUG_printf("[wifly] Flightplan submission detected, skipping parse; already recieved\n");
                 } else {
                     WIFLY_DEBUG_printf("[wifly] Flightplan submission detected, attempting to parse\n");
-                    // Attempt to parse the flightplan data and save the result to the global status
                     fplanStatus = wifly_parseFplan(params);
                 }
             }
         }
-        // Serve page content based on the status of the flightplan submission
-        if (fplanStatus == WIFLY_STATUS_AWAITING) {
-            len = snprintf(result, max_result_len, PAGE_CONTENT, "#5A5A5A", "<i>Awaiting flightplan...</i>");
-        } else if (fplanStatus == WIFLY_STATUS_OK)  {
-            len = snprintf(result, max_result_len, PAGE_CONTENT, "#4CAF50", "Flightplan successfully uploaded!");
-        } else if (fplanStatus == WIFLY_ERROR_PARSE) {
-            len = snprintf(result, max_result_len, PAGE_CONTENT, "#D21404", "<b>Error:</b> parse. Check formatting and try again.");
-        } else if (fplanStatus == WIFLY_ERROR_VERSION) {
-            len = snprintf(result, max_result_len, PAGE_CONTENT, "#D24E01", "<b>Error:</b> flightplan version incompatable! Please update your firmware.");
-        } else if (fplanStatus == WIFLY_ERROR_MEM) {
-            len = snprintf(result, max_result_len, PAGE_CONTENT, "#D24E01", "<b>Error:</b> out of memory! Please restart and try again.");
-        } else if (fplanStatus == WIFLY_ERROR_FW_VERSION) {
-            // TODO: change this to a yellow hex
-            len = snprintf(result, max_result_len, PAGE_CONTENT, "#D24E01", "<b>Warning:</b> there is a new firmware version available! It is advised to update your firmware. Flightplan successfully uploaded!");
-        }
+        // Generate page content based on the status of the flightplan submission
+        len = wifly_genPageContent(result, max_result_len, fplanStatus);
     }
     return len;
 }
