@@ -33,6 +33,7 @@ dns_server_t dns_server;
 TCP_SERVER_T *state;
 
 Waypoint *waypoints = NULL;
+uint waypoint_count = 0;
 
 void wifly_init() {
     state = calloc(1, sizeof(TCP_SERVER_T));
@@ -64,6 +65,41 @@ void wifly_deinit() {
     // cyw43_arch_deinit();
 }
 
+int wifly_genPageContent(char *result, size_t max_result_len, int status) {
+    int len;
+    char color[7];
+    char msg[135]; // change this if the longest message gets any larger, this is too small for me to implement malloc and such
+    switch(status) {
+        case WIFLY_STATUS_AWAITING:
+            strncpy(color, WIFLY_HEX_INACTIVE, sizeof(color));
+            strncpy(msg, "<i>Awaiting flightplan...</i>", sizeof(msg));
+            break;
+        case WIFLY_STATUS_OK:
+            strncpy(color, WIFLY_HEX_ERR, sizeof(color));
+            strncpy(msg, "Flightplan successfully uploaded!", sizeof(msg));
+            break;
+        case WIFLY_ERROR_PARSE:
+            strncpy(color, WIFLY_HEX_ERR, sizeof(color));
+            strncpy(msg, "<b>Error:</b> parse. Check formatting and try again.", sizeof(msg));
+            break;
+        case WIFLY_ERROR_VERSION:
+            strncpy(color, WIFLY_HEX_ERR, sizeof(color));
+            strncpy(msg, "<b>Error:</b> flightplan version incompatable! Please update your firmware.", sizeof(msg));
+            break;
+        case WIFLY_ERROR_MEM:
+            strncpy(color, WIFLY_HEX_ERR, sizeof(color));
+            strncpy(msg, "<b>Error:</b> out of memory! Please restart and try again.", sizeof(msg));
+            break;
+        case WIFLY_ERROR_FW_VERSION:
+            strncpy(color, WIFLY_HEX_WARN, sizeof(color));
+            strncpy(msg, "<b>Warning:</b> there is a new firmware version available! It is advised to update your firmware. Flightplan successfully uploaded!", sizeof(msg));
+            break;                
+        default:
+            return 0;
+    }
+    return snprintf(result, max_result_len, color, msg);
+}
+
 static inline void url_decode(char *str) {
     char *p = str;
     char *q = str;
@@ -84,34 +120,6 @@ static inline void url_decode(char *str) {
         q++;
     }
     *q = '\0';
-}
-
-int wifly_genPageContent(char *result, size_t max_result_len, int status) {
-    int len;
-    switch(status) {
-        case WIFLY_STATUS_AWAITING:
-            len = snprintf(result, max_result_len, PAGE_CONTENT, WIFLY_HEX_INACTIVE, "<i>Awaiting flightplan...</i>");
-            break;
-        case WIFLY_STATUS_OK:
-            len = snprintf(result, max_result_len, PAGE_CONTENT, WIFLY_HEX_OK, "Flightplan successfully uploaded!");
-            break;
-        case WIFLY_ERROR_PARSE:
-            len = snprintf(result, max_result_len, PAGE_CONTENT, WIFLY_HEX_ERR, "<b>Error:</b> parse. Check formatting and try again.");
-            break;
-        case WIFLY_ERROR_VERSION:
-            len = snprintf(result, max_result_len, PAGE_CONTENT, WIFLY_HEX_ERR, "<b>Error:</b> flightplan version incompatable! Please update your firmware.");
-            break;
-        case WIFLY_ERROR_MEM:
-            len = snprintf(result, max_result_len, PAGE_CONTENT, WIFLY_HEX_ERR, "<b>Error:</b> out of memory! Please restart and try again.");
-            break;
-        case WIFLY_ERROR_FW_VERSION:
-            len = snprintf(result, max_result_len, PAGE_CONTENT, WIFLY_HEX_WARN, "<b>Warning:</b> there is a new firmware version available! It is advised to update your firmware. Flightplan successfully uploaded!");
-            break;                
-        default:
-            len = 0;
-            break;
-    }
-    return len;
 }
 
 int wifly_parseFplan(const char *fplan) {
@@ -147,7 +155,6 @@ int wifly_parseFplan(const char *fplan) {
         return WIFLY_ERROR_PARSE;
     }
 
-    uint waypoint_count = 0;
     // Process all tokens and extract any needed data; things here are mostly self-explanatory
     for (uint i = 0; i < token_count; i++) {
         // Token field (name) iteration
@@ -261,6 +268,6 @@ int wifly_parseFplan(const char *fplan) {
     return status;
 }
 
-Waypoint *wifly_getFplan() {
-    return waypoints;
-}
+Waypoint *wifly_getFplan() { return waypoints; }
+
+uint wifly_getWaypointCount() { return waypoint_count; }

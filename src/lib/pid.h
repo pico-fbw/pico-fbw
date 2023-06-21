@@ -30,7 +30,7 @@
 #ifndef pid_h
 #define pid_h
 
-typedef struct {
+typedef struct PIDController{
 
 	/* Controller gains */
 	float Kp;

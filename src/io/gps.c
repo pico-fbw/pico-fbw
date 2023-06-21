@@ -18,3 +18,11 @@ int gps_init() {
 void gps_deinit() {
     
 }
+
+gpsCoords gps_getCoords() {
+    // TODO; more gps things here
+    // I just had to create this function so I can integrate it into auto mode now
+    double lat = 0;
+    double lng = 0;
+    return (gpsCoords){lat, lng};
+}

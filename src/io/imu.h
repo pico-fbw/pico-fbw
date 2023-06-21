@@ -29,7 +29,10 @@
 
 /**
  * Initializes the IMU unit.
- * @return 0 if success (correct IMU type was initialized and recognized), PICO_ERROR_GENERIC if there was an I2C read/write failure, PICO_ERROR_TIMEOUT if there was an I2C timeout, or 1 if there was a general error
+ * @return 0 if success (correct IMU type was initialized and recognized),
+ * PICO_ERROR_GENERIC if there was an I2C read/write failure,
+ * PICO_ERROR_TIMEOUT if there was an I2C timeout, or
+ * 1 if there was a general error
 */
 int imu_init();
 
@@ -45,7 +48,7 @@ void imu_deinit();
 bool imu_configure();
 
 /**
- * A struct containing heading, roll, and pitch angles of the aircraft (when filled using its corresponding method).
+ * A struct containing heading, roll, and pitch angles of the aircraft (when filled using its corresponding function).
 */
 typedef struct inertialAngles {
     float heading;
@@ -54,7 +57,7 @@ typedef struct inertialAngles {
 } inertialAngles;
 
 /**
- * A struct containing acceleration values on the X, Y, and Z axes (when filled using its corresponding method).
+ * A struct containing acceleration values on the X, Y, and Z axes (when filled using its corresponding function).
 */
 typedef struct inertialAccel {
 	float x;

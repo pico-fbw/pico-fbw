@@ -192,6 +192,28 @@
 #define yaw_kT 0.01
 
 
+// TODO: autopilot PID tuning
+// PID constants for the autopilot's lateral/horizontal guidance.
+#define horzGuid_kP 1.0
+#define horzGuid_kI 0.0025
+#define horzGuid_kD 0.001
+#define horzGuid_tau 0.001
+#define horzGuid_lim 33 // The maximum roll angle the autopilot can command
+#define horzGuid_integMin -50.0
+#define horzGuid_integMax 50.0
+#define horzGuid_kT 0.01
+
+// PID constants for the autopilot's vertical guidance.
+#define vertGuid_kP 1.0
+#define vertGuid_kI 0.0025
+#define vertGuid_kD 0.001
+#define vertGuid_tau 0.001
+#define vertGuid_loLim -15 // The minimum pitch angle the autopilot can command
+#define vertGuid_upLim 25 // The maximum pitch angle the autopilot can command
+#define vertGuid_integMin -50.0
+#define vertGuid_integMax 50.0
+#define vertGuid_kT 0.01
+
 /** @section sensors */
 
 // IMU types; uncomment whichever type you are using.
