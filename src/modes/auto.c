@@ -119,6 +119,13 @@ void mode_auto() {
     if (currentWptIdx > wifly_getWaypointCount()) {
         // auto mode should end here? all waypoints have been achieved
     }
+    // Calculate the distance to the current waypoint
+    double distance = calculateDistance(loc.lat, loc.lng, fplan[currentWptIdx].lat, fplan[currentWptIdx].lng);
+    // If we've intercepted the waypoint then advance to the next one
+    if (distance <= INTERCEPT_RADIUS) {
+        currentWptIdx++;
+    }
+    // Calculate the bearing to the current waypoint
     double bearing = calculateBearing(loc.lat, loc.lng, fplan[currentWptIdx].lat, fplan[currentWptIdx].lng);
     // ...
 
