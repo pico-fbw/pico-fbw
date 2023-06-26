@@ -192,16 +192,16 @@
 #define yaw_kT 0.01
 
 
-// TODO: autopilot PID tuning
-// PID constants for the autopilot's lateral/horizontal guidance.
-#define horzGuid_kP 1.0
-#define horzGuid_kI 0.0025
-#define horzGuid_kD 0.001
-#define horzGuid_tau 0.001
-#define horzGuid_lim 33 // The maximum roll angle the autopilot can command
-#define horzGuid_integMin -50.0
-#define horzGuid_integMax 50.0
-#define horzGuid_kT 0.01
+// TODO: autopilot PID tuning--both these PIDs do NOT input directly into the servos but instead command a bank/pitch angle so tune them with this in mind
+// PID constants for the autopilot's lateral guidance.
+#define latGuid_kP 1.0
+#define latGuid_kI 0.0025
+#define latGuid_kD 0.001
+#define latGuid_tau 0.001
+#define latGuid_lim 33 // The maximum roll angle the autopilot can command
+#define latGuid_integMin -50.0
+#define latGuid_integMax 50.0
+#define latGuid_kT 0.01
 
 // PID constants for the autopilot's vertical guidance.
 #define vertGuid_kP 1.0

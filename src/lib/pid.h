@@ -30,39 +30,52 @@
 #ifndef pid_h
 #define pid_h
 
-typedef struct PIDController{
+typedef struct PIDController {
 
 	/* Controller gains */
-	float Kp;
-	float Ki;
-	float Kd;
+	double Kp;
+	double Ki;
+	double Kd;
 
 	/* Derivative low-pass filter time constant */
-	float tau;
+	double tau;
 
 	/* Output limits */
-	float limMin;
-	float limMax;
+	double limMin;
+	double limMax;
 	
 	/* Integrator limits */
-	float limMinInt;
-	float limMaxInt;
+	double limMinInt;
+	double limMaxInt;
 
 	/* Sample time (in seconds) */
-	float T;
+	double T;
 
 	/* Controller "memory" */
-	float integrator;
-	float prevError;			/* Required for integrator */
-	float differentiator;
-	float prevMeasurement;		/* Required for differentiator */
+	double integrator;
+	double prevError;			/* Required for integrator */
+	double differentiator;
+	double prevMeasurement;		/* Required for differentiator */
 
 	/* Controller output */
-	float out;
+	double out;
 
 } PIDController;
 
+// TODO: these docs
+
+/**
+ * Initalizes a PIDController.
+ * @param pid Pointer to the PIDController to initialize.
+*/
 void pid_init(PIDController *pid);
-void pid_update(PIDController *pid, float setpoint, float measurement);
+
+/**
+ * Updates a PIDController.
+ * @param pid Pointer to the PIDController to update.
+ * @param setpoint The target value.
+ * @param measurement The measured value.
+*/
+void pid_update(PIDController *pid, double setpoint, double measurement);
 
 #endif // pid_h

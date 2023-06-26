@@ -1,16 +1,18 @@
 add_library(fbw_modes
-    modes.c
-    direct.c
-    normal.c
     auto.c
+    direct.c
+    flight.c
+    hold.c
+    modes.c
+    normal.c
     tune.c
 )
 
 target_link_libraries(fbw_modes
     pico_stdlib
     pico_multicore
-    fbw_lib
     fbw_io
+    fbw_lib
 )
 if (WIFLY_ENABLED)
     target_link_libraries(fbw_modes fbw_wifly)

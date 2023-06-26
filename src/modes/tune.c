@@ -12,11 +12,12 @@
 */
 
 #include "modes.h"
+#include "flight.h"
 
 #include "tune.h"
 
 #ifdef PID_AUTOTUNE
-    inertialAngles angles;
+    inertialAngles iAngles;
     float rollAngle;
     float pitchAngle;
     float rollIn;
@@ -26,7 +27,7 @@
         // Start blinking LED to signify we are calibrating
         led_blink(100);
         // The first four bytes of our data array will signify if we have run a calibration before, a value of 0.3 floating point corresponds to true in this case so we add that to the array
-        float tuning_data[CONFIG_SECTOR_SIZE] = {0.3f};\
+        float tuning_data[CONFIG_SECTOR_SIZE] = {0.3f};
         // Tune both roll and pitch PID
         for (uint8_t i = 1; i < 3; i++) {
             // Set up tuning, input variables depend on which PID we are tuning but everything else is the same
@@ -45,15 +46,18 @@
             // If the function returns true then tuning has completed
             while (pidtune_runtime()) {
                 // Refresh data
-                angles = imu_getAngles();
-                rollAngle = angles.roll;
-                pitchAngle = angles.pitch;
+                iAngles = imu_getAngles();
+                rollAngle = iAngles.roll;
+                pitchAngle = iAngles.pitch;
                 rollIn = pwm_readDeg(0) - 90;
                 pitchIn = pwm_readDeg(1) - 90;
                 // Check if there are any control inputs being made, if so, stop tuning and revert to direct mode
                 if (rollIn > DEADBAND_VALUE || rollIn < -DEADBAND_VALUE || pitchIn > DEADBAND_VALUE || pitchIn < -DEADBAND_VALUE) {
                     pidtune_cancel();
                     mode(DIRECT);
+                    return;
+                }
+                if (!flight_checkEnvelope(rollAngle, pitchAngle)) {
                     return;
                 }
             }

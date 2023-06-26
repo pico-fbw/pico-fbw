@@ -10,6 +10,6 @@ add_library(fbw_wifly
 # )
 
 target_link_libraries(fbw_wifly
-    pico_cyw43_arch_lwip_threadsafe_background
     pico_stdlib
+    pico_cyw43_arch_lwip_threadsafe_background
 )

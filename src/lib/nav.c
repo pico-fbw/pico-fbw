@@ -1,3 +1,8 @@
+/**
+ * Source file of pico-fbw: https://github.com/MylesAndMore/pico-fbw
+ * Licensed under the GNU GPL-3.0
+*/
+
 #include <math.h>
 
 #include "nav.h"
@@ -29,12 +34,12 @@ double calculateBearing(double latA, double lonA, double latB, double lonB) {
 double calculateDistance(double latA, double lonA, double latB, double lonB) {
     double thetaA = toRadians(latA);
     double thetaB = toRadians(latB);
-    double deltaTheta = toRadians(latB - latA);
-    double deltaLamda = toRadians(lonB - lonA);
+    double deltaT = toRadians(latB - latA);
+    double deltaL = toRadians(lonB - lonA);
 
-    double a = sin(deltaTheta / 2) * sin(deltaTheta / 2) +
+    double a = sin(deltaT / 2) * sin(deltaT / 2) +
                cos(thetaA) * cos(thetaB) *
-               sin(deltaLamda / 2) * sin(deltaLamda / 2);
+               sin(deltaL / 2) * sin(deltaL / 2);
     double c = 2 * atan2(sqrt(a), sqrt(1 - a));
 
     return EARTH_RADIUS_NM * c;           

@@ -12,7 +12,6 @@
 #include "../io/gps.h"
 #include "../io/led.h"
 #include "../io/wifly/wifly.h"
-
 #include "../lib/pid.h"
 #include "../lib/nav.h"
 
@@ -21,14 +20,9 @@
 #include "modes.h"
 #include "normal.h"
 #include "tune.h"
+#include "flight.h"
 
 #include "auto.h"
-
-/**
- * Quick note--quite a bit of auto mode works very similarly if not the same as normal mode, so I only documented the new additions
- * If something isn't documented, chances are it's in normal.c!
- * As much as I hate repeating myself it just makes more sense to have seperate PIDs for each mode
-*/
 
 bool autoInitialized = false;
 bool autoFirstTimeInit = true;
@@ -38,57 +32,36 @@ uint currentWptIdx = 0;
 Waypoint currentWpt;
 
 inertialAngles aircraft;
-gpsCoords loc;
-double currentLat;
-double currentLng;
+gpsData gps;
 
-PIDController rollGuid;
-PIDController pitchGuid;
-PIDController horzGuid; // TODO: combine lat and lng pids into one horizontal pid that directly controls the roll pid?
+double distance; // Distance to current waypoint
+double bearing; // Bearing to current waypoint
+double alt; // Altitude target of current waypoint
+
 PIDController latGuid;
-float latSet;
-PIDController lngGuid;
-float lngSet;
 PIDController vertGuid;
-float altSet;
 
 #ifdef WIFLY_ENABLED
 
 static inline void auto_computePID() {
     while (true) {
-        // TODO: computersing proportional integral derivite
-        // ^ was I high when I wrote this or something???
+        pid_update(&latGuid, bearing, aircraft.heading);
+        pid_update(&vertGuid, alt, gps.alt);
+        flight_update(latGuid.out, aircraft.roll, vertGuid.out, aircraft.pitch, 0, 0, false);
+        // TODO: add actual yaw functionality
     }
 }
 
-bool autoInit() {
+static bool autoInit() {
     mode_normalDeinit();
     // Import the flightplan data from Wi-Fly and check if it's valid
     fplan = wifly_getFplan();
-    if (fplan == NULL || wifly_getWaypointCount == 0) {
+    if (fplan == NULL || wifly_getWaypointCount() == 0) {
         return false;
     }
-    #ifdef PID_AUTOTUNE
-        if (mode_tuneCheckCalibration()) {
-            rollGuid = (PIDController){flash_read(1, 1), flash_read(1, 2), flash_read(1, 3), roll_tau, -AIL_LIMIT, AIL_LIMIT, roll_integMin, roll_integMax, roll_kT};
-            pitchGuid = (PIDController){flash_read(2, 1), flash_read(2, 2), flash_read(2, 3), pitch_tau, -ELEV_LIMIT, ELEV_LIMIT, pitch_integMin, pitch_integMax, pitch_kT};
-        } else {
-            if (autoFirstTimeInit) {
-                led_blink(2000);
-                autoFirstTimeInit = false;
-            }
-            mode(DIRECT);
-            return false;
-        }
-    #else
-        rollGuid = (PIDController){roll_kP, roll_kI, roll_kD, roll_tau, -AIL_LIMIT, AIL_LIMIT, roll_integMin, roll_integMax, roll_kT};
-        pitchGuid = (PIDController){pitch_kP, pitch_kI, pitch_kD, pitch_tau, -ELEV_LIMIT, ELEV_LIMIT, pitch_integMin, pitch_integMax, pitch_kT};
-    #endif
-    // Create PID controllers for lateral and vertical guidance
-    horzGuid = (PIDController){horzGuid_kP, horzGuid_kI, horzGuid_kD, horzGuid_tau, -horzGuid_lim, horzGuid_lim, horzGuid_integMin, horzGuid_integMax, horzGuid_kT};
+    flight_init();
+    latGuid = (PIDController){latGuid_kP, latGuid_kI, latGuid_kD, latGuid_tau, -latGuid_lim, latGuid_lim, latGuid_integMin, latGuid_integMax, latGuid_kT};
     vertGuid = (PIDController){vertGuid_kP, vertGuid_kI, vertGuid_kD, vertGuid_tau, vertGuid_loLim, vertGuid_upLim, vertGuid_integMin, vertGuid_integMax, vertGuid_kT};
-    pid_init(&rollGuid);
-    pid_init(&pitchGuid);
     pid_init(&latGuid);
     pid_init(&vertGuid);
     multicore_launch_core1(auto_computePID);
@@ -103,32 +76,31 @@ void mode_auto() {
             return;
         }
     }
-    // TODO: auto mode runtime (I love how I say that like it's simple...yikes)
-    /**
-     * Plan:
-     * [x] get current aircraft heading
-     * [x] calculate heading to next waypoint (that's the error)
-     * [ ] input error to PID controller which will calculate a deg value for ail
-     * [ ] input deg into ail pid
-    */
     aircraft = imu_getAngles();
-    loc = gps_getCoords();
-    if (aircraft.roll > 72 || aircraft.roll < -72 || aircraft.pitch > 35 || aircraft.pitch < -20) {
-        setIMUSafe(false);
-    }
-    if (currentWptIdx > wifly_getWaypointCount()) {
-        // auto mode should end here? all waypoints have been achieved
+    gps = gps_getData();
+    if (flight_checkEnvelope(aircraft.roll, aircraft.pitch)) {
+        return;
     }
     // Calculate the distance to the current waypoint
-    double distance = calculateDistance(loc.lat, loc.lng, fplan[currentWptIdx].lat, fplan[currentWptIdx].lng);
-    // If we've intercepted the waypoint then advance to the next one
+    distance = calculateDistance(gps.lat, gps.lng, fplan[currentWptIdx].lat, fplan[currentWptIdx].lng);
+    // If we've "intercepted" the waypoint then advance to the next one
     if (distance <= INTERCEPT_RADIUS) {
         currentWptIdx++;
+        if (currentWptIdx > wifly_getWaypointCount()) {
+            // Auto mode ends here, we enter a holding pattern
+            mode(HOLD);
+        } else {
+            // Load the altitude--if it is -5 (default) just discard it
+            if (fplan[currentWptIdx].alt < -5) {
+                alt = gps.alt;
+            } else {
+                alt = fplan[currentWptIdx].alt;
+            }
+        }
     }
     // Calculate the bearing to the current waypoint
-    double bearing = calculateBearing(loc.lat, loc.lng, fplan[currentWptIdx].lat, fplan[currentWptIdx].lng);
-    // ...
-
+    bearing = calculateBearing(gps.lat, gps.lng, fplan[currentWptIdx].lat, fplan[currentWptIdx].lng);
+    // still need to do altitude stuff
 }
 
 #endif

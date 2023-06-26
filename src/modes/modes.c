@@ -18,6 +18,10 @@
 #include "modes.h"
 #include "../config.h"
 
+// TODO: rethink/go over how mode switching works? I think there is a bit of a flaw when auto mode falls back to normal...
+// also fix the weird thing with init/deinit of modes and make that happen in modes.c
+// the source code may be way out of hand already but I think mode switching is a bit of a mess and definetly the worst of it
+
 // Variable to store the system's current mode regardless of the mode currently being requested
 // Mode is direct by default until we prove the IMU data is safe
 uint8_t cmode = DIRECT;
@@ -102,6 +106,9 @@ void mode(uint8_t smode) {
             }
             break;
         #endif
+        case HOLD:
+            // ...
+            break;
     }
 }
 

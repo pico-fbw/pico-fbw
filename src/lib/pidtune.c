@@ -37,6 +37,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <math.h>
+#include "pico/stdlib.h"
 
 #include "../config.h"
 
@@ -51,7 +52,7 @@
     float noiseBand;
     unsigned char nLookBack;
 
-    enum AutoTunerState state; // state of autotuner finite state machine
+    enum AutoTunerState aTuneState; // state of autotuner finite state machine
     uint64_t lastTime;
     uint64_t sampleTime;
     enum Peak peakType;
@@ -81,20 +82,20 @@
         // Set default values, they can be overridden with other functions
         // (Normally we would specify a default control type but I have removed that from the original)
         noiseBand = 0.5;
-        state = AUTOTUNER_OFF;
+        aTuneState = AUTOTUNER_OFF;
         oStep = 10.0;
         pidtune_setLookbackSec(10);
     }
 
     void pidtune_cancel() {
-        state = AUTOTUNER_OFF;
+        aTuneState = AUTOTUNER_OFF;
     }
 
     bool pidtune_runtime() {
         // Get current time in ms (since Pico has been powered)
         uint64_t now = (time_us_64() / 1000);
         // If the autotuner hasn't been run before, initialize working variables the first time around
-        if (state == AUTOTUNER_OFF) { 
+        if (aTuneState == AUTOTUNER_OFF) { 
             peakType = NOT_A_PEAK;
             inputCount = 0;
             peakCount = 0;
@@ -103,7 +104,7 @@
             lastPeakTime[0] = now;
             workingNoiseBand = noiseBand;
             workingOstep = oStep;
-            state = RELAY_STEP_UP;
+            aTuneState = RELAY_STEP_UP;
 
             #if defined (AUTOTUNE_RELAY_BIAS) 
                 relayBias = 0.0;
@@ -127,12 +128,12 @@
         #endif  
 
         bool justChanged = false; 
-        // Check input and change relay state if necessary
-        if ((state == RELAY_STEP_UP) && (refVal > setpoint + workingNoiseBand)) {
-            state = RELAY_STEP_DOWN;
+        // Check input and change relay aTuneState if necessary
+        if ((aTuneState == RELAY_STEP_UP) && (refVal > setpoint + workingNoiseBand)) {
+            aTuneState = RELAY_STEP_DOWN;
             justChanged = true;
-        } else if ((state == RELAY_STEP_DOWN) && (refVal < setpoint - workingNoiseBand)) {
-            state = RELAY_STEP_UP;
+        } else if ((aTuneState == RELAY_STEP_DOWN) && (refVal < setpoint - workingNoiseBand)) {
+            aTuneState = RELAY_STEP_UP;
             justChanged = true;
         }
         if (justChanged) {
@@ -155,7 +156,7 @@
 
                             // Calculate change in relay bias
                             float deltaRelayBias = - pidtune_processValueOffset(avgStep1, avgStep2) * workingOstep;
-                            if (state == RELAY_STEP_DOWN) {
+                            if (aTuneState == RELAY_STEP_DOWN) {
                                 deltaRelayBias = -deltaRelayBias;
                             }
                             
@@ -199,13 +200,13 @@
 
         // Set output
         // TODO: respect output limits! (again, library fault but I can probably fix this)
-        if (((unsigned char) state & (STEADY_STATE_AFTER_STEP_UP | RELAY_STEP_UP)) > 0) {
+        if (((unsigned char) aTuneState & (STEADY_STATE_AFTER_STEP_UP | RELAY_STEP_UP)) > 0) {
             #ifdef AUTOTUNE_RELAY_BIAS 
                 *output = outputStart + workingOstep + relayBias;
             #else    
                 *output = outputStart + workingOstep;
             #endif
-        } else if (state == RELAY_STEP_DOWN) {
+        } else if (aTuneState == RELAY_STEP_DOWN) {
             #if defined (AUTOTUNE_RELAY_BIAS)    
                 *output = outputStart - workingOstep + relayBias;
             #else
@@ -237,7 +238,7 @@
         }
         lastInputs[0] = refVal; 
 
-        if (((unsigned char) state & (STEADY_STATE_AT_BASELINE | STEADY_STATE_AFTER_STEP_UP)) > 0) {
+        if (((unsigned char) aTuneState & (STEADY_STATE_AT_BASELINE | STEADY_STATE_AFTER_STEP_UP)) > 0) {
             // Check that all the recent inputs are equal give or take expected noise
             float iMax = lastInputs[0];
             float iMin = lastInputs[0];
@@ -261,14 +262,14 @@
                     lastStepTime[0] = now;
                 #endif
 
-                if (state == STEADY_STATE_AT_BASELINE) {
-                    state = STEADY_STATE_AFTER_STEP_UP;
+                if (aTuneState == STEADY_STATE_AT_BASELINE) {
+                    aTuneState = STEADY_STATE_AFTER_STEP_UP;
                     lastPeaks[0] = avgInput;  
                     inputCount = 0;
                     return false;
                 }
-                // else state == STEADY_STATE_AFTER_STEP_UP
-                state = RELAY_STEP_DOWN;
+                // else aTuneState == STEADY_STATE_AFTER_STEP_UP
+                aTuneState = RELAY_STEP_DOWN;
 
                 #ifdef AUTOTUNE_RELAY_BIAS
                     sumInputSinceLastStep[0] = 0.0;
@@ -335,7 +336,7 @@
 
             // Check convergence criterion for amplitude of induced oscillation
             if (((0.5 * (absMax - absMin) - inducedAmplitude) / inducedAmplitude) < AUTOTUNE_PEAK_AMPLITUDE_TOLERANCE) {
-                state = CONVERGED;
+                aTuneState = CONVERGED;
             }
         }
 
@@ -347,17 +348,17 @@
         ((now - lastPeakTime[0]) > (unsigned long) (AUTOTUNE_MAX_WAIT_MINUTES * 60000)) ||
         (peakCount >= 20)
         ) {
-            state = FAILED;
+            aTuneState = FAILED;
         }
 
-        if (((unsigned char) state & (CONVERGED | FAILED)) == 0) {
+        if (((unsigned char) aTuneState & (CONVERGED | FAILED)) == 0) {
             return false;
         }
 
         // Autotune algorithm has terminated, reset autotuner variables
         *output = outputStart;
 
-        if (state == FAILED) {
+        if (aTuneState == FAILED) {
             // Do not calculate gain parameters
             return true;
         }

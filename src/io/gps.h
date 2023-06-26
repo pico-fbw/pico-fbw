@@ -24,17 +24,19 @@ int gps_init();
 void gps_deinit();
 
 /**
- * Contains latitude and longitude coordinates from a connected GPS module (when filled with its corresponding function).
+ * Contains latitude and longitude coordinates, as well as current altitude and speed from a connected GPS module (when filled with its corresponding function).
 */
-typedef struct gpsCoords {
+typedef struct gpsData {
     double lat;
     double lng;
-} gpsCoords;
+    int_fast16_t alt;
+    float speed;
+} gpsData;
 
 /**
  * Gets the current coordinates from the GPS module.
- * @return a gpsCoords struct containing current latitude and longitude coordinates
+ * @return a gpsData struct containing current latitude and longitude coordinates, as well as current altitude and speed
 */
-gpsCoords gps_getCoords();
+gpsData gps_getData();
 
 #endif

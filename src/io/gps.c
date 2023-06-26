@@ -2,6 +2,7 @@
  * Source file of pico-fbw: https://github.com/MylesAndMore/pico-fbw
  * Licensed under the GNU GPL-3.0
 */
+#include <stdint.h>
 
 #include "hardware/i2c.h"
 
@@ -19,10 +20,12 @@ void gps_deinit() {
     
 }
 
-gpsCoords gps_getCoords() {
+gpsData gps_getData() {
     // TODO; more gps things here
     // I just had to create this function so I can integrate it into auto mode now
     double lat = 0;
     double lng = 0;
-    return (gpsCoords){lat, lng};
+    int_fast16_t alt = 0;
+    float speed = 0;
+    return (gpsData){lat, lng, alt, speed};
 }

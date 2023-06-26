@@ -47,18 +47,18 @@ void pid_init(PIDController *pid) {
 
 }
 
-void pid_update(PIDController *pid, float setpoint, float measurement) {
+void pid_update(PIDController *pid, double setpoint, double measurement) {
 
 	/*
 	* Error signal
 	*/
-    float error = setpoint - measurement;
+    double error = setpoint - measurement;
 
 
 	/*
 	* Proportional
 	*/
-    float proportional = pid->Kp * error;
+    double proportional = pid->Kp * error;
 
 
 	/*
