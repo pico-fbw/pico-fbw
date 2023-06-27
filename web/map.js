@@ -15,16 +15,19 @@ const altBtn = document.getElementById("alt-btn");
 const map = L.map("map").setView([20, 0], 2);
 const maxZoom = 19;
 
+var markers = [];
+var polylines = [];
+
 
 function map_init() {
     // Add layers
     const googleHybrid = L.tileLayer("https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}", {
         maxZoom: maxZoom,
-        attribution: "Imagery &copy; CNES / Airbus, Landsat / Copernicus, Maxar Technologies, Sanborn, TerraMetrics, U.S. Geological Survey, USDA/FPAC/GEO, Map data &copy; 2023 Google"
+        attribution: "Imagery &copy; Google Satellite Imagery Sources, Map data &copy; 2023 Google"
     });
     const googleSatellite = L.tileLayer("https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", {
         maxZoom: maxZoom,
-        attribution: "Imagery &copy; CNES / Airbus, Landsat / Copernicus, Maxar Technologies, Sanborn, TerraMetrics, U.S. Geological Survey, USDA/FPAC/GEO, Map data &copy; 2023"
+        attribution: "Imagery &copy; Google Satellite Imagery Sources, Map data &copy; 2023"
     });
     const googleMap = L.tileLayer("https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}", {
         maxZoom: maxZoom,
@@ -46,9 +49,6 @@ function map_init() {
     // Set default layer
     googleHybrid.addTo(map);
 }
-
-var markers = [];
-var polylines = [];
 
 function map_addWpt(event, lat, lng) {
     map_setAlt(function() {
@@ -83,14 +83,17 @@ function map_addWpt(event, lat, lng) {
         
         // Draw lines between the markers
         if (markers.length > 1) {
-            polylines.push(L.polyline(markers.map(marker => marker.getLatLng()), {color:"#D21404"}).addTo(map));
+            polylines.push(
+                L.polyline(markers.map(marker => marker.getLatLng()), {color: "#D21404"}).addTo(map)
+            );
         }
         // Add a click listener to the marker for the removal function so it can be removed later
-        marker.addEventListener("click", map_removeWpt.bind(marker));
+        marker.addEventListener("click", function() { map_removeWpt(markers.indexOf(marker)); });
         
         // Enable the unload prompt because a new waypoint (presumably unsaved) has been generated
         promptBeforeUnload = true;
         // If the flightplan has been generated and another waypoint is added, make the regen button visible
+        clearTimeout(genTimeout);
         if (fplanGenerated) {
             genButtonCopyState = false;
             changeButton(genButton, "#A6710C", "Generate Flightplan");
@@ -98,18 +101,20 @@ function map_addWpt(event, lat, lng) {
     });
 }
 
-function map_removeWpt() {
+function map_removeWpt(index) {
     // Remove the waypoint from the flight plan
-    fplan.waypoints.splice(markers.indexOf(this), 1);
-    map.removeLayer(this);
-    markers.splice(markers.indexOf(this), 1);
-
+    fplan.waypoints.splice(index, 1);
+    // Remove the marker visually from the map
+    map.removeLayer(markers[index]);
+    markers.splice(index, 1);
     // Remove all existing polylines from the map
     polylines.forEach(polyline => map.removeLayer(polyline));
     polylines = [];
     // Redraw the lines between the remaining markers
     if (markers.length > 1) {
-        polylines.push(L.polyline(markers.map(marker => marker.getLatLng()), {color:"#D21404"}).addTo(map));
+        polylines.push(
+            L.polyline(markers.map(marker => marker.getLatLng()), {color: "#D21404"}).addTo(map)
+        );
     }
     if (fplanGenerated) {
         genButtonCopyState = false;
@@ -119,6 +124,8 @@ function map_removeWpt() {
     if (fplan.waypoints.length == 0) {
         promptBeforeUnload = false;
     }
+    // Regenerate the table to reflect changes, we only do this on deletions NOT additions (intentional behavior!!)
+    wifly_genWptTable();
 }
 
 function map_setAlt(callback) {
@@ -170,3 +177,5 @@ map.addEventListener("click", map_addWpt);
 altIn.addEventListener("input", function() {
     altVal.innerHTML = this.value;
 });
+
+// TODO: add a way to drag waypoints to new locations?

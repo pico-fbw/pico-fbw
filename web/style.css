@@ -1,3 +1,5 @@
+/* General styling */
+
 body {
     background-color: black;
     color: white;
@@ -31,7 +33,7 @@ body {
     transform: translate(-50%,-50%);
 }
 
-.manadd {
+.position-field {
     background-color: #A9A9A9;
     border-radius: 5px;
     width: 25%;
@@ -49,11 +51,11 @@ body {
     display: none;
 }
 
-#alt-slider {
+#notify {
     display: none;
 }
 
-#notify {
+#alt-slider {
     display: none;
 }
 
@@ -77,6 +79,32 @@ body {
     opacity: 0.95;
 }
 
+#map {
+    touch-action: none;
+    height: 580px;
+    border-radius: 12px;
+    border-radius: 8px;
+}
+
+#fplan {
+    display: none;
+    width: 99.6%;
+    height: 80px;
+    border-radius: 6px;
+}
+
+/* Buttons */
+
+.rm-btn {
+    background-color: #D21404;
+    border-radius: 8px;
+    margin-left: 8px;
+    color: white;
+    padding: 8px 11px;
+    text-align: center;
+    font-size: 12px;
+}
+
 #alt-btn {
     position: absolute;
     top: 96.6%;
@@ -88,12 +116,6 @@ body {
     padding: 6px 8px;
     text-align: center;
     font-size: 12px;
-}
-
-#map {
-    touch-action: none;
-    height: 580px;
-    border-radius: 12px;
 }
 
 #generate {
@@ -115,8 +137,57 @@ body {
     font-size: 12px;
 }
 
-#fplan {
-    display: none;
-    width: 99.6%;
-    height: 250px;
+/* Waypoints table */
+
+#waypoints-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: 5px; /* can't get this to work :( */
+    background-color: #333333;
+    border: 1.5px solid white;
+}
+
+#waypoints-table th,
+#waypoints-table td {
+    padding: 10px;
+    text-align: left;
+}
+
+#waypoints-table,
+#waypoints-table th {
+    background-color: #555555;
+    color: white;
+}
+
+#waypoints-table tr:nth-child(even) {
+    background-color: #444444;
+}
+
+#waypoints-table tr:hover {
+    background-color: #1a1a1a;
+}
+
+/* Mobile-only styling (for waypoints table)*/
+@media only screen and (max-width: 600px) {
+    #table-container {
+        overflow-x: auto;
+    }
+    
+    /* Position field */
+    #waypoints-table th:nth-child(2),
+    #waypoints-table td:nth-child(2) {
+        max-width: 65px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    /* Altitude field */
+    #waypoints-table th:nth-child(3),
+    #waypoints-table td:nth-child(3) {
+        max-width: 60px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 }

@@ -41,8 +41,25 @@
                 <button id="generate">Generate Flightplan</button>
             </span>
             <br><br>
+            
+            <div>
+                <textarea id="fplan" readonly></textarea>
+                <br>
+                <div id="table-container">
+                    <table id="waypoints-table">
+                        <thead>
+                            <tr>
+                                <th>Waypoint</th>
+                                <th>Position</th>
+                                <th>Altitude</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="waypoints-body"></tbody>
+                    </table>
+                </div>
+            </div>
 
-            <textarea id="fplan" readonly></textarea>
             <br>
         </div>
         <script src="web/map.js"></script>
