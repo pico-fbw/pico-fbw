@@ -59,10 +59,16 @@ int main() {
     uint pin_list[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, MODE_SWITCH_PIN};
     pwm_enable(pin_list, 4);
     FBW_DEBUG_printf("[boot] PWM IN ok\n");
+
     FBW_DEBUG_printf("[boot] setting up PWM OUT\n");
     const uint8_t servos[] = {SERVO_AIL_PIN, SERVO_ELEV_PIN, SERVO_RUD_PIN};
     for (uint8_t s = 0; s < 3; s++) {
-        servo_enable(servos[s]);
+        if (servo_enable(servos[s]) != 0) {
+            FBW_DEBUG_printf("[boot] FATAL: [FBW-800] PWM OUT setup failed to initialize servo %d)\n", s);
+            // TODO: when I get back home add a GIF of FBW-800 to the wiki
+            led_blink(800);
+            while (true);
+        }
     }
     FBW_DEBUG_printf("[boot] testing PWM OUT, watch for movement!\n");
     const uint8_t degrees[] = {105, 75};

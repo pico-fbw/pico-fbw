@@ -35,16 +35,11 @@
 #include "hardware/irq.h"
 #include "hardware/pwm.h"
 
-#include "servo.h"
 #include "../config.h"
 
-bool servo_disable(const uint gpio_pin) {
-    const uint8_t slice = pwm_gpio_to_slice_num(gpio_pin);
-    pwm_set_enabled(slice, false);
-    return true;
-}
+#include "servo.h"
 
-bool servo_enable(const uint gpio_pin) {
+int servo_enable(const uint gpio_pin) {
     FBW_DEBUG_printf("[pwm] setting up servo on pin %d\n", gpio_pin);
     gpio_set_function(gpio_pin, GPIO_FUNC_PWM);
     const uint8_t slice = pwm_gpio_to_slice_num(gpio_pin);
@@ -69,19 +64,24 @@ bool servo_enable(const uint gpio_pin) {
         }
     }
     if (div16_top < 16) {
-        return 2;
         FBW_DEBUG_printf("ERROR: frequency too large\n");
+        return 2;
     } else if (div16_top >= 256 * 16) {
-        return 1;
         FBW_DEBUG_printf("ERROR: frequency too small\n");
+        return 1;
     }
     FBW_DEBUG_printf("[pwm] enabling servo\n");
     pwm_hw->slice[slice].div = div16_top;
     pwm_hw->slice[slice].top = top;
-    return true;
+    return 0;
 }
 
-bool servo_set(const uint gpio_pin, const uint16_t degree) {
+void servo_disable(const uint gpio_pin) {
+    const uint8_t slice = pwm_gpio_to_slice_num(gpio_pin);
+    pwm_set_enabled(slice, false);
+}
+
+void servo_set(const uint gpio_pin, const uint16_t degree) {
     // values have to be between 0 and 180
     // SERVO_TOP_MAX = 100% full duty cycle
 
@@ -96,6 +96,4 @@ bool servo_set(const uint gpio_pin, const uint16_t degree) {
 
     pwm_set_chan_level(slice, channel, cc);
     pwm_set_enabled(slice, true);
-
-    return true;
 }

@@ -103,6 +103,9 @@ void mode_auto() {
     // still need to do altitude stuff
 }
 
+// TODO: once auto mode is complete make sure to add documentation for it on the wiki!
+// materials and how to use system will need updating and possibly a new wiki page for wifly
+
 #endif
 
 void mode_autoDeinit() {

@@ -9,7 +9,8 @@ pico_sdk_init()
 
 add_subdirectory(src)
 
-# If you are debugging the project, enable one of these options for a debug output!
-# TODO: Disable USB in final build
-pico_enable_stdio_usb(${PROJECT_NAME} 1) # 0
-pico_enable_stdio_uart(${PROJECT_NAME} 0) # 1
+# If you are debugging the project, enable either of these options for a debug output!
+# The system will automatically output a complete debug log to either of these.
+# Default baudrate is 115200 and USB is enabled by default
+pico_enable_stdio_usb(${PROJECT_NAME} 1)
+pico_enable_stdio_uart(${PROJECT_NAME} 0)

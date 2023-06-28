@@ -37,25 +37,23 @@
 #define SERVO_TOP_MAX 65534
 
 /**
- * Enable Servo control.
+ * Enables servo control on a certain pin.
  * @param gpio_pin: the GPIO pin the servo is attached to
- * @return true if the operation was successful
+ * @return 0 if the operation was successful, 1 if the frequency was too small, and 2 if the frequency was too large
 */
-bool servo_enable(const uint gpio_pin);
+int servo_enable(const uint gpio_pin);
 
 /**
- * Enable Servo control.
+ * Disables servo control on a certain pin.
  * @param gpio_pin: the GPIO pin the servo is attached to
- * @return 0 if the operation was successful
 */
-bool servo_disable(const uint gpio_pin);
+void servo_disable(const uint gpio_pin);
 
 /**
  * Sets the position of the servo using the the duty cycle of the PWM signal.
  * @param gpio_pin: the GPIO pin the servo is attached to
  * @param degree: the position in degree, a value within 0-180
- * @return 0 if the operation was successful
 */
-bool servo_set(const uint gpio_pin, const uint16_t degree);
+void servo_set(const uint gpio_pin, const uint16_t degree);
 
 #endif // servo_h

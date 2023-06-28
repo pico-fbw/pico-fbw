@@ -3,9 +3,7 @@
  * Licensed under the GNU GPL-3.0
 */
 
-const overlay = document.getElementById("overlay");
 const altSlider = document.getElementById("alt-slider");
-const notify = document.getElementById("notify");
 const notifyText = document.getElementById("notify-text");
 const altIn = document.getElementById("alt-input");
 const altVal = document.getElementById("alt-value");
@@ -17,6 +15,7 @@ const maxZoom = 19;
 
 var markers = [];
 var polylines = [];
+const polyLineColor = "#D21404";
 
 
 function map_init() {
@@ -66,13 +65,7 @@ function map_addWpt(event, lat, lng) {
         }
         // Check to make sure the coordinates are valid before accepting them
         if (lat < -85.05112878 || lat > 85.05112878 || lng < -180 || lng > 180) {
-            notifyText.innerHTML = "Invalid coordinates. Please try again.";
-            overlay.style.display = "block";
-            notify.style.display = "block";
-            setTimeout(() => {
-                overlay.style.display = "none";
-                notify.style.display = "none";
-            }, 3500);
+            displayNotification("Invalid coordinates. Please try again.", true);
             changeButton(manaddButton, "#A041DB", "Add Waypoint");
             return;
         }
@@ -84,16 +77,18 @@ function map_addWpt(event, lat, lng) {
         // Draw lines between the markers
         if (markers.length > 1) {
             polylines.push(
-                L.polyline(markers.map(marker => marker.getLatLng()), {color: "#D21404"}).addTo(map)
+                L.polyline(markers.map(marker => marker.getLatLng()), {color: polyLineColor}).addTo(map)
             );
         }
         // Add a click listener to the marker for the removal function so it can be removed later
         marker.addEventListener("click", function() { map_removeWpt(markers.indexOf(marker)); });
+        // Enable dragging of the marker and bind it to our drag function
+        marker.dragging.enable();
+        marker.addEventListener("dragend", map_wptDragged.bind(marker));
         
         // Enable the unload prompt because a new waypoint (presumably unsaved) has been generated
         promptBeforeUnload = true;
         // If the flightplan has been generated and another waypoint is added, make the regen button visible
-        clearTimeout(genTimeout);
         if (fplanGenerated) {
             genButtonCopyState = false;
             changeButton(genButton, "#A6710C", "Generate Flightplan");
@@ -113,7 +108,7 @@ function map_removeWpt(index) {
     // Redraw the lines between the remaining markers
     if (markers.length > 1) {
         polylines.push(
-            L.polyline(markers.map(marker => marker.getLatLng()), {color: "#D21404"}).addTo(map)
+            L.polyline(markers.map(marker => marker.getLatLng()), {color: polyLineColor}).addTo(map)
         );
     }
     if (fplanGenerated) {
@@ -124,8 +119,28 @@ function map_removeWpt(index) {
     if (fplan.waypoints.length == 0) {
         promptBeforeUnload = false;
     }
-    // Regenerate the table to reflect changes, we only do this on deletions NOT additions (intentional behavior!!)
-    wifly_genWptTable();
+}
+
+function map_wptDragged() {
+    // Update the flightplan with the waypoint's new coords
+    var index = markers.indexOf(this);
+    if (index != -1) {
+        fplan.waypoints[index].lat = this.getLatLng().lat;
+        fplan.waypoints[index].lng = this.getLatLng().lng;
+    }
+    // Same things happen above in removeWpt; redraw lines, update button
+    polylines.forEach(polyline => map.removeLayer(polyline));
+    polylines = [];
+    if (markers.length > 1) {
+        polylines.push(
+            L.polyline(markers.map(marker => marker.getLatLng()), {color: polyLineColor}).addTo(map)
+        );
+    }
+    if (fplanGenerated) {
+        genButtonCopyState = false;
+        changeButton(genButton, "#A6710C", "Generate Flightplan");
+    }
+    promptBeforeUnload = true;
 }
 
 function map_setAlt(callback) {
@@ -177,5 +192,3 @@ map.addEventListener("click", map_addWpt);
 altIn.addEventListener("input", function() {
     altVal.innerHTML = this.value;
 });
-
-// TODO: add a way to drag waypoints to new locations?

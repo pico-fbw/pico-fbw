@@ -255,14 +255,14 @@
 /** @section debug
  * This section for troubleshooting and project developers only.
  * If you do require more debugging information, ensure you enable either USB or UART output in /CMakeLists.txt (one directory up).
- * From there, you are welcome to enable/disable whatever debugging options you wish by commenting/uncommenting them.
+ * Once you've done that, you are welcome to enable/disable whatever debugging options you wish by commenting/uncommenting them here.
 */
 #if defined(LIB_PICO_STDIO_USB) || defined(LIB_PICO_STDIO_UART)
-	#define FBW_DEBUG
+	#define FBW_DEBUG // Internal, do not touch
 
-	// Enabled by default:
+	// Enabled by default (misc logs + warning and error statements):
 	#define FBW_DEBUG_printf    printf
-	// Uncomment/replace to enable:
+	// Uncomment/replace as necessary to enable:
 	#define WIFLY_DEBUG_printf     // printf
 	#define WIFLY_DUMP_DATA     0  // 1
 	#define TCP_DEBUG_printf       // printf
@@ -270,7 +270,7 @@
 	#define DHCP_DEBUG_printf      // printf
 	#define DNS_DEBUG_printf       // printf
 	#define DNS_DUMP_DATA       0  // 1
-	// Some more in-depth wireless debug options can be found in io/wifly/lwipopts.h
+	// Some more in-depth wireless debug options are provided by LWIP and can be found in io/wifly/lwipopts.h if necessary.
 
 #else
 	#define FBW_DEBUG_printf

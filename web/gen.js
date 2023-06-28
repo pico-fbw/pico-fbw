@@ -17,19 +17,13 @@ var fplan = {
 const maxFplanLen = 16384;
 
 const field = document.getElementById("fplan");
-const table = document.getElementById("waypoints-body");
+const tableBody = document.getElementById("waypoints-body");
 const altitudeInputs = document.getElementsByClassName("alt-input");
 const removeButtons = document.getElementsByClassName("rm-btn");
 
 var fplanGenerated = false;
 
 
-/**
- * Generates the current flightplan into JSON and puts it into the fplan field.
- * If the flightplan is too long nothing will be generated.
- * 
- * @returns true if the flightplan was generated, false if it was not.
- */
 function wifly_genFplan() {
     // Convert the object to JSON string
     var fplanJSON = JSON.stringify(fplan, null, 0);
@@ -44,7 +38,8 @@ function wifly_genFplan() {
 }
 
 function wifly_genWptTable() {
-    table.innerHTML = ""; // Clear existing rows
+    // Clear existing rows and repopulate based on the current flightplan list
+    tableBody.innerHTML = "";
     fplan.waypoints.forEach((waypoint, index) => {
         var row = document.createElement("tr");
         row.innerHTML = `
@@ -57,7 +52,7 @@ function wifly_genWptTable() {
                 <button class="rm-btn" data-index="${index}">Remove</button>
             </td>
         `;
-        table.appendChild(row);
+        tableBody.appendChild(row);
     });
 
     // Add event listeners for altitude input fields
@@ -67,7 +62,7 @@ function wifly_genWptTable() {
 
     // Add event listeners for remove buttons
     Array.from(removeButtons).forEach(button => {
-        button.addEventListener("click", handleRemoveButtonClick);
+        button.addEventListener("click", removeButtonCallback);
     });
 }
 
@@ -79,16 +74,4 @@ function handleAltitudeChange(event) {
     changeButton(genButton, "#A6710C", "Generate Flightplan");
     // Enable the unload prompt because a waypoint has been modified
     promptBeforeUnload = true;
-}
-  
-function handleRemoveButtonClick(event) {
-    map_removeWpt(event.target.dataset.index);
-    wifly_genWptTable();
-    if (fplanGenerated && fplan.waypoints.length > 0) {
-        genButtonCopyState = false;
-        changeButton(genButton, "#A6710C", "Generate Flightplan");
-    }
-    if (fplan.waypoints.length == 0) {
-        promptBeforeUnload = false;
-    }
 }

@@ -8,8 +8,14 @@ const btnTimeout = "2500";
 
 const genButton = document.getElementById("generate");
 const manaddButton = document.getElementById("manadd-btn");
+const expandTableButton = document.getElementById("expand-table-btn");
 const manaddLat = document.getElementById("manadd-lat");
 const manaddLng = document.getElementById("manadd-lng");
+
+const waypointsTable = document.getElementById("waypoints-table");
+
+const notify = document.getElementById("notify");
+const overlay = document.getElementById("overlay");
 
 var promptBeforeUnload = false;
 
@@ -17,14 +23,18 @@ var promptBeforeUnload = false;
 function changeButton(btn, color, text) {
     btn.style.backgroundColor = color;
     btn.innerHTML = text;
+    // Automatically cancel any callbacks that may be occuring just in case the user is doing things quickly
+    if (btn == genButton) {
+        clearTimeout(genTimeout);
+    } else if (btn == manaddButton) {
+        clearTimeout(manaddTimeout);
+    }
 }
 
 var genButtonCopyState = false;
 var genTimeout;
 
 function genButtonCallback() {
-    // Clear timeout so the button doesn't change back to generate if the user creates waypoints quickly
-    clearTimeout(genTimeout);
     if (fplan.waypoints.length < 2) {
         changeButton(genButton, "#D21404", "Please select two or more waypoints!");
         genTimeout = setTimeout(() => {
@@ -62,7 +72,6 @@ function genButtonCallback() {
 var manaddTimeout;
 
 function manaddButtonCallback() {
-    clearTimeout(manaddTimeout);
     if (manaddLat.value == "" || manaddLng.value == "") {
         changeButton(manaddButton, "#D21404", "Please enter coordinates!");
         manaddTimeout = setTimeout(() => {
@@ -76,14 +85,51 @@ function manaddButtonCallback() {
     }
 }
 
+function removeButtonCallback(event) {
+    map_removeWpt(event.target.dataset.index);
+    wifly_genWptTable();
+    if (fplanGenerated && fplan.waypoints.length > 0) {
+        genButtonCopyState = false;
+        promptBeforeUnload = true;
+        changeButton(genButton, "#A6710C", "Generate Flightplan");
+    }
+    if (fplan.waypoints.length == 0) {
+        promptBeforeUnload = false;
+    }
+}
 
-// Attach event listeners to buttons
+var notificationTimer;
+
+function displayNotification(notification, autoClear) {
+    notifyText.innerHTML = notification;
+    overlay.style.display = "block";
+    notify.style.display = "block";
+
+    if (autoClear) {
+        clearTimeout(notificationTimer);
+        notificationTimer = setTimeout(hideNotification, btnTimeout);
+    }
+}
+
+function hideNotification() {
+    overlay.style.display = "none";
+    notify.style.display = "none";
+}
+
+
+// Attach event listeners to buttons and overlay
 genButton.addEventListener("click", genButtonCallback);
 manaddButton.addEventListener("click", manaddButtonCallback);
+expandTableButton.addEventListener("click", function() {
+    waypointsTable.classList.toggle("expanded");
+    expandTableButton.classList.toggle("expanded");
+});
+overlay.addEventListener("click", hideNotification);
 
 // Attach an event listener to bring up a confirmation dialog when a user tries to leave the page w/o generating
 window.onbeforeunload = function() {
     if (promptBeforeUnload) {
+        displayNotification("You have uncopied changes, click anywhere to return...", false);
         return "";
     } else {
         return;
