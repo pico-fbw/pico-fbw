@@ -9,7 +9,6 @@ add_library(fbw_modes
 )
 
 target_link_libraries(fbw_modes
-    pico_stdlib
     pico_multicore
     fbw_io
     fbw_lib

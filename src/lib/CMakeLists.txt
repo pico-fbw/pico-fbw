@@ -5,5 +5,5 @@ add_library(fbw_lib
 )
 
 target_link_libraries(fbw_lib
-    pico_stdlib
+    pico_time
 )    

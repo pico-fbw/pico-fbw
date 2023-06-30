@@ -5,7 +5,6 @@
 
 #include <stdbool.h>
 #include <stdio.h>
-#include "pico/stdlib.h"
 
 #include "../io/imu.h"
 #include "../io/servo.h"
@@ -15,13 +14,12 @@
 #include "auto.h"
 #include "tune.h"
 
-#include "modes.h"
 #include "../config.h"
 
-// TODO: rethink/go over how mode switching works? I think there is a bit of a flaw when auto mode turns into hold...
-// also fix the weird thing with init/deinit of modes and make that happen in modes.c
-// the source code may be way out of hand already but I think mode switching is a bit of a mess and definetly the worst of it
-// I'm pretty sure that the mode switch can instantly override system mode changes so I really need to fix that
+#include "modes.h"
+
+// TODO: fix the weird thing with init/deinit of modes; make that happen in modes.c instead of...all over the place
+// also just generally clean up this file lol
 
 // Variable to store the system's current mode regardless of the mode currently being requested
 uint8_t cmode = DIRECT; // Mode is direct by default until we prove the IMU data is safe
@@ -107,7 +105,7 @@ void mode(uint8_t smode) {
             break;
         #endif
         case HOLD:
-            // ...
+            // TODO
             break;
     }
 }

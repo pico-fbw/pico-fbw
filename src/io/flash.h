@@ -19,7 +19,7 @@
  * 0       |  PWM calibration flag / data
  * 1       |  PID tuning flag / data
  * 2       |  PID tuning flag / data
- * 3       |  Bootup flag / versioncode
+ * 3       |  Bootup flag
 */
 
 // This is the size we will use for our arrays that we will write to flash--it's the amount of floats we can fit in one flash page.

@@ -3,8 +3,7 @@
  * Licensed under the GNU GPL-3.0
 */
 
-#include <stdbool.h>
-#include "pico/stdlib.h"
+#include "pico/stdlib.h" // FIXME: compilation fails without this, no clue why
 
 #include "../io/servo.h"
 #include "../io/pwm.h"

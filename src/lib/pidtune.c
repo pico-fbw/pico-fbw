@@ -34,10 +34,12 @@
  * https://github.com/t0mpr1c3/Arduino-PID-AutoTune-Library
 */
 
-#include <stdbool.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <math.h>
-#include "pico/stdlib.h"
+
+#include "pico/time.h"
 
 #include "../config.h"
 

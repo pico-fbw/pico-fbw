@@ -146,6 +146,7 @@ function map_wptDragged() {
 function map_setAlt(callback) {
     overlay.style.display = "block";
     altSlider.style.display = "block";
+    document.body.style.overflow = "hidden"; // Disable scrolling
 
     altBtn.addEventListener("click", handleAltButtonClick);
     function handleAltButtonClick() {
@@ -168,6 +169,7 @@ function map_setAlt(callback) {
             altSlider.style.display = "none";
             removeEventListeners();
             promptBeforeUnload = false;
+            document.body.style.overflow = "auto"; // Enable scrolling
         }
     }
 
@@ -176,6 +178,7 @@ function map_setAlt(callback) {
         altSlider.style.display = "none";
         callback();
         removeEventListeners();
+        document.body.style.overflow = "auto";
     }
 
     function removeEventListeners() {

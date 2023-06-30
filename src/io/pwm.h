@@ -27,7 +27,6 @@
  * Check them out here: https://github.com/GitJer/Some_RPI-Pico_stuff/tree/main/PwmIn/PwmIn_4pins
 */
 
-
 #ifndef pwm_h
 #define pwm_h
 

@@ -68,7 +68,7 @@ void wifly_deinit() {
 int wifly_genPageContent(char *result, size_t max_result_len, int status) {
     int len;
     char color[7];
-    char msg[135]; // change this if the longest message gets any larger, this is too small for me to implement malloc and such
+    char msg[85]; // change this if the longest message gets any larger, this is too small for me to implement malloc and such
     switch(status) {
         case WIFLY_STATUS_AWAITING:
             strncpy(color, WIFLY_HEX_INACTIVE, sizeof(color));
@@ -92,7 +92,7 @@ int wifly_genPageContent(char *result, size_t max_result_len, int status) {
             break;
         case WIFLY_ERROR_FW_VERSION:
             strncpy(color, WIFLY_HEX_WARN, sizeof(color));
-            strncpy(msg, "<b>Warning:</b> there is a new firmware version available! It is advised to update your firmware. Flightplan successfully uploaded!", sizeof(msg));
+            strncpy(msg, "<b>There is a new firmware version available!</b> Flightplan successfully uploaded!", sizeof(msg));
             break;                
         default:
             return 0;
@@ -164,22 +164,40 @@ int wifly_parseFplan(const char *fplan) {
             strncpy(field_name, decoded + tokens[i].start, tokens[i].end - tokens[i].start);
             field_name[tokens[i].end - tokens[i].start] = '\0';
             if (strcmp(field_name, "version") == 0) {
-                char version[8];
+                char version[25];
                 strncpy(version, decoded + tokens[i + 1].start, tokens[i + 1].end - tokens[i + 1].start);
                 version[tokens[i + 1].end - tokens[i + 1].start] = '\0';
                 WIFLY_DEBUG_printf("[wifly] Flightplan version: %s\n", version);
                 if (strcmp(version, WIFLY_VERSION) != 0) {
-                    WIFLY_DEBUG_printf("[wifly] ERROR: flightplan version incompatable!\n");
+                    FBW_DEBUG_printf("[wifly] ERROR: flightplan version incompatable!\n");
                     return WIFLY_ERROR_VERSION;
                 }
             } else if (strcmp(field_name, "version_fw") == 0) {
-                char versionFw[8];
+                char versionFw[25];
                 strncpy(versionFw, decoded + tokens[i + 1].start, tokens[i + 1].end - tokens[i + 1].start);
                 versionFw[tokens[i + 1].end - tokens[i + 1].start] = '\0';
                 WIFLY_DEBUG_printf("[wifly] Firmware version: %s\n", versionFw);
-                if (atof(versionFw) != PICO_FBW_VERSION) {
-                    WIFLY_DEBUG_printf("[wifly] WARNING: firmware out of date\n");
+                // Check if the version is up-to-date
+                if (strncmp(versionFw, PICO_FBW_VERSION, 5) == 0) {
+                    // Version numbering is up-to-date but is it a prerelease?
+                    const char *versionSuffix = strstr(PICO_FBW_VERSION, "-");
+                    if (versionSuffix != NULL) {
+                        versionSuffix += strlen("-");
+                        if (strncmp(versionSuffix, "alpha", strlen("alpha")) == 0) {
+                            FBW_DEBUG_printf("[wifly] There is a non-alpha release of %s available!\n", PICO_FBW_VERSION);
+                            status = WIFLY_ERROR_FW_VERSION;
+                        } else if (strncmp(versionSuffix, "beta", strlen("beta")) == 0) {
+                            FBW_DEBUG_printf("[wifly] There is a non-beta release of %s available!\n", PICO_FBW_VERSION);
+                            status = WIFLY_ERROR_FW_VERSION;
+                        }
+                    } else {
+                        WIFLY_DEBUG_printf("[wifly] Version is up-to-date\n");
+                    }
+                } else if (strncmp(versionFw, PICO_FBW_VERSION, 5) > 0) {
+                    FBW_DEBUG_printf("[wifly] WARNING: firmware out of date\n");
                     status = WIFLY_ERROR_FW_VERSION;
+                } else if (strncmp(versionFw, PICO_FBW_VERSION, 5) < 0) {
+                    FBW_DEBUG_printf("[wifly] Version is a prerelease\nThanks for contributing :)\n");
                 }
             } else if (strcmp(field_name, "waypoints") == 0) {
                 if (tokens[i + 1].type == JSMN_ARRAY) {

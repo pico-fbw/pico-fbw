@@ -25,7 +25,6 @@
 
 // Keeps the state of if normal mode has been initialized or not and if it is the first time initializing
 bool normalInitialized = false;
-bool normalFirstTimeInit = true;
 
 inertialAngles angles;
 

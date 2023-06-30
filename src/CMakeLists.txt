@@ -1,11 +1,10 @@
-add_executable(${PROJECT_NAME}
-    main.c
-)
-
+add_executable(${PROJECT_NAME} main.c)
 pico_add_extra_outputs(${PROJECT_NAME})
 
 target_link_libraries(${PROJECT_NAME}
-    pico_stdlib
+    pico_stdio
+    pico_time
+    hardware_watchdog
     fbw_io
     fbw_lib
     fbw_modes
@@ -17,6 +16,9 @@ else ()
     message(WARNING "[pico-fbw] No compatable board found")
     set(WIFLY_ENABLED OFF)
 endif ()
+if ("$CACHE{PICO_BOARD}" STREQUAL "pico")
+    set(WIFLY_ENABLED OFF)
+endif ()
 if ("$CACHE{PICO_BOARD}" STREQUAL "pico_w")
     target_link_libraries(${PROJECT_NAME} pico_cyw43_arch_none)
     option(WIFLY_ENABLED "Enable Wi-Fly (pico-fbw)" ON) # create this option if we haven't already
@@ -26,6 +28,7 @@ if ("$CACHE{PICO_BOARD}" STREQUAL "pico_w")
         include_directories(${CMAKE_CURRENT_LIST_DIR}/io/wifly)
     else ()
         message(STATUS "[pico-fbw] Wi-Fly disabled")
+        set(WIFLY_ENABLED OFF)
     endif ()
 endif ()
 
@@ -35,21 +38,16 @@ add_subdirectory(modes)
 
 
 # Reset program:
-
-add_executable(pico-fbw-reset
-    reset.c
-)
+add_executable(pico-fbw-reset reset.c)
+pico_add_extra_outputs(pico-fbw-reset)
 target_link_libraries(pico-fbw-reset
     pico_bootrom
     fbw_io
 )
-target_compile_options(pico-fbw-reset
-    PRIVATE
-    -Wall
-    -Wextra
-)
+
+target_compile_options(pico-fbw-reset PRIVATE -Wall -Wextra)
 pico_set_binary_type(pico-fbw-reset no_flash) # set the executable to upload to RAM because we are dealing with erasing flash
-pico_add_extra_outputs(pico-fbw-reset)
+
 install(TARGETS pico-fbw-reset DESTINATION ${CMAKE_INSTALL_PREFIX})
 
 # At the end of the build process, move the final binaries to the buildroot for easier access

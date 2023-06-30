@@ -6,9 +6,9 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#include "pico/stdlib.h"
 #include "pico/binary_info.h"
 #include "hardware/i2c.h"
+#include "hardware/gpio.h"
 
 #include "../modes/modes.h"
 #include "../config.h"

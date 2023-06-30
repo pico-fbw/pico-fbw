@@ -4,7 +4,6 @@
 */
 
 #include <stdbool.h>
-#include "pico/stdlib.h"
 #include "pico/multicore.h"
 
 #include "../io/flash.h"
@@ -25,7 +24,7 @@
 #include "auto.h"
 
 bool autoInitialized = false;
-bool autoFirstTimeInit = true;
+bool autoComplete = false;
 
 Waypoint *fplan = NULL;
 uint currentWptIdx = 0;
@@ -76,6 +75,10 @@ void mode_auto() {
             return;
         }
     }
+    if (autoComplete) {
+        mode(NORMAL);
+        return;
+    }
     aircraft = imu_getAngles();
     gps = gps_getData();
     if (flight_checkEnvelope(aircraft.roll, aircraft.pitch)) {
@@ -88,7 +91,9 @@ void mode_auto() {
         currentWptIdx++;
         if (currentWptIdx > wifly_getWaypointCount()) {
             // Auto mode ends here, we enter a holding pattern
+            autoComplete = true;
             mode(HOLD);
+            return;
         } else {
             // Load the altitude--if it is -5 (default) just discard it
             if (fplan[currentWptIdx].alt < -5) {
@@ -104,7 +109,7 @@ void mode_auto() {
 }
 
 // TODO: once auto mode is complete make sure to add documentation for it on the wiki!
-// materials and how to use system will need updating and possibly a new wiki page for wifly
+// materials and how to use system will need updating and also a completely new wiki page for wifly and how to use it
 
 #endif
 

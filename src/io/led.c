@@ -5,7 +5,10 @@
 
 #include <stdio.h>
 #include <stdbool.h>
-#include "pico/stdlib.h"
+
+#include "pico/binary_info.h"
+#include "pico/time.h"
+#include "hardware/gpio.h"
 
 #include "led.h"
 

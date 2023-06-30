@@ -28,9 +28,10 @@
 */
 
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 
-#include "pico/stdlib.h"
+#include "pico/time.h"
 #include "hardware/pio.h"
 #include "hardware/irq.h"
 

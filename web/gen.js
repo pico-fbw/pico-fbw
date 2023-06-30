@@ -4,7 +4,7 @@
 */
 
 // These should always be the same as the versioncodes in version.h!!
-const FW_VERSION = "0.01";
+const FW_VERSION = "0.0.1";
 const WIFLY_VERSION = "1.0";
 
 var fplan = {
