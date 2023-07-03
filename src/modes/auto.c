@@ -23,7 +23,8 @@
 
 #include "auto.h"
 
-bool autoInitialized = false;
+#ifdef WIFLY_ENABLED
+
 bool autoComplete = false;
 
 Waypoint *fplan = NULL;
@@ -40,50 +41,50 @@ double alt; // Altitude target of current waypoint
 PIDController latGuid;
 PIDController vertGuid;
 
-#ifdef WIFLY_ENABLED
 
 static inline void auto_computePID() {
     while (true) {
         pid_update(&latGuid, bearing, aircraft.heading);
         pid_update(&vertGuid, alt, gps.alt);
-        flight_update(latGuid.out, aircraft.roll, vertGuid.out, aircraft.pitch, 0, 0, false);
-        // TODO: add actual yaw functionality
+        flight_update(latGuid.out, aircraft.roll, vertGuid.out, aircraft.pitch, 0, aircraft.yaw, false);
     }
 }
 
-static bool autoInit() {
-    mode_normalDeinit();
-    // Import the flightplan data from Wi-Fly and check if it's valid
-    fplan = wifly_getFplan();
-    if (fplan == NULL || wifly_getWaypointCount() == 0) {
+#endif // WIFLY_ENABLED
+
+bool mode_autoInit() {
+    #ifdef WIFLY_ENABLED
+        // Import the flightplan data from Wi-Fly and check if it's valid
+        fplan = wifly_getFplan();
+        if (fplan == NULL || wifly_getWaypointCount() == 0) {
+            return false;
+        }
+        flight_init();
+        latGuid = (PIDController){latGuid_kP, latGuid_kI, latGuid_kD, latGuid_tau, -latGuid_lim, latGuid_lim, latGuid_integMin, latGuid_integMax, latGuid_kT};
+        vertGuid = (PIDController){vertGuid_kP, vertGuid_kI, vertGuid_kD, vertGuid_tau, vertGuid_loLim, vertGuid_upLim, vertGuid_integMin, vertGuid_integMax, vertGuid_kT};
+        pid_init(&latGuid);
+        pid_init(&vertGuid);
+        multicore_launch_core1(auto_computePID);
+        return true;
+    #else
         return false;
-    }
-    flight_init();
-    latGuid = (PIDController){latGuid_kP, latGuid_kI, latGuid_kD, latGuid_tau, -latGuid_lim, latGuid_lim, latGuid_integMin, latGuid_integMax, latGuid_kT};
-    vertGuid = (PIDController){vertGuid_kP, vertGuid_kI, vertGuid_kD, vertGuid_tau, vertGuid_loLim, vertGuid_upLim, vertGuid_integMin, vertGuid_integMax, vertGuid_kT};
-    pid_init(&latGuid);
-    pid_init(&vertGuid);
-    multicore_launch_core1(auto_computePID);
-    return true;
+    #endif // WIFLY_ENABLED
 }
+
+#ifdef WIFLY_ENABLED
 
 void mode_auto() {
-    if (!autoInitialized) {
-        if (autoInit()) {
-            autoInitialized = true;
-        } else {
-            return;
-        }
-    }
     if (autoComplete) {
-        mode(NORMAL);
+        toMode(NORMAL);
         return;
     }
+
     aircraft = imu_getAngles();
     gps = gps_getData();
     if (flight_checkEnvelope(aircraft.roll, aircraft.pitch)) {
         return;
     }
+
     // Calculate the distance to the current waypoint
     distance = calculateDistance(gps.lat, gps.lng, fplan[currentWptIdx].lat, fplan[currentWptIdx].lng);
     // If we've "intercepted" the waypoint then advance to the next one
@@ -92,7 +93,7 @@ void mode_auto() {
         if (currentWptIdx > wifly_getWaypointCount()) {
             // Auto mode ends here, we enter a holding pattern
             autoComplete = true;
-            mode(HOLD);
+            toMode(HOLD);
             return;
         } else {
             // Load the altitude--if it is -5 (default) just discard it
@@ -105,15 +106,16 @@ void mode_auto() {
     }
     // Calculate the bearing to the current waypoint
     bearing = calculateBearing(gps.lat, gps.lng, fplan[currentWptIdx].lat, fplan[currentWptIdx].lng);
-    // still need to do altitude stuff
+    
+    // TODO still need to do altitude stuff
+
 }
 
 // TODO: once auto mode is complete make sure to add documentation for it on the wiki!
 // materials and how to use system will need updating and also a completely new wiki page for wifly and how to use it
 
-#endif
+#endif // WIFLY_ENABLED
 
 void mode_autoDeinit() {
-    autoInitialized = false;
     multicore_reset_core1();
 }

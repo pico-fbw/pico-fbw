@@ -109,8 +109,12 @@ inertialAngles imu_getAngles() {
     float heading_degrees = (float)heading / 16.0;
     float roll_degrees = (float)roll / 16.0;
     float pitch_degrees = (float)pitch / 16.0;
+    float yaw_degrees = heading_degrees;
+    if (yaw_degrees >= 180) {
+        yaw_degrees -= 360;
+    }
     // Compose into data struct and return
-    return (inertialAngles){heading_degrees, roll_degrees, pitch_degrees};
+    return (inertialAngles){heading_degrees, roll_degrees, pitch_degrees, yaw_degrees};
 }
 
 inertialAccel imu_getAccel() {

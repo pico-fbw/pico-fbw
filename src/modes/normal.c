@@ -23,46 +23,30 @@
 
 #include "normal.h"
 
-// Keeps the state of if normal mode has been initialized or not and if it is the first time initializing
-bool normalInitialized = false;
-
 inertialAngles angles;
 
 float rollInput;
 float pitchInput;
 float yawInput;
 
-float rollSet;
-float pitchSet;
-float yawSet;
+double rollSet;
+double pitchSet;
 
-bool yawdamp_on = false;
+bool overrideYaw = false;
 
 // Internal function that we will later push to the second core to compute the PID math for all controllers
 static inline void normal_computePID() {
     while (true) {
-        flight_update(rollSet, angles.roll, pitchSet, angles.pitch, yawSet, angles.heading, yawdamp_on);
+        flight_update(rollSet, angles.roll, pitchSet, angles.pitch, yawInput, angles.yaw, overrideYaw);
     }
 }
 
-static void normalInit() {
-    mode_autoDeinit();
+void mode_normalInit() {
     flight_init();
     multicore_launch_core1(normal_computePID);
 }
 
-void mode_normalDeinit() {
-    // Remove the normal mode initialized flag and reset the second core for use elsewhere
-    normalInitialized = false;
-    multicore_reset_core1();
-}
-
 void mode_normal() {
-    // Initialize normal mode if we haven't already
-    if (!normalInitialized) {
-        normalInit();
-        normalInitialized = true;
-    }
     // Refresh input data from IMU and rx
     angles = imu_getAngles();
     rollInput = pwm_readDeg(0) - 90;
@@ -113,28 +97,18 @@ void mode_normal() {
 
     // Yaw deadband calculation--if we detect any aileron input whatsoever, we wil override what PID wants with the user input
     if (yawInput > DEADBAND_VALUE || yawInput < -DEADBAND_VALUE) {
-        yawSet = yawInput;
-        yawdamp_on = false;
+        overrideYaw = true;
     } else {
-        // If there is no user input on rudder axis, first check if we are in a turn or not
-        // Keep in mind this is different than if the system is making inputs on ailerons! We only want this to activate during turns, not stabilizations.
-        if (rollSet > DEADBAND_VALUE || rollSet < -DEADBAND_VALUE) {
-            // If we are in a turn, set the yaw damper as disabled and set the yaw value to a reduced version of our aileron value to coordinate our turn
-            yawdamp_on = false;
-            yawSet = flight_getRollOut() * RUDDER_TURNING_VALUE;
-        } else {
-            // If the yaw damper is set as off still and we are not in a turn, that means we have just transitioned to this phase, so we should update the yaw setpoint
-            if (!yawdamp_on) {
-                yawSet = angles.heading;
-            }
-            yawdamp_on = true;
-        }
+        overrideYaw = false;
     }
 }
 
+void mode_normalDeinit() {
+    multicore_reset_core1(); // Reset the second core for use elsewhere
+}
+
 void mode_normalReset() {
-    rollSet = 0.0f;
-    pitchSet = 0.0f;
-    yawSet = 0.0f;
-    yawdamp_on = false;
+    rollSet = 0.0;
+    pitchSet = 0.0;
+    overrideYaw = false;
 }

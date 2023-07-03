@@ -11,10 +11,15 @@
 #define HOLD 4
 
 /**
- * Sets the system into the specified mode.
- * Additionally, if the system is not already set into the specified mode, it will run the mode starting code.
+ * Transitions the system to a specified mode.
+ * @param mode The mode to transition to.
 */
-void mode(uint8_t smode);
+void toMode(uint8_t mode);
+
+/**
+ * Runs the code of the system's currently selected mode.
+*/
+void modeRuntime();
 
 /**
  * Declares whether or not the IMU data is safe to use.

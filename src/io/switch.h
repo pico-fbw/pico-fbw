@@ -6,6 +6,6 @@
  * @param currentPos The current position of the mode switch.
  * This is formatted as whatever mode the switch is commanding.
 */
-void switchPos(uint8_t currentPos);
+void updateSwitch(uint8_t currentPos);
 
 #endif // switch_h

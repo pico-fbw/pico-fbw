@@ -20,7 +20,6 @@
 #include "dhcp.h"
 #include "dns.h"
 
-#include "../wifly.h"
 #include "../../../config.h"
 
 #include "tcp.h"
@@ -141,11 +140,11 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err
         if (!(p->flags & PBUF_FLAG_PUSH)) {
             useAccHeaders = true;
             // Dynamically allocate the header accumulator for headers
-            // If we have not allocated any memory yet, do that, otherwise continue allocating more memory as we recieve more packets
+            // If we have not allocated any memory yet, do that, otherwise continue allocating more memory as we receive more packets
             if (con_state->accHeaders == NULL) {
                 con_state->accHeaders = malloc((strlen(con_state->headers) + 1));
                 if (con_state->accHeaders == NULL) {
-                    // Memory allocation failure, close conection
+                    // Memory allocation failure, close connection
                     return tcp_close_client_connection(con_state, pcb, ERR_MEM);
                 }
                 con_state->accHeaders[0] = '\0';
@@ -209,6 +208,30 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err
 
             // Send the headers to the client
             con_state->sent_len = 0;
+            err_t err = tcp_write(pcb, con_state->headers, con_state->header_len, TCP_WRITE_FLAG_MORE);
+            if (err != ERR_OK) {
+                FBW_DEBUG_printf("[tcp] ERROR: failed to write header data %d\n", err);
+                return tcp_close_client_connection(con_state, pcb, err);
+            }
+
+            // Send the body to the client
+            if (con_state->result_len) {
+                // Loop to send the result in multiple packets if needed
+                for (size_t i = 0; i < con_state->result_len; i += TCP_MSS) {
+                    size_t remaining = con_state->result_len - i;
+                    size_t len = remaining > TCP_MSS ? TCP_MSS : remaining;
+                    err = tcp_write(pcb, con_state->result + i, len, (i + len) == con_state->result_len ? 0 : TCP_WRITE_FLAG_MORE);
+                    if (err != ERR_OK) {
+                        FBW_DEBUG_printf("[tcp] ERROR: failed to write result data %d\n", err);
+                        return tcp_close_client_connection(con_state, pcb, err);
+                    }
+                }
+            }
+
+            /* If the code to send larger bodies doesn't work (I can't test currently I have no Pico lol), here is the original:
+
+            // Send the headers to the client
+            con_state->sent_len = 0;
             err_t err = tcp_write(pcb, con_state->headers, con_state->header_len, 0);
             if (err != ERR_OK) {
                 FBW_DEBUG_printf("[tcp] ERROR: failed to write header data %d\n", err);
@@ -224,7 +247,9 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err
                 }
             }
 
-            // Clean up acc headers if necessary
+            */
+
+            // Clean up accumulated headers if necessary
             if (accHeadersFinal) {
                 // Free memory used by accumulated headers and reset accumulation flags
                 free(con_state->accHeaders);

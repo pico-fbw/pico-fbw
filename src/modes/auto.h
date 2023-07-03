@@ -1,17 +1,23 @@
 #ifndef auto_h
 #define auto_h
 
+/**
+ * Initializes auto mode.
+ * @return true if initialization was successful, false if not
+*/
+bool mode_autoInit();
+
 #ifdef WIFLY_ENABLED
 
-#define INTERCEPT_RADIUS 0.5 // The radius at which to consider a waypoint "incercepted"
-// TODO: do I need to change this for different speeds? idk if it will make too much of a difference, remember what aviation simmer said
+    #define INTERCEPT_RADIUS 0.5 // The radius at which to consider a waypoint "incercepted" in nm
+    // TODO: do I need to change this for different speeds? idk if it will make too much of a difference, remember what aviation simmer said
 
-/**
- * Executes one cycle of the auto mode.
-*/
-void mode_auto();
+    /**
+     * Executes one cycle of the auto mode.
+    */
+    void mode_auto();
 
-#endif
+#endif // WIFLY_ENABLED
 
 /**
  * Fully resets/de-initializes auto mode.

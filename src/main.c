@@ -130,30 +130,31 @@ int main() {
         wifly_init();
     #endif
 
-    // Main program loop
+    // Main program loop: update the mode switch's position, then run the mode's runtime
     FBW_DEBUG_printf("\n[boot] bootup complete! entering main program loop...\n\n");
     while (true) {
         #ifdef SWITCH_2_POS
             if (pwm_readDeg(3) < 90) {
                 // Lower pos
-                switchPos(DIRECT);
+                updateSwitch(DIRECT);
             } else {
                 // Upper pos
-                switchPos(NORMAL);
+                updateSwitch(NORMAL);
             }
         #endif // switch_2_pos
         #ifdef SWITCH_3_POS
             if (pwm_readDeg(3) < 85) {
                 // Lower pos
-                switchPos(DIRECT);
+                updateSwitch(DIRECT);
             } else if (pwm_readDeg(3) > 95) {
                 // Upper pos
-                switchPos(AUTO);
+                updateSwitch(AUTO);
             } else {
                 // Middle pos
-                switchPos(NORMAL);
+                updateSwitch(NORMAL);
             }
         #endif // switch_3_pos
+        modeRuntime();
     }
 
     return 0; // How did we get here?

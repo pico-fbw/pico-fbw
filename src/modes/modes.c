@@ -9,103 +9,115 @@
 #include "../io/imu.h"
 #include "../io/servo.h"
 #include "../io/led.h"
-#include "direct.h"
-#include "normal.h"
 #include "auto.h"
+#include "direct.h"
+#include "hold.h"
+#include "normal.h"
 #include "tune.h"
 
 #include "../config.h"
 
 #include "modes.h"
 
-// TODO: fix the weird thing with init/deinit of modes; make that happen in modes.c instead of...all over the place
-// also just generally clean up this file lol
-
-// Variable to store the system's current mode regardless of the mode currently being requested
-uint8_t cmode = DIRECT; // Mode is direct by default until we prove the IMU data is safe
-
+uint8_t currentMode = DIRECT;
 bool imuDataSafe = false;
 
-void mode(uint8_t smode) {
-    // If the selected mode is the same as the current mode, run the specified mode's cycle function
-    switch(smode) {
+void toMode(uint8_t newMode) {
+    // Run deinit code for currentMode and then run init code for newMode
+    switch(currentMode) {
         case DIRECT:
-            // If the current mode is not the selected mode, run the mode switching code for that mode and change the mode
-            if (cmode != DIRECT) {
-                FBW_DEBUG_printf("[modes] entering direct mode \n");
-                cmode = DIRECT;
-                // Set LED as blinking if the IMU has encountered an error, not if the user purposely enters direct mode
-                if (!imuDataSafe) {
-                    led_blink(250);
+            FBW_DEBUG_printf("[modes] exiting direct mode\n");
+            break;
+        case NORMAL:
+            FBW_DEBUG_printf("[modes] exiting normal mode\n");
+            mode_normalReset(); // "Soft reset" normal mode setpoints
+            break;
+        case AUTO:
+            FBW_DEBUG_printf("[modes] exiting auto mode\n");
+            break;
+        case TUNE:
+            FBW_DEBUG_printf("[modes] exiting tune mode\n");
+            break;
+        case HOLD:
+            FBW_DEBUG_printf("[modes] exiting hold mode\n");
+            break;
+    }
+    if (imuDataSafe) {
+        led_blink_stop();
+        switch(newMode) {
+            case DIRECT:
+                FBW_DEBUG_printf("[modes] entering direct mode\n");
+                currentMode = DIRECT;
+                break;
+            case NORMAL:
+                // Automatically enter tune mode if necessary
+                if (mode_tuneCheckCalibration()) {
+                    FBW_DEBUG_printf("[modes] entering normal mode\n");
+                    mode_autoDeinit(); // Deinit auto mode, it can conflict with normal mode
+                    mode_normalInit();
+                    currentMode = NORMAL;
+                } else {
+                    toMode(TUNE);
+                    return;
                 }
-                // Reset normal mode, this is just in case we go back to normal mode, we don't want to keep the previous setpoints and have the system snap back to them/
-                mode_normalReset();
-            }
+                break;
+            case AUTO:
+                if (mode_tuneCheckCalibration()) {
+                    FBW_DEBUG_printf("[modes] entering auto mode\n");
+                    mode_normalDeinit(); // Deinit normal mode, it can conflict with auto mode
+                    if (mode_autoInit()) {
+                        currentMode = AUTO;
+                    } else {
+                        toMode(NORMAL);
+                        return;
+                    }
+                } else {
+                    toMode(TUNE);
+                    return;
+                }
+                break;
+            case TUNE:
+                if (!mode_tuneCheckCalibration()) {
+                    FBW_DEBUG_printf("[modes] entering tune mode\n");
+                    currentMode = TUNE;
+                } else {
+                    toMode(NORMAL);
+                    return;
+                }
+                break;
+            case HOLD:
+                FBW_DEBUG_printf("[modes] entering hold mode\n");
+                currentMode = HOLD;
+                break;
+        }
+    } else {
+        // If the IMU is unsafe we only have one option...direct mode
+        // Trigger FBW-250 because we are entering direct mode due to an IMU failure
+        led_blink(250);
+        currentMode = DIRECT;
+    }
+}
+
+void modeRuntime() {
+    switch(currentMode) {
+        case DIRECT:
             mode_direct();
             break;   
         case NORMAL:
-            if (cmode != NORMAL) {
-                // Make sure it is okay to set to normal mode
-                if (imuDataSafe) {
-                    // Enter auto mode if tuning has been done before, otherwise automatically enter tuning mode
-                    if (mode_tuneCheckCalibration()) {
-                        FBW_DEBUG_printf("[modes] entering normal mode \n");
-                        cmode = NORMAL;
-                    } else {
-                        FBW_DEBUG_printf("[modes] entering tune mode \n");
-                        cmode = TUNE;
-                    }
-                    led_blink_stop();
-                    break;
-                } else {
-                    // If we are unable to set to normal mode, revert to direct mode
-                    // We use recursive function calling here so that the direct mode init code runs
-                    mode(DIRECT);
-                }
-            }
             mode_normal();
-            break;
-        #ifdef WIFLY_ENABLED    
+            break; 
         case AUTO:
-            if (cmode != AUTO) {
-                if (imuDataSafe) {
-                    if (mode_tuneCheckCalibration()) {
-                        FBW_DEBUG_printf("[modes] entering auto mode \n");
-                        cmode = AUTO;
-                    } else {
-                        FBW_DEBUG_printf("[modes] entering tune mode \n");
-                        cmode = TUNE;
-                    }
-                    led_blink_stop();
-                    break;
-                } else {
-                    mode(DIRECT);
-                }
-            }
-            mode_auto();
+            #ifdef WIFLY_ENABLED
+                mode_auto();
+            #endif
             break;
-        #endif    
-        #ifdef PID_AUTOTUNE    
         case TUNE:
-            // smode might not equal TUNE if we are switching from auto mode so we set it directly
-            FBW_DEBUG_printf("[modes] entering tune mode \n");
-            cmode = TUNE;
-            // This logic is here for safety and also for if tuning mode gets called directly in the case of no mode switching,
-            // these checks will pass if it has been automatically entered from auto mode
-            if (imuDataSafe) {
-                if (!mode_tuneCheckCalibration()) {
-                    mode_tune();
-                } else {
-                    // Recursive function calling so checks can be done
-                    mode(NORMAL);
-                }
-            } else {
-                mode(DIRECT);
-            }
+            #ifdef PID_AUTOTUNE
+                mode_tune();
+            #endif
             break;
-        #endif
         case HOLD:
-            // TODO
+            mode_hold();
             break;
     }
 }
@@ -115,6 +127,6 @@ void setIMUSafe(bool state) {
     // Automatically de-init i2c and set into direct mode if IMU is deemed unsafe
     if (!state) {
         imu_deinit();
-        mode(DIRECT);
+        toMode(DIRECT);
     }
 }

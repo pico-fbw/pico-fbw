@@ -5,4 +5,8 @@
 
 #include "hold.h"
 
-// TODO: Implement holding pattern mode
+void mode_hold() {
+    // TODO: Implement holding pattern mode
+    // make sure to check flight envelope
+    
+}

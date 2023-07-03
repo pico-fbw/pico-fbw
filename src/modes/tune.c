@@ -54,7 +54,7 @@
                 // Check if there are any control inputs being made, if so, stop tuning and revert to direct mode
                 if (rollIn > DEADBAND_VALUE || rollIn < -DEADBAND_VALUE || pitchIn > DEADBAND_VALUE || pitchIn < -DEADBAND_VALUE) {
                     pidtune_cancel();
-                    mode(DIRECT);
+                    toMode(DIRECT);
                     return;
                 }
                 if (!flight_checkEnvelope(rollAngle, pitchAngle)) {
@@ -71,14 +71,14 @@
             } else {
                 // If calibration did fail, throw an error and revert to direct mode
                 led_blink(2000);
-                mode(DIRECT);
+                toMode(DIRECT);
                 return;
             }
         }
         // Stop blinking LED
         led_blink_stop();
         // Exit to normal mode
-        mode(NORMAL);
+        toMode(NORMAL);
     }
 #endif
 

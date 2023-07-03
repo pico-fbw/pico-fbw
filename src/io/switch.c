@@ -2,13 +2,15 @@
 
 #include "../modes/modes.h"
 
+#include "switch.h"
+
 uint8_t pos;
 
-void switchPos(uint8_t currentPos) {
+void updateSwitch(uint8_t currentPos) {
     // This way, the mode will only be changed when the user moves the switch;
-    // the system's mode changes can persist.
+    // the system's mode changes can persist and won't instantly be overrided.
     if (currentPos != pos) {
-        mode(currentPos);
         pos = currentPos;
+        toMode(pos);
     }
 }

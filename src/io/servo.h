@@ -52,7 +52,7 @@ void servo_disable(const uint gpio_pin);
 /**
  * Sets the position of the servo using the the duty cycle of the PWM signal.
  * @param gpio_pin: the GPIO pin the servo is attached to
- * @param degree: the position in degree, a value within 0-180
+ * @param degree: the position in degrees, a value within 0-180
 */
 void servo_set(const uint gpio_pin, const uint16_t degree);
 

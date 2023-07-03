@@ -1,6 +1,8 @@
 #ifndef tcp_h
 #define tcp_h
 
+#include "../wifly.h"
+
 typedef struct TCP_SERVER_T_ {
     struct tcp_pcb *server_pcb;
     bool complete;
@@ -10,9 +12,9 @@ typedef struct TCP_SERVER_T_ {
 typedef struct TCP_CONNECT_STATE_T_ {
     struct tcp_pcb *pcb;
     int sent_len;
-    char headers[1460];
+    char headers[TCP_HEADER_SIZE];
     char* accHeaders;
-    char result[1460];
+    char result[TCP_RESULT_SIZE];
     int header_len;
     int result_len;
     ip_addr_t *gw;

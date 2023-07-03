@@ -48,12 +48,13 @@ void imu_deinit();
 bool imu_configure();
 
 /**
- * A struct containing heading, roll, and pitch angles of the aircraft (when filled using its corresponding function).
+ * A struct containing heading, roll, pitch, and yaw angles of the aircraft when filled using its corresponding function.
 */
 typedef struct inertialAngles {
     float heading;
     float roll;
     float pitch;
+	float yaw;
 } inertialAngles;
 
 /**
