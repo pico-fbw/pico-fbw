@@ -2,6 +2,7 @@
  * Source file of pico-fbw: https://github.com/MylesAndMore/pico-fbw
  * Licensed under the GNU GPL-3.0
 */
+
 #include <stdint.h>
 
 #include "hardware/i2c.h"

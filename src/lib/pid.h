@@ -62,8 +62,6 @@ typedef struct PIDController {
 
 } PIDController;
 
-// TODO: these docs
-
 /**
  * Initalizes a PIDController.
  * @param pid Pointer to the PIDController to initialize.

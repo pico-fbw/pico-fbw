@@ -34,6 +34,11 @@
  * https://github.com/t0mpr1c3/Arduino-PID-AutoTune-Library
 */
 
+/**
+ * Source file of pico-fbw: https://github.com/MylesAndMore/pico-fbw
+ * Licensed under the GNU GPL-3.0
+*/
+
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>

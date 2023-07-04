@@ -35,6 +35,28 @@ TCP_SERVER_T *state;
 Waypoint *waypoints = NULL;
 uint waypoint_count = 0;
 
+static inline void url_decode(char *str) {
+    char *p = str;
+    char *q = str;
+    while (*p != '\0') {
+        if (*p == '%') {
+            char hex[3];
+            hex[0] = *(p + 1);
+            hex[1] = *(p + 2);
+            hex[2] = '\0';
+            *q = strtol(hex, NULL, 16);
+            p += 2;
+        } else if (*p == '+') {
+            *q = ' ';
+        } else {
+            *q = *p;
+        }
+        p++;
+        q++;
+    }
+    *q = '\0';
+}
+
 void wifly_init() {
     state = calloc(1, sizeof(TCP_SERVER_T));
     if (!state) {
@@ -98,28 +120,6 @@ int wifly_genPageContent(char *result, size_t max_result_len, int status) {
             return 0;
     }
     return snprintf(result, max_result_len, color, msg);
-}
-
-static inline void url_decode(char *str) {
-    char *p = str;
-    char *q = str;
-    while (*p != '\0') {
-        if (*p == '%') {
-            char hex[3];
-            hex[0] = *(p + 1);
-            hex[1] = *(p + 2);
-            hex[2] = '\0';
-            *q = strtol(hex, NULL, 16);
-            p += 2;
-        } else if (*p == '+') {
-            *q = ' ';
-        } else {
-            *q = *p;
-        }
-        p++;
-        q++;
-    }
-    *q = '\0';
 }
 
 int wifly_parseFplan(const char *fplan) {

@@ -26,7 +26,7 @@
     struct repeating_timer timer;
 #endif
 
-bool led_callback(struct repeating_timer *t) {
+static bool led_callback(struct repeating_timer *t) {
     #ifdef LED_PIN
         #if defined(RASPBERRYPI_PICO)
             gpio_xor_mask(1u << LED_PIN);

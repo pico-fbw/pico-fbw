@@ -21,7 +21,7 @@
  * @param value The value to write.
  * @return Number of bytes written, or PICO_ERROR_GENERIC if address not acknowledged, no device present.
 */
-int imu_write(uint8_t address, uint8_t value) {
+static int imu_write(uint8_t address, uint8_t value) {
     uint8_t cmd[2] = {address, value};
     return i2c_write_blocking(IMU_I2C, CHIP_REGISTER, cmd, 2, true);
 }

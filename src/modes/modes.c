@@ -20,7 +20,7 @@
 #include "modes.h"
 
 uint8_t currentMode = DIRECT;
-bool imuDataSafe = false;
+static bool imuDataSafe = false;
 
 void toMode(uint8_t newMode) {
     // Run deinit code for currentMode and then run init code for newMode
@@ -30,7 +30,7 @@ void toMode(uint8_t newMode) {
             break;
         case NORMAL:
             FBW_DEBUG_printf("[modes] exiting normal mode\n");
-            mode_normalReset(); // "Soft reset" normal mode setpoints
+            mode_normalSoftReset();
             break;
         case AUTO:
             FBW_DEBUG_printf("[modes] exiting auto mode\n");

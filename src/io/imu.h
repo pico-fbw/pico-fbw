@@ -28,6 +28,25 @@
 #endif
 
 /**
+ * Contains heading, roll, pitch, and yaw angles of the aircraft when filled using imu_getAngles().
+*/
+typedef struct inertialAngles {
+    float heading;
+    float roll;
+    float pitch;
+	float yaw;
+} inertialAngles;
+
+/**
+ * Contains acceleration values on the X, Y, and Z axes when filled using imu_getAccel().
+*/
+typedef struct inertialAccel {
+	float x;
+	float y;
+	float z;
+} inertialAccel;
+
+/**
  * Initializes the IMU unit.
  * @return 0 if success (correct IMU type was initialized and recognized),
  * PICO_ERROR_GENERIC if there was an I2C read/write failure,
@@ -46,25 +65,6 @@ void imu_deinit();
  * @return true if success, false if failure.
 */
 bool imu_configure();
-
-/**
- * A struct containing heading, roll, pitch, and yaw angles of the aircraft when filled using its corresponding function.
-*/
-typedef struct inertialAngles {
-    float heading;
-    float roll;
-    float pitch;
-	float yaw;
-} inertialAngles;
-
-/**
- * A struct containing acceleration values on the X, Y, and Z axes (when filled using its corresponding function).
-*/
-typedef struct inertialAccel {
-	float x;
-	float y;
-	float z;
-} inertialAccel;
 
 /**
  * Gets the current angles of spatial orientation from the IMU.

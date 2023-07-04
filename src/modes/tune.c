@@ -1,3 +1,8 @@
+/**
+ * Source file of pico-fbw: https://github.com/MylesAndMore/pico-fbw
+ * Licensed under the GNU GPL-3.0
+*/
+
 #include <stdbool.h>
 
 #include "../io/flash.h"
@@ -6,10 +11,6 @@
 #include "../io/led.h"
 #include "../lib/pidtune.h"
 #include "../config.h"
-/**
- * Source file of pico-fbw: https://github.com/MylesAndMore/pico-fbw
- * Licensed under the GNU GPL-3.0
-*/
 
 #include "modes.h"
 #include "flight.h"

@@ -1,9 +1,10 @@
-#include <stdlib.h>
-#include <stdbool.h>
 /**
  * Source file of pico-fbw: https://github.com/MylesAndMore/pico-fbw
  * Licensed under the GNU GPL-3.0
 */
+
+#include <stdlib.h>
+#include <stdbool.h>
 
 #include "pico/multicore.h"
 
@@ -23,39 +24,34 @@
 
 #include "normal.h"
 
-inertialAngles angles;
+static float rollInput;
+static float pitchInput;
+static float yawInput;
 
-float rollInput;
-float pitchInput;
-float yawInput;
+static double rollSet;
+static double pitchSet;
 
-double rollSet;
-double pitchSet;
-
-bool overrideYaw = false;
+static bool overrideYaw = false;
 
 // Internal function that we will later push to the second core to compute the PID math for all controllers
-static inline void normal_computePID() {
+static inline void normal_compute() {
     while (true) {
-        flight_update(rollSet, angles.roll, pitchSet, angles.pitch, yawInput, angles.yaw, overrideYaw);
+        flight_update_core1(rollSet, pitchSet, yawInput, overrideYaw);
     }
 }
 
 void mode_normalInit() {
+    // Initialize (clear) PIDs and launch them on core 1
     flight_init();
-    multicore_launch_core1(normal_computePID);
+    multicore_launch_core1(normal_compute);
 }
 
 void mode_normal() {
-    // Refresh input data from IMU and rx
-    angles = imu_getAngles();
+    // Refresh flight data and input data from rx
+    flight_update_core0();
     rollInput = pwm_readDeg(0) - 90;
     pitchInput = pwm_readDeg(1) - 90;
     yawInput = pwm_readDeg(2) - 90;
-
-    if (!flight_checkEnvelope(angles.roll, angles.pitch)) {
-        return;
-    }
 
     // Use the rx inputs to set the setpoint control values
     // Deadband calculations so we don't get crazy values due to PWM fluctuations
@@ -103,12 +99,12 @@ void mode_normal() {
     }
 }
 
-void mode_normalDeinit() {
-    multicore_reset_core1(); // Reset the second core for use elsewhere
-}
-
-void mode_normalReset() {
+void mode_normalSoftReset() {
     rollSet = 0.0;
     pitchSet = 0.0;
     overrideYaw = false;
+}
+
+void mode_normalDeinit() {
+    multicore_reset_core1(); // Reset core 1 for use elsewhere
 }

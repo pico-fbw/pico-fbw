@@ -27,6 +27,11 @@
  * Check them out here: https://github.com/GitJer/Some_RPI-Pico_stuff/tree/main/PwmIn/PwmIn_4pins
 */
 
+/**
+ * Source file of pico-fbw: https://github.com/MylesAndMore/pico-fbw
+ * Licensed under the GNU GPL-3.0
+*/
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -129,15 +134,10 @@ float pwm_readDeg(uint pin) {
     return (180000 * ((float)pulsewidth[pin] * 0.000000016 - 0.001) + pwm_getCalibrationValue(pin));
 }
 
-// Function to read the raw degree value without any calibrations applied, only used internally in calibration for now.
+// Reads the raw degree value without any calibrations applied, only used internally in calibration for now.
 static float pwm_readDegRaw(uint pin) {
     return (180000 * ((float)pulsewidth[pin] * 0.000000016 - 0.001));
 }
-
-/**
- * Source file of pico-fbw: https://github.com/MylesAndMore/pico-fbw
- * Licensed under the GNU GPL-3.0
-*/
 
 bool pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint run_times) {
     FBW_DEBUG_printf("[pwm] pwm calibration begin\n");
