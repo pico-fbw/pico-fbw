@@ -32,7 +32,7 @@ bool led_callback(struct repeating_timer *t) {
             gpio_xor_mask(1u << LED_PIN);
         #elif defined(RASPBERRYPI_PICO_W)
             cyw43_arch_gpio_put(LED_PIN, !cyw43_arch_gpio_get(LED_PIN));
-            printf(" "); // I kid you not, the program just freezes without this print statement. No idea why.
+            printf(" "); // FIXME: I kid you not, the program just freezes without this print statement. No idea why.
         #endif
     #endif
 }
