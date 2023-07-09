@@ -27,8 +27,8 @@
  * Check them out here: https://github.com/markushi/pico-servo
 */
 
-#ifndef servo_h
-#define servo_h
+#ifndef __SERVO_H
+#define __SERVO_H
 
 /**
  * Set the frequency, making "top" as large as possible for maximum resolution.
@@ -56,4 +56,4 @@ void servo_disable(const uint gpio_pin);
 */
 void servo_set(const uint gpio_pin, const uint16_t degree);
 
-#endif // servo_h
+#endif // __SERVO_H

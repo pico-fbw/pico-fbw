@@ -13,9 +13,7 @@
 
 int main() {
     flash_reset();
-    // Automatically reboot in BOOTSEL mode
-    reset_usb_boot(0, 0);
+    reset_usb_boot(0, 0); // Reboot into BOOTSEL mode
 
-    // How did we get here? (pt. 2)
-    return 0;
+    return 0; // How did we get here? (pt. 2)
 }

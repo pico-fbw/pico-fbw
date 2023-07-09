@@ -3,11 +3,11 @@
  * Licensed under the GNU GPL-3.0
 */
 
-#include <stdio.h>
 #include <stdbool.h>
-
+#include <stdio.h>
 #include "pico/binary_info.h"
 #include "pico/time.h"
+
 #include "hardware/gpio.h"
 
 #include "led.h"
@@ -23,10 +23,10 @@
 #endif
 
 #ifdef LED_PIN
-    struct repeating_timer timer;
+    static struct repeating_timer timer;
 #endif
 
-static bool led_callback(struct repeating_timer *t) {
+static inline bool led_callback(struct repeating_timer *t) {
     #ifdef LED_PIN
         #if defined(RASPBERRYPI_PICO)
             gpio_xor_mask(1u << LED_PIN);

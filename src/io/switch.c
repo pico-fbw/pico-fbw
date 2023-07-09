@@ -9,7 +9,7 @@
 
 #include "switch.h"
 
-uint8_t pos;
+static uint8_t pos;
 
 void updateSwitch(uint8_t currentPos) {
     // This way, the mode will only be changed when the user moves the switch;

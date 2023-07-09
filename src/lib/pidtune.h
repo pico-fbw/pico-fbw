@@ -1,6 +1,6 @@
 #ifdef PID_AUTOTUNE
-    #ifndef pidtune_h
-    #define pidtune_h
+    #ifndef __PIDTUNE_H
+    #define __PIDTUNE_H
 
     enum Peak {
         MINIMUM = -1,
@@ -99,5 +99,5 @@
     */
     float pidtune_getTd();
 
-    #endif // pidtune_h
+    #endif // __PIDTUNE_H
 #endif // PID_AUTOTUNE

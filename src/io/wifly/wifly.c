@@ -15,25 +15,24 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
-
 #include "pico/cyw43_arch.h"
-
 #include "../../lib/jsmn.h"
 
 #include "pcl/dhcp.h"
 #include "pcl/dns.h"
 #include "pcl/tcp.h"
 
-#include "wifly.h"
 #include "../../config.h"
 #include "../../version.h"
+
+#include "wifly.h"
 
 dhcp_server_t dhcp_server;
 dns_server_t dns_server;
 TCP_SERVER_T *state;
 
-Waypoint *waypoints = NULL;
-uint waypoint_count = 0;
+static Waypoint *waypoints = NULL;
+static uint waypoint_count = 0;
 
 static inline void url_decode(char *str) {
     char *p = str;

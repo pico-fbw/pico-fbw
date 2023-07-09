@@ -33,6 +33,7 @@
 //  https://www.ietf.org/rfc/rfc2131.txt
 //  https://tools.ietf.org/html/rfc2132 -- DHCP Options and BOOTP Vendor Extensions
 
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -41,6 +42,7 @@
 #include "lwip/udp.h"
 
 #include "../wifly.h"
+
 #include "../../../config.h"
 
 #include "dhcp.h"

@@ -3,9 +3,12 @@
  * Licensed under the GNU GPL-3.0
 */
 
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include "pico/stdio.h"
 #include "pico/time.h"
+
 #include "hardware/watchdog.h"
 #ifdef RASPBERRYPI_PICO_W
     #include "pico/cyw43_arch.h"
@@ -20,7 +23,9 @@
 #ifdef WIFLY_ENABLED
     #include "io/wifly/wifly.h"
 #endif
+
 #include "modes/modes.h"
+
 #include "config.h"
 #include "version.h"
 
@@ -46,7 +51,7 @@ int main() {
 
     // Check for first boot
     FBW_DEBUG_printf("[init] initializing bootup process\n\n");
-    if (flash_read(3, 0) != FBW_BOOT) {
+    if (flash_read(FLASH_SECTOR_BOOT, 0) != FBW_BOOT) {
         FBW_DEBUG_printf("[boot] boot flag not found! assuming first boot, initializing flash\n");
         flash_reset();
         float boot[CONFIG_SECTOR_SIZE] = {FBW_BOOT};
@@ -123,6 +128,7 @@ int main() {
         FBW_DEBUG_printf("[boot] WARNING: [FBW-1000] IMU not found\n");
         led_blink(1000);
     }
+    // TODO: GPS
 
     // Wi-Fly
     #ifdef WIFLY_ENABLED

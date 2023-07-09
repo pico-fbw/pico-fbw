@@ -4,16 +4,18 @@
 */
 
 #include <stdbool.h>
+#include <stdint.h>
+#include "../lib/pidtune.h"
 
 #include "../io/flash.h"
 #include "../io/pwm.h"
 #include "../io/imu.h"
 #include "../io/led.h"
-#include "../lib/pidtune.h"
-#include "../config.h"
 
 #include "modes.h"
 #include "flight.h"
+
+#include "../config.h"
 
 #include "tune.h"
 
@@ -87,7 +89,7 @@ bool mode_tuneCheckCalibration() {
     // Check to see if PID constants have not been manually defined
     #ifdef PID_AUTOTUNE
         // Read the first value from the second sector of flash and compare it to what we expect for the calibration flag
-        if ((flash_read(1, 0) == 0.3f) && (flash_read(2, 0) == 0.3f)) {
+        if ((flash_read(FLASH_SECTOR_PID0, 0) == 0.3f) && (flash_read(FLASH_SECTOR_PID1, 0) == 0.3f)) {
             return true;
         } else {
             return false;

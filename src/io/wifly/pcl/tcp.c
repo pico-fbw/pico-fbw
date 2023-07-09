@@ -9,9 +9,8 @@
  * Licensed under the GNU GPL-3.0
 */
 
-#include <string.h>
 #include <stdbool.h>
-
+#include <string.h>
 #include "pico/cyw43_arch.h"
 
 #include "lwip/pbuf.h"
@@ -31,10 +30,10 @@
 #define HTTP_RESPONSE_REDIRECT "HTTP/1.1 302 Redirect\nLocation: http://%s" REDIRECT "\n\n"
 #define REDIRECT "/wifly"
 
-int fplanStatus = -1; // Keeps track of if a flightplan has been submitted yet/if the submission was okay
+static int fplanStatus = WIFLY_STATUS_AWAITING; // Keeps track of if a flightplan has been submitted yet/if the submission was okay
 // Keeps track of if we are using accumulated headers and if they are complete yet
-bool useAccHeaders = false;
-bool accHeadersFinal = false;
+static bool useAccHeaders = false;
+static bool accHeadersFinal = false;
 
 static err_t tcp_close_client_connection(TCP_CONNECT_STATE_T *con_state, struct tcp_pcb *client_pcb, err_t close_err) {
     if (client_pcb) {

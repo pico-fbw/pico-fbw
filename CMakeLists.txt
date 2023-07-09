@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.13)
 
 include(src/pico_sdk_import.cmake)
+# For M-series Mac compatability
 set(CMAKE_SYSTEM_PROCESSOR arm)
 set(CMAKE_OSX_ARCHITECTURES "")
 

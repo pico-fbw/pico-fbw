@@ -1,7 +1,7 @@
 #include "../config.h"
 
-#ifndef gps_h
-#define gps_h
+#ifndef __GPS_H
+#define __GPS_H
 
 #define GPS_I2C i2c1
 
@@ -39,4 +39,4 @@ typedef struct gpsData {
 */
 gpsData gps_getData();
 
-#endif
+#endif // __GPS_H

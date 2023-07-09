@@ -5,22 +5,21 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
-
 #include "pico/multicore.h"
+#include "../lib/pid.h"
 
 #include "../io/imu.h"
 #include "../io/pwm.h"
 #include "../io/servo.h"
 #include "../io/flash.h"
 #include "../io/led.h"
-#include "../lib/pid.h"
-
-#include "../config.h"
 
 #include "modes.h"
 #include "auto.h"
 #include "tune.h"
 #include "flight.h"
+
+#include "../config.h"
 
 #include "normal.h"
 
@@ -106,5 +105,6 @@ void mode_normalSoftReset() {
 }
 
 void mode_normalDeinit() {
+    mode_normalSoftReset();
     multicore_reset_core1(); // Reset core 1 for use elsewhere
 }

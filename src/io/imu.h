@@ -1,7 +1,8 @@
+#include <stdint.h>
 #include "../config.h"
 
-#ifndef imu_h
-#define imu_h
+#ifndef __IMU_H
+#define __IMU_H
 
 // The i2c bus that will be used for the IMU
 #define IMU_I2C i2c0
@@ -85,4 +86,4 @@ inertialAccel imu_getAccel();
 */
 bool imu_changeMode(uint8_t mode);
 
-#endif // imu_h
+#endif // __IMU_H

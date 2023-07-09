@@ -5,8 +5,8 @@
 
 #include <stdbool.h>
 #include <stdio.h>
-
 #include "pico/binary_info.h"
+
 #include "hardware/i2c.h"
 #include "hardware/gpio.h"
 
@@ -16,18 +16,18 @@
 #include "imu.h"
 
 /**
- * A low(er)-level method that writes a value directly to the IMU over I2C.
+ * Writes a byte value directly to the IMU.
  * @param address The address to write to.
  * @param value The value to write.
  * @return Number of bytes written, or PICO_ERROR_GENERIC if address not acknowledged, no device present.
 */
-static int imu_write(uint8_t address, uint8_t value) {
+static inline int imu_write(uint8_t address, uint8_t value) {
     uint8_t cmd[2] = {address, value};
     return i2c_write_blocking(IMU_I2C, CHIP_REGISTER, cmd, 2, true);
 }
 
 int imu_init() {
-    FBW_DEBUG_printf("[i2c] initializing i2c subsystem\n");
+    FBW_DEBUG_printf("[imu] initializing i2c protocol\n");
     #ifdef IMU_BNO055
 		i2c_init(IMU_I2C, CHIP_FREQ_KHZ * 1000);
 		gpio_set_function(IMU_SDA_PIN, GPIO_FUNC_I2C);
@@ -67,7 +67,7 @@ void imu_deinit() {
 }
 
 bool imu_configure() {
-    FBW_DEBUG_printf("[imu] configuring IMU, watch for config data dump\n");
+    FBW_DEBUG_printf("[imu] configuring IMU\n");
     #ifdef IMU_BNO055
         FBW_DEBUG_printf("[imu] config: using IMU internal oscillator\n");
         imu_write(SYS_REGISTER, 0x40);

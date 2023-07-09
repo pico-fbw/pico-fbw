@@ -1,7 +1,7 @@
 #include "hardware/flash.h"
 
-#ifndef flash_h
-#define flash_h
+#ifndef __FLASH_H
+#define __FLASH_H
 
 /**
  * README:
@@ -21,6 +21,11 @@
  * 2       |  PID tuning flag / data
  * 3       |  Bootup flag
 */
+
+#define FLASH_SECTOR_PWM 0
+#define FLASH_SECTOR_PID0 1
+#define FLASH_SECTOR_PID1 2
+#define FLASH_SECTOR_BOOT 3
 
 // This is the size we will use for our arrays that we will write to flash--it's the amount of floats we can fit in one flash page.
 #define CONFIG_SECTOR_SIZE FLASH_SECTOR_SIZE/sizeof(float)
@@ -56,4 +61,4 @@ void flash_erase(uint sector);
 */
 void flash_reset();
 
-#endif // flash_h
+#endif // __FLASH_H

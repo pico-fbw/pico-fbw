@@ -1,5 +1,5 @@
-#ifndef normal_h
-#define normal_h
+#ifndef __NORMAL_H
+#define __NORMAL_H
 
 /**
  * Initializes normal mode.
@@ -7,7 +7,7 @@
 void mode_normalInit();
 
 /**
- * Executes one cycle of the normal mode.
+ * Executes one cycle of normal mode.
 */
 void mode_normal();
 
@@ -19,9 +19,9 @@ void mode_normal();
 void mode_normalSoftReset();
 
 /**
- * Fully resets/de-initializes normal mode.
+ * Fully de-initializes normal mode.
  * This also frees up the second core that it makes use of.
 */
 void mode_normalDeinit();
 
-#endif // normal_h
+#endif // __NORMAL_H

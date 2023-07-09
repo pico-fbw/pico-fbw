@@ -1,5 +1,5 @@
-#ifndef auto_h
-#define auto_h
+#ifndef __AUTO_H
+#define __AUTO_H
 
 /**
  * Initializes auto mode.
@@ -13,16 +13,16 @@ bool mode_autoInit();
     // TODO: do I need to change this for different speeds? idk if it will make too much of a difference, remember what aviation simmer said
 
     /**
-     * Executes one cycle of the auto mode.
+     * Executes one cycle of auto mode.
     */
     void mode_auto();
 
 #endif // WIFLY_ENABLED
 
 /**
- * Fully resets/de-initializes auto mode.
+ * Fully de-initializes auto mode.
  * This also frees up the second core that it makes use of.
 */
 void mode_autoDeinit();
 
-#endif // auto_h
+#endif // __AUTO_H

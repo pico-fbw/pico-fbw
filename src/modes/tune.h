@@ -1,8 +1,8 @@
-#ifndef tune_h
-#define tune_h
+#ifndef __TUNE_H
+#define __TUNE_H
 
 /**
- * Executes the tune mode.
+ * Executes tune mode.
 */
 void mode_tune();
 
@@ -12,4 +12,4 @@ void mode_tune();
 */
 bool mode_tuneCheckCalibration();
 
-#endif // tune_h
+#endif // __TUNE_H

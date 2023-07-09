@@ -17,11 +17,13 @@ Now, with that out of the way, let's get into the features of the system!
   - Auto-coordinated turns using a yaw damper
 - Implementation of direct mode (user inputs are transmitted directly to flight controls)
   - It can be easily activated with the use of a switch on the transmitter
-  - It can also be automatically activated if the system senses bad data
-- Fast and efficient computation leads to minimal input lag on the controls
-- Flexibility; the system can easily be reconfigured through a configuration file to suit your and your aircraft's needs
+- Wi-Fly allows you to easily upload flight plans over Wi-Fi to be automatically flown
+- Engineered and tested for safety all-around  
+- Heavy optimization for the Pico's hardware leads to minimal input lag on the controls
 - Extensive documentation to make setup and usage easy
+- Very cheap to get started; an easy entrypoint to automated RC flight
 - Support for both standard and Pico W models
+- Flexibility; the system can easily be reconfigured through a configuration file to suit your and your aircraft's needs
 - Fully open-source codebase with commented code
 
 ## Materials

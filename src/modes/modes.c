@@ -9,6 +9,7 @@
 #include "../io/imu.h"
 #include "../io/servo.h"
 #include "../io/led.h"
+
 #include "auto.h"
 #include "direct.h"
 #include "hold.h"
@@ -19,12 +20,12 @@
 
 #include "modes.h"
 
-uint8_t currentMode = DIRECT;
+static uint8_t currentMode = DIRECT;
 static bool imuDataSafe = false;
 
 void toMode(uint8_t newMode) {
     // Run deinit code for currentMode and then run init code for newMode
-    switch(currentMode) {
+    switch (currentMode) {
         case DIRECT:
             FBW_DEBUG_printf("[modes] exiting direct mode\n");
             break;
@@ -44,7 +45,7 @@ void toMode(uint8_t newMode) {
     }
     if (imuDataSafe) {
         led_blink_stop();
-        switch(newMode) {
+        switch (newMode) {
             case DIRECT:
                 FBW_DEBUG_printf("[modes] entering direct mode\n");
                 currentMode = DIRECT;
@@ -87,6 +88,8 @@ void toMode(uint8_t newMode) {
                 break;
             case HOLD:
                 FBW_DEBUG_printf("[modes] entering hold mode\n");
+                // Currently the only way of entering hold mode is from auto mode so we should deinit that first
+                mode_autoDeinit();
                 currentMode = HOLD;
                 break;
         }
@@ -117,7 +120,9 @@ void modeRuntime() {
             #endif
             break;
         case HOLD:
-            mode_hold();
+            #ifdef WIFLY_ENABLED
+                mode_hold();
+            #endif
             break;
     }
 }

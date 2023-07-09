@@ -1,5 +1,5 @@
-#ifndef tcp_h
-#define tcp_h
+#ifndef __TCP_H
+#define __TCP_H
 
 #include "../wifly.h"
 
@@ -32,4 +32,4 @@ bool tcp_server_open(void *arg);
 */
 void tcp_server_close(TCP_SERVER_T *state);
 
-#endif // tcp_h
+#endif // __TCP_H

@@ -1,5 +1,5 @@
-#ifndef math_h
-#define math_h
+#ifndef __NAV_H
+#define __NAV_H
 
 #define EARTH_RADIUS_NM 3443.93  // Earth radius in nautical miles
 
@@ -23,4 +23,4 @@ double calculateBearing(double latA, double lonA, double latB, double lonB);
 */
 double calculateDistance(double latA, double lonA, double latB, double lonB);
 
-#endif // math_h
+#endif // __NAV_H

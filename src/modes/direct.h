@@ -1,9 +1,9 @@
-#ifndef direct_h
-#define direct_h
+#ifndef __DIRECT_H
+#define __DIRECT_H
 
 /**
- * Executes one cycle of the direct mode.
+ * Executes one cycle of direct mode.
 */
 void mode_direct();
 
-#endif // direct_h
+#endif // __DIRECT_H

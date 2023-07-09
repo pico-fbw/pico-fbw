@@ -9,18 +9,20 @@
  * Licensed under the GNU GPL-3.0
 */
 
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
-#include <stdbool.h>
 
 #include "lwip/udp.h"
 
-#include "dns.h"
-
 #include "../wifly.h"
+
 #include "../../../config.h"
+
+#include "dns.h"
 
 #define PORT_DNS_SERVER 53
 

@@ -27,8 +27,8 @@
  * https://github.com/drbitboy/PID
 */
 
-#ifndef pid_h
-#define pid_h
+#ifndef __PID_H
+#define __PID_H
 
 typedef struct PIDController {
 
@@ -76,4 +76,4 @@ void pid_init(PIDController *pid);
 */
 void pid_update(PIDController *pid, double setpoint, double measurement);
 
-#endif // pid_h
+#endif // __PID_H

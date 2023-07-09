@@ -1,10 +1,17 @@
-#ifndef flight_h
-#define flight_h
+#ifndef __FLIGHT_H
+#define __FLIGHT_H
 
 #include "../io/imu.h"
+#include "../io/gps.h"
+
+#include "../config.h"
 
 // Contains the aircraft's inertial angles, will be updated whenever flight_update_core0() is called.
 extern inertialAngles aircraft;
+#ifdef WIFLY_ENABLED
+    // Contains the aircraft's GPS positioning data, will be updated whenever flight_update_core0() is called.
+    extern gpsData gps;
+#endif
 
 /**
  * Initializes the flight system (axis PIDs).
@@ -34,4 +41,4 @@ void flight_update_core0();
 */
 void flight_update_core1(double rollSetpoint, double pitchSetpoint, double yawSetpoint, bool yawOverride);
 
-#endif // flight_h
+#endif // __FLIGHT_H

@@ -5,14 +5,14 @@
 
 #include <stdbool.h>
 #include "pico/multicore.h"
+#include "../lib/pid.h"
+#include "../lib/nav.h"
 
 #include "../io/flash.h"
 #include "../io/imu.h"
 #include "../io/gps.h"
 #include "../io/led.h"
 #include "../io/wifly/wifly.h"
-#include "../lib/pid.h"
-#include "../lib/nav.h"
 
 #include "../config.h"
 
@@ -27,15 +27,14 @@
 
 static bool autoComplete = false;
 
-Waypoint *fplan = NULL;
-uint currentWptIdx = 0;
-Waypoint currentWpt;
+static Waypoint *fplan = NULL;
+static uint currentWptIdx = 0;
+static Waypoint currentWpt;
 
-gpsData gps;
-
-double distance; // Distance to current waypoint
-double bearing; // Bearing to current waypoint
-double alt; // Altitude target of current waypoint
+// Current waypoint information
+static double distance;
+static double bearing;
+static int_fast16_t alt;
 
 static PIDController latGuid;
 static PIDController vertGuid;
@@ -79,9 +78,9 @@ void mode_auto() {
         toMode(NORMAL);
         return;
     }
+    
     // Refresh flight and gps data
     flight_update_core0();
-    gps = gps_getData();
 
     // Calculate the distance to the current waypoint
     distance = calculateDistance(gps.lat, gps.lng, fplan[currentWptIdx].lat, fplan[currentWptIdx].lng);
@@ -94,7 +93,7 @@ void mode_auto() {
             toMode(HOLD);
             return;
         } else {
-            // Load the altitude--if it is -5 (default) just discard it
+            // Load the altitude--if it is -5 (default) just discard it (by setting it to our current alt; no change)
             if (fplan[currentWptIdx].alt < -5) {
                 alt = gps.alt;
             } else {
@@ -102,15 +101,13 @@ void mode_auto() {
             }
         }
     }
-    // Calculate the bearing to the current waypoint
+    // Calculate the up-to-date bearing to the current waypoint
     bearing = calculateBearing(gps.lat, gps.lng, fplan[currentWptIdx].lat, fplan[currentWptIdx].lng);
-    
-    // TODO still need to do altitude stuff
-
 }
 
-// TODO: once auto mode is complete make sure to add documentation for it on the wiki!
-// materials and how to use system will need updating and also a completely new wiki page for wifly and how to use it
+// TODO: Aadd documentation for auto mode on the wiki!
+// "materials" and "how to use system" need updating and also a completely new page for wifly and how to use it
+// also make sure to mention it in the readme
 
 #endif // WIFLY_ENABLED
 

@@ -22,50 +22,56 @@
                 <h2 class="centered" id="notify-text"></h2>
             </div>
         </div>
-        <div>
-            <div class="header">
-                <img class="icon" src="web/ico.png" alt="Wi-Fly icon">
-                <h2>Wi-Fly Flightplan Generator</h2>
-            </div>
 
-            <div id="map"></div>
-            <br>
-            <span class="add-waypoint">
-                <input class="manadd" id="manadd-lat" type="number" min="-90" max="90">
-                <input class="manadd" id="manadd-lng" type="number" min="-180" max="180">
-                <button id="manadd-btn">Add Waypoint</button>
-            </span>
-            <br>
-
-            <span>
-                <button id="generate">Generate Flightplan</button>
-            </span>
-            <br><br>
-            
+        <main>
             <div>
-                <textarea id="fplan" readonly></textarea>
+                <div class="header">
+                    <img class="icon" src="web/ico.png" alt="Wi-Fly icon">
+                    <h2>Wi-Fly Flightplan Generator</h2>
+                </div>
+
+                <div id="map"></div>
                 <br>
-                <div id="table-container">
-                    <table id="waypoints-table">
-                        <thead>
-                            <tr>
-                                <th>Waypoint</th>
-                                <th>Position</th>
-                                <th>Altitude</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody id="waypoints-body"></tbody>
-                    </table>
+                <span class="add-waypoint">
+                    <input class="manadd" id="manadd-lat" type="number" min="-90" max="90">
+                    <input class="manadd" id="manadd-lng" type="number" min="-180" max="180">
+                    <button id="manadd-btn">Add Waypoint</button>
+                </span>
+                <br>
+
+                <span>
+                    <button id="generate">Generate Flightplan</button>
+                </span>
+                <br><br>
+                
+                <div>
+                    <textarea id="fplan" readonly></textarea>
+                    <br>
+                    
+                    <div id="table-container">
+                        <table id="waypoints-table">
+                            <thead>
+                                <tr>
+                                    <th>Waypoint</th>
+                                    <th>Position</th>
+                                    <th>Altitude</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="waypoints-body"></tbody>
+                        </table>
+                    </div>
+                    <br>
+                    <button id="expand-table-btn">Expand Table</button>
                 </div>
                 <br>
-                <button id="expand-table-btn">Expand Table</button>
             </div>
+        </main>
 
-            <br>
-        </div>
-        <script src="web/map.js"></script>
-        <script src="web/gen.js"></script>
         <script src="web/btn.js"></script>
+        <script src="web/conf.js"></script>
+        <script src="web/gen.js"></script>
+        <script src="web/map.js"></script>
+        <script src="web/window.js"></script>
     </body>
 </html>

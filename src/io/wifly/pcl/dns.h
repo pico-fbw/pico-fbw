@@ -1,5 +1,5 @@
-#ifndef dns_h
-#define dns_h
+#ifndef __DNS_H
+#define __DNS_H
 
 /**
  * Copyright (c) 2022 Raspberry Pi (Trading) Ltd.
@@ -27,4 +27,4 @@ void dns_server_init(dns_server_t *d, ip_addr_t *ip);
 */
 void dns_server_deinit(dns_server_t *d);
 
-#endif // dns_h
+#endif // __DNS_H

@@ -1,5 +1,5 @@
-#ifndef dhcp_h
-#define dhcp_h
+#ifndef __DHCP_H
+#define __DHCP_H
 
 /*
  * This file is part of the MicroPython project, http://micropython.org/
@@ -63,4 +63,4 @@
 
 #endif // MICROPY_INCLUDED_LIB_NETUTILS_DHCPSERVER_H
 
-#endif // dhcp_h
+#endif // __DHCP_H

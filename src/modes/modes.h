@@ -1,7 +1,7 @@
 #include <stdbool.h>
 
-#ifndef modes_h
-#define modes_h
+#ifndef __MODES_H
+#define __MODES_H
 
 // Define internal mode aliases
 #define DIRECT 0
@@ -26,4 +26,4 @@ void modeRuntime();
 */
 void setIMUSafe(bool state);
 
-#endif // modes_h
+#endif // __MODES_H

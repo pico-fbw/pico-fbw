@@ -83,7 +83,7 @@ body {
 
 #map {
     touch-action: none;
-    height: 580px;
+    height: 500px;
     border-radius: 12px;
     border-radius: 8px;
 }
@@ -178,7 +178,7 @@ body {
 }
 
 #waypoints-table tr:hover {
-    background-color: #444444;
+    background-color: #434343;
 }
 
 /* Mobile-only styling*/

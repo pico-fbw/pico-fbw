@@ -1,4 +1,5 @@
 add_library(fbw_io
+    api.c
     flash.c
     gps.c
     imu.c

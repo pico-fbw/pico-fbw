@@ -1,5 +1,5 @@
-#ifndef wifly_h
-#define wifly_h
+#ifndef __WIFLY_H
+#define __WIFLY_H
 
 // Status codes for after a flightplan has been submitted
 #define WIFLY_STATUS_AWAITING -1
@@ -68,4 +68,4 @@ Waypoint *wifly_getFplan();
 */
 uint wifly_getWaypointCount();
 
-#endif // wifly_h
+#endif // __WIFLY_H

@@ -43,7 +43,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <math.h>
-
 #include "pico/time.h"
 
 #include "../config.h"

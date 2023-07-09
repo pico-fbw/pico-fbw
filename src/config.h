@@ -2,8 +2,8 @@
 
 /* IMPORTANT NOTE: All pins signifiy GPIO pin values, not physical pins!! Do NOT mix these up!!! */
 
-#ifndef config_h
-#define config_h
+#ifndef __CONFIG_H
+#define __CONFIG_H
 
 /** @section config */
 
@@ -59,7 +59,7 @@
  * Output pins do not have the same limitation as input pins do.
 */
 
-// The frequency to run your servos at (most are 50 and you shouldn't have to touch this).
+// The frequency to run your servos at (almost all are 50 and you shouldn't have to touch this).
 #define SERVO_HZ 50
 
 // Pin that the PWM wire on the AILERON servo is connected to.
@@ -286,4 +286,4 @@
 
 /* End of configuration. */
 
-#endif // config_h
+#endif // __CONFIG_H

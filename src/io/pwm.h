@@ -27,8 +27,8 @@
  * Check them out here: https://github.com/GitJer/Some_RPI-Pico_stuff/tree/main/PwmIn/PwmIn_4pins
 */
 
-#ifndef pwm_h
-#define pwm_h
+#ifndef __PWM_H
+#define __PWM_H
 
 /**
  * Enables PWM input functionality on the specified pins.
@@ -93,4 +93,4 @@ bool pwm_checkCalibration();
 */
 float pwm_getCalibrationValue(uint pin);
 
-#endif // pwm_h
+#endif // __PWM_H

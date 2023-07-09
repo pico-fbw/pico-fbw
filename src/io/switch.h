@@ -1,5 +1,5 @@
-#ifndef switch_h
-#define switch_h
+#ifndef __SWITCH_H
+#define __SWITCH_H
 
 /**
  * Updates the position of the mode switch.
@@ -8,4 +8,4 @@
 */
 void updateSwitch(uint8_t currentPos);
 
-#endif // switch_h
+#endif // __SWITCH_H

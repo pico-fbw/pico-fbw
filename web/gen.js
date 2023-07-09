@@ -3,28 +3,30 @@
  * Licensed under the GNU GPL-3.0
 */
 
-// These should always be the same as the versioncodes in version.h!!
-const FW_VERSION = "0.0.1";
-const WIFLY_VERSION = "1.0";
-
 var fplan = {
     version: WIFLY_VERSION,
     version_fw: FW_VERSION,
     waypoints: []
 };
-// Maximum length of the generated flightplan JSON (URL-encoded)
-// Please tell me if you're ever actually able to reach this lol
-const maxFplanLen = 16384;
+
+/* Reference constants */
 
 const field = document.getElementById("fplan");
 const tableBody = document.getElementById("waypoints-body");
 const altitudeInputs = document.getElementsByClassName("alt-input");
 const removeButtons = document.getElementsByClassName("rm-btn");
 
+/* State variable */
+
 var fplanGenerated = false;
 
+/* Global functions */
 
-function wifly_genFplan() {
+/**
+ * Parses the current flightplan into JSON and places it into the flightplan field.
+ * @returns true if generation succeeded, false if the flightplan was too long
+ */
+function gen_fplan() {
     // Convert the object to JSON string
     var fplanJSON = JSON.stringify(fplan, null, 0);
     // Encode it into a URL temporarily so we can check its length (this is how the Pico will recieve it)
@@ -32,12 +34,15 @@ function wifly_genFplan() {
         return false;
     } else {
         field.value = JSON.stringify(fplan, null, 0);
-        wifly_genWptTable();
+        gen_wptTable();
         return true;
     }
 }
 
-function wifly_genWptTable() {
+/**
+ * Generates the flightplan waypoints table.
+ */
+function gen_wptTable() {
     // Clear existing rows and repopulate based on the current flightplan list
     tableBody.innerHTML = "";
     fplan.waypoints.forEach((waypoint, index) => {
@@ -55,23 +60,27 @@ function wifly_genWptTable() {
         tableBody.appendChild(row);
     });
 
-    // Add event listeners for altitude input fields
+    // Add event listeners for altitude input fields and remove buttons (basically make them work)
     Array.from(altitudeInputs).forEach(input => {
-        input.addEventListener("input", handleAltitudeChange);
+        input.addEventListener("input", gen_altChangeCallback);
     });
-
-    // Add event listeners for remove buttons
     Array.from(removeButtons).forEach(button => {
-        button.addEventListener("click", removeButtonCallback);
+        button.addEventListener("click", btn_removeCallback);
     });
 }
 
-function handleAltitudeChange(event) {
+/* Local function */
+
+/**
+ * Callback for the altitude fields in the flightplan table.
+ * @param {Event} event The callback event.
+ */
+function gen_altChangeCallback(event) {
     var altitude = event.target.value;
     fplan.waypoints[event.target.dataset.index].alt = altitude;
     // Change the generate button's state because a waypoint has been modified
-    genButtonCopyState = false;
-    changeButton(genButton, "#A6710C", "Generate Flightplan");
+    genButtonState = false;
+    btn_change(genButton, state_generate);
     // Enable the unload prompt because a waypoint has been modified
-    promptBeforeUnload = true;
+    window_setPromptBeforeUnload(true);
 }

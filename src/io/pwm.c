@@ -35,8 +35,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-
 #include "pico/time.h"
+
 #include "hardware/pio.h"
 #include "hardware/irq.h"
 
@@ -197,7 +197,7 @@ bool pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint
 bool pwm_checkCalibration() {
     // Read the first value from the first sector of flash, this holds the value that is changed when calibration is completed, and
     // return true/false based on what value we actually saw vs. what we expect
-    if (flash_read(0, 0) == 0.5f) {
+    if (flash_read(FLASH_SECTOR_PWM, 0) == 0.5f) {
         return true;
     // Usually, this will turn out to be either 0 if the flash has not been programmed yet or 1 if it has been previously erased/reset
     } else {
@@ -211,5 +211,5 @@ float pwm_getCalibrationValue(uint pin) {
         pin = 0;
     #endif
     // Read the value of pin + 1 from the first sector, this will ensure we don't read the calibration flag instead
-    return flash_read(0, pin + 1);
+    return flash_read(FLASH_SECTOR_PWM, pin + 1);
 }
