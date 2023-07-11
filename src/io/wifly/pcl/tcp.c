@@ -182,7 +182,7 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err
             // Generate content
             con_state->result_len = server_content(request, params, con_state->result, sizeof(con_state->result));
             TCP_DEBUG_printf("[tcp] request: %s?%s\n", request, params);
-            TCP_DEBUG_printf("[tcp] result: %d\n", con_state->result_len);
+            TCP_DEBUG_printf("[tcp] result_len: %d\n", con_state->result_len);
 
             // Check we had enough buffer space
             if (con_state->result_len > sizeof(con_state->result) - 1) {
@@ -207,30 +207,6 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err
 
             // Send the headers to the client
             con_state->sent_len = 0;
-            err_t err = tcp_write(pcb, con_state->headers, con_state->header_len, TCP_WRITE_FLAG_MORE);
-            if (err != ERR_OK) {
-                FBW_DEBUG_printf("[tcp] ERROR: failed to write header data %d\n", err);
-                return tcp_close_client_connection(con_state, pcb, err);
-            }
-
-            // Send the body to the client
-            if (con_state->result_len) {
-                // Loop to send the result in multiple packets if needed
-                for (size_t i = 0; i < con_state->result_len; i += TCP_MSS) {
-                    size_t remaining = con_state->result_len - i;
-                    size_t len = remaining > TCP_MSS ? TCP_MSS : remaining;
-                    err = tcp_write(pcb, con_state->result + i, len, (i + len) == con_state->result_len ? 0 : TCP_WRITE_FLAG_MORE);
-                    if (err != ERR_OK) {
-                        FBW_DEBUG_printf("[tcp] ERROR: failed to write result data %d\n", err);
-                        return tcp_close_client_connection(con_state, pcb, err);
-                    }
-                }
-            }
-
-            /* If the code to send larger bodies doesn't work (I can't test currently I have no Pico lol), here is the original:
-
-            // Send the headers to the client
-            con_state->sent_len = 0;
             err_t err = tcp_write(pcb, con_state->headers, con_state->header_len, 0);
             if (err != ERR_OK) {
                 FBW_DEBUG_printf("[tcp] ERROR: failed to write header data %d\n", err);
@@ -245,8 +221,6 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err
                     return tcp_close_client_connection(con_state, pcb, err);
                 }
             }
-
-            */
 
             // Clean up accumulated headers if necessary
             if (accHeadersFinal) {

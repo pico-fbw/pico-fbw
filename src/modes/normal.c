@@ -5,8 +5,7 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
-#include "pico/multicore.h"
-#include "../lib/pid.h"
+#include <stdio.h>
 
 #include "../io/imu.h"
 #include "../io/pwm.h"
@@ -32,22 +31,14 @@ static double pitchSet;
 
 static bool overrideYaw = false;
 
-// Internal function that we will later push to the second core to compute the PID math for all controllers
-static inline void normal_compute() {
-    while (true) {
-        flight_update_core1(rollSet, pitchSet, yawInput, overrideYaw);
-    }
-}
-
 void mode_normalInit() {
-    // Initialize (clear) PIDs and launch them on core 1
+    // Initialize (clear) PIDs
     flight_init();
-    multicore_launch_core1(normal_compute);
 }
 
 void mode_normal() {
     // Refresh flight data and input data from rx
-    flight_update_core0();
+    flight_update((double)rollSet, (double)pitchSet, (double)yawInput, (double)overrideYaw);
     rollInput = pwm_readDeg(0) - 90;
     pitchInput = pwm_readDeg(1) - 90;
     yawInput = pwm_readDeg(2) - 90;
@@ -98,13 +89,8 @@ void mode_normal() {
     }
 }
 
-void mode_normalSoftReset() {
+void mode_normalDeinit() {
     rollSet = 0.0;
     pitchSet = 0.0;
     overrideYaw = false;
-}
-
-void mode_normalDeinit() {
-    mode_normalSoftReset();
-    multicore_reset_core1(); // Reset core 1 for use elsewhere
 }

@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include "pico/platform.h"
 #include "pico/stdio.h"
 #include "pico/time.h"
 
@@ -34,28 +35,55 @@ int main() {
     absolute_time_t imu_safe = make_timeout_time_ms(850);
     stdio_init_all();
     #ifdef FBW_DEBUG
-        sleep_ms(800); // Wait for serial to begin
-    #endif  
-    FBW_DEBUG_printf("hello and welcome to pico-fbw v%s!\n\n", PICO_FBW_VERSION);
+        sleep_ms(650); // Wait for serial to begin
+    #endif
+    #ifdef RASPBERRYPI_PICO
+        FBW_DEBUG_printf("\nhello and welcome to pico-fbw v%s!\n", PICO_FBW_VERSION);
+    #endif
     #ifdef RASPBERRYPI_PICO_W
+        FBW_DEBUG_printf("\nhello and welcome to pico-fbw(w) v%s!\n", PICO_FBW_VERSION);
         #ifdef WIFLY_ENABLED
-            FBW_DEBUG_printf("[init] initializing cyw43 architecture with predefined country %04X\n", WIFLY_NETWORK_COUNTRY);
+            FBW_DEBUG_printf("[driver] initializing cyw43 architecture with predefined country 0x%04X\n", WIFLY_NETWORK_COUNTRY);
             cyw43_arch_init_with_country(WIFLY_NETWORK_COUNTRY);
         #else
-            FBW_DEBUG_printf("[init] initializing cyw43 architecture without country\n");
+            FBW_DEBUG_printf("[driver] initializing cyw43 architecture without country\n");
             cyw43_arch_init();
         #endif
     #endif
-    FBW_DEBUG_printf("[init] initializing status LED\n");
     led_init();
+    switch (rp2040_chip_version()) {
+        case 1:
+            FBW_DEBUG_printf("[driver] you are using rp2040 chip rev B0/B1\n");
+            break;
+        case 2:
+            FBW_DEBUG_printf("[driver] you are using rp2040 chip rev B2\n");
+            break;
+        default:
+            FBW_DEBUG_printf("[driver] WARNING: unknown chip revision\n");
+            break;
+    }
+    switch (rp2040_rom_version()) {
+        case 1:
+            FBW_DEBUG_printf("[driver] you are using ROM rev RP2040-B0\n");
+            break;
+        case 2:
+            FBW_DEBUG_printf("[driver] you are using ROM rev RP2040-B1\n");
+            break;
+        case 3:
+            FBW_DEBUG_printf("[driver] you are using ROM rev RP2040-B2\n");
+            break;
+        default:
+            FBW_DEBUG_printf("[driver] WARNING: unknown ROM revision\n");
+            break;
+    }
 
     // Check for first boot
-    FBW_DEBUG_printf("[init] initializing bootup process\n\n");
+    FBW_DEBUG_printf("[driver] starting bootup process\n");
     if (flash_read(FLASH_SECTOR_BOOT, 0) != FBW_BOOT) {
         FBW_DEBUG_printf("[boot] boot flag not found! assuming first boot, initializing flash\n");
         flash_reset();
         float boot[CONFIG_SECTOR_SIZE] = {FBW_BOOT};
-        flash_write(3, boot);
+        flash_write(FLASH_SECTOR_BOOT, boot);
         FBW_DEBUG_printf("[boot] boot data written successfully! rebooting now...\n");
         watchdog_enable(1, 1);
         while (true);
@@ -111,7 +139,6 @@ int main() {
     for (uint8_t s = 0; s < 3; s++) {
         servo_set(servos[s], 90);
     }
-    FBW_DEBUG_printf("[boot] servos ok\n");
 
     // IMU
     sleep_until(imu_safe);
@@ -128,38 +155,39 @@ int main() {
         FBW_DEBUG_printf("[boot] WARNING: [FBW-1000] IMU not found\n");
         led_blink(1000);
     }
-    // TODO: GPS
+    // TODO: GPS initialization
 
     // Wi-Fly
     #ifdef WIFLY_ENABLED
-        FBW_DEBUG_printf("\n[boot] initializing Wi-Fly\n");
+        FBW_DEBUG_printf("[boot] initializing Wi-Fly\n");
         wifly_init();
     #endif
 
-    // Main program loop: update the mode switch's position, then run the mode's runtime
-    FBW_DEBUG_printf("\n[boot] bootup complete! entering main program loop...\n\n");
+    // Main program loop: update the mode switch's position, then run the current mode's runtime
+    FBW_DEBUG_printf("[boot] bootup complete! entering main program loop...\n");
     while (true) {
+        float switchPos = pwm_readDeg(3);
         #ifdef SWITCH_2_POS
-            if (pwm_readDeg(3) < 90) {
+            if (switchPos < 90) {
                 // Lower pos
                 updateSwitch(DIRECT);
             } else {
                 // Upper pos
                 updateSwitch(NORMAL);
             }
-        #endif // switch_2_pos
+        #endif // SWITCH_2_POS
         #ifdef SWITCH_3_POS
-            if (pwm_readDeg(3) < 85) {
+            if (switchPos < 85) {
                 // Lower pos
                 updateSwitch(DIRECT);
-            } else if (pwm_readDeg(3) > 95) {
+            } else if (switchPos > 95) {
                 // Upper pos
                 updateSwitch(AUTO);
             } else {
                 // Middle pos
                 updateSwitch(NORMAL);
             }
-        #endif // switch_3_pos
+        #endif // SWITCH_3_POS
         modeRuntime();
     }
 

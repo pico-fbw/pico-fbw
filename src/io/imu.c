@@ -69,21 +69,14 @@ void imu_deinit() {
 bool imu_configure() {
     FBW_DEBUG_printf("[imu] configuring IMU\n");
     #ifdef IMU_BNO055
-        FBW_DEBUG_printf("[imu] config: using IMU internal oscillator\n");
         imu_write(SYS_REGISTER, 0x40);
-        FBW_DEBUG_printf("[imu] config: resetting interrupts\n");
         imu_write(SYS_REGISTER, 0x01);
-        FBW_DEBUG_printf("[imu] config: setting normal power mode\n");
         imu_write(PWR_MODE_REGISTER, PWR_MODE_NORMAL);
         sleep_ms(50);
-        FBW_DEBUG_printf("[imu] config: settinf default axis configuration\n");
         imu_write(AXIS_MAP_CONF_REGISTER, 0x24);
-        FBW_DEBUG_printf("[imu] config: setting default axis signs\n");
         imu_write(AXIS_MAP_SIGN_REGISTER, 0x00);
-        FBW_DEBUG_printf("[imu] config: setting acceleration units to milli-Gs\n");
         imu_write(0x3B, 0b00000001);
         sleep_ms(30);
-        FBW_DEBUG_printf("[imu] config: attempting to set NDOF mode\n");
         return imu_changeMode(MODE_NDOF);
     #else
         #warning No sutable IMU could be found for configuration, this may cause problems later.
@@ -137,6 +130,7 @@ inertialAccel imu_getAccel() {
 }
 
 bool imu_changeMode(uint8_t mode) {
+    FBW_DEBUG_printf("[imu] changing to mode 0x%02X\n", mode);
     imu_write(OPR_MODE_REGISTER, mode);
     sleep_ms(100);
     // Check to ensure mode has changed properly by reading it back

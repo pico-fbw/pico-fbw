@@ -31,7 +31,7 @@ void toMode(uint8_t newMode) {
             break;
         case NORMAL:
             FBW_DEBUG_printf("[modes] exiting normal mode\n");
-            mode_normalSoftReset();
+            mode_normalDeinit();
             break;
         case AUTO:
             FBW_DEBUG_printf("[modes] exiting auto mode\n");
@@ -52,30 +52,38 @@ void toMode(uint8_t newMode) {
                 break;
             case NORMAL:
                 // Automatically enter tune mode if necessary
-                if (mode_tuneCheckCalibration()) {
-                    FBW_DEBUG_printf("[modes] entering normal mode\n");
-                    mode_autoDeinit(); // Deinit auto mode, it can conflict with normal mode
-                    mode_normalInit();
-                    currentMode = NORMAL;
-                } else {
-                    toMode(TUNE);
-                    return;
-                }
-                break;
-            case AUTO:
-                if (mode_tuneCheckCalibration()) {
-                    FBW_DEBUG_printf("[modes] entering auto mode\n");
-                    mode_normalDeinit(); // Deinit normal mode, it can conflict with auto mode
-                    if (mode_autoInit()) {
-                        currentMode = AUTO;
-                    } else {
-                        toMode(NORMAL);
+                #ifdef PID_AUTOTUNE
+                    if (!mode_tuneCheckCalibration()) {
+                        toMode(TUNE);
                         return;
                     }
-                } else {
+                #else
+                    FBW_DEBUG_printf("[modes] entering normal mode\n");
+                    mode_normalInit();
+                    currentMode = NORMAL;
+                #endif
+                break;
+            case AUTO:
+                #ifdef PID_AUTOTUNE
+                if (!mode_tuneCheckCalibration()) {
                     toMode(TUNE);
                     return;
                 }
+                #else
+                    #ifdef WIFLY_ENABLED
+                        FBW_DEBUG_printf("[modes] entering auto mode\n");
+                        if (mode_autoInit()) {
+                            currentMode = AUTO;
+                        } else {
+                            toMode(NORMAL);
+                            return;
+                        }
+                    #else
+                        // Wi-Fly is required to run auto mode, fallback to normal mode
+                        toMode(NORMAL);
+                        return;
+                    #endif
+                #endif
                 break;
             case TUNE:
                 if (!mode_tuneCheckCalibration()) {
@@ -88,8 +96,6 @@ void toMode(uint8_t newMode) {
                 break;
             case HOLD:
                 FBW_DEBUG_printf("[modes] entering hold mode\n");
-                // Currently the only way of entering hold mode is from auto mode so we should deinit that first
-                mode_autoDeinit();
                 currentMode = HOLD;
                 break;
         }

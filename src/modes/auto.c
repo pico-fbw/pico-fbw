@@ -4,7 +4,6 @@
 */
 
 #include <stdbool.h>
-#include "pico/multicore.h"
 #include "../lib/pid.h"
 #include "../lib/nav.h"
 
@@ -39,38 +38,20 @@ static int_fast16_t alt;
 static PIDController latGuid;
 static PIDController vertGuid;
 
-static inline void auto_compute() {
-    while (true) {
-        // Nested PIDs; latGuid and vertGuid use imu & gps data to command bank/pitch angles which the flight PIDs then use to actuate servos
-        pid_update(&latGuid, bearing, aircraft.heading);
-        pid_update(&vertGuid, alt, gps.alt);
-        flight_update_core1(latGuid.out, vertGuid.out, 0, false);
-    }
-}
-
-#endif // WIFLY_ENABLED
-
 bool mode_autoInit() {
-    #ifdef WIFLY_ENABLED
-        // Import the flightplan data from Wi-Fly and check if it's valid
-        fplan = wifly_getFplan();
-        if (fplan == NULL || wifly_getWaypointCount() == 0) {
-            return false;
-        }
-        // Initialize (clear) PIDs and launch them on core 1
-        flight_init();
-        latGuid = (PIDController){latGuid_kP, latGuid_kI, latGuid_kD, latGuid_tau, -latGuid_lim, latGuid_lim, latGuid_integMin, latGuid_integMax, latGuid_kT};
-        vertGuid = (PIDController){vertGuid_kP, vertGuid_kI, vertGuid_kD, vertGuid_tau, vertGuid_loLim, vertGuid_upLim, vertGuid_integMin, vertGuid_integMax, vertGuid_kT};
-        pid_init(&latGuid);
-        pid_init(&vertGuid);
-        multicore_launch_core1(auto_compute);
-        return true;
-    #else
+    // Import the flightplan data from Wi-Fly and check if it's valid
+    fplan = wifly_getFplan();
+    if (fplan == NULL || wifly_getWaypointCount() == 0) {
         return false;
-    #endif // WIFLY_ENABLED
+    }
+    // Initialize (clear) PIDs
+    flight_init();
+    latGuid = (PIDController){latGuid_kP, latGuid_kI, latGuid_kD, latGuid_tau, -latGuid_lim, latGuid_lim, latGuid_integMin, latGuid_integMax, latGuid_kT};
+    vertGuid = (PIDController){vertGuid_kP, vertGuid_kI, vertGuid_kD, vertGuid_tau, vertGuid_loLim, vertGuid_upLim, vertGuid_integMin, vertGuid_integMax, vertGuid_kT};
+    pid_init(&latGuid);
+    pid_init(&vertGuid);
+    return true;
 }
-
-#ifdef WIFLY_ENABLED
 
 void mode_auto() {
     // Don't allow re-entering auto mode after the user has exited hold mode and auto is complete
@@ -79,8 +60,10 @@ void mode_auto() {
         return;
     }
     
-    // Refresh flight and gps data
-    flight_update_core0();
+    // Nested PIDs; latGuid and vertGuid use imu & gps data to command bank/pitch angles which the flight PIDs then use to actuate servos
+    pid_update(&latGuid, bearing, aircraft.heading);
+    pid_update(&vertGuid, alt, gps.alt);
+    flight_update(latGuid.out, vertGuid.out, 0, false);
 
     // Calculate the distance to the current waypoint
     distance = calculateDistance(gps.lat, gps.lng, fplan[currentWptIdx].lat, fplan[currentWptIdx].lng);
@@ -110,7 +93,3 @@ void mode_auto() {
 // also make sure to mention it in the readme
 
 #endif // WIFLY_ENABLED
-
-void mode_autoDeinit() {
-    multicore_reset_core1(); // Reset core 1 for use elsewhere
-}

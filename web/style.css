@@ -182,7 +182,7 @@ body {
 }
 
 /* Mobile-only styling*/
-@media only screen and (max-width: 600px) {
+@media only screen and (max-width: 576px) {
     /* For waypoints table */
     #table-container {
         overflow-x: auto;

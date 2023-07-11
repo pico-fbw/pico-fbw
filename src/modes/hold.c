@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include "pico/multicore.h"
 #include "pico/time.h"
 #include "../lib/pid.h"
 
@@ -28,13 +27,6 @@ static double rollSet;
 
 static PIDController vertGuid;
 
-static inline void hold_compute() {
-    while (true) {
-        pid_update(&vertGuid, targetAlt, gps.alt);
-        flight_update_core1(rollSet, vertGuid.out, 0, false);
-    }
-}
-
 // Callback for when a turnaround should be completed in a holding pattern.
 static int64_t hold_callback(alarm_id_t id, void *data) {
     // Get current heading (beginning of the turn)
@@ -45,7 +37,7 @@ static int64_t hold_callback(alarm_id_t id, void *data) {
         targetHeading -= 360;
     }
     turnStatus = HOLD_TURN_INPROGRESS;
-    return 0; // Tells Pico to not reschedule alarm, we will wait until the turn is over to do that
+    return 0; // Tells Pico to not reschedule alarm, we will wait until the turn is complete to do that
 }
 
 void mode_holdInit() {
@@ -54,11 +46,12 @@ void mode_holdInit() {
     vertGuid = (PIDController){vertGuid_kP, vertGuid_kI, vertGuid_kD, vertGuid_tau, vertGuid_loLim, vertGuid_upLim, vertGuid_integMin, vertGuid_integMax, vertGuid_kT};
     pid_init(&vertGuid);
     targetAlt = gps.alt; // targetAlt is just the current alt from whenever we enter the mode
-    multicore_launch_core1(hold_compute);
 }
 
 void mode_hold() {
-    flight_update_core0();
+    pid_update(&vertGuid, targetAlt, gps.alt);
+    flight_update(rollSet, vertGuid.out, 0, false);
+
     switch (turnStatus) {
         case HOLD_AWAITING_TURN:
             break;
@@ -69,7 +62,6 @@ void mode_hold() {
             } else {
                 // We've reached the desired angle, now we need to wait for the turn to complete
                 turnStatus = HOLD_TURN_INPROGRESS;
-                // TODO: possibly set an alarm here just in case something goes wrong and we don't intercept within like 30s; revert to direct?
             }
             break;    
         case HOLD_TURN_INPROGRESS:
@@ -103,7 +95,3 @@ void mode_hold() {
 }
 
 #endif // WIFLY_ENABLED
-
-void mode_holdDeinit() {
-    multicore_reset_core1();
-}

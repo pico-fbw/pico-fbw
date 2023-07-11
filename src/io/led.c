@@ -5,18 +5,17 @@
 
 #include <stdbool.h>
 #include <stdio.h>
-#include "pico/binary_info.h"
 #include "pico/time.h"
-
-#include "hardware/gpio.h"
 
 #include "led.h"
 
 #if defined(RASPBERRYPI_PICO)
+    #include "hardware/gpio.h"
     #define LED_PIN PICO_DEFAULT_LED_PIN
 #elif defined(RASPBERRYPI_PICO_W)
     #include "pico/cyw43_arch.h"
     #define LED_PIN CYW43_WL_GPIO_LED_PIN
+    char buf[1];
 #else
     #warning Neither a Pico or Pico W build target were found, LED functionality is disabled.
     #undef LED_PIN
@@ -32,7 +31,7 @@ static inline bool led_callback(struct repeating_timer *t) {
             gpio_xor_mask(1u << LED_PIN);
         #elif defined(RASPBERRYPI_PICO_W)
             cyw43_arch_gpio_put(LED_PIN, !cyw43_arch_gpio_get(LED_PIN));
-            printf(" "); // FIXME: I kid you not, the program just freezes without this print statement. No idea why.
+            snprintf(buf, sizeof(buf), " "); // There's a bug in the cyw43 arch where the LED just acts sporadically, this fixes it
         #endif
     #endif
 }

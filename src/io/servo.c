@@ -51,7 +51,6 @@ int servo_enable(const uint gpio_pin) {
     const uint8_t slice = pwm_gpio_to_slice_num(gpio_pin);
     const uint freq = SERVO_HZ;
     uint32_t source_hz = clock_get_hz(clk_sys);
-    FBW_DEBUG_printf("[servo] finding optimal frequency\n");
     uint32_t div16_top = 16 * source_hz / freq;
     uint32_t top = 1;
     for (;;) {
@@ -76,7 +75,7 @@ int servo_enable(const uint gpio_pin) {
         FBW_DEBUG_printf("[servo] ERROR: frequency too small\n");
         return 1;
     }
-    FBW_DEBUG_printf("[servo] enabling servo\n");
+    FBW_DEBUG_printf("[servo] optimal frequency is %dHz\n", freq);
     pwm_hw->slice[slice].div = div16_top;
     pwm_hw->slice[slice].top = top;
     return 0;

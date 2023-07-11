@@ -73,28 +73,22 @@ static void pwm_internal_handler() {
 void pwm_enable(uint *pin_list, uint num_pins) {
     gb_num_pins = num_pins;
     pio = pio0;
-    FBW_DEBUG_printf("[pwm] loading PWM IN pio into pio0\n");
+    FBW_DEBUG_printf("[pwm] loading PWM IN into pio0 with %d state machines\n", num_pins);
     uint offset = pio_add_program(pio, &pwm_program);
-    FBW_DEBUG_printf("[pwm] starting %d state machines\n", num_pins);
     for (int i = 0; i < num_pins; i++) {
-        FBW_DEBUG_printf("[pwm] preparing state machine %d\n", i);
+        FBW_DEBUG_printf("[pwm] preparing state machine %d on pin %d\n", i, pin_list[i]);
         pulsewidth[i] = 0;
         period[i] = 0;
-        FBW_DEBUG_printf("[pwm] giving PIO control of pin %d\n", pin_list[i]);
         gpio_pull_down(pin_list[i]);
         pio_gpio_init(pio, pin_list[i]);
-        FBW_DEBUG_printf("[pwm] setting state machine config\n");
         pio_sm_config c = pwm_program_get_default_config(offset);
-        FBW_DEBUG_printf("[pwm] setting state machine pins\n");
         sm_config_set_jmp_pin(&c, pin_list[i]);
         sm_config_set_in_pins(&c, pin_list[i]);
         sm_config_set_in_shift(&c, false, false, 0);
-        FBW_DEBUG_printf("[pwm] initializing and enabling state machine\n");
         pio_sm_init(pio, i, offset, &c);
         pio_sm_set_enabled(pio, i, true);
     }
-    FBW_DEBUG_printf("[pwm] state machines ok\n");
-    FBW_DEBUG_printf("[pwm] setting up and enabling PIO interrupts\n");
+    FBW_DEBUG_printf("[pwm] state machines ok, setting up interrupts\n");
     irq_set_exclusive_handler(PIO0_IRQ_0, pwm_internal_handler);
     irq_set_enabled(PIO0_IRQ_0, true);
     pio0_hw->inte0 = PIO_IRQ0_INTE_SM0_BITS | PIO_IRQ0_INTE_SM1_BITS | PIO_IRQ0_INTE_SM2_BITS | PIO_IRQ0_INTE_SM3_BITS ;
@@ -189,7 +183,7 @@ bool pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint
     }
     // Write calibration data to sector "0", last sector of flash
     FBW_DEBUG_printf("[pwm] writing calibration data to flash\n");
-    flash_write(0, calibration_data);
+    flash_write(FLASH_SECTOR_PWM, calibration_data);
     led_blink_stop();
     return true;
 }

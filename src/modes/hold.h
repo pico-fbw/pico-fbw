@@ -1,6 +1,8 @@
 #ifndef __HOLD_H
 #define __HOLD_H
 
+#ifdef WIFLY_ENABLED
+
 // The amount of time (in seconds) that the aircraft will fly straight for in the holding pattern, before turning back around 180 degrees.
 #define HOLD_TIME_PER_LEG_S 30
 
@@ -32,10 +34,6 @@ void mode_holdInit();
 */
 void mode_hold();
 
-/**
- * Fully de-initializes hold mode.
- * This also frees up the second core that it makes use of.
-*/
-void mode_holdDeinit();;
+#endif // WIFLY_ENABLED
 
 #endif // __HOLD_H
