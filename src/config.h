@@ -1,113 +1,139 @@
-// This file contains all replaceable constants and other common config values used throughout the project.
-
 /* IMPORTANT NOTE: All pins signifiy GPIO pin values, not physical pins!! Do NOT mix these up!!! */
 
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
-/** @section config */
 
-// Define the type of mode switch you are using, a 3-pos is recommended.
-#define SWITCH_3_POS
-// #define SWITCH_2_POS
-// Pin that the PWM wire from the reciever SWITCH channel is connected to.
-#define MODE_SWITCH_PIN 7
 
-// Define if you want the system to calibrate each of your input PWM channels seperately.
-// If not defined, the system will only sample channel 0 and apply those values to everything.
-#define CONFIGURE_INPUTS_SEPERATELY
+/** @section control */
 
-/**
- * The maximum value the system will accept as a calibration offset value for PWM input signals.
- * If any of the calibration (aileron, elevator, rudder, or switch) channels are larger than this value, the system will throw an error and fail to initialize.
- * Increase this value if you are experiening error FBW-500, however note you may be unprotected from bad calibration data.
-*/
-#define MAX_CALIBRATION_OFFSET 20
-
-/**
- * The value that decides how much values from the reciever are scaled down before being added to the setpoint value.
- * Smaller values mean handling will be more like a larger plane, and larger values mean handling will be more like a typical RC plane.
- * This should be quite a small value--the setpoint is calculated many times per second!
-*/
+/* Values from the reciever are multiplied by this in normal mode.
+Smaller values mean handling will be more sluggish like a larger plane, and larger values mean handling will be more agile like a typical RC plane.
+This will be quite a small value--the setpoint is calculated many times per second! */
 #define SETPOINT_SMOOTHING_VALUE 0.00075
 
-// The value that decides how much the aileron inputs are scaled up/down directly to become the rudder inputs.
-// Does not apply during direct mode.
+/* Decides how much the aileron input is scaled up/down to become the rudder input during turns, does not apply during direct mode. */
 #define RUDDER_TURNING_VALUE 1.5
 
-// If the degrees reading from any of the inputs are below this value, the inputs will be disregarded.
-// Does not apply during direct mode.
+/* If the degree reading from any of the inputs are below this value, the inputs will be disregarded, does not apply during direct mode. */
 #define DEADBAND_VALUE 2
 
 
-/** @section input 
- * Note that all PWM input pins must be mapped to a GPIO pin on a PWM_B channel.
- * At the time of writing this is simply odd number GPIO pins, but be sure to check a pinout just in case if you plan on modifying the pins.
-*/
 
-// Pin that the PWM wire from the reciever AILERON channel is connected to.
-#define INPUT_AIL_PIN 1
+/** @section general */
 
-// Pin that the PWM wire from the reciever ELEVATOR channel is connected to.
-#define INPUT_ELEV_PIN 3
+/* Define the type of mode switch you are using, 3-pos is default and recommended. */
+#define SWITCH_3_POS
+// #define SWITCH_2_POS
 
-// Pin that the PWM wire from the reciever RUDDER channel is connected to.
-#define INPUT_RUD_PIN 5
+/* Define if you want the system to calibrate each of your input PWM channels seperately.
+If not defined, the system will only sample channel 0 and apply that value to all channels. */
+#define CONFIGURE_INPUTS_SEPERATELY
 
+/* The maximum value the system will accept as a calibration offset value for PWM input signals.
+If any of the calibration (aileron, elevator, rudder, or switch) channels are larger than this value, the system will throw the error FBW-500 and fail to initialize.
+Increase this value if you are experiening error FBW-500, however note you may be unprotected from bad calibration data. */
+#define MAX_CALIBRATION_OFFSET 20
 
-/** @section servo/output
- * Output pins do not have the same limitation as input pins do.
-*/
-
-// The frequency to run your servos at (almost all are 50 and you shouldn't have to touch this).
+/* The frequency to run your servos at (almost all are 50 and you shouldn't have to touch this). */
 #define SERVO_HZ 50
 
-// Pin that the PWM wire on the AILERON servo is connected to.
-#define SERVO_AIL_PIN 2
 
-// Pin that the PWM wire on the ELEVATOR servo is connected to.
-#define SERVO_ELEV_PIN 4
 
-// Pin that the PWM wire on the RUDDER servo is connected to.
-#define SERVO_RUD_PIN 6
+/** @section pins
+ * Note that all PWM input pins must be mapped to a GPIO pin on a PWM_B channel.
+ * At the time of writing this is simply odd number GPIO pins, but be sure to check a pinout just in case if you plan on modifying the pins.
+ * Output pins do not have this limitation (they are controllable by all PWM channels which are present on almost all pins).
+*/
+
+#define INPUT_AIL_PIN 1 // Pin that the PWM signal wire from the reciever AILERON channel is connected to.
+#define SERVO_AIL_PIN 2 // Pin that the PWM wire on the AILERON servo is connected to.
+
+#define INPUT_ELEV_PIN 3 // Pin that the PWM signal wire from the reciever ELEVATOR channel is connected to.
+#define SERVO_ELEV_PIN 4 // Pin that the PWM wire on the ELEVATOR servo is connected to.
+
+#define INPUT_RUD_PIN 5 // Pin that the PWM signal wire from the reciever RUDDER channel is connected to.
+#define SERVO_RUD_PIN 6 // Pin that the PWM wire on the RUDDER servo is connected to.
+
+#define MODE_SWITCH_PIN 7 // Pin that the PWM signa wire from the reciever SWITCH channel is connected to.
+
 
 
 /** @section limits 
- * Keep in mind that there are hard limits imposed within normal mode that are not accessible within this configuration.
- * If an angle of 72 degrees of bank, 35 degrees of pitch up, or 20 degrees of pitch down is detected from the IMU, the system will revert back to direct mode.
- * 
- * Most of the default values are the same values from an Airbus A320 aricraft--thanks to the MSFS FlyByWire team for their great documentation!
+ * Keep in mind that there are hard limits imposed that are not accessible within this configuration (72 degrees of bank, 35 degrees of pitch up, and 20 degrees of pitch down).
 */
 
-// The maximum roll angle that the system will attempt to stabilize.
-// A constant input is required to keep a roll within this and the ROLL_LIMIT_HOLD value.
+/* The maximum roll angle that the system will attempt to stabilize; a constant input is required to keep a roll within this and ROLL_LIMIT_HOLD. */
 #define ROLL_LIMIT 33
-// The maximum roll angle that the system will allow, nothing higher is allowed.
+/* The maximum roll angle that the system will allow, nothing higher is allowed. */
 #define ROLL_LIMIT_HOLD 67
 
-// The maximum pitch angle that the system will hold and stabilize, nothing higher is allowed.
+/* The maximum pitch angle that the system will hold and stabilize, nothing higher is allowed. */
 #define PITCH_UPPER_LIMIT 30
-
-// The minimum pitch angle that the system will hold and stabilize, nothing lower is allowed.
-// This value DOES need to be negative!
+/* The minimum pitch angle that the system will hold and stabilize, nothing lower is allowed.
+This value DOES need to be negative! */
 #define PITCH_LOWER_LIMIT -15
 
-/* Note that all control limits apply to both movement directions, specify how much the SERVOS are allowed to move (not maximum angles!!), and are bypassed in direct mode. */
+/* Note that all control limits apply to both movement directions, specify how much the SERVOS are allowed to move, and are ignored in direct mode. */
 
-// The maximum degree value the system is allowed to move the ailerons to.
+/* The maximum degree value the system is allowed to move the ailerons to. */
 #define AIL_LIMIT 25
 
-// The maximum degree value the system is allowed to move the elevators to.
+/* The maximum degree value the system is allowed to move the elevators to. */
 #define ELEV_LIMIT 15
 
-// The maximum rudder input the yaw damper/turn coordinator is allowed to make.
+/* The maximum rudder input the yaw damper/turn coordinator is allowed to make. */
 #define RUD_LIMIT 20
+
+
+
+/** @section sensors
+ * For sensor types, uncomment whichever type you are using.
+*/
+
+/* IMU types */
+#define IMU_BNO055
+
+/* Note that these pins must line up with the Pico's I2C0 interface, see a pinout if you're not sure! */
+#define IMU_SDA_PIN 8
+#define IMU_SCL_PIN 9
+
+/* GPS types */
+#define GPS_ADAFRUIT_ULT
+
+/* More to come in the future...? Let me know if there's an IMU/GPS module you would like supported! */
+
+
+
+/** @section Wi-Fly
+ * Wi-Fly is enabled by default when the Pico W is detected as the target board.
+ * It must be enabled/disabled through CMake and NOT the config file!
+ * The option to toggle this is WIFLY_ENABLED; Use -DWIFLY_ENABLED=ON or -DWIFLY_ENABLED=OFF through CMake command line or search for WIFLY_ENABLED in the GUI.
+ * The below settings apply only if Wi-Fly has been enabled through CMake.
+*/
+#ifdef WIFLY_ENABLED
+
+	/* Define your country to optimize Wi-Fly (not required but recommended).
+	See the list of available countries here: https://github.com/georgerobotics/cyw43-driver/blob/main/src/cyw43_country.h */
+	#define WIFLY_NETWORK_COUNTRY CYW43_COUNTRY_WORLDWIDE
+
+	/* Edit to change the name of the network Wi-Fly creates */
+	#define WIFLY_NETWORK_NAME "pico-fbw"
+	/* Uncomment to enable password protection on the network */
+	// #define WIFLY_NETWORK_USE_PASSWORD
+	#ifdef WIFLY_NETWORK_USE_PASSWORD
+		/* Edit to change the password of the network */
+		#define WIFLY_NETWORK_PASSWORD "password"
+	#endif
+
+#endif // WIFLY_ENABLED
+
 
 
 /** @section tuning 
  * Changing these values are for experts ONLY!! The system's behavior can be radically altered through these values
  * which could cause crashes or even injuries, so PLEASE be careful with these values and test thoroughly!
- * It is suggested that you read up on what each of these values do in a PID control loop before attempting to alter them if you wish.
+ * It is suggested that you read up on what each of these values do in a PID control loop before attempting to alter them.
 */
 
 // TODO: this is commented out for now because I can't fix autotune for now lol, uncomment later
@@ -159,30 +185,30 @@
 	*/ 
 	#define AUTOTUNE_MAX_WAIT_MINUTES 0.1
 #else
-	// PID constants for the roll axis.
+	/* PID constants for the roll axis. */
 	#define roll_kP 1.0
 	#define roll_kI 0.0025
 	#define roll_kD 0.001
 
-	// PID constants for the pitch axis.
+	/* PID constants for the pitch axis. */
 	#define pitch_kP 1.0
 	#define pitch_kI 0.0025
 	#define pitch_kD 0.001
 #endif
 
-// Miscellaneous roll PID tuning values.
+/* Miscellaneous roll PID tuning values. */
 #define roll_tau 0.001
 #define roll_integMin -50.0
 #define roll_integMax 50.0
 #define roll_kT 0.01
 
-// Miscellaneous pitch PID tuning values.
+/* Miscellaneous pitch PID tuning values. */
 #define pitch_tau 0.001
 #define pitch_integMin -50.0
 #define pitch_integMax 50.0
 #define pitch_kT 0.01
 
-// PID constants for the yaw axis.
+/* PID constants for the yaw axis. */
 #define yaw_kP 1.0
 #define yaw_kI 0.0025
 #define yaw_kD 0.001
@@ -193,7 +219,7 @@
 
 
 // TODO: autopilot PID tuning--both these PIDs do NOT input directly into the servos but instead command a bank/pitch angle so tune them with this in mind
-// PID constants for the autopilot's lateral guidance.
+/* PID constants for the autopilot's lateral guidance. */
 #define latGuid_kP 1.0
 #define latGuid_kI 0.0025
 #define latGuid_kD 0.001
@@ -203,7 +229,7 @@
 #define latGuid_integMax 50.0
 #define latGuid_kT 0.01
 
-// PID constants for the autopilot's vertical guidance.
+/* PID constants for the autopilot's vertical guidance. */
 #define vertGuid_kP 1.0
 #define vertGuid_kI 0.0025
 #define vertGuid_kD 0.001
@@ -214,43 +240,7 @@
 #define vertGuid_integMax 50.0
 #define vertGuid_kT 0.01
 
-/** @section sensors */
 
-// IMU types; uncomment whichever type you are using.
-#define IMU_BNO055
-
-// GPS types
-#define GPS_ADAFRUIT_ULT
-
-// More to come in the future...? Let me know if there's an IMU/GPS you would like supported!
-
-// Note that these pins must line up with the Pico's I2C0 interface, see a pinout if you're not sure!
-#define IMU_SDA_PIN 8
-#define IMU_SCL_PIN 9
-
-
-/** @section Wi-Fly
- * Wi-Fly is enabled by default when the Pico W is detected as the target board.
- * It must be enabled/disabled through CMake and NOT the config file!
- * The option to toggle this is WIFLY_ENABLED; Use -DWIFLY_ENABLED=ON or -DWIFLY_ENABLED=OFF through CMake command line or search for WIFLY_ENABLED in the GUI.
- * The below settings apply only if Wi-Fly has been enabled through CMake.
-*/
-#ifdef WIFLY_ENABLED
-
-	// Define your country to optimize Wi-Fly (not required but recommended).
-	// See the list of available countries here: https://github.com/georgerobotics/cyw43-driver/blob/main/src/cyw43_country.h
-	#define WIFLY_NETWORK_COUNTRY CYW43_COUNTRY_WORLDWIDE
-
-	// Edit to change the name of the network Wi-Fly creates
-	#define WIFLY_NETWORK_NAME "pico-fbw"
-	// Uncomment to enable password protection on the network
-	// #define WIFLY_NETWORK_USE_PASSWORD
-	#ifdef WIFLY_NETWORK_USE_PASSWORD
-		// Edit to change the password of the network
-		#define WIFLY_NETWORK_PASSWORD "password"
-	#endif
-
-#endif
 
 /** @section debug
  * This section for troubleshooting and project developers only.
@@ -260,7 +250,7 @@
 #if defined(LIB_PICO_STDIO_USB) || defined(LIB_PICO_STDIO_UART)
 	#define FBW_DEBUG // Internal, do not touch
 
-	// Enabled by default (misc logs + warning and error statements):
+	/* Enabled by default (misc logs + warning and error statements): */
 	#define FBW_DEBUG_printf    printf
 	// Uncomment/replace as necessary to enable:
 	#define WIFLY_DEBUG_printf     // printf
@@ -270,7 +260,7 @@
 	#define DHCP_DEBUG_printf      // printf
 	#define DNS_DEBUG_printf       // printf
 	#define DNS_DUMP_DATA       0  // 1
-	// Some more in-depth wireless debug options are provided by LWIP and can be found in io/wifly/lwipopts.h if necessary.
+	/* Some more in-depth wireless debug options are provided by LWIP and can be found in io/wifly/lwipopts.h if necessary. */
 
 #else
 	#define FBW_DEBUG_printf
@@ -282,6 +272,7 @@
 	#define DNS_DEBUG_printf
 	#define DNS_DUMP_DATA      0
 #endif
+
 
 
 /* End of configuration. */

@@ -31,7 +31,7 @@
 #include "version.h"
 
 int main() {
-    // Before-bootup crucial items (timestamp bootup, initialize comms, architecture, and io)
+    // Before-bootup crucial items (timestamp bootup, initialize comms, architecture, io, and LED)
     absolute_time_t imu_safe = make_timeout_time_ms(850);
     stdio_init_all();
     #ifdef FBW_DEBUG
@@ -51,31 +51,37 @@ int main() {
         #endif
     #endif
     led_init();
-    switch (rp2040_chip_version()) {
-        case 1:
-            FBW_DEBUG_printf("[driver] you are using rp2040 chip rev B0/B1\n");
-            break;
-        case 2:
-            FBW_DEBUG_printf("[driver] you are using rp2040 chip rev B2\n");
-            break;
-        default:
-            FBW_DEBUG_printf("[driver] WARNING: unknown chip revision\n");
-            break;
-    }
-    switch (rp2040_rom_version()) {
-        case 1:
-            FBW_DEBUG_printf("[driver] you are using ROM rev RP2040-B0\n");
-            break;
-        case 2:
-            FBW_DEBUG_printf("[driver] you are using ROM rev RP2040-B1\n");
-            break;
-        case 3:
-            FBW_DEBUG_printf("[driver] you are using ROM rev RP2040-B2\n");
-            break;
-        default:
-            FBW_DEBUG_printf("[driver] WARNING: unknown ROM revision\n");
-            break;
-    }
+
+    // Check chip and rom version
+    #ifdef FBW_DEBUG
+        FBW_DEBUG_printf("[driver] running on RP2040 chip revision ");
+        switch (rp2040_chip_version()) {
+            case 1:
+                FBW_DEBUG_printf("B0/B1, ");
+                break;
+            case 2:
+                FBW_DEBUG_printf("B2, ");
+                break;
+            default:
+                FBW_DEBUG_printf("UNKNOWN, ");
+                break;
+        }
+        FBW_DEBUG_printf("ROM revision ");
+        switch (rp2040_rom_version()) {
+            case 1:
+                FBW_DEBUG_printf("RP2040-B0\n");
+                break;
+            case 2:
+                FBW_DEBUG_printf("RP2040-B1\n");
+                break;
+            case 3:
+                FBW_DEBUG_printf("RP2040-B2\n");
+                break;
+            default:
+                FBW_DEBUG_printf("UNKNOWN\n");
+                break;
+        }
+    #endif
 
     // Check for first boot
     FBW_DEBUG_printf("[driver] starting bootup process\n");
