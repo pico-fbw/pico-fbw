@@ -13,7 +13,7 @@ typedef struct TCP_CONNECT_STATE_T_ {
     struct tcp_pcb *pcb;
     int sent_len;
     char headers[TCP_HEADER_SIZE];
-    char* accHeaders;
+    char *accHeaders;
     char result[TCP_RESULT_SIZE];
     int header_len;
     int result_len;

@@ -95,11 +95,13 @@ This value DOES need to be negative! */
 #define IMU_BNO055
 
 /* Note that these pins must line up with the Pico's I2C0 interface, see a pinout if you're not sure! */
-#define IMU_SDA_PIN 8
-#define IMU_SCL_PIN 9
+#define IMU_SDA_PIN 16
+#define IMU_SCL_PIN 17
 
-/* GPS types */
-#define GPS_ADAFRUIT_ULT
+/* These pins must line up with the UART1 interface.
+These labels refer to the GPS's pins; the GPS's TX pin is connected to GPS_TX_PIN on the Pico. */
+#define GPS_TX_PIN 21
+#define GPS_RX_PIN 20
 
 /* More to come in the future...? Let me know if there's an IMU/GPS module you would like supported! */
 
@@ -242,19 +244,27 @@ This value DOES need to be negative! */
 
 
 
-/** @section debug
- * This section for troubleshooting and project developers only.
- * If you do require more debugging information, ensure you enable either USB or UART output in /CMakeLists.txt (one directory up).
- * Once you've done that, you are welcome to enable/disable whatever debugging options you wish by commenting/uncommenting them here.
+/** @section debug/api
+ * Here you can enable/disable debugging features and the API.
+ * Ensure you enable either USB or UART output in /CMakeLists.txt (one directory up, not src/this directory).
+ * Once you've done that, you are welcome to enable/disable whatever debugging/API options you wish by commenting/uncommenting them here.
 */
 #if defined(LIB_PICO_STDIO_USB) || defined(LIB_PICO_STDIO_UART)
 	#define FBW_DEBUG // Internal, do not touch
 
+	/* Disabled by default, uncomment to enable the API over serial */
+	// TODO: comment this in final
+	#define API_ENABLED
+	#ifdef API_ENABLED
+		/* Uncomment to wait for a "PING" command on power-up before booting. */
+		// #define API_WAIT_ON_BOOT
+	#endif
+
 	/* Enabled by default (misc logs + warning and error statements): */
 	#define FBW_DEBUG_printf    printf
-	// Uncomment/replace as necessary to enable:
-	#define WIFLY_DEBUG_printf     // printf
-	#define WIFLY_DUMP_DATA     0  // 1
+	/* Uncomment/replace as necessary to enable: */
+	#define WIFLY_DEBUG_printf      printf
+	#define WIFLY_DUMP_DATA      1
 	#define TCP_DEBUG_printf       // printf
 	#define TCP_DUMP_DATA       0  // 1
 	#define DHCP_DEBUG_printf      // printf

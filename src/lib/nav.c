@@ -42,5 +42,5 @@ double calculateDistance(double latA, double lonA, double latB, double lonB) {
                sin(deltaL / 2) * sin(deltaL / 2);
     double c = 2 * atan2(sqrt(a), sqrt(1 - a));
 
-    return EARTH_RADIUS_NM * c;           
+    return EARTH_RADIUS_KM * c;           
 }

@@ -26,10 +26,12 @@ static float rollInput;
 static float pitchInput;
 static float yawInput;
 
-static double rollSet;
-static double pitchSet;
+static float rollSet;
+static float pitchSet;
 
 static bool overrideYaw = false;
+
+static bool overrideSetpoints = false;
 
 void mode_normalInit() {
     // Initialize (clear) PIDs
@@ -38,46 +40,52 @@ void mode_normalInit() {
 
 void mode_normal() {
     // Refresh flight data and input data from rx
-    flight_update((double)rollSet, (double)pitchSet, (double)yawInput, (double)overrideYaw);
+    flight_update((double)rollSet, (double)pitchSet, (double)yawInput, overrideYaw);
     rollInput = pwm_readDeg(0) - 90;
     pitchInput = pwm_readDeg(1) - 90;
     yawInput = pwm_readDeg(2) - 90;
-
-    // Use the rx inputs to set the setpoint control values
-    // Deadband calculations so we don't get crazy values due to PWM fluctuations
-    if (rollInput > DEADBAND_VALUE || rollInput < -DEADBAND_VALUE) {
-        // If the input is not within the deadband, add the smoothed input value on top of the current setpoint
-        // We must smooth the value because this calculation is done many times per second, so no smoothing would result
-        // in extremely (and I do really mean extreme) touchy controls.
-        rollSet += rollInput * SETPOINT_SMOOTHING_VALUE;
+    
+    // Check for overrides
+    if (rollInput > DEADBAND_VALUE || rollInput < -DEADBAND_VALUE || pitchInput > DEADBAND_VALUE || pitchInput < -DEADBAND_VALUE || yawInput > DEADBAND_VALUE || yawInput < -DEADBAND_VALUE) {
+        overrideSetpoints = false;
     }
-    if (pitchInput > DEADBAND_VALUE || pitchInput < -DEADBAND_VALUE) {
-        pitchSet += pitchInput * SETPOINT_SMOOTHING_VALUE;
-    }
+    if (!overrideSetpoints) {
+        // Use the rx inputs to set the setpoint control values
+        // Deadband calculations so we don't get crazy values due to PWM fluctuations
+        if (rollInput > DEADBAND_VALUE || rollInput < -DEADBAND_VALUE) {
+            // If the input is not within the deadband, add the smoothed input value on top of the current setpoint
+            // We must smooth the value because this calculation is done many times per second, so no smoothing would result
+            // in extremely (and I do really mean extreme) touchy controls.
+            rollSet += rollInput * SETPOINT_SMOOTHING_VALUE;
+        }
+        if (pitchInput > DEADBAND_VALUE || pitchInput < -DEADBAND_VALUE) {
+            pitchSet += pitchInput * SETPOINT_SMOOTHING_VALUE;
+        }
 
-    // Make sure the PID setpoints aren't set to unsafe values so we don't get weird outputs from PID,
-    // this is also where our bank/pitch protections come in.
-    if (rollSet > ROLL_LIMIT || rollSet < -ROLL_LIMIT) {
-        // If the roll values are unsafe, we do allow setting up to 67 but constant input is required, so check for that
-        if (!(abs(rollInput) >= abs(rollSet))) {
-            if (rollSet > 0) {
-                rollSet -= 0.05;
-            } else if (rollSet < 0) {
-                rollSet += 0.05;
+        // Make sure the PID setpoints aren't set to unsafe values so we don't get weird outputs from PID,
+        // this is also where our bank/pitch protections come in.
+        if (rollSet > ROLL_LIMIT || rollSet < -ROLL_LIMIT) {
+            // If the roll values are unsafe, we do allow setting up to 67 but constant input is required, so check for that
+            if (!(abs(rollInput) >= abs(rollSet))) {
+                if (rollSet > 0) {
+                    rollSet -= 0.05;
+                } else if (rollSet < 0) {
+                    rollSet += 0.05;
+                }
+            }
+            if (rollSet > ROLL_LIMIT_HOLD) {
+                rollSet = ROLL_LIMIT_HOLD;
+            } else if (rollSet < -ROLL_LIMIT_HOLD) {
+                rollSet = -ROLL_LIMIT_HOLD;
             }
         }
-        if (rollSet > ROLL_LIMIT_HOLD) {
-            rollSet = ROLL_LIMIT_HOLD;
-        } else if (rollSet < -ROLL_LIMIT_HOLD) {
-            rollSet = -ROLL_LIMIT_HOLD;
-        }
-    }
-    if (pitchSet > PITCH_UPPER_LIMIT || pitchSet < PITCH_LOWER_LIMIT) {
-        // Pitch is simply limited to the unsafe thresholds
-        if (pitchSet > PITCH_UPPER_LIMIT) {
-            pitchSet = PITCH_UPPER_LIMIT;
-        } else if (pitchSet < PITCH_LOWER_LIMIT) {
-            pitchSet = PITCH_LOWER_LIMIT;
+        if (pitchSet > PITCH_UPPER_LIMIT || pitchSet < PITCH_LOWER_LIMIT) {
+            // Pitch is simply limited to the unsafe thresholds
+            if (pitchSet > PITCH_UPPER_LIMIT) {
+                pitchSet = PITCH_UPPER_LIMIT;
+            } else if (pitchSet < PITCH_LOWER_LIMIT) {
+                pitchSet = PITCH_LOWER_LIMIT;
+            }
         }
     }
 
@@ -93,4 +101,17 @@ void mode_normalDeinit() {
     rollSet = 0.0;
     pitchSet = 0.0;
     overrideYaw = false;
+}
+
+bool mode_normalSetSetpoints(float roll, float pitch, float yaw) {
+    // Ensure there are no manual control inputs before we allow setpoints to be externally set
+    if (rollInput < DEADBAND_VALUE && rollInput > -DEADBAND_VALUE && pitchInput < DEADBAND_VALUE && pitchInput > -DEADBAND_VALUE && yawInput < DEADBAND_VALUE && yawInput > -DEADBAND_VALUE) {
+        return false;
+    } else {
+        rollSet = roll;
+        pitchSet = pitch;
+        yawInput = yaw;
+        overrideSetpoints = true;
+        return true;
+    }
 }

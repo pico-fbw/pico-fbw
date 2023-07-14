@@ -1,7 +1,7 @@
-#include "hardware/flash.h"
-
 #ifndef __FLASH_H
 #define __FLASH_H
+
+#include "hardware/flash.h"
 
 /**
  * README:
@@ -17,23 +17,41 @@
  * Sector  |  Use
  *         |
  * 0       |  PWM calibration flag / data
+ *         |  0 - Flag
+ *         |  1 - Pin 0 offset
+ *         |  2 - Pin 1 offset
+ *         |  3 - Pin 2 offset
+ *         |  4 - Pin 3 offset
  * 1       |  PID tuning flag / data
+ *         |  0 - Flag
+ *         |  1 - Roll kP
+ *         |  2 - Roll tI
+ *         |  3 - Roll tD
  * 2       |  PID tuning flag / data
+ *         |  0 - Flag
+ *         |  1 - Pitch kP
+ *         |  2 - Pitch tI
+ *         |  3 - Pitch tD
  * 3       |  Bootup flag
+ *         |  0 - Flag
 */
 
+#define FLASH_MIN_SECTOR FLASH_SECTOR_PWM
 #define FLASH_SECTOR_PWM 0
 #define FLASH_SECTOR_PID0 1
 #define FLASH_SECTOR_PID1 2
 #define FLASH_SECTOR_BOOT 3
+#define FLASH_MAX_SECTOR FLASH_SECTOR_BOOT
 
 // This is the size we will use for our arrays that we will write to flash--it's the amount of floats we can fit in one flash page.
-#define CONFIG_SECTOR_SIZE FLASH_SECTOR_SIZE/sizeof(float)
+// Last one is disabled because it was kind of buggy
+#define CONFIG_SECTOR_SIZE (FLASH_SECTOR_SIZE/sizeof(float) - 1)
 
 #define FBW_BOOT 3.1305210f // DO NOT CHANGE THIS VALUE! IT WILL BRICK ALL SYSTEMS!!!
 
 /**
  * Writes an array of data to a certain "sector". Note that this function assumes the data is a float array.
+ * This WILL erase and overwrite ALL data stored in the given sector! This includes ANY prior data from ANY program!!
  * @param sector the "sector" to write to
  * @param data the array of data to write 
 */
@@ -44,7 +62,7 @@ void flash_write(uint sector, float data[]);
  * @param sector the "sector" to read from
  * @param val the value of data to read back. This should be the index of the same value from when you originally wrote the data.
  * @return the requested data according to the parameters.
- * Do note that this function only does a bit of math to figure out where your requested data is; it will read read garbage data,
+ * @note This function only does a bit of math to figure out where your requested data SHOULD BE; it will read read garbage data,
  * program data, or no data at all. Be careful!
 */
 float flash_read(uint sector, uint val);

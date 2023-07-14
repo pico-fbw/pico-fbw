@@ -1,3 +1,6 @@
+#ifndef __SERVO_H
+#define __SERVO_H
+
 /**
  * The MIT License (MIT)
  *
@@ -26,9 +29,6 @@
  * Huge thanks to 'markushi' on GitHub for developing the bulk of this servo library! (slightly modified by MylesAndMore)
  * Check them out here: https://github.com/markushi/pico-servo
 */
-
-#ifndef __SERVO_H
-#define __SERVO_H
 
 /**
  * Set the frequency, making "top" as large as possible for maximum resolution.

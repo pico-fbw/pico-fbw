@@ -1,3 +1,6 @@
+#ifndef JSMN_H
+#define JSMN_H
+
 /*
  * MIT License
  *
@@ -21,8 +24,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef JSMN_H
-#define JSMN_H
 
 #include <stddef.h>
 

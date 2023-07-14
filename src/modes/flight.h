@@ -26,7 +26,7 @@ void flight_init();
  * @param yaw The desired yaw angle (only applicable if override is enabled).
  * @param override Whether or not the yaw angle should be overridden to yawSetpoint.
  * 
- * \note
+ * @note
  * The yaw damper functionality may be a bit confusing, I'll explain it here.
  * If override is set to true, the value from yaw will be passed directly to the rudder.
  * If override is set to false and roll is past the deadband, a "static damper" will be applied to the rudder (current aileron degree * RUDDER_TURNING_VALUE).

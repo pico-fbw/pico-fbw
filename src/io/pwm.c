@@ -136,7 +136,7 @@ static float pwm_readDegRaw(uint pin) {
 bool pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint run_times) {
     FBW_DEBUG_printf("[pwm] pwm calibration begin\n");
     // Start blinking LED to signify we are calibrating
-    led_blink(100);
+    led_blink(100, 0);
     // Create an array where we will arrange our data to later write; the first four bytes will signify if we have run a calibration before
     float calibration_data[CONFIG_SECTOR_SIZE] = {0.5f};
     // Check if we are calibrating per pin or not
@@ -184,7 +184,7 @@ bool pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint
     // Write calibration data to sector "0", last sector of flash
     FBW_DEBUG_printf("[pwm] writing calibration data to flash\n");
     flash_write(FLASH_SECTOR_PWM, calibration_data);
-    led_blink_stop();
+    led_stop();
     return true;
 }
 

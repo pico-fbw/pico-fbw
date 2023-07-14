@@ -6,9 +6,10 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#include "../io/gps.h"
 #include "../io/imu.h"
-#include "../io/servo.h"
 #include "../io/led.h"
+#include "../io/servo.h"
 
 #include "auto.h"
 #include "direct.h"
@@ -22,6 +23,7 @@
 
 static uint8_t currentMode = DIRECT;
 static bool imuDataSafe = false;
+static bool gpsDataSafe = false;
 
 void toMode(uint8_t newMode) {
     // Run deinit code for currentMode and then run init code for newMode
@@ -44,7 +46,7 @@ void toMode(uint8_t newMode) {
             break;
     }
     if (imuDataSafe) {
-        led_blink_stop();
+        led_stop();
         switch (newMode) {
             case DIRECT:
                 FBW_DEBUG_printf("[modes] entering direct mode\n");
@@ -65,21 +67,27 @@ void toMode(uint8_t newMode) {
                 break;
             case AUTO:
                 #ifdef PID_AUTOTUNE
-                if (!mode_tuneCheckCalibration()) {
-                    toMode(TUNE);
-                    return;
-                }
+                    if (!mode_tuneCheckCalibration()) {
+                        toMode(TUNE);
+                        return;
+                    }
                 #else
                     #ifdef WIFLY_ENABLED
-                        FBW_DEBUG_printf("[modes] entering auto mode\n");
-                        if (mode_autoInit()) {
-                            currentMode = AUTO;
+                        if (gpsDataSafe) {
+                            FBW_DEBUG_printf("[modes] entering auto mode\n");
+                            if (mode_autoInit()) {
+                                currentMode = AUTO;
+                            } else {
+                                toMode(NORMAL);
+                                return;
+                            }
                         } else {
+                            // GPS is required for auto and hold modes, fallback to normal mode
                             toMode(NORMAL);
                             return;
                         }
                     #else
-                        // Wi-Fly is required to run auto mode, fallback to normal mode
+                        // Wi-Fly is required to run auto mode, fallback
                         toMode(NORMAL);
                         return;
                     #endif
@@ -95,14 +103,20 @@ void toMode(uint8_t newMode) {
                 }
                 break;
             case HOLD:
-                FBW_DEBUG_printf("[modes] entering hold mode\n");
-                currentMode = HOLD;
+                if (gpsDataSafe) {
+                    FBW_DEBUG_printf("[modes] entering hold mode\n");
+                    currentMode = HOLD;
+                } else {
+                    toMode(NORMAL);
+                    return;
+                }
                 break;
         }
     } else {
         // If the IMU is unsafe we only have one option...direct mode
         // Trigger FBW-250 because we are entering direct mode due to an IMU failure
-        led_blink(250);
+        FBW_DEBUG_printf("[modes] ERROR: [FBW-250] entering direct mode due to IMU failure\n");
+        led_blink(250, 0);
         currentMode = DIRECT;
     }
 }
@@ -133,11 +147,23 @@ void modeRuntime() {
     }
 }
 
+uint8_t getCurrentMode() { return currentMode; }
+
 void setIMUSafe(bool state) {
     imuDataSafe = state;
     // Automatically de-init i2c and set into direct mode if IMU is deemed unsafe
     if (!state) {
         imu_deinit();
         toMode(DIRECT);
+    }
+}
+
+void setGPSSafe(bool state) {
+    gpsDataSafe = state;
+    if (!state) {
+        gps_deinit();
+        if (currentMode == AUTO || currentMode == HOLD) {
+            toMode(NORMAL);
+        }
     }
 }

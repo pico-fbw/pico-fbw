@@ -13,6 +13,8 @@
 #include "flash.h"
 
 void flash_write(uint sector, float data[]) {
+    // Erase flash before writing because s c i e n c e
+    flash_erase(sector);
     // Create memory offset based on the inputted "sector"
     uint32_t offset = (PICO_FLASH_SIZE_BYTES - (FLASH_SECTOR_SIZE + sector * FLASH_SECTOR_SIZE));
     // Disable interrupts because they can mess with our writing

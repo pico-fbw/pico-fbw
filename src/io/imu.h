@@ -1,32 +1,35 @@
-#include <stdint.h>
-#include "../config.h"
-
 #ifndef __IMU_H
 #define __IMU_H
+
+#include <stdint.h>
+#include "../config.h"
 
 // The i2c bus that will be used for the IMU
 #define IMU_I2C i2c0
 
+// Chip-specific information
 #ifdef IMU_BNO055
-	static const uint CHIP_FREQ_KHZ = 400; // Default I2C freq of the BNO055 is 400KHz
+	#define CHIP_FREQ_KHZ 400 // Default I2C freq of the BNO055 is 400KHz
 
-	static const uint8_t CHIP_REGISTER = 0x28;
-	static const uint8_t ID_REGISTER = 0x00;
-	static const uint8_t CHIP_ID = 0xA0;
-	static const uint8_t CALIBRATION_REGISTER = 0x35;
+	#define CHIP_REGISTER 0x28
+	static const unsigned char ID_REGISTER = 0x00;
+	#define CHIP_ID 0xA0
+	#define CALIBRATION_REGISTER 0x35
 
-	static const uint8_t SYS_REGISTER = 0x3F;
-	static const uint8_t SYS_RESET = 0x20;
-	static const uint8_t OPR_MODE_REGISTER = 0x3D;
-	static const uint8_t MODE_NDOF = 0x0C;
-	static const uint8_t PWR_MODE_REGISTER = 0x3E;
-	static const uint8_t PWR_MODE_NORMAL = 0x00;
-	static const uint8_t AXIS_MAP_CONF_REGISTER = 0x41;
-	static const uint8_t AXIS_MAP_SIGN_REGISTER = 0x42;
+	#define SYS_REGISTER 0x3F
+	#define SYS_RESET 0x20
+	static const unsigned char OPR_MODE_REGISTER = 0x3D;
+	#define MODE_NDOF 0x0C
+	#define PWR_MODE_REGISTER 0x3E
+	#define PWR_MODE_NORMAL 0x00
+	#define AXIS_MAP_CONF_REGISTER 0x41
+	#define AXIS_MAP_SIGN_REGISTER 0x42
 
-	static const uint8_t EULER_BEGIN_REGISTER = 0x1A;
-	static const uint8_t ACCEL_BEGIN_REGISTER = 0x28;
+	static const unsigned char EULER_BEGIN_REGISTER = 0x1A;
+	static const unsigned char ACCEL_BEGIN_REGISTER = 0x28;
 #endif
+// TODO: possibly support MPU6050? it will bring down cost a lot and I do have one to test with
+// https://github.com/rfetick/MPU6050_light may be of use here because we do need motion fusion
 
 /**
  * Contains heading, roll, pitch, and yaw angles of the aircraft when filled using imu_getAngles().

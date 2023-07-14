@@ -11,8 +11,10 @@ add_library(fbw_io
 pico_generate_pio_header(fbw_io ${CMAKE_CURRENT_LIST_DIR}/pwm.pio)
 
 target_link_libraries(fbw_io
-    pico_stdlib
     pico_binary_info
+    pico_platform
+    pico_stdio
+    pico_stdlib
     pico_time
     hardware_flash
     hardware_gpio
@@ -20,6 +22,7 @@ target_link_libraries(fbw_io
     hardware_pio
     hardware_pwm
     hardware_sync
+    hardware_uart
     fbw_modes
 )
 
@@ -27,5 +30,6 @@ if ("$CACHE{PICO_BOARD}" STREQUAL "pico_w")
     target_link_libraries(fbw_io pico_cyw43_arch_none)
     if (WIFLY_ENABLED)
         add_subdirectory(wifly)
+        target_link_libraries(fbw_io fbw_wifly)
     endif ()
 endif ()

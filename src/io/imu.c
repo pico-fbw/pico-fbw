@@ -27,8 +27,15 @@ static inline int imu_write(uint8_t address, uint8_t value) {
 }
 
 int imu_init() {
-    FBW_DEBUG_printf("[imu] initializing i2c protocol\n");
     #ifdef IMU_BNO055
+        FBW_DEBUG_printf("[imu] initializing ");
+        if (IMU_I2C == i2c0) {
+            FBW_DEBUG_printf("i2c0\n");
+        } else if (IMU_I2C == i2c1) {
+            FBW_DEBUG_printf("i2c1\n");
+        } else {
+            FBW_DEBUG_printf("\n");
+        }
 		i2c_init(IMU_I2C, CHIP_FREQ_KHZ * 1000);
 		gpio_set_function(IMU_SDA_PIN, GPIO_FUNC_I2C);
 		gpio_set_function(IMU_SCL_PIN, GPIO_FUNC_I2C);

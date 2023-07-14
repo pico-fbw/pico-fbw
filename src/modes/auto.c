@@ -27,13 +27,13 @@
 static bool autoComplete = false;
 
 static Waypoint *fplan = NULL;
-static uint currentWptIdx = 0;
+static uint currentWaypoint = 0;
 static Waypoint currentWpt;
 
 // Current waypoint information
 static double distance;
 static double bearing;
-static int_fast16_t alt;
+static int alt;
 
 static PIDController latGuid;
 static PIDController vertGuid;
@@ -50,6 +50,8 @@ bool mode_autoInit() {
     vertGuid = (PIDController){vertGuid_kP, vertGuid_kI, vertGuid_kD, vertGuid_tau, vertGuid_loLim, vertGuid_upLim, vertGuid_integMin, vertGuid_integMax, vertGuid_kT};
     pid_init(&latGuid);
     pid_init(&vertGuid);
+    // Load the first altitude from the flightplan (subsequent altitudes will be loaded on waypoint interception)
+    alt = fplan[currentWaypoint].alt;
     return true;
 }
 
@@ -66,26 +68,26 @@ void mode_auto() {
     flight_update(latGuid.out, vertGuid.out, 0, false);
 
     // Calculate the distance to the current waypoint
-    distance = calculateDistance(gps.lat, gps.lng, fplan[currentWptIdx].lat, fplan[currentWptIdx].lng);
+    distance = calculateDistance(gps.lat, gps.lng, fplan[currentWaypoint].lat, fplan[currentWaypoint].lng);
     // If we've "intercepted" the waypoint then advance to the next one
     if (distance <= INTERCEPT_RADIUS) {
-        currentWptIdx++;
-        if (currentWptIdx > wifly_getWaypointCount()) {
+        currentWaypoint++;
+        if (currentWaypoint > wifly_getWaypointCount()) {
             // Auto mode ends here, we enter a holding pattern
             autoComplete = true;
             toMode(HOLD);
             return;
         } else {
             // Load the altitude--if it is -5 (default) just discard it (by setting it to our current alt; no change)
-            if (fplan[currentWptIdx].alt < -5) {
+            if (fplan[currentWaypoint].alt < -5) {
                 alt = gps.alt;
             } else {
-                alt = fplan[currentWptIdx].alt;
+                alt = fplan[currentWaypoint].alt;
             }
         }
     }
     // Calculate the up-to-date bearing to the current waypoint
-    bearing = calculateBearing(gps.lat, gps.lng, fplan[currentWptIdx].lat, fplan[currentWptIdx].lng);
+    bearing = calculateBearing(gps.lat, gps.lng, fplan[currentWaypoint].lat, fplan[currentWaypoint].lng);
 }
 
 // TODO: Aadd documentation for auto mode on the wiki!

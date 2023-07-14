@@ -3,7 +3,7 @@
 
 #ifdef WIFLY_ENABLED
 
-    #define INTERCEPT_RADIUS 0.5 // The radius at which to consider a waypoint "incercepted" in nm
+    #define INTERCEPT_RADIUS 0.1 // The radius at which to consider a waypoint "incercepted" in kilometers
     // TODO: do I need to change this for different speeds? idk if it will make too much of a difference, remember what aviation simmer said
 
     /**

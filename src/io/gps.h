@@ -1,22 +1,21 @@
-#include "../config.h"
-
 #ifndef __GPS_H
 #define __GPS_H
 
-#define GPS_I2C i2c1
+#include "../config.h"
 
-#ifdef GPS_ADAFRUIT_ULT
+// GPS uses uart1 because uart0 can be used for debugging
+#define GPS_UART uart1
 
-#endif
+// NMEA-0183 specifies 4800/9600 baudrate, we use 4800 just to be safe
+#define GPS_BAUD_RATE 4800
+
+// TODO: naturally, once gps is done it needs to be added to wiki
 
 /**
  * Initializes the GPS module.
- * @return 0 if success (correct module type was initialized and recognized),
- * PICO_ERROR_GENERIC if there was an I2C read/write failure,
- * PICO_ERROR_TIMEOUT if there was an I2C timeout, or
- * 1 if there was a general error
+ * @return true if successful, false if not.
 */
-int gps_init();
+bool gps_init();
 
 /**
  * Deinitializes the GPS module.
@@ -24,18 +23,18 @@ int gps_init();
 void gps_deinit();
 
 /**
- * Contains latitude and longitude coordinates, as well as current altitude and speed from a connected GPS module (when filled with its corresponding function).
-*/
+ * Contains latitude and longitude coordinates, altitude, and speed from a connected GPS module when filled using gps_getData().
+*/ 
 typedef struct gpsData {
     double lat;
     double lng;
-    int_fast16_t alt;
-    float speed;
+    int alt;
+    float spd;
 } gpsData;
 
 /**
  * Gets the current coordinates from the GPS module.
- * @return a gpsData struct containing current latitude and longitude coordinates, as well as current altitude and speed
+ * @return an updated gpsData struct.
 */
 gpsData gps_getData();
 

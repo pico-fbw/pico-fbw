@@ -1,3 +1,6 @@
+#ifndef __PID_H
+#define __PID_H
+
 /**
  * The MIT License (MIT)
  *
@@ -26,9 +29,6 @@
  * Credit goes to "pms67" and "drbitboy" for developing this PID implementation, check it out here:
  * https://github.com/drbitboy/PID
 */
-
-#ifndef __PID_H
-#define __PID_H
 
 typedef struct PIDController {
 

@@ -20,24 +20,23 @@
 #include "tune.h"
 
 #ifdef PID_AUTOTUNE
-    inertialAngles iAngles;
-    float rollAngle;
-    float pitchAngle;
-    float rollIn;
-    float pitchIn;
+    static float rollInput;
+    static float pitchInput;
+    static double rollSet;
+    static double pitchSet;
 
     void mode_tune() {
         // Start blinking LED to signify we are calibrating
-        led_blink(100);
+        led_blink(100, 0);
         // The first four bytes of our data array will signify if we have run a calibration before, a value of 0.3 floating point corresponds to true in this case so we add that to the array
         float tuning_data[CONFIG_SECTOR_SIZE] = {0.3f};
         // Tune both roll and pitch PID
         for (uint8_t i = 1; i <= 2; i++) {
             // Set up tuning, input variables depend on which PID we are tuning but everything else is the same
             if (i == 1) {
-                pidtune_init(&rollIn, &rollAngle);
+                pidtune_init((double*)&aircraft.roll, &rollSet);
             } else if (i == 2) {
-                pidtune_init(&pitchIn, &pitchAngle);
+                pidtune_init((double*)&aircraft.pitch, &pitchSet);
             }
             // TODO: find good values for autotuning process
             pidtune_setOutputStep(1.0);
@@ -49,18 +48,14 @@
             // If the function returns true then tuning has completed
             while (pidtune_runtime()) {
                 // Refresh data
-                iAngles = imu_getAngles();
-                rollAngle = iAngles.roll;
-                pitchAngle = iAngles.pitch;
-                rollIn = pwm_readDeg(0) - 90;
-                pitchIn = pwm_readDeg(1) - 90;
+                flight_update(rollSet, pitchSet, 0.0, true);
+
                 // Check if there are any control inputs being made, if so, stop tuning and revert to direct mode
-                if (rollIn > DEADBAND_VALUE || rollIn < -DEADBAND_VALUE || pitchIn > DEADBAND_VALUE || pitchIn < -DEADBAND_VALUE) {
+                rollInput = pwm_readDeg(0) - 90;
+                pitchInput = pwm_readDeg(1) - 90;
+                if (rollInput > DEADBAND_VALUE || rollInput < -DEADBAND_VALUE || pitchInput > DEADBAND_VALUE || pitchInput < -DEADBAND_VALUE) {
                     pidtune_cancel();
                     toMode(DIRECT);
-                    return;
-                }
-                if (!flight_checkEnvelope(rollAngle, pitchAngle)) {
                     return;
                 }
             }
@@ -73,13 +68,13 @@
                 flash_write(i, tuning_data);
             } else {
                 // If calibration did fail, throw an error and revert to direct mode
-                led_blink(2000);
+                led_blink(2000, 0);
                 toMode(DIRECT);
                 return;
             }
         }
         // Stop blinking LED
-        led_blink_stop();
+        led_stop();
         // Exit to normal mode
         toMode(NORMAL);
     }

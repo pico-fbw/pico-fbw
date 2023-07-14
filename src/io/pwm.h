@@ -1,3 +1,6 @@
+#ifndef __PWM_H
+#define __PWM_H
+
 /**
  * The MIT License (MIT)
  *
@@ -26,9 +29,6 @@
  * Huge thanks to 'GitJer' on GitHub for giving me a starting point for the PWM input code!
  * Check them out here: https://github.com/GitJer/Some_RPI-Pico_stuff/tree/main/PwmIn/PwmIn_4pins
 */
-
-#ifndef __PWM_H
-#define __PWM_H
 
 /**
  * Enables PWM input functionality on the specified pins.

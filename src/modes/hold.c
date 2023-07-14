@@ -21,7 +21,7 @@ static uint8_t turnStatus = HOLD_TURN_UNSCHEDULED;
 
 static float oldHeading;
 static float targetHeading;
-static int_fast16_t targetAlt;
+static int targetAlt;
 
 static double rollSet;
 

@@ -4,6 +4,7 @@
 */
 
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include "pico/time.h"
 
@@ -21,19 +22,34 @@
     #undef LED_PIN
 #endif
 
-#ifdef LED_PIN
-    static struct repeating_timer timer;
-#endif
+static struct repeating_timer timer;
+static struct repeating_timer pulse_timer;
+static uint32_t gb_pulse_ms;
 
-static inline bool led_callback(struct repeating_timer *t) {
+/**
+ * Toggle's the LED's state (on -> off / off -> on).
+*/
+static inline void led_toggle() {
     #ifdef LED_PIN
         #if defined(RASPBERRYPI_PICO)
             gpio_xor_mask(1u << LED_PIN);
         #elif defined(RASPBERRYPI_PICO_W)
             cyw43_arch_gpio_put(LED_PIN, !cyw43_arch_gpio_get(LED_PIN));
-            snprintf(buf, sizeof(buf), " "); // There's a bug in the cyw43 arch where the LED just acts sporadically, this fixes it
+            snprintf(buf, sizeof(buf), '\0'); // There's a bug in the cyw43 arch where the LED just acts sporadically, this fixes it
         #endif
     #endif
+}
+
+static inline int64_t led_callback_alarm(alarm_id_t id, void *data) {
+    led_toggle();
+    return 0;
+}
+
+static inline bool led_callback(struct repeating_timer *t) {
+    // Toggle LED immediately, then schedule a toggle after the pulse duration if applicable/non-zero
+    led_toggle();
+    add_alarm_in_ms(gb_pulse_ms, led_callback_alarm, NULL, false);
+    return true;
 }
 
 void led_init() {
@@ -48,16 +64,26 @@ void led_init() {
     #endif
 }
 
-void led_blink(uint32_t freq_ms) {
+void led_blink(uint32_t freq_ms, uint32_t pulse_ms) {
     #ifdef LED_PIN
-        led_blink_stop();
+        led_stop();
+        // If we are going to be pulsing then turn the LED off so it's off for most of the cycle (looks weird otherwise)
+        if (pulse_ms != 0) {
+            #if defined(RASPBERRYPI_PICO)
+                gpio_put(LED_PIN, 0);
+            #elif defined(RASPBERRYPI_PICO_W)
+                cyw43_arch_gpio_put(LED_PIN, 0);
+            #endif
+        }
+        gb_pulse_ms = pulse_ms;
         add_repeating_timer_ms(freq_ms, led_callback, NULL, &timer);
     #endif
 }
 
-void led_blink_stop() {
+void led_stop() {
     #ifdef LED_PIN
         cancel_repeating_timer(&timer);
+        cancel_repeating_timer(&pulse_timer);
         #if defined(RASPBERRYPI_PICO)
             gpio_put(LED_PIN, 1);
         #elif defined(RASPBERRYPI_PICO_W)

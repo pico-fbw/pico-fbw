@@ -15,7 +15,9 @@
     #include "pico/cyw43_arch.h"
 #endif
 
+#include "io/api.h"
 #include "io/flash.h"
+#include "io/gps.h"
 #include "io/imu.h"
 #include "io/led.h"
 #include "io/pwm.h"
@@ -31,7 +33,7 @@
 #include "version.h"
 
 int main() {
-    // Before-bootup crucial items (timestamp bootup, initialize comms, architecture, io, and LED)
+    // Before-bootup crucial items (timestamp bootup, initialize comms, api, architecture, io, and LED)
     absolute_time_t imu_safe = make_timeout_time_ms(850);
     stdio_init_all();
     #ifdef FBW_DEBUG
@@ -51,36 +53,13 @@ int main() {
         #endif
     #endif
     led_init();
-
-    // Check chip and rom version
-    #ifdef FBW_DEBUG
-        FBW_DEBUG_printf("[driver] running on RP2040 chip revision ");
-        switch (rp2040_chip_version()) {
-            case 1:
-                FBW_DEBUG_printf("B0/B1, ");
-                break;
-            case 2:
-                FBW_DEBUG_printf("B2, ");
-                break;
-            default:
-                FBW_DEBUG_printf("UNKNOWN, ");
-                break;
-        }
-        FBW_DEBUG_printf("ROM revision ");
-        switch (rp2040_rom_version()) {
-            case 1:
-                FBW_DEBUG_printf("RP2040-B0\n");
-                break;
-            case 2:
-                FBW_DEBUG_printf("RP2040-B1\n");
-                break;
-            case 3:
-                FBW_DEBUG_printf("RP2040-B2\n");
-                break;
-            default:
-                FBW_DEBUG_printf("UNKNOWN\n");
-                break;
-        }
+    
+    // API
+    #ifdef API_ENABLED
+        printf("[api] enabling api v%s\n", PICO_FBW_API_VERSION);
+        led_blink(1000, 100);
+        api_init_blocking();
+        led_stop();
     #endif
 
     // Check for first boot
@@ -106,7 +85,7 @@ int main() {
         // Calibrate PWM
         if (!pwm_calibrate(90.0f, 2000, 5, 5) || !pwm_checkCalibration()) {
             FBW_DEBUG_printf("[boot] FATAL: [FBW-500] PWM IN calibration failed\n");
-            led_blink(500);
+            led_blink(500, 0);
             while (true);
         }
         FBW_DEBUG_printf("[boot] calibration successful, rebooting now\n");
@@ -116,7 +95,7 @@ int main() {
     if (pwm_getCalibrationValue(0) > MAX_CALIBRATION_OFFSET || pwm_getCalibrationValue(0) < -MAX_CALIBRATION_OFFSET || pwm_getCalibrationValue(1) > MAX_CALIBRATION_OFFSET || pwm_getCalibrationValue(1) < -MAX_CALIBRATION_OFFSET || pwm_getCalibrationValue(2) > MAX_CALIBRATION_OFFSET || pwm_getCalibrationValue(2) < -MAX_CALIBRATION_OFFSET || pwm_getCalibrationValue(3) > MAX_CALIBRATION_OFFSET || pwm_getCalibrationValue(3) < -MAX_CALIBRATION_OFFSET) {
         FBW_DEBUG_printf("[boot] FATAL: [FBW-500] PWM IN calibration values were too high!\n");
         FBW_DEBUG_printf("Try again, and if this continues, consider changing the MAX_CALIBRATION_OFFSET in the configuration file.\n");
-        led_blink(500);
+        led_blink(500, 0);
         while (true);
     }
     FBW_DEBUG_printf("[boot] PWM IN calibration ok, enabling\n");
@@ -130,7 +109,7 @@ int main() {
         if (servo_enable(servos[s]) != 0) {
             FBW_DEBUG_printf("[boot] FATAL: [FBW-800] failed to initialize servo %d)\n", s);
             // TODO: when I get back home add a GIF of FBW-800 to the wiki
-            led_blink(800);
+            led_blink(800, 0);
             while (true);
         }
     }
@@ -155,16 +134,23 @@ int main() {
             setIMUSafe(true);
         } else {
             FBW_DEBUG_printf("[boot] WARNING: [FBW-1000] IMU configuration failed!\n");
-            led_blink(1000);
+            led_blink(1000, 0);
         }
     } else {
-        FBW_DEBUG_printf("[boot] WARNING: [FBW-1000] IMU not found\n");
-        led_blink(1000);
+        FBW_DEBUG_printf("[boot] WARNING: [FBW-1000] IMU not found!\n");
+        led_blink(1000, 0);
     }
-    // TODO: GPS initialization
 
-    // Wi-Fly
+    // GPS and Wi-Fly
     #ifdef WIFLY_ENABLED
+        FBW_DEBUG_printf("[boot] initializing GPS\n");
+        if (gps_init()) {
+            FBW_DEBUG_printf("[boot] GPS ok\n");
+            setGPSSafe(true);
+        } else {
+            FBW_DEBUG_printf("[boot] WARNING: [FBW-1000] GPS not found!\n");
+            led_blink(2000, 0);
+        }
         FBW_DEBUG_printf("[boot] initializing Wi-Fly\n");
         wifly_init();
     #endif
@@ -195,6 +181,9 @@ int main() {
             }
         #endif // SWITCH_3_POS
         modeRuntime();
+        #ifdef API_ENABLED
+            api_poll();
+        #endif
     }
 
     return 0; // How did we get here?

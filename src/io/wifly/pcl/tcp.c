@@ -30,7 +30,6 @@
 #define HTTP_RESPONSE_REDIRECT "HTTP/1.1 302 Redirect\nLocation: http://%s" REDIRECT "\n\n"
 #define REDIRECT "/wifly"
 
-static int fplanStatus = WIFLY_STATUS_AWAITING; // Keeps track of if a flightplan has been submitted yet/if the submission was okay
 // Keeps track of if we are using accumulated headers and if they are complete yet
 static bool useAccHeaders = false;
 static bool accHeadersFinal = false;
@@ -91,17 +90,12 @@ static int server_content(const char *request, const char *params, char *result,
         // If there are params, check to see if the flightplan data is there
         if (params) {
             if (strncmp(FPLAN_PARAM, params, sizeof(FPLAN_PARAM) - 1) == 0) {
-                // Check the global status to see if we've already accepted a flightplan
-                if (fplanStatus == WIFLY_STATUS_OK) {
-                    WIFLY_DEBUG_printf("[wifly] Flightplan submission detected, skipping parse; already recieved\n");
-                } else {
-                    WIFLY_DEBUG_printf("[wifly] Flightplan submission detected, attempting to parse\n");
-                    fplanStatus = wifly_parseFplan(params);
-                }
+                WIFLY_DEBUG_printf("[wifly] Flightplan submission detected, attempting to parse\n");
+                wifly_parseFplan(params); // Status is now set internally inside of wifly.c not tcp
             }
         }
-        // Generate page content based on the status of the flightplan submission
-        len = wifly_genPageContent(result, max_result_len, fplanStatus);
+        // Generate page content based on the current status of the flightplan submission
+        len = wifly_genPageContent(result, max_result_len);
     }
     return len;
 }

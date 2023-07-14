@@ -1,6 +1,43 @@
+#ifndef __PIDTUNE_H
+#define __PIDTUNE_H
+
+/*
+ * This Library is ported from the AutotunerPID Toolkit by William Spinelli
+ * (http://www.mathworks.com/matlabcentral/fileexchange/4652) 
+ * Copyright (c) 2004
+ *
+ * This Library is licensed under the BSD License:
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are 
+ * met:
+ * 
+ *     * Redistributions of source code must retain the above copyright 
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright 
+ *       notice, this list of conditions and the following disclaimer in 
+ *       the documentation and/or other materials provided with the distribution
+ *       
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE 
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+ * POSSIBILITY OF SUCH DAMAGE.
+*/ 
+ 
+/*
+ * Credit to "br3ttb" and "t0mpr1c3" for developing the Arduino PID autotune library that the auto tuning is based off.
+ * https://github.com/t0mpr1c3/Arduino-PID-AutoTune-Library
+*/
+
+#include "../config.h"
+
 #ifdef PID_AUTOTUNE
-    #ifndef __PIDTUNE_H
-    #define __PIDTUNE_H
 
     enum Peak {
         MINIMUM = -1,
@@ -25,16 +62,13 @@
         TD_DIVISOR = 2
     };
 
-    static const float CONST_PI          = 3.14159265358979323846;
-    static const float CONST_SQRT2_DIV_2 = 0.70710678118654752440;
-
 
     /**
      * Initializes the PID tuning process.
-     * @param input pointer to input value
-     * @param output pointer to output value
+     * @param Input pointer to input value
+     * @param Output pointer to output value
     */
-    void pidtune_init(float* Input, float* Output);
+    void pidtune_init(double* Input, double* Output);
 
     /**
      * Cancels the PID tuning process.
@@ -50,14 +84,14 @@
     /**
      * Calculates offset of oscillation in process value as a proportion of the amplitude approximation.
      * Assumes a trapezoidal oscillation that is stationary over the last 2 relay cycles. 
-     * Needs constant phase lag, so recent changes to noiseBand are bad
+     * Needs constant phase lag, so recent changes to noiseBand are bad.
     */
-    float pidtune_processValueOffset(float avgStep1, float avgStep2);
+    double pidtune_processValueOffset(double avgStep1, double avgStep2);
 
     /**
      * Sets the output step size.
     */
-    void pidtune_setOutputStep(float step);
+    void pidtune_setOutputStep(double step);
 
     /**
      * Sets the PID tuning rule, Kp divisor.
@@ -77,7 +111,7 @@
     /**
      * Sets the PID noise band.
     */
-    void pidtune_setNoiseBand(float band);
+    void pidtune_setNoiseBand(double band);
 
     /**
      * Sets the PID tuning lookback time in seconds.
@@ -87,17 +121,18 @@
     /**
      * @return the final PID tuning rule, Kp.
     */
-    float pidtune_getKp();
+    double pidtune_getKp();
 
     /**
      * @return the final PID tuning rule, Ti.
     */
-    float pidtune_getTi();
+    double pidtune_getTi();
 
     /**
      * @return the final PID tuning rule, Td.
     */
-    float pidtune_getTd();
+    double pidtune_getTd();
 
-    #endif // __PIDTUNE_H
 #endif // PID_AUTOTUNE
+
+#endif // __PIDTUNE_H
