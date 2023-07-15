@@ -53,7 +53,7 @@ install(TARGETS pico-fbw-reset DESTINATION ${CMAKE_INSTALL_PREFIX})
 
 # At the end of the build process, move the final binaries to the buildroot for easier access
 add_custom_command(TARGET pico-fbw POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E rename "${CMAKE_BINARY_DIR}/src/pico-fbw.uf2" "${CMAKE_BINARY_DIR}/pico-fbw.uf2"
+    COMMAND ${CMAKE_COMMAND} -E rename "${CMAKE_BINARY_DIR}/src/${PROJECT_NAME}.uf2" "${CMAKE_BINARY_DIR}/${PROJECT_NAME}.uf2"
 )
 add_custom_command(TARGET pico-fbw-reset POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E rename "${CMAKE_BINARY_DIR}/src/pico-fbw-reset.uf2" "${CMAKE_BINARY_DIR}/pico-fbw-reset.uf2"

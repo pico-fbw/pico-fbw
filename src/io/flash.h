@@ -44,8 +44,8 @@
 #define FLASH_MAX_SECTOR FLASH_SECTOR_BOOT
 
 // This is the size we will use for our arrays that we will write to flash--it's the amount of floats we can fit in one flash page.
-// Last one is disabled because it was kind of buggy
-#define CONFIG_SECTOR_SIZE (FLASH_SECTOR_SIZE/sizeof(float) - 1)
+// It is advised not to use the last one (1024) as it can be a bit buggy
+#define CONFIG_SECTOR_SIZE FLASH_SECTOR_SIZE/sizeof(float)
 
 #define FBW_BOOT 3.1305210f // DO NOT CHANGE THIS VALUE! IT WILL BRICK ALL SYSTEMS!!!
 

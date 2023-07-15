@@ -51,7 +51,11 @@ bool mode_autoInit() {
     pid_init(&latGuid);
     pid_init(&vertGuid);
     // Load the first altitude from the flightplan (subsequent altitudes will be loaded on waypoint interception)
-    alt = fplan[currentWaypoint].alt;
+    if (fplan[currentWaypoint].alt < -5) {
+        alt = gps.alt;
+    } else {
+        alt = fplan[currentWaypoint].alt;
+    }
     return true;
 }
 

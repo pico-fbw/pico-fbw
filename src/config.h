@@ -252,13 +252,16 @@ These labels refer to the GPS's pins; the GPS's TX pin is connected to GPS_TX_PI
 #if defined(LIB_PICO_STDIO_USB) || defined(LIB_PICO_STDIO_UART)
 	#define FBW_DEBUG // Internal, do not touch
 
-	/* Disabled by default, uncomment to enable the API over serial */
+	/* Disabled by default, uncomment to enable the API over serial. */
 	// TODO: comment this in final
 	#define API_ENABLED
 	#ifdef API_ENABLED
 		/* Uncomment to wait for a "PING" command on power-up before booting. */
 		// #define API_WAIT_ON_BOOT
 	#endif
+
+	/* Time (in ms) to wait on bootup for the serial interface to initialize. */
+	#define BOOTUP_WAIT_TIME_MS 750
 
 	/* Enabled by default (misc logs + warning and error statements): */
 	#define FBW_DEBUG_printf    printf

@@ -5,6 +5,8 @@
 
 #ifdef API_ENABLED
 
+// TODO: api documentation on docs
+
 #define ENABLE_API_TIMEOUT_MS 2000 // Allow API calls this amount of time in ms after API enabled (~ after power on)
 
 /**

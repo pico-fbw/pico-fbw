@@ -37,7 +37,7 @@ int main() {
     absolute_time_t imu_safe = make_timeout_time_ms(850);
     stdio_init_all();
     #ifdef FBW_DEBUG
-        sleep_ms(650); // Wait for serial to begin
+        sleep_ms(BOOTUP_WAIT_TIME_MS); // Wait for serial to begin
     #endif
     #ifdef RASPBERRYPI_PICO
         FBW_DEBUG_printf("\nhello and welcome to pico-fbw v%s!\n", PICO_FBW_VERSION);

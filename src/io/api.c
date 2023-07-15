@@ -151,13 +151,52 @@ void api_poll() {
                     #else
                         printf("pico-fbw 501 Not Implemented\n");
                     #endif
+                } else if (strcmp(cmd, "GET_PID") == 0) {
+                    printf("{\"roll\":{\"p\":");
+                    // Curtesy checking for -inf values and changing them to null because json is dumb
+                    if (isfinite(flash_read(1, 1))) {
+                        printf("%f", flash_read(1, 1));
+                    } else {
+                        printf("null");
+                    }
+                    printf(",\"i\":");
+                    if (isfinite(flash_read(1, 2))) {
+                        printf("%f", flash_read(1, 2));
+                    } else {
+                        printf("null");
+                    }
+                    printf(",\"d\":");
+                    if (isfinite(flash_read(1, 3))) {
+                        printf("%f", flash_read(1, 3));
+                    } else {
+                        printf("null");
+                    }
+                    printf("},\"pitch\":{\"p\":");
+                    if (isfinite(flash_read(2, 1))) {
+                        printf("%f", flash_read(2, 1));
+                    } else {
+                        printf("null");
+                    }
+                    printf(",\"i\":");
+                    if (isfinite(flash_read(2, 2))) {
+                        printf("%f", flash_read(2, 2));
+                    } else {
+                        printf("null");
+                    }
+                    printf(",\"d\":");
+                    if (isfinite(flash_read(2, 3))) {
+                        printf("%f", flash_read(2, 3));
+                    } else {
+                        printf("null");
+                    }
+                    printf("}}\npico-fbw 200 OK\n");
                 } else if (strcmp(cmd, "GET_FLASH") == 0) {
                     printf("{\"sectors\":[{\"values\":[{");
-                    // Curtesy checking for -inf values and changing them to null because json is dumb
+                    // In case you were wondering json is still dumb
                     for (uint s = FLASH_MIN_SECTOR; s <= FLASH_MAX_SECTOR; s++) {
                         if (s != FLASH_MAX_SECTOR) {
-                            for (uint v = FLASH_MIN_SECTOR; v <= CONFIG_SECTOR_SIZE; v++) {
-                                if (v != CONFIG_SECTOR_SIZE) {
+                            for (uint v = FLASH_MIN_SECTOR; v <= 4; v++) {
+                                if (v != 4) {
                                     if (isfinite(flash_read(s, v))) {
                                         printf("\"%d\":%f,", v, flash_read(s, v));
                                     } else {
@@ -172,8 +211,8 @@ void api_poll() {
                                 }
                             }
                         } else {
-                            for (uint v = FLASH_MIN_SECTOR; v <= CONFIG_SECTOR_SIZE; v++) {
-                                if (v != CONFIG_SECTOR_SIZE) {
+                            for (uint v = FLASH_MIN_SECTOR; v <= 4; v++) {
+                                if (v != 4) {
                                     if (isfinite(flash_read(3, v))) {
                                         printf("\"%d\":%f,", v, flash_read(3, v));
                                     } else {
@@ -296,6 +335,64 @@ void api_poll() {
                             // Unsupported for now
                             printf("pico-fbw 501 Not Implemented\n");
                             goodReq = true;
+                        } else if (strcmp(cmd, "SET_PID") == 0) {
+                            float rollP, rollI, rollD, pitchP, pitchI, pitchD = -100.0f;
+                            for (uint i = 0; i < token_count; i++) {
+                                if (tokens[i].type == JSMN_STRING) {
+                                    char field[25];
+                                    strncpy(field, args + tokens[i].start, tokens[i].end - tokens[i].start);
+                                    field[tokens[i].end - tokens[i].start] = '\0';
+                                    if (strcmp(field, "roll") == 0) {
+                                        if (tokens[i + 1].type == JSMN_OBJECT) {
+                                            if (strncmp(args + tokens[i + 2].start, "p", tokens[i + 2].end - tokens[i + 2].start) == 0) {
+                                                rollP = atof(args + tokens[i + 3].start);
+                                            }
+                                            if (strncmp(args + tokens[i + 4].start, "i", tokens[i + 4].end - tokens[i + 4].start) == 0) {
+                                                rollI = atof(args + tokens[i + 5].start);
+                                            }
+                                            if (strncmp(args + tokens[i + 6].start, "d", tokens[i + 6].end - tokens[i + 6].start) == 0) {
+                                                rollD = atof(args + tokens[i + 7].start);
+                                            }
+                                        }
+                                    } else if (strcmp(field, "pitch") == 0) {
+                                        if (tokens[i + 1].type == JSMN_OBJECT) {
+                                            if (strncmp(args + tokens[i + 2].start, "p", tokens[i + 2].end - tokens[i + 2].start) == 0) {
+                                                pitchP = atof(args + tokens[i + 3].start);
+                                            }
+                                            if (strncmp(args + tokens[i + 4].start, "i", tokens[i + 4].end - tokens[i + 4].start) == 0) {
+                                                pitchI = atof(args + tokens[i + 5].start);
+                                            }
+                                            if (strncmp(args + tokens[i + 6].start, "d", tokens[i + 6].end - tokens[i + 6].start) == 0) {
+                                                pitchD = atof(args + tokens[i + 7].start);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            if (rollP >= 0 && rollI >= 0 && rollD >= 0 && pitchP >= 0 && pitchI >= 0 && pitchD >= 0) {
+                                goodReq = true;
+                                // Get current flash data so we don't overwrite it (well technically we do overwrite it but write it back immediately after)
+                                float pid0[CONFIG_SECTOR_SIZE];
+                                for (uint v = 0; v < CONFIG_SECTOR_SIZE; v++) {
+                                    pid0[v] = flash_read(FLASH_SECTOR_PID0, v);
+                                }
+                                pid0[0] = 0.3f;
+                                pid0[1] = rollP;
+                                pid0[2] = rollI;
+                                pid0[3] = rollD;
+                                float pid1[CONFIG_SECTOR_SIZE];
+                                for (uint v = 0; v < CONFIG_SECTOR_SIZE; v++) {
+                                    pid1[v] = flash_read(FLASH_SECTOR_PID1, v);
+                                }
+                                pid1[0] = 0.3f;
+                                pid1[1] = pitchP;
+                                pid1[2] = pitchI;
+                                pid1[3] = pitchD;
+                                // Write new value
+                                flash_write(FLASH_SECTOR_PID0, pid0);
+                                flash_write(FLASH_SECTOR_PID1, pid1);
+                                printf("pico-fbw 200 OK\n");
+                            }
                         } else if (strcmp(cmd, "SET_FLASH") == 0) {
                             uint sector;
                             uint index;
@@ -338,13 +435,11 @@ void api_poll() {
                                 }
                             }
                             if (goodReq) {
-                                // Get current flash data so we don't overwrite it (well technically we do overwrite it but write it back immediately after)
                                 float data[CONFIG_SECTOR_SIZE];
-                                for (uint i = 0; i <= CONFIG_SECTOR_SIZE; i++) {
-                                    data[i] = flash_read(sector, i);
+                                for (uint v = 0; v <= CONFIG_SECTOR_SIZE; v++) {
+                                    data[v] = flash_read(sector, v);
                                 }
                                 data[index] = value;
-                                // Write new value
                                 flash_write(sector, data);
                                 printf("pico-fbw 200 OK\n");
                             }
@@ -374,12 +469,14 @@ void api_poll() {
                        "GET_GPS - Get GPS data\n"
                        "GET_THRUST - Get thrust value\n"
                        "GET_FPLAN - Get flightplan JSON from Wi-Fly\n"
+                       "GET_PID - Get PID constants\n"
                        "GET_FLASH - Dump the flash contents used by pico-fbw\n"
                        "GET_INFO - Get system information\n"
                        "SET_MODE {\"mode\":<mode>} - Set the flight mode\n"
                        "SET_SETPOINTS {\"roll\":<roll>,\"pitch\":<pitch>,\"yaw\":<yaw>} - Set the desired attitude setpoints in normal mode\n"
                        "SET_THRUST {\"thrust\":<thrust>} - Set the thrust value\n"
                        "SET_FPLAN <flight_plan> - Set the flightplan JSON\n"
+                       "SET_PID {\"roll\":{\"p\":<roll_p>,\"i\":<roll_i>,\"d\":<roll_d>},\"pitch\":{\"p\":<pitch_p>,\"i\":<pitch_i>,\"d\":<pitch_d>}} - Set PID constants\n"
                        "SET_FLASH {\"sector\":<sector>,\"index\",<index>,\"value\":<value>} - Write a single floating-point value to the flash\n"
                        "Responses:\n"
                        "200 OK - Request successful\n"
@@ -405,6 +502,7 @@ void api_poll() {
             }
             free(cmd);
             free(line);
+            // TODO: add commands for getting and setting (including wiping) PID settings
         }
     }
 }

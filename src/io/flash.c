@@ -12,6 +12,8 @@
 
 #include "flash.h"
 
+// TODO: maybe consolidate all "sectors" into just one physical sector to conserve on space because we really don't even use much of each
+
 void flash_write(uint sector, float data[]) {
     // Erase flash before writing because s c i e n c e
     flash_erase(sector);
@@ -39,7 +41,7 @@ void flash_erase(uint sector) {
 }
 
 void flash_reset() {
-    for (uint8_t i = 0; i <= 3; i++) {
+    for (uint8_t i = FLASH_MIN_SECTOR; i <= FLASH_MAX_SECTOR; i++) {
         flash_erase(i);
     }
 }
