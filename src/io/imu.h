@@ -1,35 +1,70 @@
 #ifndef __IMU_H
 #define __IMU_H
 
-#include <stdint.h>
 #include "../config.h"
 
 // The i2c bus that will be used for the IMU
 #define IMU_I2C i2c0
 
+// The time (in microseconds) before the IMU is considered unresponsive
+#define IMU_TIMEOUT_US 5000
+
+// For configuration
+#define ROLL_AXIS 0
+#define PITCH_AXIS 1
+#define YAW_AXIS 2
+// Catch config errors w/ preprocessor so we never take off with weird axis mappings...yikes
+#if (IMU_X_AXIS != ROLL_AXIS && IMU_X_AXIS != PITCH_AXIS && IMU_X_AXIS != YAW_AXIS && IMU_X_AXIS != IMU_Y_AXIS && IMU_X_AXIS != IMU_Z_AXIS)
+	#error IMU_X_AXIS must be either ROLL_AXIS, PITCH_AXIS, or YAW_AXIS
+	#undef IMU_X_AXIS
+#endif
+#if (IMU_Y_AXIS != ROLL_AXIS && IMU_Y_AXIS != PITCH_AXIS && IMU_Y_AXIS != YAW_AXIS && IMU_Y_AXIS != IMU_X_AXIS && IMU_Y_AXIS != IMU_Z_AXIS)
+	#error IMU_Y_AXIS must be either ROLL_AXIS, PITCH_AXIS, or YAW_AXIS
+	#undef IMU_Y_AXIS
+#endif
+#if (IMU_Z_AXIS != ROLL_AXIS && IMU_Z_AXIS != PITCH_AXIS && IMU_Z_AXIS != YAW_AXIS && IMU_Z_AXIS != IMU_X_AXIS && IMU_Z_AXIS != IMU_Y_AXIS)
+	#error IMU_Z_AXIS must be either ROLL_AXIS, PITCH_AXIS, or YAW_AXIS
+	#undef IMU_Z_AXIS
+#endif
+
 // Chip-specific information
-#ifdef IMU_BNO055
-	#define CHIP_FREQ_KHZ 400 // Default I2C freq of the BNO055 is 400KHz
+// CHIP_FREQ_KHZ, CHIP_REGISTER, ID_REGISTER, and CHIP_ID are required for all chips, the rest is usually specific to each chip
+#if defined(IMU_BNO055)
+	#define CHIP_FREQ_KHZ 400
 
 	#define CHIP_REGISTER 0x28
 	static const unsigned char ID_REGISTER = 0x00;
 	#define CHIP_ID 0xA0
-	#define CALIBRATION_REGISTER 0x35
 
+	#define CALIBRATION_REGISTER 0x35
 	#define SYS_REGISTER 0x3F
 	#define SYS_RESET 0x20
 	static const unsigned char OPR_MODE_REGISTER = 0x3D;
-	#define MODE_NDOF 0x0C
 	#define PWR_MODE_REGISTER 0x3E
-	#define PWR_MODE_NORMAL 0x00
 	#define AXIS_MAP_CONF_REGISTER 0x41
 	#define AXIS_MAP_SIGN_REGISTER 0x42
 
-	static const unsigned char EULER_BEGIN_REGISTER = 0x1A;
+	static const unsigned char GYRO_BEGIN_REGISTER = 0x1A; // (technically EULER_BEGIN_REGISTER but renamed for compatability)
 	static const unsigned char ACCEL_BEGIN_REGISTER = 0x28;
+
+	#define MODE_NDOF 0x0C
+	#define PWR_MODE_NORMAL 0x00
+#elif defined(IMU_MPU6050)
+	#define CHIP_FREQ_KHZ 400
+
+	#define CHIP_REGISTER 0x68
+	static const unsigned char ID_REGISTER = 0x75;
+	#define CHIP_ID 0x68
+
+	#define SMPLRT_DIV_REGISTER 0x19
+	#define CONFIG_REGISTER 0x1A
+	#define GYRO_CONFIG_REGISTER 0x1B
+	#define ACCEL_CONFIG_REGISTER 0x1C
+	#define PWR_MODE_REGISTER 0x6B
+
+	static const unsigned char GYRO_BEGIN_REGISTER = 0x43;
+	static const unsigned char ACCEL_BEGIN_REGISTER = 0x3B;
 #endif
-// TODO: possibly support MPU6050? it will bring down cost a lot and I do have one to test with
-// https://github.com/rfetick/MPU6050_light may be of use here because we do need motion fusion
 
 /**
  * Contains heading, roll, pitch, and yaw angles of the aircraft when filled using imu_getAngles().
@@ -81,12 +116,5 @@ inertialAngles imu_getAngles();
  * @return an intertialAccel struct containing acceleration data for the X, Y, and Z axes.
 */
 inertialAccel imu_getAccel();
-
-/**
- * Changes the working mode of the IMU.
- * @param mode The code of the mode to change into (for example, 0x0C for NDOF).
- * @return true if success, false if failure.
-*/
-bool imu_changeMode(uint8_t mode);
 
 #endif // __IMU_H

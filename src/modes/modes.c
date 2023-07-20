@@ -21,11 +21,11 @@
 
 #include "modes.h"
 
-static uint8_t currentMode = DIRECT;
+static Mode currentMode = DIRECT;
 static bool imuDataSafe = false;
 static bool gpsDataSafe = false;
 
-void toMode(uint8_t newMode) {
+void toMode(Mode newMode) {
     // Run deinit code for currentMode and then run init code for newMode
     switch (currentMode) {
         case DIRECT:
@@ -150,20 +150,36 @@ void modeRuntime() {
 uint8_t getCurrentMode() { return currentMode; }
 
 void setIMUSafe(bool state) {
-    imuDataSafe = state;
-    // Automatically de-init i2c and set into direct mode if IMU is deemed unsafe
-    if (!state) {
-        imu_deinit();
-        toMode(DIRECT);
+    if (state != imuDataSafe) {
+        #ifdef FBW_DEBUG
+            if (state) {
+                FBW_DEBUG_printf("[modes] IMU set as safe\n");
+            } else {
+                FBW_DEBUG_printf("[modes] IMU set as unsafe\n");
+            }
+        #endif
+        imuDataSafe = state;
+        // Automatically de-init IMU and enable direct mode if IMU is deemed unsafe
+        if (!state) {
+            toMode(DIRECT);
+        }
     }
 }
 
 void setGPSSafe(bool state) {
-    gpsDataSafe = state;
-    if (!state) {
-        gps_deinit();
-        if (currentMode == AUTO || currentMode == HOLD) {
-            toMode(NORMAL);
+    if (state != gpsDataSafe) {
+        #ifdef FBW_DEBUG
+            if (state) {
+                FBW_DEBUG_printf("[modes] GPS set as safe\n");
+            } else {
+                FBW_DEBUG_printf("[modes] GPS set as unsafe\n");
+            }
+        #endif
+        gpsDataSafe = state;
+        if (!state) {
+            if (currentMode == AUTO || currentMode == HOLD) {
+                toMode(NORMAL);
+            }
         }
     }
 }

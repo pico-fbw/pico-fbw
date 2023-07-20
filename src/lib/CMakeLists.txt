@@ -1,4 +1,5 @@
 add_library(fbw_lib
+    minmea.c
     nav.c
     pid.c
     pidtune.c

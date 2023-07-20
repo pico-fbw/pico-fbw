@@ -1,5 +1,6 @@
 add_library(fbw_io
     api.c
+    binary.c
     flash.c
     gps.c
     imu.c
@@ -19,10 +20,12 @@ target_link_libraries(fbw_io
     hardware_flash
     hardware_gpio
     hardware_i2c
+    hardware_irq
     hardware_pio
     hardware_pwm
     hardware_sync
     hardware_uart
+    fbw_lib
     fbw_modes
 )
 

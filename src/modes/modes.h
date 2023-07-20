@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 // Define internal mode aliases
+typedef unsigned char Mode;
 #define DIRECT 0
 #define NORMAL 1
 #define AUTO 2
@@ -15,7 +16,7 @@
  * Transitions the system to a specified mode.
  * @param mode The mode to transition to.
 */
-void toMode(uint8_t mode);
+void toMode(Mode mode);
 
 /**
  * Runs the code of the system's currently selected mode.

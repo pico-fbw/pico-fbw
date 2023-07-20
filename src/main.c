@@ -108,7 +108,6 @@ int main() {
     for (uint8_t s = 0; s < 3; s++) {
         if (servo_enable(servos[s]) != 0) {
             FBW_DEBUG_printf("[boot] FATAL: [FBW-800] failed to initialize servo %d)\n", s);
-            // TODO: when I get back home add a GIF of FBW-800 to the wiki
             led_blink(800, 0);
             while (true);
         }
@@ -148,7 +147,7 @@ int main() {
             FBW_DEBUG_printf("[boot] GPS ok\n");
             setGPSSafe(true);
         } else {
-            FBW_DEBUG_printf("[boot] WARNING: [FBW-1000] GPS not found!\n");
+            FBW_DEBUG_printf("[boot] WARNING: [FBW-2000] GPS initalization failed!\n");
             led_blink(2000, 0);
         }
         FBW_DEBUG_printf("[boot] initializing Wi-Fly\n");

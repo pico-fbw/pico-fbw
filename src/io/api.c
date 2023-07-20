@@ -10,6 +10,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "pico/platform.h"
+#include "pico/runtime.h"
 #include "pico/stdio.h"
 #include "pico/time.h"
 #include "../lib/jsmn.h"
@@ -67,11 +68,29 @@ void api_init_blocking() {
     #ifdef API_WAIT_ON_BOOT
         printf("[api] waiting for PING...\n");
         while (true) {
-            char *cmd = stdin_read_line();
-            if (strcmp(cmd, "PING") == 0) {
-                printf("PONG\n");
+            char *line = stdin_read_line();
+            if (line != NULL) {
+                char *rcmd = strtok(line, " ");
+                char *cmd = malloc(strlen(rcmd) + 1);
+                if (cmd != NULL) {
+                    char *p = cmd;
+                    while (*rcmd) {
+                        *p = toupper((unsigned char)*rcmd);
+                        p++;
+                        rcmd++;
+                    }
+                    *p = '\0';
+                } else {
+                    panic("Failed to allocate memory for command"); // Panic because we should NOT be out of memory this early
+                }
+                if (strcmp(cmd, "PING") == 0) {
+                    printf("PONG\n");
+                    free(cmd);
+                    free(line);
+                    break;
+                }
                 free(cmd);
-                break;
+                free(line);
             }
         }
     #endif
@@ -89,16 +108,20 @@ void api_poll() {
             // Seperate the command and arguments
             char *rcmd = strtok(line, " ");
             char *args = strtok(NULL, " ");
-            // Automatically uppercase the command
-            char* cmd = malloc(strlen(rcmd) + 1);
+            
+            char *cmd = malloc(strlen(rcmd) + 1);
             if (cmd != NULL) {
-                char* p = cmd;
+                char *p = cmd;
                 while (*rcmd) {
                     *p = toupper((unsigned char)*rcmd);
                     p++;
                     rcmd++;
                 }
                 *p = '\0';
+            } else {
+                // Out of memory?
+                printf("pico-fbw 500 Internal Error\n");
+                return;
             }
             // Command handler:
 
@@ -502,7 +525,6 @@ void api_poll() {
             }
             free(cmd);
             free(line);
-            // TODO: add commands for getting and setting (including wiping) PID settings
         }
     }
 }

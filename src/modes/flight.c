@@ -4,13 +4,13 @@
 */
 
 #include <stdbool.h>
+#include "../lib/pid.h"
 
 #include "pico/multicore.h"
 #include "hardware/sync.h"
 
 #include "../io/flash.h"
 #include "../io/servo.h"
-#include "../lib/pid.h"
 
 #include "../config.h"
 

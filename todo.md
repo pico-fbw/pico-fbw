@@ -1,5 +1,6 @@
 # pico-fbw TODO
 
+[ ] add the GIF of FBW-800
 [ ] LED STRIPS FOR GAMER PLANE YEAAAAAAAAAAAAAAAAAAH
 [ ] thrust control (maybe not automatic yet, just manual and allow through api)
 [ ] support more IMU types

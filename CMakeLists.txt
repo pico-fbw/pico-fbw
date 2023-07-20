@@ -14,6 +14,6 @@ add_subdirectory(src)
 
 # IMPORTANT: If you are debugging the project, enable either of these options for a debug output!
 # The system will automatically output a complete debug log to either of these.
-# Default baudrate is 115200 and USB is enabled by default
+# Default baud rate for both USB and UART is 115200
 pico_enable_stdio_usb(${PROJECT_NAME} 1)
 pico_enable_stdio_uart(${PROJECT_NAME} 0)

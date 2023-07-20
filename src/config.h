@@ -93,6 +93,28 @@ This value DOES need to be negative! */
 
 /* IMU types */
 #define IMU_BNO055
+// #define IMU_MPU6050
+
+/* You may map the X, Y, and Z axes to the correct axes of flight (this can be especially important for the MPU6050)! */
+#define IMU_MAP_AXES
+#ifdef IMU_MAP_AXES
+	#define IMU_X_AXIS YAW_AXIS
+	#define IMU_Y_AXIS ROLL_AXIS
+	#define IMU_Z_AXIS PITCH_AXIS
+	// TODO: make default axis maps for BNO and MPU
+#endif
+
+// TODO: more imu translation funcionality
+
+/* Almost all GPS modules use either 4600 or 9600 baud rates with 9600 being more common. 
+Check the documentation of your GPS module and find its baud rate if you are experiencing issues. */
+#define GPS_BAUDRATE 9600
+
+/* Define the type of command used to communicate with the GPS.
+The wrong command type won't prevent the system from getting data, but it will prevent the proper configuration of the GPS unit
+which can possibly lead to issues getting the correct data at the correct times. */
+#define GPS_COMMAND_TYPE_PMTK
+// #define GPS_COMMAND_TYPE_PSRF // Currently untested by me, please get in contact if you are able to test this option!
 
 /* Note that these pins must line up with the Pico's I2C0 interface, see a pinout if you're not sure! */
 #define IMU_SDA_PIN 16
@@ -246,13 +268,13 @@ These labels refer to the GPS's pins; the GPS's TX pin is connected to GPS_TX_PI
 
 /** @section debug/api
  * Here you can enable/disable debugging features and the API.
- * Ensure you enable either USB or UART output in /CMakeLists.txt (one directory up, not src/this directory).
+ * Ensure you enable either USB or UART output in /CMakeLists.txt (one directory up, not this directory).
  * Once you've done that, you are welcome to enable/disable whatever debugging/API options you wish by commenting/uncommenting them here.
 */
 #if defined(LIB_PICO_STDIO_USB) || defined(LIB_PICO_STDIO_UART)
 	#define FBW_DEBUG // Internal, do not touch
 
-	/* Disabled by default, uncomment to enable the API over serial. */
+	/* Uncomment to enable the API over serial. */
 	// TODO: comment this in final
 	#define API_ENABLED
 	#ifdef API_ENABLED
@@ -261,13 +283,15 @@ These labels refer to the GPS's pins; the GPS's TX pin is connected to GPS_TX_PI
 	#endif
 
 	/* Time (in ms) to wait on bootup for the serial interface to initialize. */
-	#define BOOTUP_WAIT_TIME_MS 750
+	#define BOOTUP_WAIT_TIME_MS 800
 
 	/* Enabled by default (misc logs + warning and error statements): */
 	#define FBW_DEBUG_printf    printf
 	/* Uncomment/replace as necessary to enable: */
-	#define WIFLY_DEBUG_printf      printf
-	#define WIFLY_DUMP_DATA      1
+	#define IMU_DEBUG_printf       // printf
+	#define GPS_DEBUG_printf       // printf
+	#define WIFLY_DEBUG_printf     // printf
+	#define WIFLY_DUMP_DATA        // 1
 	#define TCP_DEBUG_printf       // printf
 	#define TCP_DUMP_DATA       0  // 1
 	#define DHCP_DEBUG_printf      // printf
