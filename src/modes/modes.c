@@ -72,7 +72,7 @@ void toMode(Mode newMode) {
                         return;
                     }
                 #else
-                    #ifdef WIFLY_ENABLED
+                    #ifdef GPS_ENABLED
                         if (gpsDataSafe) {
                             FBW_DEBUG_printf("[modes] entering auto mode\n");
                             if (mode_autoInit()) {
@@ -87,7 +87,7 @@ void toMode(Mode newMode) {
                             return;
                         }
                     #else
-                        // Wi-Fly is required to run auto mode, fallback
+                        // GPS is required to run auto mode, fallback
                         toMode(NORMAL);
                         return;
                     #endif
@@ -130,7 +130,7 @@ void modeRuntime() {
             mode_normal();
             break; 
         case AUTO:
-            #ifdef WIFLY_ENABLED
+            #ifdef GPS_ENABLED
                 mode_auto();
             #endif
             break;
@@ -140,7 +140,7 @@ void modeRuntime() {
             #endif
             break;
         case HOLD:
-            #ifdef WIFLY_ENABLED
+            #ifdef GPS_ENABLED
                 mode_hold();
             #endif
             break;

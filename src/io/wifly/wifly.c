@@ -16,22 +16,28 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
-#include "pico/cyw43_arch.h"
+#include "pico/stdlib.h" // Wi-Fly doesn't actually use the stdlib, this is here only to provide access to the RASPBERRYPI_PICO_W macro
+#ifdef RASPBERRYPI_PICO_W
+    #include "pico/cyw43_arch.h"
+#endif
+
 #define JSMN_HEADER // Only define once!
 #include "../../lib/jsmn.h"
 
-#include "pcl/dhcp.h"
-#include "pcl/dns.h"
-#include "pcl/tcp.h"
+#ifdef RASPBERRYPI_PICO_W
+    #include "pcl/dhcp.h"
+    #include "pcl/dns.h"
+    #include "pcl/tcp.h"
+
+    dhcp_server_t dhcp_server;
+    dns_server_t dns_server;
+    TCP_SERVER_T *state;
+#endif
 
 #include "../../config.h"
 #include "../../version.h"
 
 #include "wifly.h"
-
-dhcp_server_t dhcp_server;
-dns_server_t dns_server;
-TCP_SERVER_T *state;
 
 static int fplanStatus = WIFLY_STATUS_AWAITING;
 
@@ -62,35 +68,39 @@ static inline void url_decode(char *str) {
     *q = '\0';
 }
 
-void wifly_init() {
-    state = calloc(1, sizeof(TCP_SERVER_T));
-    if (!state) {
-        FBW_DEBUG_printf("[wifly] ERROR: tcp failed to allocate state\n");
-    }
-    const char *ap_name = WIFLY_NETWORK_NAME;
-    #ifdef WIFLY_NETWORK_USE_PASSWORD
-        const char *password = WIFLY_NETWORK_PASSWORD;
-    #else
-        const char *password = NULL;
-    #endif
-    cyw43_arch_enable_ap_mode(ap_name, password, CYW43_AUTH_WPA2_AES_PSK);
+#ifdef RASPBERRYPI_PICO_W
 
-    ip4_addr_t mask;
-    IP4_ADDR(ip_2_ip4(&state->gw), 192, 168, 4, 1);
-    IP4_ADDR(ip_2_ip4(&mask), 255, 255, 255, 0);
-    dhcp_server_init(&dhcp_server, &state->gw, &mask);
-    dns_server_init(&dns_server, &state->gw);
-    if (!tcp_server_open(state)) {
-        FBW_DEBUG_printf("[wifly] ERROR: tcp failed to open server\n");
-    }
-}
+    void wifly_init() {
+        state = calloc(1, sizeof(TCP_SERVER_T));
+        if (!state) {
+            FBW_DEBUG_printf("[wifly] ERROR: tcp failed to allocate state\n");
+        }
+        const char *ap_name = WIFLY_NETWORK_NAME;
+        #ifdef WIFLY_NETWORK_USE_PASSWORD
+            const char *password = WIFLY_NETWORK_PASSWORD;
+        #else
+            const char *password = NULL;
+        #endif
+        cyw43_arch_enable_ap_mode(ap_name, password, CYW43_AUTH_WPA2_AES_PSK);
 
-void wifly_deinit() {
-    dns_server_deinit(&dns_server);
-    dhcp_server_deinit(&dhcp_server);
-    tcp_server_close(state);
-    // cyw43_arch_deinit();
-}
+        ip4_addr_t mask;
+        IP4_ADDR(ip_2_ip4(&state->gw), 192, 168, 4, 1);
+        IP4_ADDR(ip_2_ip4(&mask), 255, 255, 255, 0);
+        dhcp_server_init(&dhcp_server, &state->gw, &mask);
+        dns_server_init(&dns_server, &state->gw);
+        if (!tcp_server_open(state)) {
+            FBW_DEBUG_printf("[wifly] ERROR: tcp failed to open server\n");
+        }
+    }
+
+    void wifly_deinit() {
+        dns_server_deinit(&dns_server);
+        dhcp_server_deinit(&dhcp_server);
+        tcp_server_close(state);
+        // cyw43_arch_deinit();
+    }
+
+#endif // RASPBERRYPI_PICO_W
 
 int wifly_genPageContent(char *result, size_t max_result_len) {
     char color[8];

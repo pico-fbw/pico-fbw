@@ -13,7 +13,5 @@ target_link_libraries(fbw_modes
     pico_time
     fbw_io
     fbw_lib
+    fbw_wifly
 )
-if (WIFLY_ENABLED)
-    target_link_libraries(fbw_modes fbw_wifly)
-endif ()

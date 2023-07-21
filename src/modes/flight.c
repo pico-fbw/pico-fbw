@@ -12,15 +12,13 @@
 #include "../io/flash.h"
 #include "../io/servo.h"
 
-#include "../config.h"
-
 #include "modes.h"
 #include "tune.h"
 
 #include "flight.h"
 
 inertialAngles aircraft;
-#ifdef WIFLY_ENABLED
+#ifdef GPS_ENABLED
     gpsData gps;
 #endif
 
@@ -49,7 +47,7 @@ void flight_init() {
 void flight_update(double roll, double pitch, double yaw, bool override) {
     // Update input data
     aircraft = imu_getAngles();
-    #ifdef WIFLY_ENABLED
+    #ifdef GPS_ENABLED
         gps = gps_getData();
     #endif
 

@@ -1,6 +1,5 @@
 add_library(fbw_io
     api.c
-    binary.c
     flash.c
     gps.c
     imu.c
@@ -27,12 +26,13 @@ target_link_libraries(fbw_io
     hardware_uart
     fbw_lib
     fbw_modes
+    fbw_wifly
 )
 
 if ("$CACHE{PICO_BOARD}" STREQUAL "pico_w")
     target_link_libraries(fbw_io pico_cyw43_arch_none)
-    if (WIFLY_ENABLED)
-        add_subdirectory(wifly)
-        target_link_libraries(fbw_io fbw_wifly)
-    endif ()
 endif ()
+
+# Wi-Fly is always enabled in some capacity (to allow for the API to interact with it regardless of Pico W).
+# LWIP and the whole HTTP stack only gets compiled if the Pico W is detected (this is all done in the Wi-Fly subdirectory).
+add_subdirectory(wifly)

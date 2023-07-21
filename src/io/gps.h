@@ -3,6 +3,8 @@
 
 #include "../config.h"
 
+#ifdef GPS_ENABLED
+
 #define GPS_UART uart1 // GPS uses uart1 because uart0 can be used for debugging in some cases
 #define GPS_UART_IRQ UART1_IRQ
 
@@ -47,5 +49,7 @@ typedef struct gpsData {
  * @return an updated gpsData struct.
 */
 gpsData gps_getData();
+
+#endif // GPS_ENABLED
 
 #endif // __GPS_H

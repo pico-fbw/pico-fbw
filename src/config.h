@@ -106,34 +106,38 @@ This value DOES need to be negative! */
 
 // TODO: more imu translation funcionality
 
-/* Almost all GPS modules use either 4600 or 9600 baud rates with 9600 being more common. 
-Check the documentation of your GPS module and find its baud rate if you are experiencing issues. */
-#define GPS_BAUDRATE 9600
-
-/* Define the type of command used to communicate with the GPS.
-The wrong command type won't prevent the system from getting data, but it will prevent the proper configuration of the GPS unit
-which can possibly lead to issues getting the correct data at the correct times. */
-#define GPS_COMMAND_TYPE_PMTK
-// #define GPS_COMMAND_TYPE_PSRF // Currently untested by me, please get in contact if you are able to test this option!
-
 /* Note that these pins must line up with the Pico's I2C0 interface, see a pinout if you're not sure! */
 #define IMU_SDA_PIN 16
 #define IMU_SCL_PIN 17
 
-/* These pins must line up with the UART1 interface.
-These labels refer to the GPS's pins; the GPS's TX pin is connected to GPS_TX_PIN on the Pico. */
-#define GPS_TX_PIN 21
-#define GPS_RX_PIN 20
+/* Uncomment to enable GPS functionality.
+There are no types, most GPS modules use the NMEA-0183 standard so that is what is supported here. */
+#define GPS_ENABLED
+#ifdef GPS_ENABLED
+
+	/* Almost all GPS modules use either 4600 or 9600 baud rates with 9600 being more common. 
+	Check the documentation of your GPS module and find its baud rate if you are experiencing issues. */
+	#define GPS_BAUDRATE 9600
+
+	/* Define the type of command used to communicate with the GPS.
+	The wrong command type won't prevent the system from getting data, but it will prevent the proper configuration of the GPS unit
+	which can possibly lead to issues getting the correct data at the correct times. */
+	#define GPS_COMMAND_TYPE_PMTK
+	// #define GPS_COMMAND_TYPE_PSRF // Currently untested by me, please get in contact if you are able to test this option!
+
+	/* These pins must line up with the UART1 interface.
+	These labels refer to the GPS's pins; the GPS's TX pin is connected to GPS_TX_PIN on the Pico. */
+	#define GPS_TX_PIN 21
+	#define GPS_RX_PIN 20
+
+#endif
 
 /* More to come in the future...? Let me know if there's an IMU/GPS module you would like supported! */
 
 
 
 /** @section Wi-Fly
- * Wi-Fly is enabled by default when the Pico W is detected as the target board.
- * It must be enabled/disabled through CMake and NOT the config file!
- * The option to toggle this is WIFLY_ENABLED; Use -DWIFLY_ENABLED=ON or -DWIFLY_ENABLED=OFF through CMake command line or search for WIFLY_ENABLED in the GUI.
- * The below settings apply only if Wi-Fly has been enabled through CMake.
+ * Wi-Fly is enabled when the Pico W is detected as the target board.
 */
 #ifdef WIFLY_ENABLED
 
@@ -150,7 +154,7 @@ These labels refer to the GPS's pins; the GPS's TX pin is connected to GPS_TX_PI
 		#define WIFLY_NETWORK_PASSWORD "password"
 	#endif
 
-#endif // WIFLY_ENABLED
+#endif
 
 
 
@@ -291,7 +295,7 @@ These labels refer to the GPS's pins; the GPS's TX pin is connected to GPS_TX_PI
 	#define IMU_DEBUG_printf       // printf
 	#define GPS_DEBUG_printf       // printf
 	#define WIFLY_DEBUG_printf     // printf
-	#define WIFLY_DUMP_DATA        // 1
+	#define WIFLY_DUMP_DATA     0  // 1
 	#define TCP_DEBUG_printf       // printf
 	#define TCP_DUMP_DATA       0  // 1
 	#define DHCP_DEBUG_printf      // printf

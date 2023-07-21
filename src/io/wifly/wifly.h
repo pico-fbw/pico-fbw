@@ -32,15 +32,19 @@ typedef struct Waypoint {
     int alt;
 } Waypoint;
 
-/**
- * Initializes the Wi-Fly system.
-*/
-void wifly_init();
+#ifdef RASPBERRYPI_PICO_W
 
-/**
- * De-initializes the Wi-Fly system.
-*/
-void wifly_deinit();
+    /**
+     * Initializes the Wi-Fly system.
+    */
+    void wifly_init();
+
+    /**
+     * De-initializes the Wi-Fly system.
+    */
+    void wifly_deinit();
+
+#endif // RASPBERRYPI_PICO_W
 
 /**
  * Generates the page content for Wi-Fly based on the current status of the flightplan.

@@ -22,7 +22,7 @@
 
 #include "auto.h"
 
-#ifdef WIFLY_ENABLED
+#ifdef GPS_ENABLED
 
 static bool autoComplete = false;
 
@@ -98,4 +98,4 @@ void mode_auto() {
 // "materials" and "how to use system" need updating and also a completely new page for wifly and how to use it
 // also make sure to mention it in the readme
 
-#endif // WIFLY_ENABLED
+#endif // GPS_ENABLED

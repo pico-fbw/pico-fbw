@@ -9,28 +9,20 @@ target_link_libraries(${PROJECT_NAME}
     fbw_io
     fbw_lib
     fbw_modes
+    fbw_wifly
 )
 # Import Pico W specific libraries and set specific compiler definitions, also a few messages about board compatability
 if ("$CACHE{PICO_BOARD}" STREQUAL "pico" OR "$CACHE{PICO_BOARD}" STREQUAL "pico_w")
     message(STATUS "[pico-fbw] $CACHE{PICO_BOARD} is compatable")
 else ()
     message(WARNING "[pico-fbw] No compatable board found")
-    set(WIFLY_ENABLED OFF)
-endif ()
-if ("$CACHE{PICO_BOARD}" STREQUAL "pico")
-    set(WIFLY_ENABLED OFF)
 endif ()
 if ("$CACHE{PICO_BOARD}" STREQUAL "pico_w")
     target_link_libraries(${PROJECT_NAME} pico_cyw43_arch_none)
-    option(WIFLY_ENABLED "Enable Wi-Fly (pico-fbw)" ON) # create this option if we haven't already
-    if (WIFLY_ENABLED) # check_symbol_exists(WIFLY "config.h" WIFLY_ENABLED)
-        message(STATUS "[pico-fbw] Wi-Fly enabled")
-        add_compile_definitions(WIFLY_ENABLED)
-        include_directories(${CMAKE_CURRENT_LIST_DIR}/io/wifly)
-    else ()
-        message(STATUS "[pico-fbw] Wi-Fly disabled")
-        set(WIFLY_ENABLED OFF)
-    endif ()
+    # WIFLY_ENABLED now just basically serves as a stand-in for RASPBERRYPI_PICO_W due to recent changes
+    # It's still used in a few places though, and the behavior could possibly be altered...
+    add_compile_definitions(WIFLY_ENABLED)
+    include_directories(${CMAKE_CURRENT_LIST_DIR}/io/wifly)
 endif ()
 
 add_subdirectory(io)

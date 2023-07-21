@@ -121,6 +121,7 @@ void api_poll() {
             } else {
                 // Out of memory?
                 printf("pico-fbw 500 Internal Error\n");
+                free(line);
                 return;
             }
             // Command handler:
@@ -132,7 +133,7 @@ void api_poll() {
                     printf("pico-fbw 200 OK\n");
                 } else if (strcmp(cmd, "GET_SENSORS") == 0) {
                     if (getCurrentMode() != DIRECT) {
-                        #ifdef WIFLY_ENABLED
+                        #ifdef GPS_ENABLED
                             printf("{\"imu\":[{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f,\"heading\":%.4f}],\"gps\":[{\"lat\":%f,\"lng\":%f,\"alt\":%d,\"spd\":%f}]}\n", aircraft.roll, aircraft.pitch, aircraft.yaw, aircraft.heading, gps.lat, gps.lng, gps.alt, gps.spd);
                         #else
                             printf("{\"imu\":[{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f,\"heading\":%.4f}]}\n", aircraft.roll, aircraft.pitch, aircraft.yaw, aircraft.heading);
@@ -149,7 +150,7 @@ void api_poll() {
                         printf("pico-fbw 503 Unavailable\n");
                     }
                 } else if (strcmp(cmd, "GET_GPS") == 0) {
-                    #ifdef WIFLY_ENABLED
+                    #ifdef GPS_ENABLED
                         if (getCurrentMode() != DIRECT) {
                             printf("{\"gps\":[{\"lat\":%f,\"lng\":%f,\"alt\":%d,\"spd\":%f}]}\n", gps.lat, gps.lng, gps.alt, gps.spd);
                             printf("pico-fbw 200 OK\n");
@@ -163,17 +164,13 @@ void api_poll() {
                     // Unsupported for now
                     printf("pico-fbw 501 Not Implemented\n");
                 } else if (strcmp(cmd, "GET_FPLAN") == 0) {
-                    #ifdef WIFLY_ENABLED
-                        const char *fplan = wifly_getFplanJson();
-                        if (fplan == NULL || wifly_getWaypointCount() == 0) {
-                            printf("pico-fbw 503 Unavailable\n");
-                        } else {
-                            printf("%s\n", fplan);
-                            printf("pico-fbw 200 OK\n");
-                        }
-                    #else
-                        printf("pico-fbw 501 Not Implemented\n");
-                    #endif
+                    const char *fplan = wifly_getFplanJson();
+                    if (fplan == NULL || wifly_getWaypointCount() == 0) {
+                        printf("pico-fbw 503 Unavailable\n");
+                    } else {
+                        printf("%s\n", fplan);
+                        printf("pico-fbw 200 OK\n");
+                    }
                 } else if (strcmp(cmd, "GET_PID") == 0) {
                     printf("{\"roll\":{\"p\":");
                     // Curtesy checking for -inf values and changing them to null because json is dumb
@@ -264,29 +261,27 @@ void api_poll() {
                     printf("pico-fbw 200 OK\n");
                 } else {
                     printf("pico-fbw 404 Unknown Command\n");
+                    free(cmd);
+                    free(line);
+                    return;
                 }
             // All SET commands
             } else if (strncmp(cmd, "SET_", 4) == 0) {
                 // SET_FPLAN command is a bit different (parsed in wifly.c, not here) so handle that one seperately
                 if (strcmp(cmd, "SET_FPLAN") == 0) {
-                    // TODO: allow some sort of auto mode on normal pico through this api command instead of through wifi?
-                    #ifdef WIFLY_ENABLED
-                        char *fplan = malloc(strlen(args) + 7);
-                        if (fplan != NULL) {
-                            // Automatically format as an HTTP request
-                            sprintf(fplan, FPLAN_PARAM_CONCAT, args);
-                            if (wifly_parseFplan(fplan)) {
-                                printf("pico-fbw 200 OK\n");
-                            } else {
-                                printf("pico-fbw 500 Internal Error\n");
-                            }
-                            free(fplan);
+                    char *fplan = malloc(strlen(args) + 7);
+                    if (fplan != NULL) {
+                        // Automatically format as an HTTP request
+                        sprintf(fplan, FPLAN_PARAM_CONCAT, args);
+                        if (wifly_parseFplan(fplan)) {
+                            printf("pico-fbw 200 OK\n");
                         } else {
                             printf("pico-fbw 500 Internal Error\n");
                         }
-                    #else
-                        printf("pico-fbw 501 Not Implemented\n");
-                    #endif
+                        free(fplan);
+                    } else {
+                        printf("pico-fbw 500 Internal Error\n");
+                    }
                 } else {
                     bool goodReq = false;
                     // All other SET commands utilize JSON so we should initatiate the JSON parser (all documented in wifly.c)
@@ -468,7 +463,9 @@ void api_poll() {
                             }
                         } else {
                             printf("pico-fbw 404 Unknown Command\n");
-                            goodReq = true;
+                            free(cmd);
+                            free(line);
+                            return;
                         }
                         if (!goodReq) {
                             printf("pico-fbw 400 Bad Request\n");

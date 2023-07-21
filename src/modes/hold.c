@@ -15,7 +15,7 @@
 
 #include "hold.h"
 
-#ifdef WIFLY_ENABLED
+#ifdef GPS_ENABLED
 
 static uint8_t turnStatus = HOLD_TURN_UNSCHEDULED;
 
@@ -94,4 +94,4 @@ void mode_hold() {
     }
 }
 
-#endif // WIFLY_ENABLED
+#endif // GPS_ENABLED

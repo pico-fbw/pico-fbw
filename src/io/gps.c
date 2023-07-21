@@ -18,6 +18,8 @@
 
 #include "gps.h"
 
+#ifdef GPS_ENABLED
+
 // TODO: altitude offset calibration
 int altOffset = 0;
 
@@ -203,3 +205,5 @@ gpsData gps_getData() {
     }
     return (gpsData){lat, lng, alt, spd, trk};
 }
+
+#endif // GPS_ENABLED

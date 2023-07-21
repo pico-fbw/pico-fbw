@@ -4,9 +4,11 @@
 #include "../io/imu.h"
 #include "../io/gps.h"
 
+#include "../config.h"
+
 // Contains the aircraft's inertial angles, will be updated whenever flight_update_core0() is called.
 extern inertialAngles aircraft;
-#ifdef WIFLY_ENABLED
+#ifdef GPS_ENABLED
     // Contains the aircraft's GPS positioning data, will be updated whenever flight_update_core0() is called.
     extern gpsData gps;
 #endif

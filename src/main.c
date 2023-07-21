@@ -16,6 +16,7 @@
 #endif
 
 #include "io/api.h"
+#include "io/binary.h"
 #include "io/flash.h"
 #include "io/gps.h"
 #include "io/imu.h"
@@ -23,9 +24,7 @@
 #include "io/pwm.h"
 #include "io/servo.h"
 #include "io/switch.h"
-#ifdef WIFLY_ENABLED
-    #include "io/wifly/wifly.h"
-#endif
+#include "io/wifly/wifly.h"
 
 #include "modes/modes.h"
 
@@ -44,13 +43,8 @@ int main() {
     #endif
     #ifdef RASPBERRYPI_PICO_W
         FBW_DEBUG_printf("\nhello and welcome to pico-fbw(w) v%s!\n", PICO_FBW_VERSION);
-        #ifdef WIFLY_ENABLED
-            FBW_DEBUG_printf("[driver] initializing cyw43 architecture with predefined country 0x%04X\n", WIFLY_NETWORK_COUNTRY);
-            cyw43_arch_init_with_country(WIFLY_NETWORK_COUNTRY);
-        #else
-            FBW_DEBUG_printf("[driver] initializing cyw43 architecture without country\n");
-            cyw43_arch_init();
-        #endif
+        FBW_DEBUG_printf("[driver] initializing cyw43 architecture with predefined country 0x%04X\n", WIFLY_NETWORK_COUNTRY);
+        cyw43_arch_init_with_country(WIFLY_NETWORK_COUNTRY);
     #endif
     led_init();
     
@@ -140,8 +134,8 @@ int main() {
         led_blink(1000, 0);
     }
 
-    // GPS and Wi-Fly
-    #ifdef WIFLY_ENABLED
+    // GPS
+    #ifdef GPS_ENABLED
         FBW_DEBUG_printf("[boot] initializing GPS\n");
         if (gps_init()) {
             FBW_DEBUG_printf("[boot] GPS ok\n");
@@ -150,6 +144,10 @@ int main() {
             FBW_DEBUG_printf("[boot] WARNING: [FBW-2000] GPS initalization failed!\n");
             led_blink(2000, 0);
         }
+    #endif
+
+    // Wi-Fly
+    #ifdef WIFLY_ENABLED
         FBW_DEBUG_printf("[boot] initializing Wi-Fly\n");
         wifly_init();
     #endif
@@ -186,4 +184,6 @@ int main() {
     }
 
     return 0; // How did we get here?
+
+    declare_binary();
 }
