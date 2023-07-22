@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 #include <stdio.h>
+#include "pico/time.h"
 
 #include "../io/gps.h"
 #include "../io/imu.h"
@@ -24,6 +25,17 @@
 static Mode currentMode = DIRECT;
 static bool imuDataSafe = false;
 static bool gpsDataSafe = false;
+
+static inline int64_t modeOvertime(alarm_id_t id, void *data) {
+    // Mode has taken longer than its maximum runtime, revert to direct mode
+    // This makes sure that the user will still have some sort of control even if a catastrophic bug were to occur
+    led_blink(500, 50); // Distress
+    // We are now forever locked into direct mode, get the aircraft on the ground!!
+    while (true) {
+        mode_direct();
+    }
+    return 0;
+}
 
 void toMode(Mode newMode) {
     // Run deinit code for currentMode and then run init code for newMode
@@ -122,6 +134,8 @@ void toMode(Mode newMode) {
 }
 
 void modeRuntime() {
+    // Schedule an alarm just in case the mode takes longer than its maximum runtime
+    alarm_id_t alarm = add_alarm_in_ms(MAX_MODE_RUNTIME_TIME_MS, modeOvertime, NULL, false);
     switch(currentMode) {
         case DIRECT:
             mode_direct();
@@ -145,6 +159,8 @@ void modeRuntime() {
             #endif
             break;
     }
+    // Mode has run, cancel the alarm
+    cancel_alarm(alarm);
 }
 
 uint8_t getCurrentMode() { return currentMode; }

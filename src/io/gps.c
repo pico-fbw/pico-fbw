@@ -20,9 +20,6 @@
 
 #ifdef GPS_ENABLED
 
-// TODO: altitude offset calibration
-int altOffset = 0;
-
 /**
  * Reads a line from a specified UART instance if available.
  * @param uart The UART instance to read from.
@@ -64,7 +61,7 @@ bool gps_init() {
     uart_set_format(GPS_UART, 8, 1, UART_PARITY_NONE); // NMEA-0183 format
     gpio_set_function(GPS_TX_PIN, GPIO_FUNC_UART);
     gpio_set_function(GPS_RX_PIN, GPIO_FUNC_UART);
-    FBW_DEBUG_printf("[gps] setting up query schedule\n");
+    GPS_DEBUG_printf("[gps] setting up query schedule\n");
     // Clear FIFO and re-enable
     irq_set_enabled(GPS_UART_IRQ, true);
     uart_set_fifo_enabled(GPS_UART, true);
@@ -108,7 +105,7 @@ bool gps_init() {
         #error A GPS command type of PMTK or PSRF must be defined.
     #endif
     // Check for the correct response and return false if it doesn't match
-    FBW_DEBUG_printf("[gps] validating query responses\n");
+    GPS_DEBUG_printf("[gps] validating query responses\n");
     #if defined(GPS_COMMAND_TYPE_PMTK)
         GPS_DEBUG_printf("[gps] response 0: %s\n", line0);
         bool result = (strncmp(line0, "$PMTK001,314,3*36", 46) == 0); // Acknowledged and successful execution of the command
@@ -197,7 +194,7 @@ gpsData gps_getData() {
     }
 
     // Check for invalid data
-    if (lat <= 90 && lat >= -90 && lng <= 180 && lng >= -180 && alt >= 0 && spd >= 0 && trk >= 0 && (alt + altOffset) > 400 && lat != INFINITY && lng != INFINITY && alt != INFINITY && spd != INFINITY && trk != INFINITY && lat != NAN && lng != NAN && alt != NAN && spd != NAN && trk != NAN) {
+    if (lat <= 90 && lat >= -90 && lng <= 180 && lng >= -180 && alt >= 0 && spd >= 0 && trk >= 0 && lat != INFINITY && lng != INFINITY && alt != INFINITY && spd != INFINITY && trk != INFINITY && lat != NAN && lng != NAN && alt != NAN && spd != NAN && trk != NAN) {
         setGPSSafe(true);
     } else {
         setGPSSafe(false);

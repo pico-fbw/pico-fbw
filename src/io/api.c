@@ -215,8 +215,8 @@ void api_poll() {
                     // In case you were wondering json is still dumb
                     for (uint s = FLASH_MIN_SECTOR; s <= FLASH_MAX_SECTOR; s++) {
                         if (s != FLASH_MAX_SECTOR) {
-                            for (uint v = FLASH_MIN_SECTOR; v <= 4; v++) {
-                                if (v != 4) {
+                            for (uint v = 0; v <= (CONFIG_SECTOR_SIZE - 1); v++) {
+                                if (v != (CONFIG_SECTOR_SIZE - 1)) {
                                     if (isfinite(flash_read(s, v))) {
                                         printf("\"%d\":%f,", v, flash_read(s, v));
                                     } else {
@@ -231,8 +231,8 @@ void api_poll() {
                                 }
                             }
                         } else {
-                            for (uint v = FLASH_MIN_SECTOR; v <= 4; v++) {
-                                if (v != 4) {
+                            for (uint v = 0; v <= (CONFIG_SECTOR_SIZE - 1); v++) {
+                                if (v != (CONFIG_SECTOR_SIZE - 1)) {
                                     if (isfinite(flash_read(3, v))) {
                                         printf("\"%d\":%f,", v, flash_read(3, v));
                                     } else {

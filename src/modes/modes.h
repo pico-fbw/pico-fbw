@@ -12,6 +12,8 @@ typedef unsigned char Mode;
 #define HOLD 4
 // If any modes are ever added, the uppermost mode must be added to the API!
 
+#define MAX_MODE_RUNTIME_TIME_MS 500 // The maximum amount of time the system will run a mode for before exiting to direct.
+
 /**
  * Transitions the system to a specified mode.
  * @param mode The mode to transition to.

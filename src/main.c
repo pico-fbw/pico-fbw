@@ -152,9 +152,10 @@ int main() {
         wifly_init();
     #endif
 
-    // Main program loop: update the mode switch's position, then run the current mode's runtime
+    // Main program loop:
     FBW_DEBUG_printf("[boot] bootup complete! entering main program loop...\n");
     while (true) {
+        // Update the mode switch's position
         float switchPos = pwm_readDeg(3);
         #ifdef SWITCH_2_POS
             if (switchPos < 90) {
@@ -177,7 +178,11 @@ int main() {
                 updateSwitch(NORMAL);
             }
         #endif // SWITCH_3_POS
+
+        // Run the current mode's runtime
         modeRuntime();
+
+        // Check for new API calls if applicable
         #ifdef API_ENABLED
             api_poll();
         #endif
