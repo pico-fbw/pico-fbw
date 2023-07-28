@@ -92,19 +92,16 @@ This value DOES need to be negative! */
 */
 
 /* IMU types */
-#define IMU_BNO055
-// #define IMU_MPU6050
+// #define IMU_BNO055
+#define IMU_MPU6050
 
-/* You may map the X, Y, and Z axes to the correct axes of flight (this can be especially important for the MPU6050)! */
-#define IMU_MAP_AXES
+/* You may map the X, Y, and Z axes to the correct axes of flight (this overrides the default mappings) by defining the following: */
+// #define IMU_MAP_AXES
 #ifdef IMU_MAP_AXES
 	#define IMU_X_AXIS YAW_AXIS
 	#define IMU_Y_AXIS ROLL_AXIS
 	#define IMU_Z_AXIS PITCH_AXIS
-	// TODO: make default axis maps for BNO and MPU
 #endif
-
-// TODO: more imu translation funcionality
 
 /* Note that these pins must line up with the Pico's I2C0 interface, see a pinout if you're not sure! */
 #define IMU_SDA_PIN 16

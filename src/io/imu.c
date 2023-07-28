@@ -6,7 +6,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include "pico/runtime.h"
 
 #include "hardware/i2c.h"
 #include "hardware/gpio.h"
@@ -28,6 +27,7 @@ static inline int imu_write(uint8_t address, uint8_t value) {
 }
 
 #if defined(IMU_BNO055)
+
     /**
      * Changes the working mode of the IMU (currently only used for BNO055).
      * @param mode The code of the mode to change into (for example, 0x0C for NDOF).
@@ -47,28 +47,12 @@ static inline int imu_write(uint8_t address, uint8_t value) {
             return false;
         }
     }
+
 #elif defined(IMU_MPU6050)
-    // TODO: finish implementing MPU6050 fusion algorithms
-    // useful docs:
-    // https://github.com/rfetick/MPU6050_light/blob/master/documentation_MPU6050_light.pdf
-    // https://github.com/rfetick/MPU6050_light/blob/master/examples/GetAngle/GetAngle.ino and https://github.com/rfetick/MPU6050_light/blob/master/src/MPU6050_light.cpp
-    // https://cdn.sparkfun.com/datasheets/Sensors/Accelerometers/RM-MPU-6000A.pdf
 
-    float gyro_offsetX, gyro_offsetY, gyro_offsetZ, accel_offsetX, accel_offsetY, accel_offsetZ = 0.0f;
+    // TODO: implement MPU6050 fusion
+    // https://github.com/jrowberg/i2cdevlib/tree/master/RP2040/MPU6050
 
-    /**
-     * 
-    */
-    static inertialAngles imu_getAnglesRaw() {
-        
-    }
-
-    /**
-     * 
-    */
-    static inertialAccel imu_getAccelRaw() {
-
-    }
 #endif
 
 int imu_init() {
@@ -182,9 +166,9 @@ inertialAngles imu_getAngles() {
         int16_t rawY = (gyro_data[2] << 8) | gyro_data[3]; // (y)
         int16_t rawZ = (gyro_data[4] << 8) | gyro_data[5]; // (z)
 
-        float x = (float)((rawX / 131.0) - gyro_offsetX);
-        float y = (float)((rawY / 131.0) - gyro_offsetY);
-        float z = (float)((rawZ / 131.0) - gyro_offsetZ);
+        float x = (float)((rawX / 131.0));
+        float y = (float)((rawY / 131.0));
+        float z = (float)((rawZ / 131.0));
     #endif
     // Map IMU axes to aircraft axes
     float roll, pitch, heading = -100.0f;

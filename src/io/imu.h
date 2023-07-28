@@ -9,27 +9,27 @@
 // The time (in microseconds) before the IMU is considered unresponsive
 #define IMU_TIMEOUT_US 5000
 
-// For configuration
+// For axis mappings in configuration file
 #define ROLL_AXIS 0
 #define PITCH_AXIS 1
 #define YAW_AXIS 2
-// Catch config errors w/ preprocessor so we never take off with weird axis mappings...yikes
-#if (IMU_X_AXIS != ROLL_AXIS && IMU_X_AXIS != PITCH_AXIS && IMU_X_AXIS != YAW_AXIS && IMU_X_AXIS != IMU_Y_AXIS && IMU_X_AXIS != IMU_Z_AXIS)
-	#error IMU_X_AXIS must be either ROLL_AXIS, PITCH_AXIS, or YAW_AXIS
-	#undef IMU_X_AXIS
-#endif
-#if (IMU_Y_AXIS != ROLL_AXIS && IMU_Y_AXIS != PITCH_AXIS && IMU_Y_AXIS != YAW_AXIS && IMU_Y_AXIS != IMU_X_AXIS && IMU_Y_AXIS != IMU_Z_AXIS)
-	#error IMU_Y_AXIS must be either ROLL_AXIS, PITCH_AXIS, or YAW_AXIS
-	#undef IMU_Y_AXIS
-#endif
-#if (IMU_Z_AXIS != ROLL_AXIS && IMU_Z_AXIS != PITCH_AXIS && IMU_Z_AXIS != YAW_AXIS && IMU_Z_AXIS != IMU_X_AXIS && IMU_Z_AXIS != IMU_Y_AXIS)
-	#error IMU_Z_AXIS must be either ROLL_AXIS, PITCH_AXIS, or YAW_AXIS
-	#undef IMU_Z_AXIS
+// Default axis mappings
+#ifndef IMU_MAP_AXES
+	#if defined(IMU_BNO055)
+		#define IMU_X_AXIS YAW_AXIS
+		#define IMU_Y_AXIS ROLL_AXIS
+		#define IMU_Z_AXIS PITCH_AXIS
+	#elif defined(IMU_MPU6050)
+		#define IMU_X_AXIS PITCH_AXIS
+		#define IMU_Y_AXIS ROLL_AXIS
+		#define IMU_Z_AXIS YAW_AXIS
+	#endif
 #endif
 
 // Chip-specific information
 // CHIP_FREQ_KHZ, CHIP_REGISTER, ID_REGISTER, and CHIP_ID are required for all chips, the rest is usually specific to each chip
 #if defined(IMU_BNO055)
+	
 	#define CHIP_FREQ_KHZ 400
 
 	#define CHIP_REGISTER 0x28
@@ -49,7 +49,9 @@
 
 	#define MODE_NDOF 0x0C
 	#define PWR_MODE_NORMAL 0x00
+
 #elif defined(IMU_MPU6050)
+
 	#define CHIP_FREQ_KHZ 400
 
 	#define CHIP_REGISTER 0x68
@@ -64,6 +66,7 @@
 
 	static const unsigned char GYRO_BEGIN_REGISTER = 0x43;
 	static const unsigned char ACCEL_BEGIN_REGISTER = 0x3B;
+	
 #endif
 
 /**
@@ -102,6 +105,7 @@ void imu_deinit();
 /**
  * Configures the IMU to send inertial reference data.
  * @return true if success, false if failure.
+ * @note Note that if the MPU6050 is the selected IMU unit, this is also when its offsets are calculated.
 */
 bool imu_configure();
 

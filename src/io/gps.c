@@ -101,8 +101,6 @@ bool gps_init() {
         } else {
             line2 = uart_read_line(GPS_UART);
         }
-    #else
-        #error A GPS command type of PMTK or PSRF must be defined.
     #endif
     // Check for the correct response and return false if it doesn't match
     GPS_DEBUG_printf("[gps] validating query responses\n");

@@ -20,7 +20,7 @@ double calculateBearing(double latA, double lonA, double latB, double lonB);
  * @param lonA Longitude of the first point.
  * @param latB Latitude of the second point.
  * @param lonB Longitude of the second point.
- * @return Distance in kilometers.
+ * @return Distance in meters.
 */
 double calculateDistance(double latA, double lonA, double latB, double lonB);
 

@@ -29,6 +29,7 @@
 #include "modes/modes.h"
 
 #include "config.h"
+#include "validator.h"
 #include "version.h"
 
 int main() {

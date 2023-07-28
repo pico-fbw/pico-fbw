@@ -18,7 +18,6 @@
     #define LED_PIN CYW43_WL_GPIO_LED_PIN
     char buf[1];
 #else
-    #warning Neither a Pico or Pico W build target were found, LED functionality is disabled.
     #undef LED_PIN
 #endif
 

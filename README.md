@@ -30,8 +30,8 @@ Now, with that out of the way, let's get into the features of the system!
 
 You will need a few materials in addition to your current RC plane setup. They are as follows:
 
-- Raspberry Pi Pico microcontroller (with data-capable micro-USB cable to flash the program)
-- BNO055 sensor breakout
+- Raspberry Pi Pico [W] microcontroller (with data-capable micro-USB cable to flash the program)
+- IMU sensor (either BNO055 or MPU6050)
 - ~7 female-to-female jumper wires
 - ~10 male-to-female jumper wires
 - A switch on your transmitter and corresponding channel on your receiver
@@ -42,7 +42,7 @@ You can find a guide to sourcing these parts as well as my tested/preferred sour
 
 You can always find the latest stable release of the software on our releases page [here](https://github.com/MylesAndMore/pico-fbw/releases/latest).
 
-This binary is pre-built so you can drag and drop it onto your Pico as-is, but be aware it only ships with recomended configuration values. These values may need to be altered in your case as different aircraft behave very differently, and the values that work for me may not work for you. So please, be careful, and test thoroughly! Do not hesitate to reconfigure if you need to.
+This binary is pre-built so you can drag and drop it onto your Pico as-is, but be aware it only ships with recomended configuration values. These values may need to be altered in your case as different aircraft behave very differently, and the values that work for me may not work for you. So please, be careful, and test thoroughly! Do not hesitate to [reconfigure](https://github.com/MylesAndMore/pico-fbw/wiki/_Building-&-Configuring) if you need to.
 
 ## Setup
 
@@ -56,6 +56,12 @@ You can find all of the information about building and configuring the project o
 
 ## Issues, Feedback, and Features
 
-If you experience any issues, have any ideas for new features, or just any general feedback about the project in general, don't hesitate to reach out! You can submit an issue on our [issues page](https://github.com/MylesAndMore/pico-fbw/issues/new)--just please be sure to label your issure accordingly. And if you are a developer looking to suggest or improve on our code, feel free to leave us an issue or [pull request](https://github.com/MylesAndMore/pico-fbw/compare)!
+If you experience any issues, have any ideas for new features, or just any general feedback about the project in general, don't hesitate to reach out! You can submit an issue on our [issues page](https://github.com/MylesAndMore/pico-fbw/issues/new)--just please be sure to label your issure accordingly. And if you are a developer looking to suggest or improve on our code, feel free to leave me an issue or [pull request](https://github.com/MylesAndMore/pico-fbw/compare)!
+
+## Donations
+
+If you've found use out of the project, great! Consider [donating](https://donate.pico-fbw.org) to support it; hosting for the website isn't free and I and a few others have put tens of hours of our own time into making automated remote-control flight more accessible.
+
+No pressure of course, pico-fbw will always be free and open-source for everyone to use.
 
 Thanks for checking out my project, hope you enjoy! :)
