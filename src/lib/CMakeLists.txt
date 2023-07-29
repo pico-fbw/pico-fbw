@@ -1,4 +1,5 @@
 add_library(fbw_lib
+    dmp.c
     minmea.c
     nav.c
     pid.c
@@ -7,4 +8,5 @@ add_library(fbw_lib
 
 target_link_libraries(fbw_lib
     pico_time
-)    
+    hardware_i2c
+)

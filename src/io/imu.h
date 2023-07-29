@@ -20,9 +20,9 @@
 		#define IMU_Y_AXIS ROLL_AXIS
 		#define IMU_Z_AXIS PITCH_AXIS
 	#elif defined(IMU_MPU6050)
-		#define IMU_X_AXIS PITCH_AXIS
-		#define IMU_Y_AXIS ROLL_AXIS
-		#define IMU_Z_AXIS YAW_AXIS
+		#define IMU_X_AXIS YAW_AXIS
+		#define IMU_Y_AXIS PITCH_AXIS
+		#define IMU_Z_AXIS ROLL_AXIS
 	#endif
 #endif
 
@@ -44,7 +44,7 @@
 	#define AXIS_MAP_CONF_REGISTER 0x41
 	#define AXIS_MAP_SIGN_REGISTER 0x42
 
-	static const unsigned char GYRO_BEGIN_REGISTER = 0x1A; // (technically EULER_BEGIN_REGISTER but renamed for compatability)
+	static const unsigned char EULER_BEGIN_REGISTER = 0x1A;
 	static const unsigned char ACCEL_BEGIN_REGISTER = 0x28;
 
 	#define MODE_NDOF 0x0C
@@ -62,10 +62,16 @@
 	#define CONFIG_REGISTER 0x1A
 	#define GYRO_CONFIG_REGISTER 0x1B
 	#define ACCEL_CONFIG_REGISTER 0x1C
+
+	#define USER_CONTROL_REGISTER 0x6A
 	#define PWR_MODE_REGISTER 0x6B
 
-	static const unsigned char GYRO_BEGIN_REGISTER = 0x43;
-	static const unsigned char ACCEL_BEGIN_REGISTER = 0x3B;
+	#define INTERRUPTS_ENABLED_REGISTER 0x38
+	#define FIFO_ENABLED_REGISTER 0x23
+
+	#define DMP_PROG_START_ADDR 0x70
+	static const unsigned char DMP_RA_FIFO_COUNT = 0x72;
+	static const unsigned char DMP_RA_FIFO_R_W = 0x74;
 	
 #endif
 
@@ -78,15 +84,6 @@ typedef struct inertialAngles {
     float pitch;
 	float yaw;
 } inertialAngles;
-
-/**
- * Contains acceleration values on the X, Y, and Z axes when filled using imu_getAccel().
-*/
-typedef struct inertialAccel {
-	float x;
-	float y;
-	float z;
-} inertialAccel;
 
 /**
  * Initializes the IMU unit.
@@ -111,14 +108,8 @@ bool imu_configure();
 
 /**
  * Gets the current angles of spatial orientation from the IMU.
- * @return an inertialAngles struct containing heading, roll, and pitch data.
+ * @return an inertialAngles struct containing heading, roll, pitch, and yaw data.
 */
 inertialAngles imu_getAngles();
-
-/**
- * Gets the current acceleration values from the IMU.
- * @return an intertialAccel struct containing acceleration data for the X, Y, and Z axes.
-*/
-inertialAccel imu_getAccel();
 
 #endif // __IMU_H

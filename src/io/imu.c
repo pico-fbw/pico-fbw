@@ -1,4 +1,33 @@
 /**
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2020 Markus Hintersteiner
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ * **/
+
+/**
+ * Huge thanks to the contributors of the 'i2cdevlib' repository for the amazing work on the MPU6050 fusion algorithm!
+ * Check it out here: https://github.com/jrowberg/i2cdevlib
+*/
+
+/**
  * Source file of pico-fbw: https://github.com/MylesAndMore/pico-fbw
  * Licensed under the GNU GPL-3.0
 */
@@ -13,7 +42,20 @@
 #include "../modes/modes.h"
 #include "../config.h"
 
+#ifdef IMU_MPU6050
+    #include <math.h>
+    #include "../lib/dmp.h"
+#endif
+
 #include "imu.h"
+
+// Holds persistant Euler data between calls to keep a constant stream of data whether the IMU is ready or not.
+typedef struct Euler {
+    float x;
+    float y;
+    float z;
+} Euler;
+static Euler euler;
 
 /**
  * Writes a byte value directly to the IMU.
@@ -23,24 +65,24 @@
 */
 static inline int imu_write(uint8_t address, uint8_t value) {
     uint8_t cmd[2] = {address, value};
-    return i2c_write_blocking(IMU_I2C, CHIP_REGISTER, cmd, 2, true);
+    return i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, cmd, 2, true, IMU_TIMEOUT_US);
 }
 
 #if defined(IMU_BNO055)
 
     /**
-     * Changes the working mode of the IMU (currently only used for BNO055).
+     * Changes the working mode of the BNO055.
      * @param mode The code of the mode to change into (for example, 0x0C for NDOF).
      * @return true if success, false if failure.
     */
-    static bool imu_changeMode(uint8_t mode) {
+    static bool bno_changeMode(uint8_t mode) {
         FBW_DEBUG_printf("[imu] changing to mode 0x%02X\n", mode);
         imu_write(OPR_MODE_REGISTER, mode);
         sleep_ms(100);
         // Check to ensure mode has changed properly by reading it back
         uint8_t currentMode;
-        i2c_write_blocking(IMU_I2C, CHIP_REGISTER, &OPR_MODE_REGISTER, 1, true);
-        i2c_read_blocking(IMU_I2C, CHIP_REGISTER, &currentMode, 1, false);
+        i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, &OPR_MODE_REGISTER, 1, true, IMU_TIMEOUT_US);
+        i2c_read_timeout_us(IMU_I2C, CHIP_REGISTER, &currentMode, 1, false, IMU_TIMEOUT_US);
         if (currentMode == mode) {
             return true;
         } else {
@@ -50,8 +92,19 @@ static inline int imu_write(uint8_t address, uint8_t value) {
 
 #elif defined(IMU_MPU6050)
 
-    // TODO: implement MPU6050 fusion
-    // https://github.com/jrowberg/i2cdevlib/tree/master/RP2040/MPU6050
+    static uint16_t fifoCount;
+    static uint8_t fifoBuf[DMP_PACKET_SIZE];
+
+    /**
+     * Gets the current count of the MPU's FIFO.
+     * @return The count of the FIFO.
+    */
+    static uint16_t mpu_getFIFOCount() {
+        uint8_t buf[2];
+        i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, &DMP_RA_FIFO_COUNT, 1, true, IMU_TIMEOUT_US);
+        i2c_read_timeout_us(IMU_I2C, CHIP_REGISTER, buf, 2, false, IMU_TIMEOUT_US);
+        return (((uint16_t)buf[0]) << 8) | buf[1];
+    }
 
 #endif
 
@@ -128,59 +181,91 @@ bool imu_configure() {
         imu_write(AXIS_MAP_SIGN_REGISTER, 0x00);
         imu_write(0x3B, 0b00000001);
         sleep_ms(30);
-        return imu_changeMode(MODE_NDOF);
+        return bno_changeMode(MODE_NDOF);
     #elif defined(IMU_MPU6050)
-        imu_write(PWR_MODE_REGISTER, 0x80);
-        sleep_ms(50);
-        imu_write(PWR_MODE_REGISTER, 0x00);
-        imu_write(SMPLRT_DIV_REGISTER, 0x00);
-        imu_write(CONFIG_REGISTER, 0x00);
-        imu_write(GYRO_CONFIG_REGISTER, 0x00);
-        imu_write(ACCEL_CONFIG_REGISTER, 0x08);
+        imu_write(PWR_MODE_REGISTER, 0x80); // Reset power
+        sleep_ms(100);
+        imu_write(USER_CONTROL_REGISTER, 0b111); // Reset again
+        sleep_ms(100);
+        imu_write(PWR_MODE_REGISTER, 0x01); // PLL_X_GYRO is a slightly better clock source
+        imu_write(INTERRUPTS_ENABLED_REGISTER, 0x00); // Disable interrupts
+        imu_write(FIFO_ENABLED_REGISTER, 0x00); // Disable FIFO (using DMP FIFO)
+        imu_write(SMPLRT_DIV_REGISTER, 0x04); // Sample rate = gyro rate / (1 + SMPLRT_DIV)
+        imu_write(CONFIG_REGISTER, 0x01); // Digital Low Pass Filter (DLPF) @ 188Hz
+        imu_write(ACCEL_CONFIG_REGISTER, 0x00); // Accel full scale = 2g
+        imu_write(GYRO_CONFIG_REGISTER, 0x18); // Gyro full scale = +2000 deg/s
+        IMU_DEBUG_printf("[imu] writing DMP to memory...\n");
+        dmp_writeMemoryBlock(dmp, DMP_SIZE, 0, 0); // Write DMP to memory
+        uint8_t cmd[3] = {DMP_PROG_START_ADDR, 0x04, 0x00}; // DMP program start address
+        i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, cmd, 3, true, IMU_TIMEOUT_US);
+        imu_write(USER_CONTROL_REGISTER, 0xC2); // Enable and reset DMP FIFO
+        imu_write(INTERRUPTS_ENABLED_REGISTER, 0x02); // Enable RAW_DMP_INT
+
+        // TODO: port accel and gyro calibrations from DMP lib/i2cdevlib
     #endif
 }
 
 inertialAngles imu_getAngles() {
-    // Get angle data from IMU
-    uint8_t gyro_data[6];
-    int timeout0 = i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, &GYRO_BEGIN_REGISTER, 1, true, IMU_TIMEOUT_US);
-    int timeout1 = i2c_read_timeout_us(IMU_I2C, CHIP_REGISTER, gyro_data, 6, false, IMU_TIMEOUT_US);
-    // Check if any I2C related errors occured, if so, set IMU as unsafe and return no data
-    if (timeout0 == PICO_ERROR_GENERIC || timeout0 == PICO_ERROR_TIMEOUT || timeout1 == PICO_ERROR_GENERIC || timeout1 == PICO_ERROR_TIMEOUT) {
-        setIMUSafe(false);
-        return (inertialAngles){0};
-    }
-    // Bit shifting and data conversions vary by type
     #if defined(IMU_BNO055)
-        // Perform the necessary bit shifts to combine the high byte and low byte into one signed integer
-        int16_t rawX = (gyro_data[1] << 8) | gyro_data[0]; // (heading)
-        int16_t rawY = (gyro_data[3] << 8) | gyro_data[2]; // (roll)
-        int16_t rawZ = (gyro_data[5] << 8) | gyro_data[4]; // (pitch)
 
-        // Convert raw data into angles
-        float x = (float)(rawX / 16.0);
-        float y = (float)(rawY / 16.0);
-        float z = (float)(rawZ / 16.0);
+        // Get angle data from IMU
+        uint8_t euler_data[6];
+        int timeout0 = i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, &EULER_BEGIN_REGISTER, 1, true, IMU_TIMEOUT_US);
+        int timeout1 = i2c_read_timeout_us(IMU_I2C, CHIP_REGISTER, euler_data, 6, false, IMU_TIMEOUT_US);
+        // Check if any I2C related errors occured, if so, set IMU as unsafe and return no data
+        if (timeout0 == PICO_ERROR_GENERIC || timeout0 == PICO_ERROR_TIMEOUT || timeout1 == PICO_ERROR_GENERIC || timeout1 == PICO_ERROR_TIMEOUT) {
+            setIMUSafe(false);
+            return (inertialAngles){0};
+        }
+
+        // Bit shift to combine the high byte and low byte into one signed integer
+        int16_t raw[3];
+        for (int i = 0; i < 3; i++) {
+            raw[i] = (euler_data[i * 2 + 1] << 8) | euler_data[i * 2];
+        }
+        // Convert raw data into Euler angles
+        euler.x = (float)(raw[0] / 16.0);
+        euler.y = (float)(raw[1] / 16.0);
+        euler.z = (float)(raw[2] / 16.0);
+
     #elif defined(IMU_MPU6050)
-        int16_t rawX = (gyro_data[0] << 8) | gyro_data[1]; // (x)
-        int16_t rawY = (gyro_data[2] << 8) | gyro_data[3]; // (y)
-        int16_t rawZ = (gyro_data[4] << 8) | gyro_data[5]; // (z)
 
-        float x = (float)((rawX / 131.0));
-        float y = (float)((rawY / 131.0));
-        float z = (float)((rawZ / 131.0));
+        // Get current FIFO count
+        fifoCount = mpu_getFIFOCount();
+        if (fifoCount >= 1024) {
+            // FIFO overflow, reset
+            imu_write(USER_CONTROL_REGISTER, 0b00000010);
+        } else {
+            if (fifoCount >= DMP_PACKET_SIZE) {
+                // FIFO is full, read out data
+                i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, &DMP_RA_FIFO_R_W, 1, true, IMU_TIMEOUT_US);
+                i2c_read_timeout_us(IMU_I2C, CHIP_REGISTER, fifoBuf, DMP_PACKET_SIZE, false, IMU_TIMEOUT_US);
+                fifoCount -= DMP_PACKET_SIZE;
+                // Obtain quaternion data from FIFO
+                float q[4];
+                for (uint8_t i = 0; i < 4; i++) {
+                    int16_t qI = ((fifoBuf[i * 4] << 8) | fifoBuf[i * 4 + 1]);
+                    q[i] = (float)qI / 16384.0f;
+                }
+                // Convert quaternion to Euler angles
+                euler.x = (atan2(2*q[1]*q[2] - 2*q[0]*q[3], 2*q[0]*q[0] + 2*q[1]*q[1] - 1)) * (180 / M_PI);
+                euler.y = (-asin(2*q[1]*q[3] + 2*q[0]*q[2])) * (180 / M_PI);
+                euler.z = (atan2(2*q[2]*q[3] - 2*q[0]*q[1], 2*q[0]*q[0] + 2*q[3]*q[3] - 1)) * (180 / M_PI);
+            }
+        }
+
     #endif
     // Map IMU axes to aircraft axes
     float roll, pitch, heading = -100.0f;
     switch (IMU_X_AXIS) {
         case ROLL_AXIS:
-            roll = x;
+            roll = euler.x;
             break;
         case PITCH_AXIS:
-            pitch = x;
+            pitch = euler.x;
             break;
         case YAW_AXIS:
-            heading = x;
+            heading = euler.x;
             break;
         default:
             // This should never happen, handled in preprocessor
@@ -188,26 +273,26 @@ inertialAngles imu_getAngles() {
     }
     switch (IMU_Y_AXIS) {
         case ROLL_AXIS:
-            roll = y;
+            roll = euler.y;
             break;
         case PITCH_AXIS:
-            pitch = y;
+            pitch = euler.y;
             break;
         case YAW_AXIS:
-            heading = y;
+            heading = euler.y;
             break;
         default:
             break;
     }
     switch (IMU_Z_AXIS) {
         case ROLL_AXIS:
-            roll = z;
+            roll = euler.z;
             break;
         case PITCH_AXIS:
-            pitch = z;
+            pitch = euler.z;
             break;
         case YAW_AXIS:
-            heading = z;
+            heading = euler.z;
             break;
         default:
             break;
@@ -217,40 +302,11 @@ inertialAngles imu_getAngles() {
     if (yaw_degrees >= 180) {
         yaw_degrees -= 360;
     }
-    // Check for writing errors
+    // Check for errors
     if (heading == -100.0f || roll == -100.0f || pitch == -100.0f) {
         setIMUSafe(false);
         return (inertialAngles){0};
     }
     // Compose into data struct and return
     return (inertialAngles){heading, roll, pitch, yaw_degrees};
-}
-
-inertialAccel imu_getAccel() {
-    // Same process as getting Euler data
-    uint8_t accel_data[6];
-    int timeout0 = i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, &ACCEL_BEGIN_REGISTER, 1, true, IMU_TIMEOUT_US);
-    int timeout1 = i2c_read_timeout_us(IMU_I2C, CHIP_REGISTER, accel_data, 6, false, IMU_TIMEOUT_US);
-    if (timeout0 == PICO_ERROR_GENERIC || timeout0 == PICO_ERROR_TIMEOUT || timeout1 == PICO_ERROR_GENERIC || timeout1 == PICO_ERROR_TIMEOUT) {
-        setIMUSafe(false);
-        return (inertialAccel){0};
-    }
-    #if defined(IMU_BNO055)
-        int16_t rawX = (accel_data[1] << 8) | accel_data[0];
-        int16_t rawY = (accel_data[3] << 8) | accel_data[2];
-        int16_t rawZ = (accel_data[5] << 8) | accel_data[4];
-
-        float x = (float)(rawX / 100.00);
-        float y = (float)(rawY / 100.00);
-        float z = (float)(rawZ / 100.00);
-    #elif defined(IMU_MPU6050)
-        int16_t rawX = (accel_data[0] << 8) | accel_data[1];
-        int16_t rawY = (accel_data[2] << 8) | accel_data[3];
-        int16_t rawZ = (accel_data[4] << 8) | accel_data[5];
-
-        float x = (float)(rawX / 8192.0);
-        float y = (float)(rawY / 8192.0);
-        float z = (float)(rawZ / 8192.0);
-    #endif
-    return (inertialAccel){x, y, z};
 }
