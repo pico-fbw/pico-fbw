@@ -6,34 +6,44 @@
 /**
  * README:
  * Some important info, because if you've gotten this far, you're probably wondering what a "sector" is and why it's in quotes everywhere.
- * The reason is, my implementation of flash is based on real flash sectors (it has to be), but they aren't truly sectors,
- * at least in terms of starting from the beginning.
- * Sector 0 is the last sector of flash, sector 1 is the second-to-last, etc.
- * I implemented in this way so we don't have to change the flash code if the binary gets larger, even though it can be a bit confusing.
+ * I've created 125 virtual "sectors" that can store 8 floats each, which all fit inside the same physical sector on the flash memory (the last one).
+ * Reading/writing to/from the virtual sectors is very different than writing to the physical sectors, so be warned!!
 */
 
 /**
  * FLASHMAP:
- * Sector  |  Use
- *         |
- * 0       |  PWM calibration flag / data
- *         |  0 - Flag
- *         |  1 - Pin 0 offset
- *         |  2 - Pin 1 offset
- *         |  3 - Pin 2 offset
- *         |  4 - Pin 3 offset
- * 1       |  PID tuning flag / data
- *         |  0 - Flag
- *         |  1 - Roll kP
- *         |  2 - Roll tI
- *         |  3 - Roll tD
- * 2       |  PID tuning flag / data
- *         |  0 - Flag
- *         |  1 - Pitch kP
- *         |  2 - Pitch tI
- *         |  3 - Pitch tD
- * 3       |  Bootup flag
- *         |  0 - Flag
+ * "Sector"  |  Use
+ *           |
+ * 0         |  PWM calibration flag / data
+ *           |  0 - Flag
+ *           |  1 - Pin 0 offset
+ *           |  2 - Pin 1 offset
+ *           |  3 - Pin 2 offset
+ *           |  4 - Pin 3 offset
+ * 
+ * 1         |  PID tuning flag / data
+ *           |  0 - Flag
+ *           |  1 - Roll kP
+ *           |  2 - Roll tI
+ *           |  3 - Roll tD
+ * 
+ * 2         |  PID tuning flag / data
+ *           |  0 - Flag
+ *           |  1 - Pitch kP
+ *           |  2 - Pitch tI
+ *           |  3 - Pitch tD
+ * 
+ * 3         |  Bootup flag
+ *           |  0 - Flag
+ * 
+ * 4         |  IMU axis mapping and direction flag / data
+ *           |  0 - Flag
+ *           |  1 - X axis map
+ *           |  2 - Y axis map
+ *           |  3 - Z axis map
+ *           |  4 - X axis direction
+ *           |  5 - Y axis direction
+ *           |  6 - Z axis direction
 */
 
 #define FLASH_MIN_SECTOR FLASH_SECTOR_PWM
@@ -41,21 +51,31 @@
 #define FLASH_SECTOR_PID0 1
 #define FLASH_SECTOR_PID1 2
 #define FLASH_SECTOR_BOOT 3
-#define FLASH_MAX_SECTOR FLASH_SECTOR_BOOT
+#define FLASH_SECTOR_IMU 4
+#define FLASH_MAX_SECTOR FLASH_SECTOR_IMU
 
-// This is the size we will use for our arrays that we will write to flash--it's the amount of floats we can fit in one flash page.
-// It is advised not to use the last one (1024) as it can be a bit buggy
-#define CONFIG_SECTOR_SIZE FLASH_SECTOR_SIZE/sizeof(float)
+// This is a fixed value so that locations of data will not change if more sectors are ever added
+// It works out to give each sector 8 floats of data
+#define FLASH_NUM_SECTORS 125
 
-#define FBW_BOOT 3.1305210f // DO NOT CHANGE THIS VALUE! IT WILL BRICK ALL SYSTEMS!!!
+// The amount of floats we can fit in one flash page.
+#define CONFIG_SECTOR_SIZE_FULL FLASH_SECTOR_SIZE/sizeof(float) // don't use 1024, it's buggy ~ Myles
+// The amount of floats we can fit in one config sector.
+#define CONFIG_SECTOR_SIZE CONFIG_SECTOR_SIZE_FULL/FLASH_NUM_SECTORS
+// Size of a config sector in bytes.
+#define CONFIG_SECTOR_SIZE_BYTES CONFIG_SECTOR_SIZE*sizeof(float)
+
+#define FLASH_PHYSECTOR 0 // The physical sector that the virtual sectors are placed in
+#define FLASH_PHYSECTOR_LOC (PICO_FLASH_SIZE_BYTES - (FLASH_SECTOR_SIZE * (FLASH_PHYSECTOR + 1))) // The location of the physical sector in memory
 
 /**
- * Writes an array of data to a certain "sector". Note that this function assumes the data is a float array.
- * This WILL erase and overwrite ALL data stored in the given sector! This includes ANY prior data from ANY program!!
+ * Writes an array of data to a certain "sector".
+ * This function requires the data to be structured as a float array.
+ * This WILL erase and overwrite ALL data stored in the given sector!
  * @param sector the "sector" to write to
- * @param data the array of data to write 
+ * @param data pointer to array of data to write (must be a float array with maximum size of CONFIG_SECTOR_SIZE)
 */
-void flash_write(uint sector, float data[]);
+void flash_write(uint sector, float *data);
 
 /**
  * Reads back one value from a previously written data array.
@@ -68,15 +88,10 @@ void flash_write(uint sector, float data[]);
 float flash_read(uint sector, uint val);
 
 /**
- * Erases a given sector of flash.
- * @param sector the "sector" to erase.
-*/
-void flash_erase(uint sector);
-
-/**
- * Erases only the flash sectors that the program actually uses.
- * This is so we don't waste flash cycles by clearing the entire flash.
+ * Erases only the flash sector that the program actually uses.
 */
 void flash_reset();
+
+#define FBW_BOOT 3.1305210f // DO NOT CHANGE THIS VALUE! IT WILL BRICK ALL SYSTEMS!!!
 
 #endif // __FLASH_H

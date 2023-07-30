@@ -33,8 +33,7 @@
 #include "version.h"
 
 int main() {
-    // Before-bootup crucial items (timestamp bootup, initialize comms, api, architecture, io, and LED)
-    absolute_time_t imu_safe = make_timeout_time_ms(850);
+    // Crucial items--initialize comms, api, architecture, io, and LED
     stdio_init_all();
     #ifdef FBW_DEBUG
         sleep_ms(BOOTUP_WAIT_TIME_MS); // Wait for serial to begin
@@ -48,7 +47,7 @@ int main() {
         cyw43_arch_init_with_country(WIFLY_NETWORK_COUNTRY);
     #endif
     led_init();
-    
+
     // API
     #ifdef API_ENABLED
         printf("[api] enabling api v%s\n", PICO_FBW_API_VERSION);
@@ -64,13 +63,13 @@ int main() {
         flash_reset();
         float boot[CONFIG_SECTOR_SIZE] = {FBW_BOOT};
         flash_write(FLASH_SECTOR_BOOT, boot);
-        FBW_DEBUG_printf("[boot] boot data written successfully! rebooting now...\n");
+        FBW_DEBUG_printf("[boot] boot data written! rebooting now...\n");
         watchdog_enable(1, 1);
         while (true);
     } else {
         FBW_DEBUG_printf("[boot] boot flag ok\n");
     }
-    
+
     // PWM IN
     FBW_DEBUG_printf("[boot] checking for PWM IN calibration\n");
     if (!pwm_checkCalibration()) {
@@ -119,8 +118,22 @@ int main() {
         servo_set(servos[s], 90);
     }
 
+    // GPS
+    #ifdef GPS_ENABLED
+        FBW_DEBUG_printf("[boot] initializing GPS\n");
+        if (gps_init()) {
+            FBW_DEBUG_printf("[boot] GPS ok\n");
+            setGPSSafe(true);
+        } else {
+            FBW_DEBUG_printf("[boot] WARNING: [FBW-2000] GPS initalization failed!\n");
+            led_blink(2000, 0);
+        }
+    #endif
+
     // IMU
-    sleep_until(imu_safe);
+    #ifdef IMU_BNO055
+        while (time_us_32() < 850000); // BNO055 requires at least 850ms to ready up
+    #endif
     FBW_DEBUG_printf("[boot] initializing IMU\n");
     if (imu_init() == 0) {
         if (imu_configure()) {
@@ -134,18 +147,6 @@ int main() {
         FBW_DEBUG_printf("[boot] WARNING: [FBW-1000] IMU not found!\n");
         led_blink(1000, 0);
     }
-
-    // GPS
-    #ifdef GPS_ENABLED
-        FBW_DEBUG_printf("[boot] initializing GPS\n");
-        if (gps_init()) {
-            FBW_DEBUG_printf("[boot] GPS ok\n");
-            setGPSSafe(true);
-        } else {
-            FBW_DEBUG_printf("[boot] WARNING: [FBW-2000] GPS initalization failed!\n");
-            led_blink(2000, 0);
-        }
-    #endif
 
     // Wi-Fly
     #ifdef WIFLY_ENABLED

@@ -5,26 +5,19 @@
 
 #include "config.h"
 
-
 #if !defined(RASPBERRYPI_PICO) && !defined(RASPBERRYPI_PICO_W)
-    #warning Neither a Pico or Pico W build target were found, functionality may not work as intended.
+    #warning Neither a Pico or Pico W build target were found, some functionality may not work as intended.
 #endif
-
-
 
 /** @section control */
 
 // Sadly the preprocessor doesn't support floating point comparisons so we can't check these
-
-
 
 /** @section general */
 
 #if defined(SWITCH_2_POS) && defined(SWITCH_3_POS)
     #error Only one switch position may be defined.
 #endif
-
-
 
 /** @section pins */
 
@@ -76,8 +69,6 @@
     #error Two or more pins are the same. Pins must be unique.
 #endif
 
-
-
 /** @section limits */
 
 #if (ROLL_LIMIT > 72 || ROLL_LIMIT_HOLD > 72)
@@ -93,8 +84,6 @@
 #if (AIL_LIMIT > 90 || ELEV_LIMIT > 90 || RUD_LIMIT > 90)
     #error Aileron, elevator, and rudder servo limit(s) must be less than 90 degrees.
 #endif
-
-
 
 /** @section sensors */
 
@@ -122,8 +111,6 @@
     #error A GPS command type must be defined.
 #endif
 
-
-
 /** @section Wi-Fly */
 
 #ifdef GPS_ENABLED
@@ -132,8 +119,6 @@
     #endif
 #endif
 
-
-
 /** @section debug/api */
 
 #if defined(LIB_PICO_STDIO_USB) || defined(LIB_PICO_STDIO_UART)
@@ -141,7 +126,5 @@
         #error FBW_DEBUG must be defined if LIB_PICO_STDIO_USB or LIB_PICO_STDIO_UART is defined.
     #endif
 #endif
-
-
 
 #endif // __VALIDATOR_H

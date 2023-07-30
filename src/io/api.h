@@ -7,7 +7,7 @@
 
 // TODO: api documentation on docs
 
-#define ENABLE_API_TIMEOUT_MS 2000 // Allow API calls this amount of time in ms after API enabled (~ after power on)
+#define ENABLE_API_TIMEOUT_MS 1500 // Allow API calls this amount of time in ms after power on (prevents API calls during bootup)
 
 /**
  * Initalizes the pico-fbw API.

@@ -29,9 +29,6 @@
 
 #ifdef API_ENABLED
 
-static absolute_time_t apiEnabledTimeout;
-static bool apiEnabled;
-
 /**
  * Reads a line from stdin if available.
  * @return A pointer to the line read if there was one (automatically null-terminated),
@@ -64,7 +61,6 @@ static inline char *stdin_read_line() {
 }
 
 void api_init_blocking() {
-    apiEnabledTimeout = make_timeout_time_ms(ENABLE_API_TIMEOUT_MS);
     #ifdef API_WAIT_ON_BOOT
         printf("[api] waiting for PING...\n");
         while (true) {
@@ -97,11 +93,7 @@ void api_init_blocking() {
 }
 
 void api_poll() {
-    if (time_reached(apiEnabledTimeout)) {
-        if (!apiEnabled) {
-            printf("[api] ready!\n");
-            apiEnabled = true;
-        }
+    if (time_us_32() < ENABLE_API_TIMEOUT_MS * 1000) {
         char *line = stdin_read_line();
         // Check if there has been input
         if (line != NULL) {
@@ -173,7 +165,7 @@ void api_poll() {
                     }
                 } else if (strcmp(cmd, "GET_PID") == 0) {
                     printf("{\"roll\":{\"p\":");
-                    // Curtesy checking for -inf values and changing them to null because json is dumb
+                    // Courtesy checking for -inf values and changing them to null because json is dumb
                     if (isfinite(flash_read(1, 1))) {
                         printf("%f", flash_read(1, 1));
                     } else {
@@ -233,14 +225,14 @@ void api_poll() {
                         } else {
                             for (uint v = 0; v <= (CONFIG_SECTOR_SIZE - 1); v++) {
                                 if (v != (CONFIG_SECTOR_SIZE - 1)) {
-                                    if (isfinite(flash_read(3, v))) {
-                                        printf("\"%d\":%f,", v, flash_read(3, v));
+                                    if (isfinite(flash_read(FLASH_MAX_SECTOR, v))) {
+                                        printf("\"%d\":%f,", v, flash_read(FLASH_MAX_SECTOR, v));
                                     } else {
-                                        printf("\"%d\":null},", v);
+                                        printf("\"%d\":null,", v);
                                     }
                                 } else {
-                                    if (isfinite(flash_read(3, v))) {
-                                        printf("\"%d\":%f}]}]}\n", v, flash_read(3, v));
+                                    if (isfinite(flash_read(FLASH_MAX_SECTOR, v))) {
+                                        printf("\"%d\":%f}]}]}\n", v, flash_read(FLASH_MAX_SECTOR, v));
                                     } else {
                                         printf("\"%d\":null}]}]}\n", v);
                                     }
@@ -389,24 +381,9 @@ void api_poll() {
                             }
                             if (rollP >= 0 && rollI >= 0 && rollD >= 0 && pitchP >= 0 && pitchI >= 0 && pitchD >= 0) {
                                 goodReq = true;
-                                // Get current flash data so we don't overwrite it (well technically we do overwrite it but write it back immediately after)
-                                float pid0[CONFIG_SECTOR_SIZE];
-                                for (uint v = 0; v < CONFIG_SECTOR_SIZE; v++) {
-                                    pid0[v] = flash_read(FLASH_SECTOR_PID0, v);
-                                }
-                                pid0[0] = 0.3f;
-                                pid0[1] = rollP;
-                                pid0[2] = rollI;
-                                pid0[3] = rollD;
-                                float pid1[CONFIG_SECTOR_SIZE];
-                                for (uint v = 0; v < CONFIG_SECTOR_SIZE; v++) {
-                                    pid1[v] = flash_read(FLASH_SECTOR_PID1, v);
-                                }
-                                pid1[0] = 0.3f;
-                                pid1[1] = pitchP;
-                                pid1[2] = pitchI;
-                                pid1[3] = pitchD;
-                                // Write new value
+                                float pid0[CONFIG_SECTOR_SIZE] = {0.3f, rollP, rollI, rollD};
+                                float pid1[CONFIG_SECTOR_SIZE] = {0.3f, pitchP, pitchI, pitchD};
+                                // Write new values
                                 flash_write(FLASH_SECTOR_PID0, pid0);
                                 flash_write(FLASH_SECTOR_PID1, pid1);
                                 printf("pico-fbw 200 OK\n");
@@ -426,7 +403,7 @@ void api_poll() {
                                         flsector[tokens[i + 1].end - tokens[i + 1].start] = '\0';
                                         // Ensure sector is valid
                                         sector = atoi(flsector);
-                                        if (!(sector < FLASH_MIN_SECTOR || sector > FLASH_MAX_SECTOR || sector == FLASH_SECTOR_BOOT)) {
+                                        if (sector >= FLASH_MIN_SECTOR && sector <= FLASH_MAX_SECTOR && sector != FLASH_SECTOR_BOOT) {
                                             goodReq = true;
                                         } else {
                                             goodReq = false;
@@ -438,7 +415,7 @@ void api_poll() {
                                         flindex[tokens[i + 1].end - tokens[i + 1].start] = '\0';
                                         // Ensure index is valid
                                         index = atoi(flindex);
-                                        if (!(index < 0 || index > CONFIG_SECTOR_SIZE)) {
+                                        if (index >= 0 && index <= CONFIG_SECTOR_SIZE) {
                                             goodReq = true;
                                         } else {
                                             goodReq = false;
@@ -449,10 +426,18 @@ void api_poll() {
                                         strncpy(flvalue, args + tokens[i + 1].start, tokens[i + 1].end - tokens[i + 1].start);
                                         flvalue[tokens[i + 1].end - tokens[i + 1].start] = '\0';
                                         value = atof(flvalue);
+                                        // Ensure value is a valid float
+                                        if (isfinite(value) && !isnan(value)) {;
+                                            goodReq = true;
+                                        } else {
+                                            goodReq = false;
+                                            break;
+                                        }
                                     }
                                 }
                             }
                             if (goodReq) {
+                                // Get current flash data in the sector so we don't overwrite it (well technically we do overwrite it but write it back immediately after)
                                 float data[CONFIG_SECTOR_SIZE];
                                 for (uint v = 0; v <= CONFIG_SECTOR_SIZE; v++) {
                                     data[v] = flash_read(sector, v);
