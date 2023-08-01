@@ -93,7 +93,7 @@ void api_init_blocking() {
 }
 
 void api_poll() {
-    if (time_us_32() < ENABLE_API_TIMEOUT_MS * 1000) {
+    if (time_us_32() > ENABLE_API_TIMEOUT_MS * 1000) {
         char *line = stdin_read_line();
         // Check if there has been input
         if (line != NULL) {
@@ -282,6 +282,7 @@ void api_poll() {
                     jsmn_init(&parser);
                     int token_count = jsmn_parse(&parser, args, strlen(args), tokens, sizeof(tokens)/sizeof(tokens[0]));
                     if (token_count > 0) {
+                        // TODO: allow SET_MODE to report back if setting the mode was successful or not
                         if (strcmp(cmd, "SET_MODE") == 0) {
                             for (uint i = 0; i < token_count; i++) {
                                 if (tokens[i].type == JSMN_STRING) {

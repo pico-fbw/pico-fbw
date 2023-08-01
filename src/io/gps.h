@@ -36,19 +36,31 @@ void gps_deinit();
 /**
  * Contains latitude and longitude coordinates, altitude, speed, and magnetic track from a connected GPS module when filled using gps_getData().
 */ 
-typedef struct gpsData {
+typedef struct GPS {
     double lat;
     double lng;
     int alt;
     float spd;
-    float trk;
-} gpsData;
+} GPS;
 
 /**
  * Gets the current coordinates from the GPS module.
- * @return an updated gpsData struct.
+ * @return an updated GPS struct.
 */
-gpsData gps_getData();
+GPS gps_getData();
+
+/**
+ * @return the current altitude offset from prior GPS altitude calibration.
+ * @note This is a positive value (basically where the GPS is MSL) or possibly zero if no calibration has been performed.
+*/
+int gps_getAltOffset();
+
+/**
+ * Calibrates the altitude offset from the GPS.
+ * @param num_samples the number of samples to take.
+ * @return 0 if successful, PICO_ERROR_TIMEOUT if a timeout occured, or PICO_ERROR_GENERIC otherwise.
+*/
+int gps_calibrateAltOffset(uint num_samples);
 
 #endif // GPS_ENABLED
 

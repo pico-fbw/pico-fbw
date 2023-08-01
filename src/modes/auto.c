@@ -51,11 +51,22 @@ bool mode_autoInit() {
     pid_init(&latGuid);
     pid_init(&vertGuid);
     // Load the first altitude from the flightplan (subsequent altitudes will be loaded on waypoint interception)
-    if (fplan[currentWaypoint].alt < -5) {
-        alt = gps.alt;
-    } else {
-        alt = fplan[currentWaypoint].alt;
-    }
+    // if it is -5 (default) just discard it (by setting it to our current alt; no change)
+    #ifdef GPS_ENABLE_ALT_OFFSET
+        if (fplan[currentWaypoint].alt < -5) {
+            alt = gps.alt;
+        } else {
+            // Factor in the altitude offset calculated earlier, if applicable
+            // The alt offset should always be valid, auto mode is not allowed to launch without this offset passing as per the modes manager
+            alt = fplan[currentWaypoint].alt + gps_getAltOffset();
+        }
+    #else
+        if (fplan[currentWaypoint].alt < -5) {
+            alt = gps.alt;
+        } else {
+            alt = fplan[currentWaypoint].alt;
+        }
+    #endif
     return true;
 }
 
@@ -82,12 +93,20 @@ void mode_auto() {
             toMode(HOLD);
             return;
         } else {
-            // Load the altitude--if it is -5 (default) just discard it (by setting it to our current alt; no change)
-            if (fplan[currentWaypoint].alt < -5) {
-                alt = gps.alt;
-            } else {
-                alt = fplan[currentWaypoint].alt;
-            }
+            // Load the next altitude
+            #ifdef GPS_ENABLE_ALT_OFFSET
+                if (fplan[currentWaypoint].alt < -5) {
+                    alt = gps.alt;
+                } else {
+                    alt = fplan[currentWaypoint].alt + gps_getAltOffset();
+                }
+            #else
+                if (fplan[currentWaypoint].alt < -5) {
+                    alt = gps.alt;
+                } else {
+                    alt = fplan[currentWaypoint].alt;
+                }
+            #endif
         }
     }
     // Calculate the up-to-date bearing to the current waypoint

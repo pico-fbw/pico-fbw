@@ -11,12 +11,14 @@
  * Licensed under the GNU GPL-3.0
 */
 
+// TODO: implement parsing (and generation on the webui's side) of gps offset calibration (use webpage settings for this?)
+
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
-#include "pico/stdlib.h" // Wi-Fly doesn't actually use the stdlib, this is here only to provide access to the RASPBERRYPI_PICO_W macro
+#include "pico/stdlib.h" // Wi-Fly doesn't actually use the pico's stdlib, this is here only to provide access to the RASPBERRYPI_PICO_W macro
 #ifdef RASPBERRYPI_PICO_W
     #include "pico/cyw43_arch.h"
 #endif

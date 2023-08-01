@@ -108,7 +108,7 @@ This value DOES need to be negative! */
 #define IMU_SCL_PIN 17
 
 /* Uncomment to enable GPS functionality.
-There are no types, most GPS modules use the NMEA-0183 standard so that is what is supported here. */
+There are no module types, almost all GPS modules use the NMEA-0183 standard so that is what is supported here. */
 #define GPS_ENABLED
 #ifdef GPS_ENABLED
 

@@ -120,10 +120,11 @@ int main() {
 
     // GPS
     #ifdef GPS_ENABLED
+        while (time_us_32() < (500 * 1000)); // Give GPS time (at least 500ms after power-up) to initialize
         FBW_DEBUG_printf("[boot] initializing GPS\n");
         if (gps_init()) {
             FBW_DEBUG_printf("[boot] GPS ok\n");
-            setGPSSafe(true);
+            // We don't set the GPS safe just yet, communications have been established but we are still unsure if the data is okay
         } else {
             FBW_DEBUG_printf("[boot] WARNING: [FBW-2000] GPS initalization failed!\n");
             led_blink(2000, 0);
@@ -132,7 +133,7 @@ int main() {
 
     // IMU
     #ifdef IMU_BNO055
-        while (time_us_32() < 850000); // BNO055 requires at least 850ms to ready up
+        while (time_us_32() < (850 * 1000)); // BNO055 requires at least 850ms to ready up
     #endif
     FBW_DEBUG_printf("[boot] initializing IMU\n");
     if (imu_init() == 0) {

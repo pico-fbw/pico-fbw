@@ -5,9 +5,13 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include "../lib/minmea.h"
+#include "pico/time.h"
+
+#include "led.h"
 
 #include "hardware/gpio.h"
 #include "hardware/irq.h"
@@ -124,14 +128,15 @@ void gps_deinit() {
     uart_deinit(GPS_UART);
 }
 
-gpsData gps_getData() {
+GPS gps_getData() {
     /* These variables are static so that they persist between calls to gps_getData()
     This is due to the nature of how getting the data works--one line at a time
     If data was not saved between calls, one call would, for example, return correct coordinates but incorrect alt, and the next
     would return incorrect coordinates but correct alt. */
     static double lat, lng = -200.0;
     static int alt = -100;
-    static float spd, trk = -100.0f;
+    static float spd = -100.0f;
+    static float pdop, hdop, vdop = -1.0f;
 
     // Read a line from the GPS and parse it
     char *line = uart_read_line(GPS_UART);
@@ -142,26 +147,25 @@ gpsData gps_getData() {
                 if (minmea_parse_gga(&gga, line)) {
                     lat = minmea_tocoord(&gga.latitude);
                     lng = minmea_tocoord(&gga.longitude);
-                    if (strcmp(&gga.altitude_units, "M") == 0) {
+                    if (strncmp(&gga.altitude_units, "M", 1) == 0) {
                         alt = (int)(minmea_tofloat(&gga.altitude) * 3.28084f); // Conversion from meters to feet
                     } else {
-                        FBW_DEBUG_printf("[gps] ERROR: unrecognized altitude unit");
+                        setGPSSafe(false);
+                        return (GPS){0};
                     }
                 } else {
-                    FBW_DEBUG_printf("[gps] ERROR: failed parsing $xxGGA sentence\n");
+                    GPS_DEBUG_printf("[gps] ERROR: failed parsing $xxGGA sentence\n");
                 }
                 break;
             }
             case MINMEA_SENTENCE_GSA: {
                 minmea_sentence_gsa gsa;
                 if (minmea_parse_gsa(&gsa, line)) {
-                    if (minmea_tofloat(&gsa.pdop) > GPS_SAFE_PDOP_THRESHOLD || minmea_tofloat(&gsa.hdop) > GPS_SAFE_HDOP_THRESHOLD || minmea_tofloat(&gsa.vdop) > GPS_SAFE_VDOP_THRESHOLD) {
-                        // DOP value(s) too high
-                        setGPSSafe(false);
-                        return (gpsData){0};
-                    }
+                    pdop = minmea_tofloat(&gsa.pdop);
+                    hdop = minmea_tofloat(&gsa.hdop);
+                    vdop = minmea_tofloat(&gsa.vdop);
                 } else {
-                    FBW_DEBUG_printf("[gps] ERROR: failed parsing $xxGSA sentence\n");
+                    GPS_DEBUG_printf("[gps] ERROR: failed parsing $xxGSA sentence\n");
                 }
                 break;
             }
@@ -169,9 +173,8 @@ gpsData gps_getData() {
                 minmea_sentence_vtg vtg;
                 if (minmea_parse_vtg(&vtg, line)) {
                     spd = minmea_tofloat(&vtg.speed_knots);
-                    trk = minmea_tofloat(&vtg.magnetic_track_degrees);
                 } else {
-                    FBW_DEBUG_printf("[gps] ERROR: failed parsing $xxVTG sentence\n");
+                    GPS_DEBUG_printf("[gps] ERROR: failed parsing $xxVTG sentence\n");
                 }
                 break;
             }
@@ -179,26 +182,74 @@ gpsData gps_getData() {
             case MINMEA_INVALID:
                 /* This is TECHNICALLY an invalid sentence but minmea was flagging a bunch of sentences from before fixes are achieved
                 as invalid so I just removed this debug statement because it was becoming very annoying and wasn't very useful anyway */
-
-                // FBW_DEBUG_printf("[gps] ERROR: invalid sentence\n");
+                // GPS_DEBUG_printf("[gps] ERROR: invalid sentence\n");
                 break;
             case MINMEA_UNKNOWN:
-                FBW_DEBUG_printf("[gps] WARNING: unsupported sentence\n");
+                GPS_DEBUG_printf("[gps] WARNING: unsupported sentence\n");
             default:
-                FBW_DEBUG_printf("[gps] ERROR: parse error\n");
+                GPS_DEBUG_printf("[gps] ERROR: parse error\n");
                 break;
         }
         free(line);
     }
 
-    // Check for invalid data
-    if (lat <= 90 && lat >= -90 && lng <= 180 && lng >= -180 && alt >= 0 && spd >= 0 && trk >= 0 && lat != INFINITY && lng != INFINITY && alt != INFINITY && spd != INFINITY && trk != INFINITY && lat != NAN && lng != NAN && alt != NAN && spd != NAN && trk != NAN) {
+    if (lat <= 90 && lat >= -90 && lng <= 180 && lng >= -180 && alt >= 0 && spd >= 0 && lat != INFINITY && lng != INFINITY && alt != INFINITY && spd != INFINITY && lat != NAN && lng != NAN && alt != NAN && spd != NAN && pdop < GPS_SAFE_PDOP_THRESHOLD && hdop < GPS_SAFE_HDOP_THRESHOLD && vdop < GPS_SAFE_VDOP_THRESHOLD) {
         setGPSSafe(true);
     } else {
         setGPSSafe(false);
-        return (gpsData){0};
+        return (GPS){0};
     }
-    return (gpsData){lat, lng, alt, spd, trk};
+    return (GPS){lat, lng, alt, spd};
+}
+
+static int altOffset = 0; // The offset of the aircraft's altitude in feet
+int gps_getAltOffset() { return altOffset; }
+
+static int samples = 0; // The amount of samples currently taken during altitude calibration
+static int64_t calibrationOvertime(alarm_id_t id, void *data) { samples = -1; } // Called if the calibration takes longer than it should and halts it
+
+int gps_calibrateAltOffset(uint num_samples) {
+    GPS_DEBUG_printf("[gps] starting altitude calibration\n");
+    led_blink(1000, 100); // Blink at 1Hz
+    // GPS updates should be at 1Hz (give or take 1s) so if the calibration takes longer we cut it short
+    alarm_id_t calibrationTimeout = add_alarm_in_ms((num_samples * 1000) + 2000, calibrationOvertime, NULL, false);
+    samples = 0;
+    int64_t alts = 0;
+    while (samples < num_samples || samples < 0) {
+        char *line = uart_read_line(GPS_UART);
+        if (line != NULL) {
+            switch (minmea_sentence_id(line, false)) {
+                case MINMEA_SENTENCE_GGA: {
+                    minmea_sentence_gga gga;
+                    if (minmea_parse_gga(&gga, line)) {
+                        if (strncmp(&gga.altitude_units, "M", 1) == 0) {
+                            int calt = (int)(minmea_tofloat(&gga.altitude) * 3.28084f);
+                            alts += calt;
+                            GPS_DEBUG_printf("[gps] altitude: %d (%d of %d)\n", calt, samples + 1, num_samples);
+                            samples++;
+                        } else {
+                            FBW_DEBUG_printf("[gps] ERROR: invalid altitude units during calibration\n");
+                            return PICO_ERROR_GENERIC;
+                        }
+                    } else {
+                        GPS_DEBUG_printf("[gps] ERROR: failed parsing $xxGGA sentence during calibration\n");
+                        return PICO_ERROR_GENERIC;
+                    }
+                }
+            }
+            free(line);
+        }
+    }
+    cancel_alarm(calibrationTimeout);
+    led_stop();
+    if (samples < 0) {
+        FBW_DEBUG_printf("[gps] ERROR: altitude calibration timed out\n");
+        return PICO_ERROR_TIMEOUT;
+    } else {
+        altOffset = alts / samples;
+        GPS_DEBUG_printf("[gps] altitude offset calculated as: %d\n", altOffset);
+        return 0;
+    }
 }
 
 #endif // GPS_ENABLED

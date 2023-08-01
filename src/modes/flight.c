@@ -19,7 +19,7 @@
 
 inertialAngles aircraft;
 #ifdef GPS_ENABLED
-    gpsData gps;
+    GPS gps;
 #endif
 
 // TODO: look into using gps heading when possible if relying on MPU due to the unreliability of no compass + fusion delays
