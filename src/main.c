@@ -64,35 +64,35 @@ int main() {
         float boot[CONFIG_SECTOR_SIZE] = {FBW_BOOT};
         flash_write(FLASH_SECTOR_BOOT, boot);
         FBW_DEBUG_printf("[boot] boot data written! rebooting now...\n");
+        // Reboot is to ensure flash is okay; any problems with the flash will simply cause a bootloop before getting to anything important
         watchdog_enable(1, 1);
         while (true);
     } else {
         FBW_DEBUG_printf("[boot] boot flag ok\n");
     }
 
-    // PWM IN
-    FBW_DEBUG_printf("[boot] checking for PWM IN calibration\n");
-    if (!pwm_checkCalibration()) {
-        FBW_DEBUG_printf("[boot] PWM IN calibration not found! waiting for tx/rx...\n");
-        sleep_ms(3000); // Wait a few moments for tx/rx to set itself up
-        FBW_DEBUG_printf("[boot] calibrating now...do not touch the transmitter!\n");
-        // Calibrate PWM
-        if (!pwm_calibrate(90.0f, 2000, 5, 5) || !pwm_checkCalibration()) {
-            FBW_DEBUG_printf("[boot] FATAL: [FBW-500] PWM IN calibration failed\n");
+    // PWM
+    FBW_DEBUG_printf("[boot] checking for PWM calibration\n");
+    if (pwm_checkCalibration() != 0) {
+        if (pwm_checkCalibration() == -1) {
+            FBW_DEBUG_printf("[boot] PWM calibration not found! waiting for tx/rx...\n");
+            sleep_ms(3000); // Wait a few moments for tx/rx to set itself up
+            FBW_DEBUG_printf("[boot] calibrating now...do not touch the transmitter!\n");
+            if (!pwm_calibrate(90.0f, 2000, 5, 5) || pwm_checkCalibration() != 0) {
+                FBW_DEBUG_printf("[boot] FATAL: [FBW-500] PWM calibration failed!\n");
+                led_blink(500, 0);
+                while (true);
+            } else {
+                FBW_DEBUG_printf("[boot] calibration successful!\n");
+            }
+        } else if (pwm_checkCalibration() == -2) {
+            FBW_DEBUG_printf("[boot] FATAL: [FBW-500] PWM calibration values were too high!\n");
+            FBW_DEBUG_printf("Try again, and if this continues, consider changing the MAX_CALIBRATION_OFFSET in the configuration file.\n");
             led_blink(500, 0);
             while (true);
         }
-        FBW_DEBUG_printf("[boot] calibration successful, rebooting now\n");
-        watchdog_enable(1, 1);
     }
-    // Check to make sure PWM calibration values seem alright, this is mainly to protect extremely high calibration values from being used, such as if a channel was accidentally unplugged during calubration
-    if (pwm_getCalibrationValue(0) > MAX_CALIBRATION_OFFSET || pwm_getCalibrationValue(0) < -MAX_CALIBRATION_OFFSET || pwm_getCalibrationValue(1) > MAX_CALIBRATION_OFFSET || pwm_getCalibrationValue(1) < -MAX_CALIBRATION_OFFSET || pwm_getCalibrationValue(2) > MAX_CALIBRATION_OFFSET || pwm_getCalibrationValue(2) < -MAX_CALIBRATION_OFFSET || pwm_getCalibrationValue(3) > MAX_CALIBRATION_OFFSET || pwm_getCalibrationValue(3) < -MAX_CALIBRATION_OFFSET) {
-        FBW_DEBUG_printf("[boot] FATAL: [FBW-500] PWM IN calibration values were too high!\n");
-        FBW_DEBUG_printf("Try again, and if this continues, consider changing the MAX_CALIBRATION_OFFSET in the configuration file.\n");
-        led_blink(500, 0);
-        while (true);
-    }
-    FBW_DEBUG_printf("[boot] PWM IN calibration ok, enabling\n");
+    FBW_DEBUG_printf("[boot] PWM calibration ok, enabling\n");
     uint pin_list[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, MODE_SWITCH_PIN};
     pwm_enable(pin_list, 4);
 
@@ -112,7 +112,7 @@ int main() {
         for (uint8_t s = 0; s < 3; s++) {
             servo_set(servos[s], degrees[d]);
         }
-        sleep_ms(100);
+        sleep_ms(50);
     }
     for (uint8_t s = 0; s < 3; s++) {
         servo_set(servos[s], 90);
@@ -140,6 +140,17 @@ int main() {
         if (imu_configure()) {
             FBW_DEBUG_printf("[boot] IMU ok\n");
             setIMUSafe(true);
+            FBW_DEBUG_printf("[boot] checking for IMU axis calibration\n");
+            if (!imu_checkCalibration()) {
+                FBW_DEBUG_printf("[boot] IMU axis calibration not found! waiting a bit to begin...\n");
+                sleep_ms(3000);
+                if (!imu_calibrate()) {
+                    FBW_DEBUG_printf("[boot] FATAL: [FBW-500] IMU calibration failed!\n");
+                    led_blink(500, 0);
+                    while (true);
+                }
+            }
+            FBW_DEBUG_printf("[boot] IMU axis calibration ok\n");
         } else {
             FBW_DEBUG_printf("[boot] WARNING: [FBW-1000] IMU configuration failed!\n");
             led_blink(1000, 0);
@@ -189,6 +200,10 @@ int main() {
         #ifdef API_ENABLED
             api_poll();
         #endif
+
+        // debug
+        Euler angles = imu_getRawAngles();
+        printf("%f %f %f\n", angles.x, angles.y, angles.z);
     }
 
     return 0; // How did we get here?

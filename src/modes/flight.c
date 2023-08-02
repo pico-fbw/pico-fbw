@@ -22,8 +22,6 @@ inertialAngles aircraft;
     GPS gps;
 #endif
 
-// TODO: look into using gps heading when possible if relying on MPU due to the unreliability of no compass + fusion delays
-
 static PIDController roll_c;
 static PIDController pitch_c;
 static PIDController yaw_c;

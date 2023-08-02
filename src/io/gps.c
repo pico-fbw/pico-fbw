@@ -11,14 +11,14 @@
 #include "../lib/minmea.h"
 #include "pico/time.h"
 
-#include "led.h"
-
 #include "hardware/gpio.h"
 #include "hardware/irq.h"
 #include "hardware/uart.h"
 
 #include "../modes/flight.h"
 #include "../modes/modes.h"
+
+#include "led.h"
 
 #include "gps.h"
 
@@ -72,38 +72,15 @@ bool gps_init() {
     // Send a command and wait until UART is ready to read, then read back the command response
     // Useful tool for calculating command checksums: https://nmeachecksum.eqth.net/
     #if defined(GPS_COMMAND_TYPE_PMTK)
-        // PMTK manual: https://www.sparkfun.com/datasheets/GPS/Modules/PMTK_Protocol.pdf
+        // PMTK manual: https://cdn.sparkfun.com/assets/parts/1/2/2/8/0/PMTK_Packet_User_Manual.pdf
         char *line0 = NULL;
-        uart_write_blocking(GPS_UART, "$PMTK314,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n", 49); // VTG, GGA, GSA 1hz
+        // Enable the correct sentences
+        uart_write_blocking(GPS_UART, "$PMTK314,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n", 49); // VTG, GGA, GSA enabled once per fix
         if (uart_is_readable_within_us(GPS_UART, GPS_COMMAND_TIMEOUT_US)) {
             line0 = uart_read_line(GPS_UART);
         } else {
-            FBW_DEBUG_printf("[gps] ERROR: no response from GPS while setting query 0\n");
+            FBW_DEBUG_printf("[gps] ERROR: timed out whilst enabling sentences\n");
             return false;
-        }
-    #elif defined(GPS_COMMAND_TYPE_PSRF)
-        // PSRF manual: https://www.sparkfun.com/datasheets/GPS/NMEA%20Reference%20Manual-Rev2.1-Dec07.pdf
-        char *line0, *line1, *line2 = NULL;
-        uart_write_blocking(GPS_UART, "$PSRF103,00,00,01,01*25\r\n", 27); // GGA, rate, 1hz, checksum enabled
-        if (!uart_is_readable_within_us(GPS_UART, GPS_COMMAND_TIMEOUT_US)) {
-            FBW_DEBUG_printf("[gps] ERROR: no response from GPS while setting query 0\n");
-            return false;
-        } else {
-            line0 = uart_read_line(GPS_UART);
-        }
-        uart_write_blocking(GPS_UART, "$PSRF103,02,00,01,01*27\r\n", 27); // GSA, rate, 1hz, checksum enabled
-        if (!uart_is_readable_within_us(GPS_UART, GPS_COMMAND_TIMEOUT_US)) {
-            FBW_DEBUG_printf("[gps] ERROR: no response from GPS while setting query 1\n");
-            return false;
-        } else {
-            line1 = uart_read_line(GPS_UART);
-        }
-        uart_write_blocking(GPS_UART, "$PSRF103,05,00,01,01*20\r\n", 27); // VTG, rate, 1hz, checksum enabled
-        if (!uart_is_readable_within_us(GPS_UART, GPS_COMMAND_TIMEOUT_US)) {
-            FBW_DEBUG_printf("[gps] ERROR: no response from GPS while setting query 2\n");
-            return false;
-        } else {
-            line2 = uart_read_line(GPS_UART);
         }
     #endif
     // Check for the correct response and return false if it doesn't match
@@ -113,13 +90,6 @@ bool gps_init() {
         bool result = (strncmp(line0, "$PMTK001,314,3*36", 46) == 0); // Acknowledged and successful execution of the command
         GPS_DEBUG_printf("[gps] comparison result: %d\n", strncmp(line0, "$PMTK001,314,3*36", 46));
         free(line0);
-    #elif defined(GPS_COMMAND_TYPE_PSRF)
-        GPS_DEBUG_printf("[gps] response 0: %s\n[gps] response 1: %s\n[gps] response 2: %s\n", line0, line1, line2);
-        bool result = (strncmp(line0, "$PSRF103,00,00,01,01*25", 24) == 0 && strncmp(line1, "$PSRF103,02,00,01,01*27", 24) == 0 && strncmp(line2, "$PSRF103,05,00,01,01*20", 24) == 0);
-        GPS_DEBUG_printf("[gps] comparison results: %d, %d, %d\n", strncmp(line0, "$PSRF103,00,00,01,01*25", 24), strncmp(line1, "$PSRF103,02,00,01,01*27", 24), strncmp(line2, "$PSRF103,05,00,01,01*20", 24));
-        free(line0);
-        free(line1);
-        free(line2);
     #endif
     return result;
 }
@@ -135,7 +105,7 @@ GPS gps_getData() {
     would return incorrect coordinates but correct alt. */
     static double lat, lng = -200.0;
     static int alt = -100;
-    static float spd = -100.0f;
+    static float spd, trk_true = -100.0f;
     static float pdop, hdop, vdop = -1.0f;
 
     // Read a line from the GPS and parse it
@@ -173,6 +143,7 @@ GPS gps_getData() {
                 minmea_sentence_vtg vtg;
                 if (minmea_parse_vtg(&vtg, line)) {
                     spd = minmea_tofloat(&vtg.speed_knots);
+                    trk_true = minmea_tofloat(&vtg.true_track_degrees);
                 } else {
                     GPS_DEBUG_printf("[gps] ERROR: failed parsing $xxVTG sentence\n");
                 }
@@ -193,13 +164,13 @@ GPS gps_getData() {
         free(line);
     }
 
-    if (lat <= 90 && lat >= -90 && lng <= 180 && lng >= -180 && alt >= 0 && spd >= 0 && lat != INFINITY && lng != INFINITY && alt != INFINITY && spd != INFINITY && lat != NAN && lng != NAN && alt != NAN && spd != NAN && pdop < GPS_SAFE_PDOP_THRESHOLD && hdop < GPS_SAFE_HDOP_THRESHOLD && vdop < GPS_SAFE_VDOP_THRESHOLD) {
+    if (lat <= 90 && lat >= -90 && lng <= 180 && lng >= -180 && alt >= 0 && spd >= 0 && lat != INFINITY && lng != INFINITY && alt != INFINITY && spd != INFINITY && trk_true != INFINITY && lat != NAN && lng != NAN && alt != NAN && spd != NAN && trk_true != NAN  && pdop < GPS_SAFE_PDOP_THRESHOLD && hdop < GPS_SAFE_HDOP_THRESHOLD && vdop < GPS_SAFE_VDOP_THRESHOLD) {
         setGPSSafe(true);
     } else {
         setGPSSafe(false);
         return (GPS){0};
     }
-    return (GPS){lat, lng, alt, spd};
+    return (GPS){lat, lng, alt, spd, trk_true};
 }
 
 static int altOffset = 0; // The offset of the aircraft's altitude in feet

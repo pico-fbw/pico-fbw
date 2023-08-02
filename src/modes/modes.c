@@ -30,6 +30,7 @@ static inline int64_t modeOvertime(alarm_id_t id, void *data) {
     // Mode has taken longer than its maximum runtime, revert to direct mode
     // This makes sure that the user will still have some sort of control even if a catastrophic bug were to occur
     led_blink(500, 50); // Distress
+    printf("FATAL ERROR: mode took longer than its maximum runtime, please report this!\n");
     // We are now forever locked into direct mode, get the aircraft on the ground!!
     while (true) {
         mode_direct();

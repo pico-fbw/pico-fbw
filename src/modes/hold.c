@@ -19,8 +19,8 @@
 
 static uint8_t turnStatus = HOLD_TURN_UNSCHEDULED;
 
-static float oldHeading;
-static float targetHeading;
+static float oldTrack;
+static float targetTrack;
 static int targetAlt;
 
 static double rollSet;
@@ -29,12 +29,12 @@ static PIDController vertGuid;
 
 // Callback for when a turnaround should be completed in a holding pattern.
 static int64_t hold_callback(alarm_id_t id, void *data) {
-    // Get current heading (beginning of the turn)
-    oldHeading = aircraft.heading;
+    // Get current track (beginning of the turn)
+    oldTrack = gps.trk_true;
     // Set our target heading based on this (with wrap protection)
-    targetHeading = (oldHeading + 180);
-    if (targetHeading > 360) {
-        targetHeading -= 360;
+    targetTrack = (oldTrack + 180);
+    if (targetTrack > 360) {
+        targetTrack -= 360;
     }
     turnStatus = HOLD_TURN_INPROGRESS;
     return 0; // Tells Pico to not reschedule alarm, we will wait until the turn is complete to do that
@@ -66,7 +66,7 @@ void mode_hold() {
             break;    
         case HOLD_TURN_INPROGRESS:
             // Wait until it is time to decrease the turn
-            if (abs(targetHeading - aircraft.heading) <= HOLD_HEADING_DECREASE_WITHIN) {
+            if (abs(targetTrack - gps.trk_true) <= HOLD_HEADING_DECREASE_WITHIN) {
                 turnStatus = HOLD_TURN_ENDING;
             }
             break;
@@ -76,7 +76,7 @@ void mode_hold() {
                 rollSet -= (HOLD_TURN_BANK_ANGLE * SETPOINT_SMOOTHING_VALUE);
             }
             // Move on to stabilization once we've intercepted the target heading
-            if (abs(targetHeading - aircraft.heading) <= HOLD_HEADING_INTERCEPT_WITHIN) {
+            if (abs(targetTrack - gps.trk_true) <= HOLD_HEADING_INTERCEPT_WITHIN) {
                 turnStatus = HOLD_TURN_STABILIZING;
             }
             break;

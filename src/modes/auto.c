@@ -78,7 +78,7 @@ void mode_auto() {
     }
     
     // Nested PIDs; latGuid and vertGuid use imu & gps data to command bank/pitch angles which the flight PIDs then use to actuate servos
-    pid_update(&latGuid, bearing, aircraft.heading);
+    pid_update(&latGuid, bearing, gps.trk_true); // Don't use aircraft heading because that's not always going to be navigational (either true or magnetic)
     pid_update(&vertGuid, alt, gps.alt);
     flight_update(latGuid.out, vertGuid.out, 0, false);
 

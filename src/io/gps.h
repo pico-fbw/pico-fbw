@@ -34,13 +34,14 @@ bool gps_init();
 void gps_deinit();
 
 /**
- * Contains latitude and longitude coordinates, altitude, speed, and magnetic track from a connected GPS module when filled using gps_getData().
+ * Contains latitude and longitude coordinates, altitude, speed, and true track (mag track broken for now) from a connected GPS module when filled using gps_getData().
 */ 
 typedef struct GPS {
     double lat;
     double lng;
     int alt;
     float spd;
+    float trk_true;
 } GPS;
 
 /**

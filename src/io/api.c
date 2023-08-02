@@ -126,9 +126,9 @@ void api_poll() {
                 } else if (strcmp(cmd, "GET_SENSORS") == 0) {
                     if (getCurrentMode() != DIRECT) {
                         #ifdef GPS_ENABLED
-                            printf("{\"imu\":[{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f,\"heading\":%.4f}],\"gps\":[{\"lat\":%f,\"lng\":%f,\"alt\":%d,\"spd\":%f}]}\n", aircraft.roll, aircraft.pitch, aircraft.yaw, aircraft.heading, gps.lat, gps.lng, gps.alt, gps.spd);
+                            printf("{\"imu\":[{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f}],\"gps\":[{\"lat\":%f,\"lng\":%f,\"alt\":%d,\"spd\":%f}]}\n", aircraft.roll, aircraft.pitch, aircraft.yaw, gps.lat, gps.lng, gps.alt, gps.spd);
                         #else
-                            printf("{\"imu\":[{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f,\"heading\":%.4f}]}\n", aircraft.roll, aircraft.pitch, aircraft.yaw, aircraft.heading);
+                            printf("{\"imu\":[{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f}]}\n", aircraft.roll, aircraft.pitch, aircraft.yaw);
                         #endif
                         printf("pico-fbw 200 OK\n");
                     } else {
@@ -136,7 +136,7 @@ void api_poll() {
                     }
                 } else if (strcmp(cmd, "GET_IMU") == 0) {
                     if (getCurrentMode() != DIRECT) {
-                        printf("{\"imu\":[{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f,\"heading\":%.4f}]}\n", aircraft.roll, aircraft.pitch, aircraft.yaw, aircraft.heading);
+                        printf("{\"imu\":[{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f}]}\n", aircraft.roll, aircraft.pitch, aircraft.yaw);
                         printf("pico-fbw 200 OK\n");
                     } else {
                         printf("pico-fbw 503 Unavailable\n");

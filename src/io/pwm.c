@@ -47,13 +47,11 @@
 #include "pwm.h"
 #include "pwm.pio.h"
 
-/* Begin PWM input functions */
-
 static PIO pio;
 static uint32_t pulsewidth[4], period[4];
 uint gb_num_pins;
 
-static void pwm_internal_handler() {
+static void pioIntr() {
     int state_machine = -1;
     // check which IRQ was raised:
     for (int i = 0; i < 4; i++) {
@@ -68,6 +66,30 @@ static void pwm_internal_handler() {
             pio0_hw->irq = 1 << i;
         }
     }
+}
+
+/**
+ * Gets the calibration value for the specified pin.
+ * @param pin the pin (0-3 to get the value of)
+ * @return the calibration value from PWM calibration.
+ * Be aware that this value may not be cohesive; this function does not check to see whether or not a calibration has been done, so it is able to return random data.
+*/
+static inline float getCalibrationValue(uint pin) {
+    // Check if we originally only calibrated one PWM and if so, set pin to that regardless
+    #ifndef CONFIGURE_INPUTS_SEPERATELY
+        pin = 0;
+    #endif
+    // Read the value of pin + 1 from the first sector, this will ensure we don't read the calibration flag instead
+    return flash_read(FLASH_SECTOR_PWM, pin + 1);
+}
+
+/**
+ * Reads the raw degree value without any calibrations applied.
+ * @param pin the pin (0-3 to read)
+ * @return the raw degree value
+*/
+static float readDegRaw(uint pin) {
+    return (180000 * ((float)pulsewidth[pin] * 0.000000016 - 0.001));
 }
 
 void pwm_enable(uint *pin_list, uint num_pins) {
@@ -89,7 +111,7 @@ void pwm_enable(uint *pin_list, uint num_pins) {
         pio_sm_set_enabled(pio, i, true);
     }
     FBW_DEBUG_printf("[pwm] state machines ok, setting up interrupts\n");
-    irq_set_exclusive_handler(PIO0_IRQ_0, pwm_internal_handler);
+    irq_set_exclusive_handler(PIO0_IRQ_0, pioIntr);
     irq_set_enabled(PIO0_IRQ_0, true);
     pio0_hw->inte0 = PIO_IRQ0_INTE_SM0_BITS | PIO_IRQ0_INTE_SM1_BITS | PIO_IRQ0_INTE_SM2_BITS | PIO_IRQ0_INTE_SM3_BITS ;
 }
@@ -125,16 +147,11 @@ float pwm_readP(uint pin) {
 }
 
 float pwm_readDeg(uint pin) {
-    return (180000 * ((float)pulsewidth[pin] * 0.000000016 - 0.001) + pwm_getCalibrationValue(pin));
-}
-
-// Reads the raw degree value without any calibrations applied, only used internally in calibration for now.
-static float pwm_readDegRaw(uint pin) {
-    return (180000 * ((float)pulsewidth[pin] * 0.000000016 - 0.001));
+    return (180000 * ((float)pulsewidth[pin] * 0.000000016 - 0.001) + getCalibrationValue(pin));
 }
 
 bool pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint run_times) {
-    FBW_DEBUG_printf("[pwm] pwm calibration begin\n");
+    FBW_DEBUG_printf("[pwm] starting pwm calibration\n");
     // Start blinking LED to signify we are calibrating
     led_blink(100, 0);
     // Create an array where we will arrange our data to later write; the first four bytes will signify if we have run a calibration before
@@ -161,7 +178,7 @@ bool pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint
             // Reset the total difference every time we run
             float total_difference = 0.0f;
             for (uint i = 0; i < num_samples; i++) {
-                total_difference += (deviation - pwm_readDegRaw(pin));
+                total_difference += (deviation - readDegRaw(pin));
                 sleep_ms(sample_delay_ms);
             }
             // Check to see if the deviation is 270 (this value occurs with a pulsewidth of 0/1 aka not connected)
@@ -188,22 +205,18 @@ bool pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint
     return true;
 }
 
-bool pwm_checkCalibration() {
-    // Read the first value from the first sector of flash, this holds the value that is changed when calibration is completed, and
-    // return true/false based on what value we actually saw vs. what we expect
+int pwm_checkCalibration() {
+    // Read the first value from the PWM sector of flash, this holds the calibration flag
     if (flash_read(FLASH_SECTOR_PWM, 0) == 0.5f) {
-        return true;
-    // Usually, this will turn out to be either 0 if the flash has not been programmed yet or 1 if it has been previously erased/reset
+        // Ensure the values are normal before we give the ok
+        for (uint8_t i = 0; i <= 3; i++) {
+            if (!WITHIN_MAX_CALIBRATION_OFFSET(getCalibrationValue(i))) {
+                return -2;
+            }
+        }
+        return 0;
     } else {
-        return false;
+        // Usually, this will turn out to be either 0 if the flash has not been programmed yet or 1 if it has been previously erased/reset
+        return -1;
     }
-}
-
-float pwm_getCalibrationValue(uint pin) {
-    // Check if we originally only calibrated one PWM and if so, set pin to that regardless
-    #ifndef CONFIGURE_INPUTS_SEPERATELY
-        pin = 0;
-    #endif
-    // Read the value of pin + 1 from the first sector, this will ensure we don't read the calibration flag instead
-    return flash_read(FLASH_SECTOR_PWM, pin + 1);
 }

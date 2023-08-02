@@ -7,28 +7,13 @@
 #define IMU_I2C i2c0
 
 // The time (in microseconds) before the IMU is considered unresponsive
-#define IMU_TIMEOUT_US 5000
-
-// For axis mappings in configuration file
-#define ROLL_AXIS 0
-#define PITCH_AXIS 1
-#define YAW_AXIS 2
-// Default axis mappings
-#ifndef IMU_MAP_AXES
-	#if defined(IMU_BNO055)
-		#define IMU_X_AXIS YAW_AXIS
-		#define IMU_Y_AXIS ROLL_AXIS
-		#define IMU_Z_AXIS PITCH_AXIS
-	#elif defined(IMU_MPU6050)
-		#define IMU_X_AXIS YAW_AXIS
-		#define IMU_Y_AXIS PITCH_AXIS
-		#define IMU_Z_AXIS ROLL_AXIS
-	#endif
-#endif
+#define IMU_TIMEOUT_US 10000
 
 // Chip-specific information
 // CHIP_FREQ_KHZ, CHIP_REGISTER, ID_REGISTER, and CHIP_ID are required for all chips, the rest is usually specific to each chip
 #if defined(IMU_BNO055)
+
+	// Datasheet: https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bno055-ds000.pdf
 	
 	#define CHIP_FREQ_KHZ 400
 
@@ -51,6 +36,8 @@
 	#define PWR_MODE_NORMAL 0x00
 
 #elif defined(IMU_MPU6050)
+
+	// Datasheet: https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Datasheet1.pdf
 
 	#define CHIP_FREQ_KHZ 400
 
@@ -75,15 +62,19 @@
 	
 #endif
 
-/**
- * Contains heading, roll, pitch, and yaw angles of the aircraft when filled using imu_getAngles().
-*/
+// Contains heading, roll, pitch, and yaw angles of the aircraft when filled using imu_getAngles().
 typedef struct inertialAngles {
-    float heading;
     float roll;
     float pitch;
 	float yaw;
 } inertialAngles;
+
+// Contains Euler angles of the aircraft when filled using imu_getRawAngles() (these are not mapped to actual aircraft angles).
+typedef struct Euler {
+    float x;
+    float y;
+    float z;
+} Euler;
 
 /**
  * Initializes the IMU unit.
@@ -107,9 +98,30 @@ void imu_deinit();
 bool imu_configure();
 
 /**
+ * Gets the current Euler angles of the aircraft.
+ * @return a Euler struct containing x, y, and z Euler angles.
+*/
+Euler imu_getRawAngles();
+
+/**
  * Gets the current angles of spatial orientation from the IMU.
- * @return an inertialAngles struct containing heading, roll, pitch, and yaw data.
+ * @return an inertialAngles struct containing roll, pitch, and yaw data.
+ * @note This function compensates using calibration data obtained earlier.
+ * Positive values indicate a right roll, pitch up, or right yaw, and negative values indicate the opposite.
 */
 inertialAngles imu_getAngles();
+
+/**
+ * Runs the IMU calibration and saves values to flash.
+ * Be aware this function WILL block until the calibration is complete (which requires user input)!
+ * @return true if success, false if failure.
+*/
+bool imu_calibrate();
+
+/**
+ * Checks if the IMU calibration has been run before.
+ * @return true if calibration has been run, false if not.
+*/
+bool imu_checkCalibration();
 
 #endif // __IMU_H

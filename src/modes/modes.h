@@ -5,11 +5,13 @@
 
 // Define internal mode aliases
 typedef unsigned char Mode;
-#define DIRECT 0
-#define NORMAL 1
-#define AUTO 2
-#define TUNE 3
-#define HOLD 4
+typedef enum Modes {
+    DIRECT,
+    NORMAL,
+    AUTO,
+    TUNE,
+    HOLD
+} Modes;
 // If any modes are ever added, the uppermost mode must be added to the API!
 
 #define MAX_MODE_RUNTIME_TIME_MS 500 // The maximum amount of time the system will run a mode for before exiting to direct.

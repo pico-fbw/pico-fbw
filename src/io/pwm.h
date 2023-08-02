@@ -82,15 +82,13 @@ bool pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint
 
 /**
  * Checks if the PWM calibration has been run before.
- * @return true if calibration has been run previously, false if not.
+ * @return 0 if calibration has been run previously, -1 if no calibration has been run, and -2 if calibration values seem abnormal.
 */
-bool pwm_checkCalibration();
+int pwm_checkCalibration();
 
 /**
- * @param pin the pin (0-3 to get the value of)
- * @return the calibration value from PWM calibration.
- * Be aware that this value may not be cohesive; this function does not check to see whether or not a calibration has been done, so it is able to return random data.
+ * @return true if the value is within the maximum calibration offset.
 */
-float pwm_getCalibrationValue(uint pin);
+#define WITHIN_MAX_CALIBRATION_OFFSET(value) ((value) >= -MAX_CALIBRATION_OFFSET && (value) <= MAX_CALIBRATION_OFFSET)
 
 #endif // __PWM_H
