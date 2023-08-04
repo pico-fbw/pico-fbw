@@ -86,6 +86,7 @@ void toMode(Mode newMode) {
                     }
                 #else
                     #ifdef GPS_ENABLED
+                        // TODO: have a way for auto mode to reengage if the gps becomes safe again bc this is usually due to bad DOP which fixes itself over time
                         if (gpsDataSafe) {
                             FBW_DEBUG_printf("[modes] entering auto mode\n");
                             if (mode_autoInit()) {

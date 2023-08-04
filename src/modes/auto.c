@@ -52,24 +52,20 @@ bool mode_autoInit() {
     pid_init(&vertGuid);
     // Load the first altitude from the flightplan (subsequent altitudes will be loaded on waypoint interception)
     // if it is -5 (default) just discard it (by setting it to our current alt; no change)
-    #ifdef GPS_ENABLE_ALT_OFFSET
+    if (gps_isAltOffsetCalibrated()) {
         if (fplan[currentWaypoint].alt < -5) {
             alt = gps.alt;
         } else {
             // Factor in the altitude offset calculated earlier, if applicable
-            if (gps_isAltOffsetCalibrated()) {
-                alt = fplan[currentWaypoint].alt + gps_getAltOffset();
-            } else {
-                return false;
-            }
+            alt = fplan[currentWaypoint].alt + gps_getAltOffset();
         }
-    #else
+    } else {
         if (fplan[currentWaypoint].alt < -5) {
             alt = gps.alt;
         } else {
             alt = fplan[currentWaypoint].alt;
         }
-    #endif
+    }
     return true;
 }
 
@@ -79,14 +75,16 @@ void mode_auto() {
         toMode(NORMAL);
         return;
     }
-    
+
+    // Calculate the bearing and distanceto the current waypoint
+    bearing = calculateBearing(gps.lat, gps.lng, fplan[currentWaypoint].lat, fplan[currentWaypoint].lng);
+    distance = calculateDistance(gps.lat, gps.lng, fplan[currentWaypoint].lat, fplan[currentWaypoint].lng);
+
     // Nested PIDs; latGuid and vertGuid use imu & gps data to command bank/pitch angles which the flight PIDs then use to actuate servos
     pid_update(&latGuid, bearing, gps.trk_true); // Don't use aircraft heading because that's not always going to be navigational (either true or magnetic)
     pid_update(&vertGuid, alt, gps.alt);
     flight_update(latGuid.out, vertGuid.out, 0, false);
 
-    // Calculate the distance to the current waypoint
-    distance = calculateDistance(gps.lat, gps.lng, fplan[currentWaypoint].lat, fplan[currentWaypoint].lng);
     // If we've "intercepted" the waypoint then advance to the next one
     if (distance <= INTERCEPT_RADIUS) {
         currentWaypoint++;
@@ -97,23 +95,22 @@ void mode_auto() {
             return;
         } else {
             // Load the next altitude
-            #ifdef GPS_ENABLE_ALT_OFFSET
+            if (gps_isAltOffsetCalibrated()) {
                 if (fplan[currentWaypoint].alt < -5) {
                     alt = gps.alt;
                 } else {
+                    // Factor in the altitude offset calculated earlier, if applicable
                     alt = fplan[currentWaypoint].alt + gps_getAltOffset();
                 }
-            #else
+            } else {
                 if (fplan[currentWaypoint].alt < -5) {
                     alt = gps.alt;
                 } else {
                     alt = fplan[currentWaypoint].alt;
                 }
-            #endif
+            }
         }
     }
-    // Calculate the up-to-date bearing to the current waypoint
-    bearing = calculateBearing(gps.lat, gps.lng, fplan[currentWaypoint].lat, fplan[currentWaypoint].lng);
 }
 
 // TODO: Aadd documentation for auto mode on the wiki!

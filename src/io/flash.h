@@ -47,11 +47,13 @@
 */
 
 #define FLASH_MIN_SECTOR FLASH_SECTOR_PWM
-#define FLASH_SECTOR_PWM 0
-#define FLASH_SECTOR_PID0 1
-#define FLASH_SECTOR_PID1 2
-#define FLASH_SECTOR_BOOT 3
-#define FLASH_SECTOR_IMU 4
+typedef enum FlashSector {
+    FLASH_SECTOR_PWM,
+    FLASH_SECTOR_PID0,
+    FLASH_SECTOR_PID1,
+    FLASH_SECTOR_BOOT,
+    FLASH_SECTOR_IMU
+} FlashSector;
 #define FLASH_MAX_SECTOR FLASH_SECTOR_IMU
 
 // This is a fixed value so that locations of data will not change if more sectors are ever added
@@ -75,7 +77,7 @@
  * @param sector the "sector" to write to
  * @param data pointer to array of data to write (must be a float array with maximum size of CONFIG_SECTOR_SIZE)
 */
-void flash_write(uint sector, float *data);
+void flash_write(FlashSector sector, float *data);
 
 /**
  * Reads back one value from a previously written data array.
@@ -85,7 +87,7 @@ void flash_write(uint sector, float *data);
  * @note This function only does a bit of math to figure out where your requested data SHOULD BE; it will read read garbage data,
  * program data, or no data at all. Be careful!
 */
-float flash_read(uint sector, uint val);
+float flash_read(FlashSector sector, uint val);
 
 /**
  * Erases only the flash sector that the program actually uses.

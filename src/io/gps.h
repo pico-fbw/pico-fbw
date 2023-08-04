@@ -10,15 +10,15 @@
 
 // Timeout between waiting for characters during line reads (in microseconds)
 // Too low and sentences will be chunked up into different function returns breaking parsing, too high and process time will be wasted
-#define GPS_READ_TIMEOUT_US 2000
+#define GPS_READ_TIMEOUT_US 2500
 
 // Timeout between waiting for a response after a command is sent (in microseconds)
 #define GPS_COMMAND_TIMEOUT_US 50000
 
 // These are the DOP thresholds to accept for safe flying, if any of the DOPs are larger than this the GPS will be considered unsafe
-#define GPS_SAFE_PDOP_THRESHOLD 3
+#define GPS_SAFE_PDOP_THRESHOLD 4
 #define GPS_SAFE_HDOP_THRESHOLD 5
-#define GPS_SAFE_VDOP_THRESHOLD 2
+#define GPS_SAFE_VDOP_THRESHOLD 3
 
 // TODO: naturally, once gps is done it needs to be added to wiki
 

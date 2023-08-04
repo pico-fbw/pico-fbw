@@ -164,7 +164,7 @@ GPS gps_getData() {
         free(line);
     }
 
-    if (lat <= 90 && lat >= -90 && lng <= 180 && lng >= -180 && alt >= 0 && spd >= 0 && lat != INFINITY && lng != INFINITY && alt != INFINITY && spd != INFINITY && trk_true != INFINITY && lat != NAN && lng != NAN && alt != NAN && spd != NAN && trk_true != NAN  && pdop < GPS_SAFE_PDOP_THRESHOLD && hdop < GPS_SAFE_HDOP_THRESHOLD && vdop < GPS_SAFE_VDOP_THRESHOLD) {
+    if (lat <= 90 && lat >= -90 && lng <= 180 && lng >= -180 && alt >= 0 && spd >= 0 && lat != INFINITY && lng != INFINITY && alt != INFINITY && spd != INFINITY && trk_true != INFINITY && lat != NAN && lng != NAN && alt != NAN && spd != NAN && trk_true != NAN && pdop < GPS_SAFE_PDOP_THRESHOLD && hdop < GPS_SAFE_HDOP_THRESHOLD && vdop < GPS_SAFE_VDOP_THRESHOLD) {
         setGPSSafe(true);
     } else {
         setGPSSafe(false);
@@ -187,6 +187,7 @@ int gps_calibrateAltOffset(uint num_samples) {
     uint samples = 0;
     int64_t alts = 0;
     while (samples < num_samples && !time_reached(calibrationTimeout)) {
+        // printf("time reached: %d\n", time_reached(calibrationTimeout));
         char *line = uart_read_line(GPS_UART);
         if (line != NULL) {
             switch (minmea_sentence_id(line, false)) {

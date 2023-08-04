@@ -235,9 +235,9 @@ There are no module types, almost all GPS modules use the NMEA-0183 standard so 
 
 // TODO: autopilot PID tuning--both these PIDs do NOT input directly into the servos but instead command a bank/pitch angle so tune them with this in mind
 /* PID constants for the autopilot's lateral guidance. */
-#define latGuid_kP 1.0
-#define latGuid_kI 0.0025
-#define latGuid_kD 0.001
+#define latGuid_kP 0.005
+#define latGuid_kI 0.008
+#define latGuid_kD 0.002
 #define latGuid_tau 0.001
 #define latGuid_lim 33 // The maximum roll angle the autopilot can command
 #define latGuid_integMin -50.0
@@ -245,7 +245,7 @@ There are no module types, almost all GPS modules use the NMEA-0183 standard so 
 #define latGuid_kT 0.01
 
 /* PID constants for the autopilot's vertical guidance. */
-#define vertGuid_kP 1.0
+#define vertGuid_kP 0.05
 #define vertGuid_kI 0.0025
 #define vertGuid_kD 0.001
 #define vertGuid_tau 0.001
@@ -280,7 +280,7 @@ There are no module types, almost all GPS modules use the NMEA-0183 standard so 
 	#define FBW_DEBUG_printf    printf
 	/* Uncomment/replace as necessary to enable: */
 	#define IMU_DEBUG_printf       // printf
-	#define GPS_DEBUG_printf       // printf
+	#define GPS_DEBUG_printf       printf
 	#define WIFLY_DEBUG_printf     // printf
 	#define WIFLY_DUMP_DATA     0  // 1
 	#define TCP_DEBUG_printf       // printf

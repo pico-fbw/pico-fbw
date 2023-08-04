@@ -16,14 +16,14 @@
  * Erases a given PHYSICAL sector of flash.
  * @param sector the sector to erase.
 */
-static void flash_erase(uint sector) {
+static void flash_erase(FlashSector sector) {
     uint32_t offset = (PICO_FLASH_SIZE_BYTES - (FLASH_SECTOR_SIZE * (sector + 1)));
     uint32_t intr = save_and_disable_interrupts();
     flash_range_erase(offset, FLASH_SECTOR_SIZE);
     restore_interrupts(intr);
 }
 
-void flash_write(uint sector, float *data) {
+void flash_write(FlashSector sector, float *data) {
     // Obtain previous physical sector data to ensure we don't overwrite it
     float *old_data = (float*)(XIP_BASE + (FLASH_PHYSECTOR_LOC));
     // Integrate old and new data to form the new physical sector data from our virtual sectors
@@ -49,7 +49,7 @@ void flash_write(uint sector, float *data) {
     restore_interrupts(intr);
 }
 
-float flash_read(uint sector, uint val) {
+float flash_read(FlashSector sector, uint val) {
     // Move the pointer forward to whatever address holds the requested value and return it
     return *(float*)(XIP_BASE + (FLASH_PHYSECTOR_LOC + (CONFIG_SECTOR_SIZE_BYTES * sector) + (sizeof(float) * val)));
 }
