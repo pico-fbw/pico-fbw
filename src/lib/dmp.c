@@ -99,6 +99,7 @@ void dmp_writeMemoryBlock(const uint8_t *data, uint16_t dataSize, uint8_t bank, 
 }
 
 // DMP firmware (InvenSense MotionApps v6.1.2)
+// https://www.cdiweb.com/datasheets/invensense/application_note-programming_sequence_for_dmp_hw_functions_icm_20648.pdf
 const unsigned char dmp[DMP_SIZE] = {
     /* Bank 0 */
     0x00, 0xF8, 0xF6, 0x2A, 0x3F, 0x68, 0xF5, 0x7A, 0x00, 0x06, 0xFF, 0xFE, 0x00, 0x03, 0x00, 0x00,

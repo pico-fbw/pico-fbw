@@ -11,18 +11,15 @@
  * Licensed under the GNU GPL-3.0
 */
 
-// TODO: implement parsing (and generation on the webui's side) of gps offset calibration (use webpage settings for this?)
-
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
-#include "pico/stdlib.h" // Wi-Fly doesn't actually use the pico's stdlib, this is here only to provide access to the RASPBERRYPI_PICO_W macro
+#include "pico/stdlib.h" // Wi-Fly doesn't actually use the pico's stdlib this is just to provide access to the board detection
 #ifdef RASPBERRYPI_PICO_W
     #include "pico/cyw43_arch.h"
 #endif
-
 #define JSMN_HEADER // Only define once!
 #include "../../lib/jsmn.h"
 
@@ -41,12 +38,17 @@
 
 #include "wifly.h"
 
-static int fplanStatus = WIFLY_STATUS_AWAITING;
+static WiflyStatus fplanStatus = WIFLY_STATUS_AWAITING;
 
 static Waypoint *waypoints = NULL;
 static uint waypoint_count = 0;
 
 static char *fplanJson = NULL; // Once the flightplan is downloaded it will be stored here and NOT freed!
+
+uint numGpsSamples = 0; // Holds the number of GPS samples to be taken (if other than zero) once the flightplan has been parsed
+
+// TODO: somehow activate gps calibration function
+// I tried to accomplish this for a few hours and I'm just giving up--all everything does is crash the Pico :(
 
 static inline void url_decode(char *str) {
     char *p = str;
@@ -106,32 +108,36 @@ static inline void url_decode(char *str) {
 
 int wifly_genPageContent(char *result, size_t max_result_len) {
     char color[8];
-    char msg[90]; // change this if the longest message gets any larger, this is too small for me to implement malloc and such
+    char msg[130]; // change this if the longest message gets any larger, this is too small for me to implement malloc and such
     switch(fplanStatus) {
         case WIFLY_STATUS_AWAITING:
-            strncpy(color, WIFLY_HEX_INACTIVE, sizeof(color));
-            strncpy(msg, "<i>Awaiting flightplan...</i>", sizeof(msg));
+            snprintf(color, sizeof(color), WIFLY_HEX_INACTIVE);
+            snprintf(msg, sizeof(msg), "Awaiting flightplan...");
             break;
         case WIFLY_STATUS_OK:
-            strncpy(color, WIFLY_HEX_OK, sizeof(color));
-            strncpy(msg, "Flightplan successfully uploaded!", sizeof(msg));
+            snprintf(color, sizeof(color), WIFLY_HEX_OK);
+            snprintf(msg, sizeof(msg), "Flightplan successfully uploaded!");
             break;
-        case WIFLY_ERROR_PARSE:
-            strncpy(color, WIFLY_HEX_ERR, sizeof(color));
-            strncpy(msg, "<b>Error:</b> parse. Check formatting and try again.", sizeof(msg));
+        case WIFLY_STATUS_GPS_OFFSET:
+            snprintf(color, sizeof(color), WIFLY_HEX_OK);
+            snprintf(msg, sizeof(msg), "Flightplan successfully uploaded, please wait for the altitude offset to calculate.<br>Estimated time: %ds", numGpsSamples);
             break;
-        case WIFLY_ERROR_VERSION:
-            strncpy(color, WIFLY_HEX_ERR, sizeof(color));
-            strncpy(msg, "<b>Error:</b> flightplan version incompatable! Please update your firmware.", sizeof(msg));
+        case WIFLY_ERR_PARSE:
+            snprintf(color, sizeof(color), WIFLY_HEX_ERR);
+            snprintf(msg, sizeof(msg), "<b>Error:</b> parse. Check formatting and try again.");
             break;
-        case WIFLY_ERROR_MEM:
-            strncpy(color, WIFLY_HEX_ERR, sizeof(color));
-            strncpy(msg, "<b>Error:</b> out of memory! Please restart and try again.", sizeof(msg));
+        case WIFLY_ERR_VERSION:
+            snprintf(color, sizeof(color), WIFLY_HEX_ERR);
+            snprintf(msg, sizeof(msg), "<b>Error:</b> flightplan version incompatable! Please update your firmware.");
             break;
-        case WIFLY_ERROR_FW_VERSION:
-            strncpy(color, WIFLY_HEX_WARN, sizeof(color));
-            strncpy(msg, "<b>There is a new firmware version available!</b><br>Flightplan successfully uploaded!", sizeof(msg));
-            break;                
+        case WIFLY_ERR_MEM:
+            snprintf(color, sizeof(color), WIFLY_HEX_ERR);
+            snprintf(msg, sizeof(msg), "<b>Error:</b> out of memory! Please restart and try again.");
+            break;
+        case WIFLY_WARN_FW_VERSION:
+            snprintf(color, sizeof(color), WIFLY_HEX_WARN);
+            snprintf(msg, sizeof(msg), "<b>Warning: </b> there is a new firmware version available!");
+            break;   
         default:
             return 0;
     }
@@ -145,7 +151,7 @@ bool wifly_parseFplan(const char *fplan) {
         const char *json_start = strstr(fplan, FPLAN_PARAM);
         if (!json_start) {
             FBW_DEBUG_printf("[wifly] ERROR: prefix '%s' not found!\n", FPLAN_PARAM);
-            fplanStatus = WIFLY_ERROR_PARSE;
+            fplanStatus = WIFLY_ERR_PARSE;
             return false;
         }
         // Move the pointer to the start of the JSON string
@@ -168,18 +174,17 @@ bool wifly_parseFplan(const char *fplan) {
         int token_count = jsmn_parse(&parser, decoded, strlen(decoded), tokens, sizeof(tokens)/sizeof(tokens[0]));
         if (token_count < 0) {
             FBW_DEBUG_printf("[wifly] ERROR: no valid tokens found!\n");
-            fplanStatus = WIFLY_ERROR_PARSE;
+            fplanStatus = WIFLY_ERR_PARSE;
             return false;
         }
         if (strlen(decoded) == 0 || decoded[0] != '{' || decoded[strlen(decoded) - 1] != '}') {
             FBW_DEBUG_printf("[wifly] ERROR: JSON start/end not found!\n");
-            fplanStatus = WIFLY_ERROR_PARSE;
+            fplanStatus = WIFLY_ERR_PARSE;
             return false;
         }
 
-        int status = WIFLY_STATUS_OK;
-        bool has_version = false;
-        bool has_version_fw = false;
+        WiflyStatus status = WIFLY_STATUS_OK;
+        bool has_version, has_version_fw, has_gps_samples = false;
         // Process all tokens and extract any needed data; things here are mostly self-explanatory
         for (uint i = 0; i < token_count; i++) {
             // Token field (name) iteration
@@ -195,11 +200,28 @@ bool wifly_parseFplan(const char *fplan) {
                     WIFLY_DEBUG_printf("[wifly] Flightplan version: %s\n", version);
                     if (strcmp(version, WIFLY_VERSION) != 0) {
                         FBW_DEBUG_printf("[wifly] ERROR: flightplan version incompatable!\n");
-                        fplanStatus = WIFLY_ERROR_VERSION;
+                        fplanStatus = WIFLY_ERR_VERSION;
                         return false;
                     }
                     has_version = true;
+                } else if (strcmp(field_name, "gps_samples") == 0) {
+                    char gpsSamples[25];
+                    strncpy(gpsSamples, decoded + tokens[i + 1].start, tokens[i + 1].end - tokens[i + 1].start);
+                    gpsSamples[tokens[i + 1].end - tokens[i + 1].start] = '\0';
+                    numGpsSamples = atoi(gpsSamples);
+                    // We expect a value between zero and 100 (only calculate if non-zero)
+                    if (numGpsSamples <= 100 && numGpsSamples >= 0) {
+                        WIFLY_DEBUG_printf("[wifly] GPS num offset samples: %s\n", gpsSamples);
+                        if (numGpsSamples != 0) {
+                            status = WIFLY_STATUS_GPS_OFFSET;
+                        }
+                    } else {
+                        status = WIFLY_ERR_PARSE;
+                        return false;
+                    }
+                    has_gps_samples = true;
                 } else if (strcmp(field_name, "version_fw") == 0) {
+                    // Even though version_fw comes before gps_samples in the JSON format, the parse is ordered in this way to display the warning message
                     char versionFw[25];
                     strncpy(versionFw, decoded + tokens[i + 1].start, tokens[i + 1].end - tokens[i + 1].start);
                     versionFw[tokens[i + 1].end - tokens[i + 1].start] = '\0';
@@ -212,17 +234,17 @@ bool wifly_parseFplan(const char *fplan) {
                             versionSuffix += strlen("-");
                             if (strncmp(versionSuffix, "alpha", strlen("alpha")) == 0) {
                                 FBW_DEBUG_printf("[wifly] There is a non-alpha release of %s available!\n", PICO_FBW_VERSION);
-                                status = WIFLY_ERROR_FW_VERSION;
+                                status = WIFLY_WARN_FW_VERSION;
                             } else if (strncmp(versionSuffix, "beta", strlen("beta")) == 0) {
                                 FBW_DEBUG_printf("[wifly] There is a non-beta release of %s available!\n", PICO_FBW_VERSION);
-                                status = WIFLY_ERROR_FW_VERSION;
+                                status = WIFLY_WARN_FW_VERSION;
                             }
                         } else {
                             WIFLY_DEBUG_printf("[wifly] Version is up-to-date\n");
                         }
                     } else if (strncmp(versionFw, PICO_FBW_VERSION, 5) > 0) {
                         FBW_DEBUG_printf("[wifly] WARNING: firmware out of date\n");
-                        status = WIFLY_ERROR_FW_VERSION;
+                        status = WIFLY_WARN_FW_VERSION;
                     } else if (strncmp(versionFw, PICO_FBW_VERSION, 5) < 0) {
                         FBW_DEBUG_printf("[wifly] Version is a prerelease\nThanks for contributing :)\n");
                     }
@@ -235,7 +257,7 @@ bool wifly_parseFplan(const char *fplan) {
                         waypoints = calloc(waypoint_count, sizeof(Waypoint));
                         if (waypoints == NULL) {
                             FBW_DEBUG_printf("[wifly] ERROR: memory allocation for waypoint data failed!\n");
-                            fplanStatus = WIFLY_ERROR_MEM;
+                            fplanStatus = WIFLY_ERR_MEM;
                             return false;
                         }
                         uint waypoint_token_index = i + 2; // Skip the array token
@@ -285,7 +307,7 @@ bool wifly_parseFplan(const char *fplan) {
                                             #endif    
                                         } else {
                                             FBW_DEBUG_printf("[wifly] ERROR: waypoint field name not recognized!\n");
-                                            fplanStatus = WIFLY_ERROR_PARSE;
+                                            fplanStatus = WIFLY_ERR_PARSE;
                                             return false;
                                         }
                                         // Advance to the next field
@@ -295,7 +317,7 @@ bool wifly_parseFplan(const char *fplan) {
                                 // Check if the waypoint data is valid (we got everything we expected)
                                 if (waypoint.lat == 0 || waypoint.lng == 0 || waypoint.alt == 0) {
                                     FBW_DEBUG_printf("[wifly] ERROR: waypoint data is invalid!\n");
-                                    fplanStatus = WIFLY_ERROR_PARSE;
+                                    fplanStatus = WIFLY_ERR_PARSE;
                                     return false;
                                 }
                                 // Store the generated waypoint into the master array
@@ -304,38 +326,37 @@ bool wifly_parseFplan(const char *fplan) {
                                 waypoint_token_index += 7;
                             } else {
                                 FBW_DEBUG_printf("[wifly] ERROR: waypoint token type not recognized!\n");
-                                fplanStatus = WIFLY_ERROR_PARSE;
+                                fplanStatus = WIFLY_ERR_PARSE;
                                 return false;
                             }
                         }
                     } else {
                         FBW_DEBUG_printf("[wifly] ERROR: waypoints array not found!\n");
-                        fplanStatus = WIFLY_ERROR_PARSE;
+                        fplanStatus = WIFLY_ERR_PARSE;
                         return false;
                     }
                 }
             }
         }
-        if (!has_version || !has_version_fw) {
-            WIFLY_DEBUG_printf("[wifly] ERROR: version or firmware version not found!\n");
-            fplanStatus = WIFLY_ERROR_PARSE;
+        if (!has_version || !has_version_fw || !has_gps_samples) {
+            WIFLY_DEBUG_printf("[wifly] ERROR: crucial fields not present in flightplan!\n");
+            fplanStatus = WIFLY_ERR_PARSE;
             return false;
         }
         WIFLY_DEBUG_printf("[wifly] Waypoint data:\n");
         for (int i = 0; i < waypoint_count; i++) {
             WIFLY_DEBUG_printf("Waypoint %d: lat=%.10f, lng=%.10f, alt=%d\n", i + 1, waypoints[i].lat, waypoints[i].lng, waypoints[i].alt);
         }
-        WIFLY_DEBUG_printf("\n");
         // Save the flightplan JSON string
         fplanJson = malloc(strlen(decoded) + 1);
         if (fplanJson == NULL) {
             FBW_DEBUG_printf("[wifly] ERROR: memory allocation for flightplan JSON failed!\n");
-            fplanStatus = WIFLY_ERROR_MEM;
+            fplanStatus = WIFLY_ERR_MEM;
             return false;
         }
         strcpy(fplanJson, decoded);
         fplanStatus = status;
-        if (fplanStatus == WIFLY_STATUS_OK || fplanStatus == WIFLY_ERROR_FW_VERSION) {
+        if (fplanStatus == WIFLY_STATUS_OK || fplanStatus == WIFLY_STATUS_GPS_OFFSET || fplanStatus == WIFLY_WARN_FW_VERSION) {
             return true;
         } else {
             return false;

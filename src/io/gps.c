@@ -176,17 +176,17 @@ GPS gps_getData() {
 static int altOffset = 0; // The offset of the aircraft's altitude in feet
 int gps_getAltOffset() { return altOffset; }
 
-static int samples = 0; // The amount of samples currently taken during altitude calibration
-static int64_t calibrationOvertime(alarm_id_t id, void *data) { samples = -1; } // Called if the calibration takes longer than it should and halts it
+static bool altOffsetCalibrated = false;
+bool gps_isAltOffsetCalibrated() { return altOffsetCalibrated; }
 
 int gps_calibrateAltOffset(uint num_samples) {
     GPS_DEBUG_printf("[gps] starting altitude calibration\n");
     led_blink(1000, 100); // Blink at 1Hz
-    // GPS updates should be at 1Hz (give or take 1s) so if the calibration takes longer we cut it short
-    alarm_id_t calibrationTimeout = add_alarm_in_ms((num_samples * 1000) + 2000, calibrationOvertime, NULL, false);
-    samples = 0;
+    // GPS updates should be at 1Hz (give or take 2s) so if the calibration takes longer we cut it short
+    absolute_time_t calibrationTimeout = make_timeout_time_ms((num_samples * 1000) + 2000);
+    uint samples = 0;
     int64_t alts = 0;
-    while (samples < num_samples || samples < 0) {
+    while (samples < num_samples && !time_reached(calibrationTimeout)) {
         char *line = uart_read_line(GPS_UART);
         if (line != NULL) {
             switch (minmea_sentence_id(line, false)) {
@@ -211,14 +211,14 @@ int gps_calibrateAltOffset(uint num_samples) {
             free(line);
         }
     }
-    cancel_alarm(calibrationTimeout);
     led_stop();
-    if (samples < 0) {
+    if (time_reached(calibrationTimeout)) {
         FBW_DEBUG_printf("[gps] ERROR: altitude calibration timed out\n");
         return PICO_ERROR_TIMEOUT;
     } else {
         altOffset = alts / samples;
         GPS_DEBUG_printf("[gps] altitude offset calculated as: %d\n", altOffset);
+        altOffsetCalibrated = true;
         return 0;
     }
 }

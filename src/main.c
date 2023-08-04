@@ -42,7 +42,7 @@ int main() {
         FBW_DEBUG_printf("\nhello and welcome to pico-fbw v%s!\n", PICO_FBW_VERSION);
     #endif
     #ifdef RASPBERRYPI_PICO_W
-        FBW_DEBUG_printf("\nhello and welcome to pico-fbw(w) v%s!\n", PICO_FBW_VERSION);
+        FBW_DEBUG_printf("\nhello and welcome to pico(w)-fbw v%s!\n", PICO_FBW_VERSION);
         FBW_DEBUG_printf("[driver] initializing cyw43 architecture with predefined country 0x%04X\n", WIFLY_NETWORK_COUNTRY);
         cyw43_arch_init_with_country(WIFLY_NETWORK_COUNTRY);
     #endif
@@ -200,10 +200,6 @@ int main() {
         #ifdef API_ENABLED
             api_poll();
         #endif
-
-        // debug
-        Euler angles = imu_getRawAngles();
-        printf("%f %f %f\n", angles.x, angles.y, angles.z);
     }
 
     return 0; // How did we get here?

@@ -2,12 +2,15 @@
 #define __WIFLY_H
 
 // Status codes for after a flightplan has been submitted
-#define WIFLY_STATUS_AWAITING -1
-#define WIFLY_STATUS_OK 0
-#define WIFLY_ERROR_PARSE 1
-#define WIFLY_ERROR_VERSION 2
-#define WIFLY_ERROR_MEM 3
-#define WIFLY_ERROR_FW_VERSION 4
+typedef enum WiflyStatus {
+    WIFLY_STATUS_AWAITING,
+    WIFLY_STATUS_OK,
+    WIFLY_STATUS_GPS_OFFSET,
+    WIFLY_ERR_PARSE,
+    WIFLY_ERR_VERSION,
+    WIFLY_ERR_MEM,
+    WIFLY_WARN_FW_VERSION
+} WiflyStatus;
 
 // Color codes that are displayed to the user for feedback
 #define WIFLY_HEX_OK "#22C55E"
@@ -23,7 +26,7 @@
 
 // Sizes of TCP buffers
 #define TCP_HEADER_SIZE 1460 // Realistically, this should never need to go above 1460 because we can accumulate multiple headers
-#define TCP_RESULT_SIZE 3660 // The result buffer size should be large enough to hold the entire HTTP response and page
+#define TCP_RESULT_SIZE 3760 // The result buffer size should be large enough to hold the entire HTTP response and page
 // Keep in mind that if the content is made larger then both the result size and possibly LWIP's memory size need to be increased
 
 typedef struct Waypoint {

@@ -3,15 +3,13 @@
 
 #include <stdbool.h>
 
-// Define internal mode aliases
-typedef unsigned char Mode;
-typedef enum Modes {
+typedef enum Mode {
     DIRECT,
     NORMAL,
     AUTO,
     TUNE,
     HOLD
-} Modes;
+} Mode;
 // If any modes are ever added, the uppermost mode must be added to the API!
 
 #define MAX_MODE_RUNTIME_TIME_MS 500 // The maximum amount of time the system will run a mode for before exiting to direct.

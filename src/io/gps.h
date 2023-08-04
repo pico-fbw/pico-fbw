@@ -57,6 +57,11 @@ GPS gps_getData();
 int gps_getAltOffset();
 
 /**
+ * @return true if the GPS altitude offset has been calibrated, false if not.
+*/
+bool gps_isAltOffsetCalibrated();
+
+/**
  * Calibrates the altitude offset from the GPS.
  * @param num_samples the number of samples to take.
  * @return 0 if successful, PICO_ERROR_TIMEOUT if a timeout occured, or PICO_ERROR_GENERIC otherwise.

@@ -5,7 +5,6 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdio.h>
 #include "pico/time.h"
 
 #include "led.h"
@@ -14,6 +13,7 @@
     #include "hardware/gpio.h"
     #define LED_PIN PICO_DEFAULT_LED_PIN
 #elif defined(RASPBERRYPI_PICO_W)
+    #include <stdio.h>
     #include "pico/cyw43_arch.h"
     #define LED_PIN CYW43_WL_GPIO_LED_PIN
     char buf[1];
@@ -45,9 +45,11 @@ static inline int64_t led_callback_alarm(alarm_id_t id, void *data) {
 }
 
 static inline bool led_callback(struct repeating_timer *t) {
-    // Toggle LED immediately, then schedule a toggle after the pulse duration if applicable/non-zero
+    // Toggle LED immediately, then schedule a toggle after the pulse duration if applicable (non-zero)
     led_toggle();
-    add_alarm_in_ms(gb_pulse_ms, led_callback_alarm, NULL, false);
+    if (gb_pulse_ms != 0) {
+        add_alarm_in_ms(gb_pulse_ms, led_callback_alarm, NULL, false);
+    }
     return true;
 }
 

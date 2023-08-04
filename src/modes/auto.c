@@ -57,8 +57,11 @@ bool mode_autoInit() {
             alt = gps.alt;
         } else {
             // Factor in the altitude offset calculated earlier, if applicable
-            // The alt offset should always be valid, auto mode is not allowed to launch without this offset passing as per the modes manager
-            alt = fplan[currentWaypoint].alt + gps_getAltOffset();
+            if (gps_isAltOffsetCalibrated()) {
+                alt = fplan[currentWaypoint].alt + gps_getAltOffset();
+            } else {
+                return false;
+            }
         }
     #else
         if (fplan[currentWaypoint].alt < -5) {

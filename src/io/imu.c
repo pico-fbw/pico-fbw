@@ -73,6 +73,8 @@ typedef enum EulerAxis {
     EULER_AXIS_Z
 } EulerAxis;
 
+static Euler euler; // Holds persistant Euler data between calls to keep a constant stream of data, whether the IMU is ready or not
+
 /**
  * Writes a byte value directly to the IMU.
  * @param address The address to write to.
@@ -114,6 +116,8 @@ static inline bool shouldCompensateAxis(EulerAxis axis) { return (bool)(flash_re
     static uint16_t fifoCount;
     static uint8_t fifoBuf[DMP_PACKET_SIZE];
 
+    struct repeating_timer updateTimer;
+
     /**
      * Gets the current count of the MPU's FIFO.
      * @return The count of the FIFO.
@@ -124,6 +128,13 @@ static inline bool shouldCompensateAxis(EulerAxis axis) { return (bool)(flash_re
         i2c_read_timeout_us(IMU_I2C, CHIP_REGISTER, buf, 2, false, IMU_TIMEOUT_US);
         return (((uint16_t)buf[0]) << 8) | buf[1];
     }
+
+    /**
+     * Updates the MPU's DMP.
+     * This must be done continually after initialization with the MPU to ensure accurate angles;
+     * the angles do not update without communication!
+    */
+    static bool mpu_update(struct repeating_timer *t) { imu_getRawAngles(); }
 
 #endif
 
@@ -209,24 +220,26 @@ bool imu_configure() {
         imu_write(PWR_MODE_REGISTER, 0x01); // PLL_X_GYRO is a slightly better clock source
         imu_write(INTERRUPTS_ENABLED_REGISTER, 0x00); // Disable interrupts
         imu_write(FIFO_ENABLED_REGISTER, 0x00); // Disable FIFO (using DMP FIFO)
-        imu_write(SMPLRT_DIV_REGISTER, 0x04); // Sample rate = gyro rate / (1 + SMPLRT_DIV)
-        imu_write(CONFIG_REGISTER, 0x01); // Digital Low Pass Filter (DLPF) @ 188Hz
         imu_write(ACCEL_CONFIG_REGISTER, 0x00); // Accel full scale = 2g
-        imu_write(GYRO_CONFIG_REGISTER, 0x18); // Gyro full scale = +2000 deg/s
+        imu_write(INT_PIN_CFG_REGISTER, 0x80); // Enable interrupt pin
+        imu_write(PWR_MODE_REGISTER, 0x01); // Select clock source again (??)
+        imu_write(SMPLRT_DIV_REGISTER, 0x04); // Sample rate = gyro rate / (1 + SMPLRT_DIV) [100Hz?]
+        imu_write(CONFIG_REGISTER, 0x01); // Digital Low Pass Filter (DLPF) 188Hz
         IMU_DEBUG_printf("[imu] writing DMP to memory...\n");
         dmp_writeMemoryBlock(dmp, DMP_SIZE, 0, 0); // Write DMP to memory
         uint8_t cmd[3] = {DMP_PROG_START_ADDR, 0x04, 0x00}; // DMP program start address
         i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, cmd, 3, true, IMU_TIMEOUT_US);
+        imu_write(GYRO_CONFIG_REGISTER, 0x18); // Gyro full scale = +2000 deg/s
         imu_write(USER_CONTROL_REGISTER, 0xC2); // Enable and reset DMP FIFO
         imu_write(INTERRUPTS_ENABLED_REGISTER, 0x02); // Enable RAW_DMP_INT
         // TODO: port accel and gyro calibrations from DMP lib/i2cdevlib (and use that for the return statement)
+
+        add_repeating_timer_us(IMU_SAMPLE_RATE_US, mpu_update, NULL, &updateTimer); // Start the update timer
         return true; // do not keep in final!
     #endif
 }
 
 Euler imu_getRawAngles() {
-    static Euler euler; // Holds persistant Euler data between calls to keep a constant stream of data, whether the IMU is ready or not
-
     #if defined(IMU_BNO055)
 
         // Get angle data from IMU
@@ -255,13 +268,13 @@ Euler imu_getRawAngles() {
 
     #elif defined(IMU_MPU6050)
 
-        // TODO: idea for MPU (because things drift a lot): if things aren't moving by more than a certain threshold each cycle
-        // (very small threshold bc rp2040 is vrrom vroom) then just don't update the angles, bno appears to do something like this internally
+        // TODO: improve drift...it's really bad
 
         // Get current FIFO count
         fifoCount = mpu_getFIFOCount();
         if (fifoCount >= 1024) {
             // FIFO overflow, reset
+            IMU_DEBUG_printf("[imu] WARNING: FIFO overflow!\n");
             imu_write(USER_CONTROL_REGISTER, 0b00000010);
         } else {
             if (fifoCount >= DMP_PACKET_SIZE) {
@@ -289,7 +302,13 @@ Euler imu_getRawAngles() {
 
 inertialAngles imu_getAngles() {
     // Get the raw Euler angles as a starting point
-    Euler angles = imu_getRawAngles();
+    Euler angles;
+    #if defined(IMU_BNO055)
+        angles = imu_getRawAngles(); // BNO055 is async; we must fetch the angles
+    #elif defined(IMU_MPU6050)
+        angles = euler; // MPU6050 is sync; we can just use the cached angles
+    #endif
+    
     // Map IMU axes to aircraft axes with correct directions
     float roll, pitch, yaw = -200.0f;
     switch (getCalibrationAxis(EULER_AXIS_X)) {
