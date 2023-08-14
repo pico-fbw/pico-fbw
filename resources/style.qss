@@ -1,0 +1,90 @@
+/* Entire application */
+QWidget {
+    background: #0f1623; /* bg-black/10 */
+    color: white;
+    font-family: "Inter", sans-serif;
+    text-align: center;
+    padding: 10px;
+}
+
+QMenuBar {
+    padding: 0px;
+}
+
+/* Hover for menu items */
+QMenuBar::item:pressed {
+    background-color: #374151; /* bg-gray-700 */
+    padding: 5px;
+    border-radius: 8px;
+}
+
+/* While clicked for menu items */
+QMenuBar::item:selected {
+    background-color: #374151; /* bg-gray-700 */
+    padding: 5px;
+    border-radius: 8px;
+}
+
+/* Hover for dropdown menus */
+QMenu::item:selected {
+    background-color: #374151; /* bg-gray-700 */
+}
+
+QTextEdit {
+    background: #1f2937; /* bg-gray-800 */
+    padding: 10px;
+    margin: 10px;
+    color: white;
+    border-radius: 10px;
+}
+
+/* Buttons and dropdown box */
+QPushButton, QComboBox {
+    background: #1f2937; /* bg-gray-800 */
+    border: none;
+    padding: 8px 20px;
+    margin: 5px;
+    color: white;
+    border-radius: 5px;
+}
+QPushButton:hover {
+    background: #374151; /* bg-gray-700 */
+}
+
+/* Dropdown box and dropdown menu */
+QComboBox QAbstractItemView {
+    background: #1f2937; /* bg-gray-800 */
+    border: none;
+    color: white;
+    outline: none;
+}
+
+/* Part of dropdown box */
+QLineEdit {
+    background: #1f2937; /* bg-gray-800 */
+    color: white;
+    padding: 2px;
+}
+
+/* Text fields in message boxes */
+QLabel {
+    padding-bottom: 2px;
+}
+
+/* Text above the progress bar indicating the build step (it really likes to clip into the progress bar) */
+QLabel#stepLabel {
+    padding: 10px;
+    margin-top: -8px;
+}
+
+QProgressBar {
+    background: transparent;
+    color: white; /* Text color of progress bar */
+    height: 20px;
+    text-align: center;
+    margin: -10px 0;
+}
+
+QProgressBar::chunk {
+    background-color: #19273c; /* Background color of progress bar */
+}

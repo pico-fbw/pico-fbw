@@ -1,14 +1,32 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.13)
 
-# Import the Pico SDK
-include (pico_sdk_import.cmake)
+project(pico-fbw_configurator CXX C)
+set(CMAKE_CXX_STANDARD 17)
 
-# Define project, language(s), and version
-project(pico-fbw C CXX ASM)
-set(CMAKE_C_STANDARD 11)
+# picolite (modified picotool) is a required dependency but compiled in
+add_subdirectory(picolite)
 
-# Initialize the Pico SDK
-pico_sdk_init()
+# Required Qt component libraries
+find_package(Qt5 COMPONENTS Core Gui Widgets REQUIRED)
 
-# Point CMake to the source directory for building
-add_subdirectory(src)
+# Include the generated moc files
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
+
+# Include source files
+set(SOURCES
+    app.pro
+    main.cpp
+    resources/resources.qrc
+    window.cpp
+)
+
+# Build the executable
+add_executable(${PROJECT_NAME} ${SOURCES})
+
+# Link libraries
+target_link_libraries(${PROJECT_NAME}
+    picolite
+    Qt5::Core Qt5::Gui Qt5::Widgets
+)

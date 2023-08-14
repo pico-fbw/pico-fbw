@@ -69,3 +69,5 @@ _deps
 
 ### Other ###
 build/
+.vscode
+.DS_Store
