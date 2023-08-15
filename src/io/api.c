@@ -440,7 +440,7 @@ void api_poll() {
                             if (goodReq) {
                                 // Get current flash data in the sector so we don't overwrite it (well technically we do overwrite it but write it back immediately after)
                                 float data[CONFIG_SECTOR_SIZE];
-                                for (uint v = 0; v <= CONFIG_SECTOR_SIZE; v++) {
+                                for (uint v = 0; v < CONFIG_SECTOR_SIZE; v++) {
                                     data[v] = flash_read(sector, v);
                                 }
                                 data[index] = value;

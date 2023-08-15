@@ -18,6 +18,14 @@ This will be quite a small value--the setpoint is calculated many times per seco
 /* If the degree reading from any of the inputs are below this value, the inputs will be disregarded, does not apply during direct mode. */
 #define DEADBAND_VALUE 2
 
+/* Configure your throttle detents here. These are all expressed as a percentage of the throttle range from 0 to 100. */
+#define THROTTLE_IDLE 10 // Most ESCs have a cutout; the motor does not start spinning exactly after 0%, so set the actual idle here.
+// TODO: configuration for idle throttle?
+#define THROTTLE_MCT 65 // Maximum throttle that is allowed for an extended period of time.
+#define THROTTLE_MAX 80 // Maximum throttle that is allowed for a short duration, set in THROTTLE_MAX_TIME.
+
+/* The maximum time in seconds that the throttle can be held at THROTTLE_MAX before THROTTLE_MCT must be set. */
+#define THROTTLE_MAX_TIME 5
 
 
 /** @section general */
@@ -38,6 +46,9 @@ Increase this value if you are experiening error FBW-500, however note you may b
 /* The frequency to run your servos at (almost all are 50 and you shouldn't have to touch this). */
 #define SERVO_HZ 50
 
+/* The frequency to run your ESC at (again, 50 should work in almost all cases). */
+#define ESC_HZ 50
+
 
 
 /** @section pins
@@ -48,14 +59,21 @@ Increase this value if you are experiening error FBW-500, however note you may b
 
 #define INPUT_AIL_PIN 1 // Pin that the PWM signal wire from the reciever AILERON channel is connected to.
 #define SERVO_AIL_PIN 2 // Pin that the PWM wire on the AILERON servo is connected to.
+// #define REVERSE_SERVO_AIL // Uncomment to reverse the servo's direction.
+// TODO: make this ^ actually do something lol
 
 #define INPUT_ELEV_PIN 3 // Pin that the PWM signal wire from the reciever ELEVATOR channel is connected to.
 #define SERVO_ELEV_PIN 4 // Pin that the PWM wire on the ELEVATOR servo is connected to.
+// #define REVERSE_SERVO_ELEV // Uncomment to reverse the servo's direction.
 
 #define INPUT_RUD_PIN 5 // Pin that the PWM signal wire from the reciever RUDDER channel is connected to.
 #define SERVO_RUD_PIN 6 // Pin that the PWM wire on the RUDDER servo is connected to.
+// #define REVERSE_SERVO_RUD // Uncomment to reverse the servo's direction.
 
-#define MODE_SWITCH_PIN 7 // Pin that the PWM signa wire from the reciever SWITCH channel is connected to.
+#define INPUT_THR_PIN 7 // Pin that the PWM signal wire from the reciever THROTTLE channel is connected to.
+#define ESC_THR_PIN 8 // Pin that the PWM wire on the THROTTLE ESC is connected to.
+
+#define INPUT_SW_PIN 9 // Pin that the PWM signal wire from the reciever SWITCH channel is connected to.
 
 
 
@@ -280,7 +298,7 @@ There are no module types, almost all GPS modules use the NMEA-0183 standard so 
 	#define FBW_DEBUG_printf    printf
 	/* Uncomment/replace as necessary to enable: */
 	#define IMU_DEBUG_printf       // printf
-	#define GPS_DEBUG_printf       printf
+	#define GPS_DEBUG_printf       // printf
 	#define WIFLY_DEBUG_printf     // printf
 	#define WIFLY_DUMP_DATA     0  // 1
 	#define TCP_DEBUG_printf       // printf

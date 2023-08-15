@@ -47,6 +47,9 @@
 #include "pwm.h"
 #include "pwm.pio.h"
 
+// TODO: I tried to add PIO1 into the mix to support athr in addition to mode switching but it went horribly
+// my priority as of now is adding elevon mixing but please work on this asap!!
+
 static PIO pio;
 static uint32_t pulsewidth[4], period[4];
 uint gb_num_pins;

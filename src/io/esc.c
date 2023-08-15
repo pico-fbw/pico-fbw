@@ -23,8 +23,8 @@
  * **/
 
 /**
- * Huge thanks to 'markushi' on GitHub for developing the bulk of this servo library! (slightly modified by MylesAndMore)
- * Check that out here: https://github.com/markushi/pico-servo
+ * This ESC library is a modification of the pico-servo library by 'markushi', thanks for that!
+ * Check that out at https://github.com/markushi/pico-servo or in servo.c
 */
 
 /**
@@ -43,10 +43,11 @@
 
 #include "../config.h"
 
+#include "esc.h"
 #include "servo.h"
 
-uint servo_enable(const uint gpio_pin) {
-    FBW_DEBUG_printf("[servo] setting up servo on pin %d\n", gpio_pin);
+uint esc_enable(const uint gpio_pin) {
+    FBW_DEBUG_printf("[ESC] setting up ESC on pin %d\n", gpio_pin);
     gpio_set_function(gpio_pin, GPIO_FUNC_PWM);
     const uint8_t slice = pwm_gpio_to_slice_num(gpio_pin);
     const uint freq = SERVO_HZ;
@@ -54,6 +55,7 @@ uint servo_enable(const uint gpio_pin) {
     uint32_t div16_top = 16 * source_hz / freq;
     uint32_t top = 1;
     for (;;) {
+        // Try a few small prime factors to get close to the desired frequency.
         if (div16_top >= 16 * 5 && div16_top % 5 == 0 && top * 5 <= PWM_TOP_MAX) {
             div16_top /= 5;
             top *= 5;
@@ -68,10 +70,10 @@ uint servo_enable(const uint gpio_pin) {
         }
     }
     if (div16_top < 16) {
-        FBW_DEBUG_printf("[servo] ERROR: frequency too large\n");
+        FBW_DEBUG_printf("[ESC] ERROR: frequency too large\n");
         return 2;
     } else if (div16_top >= 256 * 16) {
-        FBW_DEBUG_printf("[servo] ERROR: frequency too small\n");
+        FBW_DEBUG_printf("[ESC] ERROR: frequency too small\n");
         return 1;
     }
     pwm_hw->slice[slice].div = div16_top;
@@ -79,19 +81,21 @@ uint servo_enable(const uint gpio_pin) {
     return 0;
 }
 
-void servo_disable(const uint gpio_pin) {
+void esc_disable(const uint gpio_pin) {
     const uint8_t slice = pwm_gpio_to_slice_num(gpio_pin);
     pwm_set_enabled(slice, false);
 }
 
-void servo_set(const uint gpio_pin, const uint16_t degree) {
+void esc_set(const uint gpio_pin, const uint16_t degree) {
+    // Values have to be between 0 and 100
+    // PWM_TOP_MAX = 100% full duty cycle
     const uint16_t oneMs = PWM_TOP_MAX / 20;
-    const uint16_t duty_u16 = oneMs + (oneMs * degree) / 180;
+    const uint16_t duty_u16 = oneMs + (oneMs * degree) / 100;
 
     const uint8_t slice = pwm_gpio_to_slice_num(gpio_pin);
     const uint8_t channel = pwm_gpio_to_channel(gpio_pin);
     const uint32_t top = pwm_hw->slice[slice].top;
-    const uint32_t cc = duty_u16 * (top + 1) / PWM_TOP_MAX;
+    const uint32_t cc = duty_u16 * (top + 1) / PWM_CH0_CC_B_LSB;
 
     pwm_set_chan_level(slice, channel, cc);
     pwm_set_enabled(slice, true);

@@ -38,10 +38,9 @@ int main() {
     #ifdef FBW_DEBUG
         sleep_ms(BOOTUP_WAIT_TIME_MS); // Wait for serial to begin
     #endif
-    #ifdef RASPBERRYPI_PICO
+    #if defined(RASPBERRYPI_PICO)
         FBW_DEBUG_printf("\nhello and welcome to pico-fbw v%s!\n", PICO_FBW_VERSION);
-    #endif
-    #ifdef RASPBERRYPI_PICO_W
+    #elif defined(RASPBERRYPI_PICO_W)
         FBW_DEBUG_printf("\nhello and welcome to pico(w)-fbw v%s!\n", PICO_FBW_VERSION);
         FBW_DEBUG_printf("[driver] initializing cyw43 architecture with predefined country 0x%04X\n", WIFLY_NETWORK_COUNTRY);
         cyw43_arch_init_with_country(WIFLY_NETWORK_COUNTRY);
@@ -93,10 +92,10 @@ int main() {
         }
     }
     FBW_DEBUG_printf("[boot] PWM calibration ok, enabling\n");
-    uint pin_list[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, MODE_SWITCH_PIN};
+    uint pin_list[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, INPUT_SW_PIN};
     pwm_enable(pin_list, 4);
 
-    // Servos
+    // Servos/ESC (PWM out)
     FBW_DEBUG_printf("[boot] enabling servos\n");
     const uint8_t servos[] = {SERVO_AIL_PIN, SERVO_ELEV_PIN, SERVO_RUD_PIN};
     for (uint8_t s = 0; s < 3; s++) {
@@ -117,6 +116,8 @@ int main() {
     for (uint8_t s = 0; s < 3; s++) {
         servo_set(servos[s], 90);
     }
+    FBW_DEBUG_printf("[boot] enabling ESC\n");
+    // TODO: esc & throttle functionality
 
     // GPS
     #ifdef GPS_ENABLED
@@ -200,6 +201,8 @@ int main() {
         #ifdef API_ENABLED
             api_poll();
         #endif
+
+        printf("%f\n", pwm_readDeg(0));
     }
 
     return 0; // How did we get here?

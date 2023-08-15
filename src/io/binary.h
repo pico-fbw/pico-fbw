@@ -22,10 +22,11 @@ void declare_binary() {
     bi_decl(bi_2pins_with_func(IMU_SDA_PIN, IMU_SCL_PIN, GPIO_FUNC_I2C));
 
     // PWM input pins
-    bi_decl(bi_4pins_with_func(INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, MODE_SWITCH_PIN, GPIO_FUNC_PIO0));
+    bi_decl(bi_4pins_with_func(INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, INPUT_SW_PIN, GPIO_FUNC_PIO0));
+    // bi_decl(bi_1pin_with_func(INPUT_THR_PIN, GPIO_FUNC_PIO1));
 
-    // PWM output (servo) pins
-    bi_decl(bi_3pins_with_func(SERVO_AIL_PIN, SERVO_ELEV_PIN, SERVO_RUD_PIN, GPIO_FUNC_PWM));
+    // PWM output pins
+    bi_decl(bi_4pins_with_func(SERVO_AIL_PIN, SERVO_ELEV_PIN, SERVO_RUD_PIN, ESC_THR_PIN, GPIO_FUNC_PWM));
 
     /* Program info */
 
