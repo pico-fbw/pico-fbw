@@ -21,6 +21,7 @@
 #include "io/gps.h"
 #include "io/imu.h"
 #include "io/led.h"
+#include "io/platform.h"
 #include "io/pwm.h"
 #include "io/servo.h"
 #include "io/switch.h"
@@ -46,6 +47,7 @@ int main() {
         cyw43_arch_init_with_country(WIFLY_NETWORK_COUNTRY);
     #endif
     led_init();
+    platform_boot_begin();
 
     // API
     #ifdef API_ENABLED
@@ -119,19 +121,6 @@ int main() {
     FBW_DEBUG_printf("[boot] enabling ESC\n");
     // TODO: esc & throttle functionality
 
-    // GPS
-    #ifdef GPS_ENABLED
-        while (time_us_32() < (500 * 1000)); // Give GPS time (at least 500ms after power-up) to initialize
-        FBW_DEBUG_printf("[boot] initializing GPS\n");
-        if (gps_init()) {
-            FBW_DEBUG_printf("[boot] GPS ok\n");
-            // We don't set the GPS safe just yet, communications have been established but we are still unsure if the data is okay
-        } else {
-            FBW_DEBUG_printf("[boot] WARNING: [FBW-2000] GPS initalization failed!\n");
-            led_blink(2000, 0);
-        }
-    #endif
-
     // IMU
     #ifdef IMU_BNO055
         while (time_us_32() < (850 * 1000)); // BNO055 requires at least 850ms to ready up
@@ -161,6 +150,19 @@ int main() {
         led_blink(1000, 0);
     }
 
+    // GPS
+    #ifdef GPS_ENABLED
+        while (time_us_32() < (500 * 1000)); // Give GPS time (at least 500ms after power-up) to initialize
+        FBW_DEBUG_printf("[boot] initializing GPS\n");
+        if (gps_init()) {
+            FBW_DEBUG_printf("[boot] GPS ok\n");
+            // We don't set the GPS safe just yet, communications have been established but we are still unsure if the data is okay
+        } else {
+            FBW_DEBUG_printf("[boot] WARNING: [FBW-2000] GPS initalization failed!\n");
+            led_blink(2000, 0);
+        }
+    #endif
+
     // Wi-Fly
     #ifdef WIFLY_ENABLED
         FBW_DEBUG_printf("[boot] initializing Wi-Fly\n");
@@ -168,6 +170,7 @@ int main() {
     #endif
 
     // Main program loop:
+    platform_boot_complete();
     FBW_DEBUG_printf("[boot] bootup complete! entering main program loop...\n");
     while (true) {
         // Update the mode switch's position
@@ -201,8 +204,6 @@ int main() {
         #ifdef API_ENABLED
             api_poll();
         #endif
-
-        printf("%f\n", pwm_readDeg(0));
     }
 
     return 0; // How did we get here?

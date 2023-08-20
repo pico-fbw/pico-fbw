@@ -5,6 +5,7 @@ add_library(fbw_io
     gps.c
     imu.c
     led.c
+    platform.c
     pwm.c
     servo.c
     switch.c

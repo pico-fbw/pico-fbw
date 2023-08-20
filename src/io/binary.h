@@ -5,6 +5,7 @@
 
 #include "hardware/gpio.h"
 
+#include "platform.h"
 #include "../config.h"
 #include "../version.h"
 
@@ -18,8 +19,9 @@
 void declare_binary() {
     /* Pin defs */
 
-    // IMU communication pins (I2C)
+    // I2C communication pins
     bi_decl(bi_2pins_with_func(IMU_SDA_PIN, IMU_SCL_PIN, GPIO_FUNC_I2C));
+    bi_decl(bi_2pins_with_func(MARBE_D, MARBE_C, GPIO_FUNC_I2C));
 
     // PWM input pins
     bi_decl(bi_4pins_with_func(INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, INPUT_SW_PIN, GPIO_FUNC_PIO0));
@@ -39,7 +41,7 @@ void declare_binary() {
         bi_decl(bi_program_feature("API disabled"));
     #endif
     #ifdef GPS_ENABLED
-        // GPS communication pins (UART)
+        // UART communication pins
         bi_decl(bi_2pins_with_func(GPS_TX_PIN, GPS_RX_PIN, GPIO_FUNC_UART));
         bi_decl(bi_program_feature("GPS enabled"));
     #else

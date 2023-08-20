@@ -21,6 +21,8 @@
     #undef LED_PIN
 #endif
 
+// TODO: implement error precidence, maybe new "error.c file"?
+
 static struct repeating_timer timer;
 static struct repeating_timer pulse_timer;
 static uint32_t gb_pulse_ms;

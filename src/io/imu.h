@@ -3,7 +3,7 @@
 
 #include "../config.h"
 
-// The i2c bus that will be used for the IMU
+// The i2c bus that will be used for the IMU, do not change this!!
 #define IMU_I2C i2c0
 
 // The time (in microseconds) before the IMU is considered unresponsive
@@ -33,7 +33,7 @@
 	static const unsigned char ID_REGISTER = 0x00;
 	#define CHIP_ID 0xA0
 
-	#define CALIBRATION_REGISTER 0x35
+	static const unsigned char CALIBRATION_REGISTER = 0x35;
 	#define SYS_REGISTER 0x3F
 	#define SYS_RESET 0x20
 	static const unsigned char OPR_MODE_REGISTER = 0x3D;

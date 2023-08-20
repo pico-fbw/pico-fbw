@@ -110,8 +110,8 @@ This value DOES need to be negative! */
 */
 
 /* IMU types */
-// #define IMU_BNO055
-#define IMU_MPU6050
+#define IMU_BNO055
+// #define IMU_MPU6050
 
 /* Note that these pins must line up with the Pico's I2C0 interface, see a pinout if you're not sure! */
 #define IMU_SDA_PIN 16

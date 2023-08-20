@@ -77,13 +77,13 @@ static Euler euler; // Holds persistant Euler data between calls to keep a const
 
 /**
  * Writes a byte value directly to the IMU.
- * @param address The address to write to.
- * @param value The value to write.
+ * @param addr The address to write to.
+ * @param val The value to write.
  * @return Number of bytes written, or PICO_ERROR_GENERIC if address not acknowledged, no device present.
 */
-static inline int imu_write(uint8_t address, uint8_t value) {
-    uint8_t cmd[2] = {address, value};
-    return i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, cmd, 2, true, IMU_TIMEOUT_US);
+static inline int imu_write(unsigned char addr, unsigned char val) {
+    unsigned char c[2] = {addr, val};
+    return i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, c, 2, true, IMU_TIMEOUT_US);
 }
 
 static inline IMUAxis getCalibrationAxis(EulerAxis axis) { return (IMUAxis)(flash_read(FLASH_SECTOR_IMU, (uint)axis)); }
@@ -96,17 +96,18 @@ static inline bool shouldCompensateAxis(EulerAxis axis) { return (bool)(flash_re
      * @param mode The code of the mode to change into (for example, 0x0C for NDOF).
      * @return true if success, false if failure.
     */
-    static bool bno_changeMode(uint8_t mode) {
-        FBW_DEBUG_printf("[imu] changing to mode 0x%02X\n", mode);
+    static bool bno_changeMode(unsigned char mode) {
+        IMU_DEBUG_printf("[imu] changing to mode 0x%02X\n", mode);
         imu_write(OPR_MODE_REGISTER, mode);
         sleep_ms(100);
         // Check to ensure mode has changed properly by reading it back
-        uint8_t currentMode;
+        unsigned char currentMode;
         i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, &OPR_MODE_REGISTER, 1, true, IMU_TIMEOUT_US);
         i2c_read_timeout_us(IMU_I2C, CHIP_REGISTER, &currentMode, 1, false, IMU_TIMEOUT_US);
         if (currentMode == mode) {
             return true;
         } else {
+            IMU_DEBUG_printf("[imu] failed to change mode, mode is still 0x%02X, supposed to be 0x%02X\n", currentMode, mode);
             return false;
         }
     }
@@ -165,14 +166,14 @@ int imu_init() {
     IMU_DEBUG_printf("[imu] checking ID (writing 0x%02X [ID_REGISTER] to 0x%02X [CHIP_REGISTER]) with timeout of %dus...\n", ID_REGISTER, CHIP_REGISTER, IMU_TIMEOUT_US);
     int result = i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, &ID_REGISTER, 1, true, IMU_TIMEOUT_US);
     if (result == PICO_ERROR_GENERIC) {
-        IMU_DEBUG_printf("[imu] ERROR: address not acknowledged (no device present?)\n");
+        IMU_DEBUG_printf("[imu] ERROR: address not acknowledged (no/wrong device present?)\n");
         return PICO_ERROR_GENERIC;
     } else if (result == PICO_ERROR_TIMEOUT) {
         IMU_DEBUG_printf("[imu] ERROR: write timeout occured (no device present?)\n");
         return PICO_ERROR_TIMEOUT;
     } else if (result == 1) { // Correct number of bytes written should be 1
         IMU_DEBUG_printf("[imu] address acknowledged, attempting to read ID...\n");
-        uint8_t id;
+        unsigned char id;
         result = i2c_read_timeout_us(IMU_I2C, CHIP_REGISTER, &id, 1, false, IMU_TIMEOUT_US);
         if (result == PICO_ERROR_GENERIC) {
             IMU_DEBUG_printf("[imu] ERROR: address not acknowledged\n");
@@ -200,17 +201,32 @@ void imu_deinit() {
     i2c_deinit(IMU_I2C);
 }
 
+// TODO: any way to override configurations such as IMU and GPS choice when running on pico-fbw board?
+
 bool imu_configure() {
     FBW_DEBUG_printf("[imu] configuring...\n");
     #if defined(IMU_BNO055)
-        // TODO: I forgot what this is doing so I should probably figure that out
-        imu_write(SYS_REGISTER, 0x20); // Reset power
-        sleep_ms(100);
+        // imu_write(SYS_REGISTER, 0x20); // Reset power
+        // sleep_ms(100);
+        // ^ was causing issues with pico-fbw board, wasn't entirely needed anyways
         imu_write(SYS_REGISTER, 0x00); // Use internal oscillator
         imu_write(PWR_MODE_REGISTER, PWR_MODE_NORMAL); // Use normal power mode
-        sleep_ms(50);
+        sleep_ms(100);
         imu_write(AXIS_MAP_CONF_REGISTER, 0x24); // Default axis map
         imu_write(AXIS_MAP_SIGN_REGISTER, 0x00); // Default axis signs
+        // Check the calibration status
+        unsigned char calibrationStatus;
+        i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, &CALIBRATION_REGISTER, 1, true, IMU_TIMEOUT_US);
+        i2c_read_timeout_us(IMU_I2C, CHIP_REGISTER, &calibrationStatus, 1, false, IMU_TIMEOUT_US);
+        uint8_t calibrationSYS = (calibrationStatus >> 6) & 0x03;
+        if (calibrationSYS < 3) {
+            uint8_t calibrationGYR = (calibrationStatus >> 4) & 0x03;
+            uint8_t calibrationACC = (calibrationStatus >> 2) & 0x03;
+            uint8_t calibrationMAG = calibrationStatus & 0x03;
+            FBW_DEBUG_printf("[imu] WARNING: IMU calibration is not optimal.\n"
+            "[imu] calibration status: SYS: %d, GYR: %d, ACC: %d, MAG: %d\n", calibrationSYS, calibrationGYR, calibrationACC, calibrationMAG);
+            // TODO: error here
+        }
         return bno_changeMode(MODE_NDOF); // Select NDOF mode to obtain Euler data
     #elif defined(IMU_MPU6050)
         imu_write(PWR_MODE_REGISTER, 0x80); // Reset power

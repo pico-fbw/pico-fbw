@@ -16,7 +16,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
-#include "pico/stdlib.h" // Wi-Fly doesn't actually use the pico's stdlib this is just to provide access to the board detection
+#include "pico/config.h"
 #ifdef RASPBERRYPI_PICO_W
     #include "pico/cyw43_arch.h"
 #endif

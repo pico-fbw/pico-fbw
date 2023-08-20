@@ -65,33 +65,39 @@ bool gps_init() {
     uart_set_format(GPS_UART, 8, 1, UART_PARITY_NONE); // NMEA-0183 format
     gpio_set_function(GPS_TX_PIN, GPIO_FUNC_UART);
     gpio_set_function(GPS_RX_PIN, GPIO_FUNC_UART);
-    GPS_DEBUG_printf("[gps] setting up query schedule\n");
+    gpio_pull_up(GPS_TX_PIN);
+    gpio_pull_up(GPS_RX_PIN);
+    FBW_DEBUG_printf("[gps] configuring...\n");
     // Clear FIFO and re-enable
     irq_set_enabled(GPS_UART_IRQ, true);
     uart_set_fifo_enabled(GPS_UART, true);
     // Send a command and wait until UART is ready to read, then read back the command response
     // Useful tool for calculating command checksums: https://nmeachecksum.eqth.net/
+    GPS_DEBUG_printf("[gps] setting up query schedule\n");
     #if defined(GPS_COMMAND_TYPE_PMTK)
         // PMTK manual: https://cdn.sparkfun.com/assets/parts/1/2/2/8/0/PMTK_Packet_User_Manual.pdf
-        char *line0 = NULL;
         // Enable the correct sentences
+        sleep_ms(1200); // Acknowledgement is a hit or miss without this delay
         uart_write_blocking(GPS_UART, "$PMTK314,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n", 49); // VTG, GGA, GSA enabled once per fix
-        if (uart_is_readable_within_us(GPS_UART, GPS_COMMAND_TIMEOUT_US)) {
-            line0 = uart_read_line(GPS_UART);
-        } else {
-            FBW_DEBUG_printf("[gps] ERROR: timed out whilst enabling sentences\n");
-            return false;
+        // Check up to 5 sentences for the acknowledgement
+        uint8_t lines = 0;
+        while (lines < 9) {
+            char *line = NULL;
+            if (uart_is_readable_within_us(GPS_UART, GPS_COMMAND_TIMEOUT_MS * 1000)) {
+                line = uart_read_line(GPS_UART);
+                GPS_DEBUG_printf("[gps] response %d: %s\n", lines, line);
+                bool result = (strncmp(line, "$PMTK001,314,3*36", 17) == 0); // Acknowledged and successful execution of the command
+                free(line);
+                if (result) return true;
+                lines++;
+            } else {
+                FBW_DEBUG_printf("[gps] ERROR: timed out whilst awaiting a response!\n");
+                return false;
+            }
         }
+        FBW_DEBUG_printf("[gps] ERROR: %d responses were checked but none were valid!\n", lines);
+        return false;
     #endif
-    // Check for the correct response and return false if it doesn't match
-    GPS_DEBUG_printf("[gps] validating query responses\n");
-    #if defined(GPS_COMMAND_TYPE_PMTK)
-        GPS_DEBUG_printf("[gps] response 0: %s\n", line0);
-        bool result = (strncmp(line0, "$PMTK001,314,3*36", 46) == 0); // Acknowledged and successful execution of the command
-        GPS_DEBUG_printf("[gps] comparison result: %d\n", strncmp(line0, "$PMTK001,314,3*36", 46));
-        free(line0);
-    #endif
-    return result;
 }
 
 void gps_deinit() {
