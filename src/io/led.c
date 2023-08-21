@@ -21,11 +21,12 @@
     #undef LED_PIN
 #endif
 
-// TODO: implement error precidence, maybe new "error.c file"?
-
 static struct repeating_timer timer;
 static struct repeating_timer pulse_timer;
 static uint32_t gb_pulse_ms;
+
+// FIXME: led.c is still here for when the pulse functionality is being used,
+// maybe find a stand-in for that and move it to error.c?
 
 /**
  * Toggle's the LED's state (on -> off / off -> on).

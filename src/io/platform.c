@@ -3,8 +3,6 @@
  * Licensed under the GNU GPL-3.0
 */
 
-#include <stdbool.h>
-
 #include "pico/config.h"
 #include "hardware/gpio.h"
 #include "hardware/i2c.h"
@@ -38,17 +36,15 @@ const unsigned char st_anim[] = {
     0b00000000, 0b00111111,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0,
     0b00000000, 0b00111111,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0, 0, 0,
     0b00000000, 0b00111111,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 5, 0, 0, 0,
     0b00000000, 0b00111111,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 5, 5, 0, 0,
     0b00000000, 0b00111111,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 0,
     0b00000000, 0b00111111,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5,
-    0b00000000, 0b00111111,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5
 };
 
 static inline bool marbe_w(unsigned char addr, unsigned char val) {
@@ -69,7 +65,18 @@ static void marbe_i() {
     marbe_w(0x00, 0b00000000);
     marbe_w(0x01, 0b00000000);
     marbe_w(0x02, 0b00111111);
+    marbe_w(0x03, 0b00111000);
     marbe_w(0xB6, 0b10000000);
+}
+
+void marbe_s(uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4, uint8_t l5, uint8_t l6) {
+    marbe_w(0x1F, l1);
+    marbe_w(0x1E, l2);
+    marbe_w(0x1D, l3);
+    marbe_w(0x1C, l4);
+    marbe_w(0x1B, l5);
+    marbe_w(0x1A, l6);
+    marbe_w(0xB0, 0);
 }
 
 void platform_boot_begin() {
@@ -78,13 +85,15 @@ void platform_boot_begin() {
         i2c_write_blocking(MARBE_I, MARBE_R, bt_anim, sizeof(bt_anim), true);
         marbe_anim(true);
     }
+    gpio_pull_down(22);
 }
 
 void platform_boot_complete() {
     if (platform_is_fbw()) {
         i2c_write_blocking(MARBE_I, MARBE_R, st_anim, sizeof(st_anim), true);
-        sleep_ms(415);
+        sleep_ms(420);
         marbe_anim(false);
+        marbe_s(1, 1, 1, 1, 1, 1);
     }
 }
 
@@ -117,9 +126,9 @@ bool platform_is_pico() {
 }
 
 bool platform_is_fbw() {
-    return platform_is_athena() ? true : gpio_get(23);
+    return platform_is_athena() ? true : gpio_get(22);
 }
 
 bool platform_is_athena() {
-
+    return false;
 }

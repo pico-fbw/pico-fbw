@@ -36,6 +36,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "pico/time.h"
+#include "pico/types.h"
 
 #include "hardware/pio.h"
 #include "hardware/irq.h"

@@ -29,6 +29,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "pico/types.h"
 
 #include "hardware/i2c.h"
 

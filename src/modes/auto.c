@@ -4,6 +4,7 @@
 */
 
 #include <stdbool.h>
+#include "pico/types.h"
 #include "../lib/pid.h"
 #include "../lib/nav.h"
 

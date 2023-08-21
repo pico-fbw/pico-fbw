@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include "pico/time.h"
 
+#include "../io/error.h"
 #include "../io/gps.h"
 #include "../io/imu.h"
 #include "../io/led.h"
@@ -29,7 +30,6 @@ static bool gpsDataSafe = false;
 static inline int64_t modeOvertime(alarm_id_t id, void *data) {
     // Mode has taken longer than its maximum runtime, revert to direct mode
     // This makes sure that the user will still have some sort of control even if a catastrophic bug were to occur
-    led_blink(500, 50); // Distress
     printf("FATAL ERROR: mode took longer than its maximum runtime, please report this!\n");
     // We are now forever locked into direct mode, get the aircraft on the ground!!
     while (true) {
@@ -129,8 +129,7 @@ void toMode(Mode newMode) {
     } else {
         // If the IMU is unsafe we only have one option...direct mode
         // Trigger FBW-250 because we are entering direct mode due to an IMU failure
-        FBW_DEBUG_printf("[modes] ERROR: [FBW-250] entering direct mode due to IMU failure\n");
-        led_blink(250, 0);
+        error_throw(ERROR_IMU, ERROR_LEVEL_ERR, 250, "Entering direct mode due to an IMU failure!");
         currentMode = DIRECT;
     }
 }

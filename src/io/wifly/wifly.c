@@ -17,6 +17,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "pico/config.h"
+#include "pico/types.h"
 #ifdef RASPBERRYPI_PICO_W
     #include "pico/cyw43_arch.h"
 #endif

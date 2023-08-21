@@ -10,6 +10,7 @@
 #include <string.h>
 #include "../lib/minmea.h"
 #include "pico/time.h"
+#include "pico/types.h"
 
 #include "hardware/gpio.h"
 #include "hardware/irq.h"

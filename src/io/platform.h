@@ -8,6 +8,8 @@
 #define MARBE_R 0x74
 #define MARBE_TUS 10000
 
+void marbe_s(uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4, uint8_t l5, uint8_t l6);
+
 void platform_boot_begin();
 
 void platform_boot_complete();

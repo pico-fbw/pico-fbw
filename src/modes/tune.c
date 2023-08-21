@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include "../lib/pidtune.h"
 
+#include "../io/error.h"
 #include "../io/flash.h"
 #include "../io/pwm.h"
 #include "../io/imu.h"
@@ -68,7 +69,7 @@
                 flash_write(i, tuning_data);
             } else {
                 // If calibration did fail, throw an error and revert to direct mode
-                led_blink(2000, 0);
+                error_throw(ERROR_PID, ERROR_LEVEL_ERR, 2000, "PID tuning failed!");
                 toMode(DIRECT);
                 return;
             }
