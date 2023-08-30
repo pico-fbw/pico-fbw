@@ -11,7 +11,6 @@
 #include "../io/pwm.h"
 #include "../io/servo.h"
 #include "../io/flash.h"
-#include "../io/led.h"
 
 #include "modes.h"
 #include "auto.h"

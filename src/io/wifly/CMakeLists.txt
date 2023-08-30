@@ -2,9 +2,9 @@ set(wifly_sources wifly.c)
 
 if ("$CACHE{PICO_BOARD}" STREQUAL "pico_w")
     set(wifly_sources ${wifly_sources}
-        pcl/dhcp.c
-        pcl/dns.c
-        pcl/tcp.c
+        tcp_ip/dhcp.c
+        tcp_ip/dns.c
+        tcp_ip/tcp.c
     )
 endif ()
 

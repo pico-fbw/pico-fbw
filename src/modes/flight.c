@@ -29,11 +29,13 @@ static float yawOutput;
 static float flightYawSetpoint;
 static bool yawDamperOn;
 
+// TODO: support flying wing (control mixing) in all modes of flight
+
 void flight_init() {
     // Create PID controllers for the roll and pitch axes and initialize (also clears) them
     #ifdef PID_AUTOTUNE
-        roll_c = (PIDController){flash_read(FLASH_SECTOR_PID0, 1), flash_read(FLASH_SECTOR_PID0, 2), flash_read(FLASH_SECTOR_PID0, 3), roll_tau, -AIL_LIMIT, AIL_LIMIT, roll_integMin, roll_integMax, roll_kT};
-        pitch_c = (PIDController){flash_read(FLASH_SECTOR_PID1, 1), flash_read(FLASH_SECTOR_PID1, 2), flash_read(FLASH_SECTOR_PID1, 3), pitch_tau, -ELEV_LIMIT, ELEV_LIMIT, pitch_integMin, pitch_integMax, pitch_kT};
+        roll_c = (PIDController){flash_read(FLASH_SECTOR_PID, 1), flash_read(FLASH_SECTOR_PID, 2), flash_read(FLASH_SECTOR_PID, 3), roll_tau, -AIL_LIMIT, AIL_LIMIT, roll_integMin, roll_integMax, roll_kT};
+        pitch_c = (PIDController){flash_read(FLASH_SECTOR_PID, 4), flash_read(FLASH_SECTOR_PID, 5), flash_read(FLASH_SECTOR_PID, 6), pitch_tau, -ELEV_LIMIT, ELEV_LIMIT, pitch_integMin, pitch_integMax, pitch_kT};
     #else
         roll_c = (PIDController){roll_kP, roll_kI, roll_kD, roll_tau, -AIL_LIMIT, AIL_LIMIT, roll_integMin, roll_integMax, roll_kT};
         pitch_c = (PIDController){pitch_kP, pitch_kI, pitch_kD, pitch_tau, -ELEV_LIMIT, ELEV_LIMIT, pitch_integMin, pitch_integMax, pitch_kT};

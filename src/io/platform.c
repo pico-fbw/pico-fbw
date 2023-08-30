@@ -7,9 +7,11 @@
 #include "hardware/gpio.h"
 #include "hardware/i2c.h"
 
-#include "platform.h"
+#include "error.h"
 
-// TODO: switch to platform checking over preprocessor directly whereever possible
+#include "../info.h"
+
+#include "platform.h"
 
 const unsigned char bt_anim[] = {
     0x20,
@@ -80,12 +82,14 @@ void marbe_s(uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4, uint8_t l5, uint8_t
 }
 
 void platform_boot_begin() {
+    info_declare();
     if (platform_is_fbw()) {
         marbe_i();
         i2c_write_blocking(MARBE_I, MARBE_R, bt_anim, sizeof(bt_anim), true);
         marbe_anim(true);
     }
     gpio_pull_down(22);
+    led_init();
 }
 
 void platform_boot_complete() {

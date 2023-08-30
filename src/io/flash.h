@@ -13,28 +13,32 @@
 /**
  * FLASHMAP:
  * "Sector"  |  Use
- *           |
- * 0         |  PWM calibration flag / data
+ * 
+ * 0         |  Boot
+ *           |  0 - Flag
+ * 
+ * 1         |  PWM0 calibration flag / data
  *           |  0 - Flag
  *           |  1 - Pin 0 offset
  *           |  2 - Pin 1 offset
  *           |  3 - Pin 2 offset
  *           |  4 - Pin 3 offset
  * 
- * 1         |  PID tuning flag / data
+ * 2         |  PWM1 calibration flag / data
+ *           |  0 - Flag
+ *           |  1 - Pin 4 offset
+ *           |  2 - Pin 5 offset
+ *           |  3 - Pin 6 offset
+ *           |  4 - Pin 7 offset
+ * 
+ * 3         |  PID tuning flag / data
  *           |  0 - Flag
  *           |  1 - Roll kP
  *           |  2 - Roll tI
  *           |  3 - Roll tD
- * 
- * 2         |  PID tuning flag / data
- *           |  0 - Flag
- *           |  1 - Pitch kP
- *           |  2 - Pitch tI
- *           |  3 - Pitch tD
- * 
- * 3         |  Bootup flag
- *           |  0 - Flag
+ *           |  4 - Pitch kP
+ *           |  5 - Pitch tI
+ *           |  6 - Pitch tD
  * 
  * 4         |  IMU axis mapping and direction flag / data
  *           |  0 - Flag
@@ -46,13 +50,13 @@
  *           |  6 - Z axis direction
 */
 
-#define FLASH_MIN_SECTOR FLASH_SECTOR_PWM
+#define FLASH_MIN_SECTOR FLASH_SECTOR_PWM0
 typedef enum FlashSector {
-    FLASH_SECTOR_PWM,
-    FLASH_SECTOR_PID0,
-    FLASH_SECTOR_PID1,
     FLASH_SECTOR_BOOT,
-    FLASH_SECTOR_IMU
+    FLASH_SECTOR_PWM0,
+    FLASH_SECTOR_PWM1,
+    FLASH_SECTOR_IMU,
+    FLASH_SECTOR_PID
 } FlashSector;
 #define FLASH_MAX_SECTOR FLASH_SECTOR_IMU
 
@@ -94,6 +98,10 @@ float flash_read(FlashSector sector, uint val);
 */
 void flash_reset();
 
-#define FBW_BOOT 3.1305210f // DO NOT CHANGE THIS VALUE! IT WILL BRICK ALL SYSTEMS!!!
+// DO NOT CHANGE THESE VALUES! IT WILL BRICK/RESET SYSTEMS!!!
+#define FLAG_BOOT 3.1305210f
+#define FLAG_PWM 0.5f
+#define FLAG_IMU 0.7f
+#define FLAG_PID 0.3f
 
 #endif // __FLASH_H

@@ -3,6 +3,8 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
+// TODO: config support at runtime instead of compile-time?
+
 
 
 /** @section control */
@@ -169,54 +171,9 @@ There are no module types, almost all GPS modules use the NMEA-0183 standard so 
  * It is suggested that you read up on what each of these values do in a PID control loop before attempting to alter them.
 */
 
-// TODO: this is commented out for now because I can't fix autotune for now lol, uncomment later
-// #define PID_AUTOTUNE // comment out if you want to manually set PID gains. Only do this if you really know what you're doing!!
+/* Comment out if you want to manually set PID gains. Only do this if you really know what you're doing! */
+// #define PID_AUTOTUNE
 #ifdef PID_AUTOTUNE
-	/**
-     * Some example PID auto tuning rules:
-     * { {  44, 24,   0 } }  ZIEGLER_NICHOLS_PI
-     * { {  34, 40, 160 } }  ZIEGLER_NICHOLS_PID
-     * { {  64,  9,   0 } }  TYREUS_LUYBEN_PI
-     * { {  44,  9, 126 } }  TYREUS_LUYBEN_PID
-     * { {  66, 80,   0 } }  CIANCONE_MARLIN_PI
-     * { {  66, 88, 162 } }  CIANCONE_MARLIN_PID
-     * { {  28, 50, 133 } }  PESSEN_INTEGRAL_PID
-     * { {  60, 40,  60 } }  SOME_OVERSHOOT_PID
-     * { { 100, 40,  60 } }   NO_OVERSHOOT_PID
-    */
-   	// PID autotuning parameters.
-	#define TUNING_KP 100
-	#define TUNING_TI 40
-	#define TUNING_TD 60
-
-	// TODO: make sure these values actually work?
-
-	/**
-	 * Defining this option implements relay bias (comment to disable).
-	 * This is useful to adjust the relay output values during the auto tuning to recover symmetric oscillations.
-	 * This can compensate for load disturbance and equivalent signals arising from nonlinear or non-stationary processes.
-	 * Any improvement in the tunings seems quite modest but sometimes unbalanced oscillations can be persuaded to converge where they might not otherwise have done so.
-	*/ 
-	#define AUTOTUNE_RELAY_BIAS
-
-	/**
-	 * Average amplitude of successive peaks must differ by no more than this proportion,
-	 * relative to half the difference between maximum and minimum of last 2 cycles.
-	*/ 
-	#define AUTOTUNE_PEAK_AMPLITUDE_TOLERANCE 0.05
-
-	/** 
-	 * Ratio of up/down relay step duration should differ by no more than this tolerance.
-	 * Biasing the relay con give more accurate estimates of the tuning parameters but setting the tolerance too low will prolong the autotune procedure unnecessarily.
-	 * This parameter also sets the minimum bias in the relay as a proportion of its amplitude.
-	*/ 
-	#define AUTOTUNE_STEP_ASYMMETRY_TOLERANCE 0.50
-
-	/**
-	 * Auto tune terminates if waiting too long between peaks or relay steps.
-	 * Set a larger value for processes with long delays or time constants.
-	*/ 
-	#define AUTOTUNE_MAX_WAIT_MINUTES 0.1
 #else
 	/* PID constants for the roll axis. */
 	#define roll_kP 1.0
@@ -229,6 +186,15 @@ There are no module types, almost all GPS modules use the NMEA-0183 standard so 
 	#define pitch_kD 0.001
 #endif
 
+/* PID constants for the yaw axis. */
+#define yaw_kP 1.0
+#define yaw_kI 0.0025
+#define yaw_kD 0.001
+#define yaw_tau 0.001
+#define yaw_integMin -50.0
+#define yaw_integMax 50.0
+#define yaw_kT 0.01
+
 /* Miscellaneous roll PID tuning values. */
 #define roll_tau 0.001
 #define roll_integMin -50.0
@@ -240,15 +206,6 @@ There are no module types, almost all GPS modules use the NMEA-0183 standard so 
 #define pitch_integMin -50.0
 #define pitch_integMax 50.0
 #define pitch_kT 0.01
-
-/* PID constants for the yaw axis. */
-#define yaw_kP 1.0
-#define yaw_kI 0.0025
-#define yaw_kD 0.001
-#define yaw_tau 0.001
-#define yaw_integMin -50.0
-#define yaw_integMax 50.0
-#define yaw_kT 0.01
 
 
 // TODO: autopilot PID tuning--both these PIDs do NOT input directly into the servos but instead command a bank/pitch angle so tune them with this in mind
@@ -284,7 +241,6 @@ There are no module types, almost all GPS modules use the NMEA-0183 standard so 
 	#define FBW_DEBUG // Internal, do not touch
 
 	/* Uncomment to enable the API over serial. */
-	// TODO: comment this in final
 	#define API_ENABLED
 	#ifdef API_ENABLED
 		/* Uncomment to wait for a "PING" command on power-up before booting. */

@@ -1,22 +1,23 @@
-#ifndef __BINARY_H
-#define __BINARY_H
+#ifndef __INFO_H
+#define __INFO_H
 
 #include "pico/binary_info.h"
-
 #include "hardware/gpio.h"
 
-#include "platform.h"
-#include "../config.h"
-#include "../version.h"
+#include "io/platform.h"
 
-/* This file compiles all pin definitions into the binary. */
+#include "config.h"
+
+#define PICO_FBW_VERSION "0.0.1-alpha"
+#define PICO_FBW_API_VERSION "1.0"
+#define WIFLY_VERSION "1.0"
 
 /**
  * Declares all relavent information from pico-fbw into the binary.
  * Must be called once, anywhere in the program.
  * Location does not matter everything is compiled into the binary beforehand.
 */
-void declare_binary() {
+static inline void info_declare() {
     /* Pin defs */
 
     // I2C communication pins
@@ -54,4 +55,4 @@ void declare_binary() {
     #endif
 }
 
-#endif // __BINARY_H
+#endif // __INFO_H

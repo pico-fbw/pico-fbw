@@ -135,6 +135,6 @@ bool imu_calibrate();
  * Checks if the IMU calibration has been run before.
  * @return true if calibration has been run, false if not.
 */
-bool imu_checkCalibration();
+bool imu_isCalibrated();
 
 #endif // __IMU_H

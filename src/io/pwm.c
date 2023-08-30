@@ -23,7 +23,7 @@
  * **/
 
 /**
- * Huge thanks to 'GitJer' on GitHub for giving me a starting point for the PWM input code!
+ * Huge thanks to 'GitJer' on GitHub for most of the PWM input code!
  * Check them out here: https://github.com/GitJer/Some_RPI-Pico_stuff/tree/main/PwmIn/PwmIn_4pins
 */
 
@@ -41,145 +41,153 @@
 #include "hardware/pio.h"
 #include "hardware/irq.h"
 
-#include "led.h"
+#include "error.h"
 #include "flash.h"
 #include "../config.h"
 
 #include "pwm.h"
 #include "pwm.pio.h"
 
-// TODO: I tried to add PIO1 into the mix to support athr in addition to mode switching but it went horribly
-// my priority as of now is adding elevon mixing but please work on this asap!!
+// FIXME: PIO1--the interrupts aren't working and thus pins 4-7 aren't being read...
 
-static PIO pio;
-static uint32_t pulsewidth[4], period[4];
-uint gb_num_pins;
+static uint32_t pulsewidth[8], period[8];
+uint gb_num_pins = 0;
 
-static void pioIntr() {
+static void pio0Handler(void) {
     int state_machine = -1;
-    // check which IRQ was raised:
+    // Check which IRQ was raised
     for (int i = 0; i < 4; i++) {
-        if (pio0_hw->irq & 1<<i) {
-            // clear interrupt
-            pio0_hw->irq = 1 << i;
-            // read pulse width from the FIFO
-            pulsewidth[i] = pio_sm_get(pio, i);
-            // read low period from the FIFO
-            period[i] = pio_sm_get(pio, i);
-            // clear interrupt
-            pio0_hw->irq = 1 << i;
+        if (pio0_hw->irq & 1 << i) {
+            pio0_hw->irq = 1 << i; // Clear interrupt
+            pulsewidth[i] = pio_sm_get(pio0, i); // Read pulsewidth from FIFO
+            period[i] = pio_sm_get(pio0, i); // Read low period from the FIFO
+            pio0_hw->irq = 1 << i; // Clear interrupt
+        }
+    }
+}
+
+static void pio1Handler(void) {
+    int state_machine = -1;
+    for (int i = 0; i < 4; i++) {
+        if (pio1_hw->irq & 1 << i) {
+            pio1_hw->irq = 1 << i;
+            pulsewidth[i + 4] = pio_sm_get(pio1, i);
+            period[i + 4] = pio_sm_get(pio1, i);
+            pio1_hw->irq = 1 << i;
         }
     }
 }
 
 /**
  * Gets the calibration value for the specified pin.
- * @param pin the pin (0-3 to get the value of)
+ * @param pin the pin (0-7) to get the value of
  * @return the calibration value from PWM calibration.
  * Be aware that this value may not be cohesive; this function does not check to see whether or not a calibration has been done, so it is able to return random data.
 */
-static inline float getCalibrationValue(uint pin) {
+static inline float pwmOffsetOf(uint pin) {
     // Check if we originally only calibrated one PWM and if so, set pin to that regardless
     #ifndef CONFIGURE_INPUTS_SEPERATELY
         pin = 0;
     #endif
-    // Read the value of pin + 1 from the first sector, this will ensure we don't read the calibration flag instead
-    return flash_read(FLASH_SECTOR_PWM, pin + 1);
+    // Read from the correct sector based on the pin
+    if (pin <= 3) {
+        return flash_read(FLASH_SECTOR_PWM0, pin + 1); // Read +1 to skip the flag (index correctly)
+    } else {
+        return flash_read(FLASH_SECTOR_PWM1, pin - 3); // Read -3 to index correctly
+    }
+}
+
+void pwm_enable(uint *pin_list, uint num_pins) {
+    FBW_DEBUG_printf("[pwm] loading PWM IN into PIO0 with %d state machines\n", num_pins > 4 ? 4 : num_pins);
+    uint offset = pio_add_program(pio0, &pwm_program);
+    for (uint i = 0; i < (num_pins > 4 ? 4 : num_pins); i++) {
+        FBW_DEBUG_printf("[pwm] preparing state machine %d on pin %d\n", i, pin_list[i]);
+        pulsewidth[i] = 0;
+        period[i] = 0;
+        gpio_pull_down(pin_list[i]);
+        pio_gpio_init(pio0, pin_list[i]);
+        pio_sm_config c = pwm_program_get_default_config(offset);
+        sm_config_set_jmp_pin(&c, pin_list[i]);
+        sm_config_set_in_pins(&c, pin_list[i]);
+        sm_config_set_in_shift(&c, false, false, 0);
+        pio_sm_init(pio0, i, offset, &c);
+        pio_sm_set_enabled(pio0, i, true);
+    }
+    irq_set_exclusive_handler(PIO0_IRQ_0, pio0Handler);
+    irq_set_enabled(PIO0_IRQ_0, true);
+    pio0_hw->inte0 = PIO_IRQ0_INTE_SM0_BITS | PIO_IRQ0_INTE_SM1_BITS | PIO_IRQ0_INTE_SM2_BITS | PIO_IRQ0_INTE_SM3_BITS;
+    // If there are more than 4 pins, PIO1 must be used
+    if (num_pins > 4) {
+        FBW_DEBUG_printf("[pwm] loading PWM IN into PIO1 with %d state machines\n", num_pins - 4);
+        for (uint i = 4; i < num_pins; i++) {
+            FBW_DEBUG_printf("[pwm] preparing state machine %d on pin %d\n", i - 4, pin_list[i]);
+            pulsewidth[i] = 0;
+            period[i] = 0;
+            gpio_pull_down(pin_list[i]);
+            pio_gpio_init(pio1, pin_list[i]);
+            pio_sm_config c = pwm_program_get_default_config(offset);
+            sm_config_set_jmp_pin(&c, pin_list[i]);
+            sm_config_set_in_pins(&c, pin_list[i]);
+            sm_config_set_in_shift(&c, false, false, 0);
+            pio_sm_init(pio1, i - 4, offset, &c);
+            pio_sm_set_enabled(pio1, i - 4, true);
+        }
+        irq_set_exclusive_handler(PIO1_IRQ_0, pio1Handler);
+        irq_set_enabled(PIO1_IRQ_0, true);
+        pio1_hw->inte0 = PIO_IRQ0_INTE_SM0_BITS | PIO_IRQ0_INTE_SM1_BITS | PIO_IRQ0_INTE_SM2_BITS | PIO_IRQ0_INTE_SM3_BITS;
+    }
+    gb_num_pins = num_pins;
+}
+
+float pwm_readPulseWidth(uint pin) {
+    // the measurements are taken with 2 clock cycles per timer tick
+    // hence, it is 2*0.000000008
+    return ((float)pulsewidth[pin] * 0.000000016);
+}
+
+float pwm_readDutyCycle(uint pin) {
+    return ((float)pulsewidth[pin] / (float)period[pin]);
+}
+
+float pwm_readPeriod(uint pin) {
+    // the measurements are taken with 2 clock cycles per timer tick
+    // hence, it is 2*0.000000008
+    return ((float)period[pin] * 0.000000016);
 }
 
 /**
- * Reads the raw degree value without any calibrations applied.
- * @param pin the pin (0-3 to read)
+ * Reads the raw degree value without any offsets applied.
+ * @param pin the pin (0-7) to read
  * @return the raw degree value
 */
 static float readDegRaw(uint pin) {
     return (180000 * ((float)pulsewidth[pin] * 0.000000016 - 0.001));
 }
 
-void pwm_enable(uint *pin_list, uint num_pins) {
-    gb_num_pins = num_pins;
-    pio = pio0;
-    FBW_DEBUG_printf("[pwm] loading PWM IN into pio0 with %d state machines\n", num_pins);
-    uint offset = pio_add_program(pio, &pwm_program);
-    for (int i = 0; i < num_pins; i++) {
-        FBW_DEBUG_printf("[pwm] preparing state machine %d on pin %d\n", i, pin_list[i]);
-        pulsewidth[i] = 0;
-        period[i] = 0;
-        gpio_pull_down(pin_list[i]);
-        pio_gpio_init(pio, pin_list[i]);
-        pio_sm_config c = pwm_program_get_default_config(offset);
-        sm_config_set_jmp_pin(&c, pin_list[i]);
-        sm_config_set_in_pins(&c, pin_list[i]);
-        sm_config_set_in_shift(&c, false, false, 0);
-        pio_sm_init(pio, i, offset, &c);
-        pio_sm_set_enabled(pio, i, true);
-    }
-    FBW_DEBUG_printf("[pwm] state machines ok, setting up interrupts\n");
-    irq_set_exclusive_handler(PIO0_IRQ_0, pioIntr);
-    irq_set_enabled(PIO0_IRQ_0, true);
-    pio0_hw->inte0 = PIO_IRQ0_INTE_SM0_BITS | PIO_IRQ0_INTE_SM1_BITS | PIO_IRQ0_INTE_SM2_BITS | PIO_IRQ0_INTE_SM3_BITS ;
-}
-
-void pwm_read(float *readings, uint pin) {
-    if (pin < gb_num_pins) {
-        // determine whole period
-        period[pin] += pulsewidth[pin];
-        // the measurements are taken with 2 clock cycles per timer tick
-        // hence, it is 2*0.000000008
-        *(readings + 0) = (float)pulsewidth[pin] * 2 * 0.000000008;
-        *(readings + 1) = (float)period[pin] * 2 * 0.000000008;
-        *(readings + 2) = ((float)pulsewidth[pin] / (float)period[pin]);
-        pulsewidth[pin] = 0;
-        period[pin] = 0;
-    }
-}
-
-float pwm_readPW(uint pin) {
-    // the measurements are taken with 2 clock cycles per timer tick
-    // hence, it is 2*0.000000008
-    return ((float)pulsewidth[pin] * 0.000000016);
-}
-
-float pwm_readDC(uint pin) {
-    return ((float)pulsewidth[pin] / (float)period[pin]);
-}
-
-float pwm_readP(uint pin) {
-    // the measurements are taken with 2 clock cycles per timer tick
-    // hence, it is 2*0.000000008
-    return ((float)period[pin] * 0.000000016);
-}
-
 float pwm_readDeg(uint pin) {
-    return (180000 * ((float)pulsewidth[pin] * 0.000000016 - 0.001) + getCalibrationValue(pin));
+    return (180000 * ((float)pulsewidth[pin] * 0.000000016 - 0.001) + pwmOffsetOf(pin));
 }
 
-bool pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint run_times) {
+bool pwm_calibrate(float deviations[], uint num_samples, uint sample_delay_ms, uint run_times) {
     FBW_DEBUG_printf("[pwm] starting pwm calibration\n");
-    // Start blinking LED to signify we are calibrating
-    led_blink(100, 0);
-    // Create an array where we will arrange our data to later write; the first four bytes will signify if we have run a calibration before
-    float calibration_data[CONFIG_SECTOR_SIZE] = {0.5f};
-    // Check if we are calibrating per pin or not
+    if (gb_num_pins < 1) return false; // Ensure PWM has been initialized
+    error_throw(ERROR_PWM, ERROR_LEVEL_STATUS, 100, 0, false, ""); // Start blinking LED to signify we are calibrating
+    // Create arrays where we will arrange our data to later write
+    float calibration_data0[CONFIG_SECTOR_SIZE] = {FLAG_PWM}; // The first position holds a flag to indicate that calibration has been completed
+    float calibration_data1[CONFIG_SECTOR_SIZE] = {FLAG_PWM};
     #ifdef CONFIGURE_INPUTS_SEPERATELY
-        // If yes, complete the calibration for all pins
-        uint num_pins = 4;
+        // If we are calibrating per pin, register all the pins we want to calibrate
+        uint num_pins = gb_num_pins;  
     #else
-        // If not, only register pin 0 to calibrate 
+        // If not, only register pin 0 to be calibrated
         uint num_pins = 1;
     #endif
     for (uint pin = 0; pin < num_pins; pin++) {
         FBW_DEBUG_printf("[pwm] calibrating pin %d out of %d\n", pin, num_pins);
-        // If we are testing the switch, set the deviation to zero so it works for both a two and three-pos switch
-        if (pin == 3) {
-            deviation = 0.0f;
-        }
-        // Reset the final difference for every pin we test
+        float deviation = deviations[pin];
         float final_difference = 0.0f;
-        // These loops simply poll the specified pin based on the specifications we have provided in the function
         for (uint t = 0; t < run_times; t++) {
             FBW_DEBUG_printf("[pwm] running trial %d out of %d\n", t, run_times);
-            // Reset the total difference every time we run
             float total_difference = 0.0f;
             for (uint i = 0; i < num_samples; i++) {
                 total_difference += (deviation - readDegRaw(pin));
@@ -194,28 +202,45 @@ bool pwm_calibrate(float deviation, uint num_samples, uint sample_delay_ms, uint
             final_difference = final_difference + (total_difference / num_samples);
         }
         // Get our final average and save it to the correct byte in our array which we write to flash
+        // Any pins over 4 (thus, pins belonging to PIO1) will be in the second array
         FBW_DEBUG_printf("[pwm] pin %d final offset is %f\n", pin, (final_difference / run_times));
-        calibration_data[pin + 1] = final_difference / run_times;
+        if (num_pins > 4) {
+            calibration_data1[pin - 3] = final_difference / run_times;
+        } else {
+            calibration_data0[pin + 1] = final_difference / run_times;
+        }
     }
-    // Before we write, make sure values aren't way out of spec
-    if (calibration_data[1] > MAX_CALIBRATION_OFFSET || calibration_data[1] < -MAX_CALIBRATION_OFFSET || calibration_data[2] > MAX_CALIBRATION_OFFSET || calibration_data[2] < -MAX_CALIBRATION_OFFSET || calibration_data[3] > MAX_CALIBRATION_OFFSET || calibration_data[3] < -MAX_CALIBRATION_OFFSET || calibration_data[4] > MAX_CALIBRATION_OFFSET || calibration_data[4] < -MAX_CALIBRATION_OFFSET) {
-        FBW_DEBUG_printf("ERROR: [FBW-500] a calibration value is too high!\n");
-        return false;
+    // Check values one last time and then write to flash
+    for (uint8_t i = 0; i < (num_pins > 4 ? 4 : num_pins); i++) {
+        if (!WITHIN_MAX_CALIBRATION_OFFSET(calibration_data0[i + 1])) {
+            FBW_DEBUG_printf("ERROR: [FBW-500] calibration value %d is too high!\n", i + 1);
+            return false;
+        }
     }
-    // Write calibration data to sector "0", last sector of flash
+    if (num_pins > 4) {
+        for (uint8_t i = 4; i < num_pins; i++) {
+            if (!WITHIN_MAX_CALIBRATION_OFFSET(calibration_data1[i - 3])) {
+                FBW_DEBUG_printf("ERROR: [FBW-500] calibration value %d is too high!\n", i + 1);
+                return false;
+            }
+        }
+    }
     FBW_DEBUG_printf("[pwm] writing calibration data to flash\n");
-    flash_write(FLASH_SECTOR_PWM, calibration_data);
-    led_stop();
+    flash_write(FLASH_SECTOR_PWM0, calibration_data0);
+    if (num_pins > 4) flash_write(FLASH_SECTOR_PWM1, calibration_data1);
+    error_clear(ERROR_PWM, false);
     return true;
 }
 
-int pwm_checkCalibration() {
-    // Read the first value from the PWM sector of flash, this holds the calibration flag
-    if (flash_read(FLASH_SECTOR_PWM, 0) == 0.5f) {
-        // Ensure the values are normal before we give the ok
-        for (uint8_t i = 0; i <= 3; i++) {
-            if (!WITHIN_MAX_CALIBRATION_OFFSET(getCalibrationValue(i))) {
-                return -2;
+int pwm_isCalibrated() {
+    // Read the calibration flags
+    if (flash_read(FLASH_SECTOR_PWM0, 0) == FLAG_PWM && flash_read(FLASH_SECTOR_PWM1, 0) == FLAG_PWM) {
+        // If we know how many pins there are, ensure the values are normal before we give the okay
+        if (gb_num_pins > 0) {
+            for (uint8_t i = 0; i <= (gb_num_pins - 1); i++) {
+                if (!WITHIN_MAX_CALIBRATION_OFFSET(pwmOffsetOf(i))) {
+                    return -2;
+                }
             }
         }
         return 0;

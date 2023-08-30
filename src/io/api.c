@@ -24,7 +24,7 @@
 
 #include "wifly/wifly.h"
 
-#include "../version.h"
+#include "../info.h"
 
 #include "api.h"
 
@@ -383,11 +383,9 @@ void api_poll() {
                             }
                             if (rollP >= 0 && rollI >= 0 && rollD >= 0 && pitchP >= 0 && pitchI >= 0 && pitchD >= 0) {
                                 goodReq = true;
-                                float pid0[CONFIG_SECTOR_SIZE] = {0.3f, rollP, rollI, rollD};
-                                float pid1[CONFIG_SECTOR_SIZE] = {0.3f, pitchP, pitchI, pitchD};
+                                float pid[CONFIG_SECTOR_SIZE] = {FLAG_PID, rollP, rollI, rollD, pitchP, pitchI, pitchD};
                                 // Write new values
-                                flash_write(FLASH_SECTOR_PID0, pid0);
-                                flash_write(FLASH_SECTOR_PID1, pid1);
+                                flash_write(FLASH_SECTOR_PID, pid);
                                 printf("pico-fbw 200 OK\n");
                             }
                         } else if (strcmp(cmd, "SET_FLASH") == 0) {

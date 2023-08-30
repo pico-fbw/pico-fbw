@@ -25,9 +25,9 @@
 #include "../../lib/jsmn.h"
 
 #ifdef RASPBERRYPI_PICO_W
-    #include "pcl/dhcp.h"
-    #include "pcl/dns.h"
-    #include "pcl/tcp.h"
+    #include "tcp_ip/dhcp.h"
+    #include "tcp_ip/dns.h"
+    #include "tcp_ip/tcp.h"
 
     dhcp_server_t dhcp_server;
     dns_server_t dns_server;
@@ -35,7 +35,7 @@
 #endif
 
 #include "../../config.h"
-#include "../../version.h"
+#include "../../info.h"
 
 #include "wifly.h"
 

@@ -10,7 +10,6 @@
 #include "../io/error.h"
 #include "../io/gps.h"
 #include "../io/imu.h"
-#include "../io/led.h"
 #include "../io/servo.h"
 
 #include "auto.h"
@@ -59,7 +58,7 @@ void toMode(Mode newMode) {
             break;
     }
     if (imuDataSafe) {
-        led_stop();
+        error_clear(ERROR_IMU, false);
         switch (newMode) {
             case DIRECT:
                 FBW_DEBUG_printf("[modes] entering direct mode\n");
@@ -68,7 +67,7 @@ void toMode(Mode newMode) {
             case NORMAL:
                 // Automatically enter tune mode if necessary
                 #ifdef PID_AUTOTUNE
-                    if (!mode_tuneCheckCalibration()) {
+                    if (!mode_tuneisCalibrated()) {
                         toMode(TUNE);
                         return;
                     }
@@ -80,7 +79,7 @@ void toMode(Mode newMode) {
                 break;
             case AUTO:
                 #ifdef PID_AUTOTUNE
-                    if (!mode_tuneCheckCalibration()) {
+                    if (!mode_tuneisCalibrated()) {
                         toMode(TUNE);
                         return;
                     }
@@ -108,7 +107,7 @@ void toMode(Mode newMode) {
                 #endif
                 break;
             case TUNE:
-                if (!mode_tuneCheckCalibration()) {
+                if (!mode_tuneisCalibrated()) {
                     FBW_DEBUG_printf("[modes] entering tune mode\n");
                     currentMode = TUNE;
                 } else {
@@ -129,7 +128,7 @@ void toMode(Mode newMode) {
     } else {
         // If the IMU is unsafe we only have one option...direct mode
         // Trigger FBW-250 because we are entering direct mode due to an IMU failure
-        error_throw(ERROR_IMU, ERROR_LEVEL_ERR, 250, "Entering direct mode due to an IMU failure!");
+        error_throw(ERROR_IMU, ERROR_LEVEL_ERR, 250, 0, true, "Entering direct mode due to an IMU failure!");
         currentMode = DIRECT;
     }
 }

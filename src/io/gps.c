@@ -19,7 +19,7 @@
 #include "../modes/flight.h"
 #include "../modes/modes.h"
 
-#include "led.h"
+#include "error.h"
 
 #include "gps.h"
 
@@ -188,7 +188,7 @@ bool gps_isAltOffsetCalibrated() { return altOffsetCalibrated; }
 
 int gps_calibrateAltOffset(uint num_samples) {
     GPS_DEBUG_printf("[gps] starting altitude calibration\n");
-    led_blink(1000, 100); // Blink at 1Hz
+    error_throw(ERROR_GPS, ERROR_LEVEL_STATUS, 1000, 100, false, ""); // Blink at 1Hz
     // GPS updates should be at 1Hz (give or take 2s) so if the calibration takes longer we cut it short
     absolute_time_t calibrationTimeout = make_timeout_time_ms((num_samples * 1000) + 2000);
     uint samples = 0;
@@ -219,7 +219,7 @@ int gps_calibrateAltOffset(uint num_samples) {
             free(line);
         }
     }
-    led_stop();
+    error_clear(ERROR_GPS, false);
     if (time_reached(calibrationTimeout)) {
         FBW_DEBUG_printf("[gps] ERROR: altitude calibration timed out\n");
         return PICO_ERROR_TIMEOUT;

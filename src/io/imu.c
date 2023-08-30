@@ -48,7 +48,7 @@
 #endif
 
 #include "flash.h"
-#include "led.h"
+#include "error.h"
 
 #include "imu.h"
 
@@ -372,8 +372,8 @@ inertialAngles imu_getAngles() {
 
 bool imu_calibrate() {
     FBW_DEBUG_printf("[imu] starting imu angle mapping calibration\n");
-    led_blink(500, 100);
-    float calibration_data[CONFIG_SECTOR_SIZE] = {0.7f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}; // {flag, x, y, z, x_dir, y_dir, z_dir}
+    error_throw(ERROR_IMU, ERROR_LEVEL_STATUS, 500, 100, true, ""); // Blink for calibration status
+    float calibration_data[CONFIG_SECTOR_SIZE] = {FLAG_IMU, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}; // {flag, x, y, z, x_dir, y_dir, z_dir}
     // Complete all axes' calibration
     IMUCalibrationState state = CALIBRATION_STATE_ROLL;
     while (state != CALIBRATION_STATE_COMPLETE) {
@@ -423,22 +423,22 @@ bool imu_calibrate() {
         }
 
         // 3 blinks to signify an axis has been recognized
-        led_blink(250, 100);
+        error_throw(ERROR_IMU, ERROR_LEVEL_STATUS, 250, 100, true, "");
         absolute_time_t resume = make_timeout_time_ms(750);
         while (!time_reached(resume)) {
             // We need to ensure the angles are always being fetched as the MPU isn't async, so we can't simply sleep
             imu_getRawAngles();
         }
-        led_stop();
+        error_clear(ERROR_IMU, false);
         // Wait for user to re-center, and then advance to the next axis
         resume = make_timeout_time_ms(2000);
         while (!time_reached(resume)) {
             imu_getRawAngles();
         }
-        led_blink(500, 100);
+        error_throw(ERROR_IMU, ERROR_LEVEL_STATUS, 500, 100, true, "");
         state++;
     }
-    led_stop();
+    error_clear(ERROR_IMU, false);
 
     // Check data before writing to flash
     if (calibration_data[1] != calibration_data[2] && calibration_data[1] != calibration_data[3] && calibration_data[2] != calibration_data[1] && calibration_data[2] != calibration_data[3] && calibration_data[3] != calibration_data[1] && calibration_data[3] != calibration_data[2]) {
@@ -451,9 +451,9 @@ bool imu_calibrate() {
     }
 }
 
-bool imu_checkCalibration() {
+bool imu_isCalibrated() {
     // Read the flag as well as ensure values make sense
-    if (flash_read(FLASH_SECTOR_IMU, 0) == 0.7f) {
+    if (flash_read(FLASH_SECTOR_IMU, 0) == FLAG_IMU) {
         float data[6];
         for (uint8_t i = 1; i <= 6; i++) {
             data[i - 1] = flash_read(FLASH_SECTOR_IMU, i);

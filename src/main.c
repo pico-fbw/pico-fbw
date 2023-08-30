@@ -17,13 +17,11 @@
 #endif
 
 #include "io/api.h"
-#include "io/binary.h"
 #include "io/error.h"
 #include "io/esc.h"
 #include "io/flash.h"
 #include "io/gps.h"
 #include "io/imu.h"
-#include "io/led.h"
 #include "io/platform.h"
 #include "io/pwm.h"
 #include "io/servo.h"
@@ -33,8 +31,8 @@
 #include "modes/modes.h"
 
 #include "config.h"
+#include "info.h"
 #include "validator.h"
-#include "version.h"
 
 int main() {
     // Crucial items--initialize comms, api, architecture, io, and LED
@@ -49,23 +47,22 @@ int main() {
         FBW_DEBUG_printf("[driver] initializing cyw43 architecture with predefined country 0x%04X\n", WIFLY_NETWORK_COUNTRY);
         cyw43_arch_init_with_country(WIFLY_NETWORK_COUNTRY);
     #endif
-    led_init();
     platform_boot_begin();
 
     // API
     #ifdef API_ENABLED
         printf("[api] enabling api v%s\n", PICO_FBW_API_VERSION);
-        led_blink(1000, 100);
+        error_throw(ERROR_NONE, ERROR_LEVEL_NONE, 1000, 100, false, "");
         api_init_blocking();
-        led_stop();
+        error_clear(ERROR_NONE, true);
     #endif
 
     // Check for first boot
     FBW_DEBUG_printf("[driver] starting bootup process\n");
-    if (flash_read(FLASH_SECTOR_BOOT, 0) != FBW_BOOT) {
+    if (flash_read(FLASH_SECTOR_BOOT, 0) != FLAG_BOOT) {
         FBW_DEBUG_printf("[boot] boot flag not found! assuming first boot, initializing flash\n");
         flash_reset();
-        float boot[CONFIG_SECTOR_SIZE] = {FBW_BOOT};
+        float boot[CONFIG_SECTOR_SIZE] = {FLAG_BOOT};
         flash_write(FLASH_SECTOR_BOOT, boot);
         FBW_DEBUG_printf("[boot] boot data written! rebooting now...\n");
         // Reboot is to ensure flash is okay; any problems with the flash will simply cause a bootloop before getting to anything important
@@ -75,26 +72,27 @@ int main() {
         FBW_DEBUG_printf("[boot] boot flag ok\n");
     }
 
-    // PWM
+    // PWM (in)
+    uint pin_list[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, INPUT_SW_PIN, INPUT_THR_PIN};
+    float deviations[] = {90.0f, 90.0f, 90.0f, 0.0f, 0.0f}; // We expect all controls to be centered except switch and throttle
+    FBW_DEBUG_printf("[boot] enabling PWM\n");
+    pwm_enable(pin_list, 5);
     FBW_DEBUG_printf("[boot] checking for PWM calibration\n");
-    if (pwm_checkCalibration() != 0) {
-        if (pwm_checkCalibration() == -1) {
+    if (pwm_isCalibrated() != 0) {
+        if (pwm_isCalibrated() == -1) {
             FBW_DEBUG_printf("[boot] PWM calibration not found! waiting for tx/rx...\n");
             sleep_ms(3000); // Wait a few moments for tx/rx to set itself up
             FBW_DEBUG_printf("[boot] calibrating now...do not touch the transmitter!\n");
-            if (!pwm_calibrate(90.0f, 2000, 5, 5) || pwm_checkCalibration() != 0) {
-                error_throw(ERROR_PWM, ERROR_LEVEL_FATAL, 500, "PWM calibration failed!");
+            if (!pwm_calibrate(deviations, 2000, 5, 5) || pwm_isCalibrated() != 0) {
+                error_throw(ERROR_PWM, ERROR_LEVEL_FATAL, 500, 0, true, "PWM calibration failed!");
             } else {
                 FBW_DEBUG_printf("[boot] calibration successful!\n");
             }
-        } else if (pwm_checkCalibration() == -2) {
-            error_throw(ERROR_PWM, ERROR_LEVEL_FATAL, 500, "PWM calibration values were too high!\n"
+        } else if (pwm_isCalibrated() == -2) {
+            error_throw(ERROR_PWM, ERROR_LEVEL_FATAL, 500, 0, true, "PWM calibration values were too high!\n"
             "Try again, and if this continues, consider changing the MAX_CALIBRATION_OFFSET in the configuration file.");
         }
     }
-    FBW_DEBUG_printf("[boot] PWM calibration ok, enabling\n");
-    uint pin_list[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, INPUT_SW_PIN};
-    pwm_enable(pin_list, 4);
 
     // Servos/ESC (PWM out)
     FBW_DEBUG_printf("[boot] enabling servos\n");
@@ -102,7 +100,7 @@ int main() {
     for (uint8_t s = 0; s < 3; s++) {
         if (servo_enable(servos[s]) != 0) {
             FBW_DEBUG_printf("[boot] failed to initialize servo %d)\n", s);
-            error_throw(ERROR_PWM, ERROR_LEVEL_FATAL, 800, "failed to initialize servo");
+            error_throw(ERROR_PWM, ERROR_LEVEL_FATAL, 800, 0, false, "failed to initialize servo");
         }
     }
     FBW_DEBUG_printf("[boot] testing servos, watch for movement\n");
@@ -129,19 +127,19 @@ int main() {
             FBW_DEBUG_printf("[boot] IMU ok\n");
             setIMUSafe(true);
             FBW_DEBUG_printf("[boot] checking for IMU axis calibration\n");
-            if (!imu_checkCalibration()) {
+            if (!imu_isCalibrated()) {
                 FBW_DEBUG_printf("[boot] IMU axis calibration not found! waiting a bit to begin...\n");
                 sleep_ms(3000);
                 if (!imu_calibrate()) {
-                    error_throw(ERROR_IMU, ERROR_LEVEL_FATAL, 500, "IMU calibration failed!");
+                    error_throw(ERROR_IMU, ERROR_LEVEL_FATAL, 500, 0, true, "IMU calibration failed!");
                 }
             }
             FBW_DEBUG_printf("[boot] IMU axis calibration ok\n");
         } else {
-            error_throw(ERROR_IMU, ERROR_LEVEL_WARN, 1000, "IMU configuration failed!");
+            error_throw(ERROR_IMU, ERROR_LEVEL_WARN, 1000, 0, false, "IMU configuration failed!");
         }
     } else {
-        error_throw(ERROR_IMU, ERROR_LEVEL_ERR, 1000, "IMU not found!");
+        error_throw(ERROR_IMU, ERROR_LEVEL_ERR, 1000, 0, false, "IMU not found!");
     }
 
     // GPS
@@ -152,7 +150,7 @@ int main() {
             FBW_DEBUG_printf("[boot] GPS ok\n");
             // We don't set the GPS safe just yet, communications have been established but we are still unsure if the data is okay
         } else {
-            error_throw(ERROR_GPS, ERROR_LEVEL_ERR, 1000, "GPS initalization failed!");
+            error_throw(ERROR_GPS, ERROR_LEVEL_ERR, 1000, 0, false, "GPS initalization failed!");
         }
     #endif
 
@@ -200,6 +198,4 @@ int main() {
     }
 
     return 0; // How did we get here?
-
-    declare_binary();
 }
