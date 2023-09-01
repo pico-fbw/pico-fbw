@@ -1,26 +1,6 @@
 /**
- * The MIT License (MIT)
- *
- * Copyright (c) 2020 Markus Hintersteiner
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- * **/
+ * This file utilizes code under the MIT License. See "LICENSE" for details.
+*/
 
 /**
  * Huge thanks to 'GitJer' on GitHub for most of the PWM input code!
@@ -48,13 +28,10 @@
 #include "pwm.h"
 #include "pwm.pio.h"
 
-// FIXME: PIO1--the interrupts aren't working and thus pins 4-7 aren't being read...
-
 static uint32_t pulsewidth[8], period[8];
 uint gb_num_pins = 0;
 
 static void pio0Handler(void) {
-    int state_machine = -1;
     // Check which IRQ was raised
     for (int i = 0; i < 4; i++) {
         if (pio0_hw->irq & 1 << i) {
@@ -67,7 +44,6 @@ static void pio0Handler(void) {
 }
 
 static void pio1Handler(void) {
-    int state_machine = -1;
     for (int i = 0; i < 4; i++) {
         if (pio1_hw->irq & 1 << i) {
             pio1_hw->irq = 1 << i;
@@ -79,58 +55,42 @@ static void pio1Handler(void) {
 }
 
 /**
- * Gets the calibration value for the specified pin.
- * @param pin the pin (0-7) to get the value of
- * @return the calibration value from PWM calibration.
- * Be aware that this value may not be cohesive; this function does not check to see whether or not a calibration has been done, so it is able to return random data.
+ * Sets up a PWM state machine for a single pin.
+ * @param pio The PIO instance to use
+ * @param offset The PIO program offset to use
+ * @param pin The pin to use
+ * @param sm The state machine to use
 */
-static inline float pwmOffsetOf(uint pin) {
-    // Check if we originally only calibrated one PWM and if so, set pin to that regardless
-    #ifndef CONFIGURE_INPUTS_SEPERATELY
-        pin = 0;
-    #endif
-    // Read from the correct sector based on the pin
-    if (pin <= 3) {
-        return flash_read(FLASH_SECTOR_PWM0, pin + 1); // Read +1 to skip the flag (index correctly)
-    } else {
-        return flash_read(FLASH_SECTOR_PWM1, pin - 3); // Read -3 to index correctly
-    }
+static void setup_sm(PIO pio, uint offset, uint pin, uint sm) {
+    FBW_DEBUG_printf("[pwm] preparing state machine %d on pin %d\n", sm, pin);
+    pulsewidth[sm] = 0;
+    period[sm] = 0;
+    gpio_pull_down(pin);
+    pio_gpio_init(pio, pin);
+    pio_sm_config cfg = pwm_program_get_default_config(offset);
+    sm_config_set_jmp_pin(&cfg, pin);
+    sm_config_set_in_pins(&cfg, pin);
+    sm_config_set_in_shift(&cfg, false, false, 0);
+    pio_sm_init(pio, sm, offset, &cfg);
+    pio_sm_set_enabled(pio, sm, true);
 }
 
 void pwm_enable(uint *pin_list, uint num_pins) {
     FBW_DEBUG_printf("[pwm] loading PWM IN into PIO0 with %d state machines\n", num_pins > 4 ? 4 : num_pins);
-    uint offset = pio_add_program(pio0, &pwm_program);
+    uint offset0 = pio_add_program(pio0, &pwm_program);
     for (uint i = 0; i < (num_pins > 4 ? 4 : num_pins); i++) {
-        FBW_DEBUG_printf("[pwm] preparing state machine %d on pin %d\n", i, pin_list[i]);
-        pulsewidth[i] = 0;
-        period[i] = 0;
-        gpio_pull_down(pin_list[i]);
-        pio_gpio_init(pio0, pin_list[i]);
-        pio_sm_config c = pwm_program_get_default_config(offset);
-        sm_config_set_jmp_pin(&c, pin_list[i]);
-        sm_config_set_in_pins(&c, pin_list[i]);
-        sm_config_set_in_shift(&c, false, false, 0);
-        pio_sm_init(pio0, i, offset, &c);
-        pio_sm_set_enabled(pio0, i, true);
+        setup_sm(pio0, offset0, pin_list[i], i);
     }
     irq_set_exclusive_handler(PIO0_IRQ_0, pio0Handler);
     irq_set_enabled(PIO0_IRQ_0, true);
     pio0_hw->inte0 = PIO_IRQ0_INTE_SM0_BITS | PIO_IRQ0_INTE_SM1_BITS | PIO_IRQ0_INTE_SM2_BITS | PIO_IRQ0_INTE_SM3_BITS;
-    // If there are more than 4 pins, PIO1 must be used
+    
+    // If there are more than 4 pins, PIO1 must also be used
     if (num_pins > 4) {
         FBW_DEBUG_printf("[pwm] loading PWM IN into PIO1 with %d state machines\n", num_pins - 4);
+        uint offset1 = pio_add_program(pio1, &pwm_program);
         for (uint i = 4; i < num_pins; i++) {
-            FBW_DEBUG_printf("[pwm] preparing state machine %d on pin %d\n", i - 4, pin_list[i]);
-            pulsewidth[i] = 0;
-            period[i] = 0;
-            gpio_pull_down(pin_list[i]);
-            pio_gpio_init(pio1, pin_list[i]);
-            pio_sm_config c = pwm_program_get_default_config(offset);
-            sm_config_set_jmp_pin(&c, pin_list[i]);
-            sm_config_set_in_pins(&c, pin_list[i]);
-            sm_config_set_in_shift(&c, false, false, 0);
-            pio_sm_init(pio1, i - 4, offset, &c);
-            pio_sm_set_enabled(pio1, i - 4, true);
+            setup_sm(pio1, offset1, pin_list[i], i - 4);
         }
         irq_set_exclusive_handler(PIO1_IRQ_0, pio1Handler);
         irq_set_enabled(PIO1_IRQ_0, true);
@@ -153,6 +113,25 @@ float pwm_readPeriod(uint pin) {
     // the measurements are taken with 2 clock cycles per timer tick
     // hence, it is 2*0.000000008
     return ((float)period[pin] * 0.000000016);
+}
+
+/**
+ * Gets the calibration value for the specified pin.
+ * @param pin the pin (0-7) to get the value of
+ * @return the calibration value from PWM calibration.
+ * Be aware that this value may not be cohesive; this function does not check to see whether or not a calibration has been done, so it is able to return random data.
+*/
+static inline float pwmOffsetOf(uint pin) {
+    // Check if we originally only calibrated one PWM and if so, set pin to that regardless
+    #ifndef CONFIGURE_INPUTS_SEPERATELY
+        pin = 0;
+    #endif
+    // Read from the correct sector based on the pin
+    if (pin <= 3) {
+        return flash_read(FLASH_SECTOR_PWM0, pin + 1); // Read +1 to skip the flag (index correctly)
+    } else {
+        return flash_read(FLASH_SECTOR_PWM1, pin - 3); // Read -3 to index correctly
+    }
 }
 
 /**

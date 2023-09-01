@@ -1,12 +1,6 @@
 #ifndef __DNS_H
 #define __DNS_H
 
-/**
- * Copyright (c) 2022 Raspberry Pi (Trading) Ltd.
- *
- * SPDX-License-Identifier: BSD-3-Clause
- */
-
 #include "lwip/ip_addr.h"
 
 typedef struct dns_server_t_ {

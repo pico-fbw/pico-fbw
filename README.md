@@ -17,14 +17,15 @@ Now, with that out of the way, let's get into the features of the system!
   - Auto-coordinated turns using a yaw damper
 - Implementation of direct mode (user inputs are transmitted directly to flight controls)
   - It can be easily activated with the use of a switch on the transmitter
-- Wi-Fly allows you to easily upload flight plans over Wi-Fi to be automatically flown
-- Engineered and tested for safety all-around  
-- Heavy optimization for the Pico's hardware leads to minimal input lag on the controls
+- Wi-Fly allows you to easily upload flight plans over Wi-Fi to be automatically flown using the:
+- Primitive autopilot/autothrottle system (although quickly advancing!)
 - Extensive documentation to make setup and usage easy
+- Easy configuration of all system options
 - Very cheap to get started; an easy entrypoint to automated RC flight
+- Engineered and tested for safety all-around  
+- Built-in API allows for external control using another device
 - Support for both standard and Pico W models
-- Flexibility; the system can easily be reconfigured through a configuration file to suit your and your aircraft's needs
-- Fully open-source codebase with commented code
+- Fully open-source
 
 ## Materials
 
@@ -32,7 +33,8 @@ You will need a few materials in addition to your current RC plane setup. They a
 
 - Raspberry Pi Pico [W] microcontroller (with data-capable micro-USB cable to flash the program)
 - IMU sensor (either BNO055 or MPU6050)
-- ~7 female-to-female jumper wires
+- GPS sensor (optional)
+- ~7-11 female-to-female jumper wires (depending if you are using GPS or not)
 - ~10 male-to-female jumper wires
 - A switch on your transmitter and corresponding channel on your receiver
 
@@ -46,7 +48,7 @@ This binary is pre-built so you can drag and drop it onto your Pico as-is, but b
 
 ## Setup
 
-The Pico acts like a person in the middle. Instead of your servos, ESC, and such being wired up directly to your reciever, instead, your reciever is wired up to the Pico so it can recieve and compute those inputs, and your output devices (like servos) are also wired up to the Pico so it can control them.
+The Pico stands in the middle, between your radio reciever and output devices. Instead of your servos, ESC, and such being wired up directly to your reciever, instead, your reciever is wired up to the Pico so it can recieve and compute those inputs, and your output devices are also wired up to the Pico so it can control them.
 
 It may seem daunting to to modify your existing setup to incorporate this, but rest assured, it is relatively simple and will not take you long. I've created a guide for you to check out [here](https://github.com/MylesAndMore/pico-fbw/wiki/_Setup) that outlines exactly how to wire things up and get going with the project!
 
@@ -57,11 +59,3 @@ You can find all of the information about building and configuring the project o
 ## Issues, Feedback, and Features
 
 If you experience any issues, have any ideas for new features, or just any general feedback about the project in general, don't hesitate to reach out! You can submit an issue on our [issues page](https://github.com/MylesAndMore/pico-fbw/issues/new)--just please be sure to label your issure accordingly. And if you are a developer looking to suggest or improve on our code, feel free to leave me an issue or [pull request](https://github.com/MylesAndMore/pico-fbw/compare)!
-
-## Donations
-
-If you've found use out of the project, great! Consider [donating](https://donate.pico-fbw.org) to support it; hosting for the website isn't free and I and a few others have put tens of hours of our own time into making automated remote-control flight more accessible.
-
-No pressure of course, pico-fbw will always be free and open-source for everyone to use.
-
-Thanks for checking out my project, hope you enjoy! :)

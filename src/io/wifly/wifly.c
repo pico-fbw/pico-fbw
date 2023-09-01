@@ -1,9 +1,9 @@
+// Huge thank-you to Rasperry Pi (as a part of the Pico examples library) for providing much of the code used in Wi-Fly!
+
 /**
- * Huge thank-you to Rasperry Pi (as a part of the Pico examples library) for providing much of the code used in Wi-Fly!
- * 
  * Copyright (c) 2022 Raspberry Pi (Trading) Ltd.
- *
- * SPDX-License-Identifier: BSD-3-Clause
+ * 
+ * This file utilizes code under the BSD-3-Clause License. See "LICENSE" for details.
 */
 
 /**
