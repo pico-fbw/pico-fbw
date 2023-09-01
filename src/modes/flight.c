@@ -6,9 +6,6 @@
 #include <stdbool.h>
 #include "../lib/pid.h"
 
-#include "pico/multicore.h"
-#include "hardware/sync.h"
-
 #include "../io/flash.h"
 #include "../io/servo.h"
 
@@ -85,5 +82,3 @@ void flight_update(double roll, double pitch, double yaw, bool override) {
     servo_set(SERVO_ELEV_PIN, (uint16_t)(pitch_c.out + 90));
     servo_set(SERVO_RUD_PIN, (uint16_t)(yawOutput + 90));
 }
-
-// TODO: multicore disabled for now, it was causing too many issues lol

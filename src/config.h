@@ -22,7 +22,7 @@ This will be quite a small value--the setpoint is calculated many times per seco
 
 /* Configure your throttle detents here. These are all expressed as a percentage of the throttle range from 0 to 100. */
 #define THROTTLE_IDLE 10 // Most ESCs have a cutout; the motor does not start spinning exactly after 0%, so set the actual idle here.
-// TODO: configuration for idle throttle?
+// TODO: auto-configuration for idle throttle detent (similar to current PWM calibration)?
 #define THROTTLE_MCT 65 // Maximum throttle that is allowed for an extended period of time.
 #define THROTTLE_MAX 80 // Maximum throttle that is allowed for a short duration, set in THROTTLE_MAX_TIME.
 
@@ -62,7 +62,7 @@ Increase this value if you are experiening error FBW-500, however note you may b
 #define INPUT_AIL_PIN 1 // Pin that the PWM signal wire from the reciever AILERON channel is connected to.
 #define SERVO_AIL_PIN 2 // Pin that the PWM wire on the AILERON servo is connected to.
 // #define REVERSE_SERVO_AIL // Uncomment to reverse the servo's direction.
-// TODO: make this ^ actually do something lol
+// TODO: add the functionality to servo reversing for this ^ as well as elev and rud below
 
 #define INPUT_ELEV_PIN 3 // Pin that the PWM signal wire from the reciever ELEVATOR channel is connected to.
 #define SERVO_ELEV_PIN 4 // Pin that the PWM wire on the ELEVATOR servo is connected to.

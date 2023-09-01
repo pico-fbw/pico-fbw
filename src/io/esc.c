@@ -47,6 +47,21 @@
 #include "esc.h"
 #include "servo.h"
 
+void esc_set(const uint gpio_pin, const uint16_t degree) {
+    // Values have to be between 0 and 100
+    // PWM_TOP_MAX = 100% full duty cycle
+    const uint16_t oneMs = PWM_TOP_MAX / 20;
+    const uint16_t duty_u16 = oneMs + (oneMs * degree) / 100;
+
+    const uint8_t slice = pwm_gpio_to_slice_num(gpio_pin);
+    const uint8_t channel = pwm_gpio_to_channel(gpio_pin);
+    const uint32_t top = pwm_hw->slice[slice].top;
+    const uint32_t cc = duty_u16 * (top + 1) / PWM_CH0_CC_B_LSB;
+
+    pwm_set_chan_level(slice, channel, cc);
+    pwm_set_enabled(slice, true);
+}
+
 uint esc_enable(const uint gpio_pin) {
     FBW_DEBUG_printf("[ESC] setting up ESC on pin %d\n", gpio_pin);
     gpio_set_function(gpio_pin, GPIO_FUNC_PWM);
@@ -79,25 +94,11 @@ uint esc_enable(const uint gpio_pin) {
     }
     pwm_hw->slice[slice].div = div16_top;
     pwm_hw->slice[slice].top = top;
+    esc_set(gpio_pin, 0); // Set initial position to 0 to be safe
     return 0;
 }
 
 void esc_disable(const uint gpio_pin) {
     const uint8_t slice = pwm_gpio_to_slice_num(gpio_pin);
     pwm_set_enabled(slice, false);
-}
-
-void esc_set(const uint gpio_pin, const uint16_t degree) {
-    // Values have to be between 0 and 100
-    // PWM_TOP_MAX = 100% full duty cycle
-    const uint16_t oneMs = PWM_TOP_MAX / 20;
-    const uint16_t duty_u16 = oneMs + (oneMs * degree) / 100;
-
-    const uint8_t slice = pwm_gpio_to_slice_num(gpio_pin);
-    const uint8_t channel = pwm_gpio_to_channel(gpio_pin);
-    const uint32_t top = pwm_hw->slice[slice].top;
-    const uint32_t cc = duty_u16 * (top + 1) / PWM_CH0_CC_B_LSB;
-
-    pwm_set_chan_level(slice, channel, cc);
-    pwm_set_enabled(slice, true);
 }

@@ -100,7 +100,7 @@ int main() {
     for (uint8_t s = 0; s < 3; s++) {
         if (servo_enable(servos[s]) != 0) {
             FBW_DEBUG_printf("[boot] failed to initialize servo %d)\n", s);
-            error_throw(ERROR_PWM, ERROR_LEVEL_FATAL, 800, 0, false, "failed to initialize servo");
+            error_throw(ERROR_PWM, ERROR_LEVEL_FATAL, 800, 0, false, "Failed to initialize a servo!");
         }
     }
     FBW_DEBUG_printf("[boot] testing servos, watch for movement\n");
@@ -115,7 +115,9 @@ int main() {
         servo_set(servos[s], 90);
     }
     FBW_DEBUG_printf("[boot] enabling ESC\n");
-    // TODO: esc & throttle functionality
+    if (esc_enable(ESC_THR_PIN) != 0) {
+        error_throw(ERROR_PWM, ERROR_LEVEL_FATAL, 800, 0, false, "Failed to initialize the ESC!");
+    }
 
     // IMU
     #ifdef IMU_BNO055
@@ -131,7 +133,7 @@ int main() {
                 FBW_DEBUG_printf("[boot] IMU axis calibration not found! waiting a bit to begin...\n");
                 sleep_ms(3000);
                 if (!imu_calibrate()) {
-                    error_throw(ERROR_IMU, ERROR_LEVEL_FATAL, 500, 0, true, "IMU calibration failed!");
+                    error_throw(ERROR_IMU, ERROR_LEVEL_FATAL, 1000, 0, true, "IMU calibration failed!");
                 }
             }
             FBW_DEBUG_printf("[boot] IMU axis calibration ok\n");

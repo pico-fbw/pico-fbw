@@ -21,59 +21,58 @@
 #define ANGLE_THRESHOLD_Y 0.1f
 #define ANGLE_THRESHOLD_Z 0.1f
 
-// Chip-specific information
+// Chip-specific information:
 // CHIP_FREQ_KHZ, CHIP_REGISTER, ID_REGISTER, and CHIP_ID are required for all chips, the rest is usually specific to each chip
-#if defined(IMU_BNO055)
 
-	// Datasheet: https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bno055-ds000.pdf
-	
-	#define CHIP_FREQ_KHZ 400
+/* BNO055 */
 
-	#define CHIP_REGISTER 0x28
-	static const unsigned char ID_REGISTER = 0x00;
-	#define CHIP_ID 0xA0
+// Datasheet: https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bno055-ds000.pdf
 
-	static const unsigned char CALIBRATION_REGISTER = 0x35;
-	#define SYS_REGISTER 0x3F
-	#define SYS_RESET 0x20
-	static const unsigned char OPR_MODE_REGISTER = 0x3D;
-	#define PWR_MODE_REGISTER 0x3E
-	#define AXIS_MAP_CONF_REGISTER 0x41
-	#define AXIS_MAP_SIGN_REGISTER 0x42
+#define BNO_CHIP_FREQ_KHZ 400
 
-	static const unsigned char EULER_BEGIN_REGISTER = 0x1A;
-	static const unsigned char ACCEL_BEGIN_REGISTER = 0x28;
+#define BNO_CHIP_REGISTER 0x28
+static const unsigned char BNO_ID_REGISTER = 0x00;
+#define BNO_CHIP_ID 0xA0
 
-	#define MODE_NDOF 0x0C
-	#define PWR_MODE_NORMAL 0x00
+static const unsigned char CALIBRATION_REGISTER = 0x35;
+#define SYS_REGISTER 0x3F
+#define SYS_RESET 0x20
+static const unsigned char OPR_MODE_REGISTER = 0x3D;
+#define BNO_PWR_MODE_REGISTER 0x3E
+#define AXIS_MAP_CONF_REGISTER 0x41
+#define AXIS_MAP_SIGN_REGISTER 0x42
 
-#elif defined(IMU_MPU6050)
+static const unsigned char EULER_BEGIN_REGISTER = 0x1A;
+static const unsigned char ACCEL_BEGIN_REGISTER = 0x28;
 
-	// Datasheet: https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Datasheet1.pdf
+#define MODE_NDOF 0x0C
+#define PWR_MODE_NORMAL 0x00
 
-	#define CHIP_FREQ_KHZ 400
+/* MPU6050 */
 
-	#define CHIP_REGISTER 0x68
-	static const unsigned char ID_REGISTER = 0x75;
-	#define CHIP_ID 0x68
+// Datasheet: https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Datasheet1.pdf
 
-	#define SMPLRT_DIV_REGISTER 0x19
-	#define CONFIG_REGISTER 0x1A
-	#define INT_PIN_CFG_REGISTER 0x37
-	#define GYRO_CONFIG_REGISTER 0x1B
-	#define ACCEL_CONFIG_REGISTER 0x1C
+#define MPU_CHIP_FREQ_KHZ 400
 
-	#define USER_CONTROL_REGISTER 0x6A
-	#define PWR_MODE_REGISTER 0x6B
+#define MPU_CHIP_REGISTER 0x68
+static const unsigned char MPU_ID_REGISTER = 0x75;
+#define MPU_CHIP_ID 0x68
 
-	#define INTERRUPTS_ENABLED_REGISTER 0x38
-	#define FIFO_ENABLED_REGISTER 0x23
+#define SMPLRT_DIV_REGISTER 0x19
+#define CONFIG_REGISTER 0x1A
+#define INT_PIN_CFG_REGISTER 0x37
+#define GYRO_CONFIG_REGISTER 0x1B
+#define ACCEL_CONFIG_REGISTER 0x1C
 
-	#define DMP_PROG_START_ADDR 0x70
-	static const unsigned char DMP_RA_FIFO_COUNT = 0x72;
-	static const unsigned char DMP_RA_FIFO_R_W = 0x74;
-	
-#endif
+#define USER_CONTROL_REGISTER 0x6A
+#define MPU_PWR_MODE_REGISTER 0x6B
+
+#define INTERRUPTS_ENABLED_REGISTER 0x38
+#define FIFO_ENABLED_REGISTER 0x23
+
+#define DMP_PROG_START_ADDR 0x70
+static const unsigned char DMP_RA_FIFO_COUNT = 0x72;
+static const unsigned char DMP_RA_FIFO_R_W = 0x74;
 
 // Contains heading, roll, pitch, and yaw angles of the aircraft when filled using imu_getAngles().
 typedef struct inertialAngles {

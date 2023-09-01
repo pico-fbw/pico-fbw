@@ -27,6 +27,11 @@
  * as well as functions to read and write to the DMP memory.
 */
 
+/**
+ * Source file of pico-fbw: https://github.com/MylesAndMore/pico-fbw
+ * Licensed under the GNU GPL-3.0
+*/
+
 #include <stdbool.h>
 #include <stdint.h>
 #include "pico/types.h"
@@ -46,7 +51,7 @@ static void dmp_setMemoryBank(uint8_t bank) {
     // if (userBank) bank |= 0x20;
     // if (prefetchEnabled) bank |= 0x40;
     uint8_t bytes[2] = {0x6D, bank};
-    i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, bytes, 2, true, IMU_TIMEOUT_US);
+    i2c_write_timeout_us(IMU_I2C, MPU_CHIP_REGISTER, bytes, 2, true, IMU_TIMEOUT_US);
 }
 
 /**
@@ -55,7 +60,7 @@ static void dmp_setMemoryBank(uint8_t bank) {
 */
 static void dmp_setMemoryStartAddress(uint8_t address) {
     uint8_t bytes[2] = {0x6E, address};
-    i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, bytes, 2, true, IMU_TIMEOUT_US);
+    i2c_write_timeout_us(IMU_I2C, MPU_CHIP_REGISTER, bytes, 2, true, IMU_TIMEOUT_US);
 }
 
 void dmp_writeMemoryBlock(const uint8_t *data, uint16_t dataSize, uint8_t bank, uint8_t address) {
@@ -84,7 +89,7 @@ void dmp_writeMemoryBlock(const uint8_t *data, uint16_t dataSize, uint8_t bank, 
         for (uint i = 0; i < chunkSize; i++){
             data_buf[i+1] = buf[i];
         }
-        i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, data_buf, chunkSize + 1, false, IMU_TIMEOUT_US);
+        i2c_write_timeout_us(IMU_I2C, MPU_CHIP_REGISTER, data_buf, chunkSize + 1, false, IMU_TIMEOUT_US);
 
         // Increase byte index by chunkSize (uint8_t automatically wraps to 0 at 256)
         i += chunkSize;

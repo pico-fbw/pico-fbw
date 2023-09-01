@@ -3,7 +3,7 @@
  * Licensed under the GNU GPL-3.0
 */
 
-#include "pico/stdlib.h" // FIXME: compilation fails without this, no clue why
+#include "pico/types.h"
 
 #include "../io/esc.h"
 #include "../io/servo.h"

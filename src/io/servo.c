@@ -46,6 +46,19 @@
 
 #include "servo.h"
 
+void servo_set(const uint gpio_pin, const uint16_t degree) {
+    const uint16_t oneMs = PWM_TOP_MAX / 20;
+    const uint16_t duty_u16 = oneMs + (oneMs * degree) / 180;
+
+    const uint8_t slice = pwm_gpio_to_slice_num(gpio_pin);
+    const uint8_t channel = pwm_gpio_to_channel(gpio_pin);
+    const uint32_t top = pwm_hw->slice[slice].top;
+    const uint32_t cc = duty_u16 * (top + 1) / PWM_TOP_MAX;
+
+    pwm_set_chan_level(slice, channel, cc);
+    pwm_set_enabled(slice, true);
+}
+
 uint servo_enable(const uint gpio_pin) {
     FBW_DEBUG_printf("[servo] setting up servo on pin %d\n", gpio_pin);
     gpio_set_function(gpio_pin, GPIO_FUNC_PWM);
@@ -77,23 +90,11 @@ uint servo_enable(const uint gpio_pin) {
     }
     pwm_hw->slice[slice].div = div16_top;
     pwm_hw->slice[slice].top = top;
+    servo_set(gpio_pin, 90); // Set the servo to ~90 (middle) degrees by default
     return 0;
 }
 
 void servo_disable(const uint gpio_pin) {
     const uint8_t slice = pwm_gpio_to_slice_num(gpio_pin);
     pwm_set_enabled(slice, false);
-}
-
-void servo_set(const uint gpio_pin, const uint16_t degree) {
-    const uint16_t oneMs = PWM_TOP_MAX / 20;
-    const uint16_t duty_u16 = oneMs + (oneMs * degree) / 180;
-
-    const uint8_t slice = pwm_gpio_to_slice_num(gpio_pin);
-    const uint8_t channel = pwm_gpio_to_channel(gpio_pin);
-    const uint32_t top = pwm_hw->slice[slice].top;
-    const uint32_t cc = duty_u16 * (top + 1) / PWM_TOP_MAX;
-
-    pwm_set_chan_level(slice, channel, cc);
-    pwm_set_enabled(slice, true);
 }
