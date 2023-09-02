@@ -23,7 +23,7 @@
 
 #include "../wifly.h"
 
-#include "../../../config.h"
+#include "../../config.h"
 
 #include "dhcp.h"
 

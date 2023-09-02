@@ -26,12 +26,13 @@
 #include "io/pwm.h"
 #include "io/servo.h"
 #include "io/switch.h"
-#include "io/wifly/wifly.h"
+#include "wifly/wifly.h"
+
+#include "lib/info.h"
 
 #include "modes/modes.h"
 
 #include "config.h"
-#include "info.h"
 #include "validator.h"
 
 int main() {
@@ -89,7 +90,7 @@ int main() {
                 FBW_DEBUG_printf("[boot] calibration successful!\n");
             }
         } else if (pwm_isCalibrated() == -2) {
-            error_throw(ERROR_PWM, ERROR_LEVEL_FATAL, 500, 0, true, "PWM calibration values were too high!\n"
+            error_throw(ERROR_PWM, ERROR_LEVEL_FATAL, 500, 0, true, "PWM calibration values are too high!\n"
             "Try again, and if this continues, consider changing the MAX_CALIBRATION_OFFSET in the configuration file.");
         }
     }

@@ -2,14 +2,16 @@ add_executable(${PROJECT_NAME} main.c)
 pico_add_extra_outputs(${PROJECT_NAME})
 
 target_link_libraries(${PROJECT_NAME}
-    pico_platform
-    pico_stdio
-    pico_time
-    hardware_watchdog
     fbw_io
     fbw_lib
     fbw_modes
     fbw_wifly
+    hardware_watchdog
+    pico_base
+    pico_bootrom
+    pico_platform
+    pico_stdio
+    pico_time
 )
 # Import Pico W specific libraries and set specific compiler definitions, also a few messages about board compatability
 if ("$CACHE{PICO_BOARD}" STREQUAL "pico" OR "$CACHE{PICO_BOARD}" STREQUAL "pico_w")
@@ -22,12 +24,16 @@ if ("$CACHE{PICO_BOARD}" STREQUAL "pico_w")
     # WIFLY_ENABLED now just basically serves as a stand-in for RASPBERRYPI_PICO_W due to recent changes
     # It's still used in a few places though, and the behavior could possibly be altered...
     add_compile_definitions(WIFLY_ENABLED)
-    include_directories(${CMAKE_CURRENT_LIST_DIR}/io/wifly)
+    include_directories(${CMAKE_CURRENT_LIST_DIR}/wifly)
 endif ()
 
 add_subdirectory(io)
 add_subdirectory(lib)
 add_subdirectory(modes)
+
+# Wi-Fly is always enabled in some capacity (to allow for the API to interact with it regardless of Pico W).
+# LWIP and the whole HTTP stack only gets compiled if the Pico W is detected (this is all done in the Wi-Fly subdirectory).
+add_subdirectory(wifly)
 
 
 # Reset program:

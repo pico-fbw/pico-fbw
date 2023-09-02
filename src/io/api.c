@@ -22,9 +22,9 @@
 #include "../modes/modes.h"
 #include "../modes/normal.h"
 
-#include "wifly/wifly.h"
+#include "../wifly/wifly.h"
 
-#include "../info.h"
+#include "../lib/info.h"
 
 #include "api.h"
 

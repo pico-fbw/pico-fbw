@@ -11,6 +11,7 @@ endif ()
 add_library(fbw_wifly ${wifly_sources})
 
 target_link_libraries(fbw_wifly
+    pico_base
     pico_stdlib
 )
 if ("$CACHE{PICO_BOARD}" STREQUAL "pico_w")

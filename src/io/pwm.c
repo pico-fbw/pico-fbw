@@ -75,7 +75,7 @@ static void setup_sm(PIO pio, uint offset, uint pin, uint sm) {
     pio_sm_set_enabled(pio, sm, true);
 }
 
-void pwm_enable(uint *pin_list, uint num_pins) {
+void pwm_enable(uint pin_list[], uint num_pins) {
     FBW_DEBUG_printf("[pwm] loading PWM IN into PIO0 with %d state machines\n", num_pins > 4 ? 4 : num_pins);
     uint offset0 = pio_add_program(pio0, &pwm_program);
     for (uint i = 0; i < (num_pins > 4 ? 4 : num_pins); i++) {
@@ -86,6 +86,7 @@ void pwm_enable(uint *pin_list, uint num_pins) {
     pio0_hw->inte0 = PIO_IRQ0_INTE_SM0_BITS | PIO_IRQ0_INTE_SM1_BITS | PIO_IRQ0_INTE_SM2_BITS | PIO_IRQ0_INTE_SM3_BITS;
     
     // If there are more than 4 pins, PIO1 must also be used
+    // FIXME: this is the weirdest issue...the program freezes, but only on the Pico W when using PIO1 and after a few ms...what??
     if (num_pins > 4) {
         FBW_DEBUG_printf("[pwm] loading PWM IN into PIO1 with %d state machines\n", num_pins - 4);
         uint offset1 = pio_add_program(pio1, &pwm_program);

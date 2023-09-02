@@ -9,9 +9,9 @@ add_library(fbw_modes
 )
 
 target_link_libraries(fbw_modes
-    pico_multicore
-    pico_time
     fbw_io
     fbw_lib
     fbw_wifly
+    pico_base
+    pico_time
 )

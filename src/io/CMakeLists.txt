@@ -10,14 +10,14 @@ add_library(fbw_io
     servo.c
     switch.c
 )
+
 pico_generate_pio_header(fbw_io ${CMAKE_CURRENT_LIST_DIR}/pwm.pio)
 
 target_link_libraries(fbw_io
-    pico_binary_info
-    pico_platform
-    pico_stdio
-    pico_stdlib
-    pico_time
+    fbw_lib
+    fbw_modes
+    fbw_wifly
+    hardware_clocks
     hardware_flash
     hardware_gpio
     hardware_i2c
@@ -26,15 +26,10 @@ target_link_libraries(fbw_io
     hardware_pwm
     hardware_sync
     hardware_uart
-    fbw_lib
-    fbw_modes
-    fbw_wifly
+    pico_base
+    pico_platform
+    pico_runtime
+    pico_stdio
+    pico_stdlib # IO is broken without this for some reason
+    pico_time
 )
-
-if ("$CACHE{PICO_BOARD}" STREQUAL "pico_w")
-    target_link_libraries(fbw_io pico_cyw43_arch_none)
-endif ()
-
-# Wi-Fly is always enabled in some capacity (to allow for the API to interact with it regardless of Pico W).
-# LWIP and the whole HTTP stack only gets compiled if the Pico W is detected (this is all done in the Wi-Fly subdirectory).
-add_subdirectory(wifly)

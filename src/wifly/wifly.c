@@ -16,13 +16,13 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
-#include "pico/config.h"
+#include "pico/config.h" // For board detection
 #include "pico/types.h"
 #ifdef RASPBERRYPI_PICO_W
     #include "pico/cyw43_arch.h"
 #endif
 #define JSMN_HEADER // Only define once!
-#include "../../lib/jsmn.h"
+#include "../lib/jsmn.h"
 
 #ifdef RASPBERRYPI_PICO_W
     #include "tcp_ip/dhcp.h"
@@ -34,8 +34,8 @@
     TCP_SERVER_T *state;
 #endif
 
-#include "../../config.h"
-#include "../../info.h"
+#include "../config.h"
+#include "../lib/info.h"
 
 #include "wifly.h"
 

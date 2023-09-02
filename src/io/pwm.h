@@ -12,7 +12,7 @@
  * @param pin_list the list of pins to enable PWM input on
  * @param num_pins the number of pins you are enabling PWM input on (1-8)
 */
-void pwm_enable(uint *pin_list, uint num_pins);
+void pwm_enable(uint pin_list[], uint num_pins);
 
 /**
  * @param pin the number of the pin to read (0-7)

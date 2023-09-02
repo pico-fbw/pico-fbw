@@ -20,7 +20,7 @@
 
 #include "../wifly.h"
 
-#include "../../../config.h"
+#include "../../config.h"
 
 #include "dns.h"
 

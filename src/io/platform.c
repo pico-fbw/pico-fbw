@@ -9,7 +9,7 @@
 
 #include "error.h"
 
-#include "../info.h"
+#include "../lib/info.h"
 
 #include "platform.h"
 

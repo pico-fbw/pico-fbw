@@ -11,7 +11,7 @@
 #include "../io/flash.h"
 #include "../io/imu.h"
 #include "../io/gps.h"
-#include "../io/wifly/wifly.h"
+#include "../wifly/wifly.h"
 
 #include "../config.h"
 

@@ -19,7 +19,7 @@
 #include "dhcp.h"
 #include "dns.h"
 
-#include "../../../config.h"
+#include "../../config.h"
 
 #include "tcp.h"
 
