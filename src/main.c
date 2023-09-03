@@ -74,18 +74,18 @@ int main() {
     }
 
     // PWM (in)
-    uint pin_list[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, INPUT_SW_PIN, INPUT_THR_PIN};
-    uint num_pins = 5;
+    uint pins[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, INPUT_SW_PIN, INPUT_THR_PIN};
+    uint num_pins = (sizeof(pins) / sizeof(pins[0]));
     float deviations[] = {90.0f, 90.0f, 90.0f, 0.0f, 0.0f}; // We expect all controls to be centered except switch and throttle
     FBW_DEBUG_printf("[boot] enabling PWM\n");
-    pwm_enable(pin_list, num_pins);
+    pwm_enable(pins, num_pins);
     FBW_DEBUG_printf("[boot] checking for PWM calibration\n");
     if (pwm_isCalibrated() != 0) {
         if (pwm_isCalibrated() == -1) {
             FBW_DEBUG_printf("[boot] PWM calibration not found!\n");
             sleep_ms(2000); // Wait a few moments for tx/rx to set itself up
             FBW_DEBUG_printf("[boot] calibrating now...do not touch the transmitter!\n");
-            if (!pwm_calibrate(pin_list, num_pins, deviations, 2000, 2, 3) || pwm_isCalibrated() != 0) {
+            if (!pwm_calibrate(pins, num_pins, deviations, 2000, 2, 3) || pwm_isCalibrated() != 0) {
                 error_throw(ERROR_PWM, ERROR_LEVEL_FATAL, 500, 0, true, "PWM calibration failed!");
             } else {
                 FBW_DEBUG_printf("[boot] calibration successful!\n");
@@ -199,8 +199,6 @@ int main() {
         #ifdef API_ENABLED
             api_poll();
         #endif
-
-        printf("%f %f %f %f %f\n", pwm_readDeg(INPUT_AIL_PIN), pwm_readDeg(INPUT_ELEV_PIN), pwm_readDeg(INPUT_RUD_PIN), pwm_readDeg(INPUT_THR_PIN), pwm_readDeg(INPUT_SW_PIN));
     }
 
     return 0; // How did we get here?

@@ -16,6 +16,6 @@ void updateSwitch(uint8_t currentPos) {
     // the system's mode changes can persist and won't instantly be overrided.
     if (currentPos != pos) {
         pos = currentPos;
-        toMode(pos);
+        toMode((Mode)pos);
     }
 }

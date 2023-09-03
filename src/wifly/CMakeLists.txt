@@ -11,6 +11,8 @@ endif ()
 add_library(fbw_wifly ${wifly_sources})
 
 target_link_libraries(fbw_wifly
+    fbw_io
+    fbw_lib
     pico_base
     pico_stdlib
 )

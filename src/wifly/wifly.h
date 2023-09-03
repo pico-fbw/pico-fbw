@@ -80,4 +80,10 @@ const char *wifly_getFplanJson();
 */
 uint wifly_getWaypointCount();
 
+/**
+ * @return the number of GPS samples that must be collected.
+ * @note that this will be -1 if a flightplan has not yet been parsed and typically anywhere from 0-100 if it has been.
+*/
+int wifly_getNumGPSSamples();
+
 #endif // __WIFLY_H

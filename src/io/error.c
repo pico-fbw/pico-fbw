@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "pico/time.h"
+#include "pico/types.h"
 
 #include "platform.h"
 

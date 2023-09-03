@@ -16,6 +16,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include "pico/types.h"
 
 #include "hardware/i2c.h"
 #include "hardware/gpio.h"

@@ -12,6 +12,8 @@
 #include "../io/imu.h"
 #include "../io/servo.h"
 
+#include "../wifly/wifly.h"
+
 #include "auto.h"
 #include "direct.h"
 #include "hold.h"
@@ -85,8 +87,12 @@ void toMode(Mode newMode) {
                     }
                 #else
                     #ifdef GPS_ENABLED
-                        // TODO: have a way for auto mode to reengage if the gps becomes safe again bc this is usually due to bad DOP which fixes itself over time
+                        // TODO: have a way for auto mode to re-engage if the gps becomes safe again; this is usually due to bad DOP which fixes itself over time
                         if (gpsDataSafe) {
+                            // Check to see if we have to calibrate the GPS alt offset
+                            if (wifly_getNumGPSSamples() > 0) {
+                                gps_calibrateAltOffset(wifly_getNumGPSSamples());
+                            }
                             FBW_DEBUG_printf("[modes] entering auto mode\n");
                             if (mode_autoInit()) {
                                 currentMode = AUTO;

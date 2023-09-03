@@ -13,7 +13,8 @@ target_link_libraries(${PROJECT_NAME}
     pico_stdio
     pico_time
 )
-# Import Pico W specific libraries and set specific compiler definitions, also a few messages about board compatability
+
+# Import Pico W specific libraries and set specific compiler definitions
 if ("$CACHE{PICO_BOARD}" STREQUAL "pico" OR "$CACHE{PICO_BOARD}" STREQUAL "pico_w")
     message(STATUS "[pico-fbw] $CACHE{PICO_BOARD} is compatable")
 else ()
@@ -21,7 +22,7 @@ else ()
 endif ()
 if ("$CACHE{PICO_BOARD}" STREQUAL "pico_w")
     target_link_libraries(${PROJECT_NAME} pico_cyw43_arch_none)
-    # WIFLY_ENABLED now just basically serves as a stand-in for RASPBERRYPI_PICO_W due to recent changes
+    # WIFLY_ENABLED now just basically serves as a stand-in for RASPBERRYPI_PICO_W; it cannot be manually enabled/disabled
     # It's still used in a few places though, and the behavior could possibly be altered...
     add_compile_definitions(WIFLY_ENABLED)
     include_directories(${CMAKE_CURRENT_LIST_DIR}/wifly)
@@ -40,11 +41,10 @@ add_subdirectory(wifly)
 add_executable(pico-fbw-reset reset.c)
 pico_add_extra_outputs(pico-fbw-reset)
 target_link_libraries(pico-fbw-reset
-    pico_bootrom
     fbw_io
+    pico_bootrom
 )
 
-target_compile_options(pico-fbw-reset PRIVATE -Wall -Wextra)
 pico_set_binary_type(pico-fbw-reset no_flash) # set the executable to upload to RAM because we are dealing with erasing flash
 
 install(TARGETS pico-fbw-reset DESTINATION ${CMAKE_INSTALL_PREFIX})

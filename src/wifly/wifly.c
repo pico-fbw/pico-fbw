@@ -34,6 +34,8 @@
     TCP_SERVER_T *state;
 #endif
 
+#include "../io/gps.h"
+
 #include "../config.h"
 #include "../lib/info.h"
 
@@ -46,10 +48,7 @@ static uint waypoint_count = 0;
 
 static char *fplanJson = NULL; // Once the flightplan is downloaded it will be stored here and NOT freed!
 
-uint numGpsSamples = 0; // Holds the number of GPS samples to be taken (if other than zero) once the flightplan has been parsed
-
-// TODO: somehow activate gps calibration function
-// I tried to accomplish this for a few hours and I'm just giving up--all everything does is crash the Pico :(
+int numGpsSamples = -1; // Holds the number of GPS samples to be taken (if other than zero) once the flightplan has been parsed
 
 static inline void url_decode(char *str) {
     char *p = str;
@@ -109,7 +108,7 @@ static inline void url_decode(char *str) {
 
 int wifly_genPageContent(char *result, size_t max_result_len) {
     char color[8];
-    char msg[130]; // change this if the longest message gets any larger, this is too small for me to implement malloc and such
+    char msg[165]; // change this if the longest message gets any larger, this is too small for me to implement malloc and such
     switch(fplanStatus) {
         case WIFLY_STATUS_AWAITING:
             snprintf(color, sizeof(color), WIFLY_HEX_INACTIVE);
@@ -121,7 +120,8 @@ int wifly_genPageContent(char *result, size_t max_result_len) {
             break;
         case WIFLY_STATUS_GPS_OFFSET:
             snprintf(color, sizeof(color), WIFLY_HEX_OK);
-            snprintf(msg, sizeof(msg), "Flightplan successfully uploaded, please wait for the altitude offset to calculate.<br>Estimated time: %ds", numGpsSamples);
+            snprintf(msg, sizeof(msg), "Flightplan successfully uploaded!<br><br>When ready, please engage auto mode to calibrate the GPS."
+                                       "<br>Auto mode will be automatically disengaged once complete.");
             break;
         case WIFLY_ERR_PARSE:
             snprintf(color, sizeof(color), WIFLY_HEX_ERR);
@@ -137,7 +137,7 @@ int wifly_genPageContent(char *result, size_t max_result_len) {
             break;
         case WIFLY_WARN_FW_VERSION:
             snprintf(color, sizeof(color), WIFLY_HEX_WARN);
-            snprintf(msg, sizeof(msg), "<b>Warning: </b> there is a new firmware version available!");
+            snprintf(msg, sizeof(msg), "<b>Warning:</b> there is a new firmware version available!");
             break;   
         default:
             return 0;
@@ -205,22 +205,6 @@ bool wifly_parseFplan(const char *fplan) {
                         return false;
                     }
                     has_version = true;
-                } else if (strcmp(field_name, "gps_samples") == 0) {
-                    char gpsSamples[25];
-                    strncpy(gpsSamples, decoded + tokens[i + 1].start, tokens[i + 1].end - tokens[i + 1].start);
-                    gpsSamples[tokens[i + 1].end - tokens[i + 1].start] = '\0';
-                    numGpsSamples = atoi(gpsSamples);
-                    // We expect a value between zero and 100 (only calculate if non-zero)
-                    if (numGpsSamples <= 100 && numGpsSamples >= 0) {
-                        WIFLY_DEBUG_printf("[wifly] GPS num offset samples: %s\n", gpsSamples);
-                        if (numGpsSamples != 0) {
-                            status = WIFLY_STATUS_GPS_OFFSET;
-                        }
-                    } else {
-                        status = WIFLY_ERR_PARSE;
-                        return false;
-                    }
-                    has_gps_samples = true;
                 } else if (strcmp(field_name, "version_fw") == 0) {
                     // Even though version_fw comes before gps_samples in the JSON format, the parse is ordered in this way to display the warning message
                     char versionFw[25];
@@ -250,6 +234,22 @@ bool wifly_parseFplan(const char *fplan) {
                         FBW_DEBUG_printf("[wifly] Version is a prerelease\nThanks for contributing :)\n");
                     }
                     has_version_fw = true;
+                } else if (strcmp(field_name, "gps_samples") == 0) {
+                    char gpsSamples[25];
+                    strncpy(gpsSamples, decoded + tokens[i + 1].start, tokens[i + 1].end - tokens[i + 1].start);
+                    gpsSamples[tokens[i + 1].end - tokens[i + 1].start] = '\0';
+                    numGpsSamples = atoi(gpsSamples);
+                    // We expect a value between zero and 100 (only calculate if non-zero)
+                    if (numGpsSamples <= 100 && numGpsSamples >= 0) {
+                        WIFLY_DEBUG_printf("[wifly] GPS num offset samples: %s\n", gpsSamples);
+                        if (numGpsSamples != 0) {
+                            if (status == WIFLY_STATUS_OK) status = WIFLY_STATUS_GPS_OFFSET; // Only replace the status if it is still OK (no warnings yet)
+                        }
+                    } else {
+                        status = WIFLY_ERR_PARSE;
+                        return false;
+                    }
+                    has_gps_samples = true;
                 } else if (strcmp(field_name, "waypoints") == 0) {
                     if (tokens[i + 1].type == JSMN_ARRAY) {
                         waypoint_count = tokens[i + 1].size;
@@ -372,3 +372,5 @@ Waypoint *wifly_getFplan() { return waypoints; }
 const char *wifly_getFplanJson() { return fplanJson; }
 
 uint wifly_getWaypointCount() { return waypoint_count; }
+
+int wifly_getNumGPSSamples() { return numGpsSamples; }

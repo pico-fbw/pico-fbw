@@ -233,14 +233,21 @@ bool pwm_calibrate(uint pin_list[], uint num_pins, float deviations[], uint num_
                 FBW_DEBUG_printf("ERROR: [FBW-500] pin %d is not a valid pin to calibrate!\n", pin);
                 return false;
         }
-        calibration_data[loc] = final_difference / run_times;
-    }
-    // Check values one last time and then write to flash
-    for (uint8_t i = 0; i < num_pins; i++) {
-        if (!WITHIN_MAX_CALIBRATION_OFFSET(calibration_data[i + 1])) {
-            FBW_DEBUG_printf("ERROR: [FBW-500] calibration value %d is too high!\n", i + 1);
-            return false;
+        // Check to ensure the value is within limits before adding it to be written
+        if (!WITHIN_MAX_CALIBRATION_OFFSET(final_difference / run_times)) {
+            if (pin == INPUT_SW_PIN) {
+                // The switch pin is a little special; it can have high offsets but only if they are negative, otherwise modes won't register properly
+                if ((final_difference / run_times) < -200.0f || (final_difference / run_times) > MAX_CALIBRATION_OFFSET) {
+                    goto error;
+                }
+            } else {
+                goto error;
+            }
+            error:
+                FBW_DEBUG_printf("ERROR: [FBW-500] pin %d's calibration value is too high!\n", pin);
+                return false;
         }
+        calibration_data[loc] = final_difference / run_times;
     }
     FBW_DEBUG_printf("[pwm] writing calibration data to flash\n");
     flash_write(FLASH_SECTOR_PWM, calibration_data);
@@ -252,9 +259,17 @@ int pwm_isCalibrated() {
     // Read the calibration flag
     if (flash_read(FLASH_SECTOR_PWM, 0) == FLAG_PWM) {
         // Ensure the values are within bounds before we give the okay
-        for (uint8_t i = 0; i < (sizeof(states) / sizeof(states[0])); i++) {
-            if (!WITHIN_MAX_CALIBRATION_OFFSET(pwmOffsetOf(i))) {
-                return -2;
+        uint pins[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, INPUT_SW_PIN, INPUT_THR_PIN};
+        uint num_pins = (sizeof(pins) / sizeof(pins[0]));
+        for (uint i = 0; i < num_pins; i++) {
+            if (!WITHIN_MAX_CALIBRATION_OFFSET(pwmOffsetOf(pins[i]))) {
+                if (pwmOffsetOf(pins[i]) == INPUT_SW_PIN) {
+                    if (pwmOffsetOf(pins[i]) < -200.0f || pwmOffsetOf(pins[i]) > MAX_CALIBRATION_OFFSET) {
+                        return -2;
+                    }
+                } else {
+                    return -2;
+                }
             }
         }
         return 0;
