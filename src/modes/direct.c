@@ -21,8 +21,8 @@
 */
 
 void mode_direct() {
-    servo_set(SERVO_AIL_PIN, pwm_readDeg(0));
-    servo_set(SERVO_ELEV_PIN, pwm_readDeg(1));
-    servo_set(SERVO_RUD_PIN, pwm_readDeg(2));
+    servo_set(SERVO_AIL_PIN, pwm_readDeg(INPUT_AIL_PIN));
+    servo_set(SERVO_ELEV_PIN, pwm_readDeg(INPUT_ELEV_PIN));
+    servo_set(SERVO_RUD_PIN, pwm_readDeg(INPUT_RUD_PIN));
     // esc_set(ESC_THR_PIN, pwm_readThr(PWM_THR_PIN));
 }

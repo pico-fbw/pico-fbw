@@ -16,20 +16,23 @@
  * 
  * 0         |  Boot
  *           |  0 - Flag
+ *           |  1 - unused
+ *           |  2 - unused
+ *           |  3 - unused
+ *           |  4 - unused
+ *           |  5 - unused
+ *           |  6 - unused
+ *           |  7 - unused
  * 
- * 1         |  PWM0 calibration flag / data
+ * 1         |  PWM calibration flag / data
  *           |  0 - Flag
- *           |  1 - Pin 0 offset
- *           |  2 - Pin 1 offset
- *           |  3 - Pin 2 offset
- *           |  4 - Pin 3 offset
- * 
- * 2         |  PWM1 calibration flag / data
- *           |  0 - Flag
- *           |  1 - Pin 4 offset
- *           |  2 - Pin 5 offset
- *           |  3 - Pin 6 offset
- *           |  4 - Pin 7 offset
+ *           |  1 - INPUT_AIL_PIN offset
+ *           |  2 - INPUT_ELEV_PIN offset
+ *           |  3 - INPUT_RUD_PIN offset
+ *           |  4 - INPUT_SW_PIN offset
+ *           |  5 - INPUT_THR_PIN offset
+ *           |  6 - unused
+ *           |  7 - unused
  * 
  * 3         |  PID tuning flag / data
  *           |  0 - Flag
@@ -39,6 +42,7 @@
  *           |  4 - Pitch kP
  *           |  5 - Pitch tI
  *           |  6 - Pitch tD
+ *           |  7 - unused
  * 
  * 4         |  IMU axis mapping and direction flag / data
  *           |  0 - Flag
@@ -48,13 +52,13 @@
  *           |  4 - X axis direction
  *           |  5 - Y axis direction
  *           |  6 - Z axis direction
+ *           |  7 - unused
 */
 
-#define FLASH_MIN_SECTOR FLASH_SECTOR_PWM0
+#define FLASH_MIN_SECTOR FLASH_SECTOR_PWM
 typedef enum FlashSector {
     FLASH_SECTOR_BOOT,
-    FLASH_SECTOR_PWM0,
-    FLASH_SECTOR_PWM1,
+    FLASH_SECTOR_PWM,
     FLASH_SECTOR_IMU,
     FLASH_SECTOR_PID
 } FlashSector;

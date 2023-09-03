@@ -32,13 +32,9 @@ This will be quite a small value--the setpoint is calculated many times per seco
 
 /** @section general */
 
-/* Define the type of mode switch you are using, 3-pos is default and recommended. */
+/* Define the type of mode switch you are using, 3-pos is default and highly recommended. */
 #define SWITCH_3_POS
 // #define SWITCH_2_POS
-
-/* Define if you want the system to calibrate each of your input PWM channels seperately.
-If not defined, the system will only sample channel 0 and apply that value to all channels. */
-#define CONFIGURE_INPUTS_SEPERATELY
 
 /* The maximum value the system will accept as a calibration offset value for PWM input signals.
 If any of the calibration (aileron, elevator, rudder, or switch) channels are larger than this value, the system will throw the error FBW-500 and fail to initialize.

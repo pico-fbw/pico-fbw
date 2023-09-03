@@ -6,40 +6,28 @@
 */
 #define WITHIN_MAX_CALIBRATION_OFFSET(value) ((value) >= -MAX_CALIBRATION_OFFSET && (value) <= MAX_CALIBRATION_OFFSET)
 
+/* You may wonder why there is a limit of seven pins even though there are eight state machines.
+This is because the Pico W reserves one state machine for itself, and even though we could use the full eight on a regular Pico,
+this keeps compatability between models. */
+
 /**
  * Enables PWM input functionality on the specified pins.
- * Up to eight pins can be enabled; over four will use PIO1 in addition to PIO0.
+ * Up to seven pins can be enabled; attempting to use over four will use PIO1 in addition to PIO0 by default.
  * @param pin_list the list of pins to enable PWM input on
- * @param num_pins the number of pins you are enabling PWM input on (1-8)
+ * @param num_pins the number of pins you are enabling PWM input on (1-7)
 */
 void pwm_enable(uint pin_list[], uint num_pins);
 
 /**
- * @param pin the number of the pin to read (0-7)
- * @return the pulsewidth of the specified pin.
-*/
-float pwm_readPulseWidth(uint pin);
-
-/**
- * @param pin the number of the pin to read (0-7)
- * @return the duty cycle of the specified pin.
-*/
-float pwm_readDutyCycle(uint pin);
-
-/**
- * @param pin the number of the pin to read (0-7)
- * @return the period of the specified pin.
-*/
-float pwm_readPeriod(uint pin);
-
-/**
- * @param pin the number of the pin to read (0-7)
+ * @param pin the the GPIO pin to read (must have been already initalized)
  * @return the calculated degree value derived from the pulsewidth on that pin.
 */
 float pwm_readDeg(uint pin);
 
 /**
- * Samples all initalized pins for deviation from a specified value for a specified number of samples, then saves that offset value to flash.
+ * Samples a list of pins for deviation from a specified value for a specified number of samples, then saves that offset value to flash.
+ * @param pin_list the list of pins to calibrate
+ * @param num_pins the number of pins in the list
  * @param deviations the value we should be seeing on each pin
  * @param num_samples the number of times to sample the pin for deviation
  * @param sample_delay_ms the delay between samples
@@ -47,7 +35,7 @@ float pwm_readDeg(uint pin);
  * 
  * @return true if the calibration was successful, false if not
 */
-bool pwm_calibrate(float deviations[], uint num_samples, uint sample_delay_ms, uint run_times);
+bool pwm_calibrate(uint pin_list[], uint num_pins, float deviations[], uint num_samples, uint sample_delay_ms, uint run_times);
 
 /**
  * Checks if the PWM calibration has been run before.

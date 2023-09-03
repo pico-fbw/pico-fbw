@@ -40,9 +40,9 @@ void mode_normalInit() {
 void mode_normal() {
     // Refresh flight data and input data from rx
     flight_update((double)rollSet, (double)pitchSet, (double)yawInput, overrideYaw);
-    rollInput = pwm_readDeg(0) - 90;
-    pitchInput = pwm_readDeg(1) - 90;
-    yawInput = pwm_readDeg(2) - 90;
+    rollInput = pwm_readDeg(INPUT_AIL_PIN) - 90;
+    pitchInput = pwm_readDeg(INPUT_ELEV_PIN) - 90;
+    yawInput = pwm_readDeg(INPUT_RUD_PIN) - 90;
     
     // Check for overrides
     if (rollInput > DEADBAND_VALUE || rollInput < -DEADBAND_VALUE || pitchInput > DEADBAND_VALUE || pitchInput < -DEADBAND_VALUE || yawInput > DEADBAND_VALUE || yawInput < -DEADBAND_VALUE) {
