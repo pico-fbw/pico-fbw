@@ -32,6 +32,7 @@
 
 #include "modes/modes.h"
 
+#include "autoconfig.h"
 #include "config.h"
 #include "validator.h"
 
@@ -74,8 +75,12 @@ int main() {
     }
 
     // PWM (in)
-    uint pins[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, INPUT_SW_PIN, INPUT_THR_PIN};
-    uint num_pins = (sizeof(pins) / sizeof(pins[0]));
+    #ifdef ATHR_ENABLED
+        uint pins[NUM_INPUT_PINS] = {INPUT0, INPUT1, INPUT2, INPUT_SW_PIN, INPUT_THR_PIN};
+    #else
+        uint pins[NUM_INPUT_PINS] = {INPUT0, INPUT1, INPUT2, INPUT_SW_PIN};
+    #endif
+    uint num_pins = NUM_INPUT_PINS;
     float deviations[] = {90.0f, 90.0f, 90.0f, 0.0f, 0.0f}; // We expect all controls to be centered except switch and throttle
     FBW_DEBUG_printf("[boot] enabling PWM\n");
     pwm_enable(pins, num_pins);

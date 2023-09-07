@@ -7,12 +7,42 @@
 
 
 
+/** @section general */
+
+/* Define the type of controls you are using. */
+#define CONTROL_3AXIS // Also known as "conventional" controls. Uses the typical three control surfaces/axes (aileron, elevator, rudder).
+// #define CONTROL_FLYINGWING // Uses "elevons" (mixed elevator and aileron) and no rudder.
+
+/* Define to enable the autothrottle. Commenting (disabling) this means you are not required to plug in/pass through a throttle input,
+but you will not have access to auto mode (the only place where the autothrottle is currently used). */
+#define ATHR_ENABLED
+// TODO: give this ^ functionality
+
+/* Define the type of mode switch you are using, 3-pos is default and highly recommended. */
+// TODO: change things like these to enums (especially when I [hopefully] switch to runtime config?)
+#define SWITCH_3_POS
+// #define SWITCH_2_POS
+
+/* The maximum value the system will accept as a calibration offset value for PWM input signals.
+If any of the calibration (aileron, elevator, rudder, or switch) channels are larger than this value, the system will throw the error FBW-500 and fail to initialize.
+Increase this value if you are experiening error FBW-500, however note you may be unprotected from bad calibration data. */
+#define MAX_CALIBRATION_OFFSET 20
+
+/* The frequency to run your servos at (almost all are 50 and you shouldn't have to touch this). */
+#define SERVO_HZ 50
+
+/* The frequency to run your ESC at (again, 50 should work in almost all cases). */
+#define ESC_HZ 50
+
+
+
 /** @section control */
 
 /* Values from the reciever are multiplied by this in normal mode.
 Smaller values mean handling will be more sluggish like a larger plane, and larger values mean handling will be more agile like a typical RC plane.
 This will be quite a small value--the setpoint is calculated many times per second! */
 #define SETPOINT_SMOOTHING_VALUE 0.00075
+// TODO: better name for ^ this and below?
 
 /* Decides how much the aileron input is scaled up/down to become the rudder input during turns, does not apply during direct mode. */
 #define RUDDER_TURNING_VALUE 1.5
@@ -30,24 +60,6 @@ This will be quite a small value--the setpoint is calculated many times per seco
 #define THROTTLE_MAX_TIME 5
 
 
-/** @section general */
-
-/* Define the type of mode switch you are using, 3-pos is default and highly recommended. */
-#define SWITCH_3_POS
-// #define SWITCH_2_POS
-
-/* The maximum value the system will accept as a calibration offset value for PWM input signals.
-If any of the calibration (aileron, elevator, rudder, or switch) channels are larger than this value, the system will throw the error FBW-500 and fail to initialize.
-Increase this value if you are experiening error FBW-500, however note you may be unprotected from bad calibration data. */
-#define MAX_CALIBRATION_OFFSET 20
-
-/* The frequency to run your servos at (almost all are 50 and you shouldn't have to touch this). */
-#define SERVO_HZ 50
-
-/* The frequency to run your ESC at (again, 50 should work in almost all cases). */
-#define ESC_HZ 50
-
-
 
 /** @section pins
  * Note that all PWM input pins must be mapped to a GPIO pin on a PWM_B channel.
@@ -55,21 +67,35 @@ Increase this value if you are experiening error FBW-500, however note you may b
  * Output pins do not have this limitation (they are controllable by all PWM channels which are present on almost all pins).
 */
 
-#define INPUT_AIL_PIN 1 // Pin that the PWM signal wire from the reciever AILERON channel is connected to.
-#define SERVO_AIL_PIN 2 // Pin that the PWM wire on the AILERON servo is connected to.
-// #define REVERSE_SERVO_AIL // Uncomment to reverse the servo's direction.
-// TODO: add the functionality to servo reversing for this ^ as well as elev and rud below
+#if defined(CONTROL_3AXIS)
+	#define INPUT_AIL_PIN 1 // Pin that the PWM signal wire from the reciever AILERON channel is connected to.
+	#define SERVO_AIL_PIN 2 // Pin that the PWM wire on the AILERON servo is connected to.
+	// #define REVERSE_SERVO_AIL // Uncomment to reverse the servo's direction.
+	// TODO: add the functionality to servo reversing for this ^ as well as elev and rud below
 
-#define INPUT_ELEV_PIN 3 // Pin that the PWM signal wire from the reciever ELEVATOR channel is connected to.
-#define SERVO_ELEV_PIN 4 // Pin that the PWM wire on the ELEVATOR servo is connected to.
-// #define REVERSE_SERVO_ELEV // Uncomment to reverse the servo's direction.
+	#define INPUT_ELEV_PIN 3 // Pin that the PWM signal wire from the reciever ELEVATOR channel is connected to.
+	#define SERVO_ELEV_PIN 4 // Pin that the PWM wire on the ELEVATOR servo is connected to.
+	// #define REVERSE_SERVO_ELEV // Uncomment to reverse the servo's direction.
 
-#define INPUT_RUD_PIN 5 // Pin that the PWM signal wire from the reciever RUDDER channel is connected to.
-#define SERVO_RUD_PIN 6 // Pin that the PWM wire on the RUDDER servo is connected to.
-// #define REVERSE_SERVO_RUD // Uncomment to reverse the servo's direction.
+	#define INPUT_RUD_PIN 5 // Pin that the PWM signal wire from the reciever RUDDER channel is connected to.
+	#define SERVO_RUD_PIN 6 // Pin that the PWM wire on the RUDDER servo is connected to.
+	// #define REVERSE_SERVO_RUD // Uncomment to reverse the servo's direction.
+#elif defined(CONTROL_FLYINGWING)
+	/* Note that elevons are identified as if being viewed from the back of the aircraft. */
+	
+	#define INPUT_ELEVON_L_PIN 1 // Pin that the PWM signal wire from the reciever ELEVON LEFT channel is connected to.
+	#define SERVO_ELEVON_L_PIN 2 // Pin that the PWM wire on the ELEVON LEFT servo is connected to.
+	// #define REVERSE_SERVO_ELEVON_L // Uncomment to reverse the servo's direction.
 
-#define INPUT_THR_PIN 7 // Pin that the PWM signal wire from the reciever THROTTLE channel is connected to.
-#define ESC_THR_PIN 8 // Pin that the PWM wire on the THROTTLE ESC is connected to.
+	#define INPUT_ELEVON_R_PIN 3 // Pin that the PWM signal wire from the reciever ELEVON RIGHT channel is connected to.
+	#define SERVO_ELEVON_R_PIN 4 // Pin that the PWM wire on the ELEVON RIGHT servo is connected to.
+	// #define REVERSE_SERVO_ELEVON_R // Uncomment to reverse the servo's direction.
+#endif
+
+#ifdef ATHR_ENABLED
+	#define INPUT_THR_PIN 7 // Pin that the PWM signal wire from the reciever THROTTLE channel is connected to.
+	#define ESC_THR_PIN 8 // Pin that the PWM wire on the THROTTLE ESC is connected to.
+#endif
 
 #define INPUT_SW_PIN 9 // Pin that the PWM signal wire from the reciever SWITCH channel is connected to.
 

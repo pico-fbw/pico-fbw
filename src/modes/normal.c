@@ -33,18 +33,16 @@ static bool overrideYaw = false;
 static bool overrideSetpoints = false;
 
 void mode_normalInit() {
-    // Initialize (clear) PIDs
-    flight_init();
+    flight_init(); // Initialize baseline flight system
 }
 
 void mode_normal() {
-    // Refresh flight data and input data from rx
-    flight_update((double)rollSet, (double)pitchSet, (double)yawInput, overrideYaw);
+    // Refresh input data from rx
     rollInput = pwm_readDeg(INPUT_AIL_PIN) - 90;
     pitchInput = pwm_readDeg(INPUT_ELEV_PIN) - 90;
     yawInput = pwm_readDeg(INPUT_RUD_PIN) - 90;
     
-    // Check for overrides
+    // Check for manual overrides of externally set setpoints
     if (rollInput > DEADBAND_VALUE || rollInput < -DEADBAND_VALUE || pitchInput > DEADBAND_VALUE || pitchInput < -DEADBAND_VALUE || yawInput > DEADBAND_VALUE || yawInput < -DEADBAND_VALUE) {
         overrideSetpoints = false;
     }
@@ -94,6 +92,9 @@ void mode_normal() {
     } else {
         overrideYaw = false;
     }
+
+    // Update the flight system with calculated setpoints
+    flight_update((double)rollSet, (double)pitchSet, (double)yawInput, overrideYaw);
 }
 
 void mode_normalDeinit() {

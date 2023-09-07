@@ -1,17 +1,14 @@
 #ifndef __VALIDATOR_H
 #define __VALIDATOR_H
 
-/* This file contains the validation of the config options */
+/* This file contains the validation of the config options. */
 
+#include "autoconfig.h"
 #include "config.h"
 
 #if !defined(RASPBERRYPI_PICO) && !defined(RASPBERRYPI_PICO_W)
     #warning Neither a Pico or Pico W build target were found, some functionality may not work as intended.
 #endif
-
-/** @section control */
-
-// Sadly the preprocessor doesn't support floating point comparisons so we can't check these
 
 /** @section general */
 
@@ -19,65 +16,13 @@
     #error Only one switch position may be defined.
 #endif
 
+/** @section control */
+
+// Sadly the preprocessor doesn't support floating point comparisons so we can't check these
+
 /** @section pins */
 
-#define PINS_EQUAL(p1, p2) ((p1) == (p2))
-
-#if PINS_EQUAL(INPUT_AIL_PIN, SERVO_AIL_PIN) || \
-    PINS_EQUAL(INPUT_ELEV_PIN, SERVO_ELEV_PIN) || \
-    PINS_EQUAL(INPUT_RUD_PIN, SERVO_RUD_PIN) || \
-    PINS_EQUAL(INPUT_AIL_PIN, INPUT_SW_PIN) || \
-    PINS_EQUAL(INPUT_AIL_PIN, INPUT_THR_PIN) || \
-    PINS_EQUAL(INPUT_AIL_PIN, IMU_SDA_PIN) || \
-    PINS_EQUAL(INPUT_AIL_PIN, IMU_SCL_PIN) || \
-    PINS_EQUAL(INPUT_AIL_PIN, GPS_TX_PIN) || \
-    PINS_EQUAL(INPUT_AIL_PIN, GPS_RX_PIN) || \
-    PINS_EQUAL(SERVO_AIL_PIN, INPUT_SW_PIN) || \
-    PINS_EQUAL(SERVO_AIL_PIN, INPUT_THR_PIN) || \
-    PINS_EQUAL(SERVO_AIL_PIN, IMU_SDA_PIN) || \
-    PINS_EQUAL(SERVO_AIL_PIN, IMU_SCL_PIN) || \
-    PINS_EQUAL(SERVO_AIL_PIN, GPS_TX_PIN) || \
-    PINS_EQUAL(SERVO_AIL_PIN, GPS_RX_PIN) || \
-    PINS_EQUAL(INPUT_ELEV_PIN, INPUT_SW_PIN) || \
-    PINS_EQUAL(INPUT_ELEV_PIN, INPUT_THR_PIN) || \
-    PINS_EQUAL(INPUT_ELEV_PIN, IMU_SDA_PIN) || \
-    PINS_EQUAL(INPUT_ELEV_PIN, IMU_SCL_PIN) || \
-    PINS_EQUAL(INPUT_ELEV_PIN, GPS_TX_PIN) || \
-    PINS_EQUAL(INPUT_ELEV_PIN, GPS_RX_PIN) || \
-    PINS_EQUAL(SERVO_ELEV_PIN, INPUT_SW_PIN) || \
-    PINS_EQUAL(SERVO_ELEV_PIN, INPUT_THR_PIN) || \
-    PINS_EQUAL(SERVO_ELEV_PIN, IMU_SDA_PIN) || \
-    PINS_EQUAL(SERVO_ELEV_PIN, IMU_SCL_PIN) || \
-    PINS_EQUAL(SERVO_ELEV_PIN, GPS_TX_PIN) || \
-    PINS_EQUAL(SERVO_ELEV_PIN, GPS_RX_PIN) || \
-    PINS_EQUAL(INPUT_RUD_PIN, INPUT_SW_PIN) || \
-    PINS_EQUAL(INPUT_RUD_PIN, INPUT_THR_PIN) || \
-    PINS_EQUAL(INPUT_RUD_PIN, IMU_SDA_PIN) || \
-    PINS_EQUAL(INPUT_RUD_PIN, IMU_SCL_PIN) || \
-    PINS_EQUAL(INPUT_RUD_PIN, GPS_TX_PIN) || \
-    PINS_EQUAL(INPUT_RUD_PIN, GPS_RX_PIN) || \
-    PINS_EQUAL(SERVO_RUD_PIN, INPUT_SW_PIN) || \
-    PINS_EQUAL(SERVO_RUD_PIN, INPUT_THR_PIN) || \
-    PINS_EQUAL(SERVO_RUD_PIN, IMU_SDA_PIN) || \
-    PINS_EQUAL(SERVO_RUD_PIN, IMU_SCL_PIN) || \
-    PINS_EQUAL(SERVO_RUD_PIN, GPS_TX_PIN) || \
-    PINS_EQUAL(SERVO_RUD_PIN, GPS_RX_PIN) || \
-    PINS_EQUAL(INPUT_SW_PIN, IMU_SDA_PIN) || \
-    PINS_EQUAL(INPUT_SW_PIN, IMU_SCL_PIN) || \
-    PINS_EQUAL(INPUT_SW_PIN, GPS_TX_PIN) || \
-    PINS_EQUAL(INPUT_SW_PIN, GPS_RX_PIN) || \
-    PINS_EQUAL(INPUT_THR_PIN, IMU_SDA_PIN) || \
-    PINS_EQUAL(INPUT_THR_PIN, IMU_SCL_PIN) || \
-    PINS_EQUAL(INPUT_THR_PIN, GPS_TX_PIN) || \
-    PINS_EQUAL(INPUT_THR_PIN, GPS_RX_PIN) || \
-    PINS_EQUAL(IMU_SDA_PIN, IMU_SCL_PIN) || \
-    PINS_EQUAL(IMU_SDA_PIN, GPS_TX_PIN) || \
-    PINS_EQUAL(IMU_SDA_PIN, GPS_RX_PIN) || \
-    PINS_EQUAL(IMU_SCL_PIN, GPS_TX_PIN) || \
-    PINS_EQUAL(IMU_SCL_PIN, GPS_RX_PIN) || \
-    PINS_EQUAL(GPS_TX_PIN, GPS_RX_PIN)
-    #error Two or more pins are the same. Pins must be unique.
-#endif
+// TODO: redo pin checks
 
 /** @section limits */
 
