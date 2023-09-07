@@ -20,6 +20,7 @@ set(SOURCES
     main.cpp
     resources/resources.qrc
     window.cpp
+    worker.cpp
 )
 
 # Build the executable

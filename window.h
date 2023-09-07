@@ -13,8 +13,10 @@
 #include <QSettings>
 #include <QString>
 #include <QTextEdit>
+#include <QThread>
 
 #include "messages.h"
+#include "worker.h"
 
 class Window : public QMainWindow {
     Q_OBJECT
@@ -40,16 +42,11 @@ private slots:
      * @note This function cannot be called standalone by the user, it will be called from loadProject() when needed.
     */
     bool downloadProject(QString filePath);
-    
-    /**
-     * @brief Builds the currently loaded project.
-     * @note This will fail if the project is not loaded.
-    */
-    void buildProject();
-    /**
-     * @brief Helper function to process CMake's output and provide updates.
-    */
-    void processCMakeOutput();
+
+    void startBuild();
+    void updateBuildProgress(int progress);
+    void updateBuildStep(QString step);
+    void finishBuild(bool success, QString error);\
 
     /**
      * @brief Handles the uploading of a recently built project to a connected Pico.
@@ -102,7 +99,8 @@ private:
 
     Model selectedModel = Model::MODEL0;
     
-    QProcess cmake;
+    Worker *worker;
+    QThread *workerThread;
 };
 
 #endif // WINDOW_H

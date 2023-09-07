@@ -6,7 +6,9 @@
 #include <QFileDialog>
 #include <QLineEdit>
 #include <QMessageBox>
+#include <QMetaObject>
 #include <QPushButton>
+#include <QStringList>
 #include <QSysInfo>
 #include <QTextStream>
 #include <QUrl>
@@ -73,7 +75,7 @@ Window::Window() : settings("pico-fbw", APP_NAME) {
     connect(loadAction, &QAction::triggered, this, &Window::loadProject);
     connect(model0Action, &QAction::triggered, this, [this]() { setModel(Model::MODEL0); });
     connect(model1Action, &QAction::triggered, this, [this]() { setModel(Model::MODEL1); });
-    connect(buildUploadAction, &QAction::triggered, this, &Window::buildProject);
+    connect(buildUploadAction, &QAction::triggered, this, &Window::startBuild);
     connect(exitAction, &QAction::triggered, this, &Window::close);
 
     connect(helpAction, &QAction::triggered, this, &Window::help);
@@ -127,7 +129,7 @@ Window::Window() : settings("pico-fbw", APP_NAME) {
 
     // Connect buttons to their various methods
     connect(loadButton, &QPushButton::clicked, this, &Window::loadProject);
-    connect(buildButton, &QPushButton::clicked, this, &Window::buildProject);
+    connect(buildButton, &QPushButton::clicked, this, &Window::startBuild);
     // Connect dropdown
     connect(picoModelSel, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, [this](int index) {
         if (index >= 0 && index < picoModelSel->count()) {
@@ -145,6 +147,16 @@ Window::Window() : settings("pico-fbw", APP_NAME) {
     QWidget *centralWidget = new QWidget(this);
     centralWidget->setLayout(mainLayout);
     setCentralWidget(centralWidget);
+
+    // We also take this time to spawn a new worker and move it to a seperate thread--this keeps the UI responsive when CMake is uhh killing the CPU
+    worker = new Worker();
+    workerThread = new QThread();
+
+    worker->moveToThread(workerThread);
+    connect(worker, &Worker::buildProgress, this, &Window::updateBuildProgress);
+    connect(worker, &Worker::buildStep, this, &Window::updateBuildStep);
+    connect(worker, &Worker::buildFinished, this, &Window::finishBuild);
+    workerThread->start();
 }
 
 void Window::loadProject() {
@@ -242,7 +254,7 @@ void Window::loadProject() {
 
 bool Window::downloadProject(QString filePath) {
     QStringList gitArgs;
-    gitArgs << "clone" << "https://github.com/MylesAndMore/pico-fbw.git" << filePath << "--branch" << "alpha";
+    gitArgs << "clone" << "https://github.com/MylesAndMore/pico-fbw.git" << filePath << "--branch" << "main";
     QProcess git;
     git.start("git", gitArgs);
     stepLabel->setText("<b>Downloading...</b>");
@@ -269,27 +281,13 @@ bool Window::downloadProject(QString filePath) {
     }
 }
 
-void Window::buildProject() {
+// FIXME: multithreading with the build process kind of works :tm: but really needs some bugfixing...it's too late so I'm going to do this later :)
+void Window::startBuild() {
     if (!goodProjectDir) {
         QMessageBox::critical(this, "Error", "Invalid project!");
         return;
     }
-
-    QStringList confArgs;
-    confArgs << "-B" << "build_pfc" << "-DPICO_SDK_FETCH_FROM_GIT=ON" << "-DCMAKE_BUILD_TYPE=Release"; // Arguments required for all models
-
-    // Create the correct cmake arguments for the selected model
-    switch (selectedModel) {
-        case MODEL0:
-            confArgs << MODEL0_ARGS;
-            break;
-        case MODEL1:
-            confArgs << MODEL1_ARGS;
-            break;
-        default:
-            QMessageBox::critical(this, "Error", "Invalid model!");
-            return;
-    }
+    buildButton->setDisabled(true); // Disable build button during process
 
     // Save the current content of the text editor into the config file
     QString configFilePath = projectDir + "/src/config.h";
@@ -303,81 +301,47 @@ void Window::buildProject() {
         return;
     }
 
-    // Spawn a process to configure the build directory for building (aka generate Makefiles)
-    cmake.setWorkingDirectory(projectDir);
-    cmake.start("cmake", confArgs);
-    connect(&cmake, SIGNAL(readyReadStandardOutput()), this, SLOT(processCMakeOutput()));
-    bool timedOut = !cmake.waitForFinished(20 * 1000); // 20 second timeout for configuration step
-    disconnect(&cmake, SIGNAL(readyReadStandardOutput()), this, SLOT(processCMakeOutput()));
-
-    if (cmake.exitCode() != 0) {
-        QMessageBox eMsg(QMessageBox::Critical, "Configuration Failed", "Build process failed during configuration step!<br>"
-                                                                        "Ensure you have all necessary components installed and have selected the correct directory.",
-                                                                        QMessageBox::Ok, this);
-        eMsg.setDetailedText(cmake.readAllStandardError());
-        eMsg.exec();
-        return;
-    } else if (timedOut) {
-        QMessageBox::critical(this, "Configuration Failed", "Build process failed during configuration step!<br><br>Timed out after 20 seconds.");
-        return;
+    // Create the correct cmake arguments for the selected model
+    QStringList confArgs;
+    confArgs << "-B" << "build_pfc" << "-DPICO_SDK_FETCH_FROM_GIT=ON" << "-DCMAKE_BUILD_TYPE=Release"; // Arguments required for all models
+    switch (selectedModel) {
+        case MODEL0:
+            confArgs << MODEL0_ARGS;
+            break;
+        case MODEL1:
+            confArgs << MODEL1_ARGS;
+            break;
+        default:
+            QMessageBox::critical(this, "Error", "Invalid model!");
+            return;
     }
-
-    // CMake's configuration step succeeded, now build the project
-    QStringList buildArgs;
-    buildArgs << "--build" << "build_pfc";
-    cmake.start("cmake", buildArgs);
-    connect(&cmake, SIGNAL(readyReadStandardOutput()), this, SLOT(processCMakeOutput()));
-    timedOut = !cmake.waitForFinished(100 * 1000); // 100 second timeout for build step
-    disconnect(&cmake, SIGNAL(readyReadStandardOutput()), this, SLOT(processCMakeOutput()));
-
-    if (cmake.exitCode() != 0) {
-        QMessageBox eMsg(QMessageBox::Critical, "Build Failed", "Build process failed during build step!", QMessageBox::Ok, this);
-        eMsg.setDetailedText(cmake.readAllStandardError());
-        eMsg.exec();
-        return;
-    } else if (timedOut) {
-        QMessageBox::critical(this, "Build Failed", "Build process failed during build step!<br><br>Timed out after 80 seconds.");
-        return;
-    }
-
-    // Build was also successful, prompt the user if they want to upload the firmware
-    QMessageBox::StandardButton reply = QMessageBox::question(this, "Build Successful", "Build process was successful!<br><br>"
-                                                                    "Would you like to upload the firmware now?",
-                                                              QMessageBox::Yes | QMessageBox::No);
-    if (reply == QMessageBox::Yes) {
-        handleUpload();
-    }
+    // Start the build process in a seperate thread and pass the args in
+    QMetaObject::invokeMethod(worker, "buildProject", Qt::QueuedConnection,
+                              Q_ARG(const QStringList&, confArgs),
+                              Q_ARG(const QString&, projectDir));
 }
 
-void Window::processCMakeOutput() {
-    // Fetch the current output from the CMake process
-    QByteArray output = cmake.readAllStandardOutput();
-    QString outputStr = QString::fromUtf8(output);
+void Window::updateBuildProgress(int progress) {
+    progressBar->setValue(progress);
+}
 
-    int percentIndex = outputStr.indexOf("%");
-    if (percentIndex != -1 && percentIndex >= 3) {
-        QString progressStr = outputStr.mid(percentIndex - 3, 3);
-        bool ok;
-        int progress = progressStr.toInt(&ok);
-        if (ok) {
-            progressBar->setValue(progress);
-            return;
-        }
-    }
+void Window::updateBuildStep(QString step) {
+    stepLabel->setText("<b>Building: </b> " + step);
+}
 
-    // Look for indications of build steps
-    QString dependencyPrefix = "Scanning dependencies of target ";
-    int dependencyIndex = outputStr.indexOf(dependencyPrefix);
-    if (dependencyIndex != -1) {
-        // Extract the target name substring
-        int targetStartIndex = dependencyIndex + dependencyPrefix.length();
-        int targetEndIndex = outputStr.indexOf('\n', targetStartIndex);
-        if (targetEndIndex != -1) {
-            QString targetName = outputStr.mid(targetStartIndex, targetEndIndex - targetStartIndex).trimmed();
-            // Update the step label with the target name
-            stepLabel->setText("<b>Building: </b>" + targetName);
-            return;
+void Window::finishBuild(bool success, QString error) {
+    buildButton->setEnabled(true);
+    if (success) {
+        // Build and config were successful, prompt the user if they want to upload the firmware
+        QMessageBox::StandardButton reply = QMessageBox::question(this, "Build Successful", "Build process was successful!<br><br>"
+                                                                        "Would you like to upload the firmware now?",
+                                                                QMessageBox::Yes | QMessageBox::No);
+        if (reply == QMessageBox::Yes) {
+            handleUpload();
         }
+    } else {
+        // Either build or config failed, display the error
+        QMessageBox::critical(this, "Build Failed", "Build process failed!<br><br>" + error);
     }
 }
 
