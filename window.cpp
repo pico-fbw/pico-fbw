@@ -162,6 +162,8 @@ void Window::loadProject() {
     // Check if the Shift key is held down; this will bypass all checks and go straight to select/download
     bool shiftPressed = QApplication::keyboardModifiers() & Qt::ShiftModifier;
     if (shiftPressed) {
+        // Additionally, also clear settings
+        settings.remove(SETTING_PROJECTDIR);
         goto shiftOverride;
     }
     // Try to find config.h, assuming we are in the root "pico-fbw" directory
