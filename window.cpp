@@ -1,14 +1,15 @@
 #include <QAbstractButton>
+#include <QApplication>
 #include <QCoreApplication>
 #include <QDesktopServices>
 #include <QDir>
 #include <QFile>
 #include <QFileDialog>
+#include <QKeyEvent>
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QMetaObject>
 #include <QPushButton>
-#include <QStringList>
 #include <QSysInfo>
 #include <QTextStream>
 #include <QUrl>
@@ -26,6 +27,8 @@ enum ButtonRoles {
     CancelButtonRole
 };
 
+// TODO: change to higher resolution image in resources; looks kind of bad on mac
+
 Window::Window() : settings("pico-fbw", APP_NAME) {
     setWindowTitle(APP_NAME);
 
@@ -34,40 +37,40 @@ Window::Window() : settings("pico-fbw", APP_NAME) {
 
     // File menu
     fileMenu = new QMenu("File", this);
-    loadAction = new QAction(BTN_LOAD_PROJECT, this);
+    loadAction = new QAction(FIELD_LOAD_PROJECT, this);
     loadAction->setShortcut(QKeySequence::Open);
-    loadAction->setToolTip(TOOLTIP_LOAD_PROJECT);
+    loadAction->setToolTip(TIP_LOAD_PROJECT);
     fileMenu->addAction(loadAction);
     fileMenu->addSeparator();
     selectModelSubmenu = new QMenu(FIELD_SELECT_MODEL, this);
     model0Action = new QAction(MODEL0_NAME, this);
     model1Action = new QAction(MODEL1_NAME, this);
-    selectModelSubmenu->setToolTip(TOOLTIP_SELECT_MODEL);
+    selectModelSubmenu->setToolTip(TIP_SELECT_MODEL);
     selectModelSubmenu->addAction(model0Action);
     selectModelSubmenu->addAction(model1Action);
     fileMenu->addMenu(selectModelSubmenu);
     fileMenu->addSeparator();
-    buildUploadAction = new QAction(BTN_BUILD_UPLOAD, this);
+    buildUploadAction = new QAction(FIELD_BUILD_UPLOAD, this);
     buildUploadAction->setShortcut(QKeySequence::Save);
-    buildUploadAction->setToolTip(TOOLTIP_BUILD_UPLOAD);
+    buildUploadAction->setToolTip(TIP_BUILD_UPLOAD);
     fileMenu->addAction(buildUploadAction);
     fileMenu->addSeparator();
-    exitAction = new QAction("Exit", this);
+    exitAction = new QAction(FIELD_EXIT, this);
     exitAction->setShortcut(QKeySequence::Quit);
     fileMenu->addAction(exitAction);
 
     // Help menu
-    helpMenu = new QMenu("Help", this);
-    helpAction = new QAction("Help", this);
+    helpMenu = new QMenu(FIELD_HELP, this);
+    helpAction = new QAction(FIELD_HELP, this);
     helpAction->setShortcut(QKeySequence::HelpContents);
     helpMenu->addAction(helpAction);
     helpMenu->addSeparator();
-    licensesAction = new QAction("Licenses", this);
+    licensesAction = new QAction(FIELD_LICENSES, this);
     helpMenu->addAction(licensesAction);
     helpMenu->addSeparator();
-    aboutQtAction = new QAction("About Qt", this);
+    aboutQtAction = new QAction(FIELD_ABOUTQT, this);
     helpMenu->addAction(aboutQtAction);
-    aboutAction = new QAction("About", this);
+    aboutAction = new QAction(FIELD_ABOUT, this);
     helpMenu->addAction(aboutAction);
     helpMenu->addSeparator();
 
@@ -75,7 +78,7 @@ Window::Window() : settings("pico-fbw", APP_NAME) {
     connect(loadAction, &QAction::triggered, this, &Window::loadProject);
     connect(model0Action, &QAction::triggered, this, [this]() { setModel(Model::MODEL0); });
     connect(model1Action, &QAction::triggered, this, [this]() { setModel(Model::MODEL1); });
-    connect(buildUploadAction, &QAction::triggered, this, &Window::startBuild);
+    connect(buildUploadAction, &QAction::triggered, this, &Window::buildProject);
     connect(exitAction, &QAction::triggered, this, &Window::close);
 
     connect(helpAction, &QAction::triggered, this, &Window::help);
@@ -92,18 +95,18 @@ Window::Window() : settings("pico-fbw", APP_NAME) {
 
     // TODO: maybe instead of a text editor, parse the file and have easily changeable widgets
     textEditor = new QTextEdit(this);
-    textEditor->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn); // FIXME: doesn't show up?
+    textEditor->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn); // FIXME: doesn't show up? (although should not be a problem if ^ is done)
     textEditor->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     textEditor->setLineWrapMode(QTextEdit::NoWrap);
     textEditor->setReadOnly(true); // Set as read-only until the config file is loaded
     mainLayout->addWidget(textEditor);
 
-    loadButton = new QPushButton(BTN_LOAD_PROJECT, this);
-    loadButton->setToolTip(TOOLTIP_LOAD_PROJECT);
+    loadButton = new QPushButton(FIELD_LOAD_PROJECT, this);
+    loadButton->setToolTip(TIP_LOAD_PROJECT);
     mainLayout->addWidget(loadButton);
 
     picoModelSel = new QComboBox(this);
-    picoModelSel->setToolTip(TOOLTIP_SELECT_MODEL);
+    picoModelSel->setToolTip(TIP_SELECT_MODEL);
     picoModelSel->setEditable(true);
     picoModelSel->lineEdit()->setReadOnly(true);
     picoModelSel->lineEdit()->setAlignment(Qt::AlignCenter);
@@ -115,8 +118,8 @@ Window::Window() : settings("pico-fbw", APP_NAME) {
     }
     mainLayout->addWidget(picoModelSel);
 
-    buildButton = new QPushButton(BTN_BUILD_UPLOAD, this);
-    buildButton->setToolTip(TOOLTIP_BUILD_UPLOAD);
+    buildButton = new QPushButton(FIELD_BUILD_UPLOAD, this);
+    buildButton->setToolTip(TIP_BUILD_UPLOAD);
     mainLayout->addWidget(buildButton);
 
     stepLabel = new QLabel(this);
@@ -129,7 +132,7 @@ Window::Window() : settings("pico-fbw", APP_NAME) {
 
     // Connect buttons to their various methods
     connect(loadButton, &QPushButton::clicked, this, &Window::loadProject);
-    connect(buildButton, &QPushButton::clicked, this, &Window::startBuild);
+    connect(buildButton, &QPushButton::clicked, this, &Window::buildProject);
     // Connect dropdown
     connect(picoModelSel, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, [this](int index) {
         if (index >= 0 && index < picoModelSel->count()) {
@@ -142,32 +145,26 @@ Window::Window() : settings("pico-fbw", APP_NAME) {
         }
     });
     // Load in dropdown/model default from settings
-    setModel((Model)settings.value("model").toInt());
+    setModel((Model)settings.value(SETTING_MODEL).toInt());
 
     QWidget *centralWidget = new QWidget(this);
     centralWidget->setLayout(mainLayout);
     setCentralWidget(centralWidget);
-
-    // We also take this time to spawn a new worker and move it to a seperate thread--this keeps the UI responsive when CMake is uhh killing the CPU
-    worker = new Worker();
-    workerThread = new QThread();
-
-    worker->moveToThread(workerThread);
-    connect(worker, &Worker::buildProgress, this, &Window::updateBuildProgress);
-    connect(worker, &Worker::buildStep, this, &Window::updateBuildStep);
-    connect(worker, &Worker::buildFinished, this, &Window::finishBuild);
-    workerThread->start();
 }
 
 void Window::loadProject() {
     goodProjectDir = false;
     QFile configFile;
-
-    // Try to find config.h, assuming we are in the root "pico-fbw" directory
     QString filePathRoot = QDir::currentPath() + "/config.h";
     QString filePathSrc = QDir::currentPath() + "/src/config.h";
     QFile configFileRoot(filePathRoot);
     QFile configFileSrc(filePathSrc);
+    // Check if the Shift key is held down; this will bypass all checks and go straight to select/download
+    bool shiftPressed = QApplication::keyboardModifiers() & Qt::ShiftModifier;
+    if (shiftPressed) {
+        goto shiftOverride;
+    }
+    // Try to find config.h, assuming we are in the root "pico-fbw" directory
     if (configFileRoot.exists()) {
         // Config file exists in root directory
         projectDir = QDir::currentPath();
@@ -177,46 +174,45 @@ void Window::loadProject() {
     } else {
         // Config could not be automatically found
         // First check so see if we have a project directory saved in settings, if not, prompt user to select or download one
-        if (settings.contains("projectDir")) {
-            projectDir = settings.value("projectDir").toString();
+        if (settings.contains(SETTING_PROJECTDIR)) {
+            projectDir = settings.value(SETTING_PROJECTDIR).toString();
         } else {
-            QMessageBox promptCreateSelect(this);
-            promptCreateSelect.setWindowTitle("Project Not Found");
-            promptCreateSelect.setText("A valid pico-fbw project could not be found.<br><br>What would you like to do?");
-            promptCreateSelect.setIcon(QMessageBox::Question);
+            shiftOverride:
+                QMessageBox promptCreateSelect(this);
+                promptCreateSelect.setWindowTitle(ERR_PROJNOTFOUND);
+                promptCreateSelect.setText(TIP_PROJNOTFOUND);
+                promptCreateSelect.setIcon(QMessageBox::Question);
 
-            QPushButton *createButton = promptCreateSelect.addButton(tr("Create New Project"), QMessageBox::ActionRole);
-            QPushButton *selectButton = promptCreateSelect.addButton(tr("Select Existing Project"), QMessageBox::ActionRole);
-            QPushButton *cancelButton = promptCreateSelect.addButton(QMessageBox::Cancel);
-            createButton->setProperty("customRole", CreateButtonRole);
-            selectButton->setProperty("customRole", SelectButtonRole);
-            cancelButton->setProperty("customRole", CancelButtonRole);
-            promptCreateSelect.setDefaultButton(createButton);
-            promptCreateSelect.exec();
+                QPushButton *createButton = promptCreateSelect.addButton(tr(TIP_NEWPROJ), QMessageBox::ActionRole);
+                QPushButton *selectButton = promptCreateSelect.addButton(tr(TIP_OPENPROJ), QMessageBox::ActionRole);
+                QPushButton *cancelButton = promptCreateSelect.addButton(QMessageBox::Cancel);
+                createButton->setProperty("customRole", CreateButtonRole);
+                selectButton->setProperty("customRole", SelectButtonRole);
+                cancelButton->setProperty("customRole", CancelButtonRole);
+                promptCreateSelect.setDefaultButton(createButton);
+                promptCreateSelect.exec();
 
-            QAbstractButton *clickedButton = promptCreateSelect.clickedButton();
-            int clickedButtonRole = clickedButton->property("customRole").toInt();
+                QAbstractButton *clickedButton = promptCreateSelect.clickedButton();
+                int clickedButtonRole = clickedButton->property("customRole").toInt();
 
-            switch (clickedButtonRole) {
-                case CreateButtonRole:
-                    projectDir = QFileDialog::getExistingDirectory(this, "Create a project directory");
-                    if (projectDir.isEmpty()) {
-                        // User canceled directory selection
-                        return;
-                    } else {
-                        if (!downloadProject(projectDir)) {
-                            return;
+                switch (clickedButtonRole) {
+                    case CreateButtonRole:
+                        projectDir = QFileDialog::getExistingDirectory(this, TIP_NEWPROJ);
+                        if (projectDir.isEmpty()) {
+                            return; // User canceled directory selection
+                        } else {
+                            downloadProject(projectDir);
+                            return; // We will continue with the load once git is finished downloading
                         }
-                    }
-                    break;
-                case SelectButtonRole:
-                    projectDir = QFileDialog::getExistingDirectory(this, "Select existing pico-fbw directory");
-                    if (projectDir.isEmpty()) return;
-                    break;
-                case CancelButtonRole:
-                default:
-                    return;
-            }
+                        break;
+                    case SelectButtonRole:
+                        projectDir = QFileDialog::getExistingDirectory(this, TIP_OPENPROJ);
+                        if (projectDir.isEmpty()) return;
+                        break;
+                    case CancelButtonRole:
+                    default:
+                        return;
+                }
         }
     }
 
@@ -226,15 +222,15 @@ void Window::loadProject() {
 
     if (!configFile.exists()) {
         // The config file still doesn't exist (likely not the directory we're expecting)
-        QMessageBox::critical(this, "Error", "Config file not found!");
+        QMessageBox::critical(this, MSG_ERR, ERR_CFGNOTFOUND);
         // Clear the project directory from settings to ensure we don't try to load it again (infinite loop)
-        settings.remove("projectDir");
+        settings.remove(SETTING_PROJECTDIR);
         return;
     }
 
     if (!configFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        QMessageBox::critical(this, "Error", "Failed to open config file!");
-        settings.remove("projectDir");
+        QMessageBox::critical(this, MSG_ERR, ERR_CFGFAILEDOPEN);
+        settings.remove(SETTING_PROJECTDIR);
         return;
     }
 
@@ -246,48 +242,45 @@ void Window::loadProject() {
     // Set flag to indicate we have a good project directory
     goodProjectDir = true;
 
-    // Save project location to settings
-    settings.setValue("projectDir", projectDir);
+    // Save project location to settings (not if there is a shift override though, that is only to load something temp)
+    if (!shiftPressed) {
+        settings.setValue(SETTING_PROJECTDIR, projectDir);
+    }
 
     configFile.close();
 }
 
-bool Window::downloadProject(QString filePath) {
+void Window::downloadProject(QString filePath) {
     QStringList gitArgs;
-    gitArgs << "clone" << "https://github.com/MylesAndMore/pico-fbw.git" << filePath << "--branch" << "main";
-    QProcess git;
+    gitArgs << "clone" << "https://github.com/MylesAndMore/pico-fbw.git" << filePath;
     git.start("git", gitArgs);
-    stepLabel->setText("<b>Downloading...</b>");
-    // Connect to the process's output so we can have a progress bar
-    connect(&git, SIGNAL(readyReadStandardOutput()), this, SLOT(processGitOutput()));
-    // Wait until either the process finishes or we timeout (20 second timeout for configuration step)
-    bool timedOut = !git.waitForFinished(30 * 1000);
-    // Disconnect from the output so we don't parse any unnecessary lines
-    disconnect(&git, SIGNAL(readyReadStandardOutput()), this, SLOT(processGitOutput()));
-    stepLabel->setText("");
+    stepLabel->setText(STEP_DOWNLOAD);
+    // Connect a signal so that we can display feedback once git has finished downloading
+    connect(&git, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(handleGitFinished(int)));
+}
 
+void Window::handleGitFinished(int exitCode) {
     if (git.exitCode() != 0) {
-        QMessageBox eMsg(QMessageBox::Critical, "Download Failed", "Failed to download project!<br>"
-                                                                   "Ensure you have all necessary components installed and the directory you selected is empty.",
-                                                                   QMessageBox::Ok, this);
+        QMessageBox eMsg(QMessageBox::Critical, ERR_DOWNLOADFAIL, TIP_DOWNLOADFAIL, QMessageBox::Ok, this);
         eMsg.setDetailedText(git.readAllStandardError());
         eMsg.exec();
-        return false;
-    } else if (timedOut) {
-        QMessageBox::critical(this, "Download Failed", "Failed to download project!<br><br>Timed out after 30 seconds.");
-        return false;
+        stepLabel->setText("");
     } else {
-        return true;
+        stepLabel->setText(STEP_DOWNLOADFINISHED);
+        // Git suceeded; load the downloaded project (folder already stored in projectDir from last time so loadProject() should be happy)
+        loadProject();
     }
 }
 
-// FIXME: multithreading with the build process kind of works :tm: but really needs some bugfixing...it's too late so I'm going to do this later :)
-void Window::startBuild() {
+void Window::buildProject() {
     if (!goodProjectDir) {
-        QMessageBox::critical(this, "Error", "Invalid project!");
-        return;
+        // Attempt to load the project and try once again
+        loadProject();
+        if (!goodProjectDir) {
+            QMessageBox::critical(this, MSG_ERR, ERR_PROJINVALID);
+            return;
+        }
     }
-    buildButton->setDisabled(true); // Disable build button during process
 
     // Save the current content of the text editor into the config file
     QString configFilePath = projectDir + "/src/config.h";
@@ -297,7 +290,7 @@ void Window::startBuild() {
         out << textEditor->toPlainText(); // Save the edited configuration
         configFile.close();
     } else {
-        QMessageBox::critical(this, "Error", "Failed to save config file!");
+        QMessageBox::critical(this, MSG_ERR, ERR_CFGFAILEDWRITE);
         return;
     }
 
@@ -312,36 +305,98 @@ void Window::startBuild() {
             confArgs << MODEL1_ARGS;
             break;
         default:
-            QMessageBox::critical(this, "Error", "Invalid model!");
+            QMessageBox::critical(this, MSG_ERR, ERR_MODELINVALID);
             return;
     }
-    // Start the build process in a seperate thread and pass the args in
-    QMetaObject::invokeMethod(worker, "buildProject", Qt::QueuedConnection,
-                              Q_ARG(const QStringList&, confArgs),
-                              Q_ARG(const QString&, projectDir));
+
+    // Spawn a process to configure the build directory for building
+    buildState = BuildState::Configuring;
+    buildButton->setEnabled(false); // Disable the build button while we're building
+    cmake.setWorkingDirectory(projectDir);
+    // Connect a signal so that we can process the output of CMake to display graphical progress to the user
+    connect(&cmake, SIGNAL(readyReadStandardOutput()), this, SLOT(processCMakeOutput()));
+    connect(&cmake, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(handleCMakeFinished(int)));
+    cmake.start("cmake", confArgs);
 }
 
-void Window::updateBuildProgress(int progress) {
-    progressBar->setValue(progress);
+void Window::handleCMakeFinished(int exitCode) {
+    // Disconnect the signals so we don't get any unnecessary functions triggered
+    disconnect(&cmake, SIGNAL(readyReadStandardOutput()), this, SLOT(processCMakeOutput()));
+    disconnect(&cmake, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(handleCMakeFinished(int)));
+    buildButton->setEnabled(true); // Re-enable the build button
+    switch (buildState) {
+        case BuildState::Configuring:
+            if (cmake.exitCode() != 0) {
+                QMessageBox eMsg(QMessageBox::Critical, ERR_BUILDFAIL, TIP_BUILDFAIL_CONFIG, QMessageBox::Ok, this);
+                eMsg.setDetailedText(cmake.readAllStandardError());
+                eMsg.exec();
+                return;
+            } else {
+                // CMake's configuration step succeeded, now build the project
+                buildState = BuildState::Building;
+                buildButton->setEnabled(false);
+                QStringList buildArgs;
+                buildArgs << "--build" << "build_pfc";
+                connect(&cmake, SIGNAL(readyReadStandardOutput()), this, SLOT(processCMakeOutput()));
+                connect(&cmake, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(handleCMakeFinished(int)));
+                cmake.start("cmake", buildArgs);
+            }
+            break;
+        case BuildState::Building:
+            if (cmake.exitCode() != 0) {
+                buildState = BuildState::Configuring;
+                QMessageBox eMsg(QMessageBox::Critical, ERR_BUILDFAIL, TIP_BUILDFAIL_BUILD, QMessageBox::Ok, this);
+                eMsg.setDetailedText(cmake.readAllStandardError());
+                eMsg.exec();
+                return;
+            } else {
+                buildState = BuildState::Finished;
+                stepLabel->setText(STEP_BUILDFINISHED);
+                // Build was successful, prompt the user if they want to upload the firmware
+                QMessageBox::StandardButton reply = QMessageBox::question(this, MSG_BUILDSUCCESS, TIP_BUILDSUCCESS_UPLOAD, QMessageBox::Yes | QMessageBox::No);
+                if (reply == QMessageBox::Yes) {
+                    handleUpload();
+                }
+            }
+            break;
+        default:
+            break;
+    }
 }
 
-void Window::updateBuildStep(QString step) {
-    stepLabel->setText("<b>Building: </b> " + step);
-}
+void Window::processCMakeOutput() {
+    // Fetch the current output from the CMake process
+    QByteArray output = cmake.readAllStandardOutput();
+    QString outputStr = QString::fromUtf8(output);
 
-void Window::finishBuild(bool success, QString error) {
-    buildButton->setEnabled(true);
-    if (success) {
-        // Build and config were successful, prompt the user if they want to upload the firmware
-        QMessageBox::StandardButton reply = QMessageBox::question(this, "Build Successful", "Build process was successful!<br><br>"
-                                                                        "Would you like to upload the firmware now?",
-                                                                QMessageBox::Yes | QMessageBox::No);
-        if (reply == QMessageBox::Yes) {
-            handleUpload();
+    int percentIndex = outputStr.indexOf("%");
+    if (percentIndex != -1 && percentIndex >= 3) {
+        QString progressStr = outputStr.mid(percentIndex - 3, 3);
+        bool ok;
+        int progress = progressStr.toInt(&ok);
+        if (ok) {
+            progressBar->setValue(progress);
         }
-    } else {
-        // Either build or config failed, display the error
-        QMessageBox::critical(this, "Build Failed", "Build process failed!<br><br>" + error);
+    }
+
+    // Look for indications of build steps
+    QString dependencyPrefix = "Scanning dependencies of target ";
+    int dependencyIndex = outputStr.indexOf(dependencyPrefix);
+    if (dependencyIndex == -1) {
+        // Try another prefix
+        dependencyPrefix = "Built target ";
+        dependencyIndex = outputStr.indexOf(dependencyPrefix);
+        if (dependencyIndex == -1) {
+            return;
+        }
+    }
+    // Extract the target name substring
+    int targetStartIndex = dependencyIndex + dependencyPrefix.length();
+    int targetEndIndex = outputStr.indexOf('\n', targetStartIndex);
+    if (targetEndIndex != -1) {
+        QString targetName = outputStr.mid(targetStartIndex, targetEndIndex - targetStartIndex).trimmed();
+        // Update the step label with the target name
+        stepLabel->setText(STEP_BUILD + targetName);
     }
 }
 
@@ -349,12 +404,13 @@ void Window::handleUpload() {
     // Check if the build directory contains the uf2 file we need
     QFile uf2(projectDir + "/build_pfc/pico-fbw.uf2");
     if (!uf2.exists()) {
-        QMessageBox::critical(this, "Upload Failed", "Binary file not found!");
+        QMessageBox::critical(this, ERR_UPLOADFAIL, TIP_UPLOADBNOTFOUND);
         return;
     }
 
     // Load the uf2 onto the Pico and check for errors
     progressBar->setValue(0);
+    stepLabel->setText("");
     int status = picolite_load(uf2.fileName().toUtf8().constData());
     const char *errorMsg = nullptr;
     switch (status) {
@@ -363,57 +419,53 @@ void Window::handleUpload() {
             break;
         case PICOLITE_ERROR_FORMAT:
         case PICOLITE_ERROR_INCOMPATIBLE:
-            errorMsg = "Invalid binary file!";
+            errorMsg = UERR_INVALIDB;
             break;
         case PICOLITE_ERROR_READ_FAILED:
-            errorMsg = "Failed to read binary file!";
+            errorMsg = UERR_READFAIL;
             break;
         case PICOLITE_ERROR_USB:
-            errorMsg = "Failed to connect to Pico!";
+            errorMsg = UERR_CONNECTFAIL;
             break;
         case PICOLITE_ERROR_NO_DEVICE:
-            errorMsg = "No Pico was detected.";
+            errorMsg = UERR_NODETECT;
             break;
         case PICOLITE_ERROR_CONNECTION:
-            errorMsg = "Communication with Pico failed.";
+            errorMsg = UERR_CONNECT;
             break;
         case PICOLITE_ERROR_VERIFICATION_FAILED:
-            errorMsg = "Verification of binary failed.";
+            errorMsg = UERR_VERIFY;
             break;
         case PICOLITE_ERROR_PERMISSIONS:
-            errorMsg = "A Pico was detected but the application was unable to communicate with it. This is likely a permission issue.";
+            errorMsg = UERR_PERMS;
             break;
         case PICOLITE_ERROR_DRIVER:
-            errorMsg = "A Pico was detected but the application was unable to communicate with it. This is likely a driver issue.";
+            errorMsg = UERR_DRIVER;
             break;
         case PICOLITE_ERROR_BOOTSEL:
-            errorMsg = "A Pico was detected but the application was unable to set it into BOOTSEL mode. Reboot the Pico with the BOOTSEL button pressed and try again.";
+            errorMsg = UERR_BOOTSEL;
             break;
         case PICOLITE_ERROR_UNKNOWN:
         default:
-            errorMsg = "Unknown error.";
+            errorMsg = UERR_UNKNOWN;
     }
 
     if (!errorMsg) {
-        QMessageBox::information(this, "Upload Successful!", "Upload was successful!");
+        QMessageBox::information(this, MSG_UPLOADSUCCESS, MSG_UPLOADSUCCESS);
     } else {
-        QMessageBox eMsg(QMessageBox::Critical, "Upload Failed!", QString("Error: %1").arg(errorMsg), QMessageBox::Ok, this);
+        QMessageBox eMsg(QMessageBox::Critical, ERR_UPLOADFAIL, QString(MSG_ERR) + QString(": %1").arg(errorMsg), QMessageBox::Ok, this);
         eMsg.setDetailedText(PICOLITE_ERROR_msg);
         eMsg.exec();
 
         if (status != PICOLITE_ERROR_NO_DEVICE) {
             QMessageBox::StandardButton uploadButton =
-            QMessageBox::question(this, "Manual Upload", "Would you like to upload the file manually?",
-                                QMessageBox::Yes | QMessageBox::No);
-
+            QMessageBox::question(this, Q_MANUALUPLOAD, MSG_MANUALUPLOAD, QMessageBox::Yes | QMessageBox::No);
             if (uploadButton == QMessageBox::Yes) {
                 QString buildFolderPath = projectDir + "/build_pfc/";
                 QDesktopServices::openUrl(QUrl::fromLocalFile(buildFolderPath));
             }
         }
     }
-
-    // TODO: privelage escelation for picolite_load?
 }
 
 void Window::setModel(Model model) {
@@ -422,25 +474,20 @@ void Window::setModel(Model model) {
     // Update dropdown
     picoModelSel->setCurrentIndex((int)model);
     // Update cache (settings)
-    settings.setValue("model", (int)model);
+    settings.setValue(SETTING_MODEL, (int)model);
 }
 
-
 void Window::help() {
-    QString helpText = QString("This application allows you to easily configure, build, and upload the pico-fbw firmware.<br><br>"
-                       "<b>%1</b>: %2<br><br>"
-                       "<b>%3</b>: %4<br><br>"
-                       "<b>%5</b>: %6<br><br>"
-                       "<br>For more information, refer to the online documentation at <a href=\"https://pico-fbw.org\">pico-fbw.org</a>.")
-                       .arg(BTN_LOAD_PROJECT)
-                       .arg(TOOLTIP_LOAD_PROJECT)
+    QString helpText = QString(MSG_HELP)
+                       .arg(FIELD_LOAD_PROJECT)
+                       .arg(TIP_LOAD_PROJECT)
                        .arg(FIELD_SELECT_MODEL)
-                       .arg(TOOLTIP_SELECT_MODEL)
-                       .arg(BTN_BUILD_UPLOAD)
-                       .arg(TOOLTIP_BUILD_UPLOAD);
+                       .arg(TIP_SELECT_MODEL)
+                       .arg(FIELD_BUILD_UPLOAD)
+                       .arg(TIP_BUILD_UPLOAD);
 
     QMessageBox helpPopup(this);
-    helpPopup.setWindowTitle("Help");
+    helpPopup.setWindowTitle(FIELD_HELP);
     helpPopup.setTextFormat(Qt::RichText);
     helpPopup.setText(helpText);
     helpPopup.setIcon(QMessageBox::Information);
@@ -449,15 +496,10 @@ void Window::help() {
 }
 
 void Window::licenses() {
-    QString licenseText = "This application uses the Qt framework, which is licensed under the GNU GPL-3.0 license.<br><br>"
-                          "The application itself is also licensed under the GNU GPL-3.0 license.<br><br>"
-                          "Parts of this application utilize code from picotool by Raspberry Pi, which is licensed under the BSD 3-Clause license.<br><br>"
-                          "For more details, you can review the license texts:<br>"
-                          "<a href=\"https://www.gnu.org/licenses/gpl-3.0.en.html\">GNU GPL-3.0 License</a><br>"
-                          "<a href=\"https://opensource.org/licenses/BSD-3-Clause\">BSD 3-Clause License</a>";
+    QString licenseText = MSG_LICENSE;
 
     QMessageBox licensePopup(this);
-    licensePopup.setWindowTitle("Licenses");
+    licensePopup.setWindowTitle(FIELD_LICENSES);
     licensePopup.setTextFormat(Qt::RichText);
     licensePopup.setText(licenseText);
     licensePopup.setIcon(QMessageBox::Information);
@@ -466,19 +508,15 @@ void Window::licenses() {
 }
 
 void Window::aboutQt() {
-    QMessageBox::aboutQt(this, "About Qt");
+    QMessageBox::aboutQt(this, FIELD_ABOUTQT);
 }
 
 void Window::about() {
-    QString aboutText = QString("<b>%1</b> version %2_%3<br><br>"
-                                "This application allows you to easily configure, build, and upload the pico-fbw firmware.<br><br>"
-                                "pico-fbw and this application are created by MylesAndMore and are licensed under the GNU GPL-3.0 license.<br><br>"
-                                "For more information and source code, visit <a href=\"https://pico-fbw.org\">pico-fbw.org</a> or "
-                                "the <a href=\"https://github.com/MylesAndMore/pico-fbw\">GitHub repository</a>.")
+    QString aboutText = QString(MSG_ABOUT)
                                 .arg(APP_NAME)
                                 .arg(APP_VERSION)
                                 .arg(QSysInfo::productType());
 
     QMessageBox aboutPopup(this);
-    QMessageBox::about(this, QString("About %1").arg(APP_NAME), aboutText);
+    QMessageBox::about(this, QString(FIELD_ABOUT) + QString(" %1").arg(APP_NAME), aboutText);
 }
