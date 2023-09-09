@@ -330,7 +330,7 @@ void api_poll() {
                                     }
                                 }
                                 // World's longest if statement to make sure the setpoints are valid
-                                if ((rollSet != -100.0f && pitchSet != -100.0f && yawSet != -100.0f) && (rollSet < ROLL_LIMIT_HOLD && rollSet > -ROLL_LIMIT_HOLD && pitchSet < PITCH_UPPER_LIMIT && pitchSet > PITCH_LOWER_LIMIT && yawSet < RUD_LIMIT && yawSet > -RUD_LIMIT)) {
+                                if ((rollSet != -100.0f && pitchSet != -100.0f && yawSet != -100.0f) && (rollSet < ROLL_LIMIT_HOLD && rollSet > -ROLL_LIMIT_HOLD && pitchSet < PITCH_UPPER_LIMIT && pitchSet > PITCH_LOWER_LIMIT && yawSet < MAX_RUD_DEFLECTION && yawSet > -MAX_RUD_DEFLECTION)) {
                                     if (mode_normalSetSetpoints(rollSet, pitchSet, yawSet)) {
                                         printf("pico-fbw 200 OK\n");
                                         goodReq = true;
@@ -344,7 +344,7 @@ void api_poll() {
                                 goodReq = true;
                             }
                         } else if (strcmp(cmd, "SET_THRUST") == 0) {
-                            // Unsupported for now
+                            // TODO: implement the command w/ athr lib
                             printf("pico-fbw 501 Not Implemented\n");
                             goodReq = true;
                         } else if (strcmp(cmd, "SET_PID") == 0) {
@@ -508,7 +508,7 @@ void api_poll() {
                            "GNU General Public License for more details.\n\n"
 
                            "You should have received a copy of the GNU General Public License"
-                           "along with this program.  If not, see <https://www.gnu.org/licenses/>.\n",
+                           "along with this program. If not, see <https://www.gnu.org/licenses/>.\n",
                            PICO_FBW_VERSION, PICO_FBW_API_VERSION, rp2040_chip_version(), (rp2040_rom_version() - 1));
                 #endif
                 #ifdef RASPBERRYPI_PICO_W
@@ -525,7 +525,7 @@ void api_poll() {
                            "GNU General Public License for more details.\n\n"
 
                            "You should have received a copy of the GNU General Public License"
-                           "along with this program.  If not, see <https://www.gnu.org/licenses/>.\n",
+                           "along with this program. If not, see <https://www.gnu.org/licenses/>.\n",
                            PICO_FBW_VERSION, PICO_FBW_API_VERSION, WIFLY_VERSION, rp2040_chip_version(), (rp2040_rom_version() - 1));
                 #endif
             } else if (strcmp(cmd, "PARMESEAN_PARTY") == 0) {

@@ -8,6 +8,11 @@ typedef enum ControlMode {
     CTRLMODE_FLYINGWING
 } ControlMode;
 
+typedef enum PWMMode {
+    PWM_MODE_DEG,
+    PWM_MODE_ESC
+} PWMMode;
+
 /**
  * @return true if the value is within the maximum calibration offset.
 */
@@ -26,10 +31,12 @@ this keeps compatability between models. */
 void pwm_enable(uint pin_list[], uint num_pins);
 
 /**
- * @param pin the the GPIO pin to read (must have been already initalized)
+ * @param pin the GPIO pin to read (must have been already initalized)
+ * @param mode the mode of the PWM (DEG or ESC)
  * @return the calculated degree value derived from the pulsewidth on that pin.
+ * @note The mode simply changes how data is displayed and not how it is calculated (DEG from 0-180 and ESC from 0-100).
 */
-float pwm_readDeg(uint pin);
+float pwm_read(uint pin, PWMMode mode);
 
 /**
  * Samples a list of pins for deviation from a specified value for a specified number of samples, then saves that offset value to flash.
@@ -46,7 +53,7 @@ bool pwm_calibrate(uint pin_list[], uint num_pins, float deviations[], uint num_
 
 /**
  * Checks if the PWM calibration has been run before.
- * @return 0 if calibration has been run previously, -1 if no calibration has been run, and -2 if calibration values seem abnormal.
+ * @return 0 if calibration has been run previously, -1 if no calibration has been run, and -2 if the calibration was run in a different control mode.
 */
 int pwm_isCalibrated();
 

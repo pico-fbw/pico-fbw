@@ -56,7 +56,7 @@
         #error A pin may only be assigned once.
     #endif
 #elif defined(CONTROL_FLYINGWING)
-    #if !PINS_UNIQUE_11(INPUT_ELEVON_L_PIN, SERVO_ELEVON_L_PIN, INPUT_ELEVON_R_PIN, SERVO_ELEVON_R_PIN, INPUT_THR_PIN, ESC_THR_PIN, INPUT_SW_PIN, IMU_SDA_PIN, IMU_SCL_PIN, GPS_RX_PIN, GPS_TX_PIN)
+    #if !PINS_UNIQUE_11(INPUT_AIL_PIN, SERVO_ELEVON_L_PIN, INPUT_ELEV_PIN, SERVO_ELEVON_R_PIN, INPUT_THR_PIN, ESC_THR_PIN, INPUT_SW_PIN, IMU_SDA_PIN, IMU_SCL_PIN, GPS_RX_PIN, GPS_TX_PIN)
         #error A pin may only be assigned once.
     #endif
 #endif
@@ -73,7 +73,7 @@
     #error The pitch lower limit must be greater than -20 degrees.
 #endif
 
-#if (AIL_LIMIT > 90 || ELEV_LIMIT > 90 || RUD_LIMIT > 90)
+#if (MAX_AIL_DEFLECTION > 90 || MAX_ELEV_DEFLECTION > 90 || MAX_RUD_DEFLECTION > 90)
     #error Aileron, elevator, and rudder servo limit(s) must be less than 90 degrees.
 #endif
 

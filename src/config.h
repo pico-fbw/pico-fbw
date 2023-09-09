@@ -5,7 +5,7 @@
 
 // TODO: config support at runtime instead of compile-time?
 // remember to change current #define list elements to enums when that is done
-// TODO: also convert #ifdefs to #ifs (for now)
+// TODO: also convert #ifdefs to #ifs to make things easier now, and for if we transition
 
 
 
@@ -41,10 +41,27 @@ Increase this value if you are experiening error FBW-500, however note you may b
 /* Values from the reciever are multiplied by this in normal mode.
 Smaller values mean handling will be more sluggish like a larger plane, and larger values mean handling will be more agile like a typical RC plane.
 This must be quite a small value--the setpoint is calculated many times per second! */
-#define CONTROL_SENSITIVITY_VALUE 0.00075
+#define CONTROL_SENSITIVITY 0.00075
 
 /* Decides how much the aileron input is scaled up/down to become the rudder input during turns, does not apply during direct mode. */
-#define RUD_TURN_SENSITIVITY_VALUE 1.5
+#define RUD_TURN_SENSITIVITY 1.5
+
+#ifdef CONTROL_FLYINGWING
+
+	/* The gain between the aileron and elevator channels for elevon mixing.
+	For example, a value of 0.5 (the default) will result in the maximum travel of the elevons being reached when both full
+	aileron and elevator are applied. Only half travel will be applied when only the aileron/elevator is applied.
+	
+	Increase this if you desire more elevon deflection when using only one input, but beware this can result in input saturation! */
+	#define ELEVON_MIXING_GAIN 0.5
+
+	/* The bias of the aileron input in elevon mixing. */
+	#define AIL_MIXING_BIAS 1
+
+	/* The bias of the elevator input in elevon mixing. */
+	#define ELEV_MIXING_BIAS 1
+
+#endif
 
 /* If the degree reading from any of the inputs are below this value, the inputs will be disregarded, does not apply during direct mode. */
 #define DEADBAND_VALUE 2
@@ -82,12 +99,12 @@ This must be quite a small value--the setpoint is calculated many times per seco
 #elif defined(CONTROL_FLYINGWING)
 	/* Note that elevons are identified as if being viewed from the back of the aircraft. */
 	
-	#define INPUT_ELEVON_L_PIN 1 // Pin that the PWM signal wire from the reciever ELEVON LEFT channel is connected to.
-	#define SERVO_ELEVON_L_PIN 2 // Pin that the PWM wire on the ELEVON LEFT servo is connected to.
+	#define INPUT_AIL_PIN 1 // Pin that the PWM signal wire from the reciever AILERON channel is connected to.
+	#define SERVO_ELEVON_L_PIN 2 // Pin that the PWM wire on the ELEVON LEFT servo is connected to. Will also map to INPUT_AIL_PIN in direct mode.
 	// #define REVERSE_SERVO_ELEVON_L // Uncomment to reverse the servo's direction.
 
-	#define INPUT_ELEVON_R_PIN 3 // Pin that the PWM signal wire from the reciever ELEVON RIGHT channel is connected to.
-	#define SERVO_ELEVON_R_PIN 4 // Pin that the PWM wire on the ELEVON RIGHT servo is connected to.
+	#define INPUT_ELEV_PIN 3 // Pin that the PWM signal wire from the reciever ELEVATOR channel is connected to.
+	#define SERVO_ELEVON_R_PIN 4 // Pin that the PWM wire on the ELEVON RIGHT servo is connected to. Will also map to INPUT_ELEV_PIN in direct mode.
 	// #define REVERSE_SERVO_ELEVON_R // Uncomment to reverse the servo's direction.
 #endif
 
@@ -118,13 +135,20 @@ This value DOES need to be negative! */
 /* Note that all control limits apply to both movement directions, specify how much the SERVOS are allowed to move, and are ignored in direct mode. */
 
 /* The maximum degree value the system is allowed to move the ailerons to. */
-#define AIL_LIMIT 25
+#define MAX_AIL_DEFLECTION 25
 
 /* The maximum degree value the system is allowed to move the elevators to. */
-#define ELEV_LIMIT 15
+#define MAX_ELEV_DEFLECTION 15
 
-/* The maximum rudder input the yaw damper/turn coordinator is allowed to make. */
-#define RUD_LIMIT 20
+/* The maximum degree value the system is allowed to move the rudderr to. */
+#define MAX_RUD_DEFLECTION 20
+
+#ifdef CONTROL_FLYINGWING
+    
+	/* The maximum degree value the system is allowed to move the elevons to. */
+	#define MAX_ELEVON_DEFLECTION 20
+
+#endif
 
 
 

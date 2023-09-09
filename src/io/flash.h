@@ -26,8 +26,8 @@
  * 
  * 1         |  PWM calibration flag / data
  *           |  0 - Flag
- *           |  1 - INPUT_AIL_PIN / INPUT_ELEVON_L_PIN offset
- *           |  2 - INPUT_ELEV_PIN / INPUT_ELEVON_R_PIN offset
+ *           |  1 - INPUT_AIL_PIN offset
+ *           |  2 - INPUT_ELEV_PIN offset
  *           |  3 - INPUT_RUD_PIN offset
  *           |  4 - INPUT_SW_PIN offset
  *           |  5 - INPUT_THR_PIN offset

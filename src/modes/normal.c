@@ -38,9 +38,11 @@ void mode_normalInit() {
 
 void mode_normal() {
     // Refresh input data from rx
-    rollInput = pwm_readDeg(INPUT_AIL_PIN) - 90;
-    pitchInput = pwm_readDeg(INPUT_ELEV_PIN) - 90;
-    yawInput = pwm_readDeg(INPUT_RUD_PIN) - 90;
+    rollInput = pwm_read(INPUT_AIL_PIN, PWM_MODE_DEG) - 90;
+    pitchInput = pwm_read(INPUT_ELEV_PIN, PWM_MODE_DEG) - 90;
+    #ifdef CONTROL_3AXIS
+        yawInput = pwm_read(INPUT_RUD_PIN, PWM_MODE_DEG) - 90;
+    #endif
     
     // Check for manual overrides of externally set setpoints
     if (rollInput > DEADBAND_VALUE || rollInput < -DEADBAND_VALUE || pitchInput > DEADBAND_VALUE || pitchInput < -DEADBAND_VALUE || yawInput > DEADBAND_VALUE || yawInput < -DEADBAND_VALUE) {
@@ -53,10 +55,10 @@ void mode_normal() {
             // If the input is not within the deadband, add the smoothed input value on top of the current setpoint
             // We must smooth the value because this calculation is done many times per second, so no smoothing would result
             // in extremely (and I do really mean extreme) touchy controls.
-            rollSet += rollInput * CONTROL_SENSITIVITY_VALUE;
+            rollSet += rollInput * CONTROL_SENSITIVITY;
         }
         if (pitchInput > DEADBAND_VALUE || pitchInput < -DEADBAND_VALUE) {
-            pitchSet += pitchInput * CONTROL_SENSITIVITY_VALUE;
+            pitchSet += pitchInput * CONTROL_SENSITIVITY;
         }
 
         // Make sure the PID setpoints aren't set to unsafe values so we don't get weird outputs from PID,

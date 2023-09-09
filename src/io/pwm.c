@@ -143,13 +143,15 @@ static inline float pwmOffsetOf(uint pin) {
         case INPUT_ELEV_PIN:
             val = 2;
             break;
-        case INPUT_RUD_PIN:
-            val = 3;
-            break;
-        case INPUT_THR_PIN:
+        #ifdef CONTROL_3AXIS
+            case INPUT_RUD_PIN:
+                val = 3;
+                break;
+        #endif
+        case INPUT_SW_PIN:
             val = 4;
             break;
-        case INPUT_SW_PIN:
+        case INPUT_THR_PIN:
             val = 5;
             break;
         default:
@@ -160,23 +162,34 @@ static inline float pwmOffsetOf(uint pin) {
 }
 
 /**
- * Reads the raw degree value without any calibration offsets applied.
+ * Reads the raw PWM value without any calibration offsets applied.
  * @param pin the GPIO pin to read
+ * @param mode the mode of the PWM
  * @return the raw degree value
 */
-static inline float readDegRaw(uint pin) {
+static inline float readRaw(uint pin, PWMMode mode) {
     // Find the GPIO pin's state machine
     for (uint8_t i = 0; i < (sizeof(states) / sizeof(states[0])); i++) {
         if (states[i].pin == pin) {
-            return (180000 * ((float)states[i].pulsewidth * 0.000000016 - 0.001));
+            switch (mode) {
+                case PWM_MODE_DEG:
+                    return (180000 * ((float)states[i].pulsewidth * 0.000000016 - 0.001)); // 0-180
+                case PWM_MODE_ESC:
+                    return (100000 * ((float)states[i].pulsewidth * 0.000000016 - 0.001)); // 0-100
+            }
         }
     }
 }
 
-float pwm_readDeg(uint pin) {
+float pwm_read(uint pin, PWMMode mode) {
     for (uint8_t i = 0; i < (sizeof(states) / sizeof(states[0])); i++) {
         if (states[i].pin == pin) {
-            return (180000 * ((float)states[i].pulsewidth * 0.000000016 - 0.001) + pwmOffsetOf(pin));
+            switch (mode) {
+                case PWM_MODE_DEG:
+                    return (180000 * ((float)states[i].pulsewidth * 0.000000016 - 0.001) + pwmOffsetOf(pin));
+                case PWM_MODE_ESC:
+                    return (100000 * ((float)states[i].pulsewidth * 0.000000016 - 0.001) + pwmOffsetOf(pin));
+            }
         }
     }
 }
@@ -193,11 +206,12 @@ bool pwm_calibrate(uint pin_list[], uint num_pins, float deviations[], uint num_
         FBW_DEBUG_printf("[pwm] calibrating pin %d (%d/%d)\n", pin, i + 1, num_pins);
         float deviation = deviations[i];
         float final_difference = 0.0f;
+        bool isThrottle = pin_list[i] == INPUT_THR_PIN;
         for (uint t = 0; t < run_times; t++) {
             FBW_DEBUG_printf("[pwm] running trial %d out of %d\n", t + 1, run_times);
             float total_difference = 0.0f;
             for (uint i = 0; i < num_samples; i++) {
-                total_difference += (deviation - readDegRaw(pin));
+                total_difference += (deviation - isThrottle ? readRaw(pin, PWM_MODE_ESC) : readRaw(pin, PWM_MODE_DEG));
                 sleep_ms(sample_delay_ms);
             }
             // Check to see if the deviation is 270 (this value occurs with a pulsewidth of 0 or 1, aka not connected)
@@ -220,14 +234,16 @@ bool pwm_calibrate(uint pin_list[], uint num_pins, float deviations[], uint num_
             case INPUT_ELEV_PIN:
                 loc = 2;
                 break;
-            case INPUT_RUD_PIN:
-                loc = 3;
+            #ifdef CONTROL_3AXIS
+                case INPUT_RUD_PIN:
+                    loc = 3;
+                    break;
+            #endif
+            case INPUT_SW_PIN:
+                loc = 4;
                 break;
             case INPUT_THR_PIN:
                 loc = 5;
-                break;
-            case INPUT_SW_PIN:
-                loc = 4;
                 break;
             default:
                 FBW_DEBUG_printf("ERROR: [FBW-500] pin %d is not a valid pin to calibrate!\n", pin);
@@ -272,21 +288,7 @@ bool pwm_calibrate(uint pin_list[], uint num_pins, float deviations[], uint num_
 int pwm_isCalibrated() {
     // Read the calibration flag
     if (flash_read(FLASH_SECTOR_PWM, 0) == FLAG_PWM) {
-        // Ensure the values are within bounds
-        uint pins[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, INPUT_SW_PIN, INPUT_THR_PIN};
-        uint num_pins = (sizeof(pins) / sizeof(pins[0]));
-        for (uint i = 0; i < num_pins; i++) {
-            if (!WITHIN_MAX_CALIBRATION_OFFSET(pwmOffsetOf(pins[i]))) {
-                if (pwmOffsetOf(pins[i]) == INPUT_SW_PIN) {
-                    if (pwmOffsetOf(pins[i]) < -200.0f || pwmOffsetOf(pins[i]) > MAX_CALIBRATION_OFFSET) {
-                        return -2;
-                    }
-                } else {
-                    return -2;
-                }
-            }
-        }
-        // Finally, ensure that the control mode we are in is the same as the one in which we calibrated
+        // Ensure that the control mode we are in is the same as the one in which we calibrated
         ControlMode currentControlMode;
         #if defined(CONTROL_3AXIS)
             #ifdef ATHR_ENABLED
@@ -302,7 +304,7 @@ int pwm_isCalibrated() {
             #endif
         #endif
         if (currentControlMode != flash_read(FLASH_SECTOR_PWM, 6)) {
-            return -3;
+            return -2;
         }
         // All checks have passed
         return 0;

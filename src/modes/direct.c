@@ -21,8 +21,15 @@
 */
 
 void mode_direct() {
-    servo_set(SERVO_AIL_PIN, pwm_readDeg(INPUT_AIL_PIN));
-    servo_set(SERVO_ELEV_PIN, pwm_readDeg(INPUT_ELEV_PIN));
-    servo_set(SERVO_RUD_PIN, pwm_readDeg(INPUT_RUD_PIN));
-    // esc_set(ESC_THR_PIN, pwm_readThr(PWM_THR_PIN));
+    #if defined(CONTROL_3AXIS)
+        servo_set(SERVO_AIL_PIN, pwm_read(INPUT_AIL_PIN, PWM_MODE_DEG));
+        servo_set(SERVO_ELEV_PIN, pwm_read(INPUT_ELEV_PIN, PWM_MODE_DEG));
+        servo_set(SERVO_RUD_PIN, pwm_read(INPUT_RUD_PIN, PWM_MODE_DEG));
+    #elif defined(CONTROL_FLYINGWING)
+        servo_set(SERVO_ELEVON_L_PIN, pwm_read(INPUT_AIL_PIN, PWM_MODE_DEG));
+        servo_set(SERVO_ELEVON_R_PIN, pwm_read(INPUT_ELEV_PIN, PWM_MODE_DEG));
+    #endif
+    #ifdef ATHR_ENABLED
+        esc_set(ESC_THR_PIN, pwm_read(INPUT_THR_PIN, PWM_MODE_ESC));
+    #endif
 }

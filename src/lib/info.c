@@ -25,8 +25,6 @@ void info_declare() {
     bi_decl(bi_2pins_with_func(MARBE_D, MARBE_C, GPIO_FUNC_I2C));
 
     // PWM input pins
-    bi_decl(bi_4pins_with_func(INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, INPUT_SW_PIN, GPIO_FUNC_PIO0));
-    // bi_decl(bi_1pin_with_func(INPUT_THR_PIN, GPIO_FUNC_PIO1));
     #if defined(CONTROL_3AXIS)
         bi_decl(bi_4pins_with_func(INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, INPUT_SW_PIN, GPIO_FUNC_PIO0));
         #ifdef ATHR_ENABLED
@@ -34,14 +32,27 @@ void info_declare() {
         #endif
     #elif defined(CONTROL_FLYINGWING)
         #ifndef ATHR_ENABLED
-            bi_decl(bi_3pins_with_func(INPUT_ELEVON_L_PIN, INPUT_ELEVON_R_PIN, INPUT_SW_PIN, GPIO_FUNC_PIO0));
+            bi_decl(bi_3pins_with_func(INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_SW_PIN, GPIO_FUNC_PIO0));
         #else
-            bi_decl(bi_4pins_with_func(INPUT_ELEVON_L_PIN, INPUT_ELEVON_R_PIN, INPUT_SW_PIN, INPUT_THR_PIN, GPIO_FUNC_PIO0));
+            bi_decl(bi_4pins_with_func(INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_SW_PIN, INPUT_THR_PIN, GPIO_FUNC_PIO0));
         #endif
     #endif
 
     // PWM output pins
-    bi_decl(bi_4pins_with_func(SERVO_AIL_PIN, SERVO_ELEV_PIN, SERVO_RUD_PIN, ESC_THR_PIN, GPIO_FUNC_PWM));
+    #if defined(CONTROL_3AXIS)
+        #ifdef ATHR_ENABLED
+            bi_decl(bi_4pins_with_func(SERVO_AIL_PIN, SERVO_ELEV_PIN, SERVO_RUD_PIN, ESC_THR_PIN, GPIO_FUNC_PWM));
+        #else
+            bi_decl(bi_3pins_with_func(SERVO_AIL_PIN, SERVO_ELEV_PIN, SERVO_RUD_PIN, GPIO_FUNC_PWM));
+        #endif
+    #elif defined(CONTROL_FLYINGWING)
+        #ifndef ATHR_ENABLED
+            bi_decl(bi_3pins_with_func(SERVO_ELEVON_L_PIN, SERVO_ELEVON_L_PIN, ESC_THR_PIN, GPIO_FUNC_PWM));
+        #else
+            bi_decl(bi_2pins_with_func(SERVO_ELEVON_L_PIN, SERVO_ELEVON_L_PIN, GPIO_FUNC_PWM));
+        #endif
+    #endif
+    
 
     /* Program info */
 
