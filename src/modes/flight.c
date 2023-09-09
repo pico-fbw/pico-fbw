@@ -65,7 +65,7 @@ void flight_update(double roll, double pitch, double yaw, bool override) {
         yawDamperOn = false;
     } else if (roll > DEADBAND_VALUE || roll < -DEADBAND_VALUE) {
         // Yaw damper disabled (passthrough)
-        yawOutput = roll_c.out * RUDDER_TURNING_VALUE;
+        yawOutput = roll_c.out * RUD_TURN_SENSITIVITY_VALUE;
         yawDamperOn = false;
     } else {
         // Yaw damper enabled

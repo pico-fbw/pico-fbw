@@ -31,7 +31,7 @@ void flight_init();
  * @note
  * The yaw damper functionality may be a bit confusing, I'll explain it here.
  * If override is set to true, the value from yaw will be passed directly to the rudder.
- * If override is set to false and roll is past the deadband, a "static damper" will be applied to the rudder (current aileron degree * RUDDER_TURNING_VALUE).
+ * If override is set to false and roll is past the deadband, a "static damper" will be applied to the rudder (current aileron degree * RUD_TURN_SENSITIVITY_VALUE).
  * If override is set to false and roll is below the deadband, a "dynamic damper" will be applied instead (uses PID to achieve the correct yaw angle).
 */
 void flight_update(double roll, double pitch, double yaw, bool override);

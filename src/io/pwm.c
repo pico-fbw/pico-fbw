@@ -224,10 +224,10 @@ bool pwm_calibrate(uint pin_list[], uint num_pins, float deviations[], uint num_
                 loc = 3;
                 break;
             case INPUT_THR_PIN:
-                loc = 4;
+                loc = 5;
                 break;
             case INPUT_SW_PIN:
-                loc = 5;
+                loc = 4;
                 break;
             default:
                 FBW_DEBUG_printf("ERROR: [FBW-500] pin %d is not a valid pin to calibrate!\n", pin);
@@ -249,6 +249,20 @@ bool pwm_calibrate(uint pin_list[], uint num_pins, float deviations[], uint num_
         }
         calibration_data[loc] = final_difference / run_times;
     }
+    // Write the current control mode that was used when calibrating data so the data can later be validated
+    #if defined(CONTROL_3AXIS)
+        #ifdef ATHR_ENABLED
+            calibration_data[6] = CTRLMODE_3AXIS_ATHR;
+        #else
+            calibration_data[6] = CTRLMODE_3AXIS;
+        #endif
+    #elif defined(CONTROL_FLYINGWING)
+        #ifdef ATHR_ENABLED
+            calibration_data[6] = CTRLMODE_FLYINGWING_ATHR;
+        #else
+            calibration_data[6] = CTRLMODE_FLYINGWING;
+        #endif
+    #endif
     FBW_DEBUG_printf("[pwm] writing calibration data to flash\n");
     flash_write(FLASH_SECTOR_PWM, calibration_data);
     error_clear(ERROR_PWM, false);
@@ -258,7 +272,7 @@ bool pwm_calibrate(uint pin_list[], uint num_pins, float deviations[], uint num_
 int pwm_isCalibrated() {
     // Read the calibration flag
     if (flash_read(FLASH_SECTOR_PWM, 0) == FLAG_PWM) {
-        // Ensure the values are within bounds before we give the okay
+        // Ensure the values are within bounds
         uint pins[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, INPUT_SW_PIN, INPUT_THR_PIN};
         uint num_pins = (sizeof(pins) / sizeof(pins[0]));
         for (uint i = 0; i < num_pins; i++) {
@@ -272,6 +286,25 @@ int pwm_isCalibrated() {
                 }
             }
         }
+        // Finally, ensure that the control mode we are in is the same as the one in which we calibrated
+        ControlMode currentControlMode;
+        #if defined(CONTROL_3AXIS)
+            #ifdef ATHR_ENABLED
+                currentControlMode = CTRLMODE_3AXIS_ATHR;
+            #else
+                currentControlMode = CTRLMODE_3AXIS;
+            #endif
+        #elif defined(CONTROL_FLYINGWING)
+            #ifdef ATHR_ENABLED
+                currentControlMode = CTRLMODE_FLYINGWING_ATHR;
+            #else
+                currentControlMode = CTRLMODE_FLYINGWING;
+            #endif
+        #endif
+        if (currentControlMode != flash_read(FLASH_SECTOR_PWM, 6)) {
+            return -3;
+        }
+        // All checks have passed
         return 0;
     } else {
         // Usually, this will turn out to be either 0 if the flash has not been programmed yet or 1 if it has been previously erased/reset

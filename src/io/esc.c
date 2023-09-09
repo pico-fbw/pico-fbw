@@ -27,6 +27,8 @@
 #include "esc.h"
 #include "servo.h"
 
+#ifdef ATHR_ENABLED
+
 void esc_set(const uint gpio_pin, const uint16_t degree) {
     // Values have to be between 0 and 100
     // PWM_TOP_MAX = 100% full duty cycle
@@ -82,3 +84,5 @@ void esc_disable(const uint gpio_pin) {
     const uint8_t slice = pwm_gpio_to_slice_num(gpio_pin);
     pwm_set_enabled(slice, false);
 }
+
+#endif

@@ -32,7 +32,6 @@
 
 #include "modes/modes.h"
 
-#include "autoconfig.h"
 #include "config.h"
 #include "validator.h"
 
@@ -75,19 +74,37 @@ int main() {
     }
 
     // PWM (in)
-    #ifdef ATHR_ENABLED
-        uint pins[NUM_INPUT_PINS] = {INPUT0, INPUT1, INPUT2, INPUT_SW_PIN, INPUT_THR_PIN};
-    #else
-        uint pins[NUM_INPUT_PINS] = {INPUT0, INPUT1, INPUT2, INPUT_SW_PIN};
+    #if defined(CONTROL_3AXIS)
+        #ifdef ATHR_ENABLED
+            uint pins[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, INPUT_SW_PIN, INPUT_THR_PIN};
+            uint num_pins = 5;
+            float deviations[] = {90.0f, 90.0f, 90.0f, 0.0f, 0.0f}; // We expect all controls to be centered except switch and throttle
+        #else
+            uint pins[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, INPUT_SW_PIN};
+            uint num_pins = 4;
+            float deviations[] = {90.0f, 90.0f, 90.0f, 0.0f};
+        #endif
+    #elif defined(CONTROL_FLYINGWING)
+        #ifdef ATHR_ENABLED
+            uint pins = {INPUT_ELEVON_L_PIN, INPUT_ELEVON_R_PIN, INPUT_SW_PIN, INPUT_THR_PIN};
+            uint num_pins = 4;
+            float deviations[] = {90.0f, 90.0f, 0.0f, 0.0f};
+        #else
+            uint pins = {INPUT_ELEVON_L_PIN, INPUT_ELEVON_R_PIN, INPUT_SW_PIN};
+            uint num_pins = 3;
+            float deviations[] = {90.0f, 90.0f, 0.0f};
+        #endif
     #endif
-    uint num_pins = NUM_INPUT_PINS;
-    float deviations[] = {90.0f, 90.0f, 90.0f, 0.0f, 0.0f}; // We expect all controls to be centered except switch and throttle
     FBW_DEBUG_printf("[boot] enabling PWM\n");
     pwm_enable(pins, num_pins);
-    FBW_DEBUG_printf("[boot] checking for PWM calibration\n");
-    if (pwm_isCalibrated() != 0) {
-        if (pwm_isCalibrated() == -1) {
+    FBW_DEBUG_printf("[boot] validating PWM\n");
+    int calibrationResult = pwm_isCalibrated();
+    switch (calibrationResult) {
+        case -1:
             FBW_DEBUG_printf("[boot] PWM calibration not found!\n");
+        case -3:
+            FBW_DEBUG_printf("[boot] PWM calibration was completed for a different control mode!\n");
+            // Both -1 and -3 will result in a calibration
             sleep_ms(2000); // Wait a few moments for tx/rx to set itself up
             FBW_DEBUG_printf("[boot] calibrating now...do not touch the transmitter!\n");
             if (!pwm_calibrate(pins, num_pins, deviations, 2000, 2, 3) || pwm_isCalibrated() != 0) {
@@ -95,10 +112,10 @@ int main() {
             } else {
                 FBW_DEBUG_printf("[boot] calibration successful!\n");
             }
-        } else if (pwm_isCalibrated() == -2) {
+            break;
+        case -2:
             error_throw(ERROR_PWM, ERROR_LEVEL_FATAL, 500, 0, true, "PWM calibration values are too high!\n"
             "Try again, and if this continues, consider changing the MAX_CALIBRATION_OFFSET in the configuration file.");
-        }
     }
 
     // Servos/ESC (PWM out)

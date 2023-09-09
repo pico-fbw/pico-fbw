@@ -3,7 +3,6 @@
 
 /* This file contains the validation of the config options. */
 
-#include "autoconfig.h"
 #include "config.h"
 
 #if !defined(RASPBERRYPI_PICO) && !defined(RASPBERRYPI_PICO_W)
@@ -11,6 +10,10 @@
 #endif
 
 /** @section general */
+
+#if defined(CONTROL_3AXIS) && defined(CONTROL_FLYINGWING)
+    #error Only one control method may be defined.
+#endif
 
 #if defined(SWITCH_2_POS) && defined(SWITCH_3_POS)
     #error Only one switch position may be defined.
@@ -22,7 +25,41 @@
 
 /** @section pins */
 
-// TODO: redo pin checks
+// Tried to make these variadic but it didn't work so we have to have this mess :(
+#define PINS_UNIQUE_13(a, b, c, d, e, f, g, h, i, j, k, l, m) \
+    ((a != b) && (a != c) && (a != d) && (a != e) && (a != f) && (a != g) && (a != h) && (a != i) && (a != j) && (a != k) && (a != l) && (a != m) && \
+     (b != c) && (b != d) && (b != e) && (b != f) && (b != g) && (b != h) && (b != i) && (b != j) && (b != k) && (b != l) && (b != m) && \
+     (c != d) && (c != e) && (c != f) && (c != g) && (c != h) && (c != i) && (c != j) && (c != k) && (c != l) && (c != m) && \
+     (d != e) && (d != f) && (d != g) && (d != h) && (d != i) && (d != j) && (d != k) && (d != l) && (d != m) && \
+     (e != f) && (e != g) && (e != h) && (e != i) && (e != j) && (e != k) && (e != l) && (e != m) && \
+     (f != g) && (f != h) && (f != i) && (f != j) && (f != k) && (f != l) && (f != m) && \
+     (g != h) && (g != i) && (g != j) && (g != k) && (g != l) && (g != m) && \
+     (h != i) && (h != j) && (h != k) && (h != l) && (h != m) && \
+     (i != j) && (i != k) && (i != l) && (i != m) && \
+     (j != k) && (j != l) && (j != m) && \
+     (k != l) && (k != m) && \
+     (l != m))
+#define PINS_UNIQUE_11(a, b, c, d, e, f, g, h, i, j, k) \
+    ((a != b) && (a != c) && (a != d) && (a != e) && (a != f) && (a != g) && (a != h) && (a != i) && (a != j) && (a != k) && \
+     (b != c) && (b != d) && (b != e) && (b != f) && (b != g) && (b != h) && (b != i) && (b != j) && (b != k) && \
+     (c != d) && (c != e) && (c != f) && (c != g) && (c != h) && (c != i) && (c != j) && (c != k) && \
+     (d != e) && (d != f) && (d != g) && (d != h) && (d != i) && (d != j) && (d != k) && \
+     (e != f) && (e != g) && (e != h) && (e != i) && (e != j) && (e != k) && \
+     (f != g) && (f != h) && (f != i) && (f != j) && (f != k) && \
+     (g != h) && (g != i) && (g != j) && (g != k) && \
+     (h != i) && (h != j) && (h != k) && \
+     (i != j) && (i != k) && \
+     (j != k))
+
+#if defined(CONTROL_3AXIS)
+    #if !PINS_UNIQUE_13(INPUT_AIL_PIN, SERVO_AIL_PIN, INPUT_ELEV_PIN, SERVO_ELEV_PIN, INPUT_RUD_PIN, SERVO_RUD_PIN, INPUT_THR_PIN, ESC_THR_PIN, INPUT_SW_PIN, IMU_SDA_PIN, IMU_SCL_PIN, GPS_RX_PIN, GPS_TX_PIN)
+        #error A pin may only be assigned once.
+    #endif
+#elif defined(CONTROL_FLYINGWING)
+    #if !PINS_UNIQUE_11(INPUT_ELEVON_L_PIN, SERVO_ELEVON_L_PIN, INPUT_ELEVON_R_PIN, SERVO_ELEVON_R_PIN, INPUT_THR_PIN, ESC_THR_PIN, INPUT_SW_PIN, IMU_SDA_PIN, IMU_SCL_PIN, GPS_RX_PIN, GPS_TX_PIN)
+        #error A pin may only be assigned once.
+    #endif
+#endif
 
 /** @section limits */
 
@@ -49,21 +86,22 @@
     #error An IMU module must be defined.
 #endif
 
-#if (IMU_X_AXIS != ROLL_AXIS && IMU_X_AXIS != PITCH_AXIS && IMU_X_AXIS != YAW_AXIS && IMU_X_AXIS != IMU_Y_AXIS && IMU_X_AXIS != IMU_Z_AXIS)
-	#error IMU_X_AXIS must be either ROLL_AXIS, PITCH_AXIS, or YAW_AXIS.
-	#undef IMU_X_AXIS
+#if (IMU_SDA_PIN != 0 && IMU_SDA_PIN != 4 && IMU_SDA_PIN != 8 && IMU_SDA_PIN != 12 && IMU_SDA_PIN != 16 && IMU_SDA_PIN != 20 && IMU_SDA_PIN != 28)
+    #error IMU_SDA_PIN must be on the I2C0_SDA interface.
+    #undef IMU_SDA_PIN
 #endif
-#if (IMU_Y_AXIS != ROLL_AXIS && IMU_Y_AXIS != PITCH_AXIS && IMU_Y_AXIS != YAW_AXIS && IMU_Y_AXIS != IMU_X_AXIS && IMU_Y_AXIS != IMU_Z_AXIS)
-	#error IMU_Y_AXIS must be either ROLL_AXIS, PITCH_AXIS, or YAW_AXIS.
-	#undef IMU_Y_AXIS
-#endif
-#if (IMU_Z_AXIS != ROLL_AXIS && IMU_Z_AXIS != PITCH_AXIS && IMU_Z_AXIS != YAW_AXIS && IMU_Z_AXIS != IMU_X_AXIS && IMU_Z_AXIS != IMU_Y_AXIS)
-	#error IMU_Z_AXIS must be either ROLL_AXIS, PITCH_AXIS, or YAW_AXIS.
-	#undef IMU_Z_AXIS
+#if (IMU_SCL_PIN != 1 && IMU_SCL_PIN != 5 && IMU_SCL_PIN != 9 && IMU_SCL_PIN != 13 && IMU_SCL_PIN != 17 && IMU_SCL_PIN != 21)
+    #error IMU_SCL_PIN must be on the I2C0_SCL interface.
+    #undef IMU_SCL_PIN
 #endif
 
-#if !defined(GPS_COMMAND_TYPE_PMTK) && !defined(GPS_COMMAND_TYPE_PSRF)
-    #error A GPS command type must be defined.
+#if (GPS_RX_PIN != 4 && GPS_RX_PIN != 8 && GPS_RX_PIN != 20)
+    #error GPS_RX_PIN must be on the UART1_TX interface.
+    #undef GPS_RX_PIN
+#endif
+#if (GPS_TX_PIN != 5 && GPS_TX_PIN != 9 && GPS_TX_PIN != 21)
+    #error GPS_TX_PIN must be on the UART1_RX interface.
+    #undef GPS_TX_PIN
 #endif
 
 /** @section Wi-Fly */

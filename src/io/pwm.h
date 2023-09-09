@@ -1,6 +1,13 @@
 #ifndef __PWM_H
 #define __PWM_H
 
+typedef enum ControlMode {
+    CTRLMODE_3AXIS_ATHR,
+    CTRLMODE_3AXIS,
+    CTRLMODE_FLYINGWING_ATHR,
+    CTRLMODE_FLYINGWING
+} ControlMode;
+
 /**
  * @return true if the value is within the maximum calibration offset.
 */

@@ -53,10 +53,10 @@ void mode_normal() {
             // If the input is not within the deadband, add the smoothed input value on top of the current setpoint
             // We must smooth the value because this calculation is done many times per second, so no smoothing would result
             // in extremely (and I do really mean extreme) touchy controls.
-            rollSet += rollInput * SETPOINT_SMOOTHING_VALUE;
+            rollSet += rollInput * CONTROL_SENSITIVITY_VALUE;
         }
         if (pitchInput > DEADBAND_VALUE || pitchInput < -DEADBAND_VALUE) {
-            pitchSet += pitchInput * SETPOINT_SMOOTHING_VALUE;
+            pitchSet += pitchInput * CONTROL_SENSITIVITY_VALUE;
         }
 
         // Make sure the PID setpoints aren't set to unsafe values so we don't get weird outputs from PID,

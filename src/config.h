@@ -4,6 +4,8 @@
 #define __CONFIG_H
 
 // TODO: config support at runtime instead of compile-time?
+// remember to change current #define list elements to enums when that is done
+// TODO: also convert #ifdefs to #ifs (for now)
 
 
 
@@ -16,10 +18,8 @@
 /* Define to enable the autothrottle. Commenting (disabling) this means you are not required to plug in/pass through a throttle input,
 but you will not have access to auto mode (the only place where the autothrottle is currently used). */
 #define ATHR_ENABLED
-// TODO: give this ^ functionality
 
 /* Define the type of mode switch you are using, 3-pos is default and highly recommended. */
-// TODO: change things like these to enums (especially when I [hopefully] switch to runtime config?)
 #define SWITCH_3_POS
 // #define SWITCH_2_POS
 
@@ -40,12 +40,11 @@ Increase this value if you are experiening error FBW-500, however note you may b
 
 /* Values from the reciever are multiplied by this in normal mode.
 Smaller values mean handling will be more sluggish like a larger plane, and larger values mean handling will be more agile like a typical RC plane.
-This will be quite a small value--the setpoint is calculated many times per second! */
-#define SETPOINT_SMOOTHING_VALUE 0.00075
-// TODO: better name for ^ this and below?
+This must be quite a small value--the setpoint is calculated many times per second! */
+#define CONTROL_SENSITIVITY_VALUE 0.00075
 
 /* Decides how much the aileron input is scaled up/down to become the rudder input during turns, does not apply during direct mode. */
-#define RUDDER_TURNING_VALUE 1.5
+#define RUD_TURN_SENSITIVITY_VALUE 1.5
 
 /* If the degree reading from any of the inputs are below this value, the inputs will be disregarded, does not apply during direct mode. */
 #define DEADBAND_VALUE 2
@@ -154,7 +153,7 @@ There are no module types, almost all GPS modules use the NMEA-0183 standard so 
 	#define GPS_COMMAND_TYPE_PMTK
 	// Please let me know if there's a command type you would like supported! MTK appears to be the most common.
 
-	/* These pins must line up with the UART1 interface.
+	/* These pins must line up with the UART0 interface.
 	These labels refer to the GPS's pins; the GPS's TX pin is connected to GPS_TX_PIN on the Pico. */
 	#define GPS_TX_PIN 21
 	#define GPS_RX_PIN 20
@@ -230,7 +229,6 @@ There are no module types, almost all GPS modules use the NMEA-0183 standard so 
 #define pitch_kT 0.01
 
 
-// TODO: autopilot PID tuning--both these PIDs do NOT input directly into the servos but instead command a bank/pitch angle so tune them with this in mind
 /* PID constants for the autopilot's lateral guidance. */
 #define latGuid_kP 0.005
 #define latGuid_kI 0.008

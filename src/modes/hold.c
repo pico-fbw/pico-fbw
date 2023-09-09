@@ -58,7 +58,7 @@ void mode_hold() {
         case HOLD_TURN_BEGUN:
             // Slowly ease into the turn
             if (rollSet <= HOLD_TURN_BANK_ANGLE) {
-                rollSet += (HOLD_TURN_BANK_ANGLE * SETPOINT_SMOOTHING_VALUE);
+                rollSet += (HOLD_TURN_BANK_ANGLE * CONTROL_SENSITIVITY_VALUE);
             } else {
                 // We've reached the desired angle, now we need to wait for the turn to complete
                 turnStatus = HOLD_TURN_INPROGRESS;
@@ -73,7 +73,7 @@ void mode_hold() {
         case HOLD_TURN_ENDING:
             // Slowly decrease the turn
             if (rollSet >= HOLD_TURN_SLOW_BANK_ANGLE) {
-                rollSet -= (HOLD_TURN_BANK_ANGLE * SETPOINT_SMOOTHING_VALUE);
+                rollSet -= (HOLD_TURN_BANK_ANGLE * CONTROL_SENSITIVITY_VALUE);
             }
             // Move on to stabilization once we've intercepted the target heading
             if (abs(targetTrack - gps.trk_true) <= HOLD_HEADING_INTERCEPT_WITHIN) {
@@ -83,7 +83,7 @@ void mode_hold() {
         case HOLD_TURN_STABILIZING:
             // Stabilize the turn back to 0 degrees of bank, then mark it as completed (unscheduled)
             if (rollSet >= 0) {
-                rollSet -= (HOLD_TURN_BANK_ANGLE * SETPOINT_SMOOTHING_VALUE);
+                rollSet -= (HOLD_TURN_BANK_ANGLE * CONTROL_SENSITIVITY_VALUE);
             }
             break;
         case HOLD_TURN_UNSCHEDULED:
