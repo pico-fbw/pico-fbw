@@ -53,7 +53,6 @@ int main() {
     // API
     #ifdef API_ENABLED
         printf("[api] enabling api v%s\n", PICO_FBW_API_VERSION);
-        error_throw(ERROR_NONE, ERROR_LEVEL_NONE, 1000, 100, false, "");
         api_init_blocking();
         error_clear(ERROR_NONE, true);
     #endif
@@ -104,7 +103,7 @@ int main() {
             FBW_DEBUG_printf("[boot] PWM calibration was completed for a different control mode!\n");
         case -1:
             FBW_DEBUG_printf("[boot] PWM calibration not found!\n");
-            // Both -1 and -3 will result in a calibration
+            platform_boot_complete();
             sleep_ms(2000); // Wait a few moments for tx/rx to set itself up
             FBW_DEBUG_printf("[boot] calibrating now...do not touch the transmitter!\n");
             if (!pwm_calibrate(pins, num_pins, deviations, 2000, 2, 3) || pwm_isCalibrated() != 0) {
@@ -160,7 +159,8 @@ int main() {
             FBW_DEBUG_printf("[boot] checking for IMU axis calibration\n");
             if (!imu_isCalibrated()) {
                 FBW_DEBUG_printf("[boot] IMU axis calibration not found! waiting a bit to begin...\n");
-                sleep_ms(3000);
+                platform_boot_complete();
+                sleep_ms(2000);
                 if (!imu_calibrate()) {
                     error_throw(ERROR_IMU, ERROR_LEVEL_FATAL, 1000, 0, true, "IMU calibration failed!");
                 }

@@ -84,29 +84,31 @@ This must be quite a small value--the setpoint is calculated many times per seco
 */
 
 #if defined(CONTROL_3AXIS)
+
 	#define INPUT_AIL_PIN 1 // Pin that the PWM signal wire from the reciever AILERON channel is connected to.
 	#define SERVO_AIL_PIN 2 // Pin that the PWM wire on the AILERON servo is connected to.
-	// #define REVERSE_SERVO_AIL // Uncomment to reverse the servo's direction.
-	// TODO: add the functionality to servo reversing for this ^ as well as elev and rud below
 
 	#define INPUT_ELEV_PIN 3 // Pin that the PWM signal wire from the reciever ELEVATOR channel is connected to.
 	#define SERVO_ELEV_PIN 4 // Pin that the PWM wire on the ELEVATOR servo is connected to.
-	// #define REVERSE_SERVO_ELEV // Uncomment to reverse the servo's direction.
 
 	#define INPUT_RUD_PIN 5 // Pin that the PWM signal wire from the reciever RUDDER channel is connected to.
 	#define SERVO_RUD_PIN 6 // Pin that the PWM wire on the RUDDER servo is connected to.
-	// #define REVERSE_SERVO_RUD // Uncomment to reverse the servo's direction.
+
 #elif defined(CONTROL_FLYINGWING)
+
 	/* Note that elevons are identified as if being viewed from the back of the aircraft. */
 	
 	#define INPUT_AIL_PIN 1 // Pin that the PWM signal wire from the reciever AILERON channel is connected to.
 	#define SERVO_ELEVON_L_PIN 2 // Pin that the PWM wire on the ELEVON LEFT servo is connected to. Will also map to INPUT_AIL_PIN in direct mode.
-	// #define REVERSE_SERVO_ELEVON_L // Uncomment to reverse the servo's direction.
 
 	#define INPUT_ELEV_PIN 3 // Pin that the PWM signal wire from the reciever ELEVATOR channel is connected to.
 	#define SERVO_ELEVON_R_PIN 4 // Pin that the PWM wire on the ELEVON RIGHT servo is connected to. Will also map to INPUT_ELEV_PIN in direct mode.
-	// #define REVERSE_SERVO_ELEVON_R // Uncomment to reverse the servo's direction.
+
 #endif
+
+#define REVERSE_AIL  0 // Reverses the aileron direction.
+#define REVERSE_ELEV 0 // Reverses the elevator direction.
+#define REVERSE_RUD  0 // Reverses the rudder direction.
 
 #ifdef ATHR_ENABLED
 	#define INPUT_THR_PIN 7 // Pin that the PWM signal wire from the reciever THROTTLE channel is connected to.

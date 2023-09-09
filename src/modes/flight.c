@@ -86,30 +86,23 @@ void flight_update(double roll, double pitch, double yaw, bool override) {
         }
     #elif defined(CONTROL_FLYINGWING)
         // Control mixing computations
-        lElevonOutput = ((roll_c.out * AIL_MIXING_BIAS) + (pitch_c.out * ELEV_MIXING_BIAS)) * ELEVON_MIXING_GAIN;
-        rElevonOutput = ((roll_c.out * AIL_MIXING_BIAS) - (pitch_c.out * ELEV_MIXING_BIAS)) * ELEVON_MIXING_GAIN;
+        lElevonOutput = ((REVERSE_ROLL ? -1 : 1) * roll_c.out * AIL_MIXING_BIAS + (REVERSE_PITCH ? -1 : 1) * pitch_c.out * ELEV_MIXING_BIAS) * ELEVON_MIXING_GAIN;
+        rElevonOutput = ((REVERSE_ROLL ? -1 : 1) * roll_c.out * AIL_MIXING_BIAS - (REVERSE_PITCH ? -1 : 1) * pitch_c.out * ELEV_MIXING_BIAS) * ELEVON_MIXING_GAIN;
+
         // Limit elevon outputs
         if (abs(lElevonOutput) > MAX_ELEVON_DEFLECTION) {
-            if (lElevonOutput > 0) {
-                lElevonOutput = MAX_ELEVON_DEFLECTION;
-            } else {
-                lElevonOutput = -MAX_ELEVON_DEFLECTION;
-            }
+            lElevonOutput = (lElevonOutput > 0) ? MAX_ELEVON_DEFLECTION : -MAX_ELEVON_DEFLECTION;
         }
         if (abs(rElevonOutput) > MAX_ELEVON_DEFLECTION) {
-            if (rElevonOutput > 0) {
-                rElevonOutput = MAX_ELEVON_DEFLECTION;
-            } else {
-                rElevonOutput = -MAX_ELEVON_DEFLECTION;
-            }
+            rElevonOutput = (rElevonOutput > 0) ? MAX_ELEVON_DEFLECTION : -MAX_ELEVON_DEFLECTION;
         }
     #endif
 
     // Supply current PID outputs to servos
     #if defined(CONTROL_3AXIS)
-        servo_set(SERVO_AIL_PIN, (uint16_t)(roll_c.out + 90));
-        servo_set(SERVO_ELEV_PIN, (uint16_t)(pitch_c.out + 90));
-        servo_set(SERVO_RUD_PIN, (uint16_t)(yawOutput + 90));
+        servo_set(SERVO_AIL_PIN, REVERSE_AIL ? (uint16_t)(roll_c.out + 90) : (uint16_t)(roll_c.out - 90));
+        servo_set(SERVO_ELEV_PIN, REVERSE_ELEV ? (uint16_t)(pitch_c.out + 90) : (uint16_t)(pitch_c.out - 90));
+        servo_set(SERVO_RUD_PIN, REVERSE_RUD ? (uint16_t)(yawOutput + 90) : (uint16_t)(yawOutput - 90));
     #elif defined(CONTROL_FLYINGWING)
         servo_set(SERVO_ELEVON_L_PIN, (uint16_t)(lElevonOutput + 90));
         servo_set(SERVO_ELEVON_R_PIN, (uint16_t)(rElevonOutput + 90));
