@@ -27,8 +27,6 @@ enum ButtonRoles {
     CancelButtonRole
 };
 
-// TODO: change to higher resolution image in resources; looks kind of bad on mac
-
 Window::Window() : settings("pico-fbw", APP_NAME) {
     setWindowTitle(APP_NAME);
 
