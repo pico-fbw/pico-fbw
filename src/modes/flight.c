@@ -15,7 +15,7 @@
 
 #include "flight.h"
 
-inertialAngles aircraft;
+Angles aircraft;
 #ifdef GPS_ENABLED
     GPS gps;
 #endif

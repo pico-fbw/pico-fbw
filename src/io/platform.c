@@ -13,6 +13,8 @@
 
 #include "platform.h"
 
+static bool isAthena = false;
+
 const unsigned char bt_anim[] = {
     0x20,
     0b00000000, 0b00111111,
@@ -83,17 +85,18 @@ void marbe_s(uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4, uint8_t l5, uint8_t
 
 void platform_boot_begin() {
     info_declare();
+    gpio_pull_down(22);
     if (platform_is_fbw()) {
         marbe_i();
         i2c_write_blocking(MARBE_I, MARBE_R, bt_anim, sizeof(bt_anim), true);
         marbe_anim(true);
     }
-    gpio_pull_down(22);
     led_init();
 }
 
 void platform_boot_complete() {
     if (platform_is_fbw()) {
+        // TODO: this being interrupted by error.c?
         i2c_write_blocking(MARBE_I, MARBE_R, st_anim, sizeof(st_anim), true);
         sleep_ms(420);
         marbe_anim(false);
@@ -133,6 +136,6 @@ bool platform_is_fbw() {
     return platform_is_athena() ? true : gpio_get(22);
 }
 
-bool platform_is_athena() {
-    return false;
-}
+bool platform_is_athena() { return (isAthena && gpio_get(22)); }
+
+void platform_set_athena(bool val) { isAthena = val; }

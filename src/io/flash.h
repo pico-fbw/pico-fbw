@@ -10,6 +10,8 @@
  * Reading/writing to/from the virtual sectors is very different than writing to the physical sectors, so be warned!!
 */
 
+// TODO: support more types in flash?
+
 /**
  * FLASHMAP:
  * "Sector"  |  Use
@@ -24,7 +26,7 @@
  *           |  6 - unused
  *           |  7 - unused
  * 
- * 1         |  PWM calibration flag / data
+ * 1         |  PWM offset calibration flag / data
  *           |  0 - Flag
  *           |  1 - INPUT_AIL_PIN offset
  *           |  2 - INPUT_ELEV_PIN offset
@@ -34,17 +36,7 @@
  *           |  6 - Control mode flag
  *           |  7 - unused
  * 
- * 3         |  PID tuning flag / data
- *           |  0 - Flag
- *           |  1 - Roll kP
- *           |  2 - Roll tI
- *           |  3 - Roll tD
- *           |  4 - Pitch kP
- *           |  5 - Pitch tI
- *           |  6 - Pitch tD
- *           |  7 - unused
- * 
- * 4         |  IMU axis mapping and direction flag / data
+ * 2         |  IMU axis mapping and direction flag / data
  *           |  0 - Flag
  *           |  1 - X axis map
  *           |  2 - Y axis map
@@ -53,16 +45,45 @@
  *           |  5 - Y axis direction
  *           |  6 - Z axis direction
  *           |  7 - unused
+ * 
+ * 3         |  IMU calibration profile flag / data (1)
+ *           |  0 - Flag
+ *           |  1 - Accelerometer offset X
+ *           |  2 - Accelerometer offset Y
+ *           |  3 - Accelerometer offset Z
+ *           |  4 - Magnetometer offset X
+ *           |  5 - Magnetometer offset Y
+ *           |  6 - Magnetometer offset Z
+ *           |  7 - unused
+ * 
+ * 4         |  IMU calibration profile data (2)
+ *           |  0 - Gyroscope offset X
+ *           |  1 - Gyroscope offset Y
+ *           |  2 - Gyroscope offset Z
+ *           |  3 - Accelerometer radius
+ *           |  4 - Magnetometer radius
+ * 
+ * 5         |  PID tuning flag / data
+ *           |  0 - Flag
+ *           |  1 - Roll kP
+ *           |  2 - Roll tI
+ *           |  3 - Roll tD
+ *           |  4 - Pitch kP
+ *           |  5 - Pitch tI
+ *           |  6 - Pitch tD
+ *           |  7 - unused
 */
 
 #define FLASH_MIN_SECTOR FLASH_SECTOR_PWM
 typedef enum FlashSector {
     FLASH_SECTOR_BOOT,
     FLASH_SECTOR_PWM,
-    FLASH_SECTOR_IMU,
+    FLASH_SECTOR_IMU_MAP,
+    FLASH_SECTOR_IMU_CFG0,
+    FLASH_SECTOR_IMU_CFG1,
     FLASH_SECTOR_PID
 } FlashSector;
-#define FLASH_MAX_SECTOR FLASH_SECTOR_IMU
+#define FLASH_MAX_SECTOR FLASH_SECTOR_PID
 
 // This is a fixed value so that locations of data will not change if more sectors are ever added
 // It works out to give each sector 8 floats of data

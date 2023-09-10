@@ -39,6 +39,9 @@ static uint currentError = 9999;
 static struct repeating_timer timer;
 static uint32_t gb_pulse_ms = 0;
 
+// TODO: this randomly stops after a bit sometimes?
+// also Pico's LED is just randomly going out as well; the timer is stopping?
+
 static inline void led_toggle() {
     if (platform_is_fbw()) {
         for (uint i = 0; i < 6; i++) {

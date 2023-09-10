@@ -30,23 +30,26 @@
 
 #define BNO_CHIP_FREQ_KHZ 400
 
-#define BNO_CHIP_REGISTER 0x28
+static const unsigned char BNO_CHIP_REGISTER = 0x28;
 static const unsigned char BNO_ID_REGISTER = 0x00;
-#define BNO_CHIP_ID 0xA0
+static const unsigned char BNO_CHIP_ID = 0xA0;
 
 static const unsigned char CALIBRATION_REGISTER = 0x35;
-#define SYS_REGISTER 0x3F
-#define SYS_RESET 0x20
+static const unsigned char SYS_REGISTER = 0x3F;
+static const unsigned char SYS_RESET = 0x20;
 static const unsigned char OPR_MODE_REGISTER = 0x3D;
-#define BNO_PWR_MODE_REGISTER 0x3E
-#define AXIS_MAP_CONF_REGISTER 0x41
-#define AXIS_MAP_SIGN_REGISTER 0x42
+static const unsigned char BNO_PWR_MODE_REGISTER = 0x3E;
+static const unsigned char AXIS_MAP_CONF_REGISTER = 0x41;
+static const unsigned char AXIS_MAP_SIGN_REGISTER = 0x42;
+static const unsigned char ACCEL_OFFSET_X_BEGIN_REGISTER = 0x55;
+static const unsigned char GYRO_OFFSET_X_BEGIN_REGISTER = 0x61;
 
 static const unsigned char EULER_BEGIN_REGISTER = 0x1A;
 static const unsigned char ACCEL_BEGIN_REGISTER = 0x28;
 
-#define MODE_NDOF 0x0C
-#define PWR_MODE_NORMAL 0x00
+static const unsigned char MODE_CONFIG = 0x00;
+static const unsigned char MODE_NDOF = 0x0C;
+static const unsigned char PWR_MODE_NORMAL = 0x00;
 
 /* MPU6050 */
 
@@ -54,32 +57,32 @@ static const unsigned char ACCEL_BEGIN_REGISTER = 0x28;
 
 #define MPU_CHIP_FREQ_KHZ 400
 
-#define MPU_CHIP_REGISTER 0x68
+static const unsigned char MPU_CHIP_REGISTER = 0x68;
 static const unsigned char MPU_ID_REGISTER = 0x75;
-#define MPU_CHIP_ID 0x68
+static const unsigned char MPU_CHIP_ID = 0x68;
 
-#define SMPLRT_DIV_REGISTER 0x19
-#define CONFIG_REGISTER 0x1A
-#define INT_PIN_CFG_REGISTER 0x37
-#define GYRO_CONFIG_REGISTER 0x1B
-#define ACCEL_CONFIG_REGISTER 0x1C
+static const unsigned char SMPLRT_DIV_REGISTER = 0x19;
+static const unsigned char CONFIG_REGISTER = 0x1A;
+static const unsigned char INT_PIN_CFG_REGISTER = 0x37;
+static const unsigned char GYRO_CONFIG_REGISTER = 0x1B;
+static const unsigned char ACCEL_CONFIG_REGISTER = 0x1C;
 
-#define USER_CONTROL_REGISTER 0x6A
-#define MPU_PWR_MODE_REGISTER 0x6B
+static const unsigned char USER_CONTROL_REGISTER = 0x6A;
+static const unsigned char MPU_PWR_MODE_REGISTER = 0x6B;
 
-#define INTERRUPTS_ENABLED_REGISTER 0x38
-#define FIFO_ENABLED_REGISTER 0x23
+static const unsigned char INTERRUPTS_ENABLED_REGISTER = 0x38;
+static const unsigned char FIFO_ENABLED_REGISTER = 0x23;
 
-#define DMP_PROG_START_ADDR 0x70
+static const unsigned char DMP_PROG_START_ADDR = 0x70;
 static const unsigned char DMP_RA_FIFO_COUNT = 0x72;
 static const unsigned char DMP_RA_FIFO_R_W = 0x74;
 
 // Contains heading, roll, pitch, and yaw angles of the aircraft when filled using imu_getAngles().
-typedef struct inertialAngles {
+typedef struct Angles {
     float roll;
     float pitch;
 	float yaw;
-} inertialAngles;
+} Angles;
 
 // Contains Euler angles of the aircraft when filled using imu_getRawAngles() (these are not mapped to actual aircraft angles).
 typedef struct Euler {
@@ -117,11 +120,11 @@ Euler imu_getRawAngles();
 
 /**
  * Gets the current angles of spatial orientation from the IMU.
- * @return an inertialAngles struct containing roll, pitch, and yaw data.
+ * @return an Angles struct containing roll, pitch, and yaw data.
  * @note This function compensates using calibration data obtained earlier.
  * Positive values indicate a right roll, pitch up, or right yaw, and negative values indicate the opposite.
 */
-inertialAngles imu_getAngles();
+Angles imu_getAngles();
 
 /**
  * Runs the IMU calibration and saves values to flash.

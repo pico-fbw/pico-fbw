@@ -28,6 +28,8 @@
 
 #include "api.h"
 
+// TODO: GET-ERRORS or similar command
+
 #ifdef API_ENABLED
 
 /**
@@ -494,7 +496,7 @@ void api_poll() {
                        "503 Unavailable - Request temporarily unavailable\n",
                        PICO_FBW_API_VERSION);
             } else if (strcmp(cmd, "ABOUT") == 0) {
-                #ifdef RASPBERRYPI_PICO
+                #if defined(RASPBERRYPI_PICO)
                     printf("pico-fbw v%s, API v%s, Wi-Fly Unsupported, RP2040-B%d, ROM RP2040-B%d\n\n"
                            "Copyright (C) 2023 pico-fbw\n\n"
                            "This program is free software: you can redistribute it and/or modify"
@@ -510,8 +512,7 @@ void api_poll() {
                            "You should have received a copy of the GNU General Public License"
                            "along with this program. If not, see <https://www.gnu.org/licenses/>.\n",
                            PICO_FBW_VERSION, PICO_FBW_API_VERSION, rp2040_chip_version(), (rp2040_rom_version() - 1));
-                #endif
-                #ifdef RASPBERRYPI_PICO_W
+                #elif defined(RASPBERRYPI_PICO_W)
                     printf("pico(w)-fbw v%s, API v%s, Wi-Fly v%s, RP2040-B%d, ROM RP2040-B%d\n\n"
                            "Copyright (C) 2023 pico-fbw\n\n"
                            "This program is free software: you can redistribute it and/or modify"
@@ -527,6 +528,14 @@ void api_poll() {
                            "You should have received a copy of the GNU General Public License"
                            "along with this program. If not, see <https://www.gnu.org/licenses/>.\n",
                            PICO_FBW_VERSION, PICO_FBW_API_VERSION, WIFLY_VERSION, rp2040_chip_version(), (rp2040_rom_version() - 1));
+                #endif
+            } else if (strcmp(cmd, "ATHENA_INFO") == 0) {
+                #if defined(RASPBERRYPI_PICO)
+                    printf("pico-fbw v%s, API v%s, RP2040-B%d\npico-fbw 200 OK\n",
+                           PICO_FBW_VERSION, PICO_FBW_API_VERSION, rp2040_chip_version());
+                #elif defined(RASPBERRYPI_PICO_W)
+                    printf("pico(w)-fbw v%s, API v%s, RP2040-B%d\npico-fbw 200 OK\n",
+                           PICO_FBW_VERSION, PICO_FBW_API_VERSION, rp2040_chip_version());
                 #endif
             } else if (strcmp(cmd, "PARMESEAN_PARTY") == 0) {
                 printf("pico-fbw 1022 Party!\n");

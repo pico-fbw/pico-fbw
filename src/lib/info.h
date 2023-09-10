@@ -1,8 +1,8 @@
 #ifndef __INFO_H
 #define __INFO_H
 
-#define PICO_FBW_VERSION "0.0.1-alpha"
-#define PICO_FBW_API_VERSION "1.0"
+#define PICO_FBW_VERSION "1.0.0-beta1"
+#define PICO_FBW_API_VERSION "1.1"
 #define WIFLY_VERSION "1.0"
 
 /**

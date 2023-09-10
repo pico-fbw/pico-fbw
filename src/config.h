@@ -313,7 +313,7 @@ There are no module types, almost all GPS modules use the NMEA-0183 standard so 
 	#define DHCP_DEBUG_printf      // printf
 	#define DNS_DEBUG_printf       // printf
 	#define DNS_DUMP_DATA       0  // 1
-	/* Some more in-depth wireless debug options are provided by LWIP and can be found in io/wifly/lwipopts.h if necessary. */
+	/* Some more in-depth wireless debug options are provided by LWIP and can be found in wifly/lwipopts.h if necessary. */
 
 #else
 

@@ -156,9 +156,9 @@ int main() {
         if (imu_configure()) {
             FBW_DEBUG_printf("[boot] IMU ok\n");
             setIMUSafe(true);
-            FBW_DEBUG_printf("[boot] checking for IMU axis calibration\n");
+            FBW_DEBUG_printf("[boot] checking for IMU calibration\n");
             if (!imu_isCalibrated()) {
-                FBW_DEBUG_printf("[boot] IMU axis calibration not found! waiting a bit to begin...\n");
+                FBW_DEBUG_printf("[boot] IMU calibration not found! waiting a bit to begin...\n");
                 platform_boot_complete();
                 sleep_ms(2000);
                 if (!imu_calibrate()) {

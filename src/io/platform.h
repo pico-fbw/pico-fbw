@@ -26,6 +26,8 @@ bool platform_is_fbw();
 
 bool platform_is_athena();
 
+void platform_set_athena(bool val);
+
 /**
  * @return 0 PICO, 1 PICO_W, 2 FBW, 3 ATHENA, -1 ERROR
  * @note higher numbers will take precedence over lower numbers; for example, if PICO_W and FBW are both detected, FBW will be returned
