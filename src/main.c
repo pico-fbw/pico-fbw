@@ -130,12 +130,12 @@ int main() {
         }
     }
     FBW_DEBUG_printf("[boot] testing servos, watch for movement\n");
-    const uint8_t degrees[] = {105, 75};
+    const uint8_t degrees[] = {110, 70};
     for (uint8_t d = 0; d < 2; d++) {
         for (uint8_t s = 0; s < num_servos; s++) {
             servo_set(servos[s], degrees[d]);
         }
-        sleep_ms(50);
+        sleep_ms(200);
     }
     for (uint8_t s = 0; s < num_servos; s++) {
         servo_set(servos[s], 90);

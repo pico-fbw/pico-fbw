@@ -100,9 +100,9 @@ void flight_update(double roll, double pitch, double yaw, bool override) {
 
     // Supply current PID outputs to servos
     #if defined(CONTROL_3AXIS)
-        servo_set(SERVO_AIL_PIN, REVERSE_AIL ? (uint16_t)(roll_c.out + 90) : (uint16_t)(roll_c.out - 90));
-        servo_set(SERVO_ELEV_PIN, REVERSE_ELEV ? (uint16_t)(pitch_c.out + 90) : (uint16_t)(pitch_c.out - 90));
-        servo_set(SERVO_RUD_PIN, REVERSE_RUD ? (uint16_t)(yawOutput + 90) : (uint16_t)(yawOutput - 90));
+        servo_set(SERVO_AIL_PIN, REVERSE_ROLL ? (uint16_t)(roll_c.out + 90) : (uint16_t)(roll_c.out - 90));
+        servo_set(SERVO_ELEV_PIN, REVERSE_PITCH ? (uint16_t)(pitch_c.out + 90) : (uint16_t)(pitch_c.out - 90));
+        servo_set(SERVO_RUD_PIN, REVERSE_YAW ? (uint16_t)(yawOutput + 90) : (uint16_t)(yawOutput - 90));
     #elif defined(CONTROL_FLYINGWING)
         servo_set(SERVO_ELEVON_L_PIN, (uint16_t)(lElevonOutput + 90));
         servo_set(SERVO_ELEVON_R_PIN, (uint16_t)(rElevonOutput + 90));

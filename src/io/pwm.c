@@ -211,7 +211,7 @@ bool pwm_calibrate(uint pin_list[], uint num_pins, float deviations[], uint num_
             FBW_DEBUG_printf("[pwm] running trial %d out of %d\n", t + 1, run_times);
             float total_difference = 0.0f;
             for (uint i = 0; i < num_samples; i++) {
-                total_difference += (deviation - isThrottle ? readRaw(pin, PWM_MODE_ESC) : readRaw(pin, PWM_MODE_DEG));
+                total_difference += (deviation - (isThrottle ? readRaw(pin, PWM_MODE_ESC) : readRaw(pin, PWM_MODE_DEG)));
                 sleep_ms(sample_delay_ms);
             }
             // Check to see if the deviation is 270 (this value occurs with a pulsewidth of 0 or 1, aka not connected)

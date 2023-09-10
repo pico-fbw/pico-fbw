@@ -245,6 +245,7 @@ bool imu_configure() {
                 error_throw(ERROR_IMU, ERROR_LEVEL_WARN, 1000, 0, false, "IMU calibration is not optimal.");
                 FBW_DEBUG_printf("[imu] calibration status: SYS: %d, GYR: %d, ACC: %d, MAG: %d\n", calibrationSYS, calibrationGYR, calibrationACC, calibrationMAG);
             }
+            // TODO: add offset calibration for BNO as well
             return bno_changeMode(MODE_NDOF); // Select NDOF mode to obtain Euler data
         case IMU_MODEL_MPU6050:
             imu_write(PWR_MODE_REGISTER, 0x80); // Reset power

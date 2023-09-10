@@ -106,13 +106,15 @@ This must be quite a small value--the setpoint is calculated many times per seco
 
 #endif
 
-#define REVERSE_AIL  0 // Reverses the aileron direction.
-#define REVERSE_ELEV 0 // Reverses the elevator direction.
-#define REVERSE_RUD  0 // Reverses the rudder direction.
+#define REVERSE_ROLL  0 // Reverses the roll direction.
+#define REVERSE_PITCH 0 // Reverses the pitch direction.
+#define REVERSE_YAW   0 // Reverses the yaw direction.
 
 #ifdef ATHR_ENABLED
+
 	#define INPUT_THR_PIN 7 // Pin that the PWM signal wire from the reciever THROTTLE channel is connected to.
 	#define ESC_THR_PIN 8 // Pin that the PWM wire on the THROTTLE ESC is connected to.
+
 #endif
 
 #define INPUT_SW_PIN 9 // Pin that the PWM signal wire from the reciever SWITCH channel is connected to.
@@ -222,6 +224,7 @@ There are no module types, almost all GPS modules use the NMEA-0183 standard so 
 // #define PID_AUTOTUNE
 #ifdef PID_AUTOTUNE
 #else
+
 	/* PID constants for the roll axis. */
 	#define roll_kP 1.0
 	#define roll_kI 0.0025
@@ -231,6 +234,7 @@ There are no module types, almost all GPS modules use the NMEA-0183 standard so 
 	#define pitch_kP 1.0
 	#define pitch_kI 0.0025
 	#define pitch_kD 0.001
+
 #endif
 
 /* PID constants for the yaw axis. */
@@ -284,6 +288,7 @@ There are no module types, almost all GPS modules use the NMEA-0183 standard so 
  * Once you've done that, you are welcome to enable/disable whatever debugging/API options you wish by commenting/uncommenting them here.
 */
 #if defined(LIB_PICO_STDIO_USB) || defined(LIB_PICO_STDIO_UART)
+
 	#define FBW_DEBUG // Internal, do not touch
 
 	/* Uncomment to enable the API over serial. */
@@ -311,6 +316,7 @@ There are no module types, almost all GPS modules use the NMEA-0183 standard so 
 	/* Some more in-depth wireless debug options are provided by LWIP and can be found in io/wifly/lwipopts.h if necessary. */
 
 #else
+
 	#define FBW_DEBUG_printf
 	#define WIFLY_DEBUG_printf
 	#define WIFLY_DUMP_DATA    0
@@ -319,6 +325,7 @@ There are no module types, almost all GPS modules use the NMEA-0183 standard so 
 	#define DHCP_DEBUG_printf
 	#define DNS_DEBUG_printf
 	#define DNS_DUMP_DATA      0
+
 #endif
 
 
