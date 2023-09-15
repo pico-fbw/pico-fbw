@@ -17,6 +17,8 @@
 #include "../lib/jsmn.h"
 
 #include "flash.h"
+#include "platform.h"
+#include "servo.h"
 
 #include "../modes/flight.h"
 #include "../modes/modes.h"
@@ -277,6 +279,19 @@ void api_poll() {
                     } else {
                         printf("pico-fbw 500 Internal Error\n");
                     }
+                // SET_MODE and SET_THRUST are one-argument commands, thus they do not utilize JSON
+                } else if (strcmp(cmd, "SET_MODE") == 0) {
+                    Mode mode = atoi(args);
+                    // Ensure mode is valid before setting it
+                    if (mode >= DIRECT && mode <= HOLD) {
+                        toMode(mode);
+                        printf("pico-fbw 200 OK\n");
+                    } else {
+                        printf("pico-fbw 400 Bad Request\n");
+                    }
+                } else if (strcmp(cmd, "SET_THRUST") == 0) {
+                    // TODO: implement the command w/ athr lib
+                    printf("pico-fbw 501 Not Implemented\n");
                 } else {
                     bool goodReq = false;
                     // All other SET commands utilize JSON so we should initatiate the JSON parser (all documented in wifly.c)
@@ -286,26 +301,7 @@ void api_poll() {
                     int token_count = jsmn_parse(&parser, args, strlen(args), tokens, sizeof(tokens)/sizeof(tokens[0]));
                     if (token_count > 0) {
                         // TODO: allow SET_MODE to report back if setting the mode was successful or not
-                        if (strcmp(cmd, "SET_MODE") == 0) {
-                            for (uint i = 0; i < token_count; i++) {
-                                if (tokens[i].type == JSMN_STRING) {
-                                    char field[25];
-                                    strncpy(field, args + tokens[i].start, tokens[i].end - tokens[i].start);
-                                    field[tokens[i].end - tokens[i].start] = '\0';
-                                    if (strcmp(field, "mode") == 0) {
-                                        char mode[2];
-                                        strncpy(mode, args + tokens[i + 1].start, tokens[i + 1].end - tokens[i + 1].start);
-                                        mode[tokens[i + 1].end - tokens[i + 1].start] = '\0';
-                                        // Ensure mode is valid before setting it
-                                        if (atoi(mode) >= DIRECT && atoi(mode) <= HOLD) {
-                                            toMode(atoi(mode));
-                                            printf("pico-fbw 200 OK\n");
-                                            goodReq = true;
-                                        }
-                                    }
-                                }
-                            }
-                        } else if (strcmp(cmd, "SET_SETPOINTS") == 0) {
+                        if (strcmp(cmd, "SET_SETPOINTS") == 0) {
                             if (getCurrentMode() == NORMAL) {
                                 float rollSet, pitchSet, yawSet = -100.0f;
                                 for (uint i = 0; i < token_count; i++) {
@@ -345,10 +341,6 @@ void api_poll() {
                                 printf("pico-fbw 403 Forbidden\n");
                                 goodReq = true;
                             }
-                        } else if (strcmp(cmd, "SET_THRUST") == 0) {
-                            // TODO: implement the command w/ athr lib
-                            printf("pico-fbw 501 Not Implemented\n");
-                            goodReq = true;
                         } else if (strcmp(cmd, "SET_PID") == 0) {
                             float rollP, rollI, rollD, pitchP, pitchI, pitchD = -100.0f;
                             for (uint i = 0; i < token_count; i++) {
@@ -461,7 +453,25 @@ void api_poll() {
                         printf("pico-fbw 400 Bad Request\n");
                     }
                 }
-            // Misc commands (no prefix)
+            // All TEST commands
+            } else if (strncmp(cmd, "TEST_", 5) == 0) {
+                // TODO: tests for PWM, IMU, and GPS
+                if (strcmp(cmd, "TEST_SERVO")) {
+                    uint servos[] = {};
+                    uint num_servos;
+                    const uint16_t degrees[] = DEFAULT_SERVO_TEST;
+                    if (args == NULL) {
+                        // No arguments, test with default values
+                        const uint servos[] = SERVO_PINS;
+                        num_servos = NUM_SERVOS;
+                    } else {
+                        // Test the servo that was provided in the command
+                        const uint servos[] = {atoi(args)};
+                        num_servos = 1;
+                    }
+                    servo_test(servos, num_servos, degrees, NUM_DEFAULT_SERVO_TEST, DEFAULT_SERVO_TEST_PAUSE_MS);
+                }
+            // No-prefix commands
             } else if (strcmp(cmd, "PING") == 0) {
                 printf("PONG\n");
             } else if (strcmp(cmd, "HELP") == 0) {
@@ -479,12 +489,13 @@ void api_poll() {
                        "GET_PID - Get PID constants\n"
                        "GET_FLASH - Dump the flash contents used by pico-fbw\n"
                        "GET_INFO - Get system information\n"
-                       "SET_MODE {\"mode\":<mode>} - Set the flight mode\n"
+                       "SET_MODE <mode> - Set the flight mode\n"
                        "SET_SETPOINTS {\"roll\":<roll>,\"pitch\":<pitch>,\"yaw\":<yaw>} - Set the desired attitude setpoints in normal mode\n"
-                       "SET_THRUST {\"thrust\":<thrust>} - Set the thrust value\n"
+                       "SET_THRUST <thrust> - Set the thrust value\n"
                        "SET_FPLAN <flight_plan> - Set the flightplan JSON\n"
                        "SET_PID {\"roll\":{\"p\":<roll_p>,\"i\":<roll_i>,\"d\":<roll_d>},\"pitch\":{\"p\":<pitch_p>,\"i\":<pitch_i>,\"d\":<pitch_d>}} - Set PID constants\n"
                        "SET_FLASH {\"sector\":<sector>,\"index\",<index>,\"value\":<value>} - Write a single floating-point value to the flash\n"
+                       "TEST_SERVO <servo> Tests the servo (or all enabled servos if no servo is specified)\n"
                        "Responses:\n"
                        "200 OK - Request successful\n"
                        "400 Bad Request - Invalid request format or parameters\n"
@@ -528,14 +539,6 @@ void api_poll() {
                            "You should have received a copy of the GNU General Public License"
                            "along with this program. If not, see <https://www.gnu.org/licenses/>.\n",
                            PICO_FBW_VERSION, PICO_FBW_API_VERSION, WIFLY_VERSION, rp2040_chip_version(), (rp2040_rom_version() - 1));
-                #endif
-            } else if (strcmp(cmd, "ATHENA_INFO") == 0) {
-                #if defined(RASPBERRYPI_PICO)
-                    printf("pico-fbw v%s, API v%s, RP2040-B%d\npico-fbw 200 OK\n",
-                           PICO_FBW_VERSION, PICO_FBW_API_VERSION, rp2040_chip_version());
-                #elif defined(RASPBERRYPI_PICO_W)
-                    printf("pico(w)-fbw v%s, API v%s, RP2040-B%d\npico-fbw 200 OK\n",
-                           PICO_FBW_VERSION, PICO_FBW_API_VERSION, rp2040_chip_version());
                 #endif
             } else if (strcmp(cmd, "PARMESEAN_PARTY") == 0) {
                 printf("pico-fbw 1022 Party!\n");

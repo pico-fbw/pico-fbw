@@ -15,14 +15,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include "pico/time.h"
 #include "pico/types.h"
 
 #include "hardware/clocks.h"
 #include "hardware/gpio.h"
 #include "hardware/irq.h"
 #include "hardware/pwm.h"
-
-#include "../config.h"
 
 #include "servo.h"
 
@@ -72,6 +71,15 @@ uint servo_enable(const uint gpio_pin) {
     pwm_hw->slice[slice].top = top;
     servo_set(gpio_pin, 90); // Set the servo to ~90 (middle) degrees by default
     return 0;
+}
+
+void servo_test(const uint servos[], const uint num_servos, const uint16_t degrees[], const uint num_degrees, const uint pause_between_moves_ms) {
+    for (uint8_t d = 0; d < num_degrees; d++) {
+        for (uint8_t s = 0; s < num_servos; s++) {
+            servo_set(servos[s], degrees[d]);
+        }
+        sleep_ms(pause_between_moves_ms);
+    }
 }
 
 void servo_disable(const uint gpio_pin) {

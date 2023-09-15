@@ -28,7 +28,7 @@ this keeps compatability between models. */
  * @param pin_list the list of pins to enable PWM input on
  * @param num_pins the number of pins you are enabling PWM input on (1-7)
 */
-void pwm_enable(uint pin_list[], uint num_pins);
+void pwm_enable(const uint pin_list[], const uint num_pins);
 
 /**
  * @param pin the GPIO pin to read (must have been already initalized)
@@ -36,7 +36,7 @@ void pwm_enable(uint pin_list[], uint num_pins);
  * @return the calculated degree value derived from the pulsewidth on that pin.
  * @note The mode simply changes how data is displayed and not how it is calculated (DEG from 0-180 and ESC from 0-100).
 */
-float pwm_read(uint pin, PWMMode mode);
+float pwm_read(const uint pin, PWMMode mode);
 
 /**
  * Samples a list of pins for deviation from a specified value for a specified number of samples, then saves that offset value to flash.
@@ -49,7 +49,7 @@ float pwm_read(uint pin, PWMMode mode);
  * 
  * @return true if the calibration was successful, false if not
 */
-bool pwm_calibrate(uint pin_list[], uint num_pins, float deviations[], uint num_samples, uint sample_delay_ms, uint run_times);
+bool pwm_calibrate(const uint pin_list[], const uint num_pins, const float deviations[], uint num_samples, uint sample_delay_ms, uint run_times);
 
 /**
  * Checks if the PWM calibration has been run before.

@@ -173,15 +173,12 @@ uint8_t getCurrentMode() { return currentMode; }
 
 void setIMUSafe(bool state) {
     if (state != imuDataSafe) {
-        // Automatically de-init IMU and enable direct mode if IMU is deemed unsafe
-        if (!state) {
-            toMode(DIRECT);
-        }
         imuDataSafe = state;
         #ifdef FBW_DEBUG
             if (state) {
                 FBW_DEBUG_printf("[modes] IMU set as safe\n");
             } else {
+                toMode(DIRECT); // Automatically de-init IMU if IMU is deemed unsafe
                 FBW_DEBUG_printf("[modes] IMU set as unsafe\n");
             }
         #endif
@@ -190,17 +187,16 @@ void setIMUSafe(bool state) {
 
 void setGPSSafe(bool state) {
     if (state != gpsDataSafe) {
-        if (!state) {
-            if (currentMode == AUTO || currentMode == HOLD) {
-                toMode(NORMAL);
-            }
-        }
         gpsDataSafe = state;
         #ifdef FBW_DEBUG
             if (state) {
                 FBW_DEBUG_printf("[modes] GPS set as safe\n");
+                error_clear(ERROR_GPS, false); // Clear any GPS errors
             } else {
                 FBW_DEBUG_printf("[modes] GPS set as unsafe\n");
+                if (currentMode == AUTO || currentMode == HOLD) {
+                    toMode(NORMAL); // Return to normal mode if GPS is deemed unsafe in Auto or Hold modes (require GPS)
+                }
             }
         #endif
     }

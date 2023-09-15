@@ -67,7 +67,7 @@ static void pio1Handler(void) {
  * @note This function will automatically claim and enable a state machine on the specified PIO instance,
  * or throw an error if none were available
 */
-static void setup_sm(PIO pio, uint offset, uint pin) {
+static void setup_sm(const PIO pio, const uint offset, const uint pin) {
     // Find a usable state machine for this pin
     int sm = pio_claim_unused_sm(pio, false);
     if (sm >= 0) {
@@ -94,7 +94,7 @@ static void setup_sm(PIO pio, uint offset, uint pin) {
     }
 }
 
-void pwm_enable(uint pin_list[], uint num_pins) {
+void pwm_enable(const uint pin_list[], const uint num_pins) {
     if (pio_can_add_program(pio0, &pwm_program)) {
         FBW_DEBUG_printf("[pwm] loading PWM IN into PIO0 with %d state machines\n", num_pins > 4 ? 4 : num_pins);
         uint offset = pio_add_program(pio0, &pwm_program);
@@ -167,7 +167,7 @@ static inline float pwmOffsetOf(uint pin) {
  * @param mode the mode of the PWM
  * @return the raw degree value
 */
-static inline float readRaw(uint pin, PWMMode mode) {
+static inline float readRaw(const uint pin, PWMMode mode) {
     // Find the GPIO pin's state machine
     for (uint8_t i = 0; i < (sizeof(states) / sizeof(states[0])); i++) {
         if (states[i].pin == pin) {
@@ -181,7 +181,7 @@ static inline float readRaw(uint pin, PWMMode mode) {
     }
 }
 
-float pwm_read(uint pin, PWMMode mode) {
+float pwm_read(const uint pin, PWMMode mode) {
     for (uint8_t i = 0; i < (sizeof(states) / sizeof(states[0])); i++) {
         if (states[i].pin == pin) {
             switch (mode) {
@@ -194,7 +194,7 @@ float pwm_read(uint pin, PWMMode mode) {
     }
 }
 
-bool pwm_calibrate(uint pin_list[], uint num_pins, float deviations[], uint num_samples, uint sample_delay_ms, uint run_times) {
+bool pwm_calibrate(const uint pin_list[], const uint num_pins, const float deviations[], uint num_samples, uint sample_delay_ms, uint run_times) {
     FBW_DEBUG_printf("[pwm] starting pwm calibration\n");
     if (gb_num_pins < 1) return false; // Ensure PWM has been initialized
     error_throw(ERROR_PWM, ERROR_LEVEL_STATUS, 100, 0, false, ""); // Start blinking LED to signify we are calibrating

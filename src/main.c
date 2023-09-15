@@ -75,23 +75,23 @@ int main() {
     // PWM (in)
     #if defined(CONTROL_3AXIS)
         #ifdef ATHR_ENABLED
-            uint pins[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, INPUT_SW_PIN, INPUT_THR_PIN};
-            uint num_pins = 5;
-            float deviations[] = {90.0f, 90.0f, 90.0f, 0.0f, 0.0f}; // We expect all controls to be centered except switch and throttle
+            const uint pins[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, INPUT_SW_PIN, INPUT_THR_PIN};
+            const uint num_pins = 5;
+            const float deviations[] = {90.0f, 90.0f, 90.0f, 0.0f, 0.0f}; // We expect all controls to be centered except switch and throttle
         #else
-            uint pins[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, INPUT_SW_PIN};
-            uint num_pins = 4;
-            float deviations[] = {90.0f, 90.0f, 90.0f, 0.0f};
+            const uint pins[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_RUD_PIN, INPUT_SW_PIN};
+            const uint num_pins = 4;
+            const float deviations[] = {90.0f, 90.0f, 90.0f, 0.0f};
         #endif
     #elif defined(CONTROL_FLYINGWING)
         #ifdef ATHR_ENABLED
-            uint pins[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_SW_PIN, INPUT_THR_PIN};
-            uint num_pins = 4;
-            float deviations[] = {90.0f, 90.0f, 0.0f, 0.0f};
+            const uint pins[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_SW_PIN, INPUT_THR_PIN};
+            const uint num_pins = 4;
+            const float deviations[] = {90.0f, 90.0f, 0.0f, 0.0f};
         #else
-            uint pins[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_SW_PIN};
-            uint num_pins = 3;
-            float deviations[] = {90.0f, 90.0f, 0.0f};
+            const uint pins[] = {INPUT_AIL_PIN, INPUT_ELEV_PIN, INPUT_SW_PIN};
+            const uint num_pins = 3;
+            const float deviations[] = {90.0f, 90.0f, 0.0f};
         #endif
     #endif
     FBW_DEBUG_printf("[boot] enabling PWM\n");
@@ -116,30 +116,15 @@ int main() {
 
     // Servos/ESC (PWM out)
     FBW_DEBUG_printf("[boot] enabling servos\n");
-    #if defined(CONTROL_3AXIS)
-        const uint8_t servos[] = {SERVO_AIL_PIN, SERVO_ELEV_PIN, SERVO_RUD_PIN};
-        uint num_servos = 3;
-    #elif defined(CONTROL_FLYINGWING)
-        const uint8_t servos[] = {SERVO_ELEVON_L_PIN, SERVO_ELEVON_R_PIN};
-        uint num_servos = 2;
-    #endif
-    for (uint8_t s = 0; s < num_servos; s++) {
+    const uint servos[] = SERVO_PINS;
+    for (uint8_t s = 0; s < NUM_SERVOS; s++) {
         if (servo_enable(servos[s]) != 0) {
-            FBW_DEBUG_printf("[boot] failed to initialize servo %d)\n", s);
+            FBW_DEBUG_printf("[boot] failed to initialize servo %d\n", s);
             error_throw(ERROR_PWM, ERROR_LEVEL_FATAL, 800, 0, false, "Failed to initialize a servo!");
         }
     }
-    FBW_DEBUG_printf("[boot] testing servos, watch for movement\n");
-    const uint8_t degrees[] = {110, 70};
-    for (uint8_t d = 0; d < 2; d++) {
-        for (uint8_t s = 0; s < num_servos; s++) {
-            servo_set(servos[s], degrees[d]);
-        }
-        sleep_ms(200);
-    }
-    for (uint8_t s = 0; s < num_servos; s++) {
-        servo_set(servos[s], 90);
-    }
+    const uint16_t degrees[] = DEFAULT_SERVO_TEST;
+    servo_test(servos, NUM_SERVOS, degrees, NUM_DEFAULT_SERVO_TEST, DEFAULT_SERVO_TEST_PAUSE_MS);
     #ifdef ATHR_ENABLED
         FBW_DEBUG_printf("[boot] enabling ESC\n");
         if (esc_enable(ESC_THR_PIN) != 0) {
@@ -149,7 +134,7 @@ int main() {
 
     // IMU
     #ifdef IMU_BNO055
-        while (time_us_32() < (850 * 1000)); // BNO055 requires at least 850ms to ready up
+        while (time_us_64() < (850 * 1000)); // BNO055 requires at least 850ms to ready up
     #endif
     FBW_DEBUG_printf("[boot] initializing IMU\n");
     if (imu_init() == 0) {
@@ -180,6 +165,7 @@ int main() {
         if (gps_init()) {
             FBW_DEBUG_printf("[boot] GPS ok\n");
             // We don't set the GPS safe just yet, communications have been established but we are still unsure if the data is okay
+            error_throw(ERROR_GPS, ERROR_LEVEL_STATUS, 1000, 0, false, ""); // Show that GPS does not have a signal yet
         } else {
             error_throw(ERROR_GPS, ERROR_LEVEL_ERR, 1000, 0, false, "GPS initalization failed!");
         }

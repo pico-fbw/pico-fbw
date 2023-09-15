@@ -137,5 +137,3 @@ bool platform_is_fbw() {
 }
 
 bool platform_is_athena() { return (isAthena && gpio_get(22)); }
-
-void platform_set_athena(bool val) { isAthena = val; }
