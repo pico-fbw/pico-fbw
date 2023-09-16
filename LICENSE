@@ -20,6 +20,7 @@ The following files (and their corresponding Header [.h] files) of this project 
 - pid.c
 - pwm.c
 - pwm.pio
+- semver.c
 - servo.c
 
 You can find a copy of the License at the following URL:

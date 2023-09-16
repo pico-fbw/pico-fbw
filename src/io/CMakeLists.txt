@@ -16,6 +16,7 @@ pico_generate_pio_header(fbw_io ${CMAKE_CURRENT_LIST_DIR}/pwm.pio)
 target_link_libraries(fbw_io
     fbw_lib
     fbw_modes
+    fbw_sys
     fbw_wifly
     hardware_clocks
     hardware_flash

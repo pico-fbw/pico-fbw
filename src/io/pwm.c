@@ -158,7 +158,7 @@ static inline float pwmOffsetOf(uint pin) {
             val = 1;
     }
     // Read from the correct sector based on the value
-    return flash_read(FLASH_SECTOR_PWM, val);
+    return flash_readFloat(FLOAT_SECTOR_PWM, val);
 }
 
 /**
@@ -200,7 +200,7 @@ bool pwm_calibrate(const uint pin_list[], const uint num_pins, const float devia
     error_throw(ERROR_PWM, ERROR_LEVEL_STATUS, 100, 0, false, ""); // Start blinking LED to signify we are calibrating
     // Create an array where we will arrange our data to later write
     // The first position holds a flag to indicate that calibration has been completed; subsequent values will hold the calibration data
-    float calibration_data[CONFIG_SECTOR_SIZE] = {FLAG_PWM};
+    float calibration_data[FLOAT_SECTOR_SIZE] = {FLAG_PWM};
     for (uint i = 0; i < num_pins; i++) {
         uint pin = pin_list[i];
         FBW_DEBUG_printf("[pwm] calibrating pin %d (%d/%d)\n", pin, i + 1, num_pins);
@@ -280,14 +280,14 @@ bool pwm_calibrate(const uint pin_list[], const uint num_pins, const float devia
         #endif
     #endif
     FBW_DEBUG_printf("[pwm] writing calibration data to flash\n");
-    flash_write(FLASH_SECTOR_PWM, calibration_data);
+    flash_writeFloat(FLOAT_SECTOR_PWM, calibration_data);
     error_clear(ERROR_PWM, false);
     return true;
 }
 
 int pwm_isCalibrated() {
     // Read the calibration flag
-    if (flash_read(FLASH_SECTOR_PWM, 0) == FLAG_PWM) {
+    if (flash_readFloat(FLOAT_SECTOR_PWM, 0) == FLAG_PWM) {
         // Ensure that the control mode we are in is the same as the one in which we calibrated
         ControlMode currentControlMode;
         #if defined(CONTROL_3AXIS)
@@ -303,7 +303,7 @@ int pwm_isCalibrated() {
                 currentControlMode = CTRLMODE_FLYINGWING;
             #endif
         #endif
-        if (currentControlMode != flash_read(FLASH_SECTOR_PWM, 6)) {
+        if (currentControlMode != flash_readFloat(FLOAT_SECTOR_PWM, 6)) {
             return -2;
         }
         // All checks have passed

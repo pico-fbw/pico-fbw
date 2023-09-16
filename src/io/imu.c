@@ -82,8 +82,8 @@ static inline int imu_write(unsigned char addr, unsigned char val) {
     return i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, c, sizeof(c), true, IMU_TIMEOUT_US);
 }
 
-static inline IMUAxis getCalibrationAxis(EulerAxis axis) { return (IMUAxis)(flash_read(FLASH_SECTOR_IMU_MAP, (uint)axis)); }
-static inline bool shouldCompensateAxis(EulerAxis axis) { return (bool)(flash_read(FLASH_SECTOR_IMU_MAP, (uint)(axis + 3))); }
+static inline IMUAxis getCalibrationAxis(EulerAxis axis) { return (IMUAxis)(flash_readFloat(FLOAT_SECTOR_IMU_MAP, (uint)axis)); }
+static inline bool shouldCompensateAxis(EulerAxis axis) { return (bool)(flash_readFloat(FLOAT_SECTOR_IMU_MAP, (uint)(axis + 3))); }
 
 /**
  * Changes the working mode of the BNO055.
@@ -314,11 +314,11 @@ bool imu_configure() {
             // if (imu_isCalibrated()) {
             if (false) { // FIXME: there are currently problems with restoring calibration data, thus data is better without it but still should be fixed
                 int16_t calibrationData[11];
-                for (uint i = 0; i < CONFIG_SECTOR_SIZE; i++) {
-                    calibrationData[i] = (int16_t)flash_read(FLASH_SECTOR_IMU_CFG0, i);
+                for (uint i = 0; i < FLOAT_SECTOR_SIZE; i++) {
+                    calibrationData[i] = (int16_t)flash_readFloat(FLOAT_SECTOR_IMU_CFG0, i);
                 }
-                for (uint i = 0; i < (sizeof(calibrationData) / sizeof(int16_t)) - CONFIG_SECTOR_SIZE; i++) {
-                    calibrationData[i + CONFIG_SECTOR_SIZE] = (int16_t)flash_read(FLASH_SECTOR_IMU_CFG1, i);
+                for (uint i = 0; i < (sizeof(calibrationData) / sizeof(int16_t)) - FLOAT_SECTOR_SIZE; i++) {
+                    calibrationData[i + FLOAT_SECTOR_SIZE] = (int16_t)flash_readFloat(FLOAT_SECTOR_IMU_CFG1, i);
                 }
                 int timeout = bno_saveCalibrationData(calibrationData, false);
                 if (timeout == PICO_ERROR_GENERIC || timeout == PICO_ERROR_TIMEOUT) {
@@ -513,27 +513,27 @@ bool imu_calibrate() {
             int timeout = bno_getCalibrationData(data);
             if (timeout != PICO_ERROR_GENERIC && timeout != PICO_ERROR_TIMEOUT) {
                 // Convert to floats so we can store in flash
-                float imu0[CONFIG_SECTOR_SIZE] = {FLAG_IMU};
-                for (uint i = 0; i < CONFIG_SECTOR_SIZE; i++) {
+                float imu0[FLOAT_SECTOR_SIZE] = {FLAG_IMU};
+                for (uint i = 0; i < FLOAT_SECTOR_SIZE; i++) {
                     imu0[i] = (float)data[i];
                 }
-                float imu1[CONFIG_SECTOR_SIZE];
-                for (uint i = 0; i < (sizeof(data) / sizeof(int16_t)) - CONFIG_SECTOR_SIZE; i++) {
-                    imu1[i] = (float)data[i + CONFIG_SECTOR_SIZE];
+                float imu1[FLOAT_SECTOR_SIZE];
+                for (uint i = 0; i < (sizeof(data) / sizeof(int16_t)) - FLOAT_SECTOR_SIZE; i++) {
+                    imu1[i] = (float)data[i + FLOAT_SECTOR_SIZE];
                 }
-                flash_write(FLASH_SECTOR_IMU_CFG0, imu0);
-                flash_write(FLASH_SECTOR_IMU_CFG1, imu1);
+                flash_writeFloat(FLOAT_SECTOR_IMU_CFG0, imu0);
+                flash_writeFloat(FLOAT_SECTOR_IMU_CFG1, imu1);
             } else {
                 FBW_DEBUG_printf("[imu] failed to read BNO055 calibration data!\n");
                 return false;
             }
             // Write data back as a test
             int16_t test[11];
-            for (uint i = 0; i < CONFIG_SECTOR_SIZE; i++) {
-                test[i] = (int16_t)flash_read(FLASH_SECTOR_IMU_CFG0, i);
+            for (uint i = 0; i < FLOAT_SECTOR_SIZE; i++) {
+                test[i] = (int16_t)flash_readFloat(FLOAT_SECTOR_IMU_CFG0, i);
             }
-            for (uint i = 0; i < (sizeof(test) / sizeof(int16_t)) - CONFIG_SECTOR_SIZE; i++) {
-                test[i + CONFIG_SECTOR_SIZE] = (int16_t)flash_read(FLASH_SECTOR_IMU_CFG1, i);
+            for (uint i = 0; i < (sizeof(test) / sizeof(int16_t)) - FLOAT_SECTOR_SIZE; i++) {
+                test[i + FLOAT_SECTOR_SIZE] = (int16_t)flash_readFloat(FLOAT_SECTOR_IMU_CFG1, i);
             }
             timeout = bno_saveCalibrationData(test, true);
             if (timeout != PICO_ERROR_GENERIC && timeout != PICO_ERROR_TIMEOUT) {
@@ -549,7 +549,7 @@ bool imu_calibrate() {
     return true; // TODO remove, just for testing for now
     FBW_DEBUG_printf("[imu] starting imu angle mapping calibration\n");
     error_throw(ERROR_IMU, ERROR_LEVEL_STATUS, 500, 100, true, ""); // Blink for calibration status
-    float calibration_data[CONFIG_SECTOR_SIZE] = {FLAG_IMU, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}; // {flag, x, y, z, x_dir, y_dir, z_dir}
+    float calibration_data[FLOAT_SECTOR_SIZE] = {FLAG_IMU, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}; // {flag, x, y, z, x_dir, y_dir, z_dir}
     // Complete all axes' calibration
     IMUCalibrationState state = CALIBRATION_STATE_ROLL;
     while (state != CALIBRATION_STATE_COMPLETE) {
@@ -618,7 +618,7 @@ bool imu_calibrate() {
 
     // Check data before writing to flash
     if (calibration_data[1] != calibration_data[2] && calibration_data[1] != calibration_data[3] && calibration_data[2] != calibration_data[1] && calibration_data[2] != calibration_data[3] && calibration_data[3] != calibration_data[1] && calibration_data[3] != calibration_data[2]) {
-        flash_write(FLASH_SECTOR_IMU_MAP, calibration_data);
+        flash_writeFloat(FLOAT_SECTOR_IMU_MAP, calibration_data);
         FBW_DEBUG_printf("[imu] imu angle mapping calibration complete\n");
         return true;
     } else {
@@ -629,10 +629,10 @@ bool imu_calibrate() {
 
 bool imu_isCalibrated() {
     // Read the flags as well as ensure values make sense
-    if (flash_read(FLASH_SECTOR_IMU_MAP, 0) == FLAG_IMU && flash_read(FLASH_SECTOR_IMU_CFG0, 0 == FLAG_IMU)) {
+    if (flash_readFloat(FLOAT_SECTOR_IMU_MAP, 0) == FLAG_IMU && flash_readFloat(FLOAT_SECTOR_IMU_CFG0, 0 == FLAG_IMU)) {
         float data[6];
         for (uint8_t i = 1; i <= 6; i++) {
-            data[i - 1] = flash_read(FLASH_SECTOR_IMU_MAP, i);
+            data[i - 1] = flash_readFloat(FLOAT_SECTOR_IMU_MAP, i);
             if (!isfinite(data[i - 1])) {
                 return false;
             }

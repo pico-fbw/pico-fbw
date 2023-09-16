@@ -1,4 +1,12 @@
+/**
+ * Source file of pico-fbw: https://github.com/MylesAndMore/pico-fbw
+ * Licensed under the GNU GPL-3.0
+*/
+
+#include <stdio.h>
+
 #include "pico/binary_info.h"
+#include "../lib/semver.h"
 
 #include "hardware/gpio.h"
 
@@ -72,4 +80,36 @@ void info_declare() {
     #else
         bi_decl(bi_program_feature("Wi-Fly disabled"));
     #endif
+}
+
+int info_checkVersion(char *version) {
+    // Parse the version strings into the semantic versioning standard
+    semver_t binary;
+    if (semver_parse(PICO_FBW_VERSION, &binary) < 0) {
+        semver_free(&binary);
+        FBW_DEBUG_printf("[version] unable to parse binary version string\n");
+        return -2;
+    }
+    semver_t compare;
+    if (semver_parse(version, &compare) < 0) {
+        semver_free(&binary);
+        semver_free(&compare);
+        FBW_DEBUG_printf("[version] unable to parse input version string\n");
+        return -2;
+    }
+    // Compare the versions
+    switch (semver_compare(binary, compare)) {
+        case 0:
+            return 0; // Equal
+        case 1:
+            // In most cases this will be a prerelease version but it could also be a user upgrading to a release from prerelease so check that case
+            if (binary.prerelease[0] == '\0') {
+                return -1; // Lower
+            } else {
+                FBW_DEBUG_printf("[version] thanks for testing %s :)\n", binary.prerelease);
+                return 1; // Higher
+            }
+        case -1:
+            return -1;
+    }
 }

@@ -19,7 +19,7 @@ bool mode_tuneisCalibrated() {
     // Check to see if PID constants have not been manually defined
     #ifdef PID_AUTOTUNE
         // Read the first value from the second sector of flash and compare it to what we expect for the calibration flag
-        if ((flash_read(FLASH_SECTOR_PID0, 0) == 0.3f)) {
+        if ((flash_readFloat(FLASH_SECTOR_PID0, 0) == 0.3f)) {
             // TODO: maybe also ensure the values make sense?
             return true;
         } else {

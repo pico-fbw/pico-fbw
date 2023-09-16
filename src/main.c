@@ -28,7 +28,7 @@
 #include "io/switch.h"
 #include "wifly/wifly.h"
 
-#include "lib/info.h"
+#include "sys/info.h"
 
 #include "modes/modes.h"
 
@@ -59,17 +59,32 @@ int main() {
 
     // Check for first boot
     FBW_DEBUG_printf("[driver] starting bootup process\n");
-    if (flash_read(FLASH_SECTOR_BOOT, 0) != FLAG_BOOT) {
+    if (flash_readFloat(FLOAT_SECTOR_BOOT, 0) != FLAG_BOOT) {
         FBW_DEBUG_printf("[boot] boot flag not found! assuming first boot, initializing flash\n");
         flash_reset();
-        float boot[CONFIG_SECTOR_SIZE] = {FLAG_BOOT};
-        flash_write(FLASH_SECTOR_BOOT, boot);
+        float boot[FLOAT_SECTOR_SIZE] = {FLAG_BOOT};
+        flash_writeFloat(FLOAT_SECTOR_BOOT, boot);
         FBW_DEBUG_printf("[boot] boot data written! rebooting now...\n");
         // Reboot is to ensure flash is okay; any problems with the flash will simply cause a bootloop before getting to anything important
-        watchdog_enable(1, 1);
+        watchdog_enable(1, false);
         while (true);
     } else {
         FBW_DEBUG_printf("[boot] boot flag ok\n");
+    }
+
+    // Check version
+    FBW_DEBUG_printf("[boot] checking for updates\n");
+    int versionCheck = info_checkVersion(flash_readString(STRING_SECTOR_VERSION));
+    if (versionCheck != 0) {
+        FBW_DEBUG_printf("[boot] performing a system update from v%s to v%s, please wait...\n", flash_readString(STRING_SECTOR_VERSION), PICO_FBW_VERSION);
+        // << Insert system update code here, if applicable >>
+        // Update flash with new version
+        flash_writeString(STRING_SECTOR_VERSION, PICO_FBW_VERSION);
+        FBW_DEBUG_printf("[boot] system update complete! rebooting now...\n");
+        watchdog_enable(1, false);
+        while (true);
+    } else {
+        FBW_DEBUG_printf("[boot] no updates required\n");
     }
 
     // PWM (in)

@@ -37,7 +37,7 @@
 #include "../io/gps.h"
 
 #include "../config.h"
-#include "../lib/info.h"
+#include "../sys/info.h"
 
 #include "wifly.h"
 
@@ -211,27 +211,15 @@ bool wifly_parseFplan(const char *fplan) {
                     strncpy(versionFw, decoded + tokens[i + 1].start, tokens[i + 1].end - tokens[i + 1].start);
                     versionFw[tokens[i + 1].end - tokens[i + 1].start] = '\0';
                     WIFLY_DEBUG_printf("[wifly] Firmware version: %s\n", versionFw);
-                    // Check if the version is up-to-date
-                    if (strncmp(versionFw, PICO_FBW_VERSION, 5) == 0) {
-                        // Version numbering is up-to-date but is it a prerelease?
-                        const char *versionSuffix = strstr(PICO_FBW_VERSION, "-");
-                        if (versionSuffix != NULL) {
-                            versionSuffix += strlen("-");
-                            if (strncmp(versionSuffix, "alpha", strlen("alpha")) == 0) {
-                                FBW_DEBUG_printf("[wifly] There is a non-alpha release of %s available!\n", PICO_FBW_VERSION);
-                                status = WIFLY_WARN_FW_VERSION;
-                            } else if (strncmp(versionSuffix, "beta", strlen("beta")) == 0) {
-                                FBW_DEBUG_printf("[wifly] There is a non-beta release of %s available!\n", PICO_FBW_VERSION);
-                                status = WIFLY_WARN_FW_VERSION;
-                            }
+                    int versionCheck = info_checkVersion(versionFw);
+                    if (versionCheck < 0) {
+                        if (versionCheck < -1) {
+                            FBW_DEBUG_printf("[wifly] ERROR: version check failed!\n");
+                            status = WIFLY_ERR_PARSE;
                         } else {
-                            WIFLY_DEBUG_printf("[wifly] Version is up-to-date\n");
+                            FBW_DEBUG_printf("[wifly] WARNING: a new pico-fbw firmware version is available, please download it!\n");
+                            status = WIFLY_WARN_FW_VERSION;
                         }
-                    } else if (strncmp(versionFw, PICO_FBW_VERSION, 5) > 0) {
-                        FBW_DEBUG_printf("[wifly] WARNING: firmware out of date\n");
-                        status = WIFLY_WARN_FW_VERSION;
-                    } else if (strncmp(versionFw, PICO_FBW_VERSION, 5) < 0) {
-                        FBW_DEBUG_printf("[wifly] Version is a prerelease\nThanks for contributing :)\n");
                     }
                     has_version_fw = true;
                 } else if (strcmp(field_name, "gps_samples") == 0) {

@@ -26,11 +26,12 @@
 
 #include "../wifly/wifly.h"
 
-#include "../lib/info.h"
+#include "../sys/info.h"
 
 #include "api.h"
 
 // TODO: GET-ERRORS or similar command
+// TODO: REBOOT and REBOOT_BOOTSEL commands
 
 #ifdef API_ENABLED
 
@@ -171,73 +172,74 @@ void api_poll() {
                 } else if (strcmp(cmd, "GET_PID") == 0) {
                     printf("{\"roll\":{\"p\":");
                     // Courtesy checking for -inf values and changing them to null because json is dumb
-                    if (isfinite(flash_read(1, 1))) {
-                        printf("%f", flash_read(1, 1));
+                    if (isfinite(flash_readFloat(1, 1))) {
+                        printf("%f", flash_readFloat(1, 1));
                     } else {
                         printf("null");
                     }
                     printf(",\"i\":");
-                    if (isfinite(flash_read(1, 2))) {
-                        printf("%f", flash_read(1, 2));
+                    if (isfinite(flash_readFloat(1, 2))) {
+                        printf("%f", flash_readFloat(1, 2));
                     } else {
                         printf("null");
                     }
                     printf(",\"d\":");
-                    if (isfinite(flash_read(1, 3))) {
-                        printf("%f", flash_read(1, 3));
+                    if (isfinite(flash_readFloat(1, 3))) {
+                        printf("%f", flash_readFloat(1, 3));
                     } else {
                         printf("null");
                     }
                     printf("},\"pitch\":{\"p\":");
-                    if (isfinite(flash_read(2, 1))) {
-                        printf("%f", flash_read(2, 1));
+                    if (isfinite(flash_readFloat(2, 1))) {
+                        printf("%f", flash_readFloat(2, 1));
                     } else {
                         printf("null");
                     }
                     printf(",\"i\":");
-                    if (isfinite(flash_read(2, 2))) {
-                        printf("%f", flash_read(2, 2));
+                    if (isfinite(flash_readFloat(2, 2))) {
+                        printf("%f", flash_readFloat(2, 2));
                     } else {
                         printf("null");
                     }
                     printf(",\"d\":");
-                    if (isfinite(flash_read(2, 3))) {
-                        printf("%f", flash_read(2, 3));
+                    if (isfinite(flash_readFloat(2, 3))) {
+                        printf("%f", flash_readFloat(2, 3));
                     } else {
                         printf("null");
                     }
                     printf("}}\npico-fbw 200 OK\n");
                 } else if (strcmp(cmd, "GET_FLASH") == 0) {
+                    // TODO: allow reading string flash sectors
                     printf("{\"sectors\":[{\"values\":[{");
                     // In case you were wondering json is still dumb
-                    for (uint s = FLASH_MIN_SECTOR; s <= FLASH_MAX_SECTOR; s++) {
-                        if (s != FLASH_MAX_SECTOR) {
-                            for (uint v = 0; v <= (CONFIG_SECTOR_SIZE - 1); v++) {
-                                if (v != (CONFIG_SECTOR_SIZE - 1)) {
-                                    if (isfinite(flash_read(s, v))) {
-                                        printf("\"%d\":%f,", v, flash_read(s, v));
+                    for (uint s = FLOAT_SECTOR_MIN; s <= FLOAT_SECTOR_MAX; s++) {
+                        if (s != FLOAT_SECTOR_MAX) {
+                            for (uint v = 0; v <= (FLOAT_SECTOR_SIZE - 1); v++) {
+                                if (v != (FLOAT_SECTOR_SIZE - 1)) {
+                                    if (isfinite(flash_readFloat(s, v))) {
+                                        printf("\"%d\":%f,", v, flash_readFloat(s, v));
                                     } else {
                                         printf("\"%d\":null,", v);
                                     }
                                 } else {
-                                    if (isfinite(flash_read(s, v))) {
-                                        printf("\"%d\":%f},{", v, flash_read(s, v));
+                                    if (isfinite(flash_readFloat(s, v))) {
+                                        printf("\"%d\":%f},{", v, flash_readFloat(s, v));
                                     } else {
                                         printf("\"%d\":null},{", v);
                                     }
                                 }
                             }
                         } else {
-                            for (uint v = 0; v <= (CONFIG_SECTOR_SIZE - 1); v++) {
-                                if (v != (CONFIG_SECTOR_SIZE - 1)) {
-                                    if (isfinite(flash_read(FLASH_MAX_SECTOR, v))) {
-                                        printf("\"%d\":%f,", v, flash_read(FLASH_MAX_SECTOR, v));
+                            for (uint v = 0; v <= (FLOAT_SECTOR_SIZE - 1); v++) {
+                                if (v != (FLOAT_SECTOR_SIZE - 1)) {
+                                    if (isfinite(flash_readFloat(FLOAT_SECTOR_MAX, v))) {
+                                        printf("\"%d\":%f,", v, flash_readFloat(FLOAT_SECTOR_MAX, v));
                                     } else {
                                         printf("\"%d\":null,", v);
                                     }
                                 } else {
-                                    if (isfinite(flash_read(FLASH_MAX_SECTOR, v))) {
-                                        printf("\"%d\":%f}]}]}\n", v, flash_read(FLASH_MAX_SECTOR, v));
+                                    if (isfinite(flash_readFloat(FLOAT_SECTOR_MAX, v))) {
+                                        printf("\"%d\":%f}]}]}\n", v, flash_readFloat(FLOAT_SECTOR_MAX, v));
                                     } else {
                                         printf("\"%d\":null}]}]}\n", v);
                                     }
@@ -377,12 +379,13 @@ void api_poll() {
                             }
                             if (rollP >= 0 && rollI >= 0 && rollD >= 0 && pitchP >= 0 && pitchI >= 0 && pitchD >= 0) {
                                 goodReq = true;
-                                float pid[CONFIG_SECTOR_SIZE] = {FLAG_PID, rollP, rollI, rollD, pitchP, pitchI, pitchD};
+                                float pid[FLOAT_SECTOR_SIZE] = {FLAG_PID, rollP, rollI, rollD, pitchP, pitchI, pitchD};
                                 // Write new values
-                                flash_write(FLASH_SECTOR_PID, pid);
+                                flash_writeFloat(FLOAT_SECTOR_PID, pid);
                                 printf("pico-fbw 200 OK\n");
                             }
                         } else if (strcmp(cmd, "SET_FLASH") == 0) {
+                            // TODO: allow writing strings
                             uint sector;
                             uint index;
                             float value;
@@ -397,7 +400,7 @@ void api_poll() {
                                         flsector[tokens[i + 1].end - tokens[i + 1].start] = '\0';
                                         // Ensure sector is valid
                                         sector = atoi(flsector);
-                                        if (sector >= FLASH_MIN_SECTOR && sector <= FLASH_MAX_SECTOR && sector != FLASH_SECTOR_BOOT) {
+                                        if (sector >= FLOAT_SECTOR_MIN && sector <= FLOAT_SECTOR_MAX && sector != FLOAT_SECTOR_BOOT) {
                                             goodReq = true;
                                         } else {
                                             goodReq = false;
@@ -409,7 +412,7 @@ void api_poll() {
                                         flindex[tokens[i + 1].end - tokens[i + 1].start] = '\0';
                                         // Ensure index is valid
                                         index = atoi(flindex);
-                                        if (index >= 0 && index <= CONFIG_SECTOR_SIZE) {
+                                        if (index >= 0 && index <= FLOAT_SECTOR_SIZE) {
                                             goodReq = true;
                                         } else {
                                             goodReq = false;
@@ -432,12 +435,12 @@ void api_poll() {
                             }
                             if (goodReq) {
                                 // Get current flash data in the sector so we don't overwrite it (well technically we do overwrite it but write it back immediately after)
-                                float data[CONFIG_SECTOR_SIZE];
-                                for (uint v = 0; v < CONFIG_SECTOR_SIZE; v++) {
-                                    data[v] = flash_read(sector, v);
+                                float data[FLOAT_SECTOR_SIZE];
+                                for (uint v = 0; v < FLOAT_SECTOR_SIZE; v++) {
+                                    data[v] = flash_readFloat(sector, v);
                                 }
                                 data[index] = value;
-                                flash_write(sector, data);
+                                flash_writeFloat(sector, data);
                                 printf("pico-fbw 200 OK\n");
                             }
                         } else {

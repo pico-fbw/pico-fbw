@@ -35,8 +35,8 @@ static PIDController pitch_c;
 void flight_init() {
     // Create PID controllers for the roll and pitch axes and initialize (also clears) them
     #ifdef PID_AUTOTUNE
-        roll_c = (PIDController){flash_read(FLASH_SECTOR_PID, 1), flash_read(FLASH_SECTOR_PID, 2), flash_read(FLASH_SECTOR_PID, 3), roll_tau, -MAX_AIL_DEFLECTION, MAX_AIL_DEFLECTION, roll_integMin, roll_integMax, roll_kT};
-        pitch_c = (PIDController){flash_read(FLASH_SECTOR_PID, 4), flash_read(FLASH_SECTOR_PID, 5), flash_read(FLASH_SECTOR_PID, 6), pitch_tau, -MAX_ELEV_DEFLECTION, MAX_ELEV_DEFLECTION, pitch_integMin, pitch_integMax, pitch_kT};
+        roll_c = (PIDController){flash_readFloat(FLASH_SECTOR_PID, 1), flash_readFloat(FLASH_SECTOR_PID, 2), flash_readFloat(FLASH_SECTOR_PID, 3), roll_tau, -MAX_AIL_DEFLECTION, MAX_AIL_DEFLECTION, roll_integMin, roll_integMax, roll_kT};
+        pitch_c = (PIDController){flash_readFloat(FLASH_SECTOR_PID, 4), flash_readFloat(FLASH_SECTOR_PID, 5), flash_readFloat(FLASH_SECTOR_PID, 6), pitch_tau, -MAX_ELEV_DEFLECTION, MAX_ELEV_DEFLECTION, pitch_integMin, pitch_integMax, pitch_kT};
     #else
         roll_c = (PIDController){roll_kP, roll_kI, roll_kD, roll_tau, -MAX_AIL_DEFLECTION, MAX_AIL_DEFLECTION, roll_integMin, roll_integMax, roll_kT};
         pitch_c = (PIDController){pitch_kP, pitch_kI, pitch_kD, pitch_tau, -MAX_ELEV_DEFLECTION, MAX_ELEV_DEFLECTION, pitch_integMin, pitch_integMax, pitch_kT};

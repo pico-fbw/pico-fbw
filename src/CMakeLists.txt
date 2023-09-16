@@ -5,6 +5,7 @@ target_link_libraries(${PROJECT_NAME}
     fbw_io
     fbw_lib
     fbw_modes
+    fbw_sys
     fbw_wifly
     hardware_watchdog
     pico_base
@@ -31,6 +32,7 @@ endif ()
 add_subdirectory(io)
 add_subdirectory(lib) # TODO: is it possible to move lib outside of the src/ dir? I tried and it did not go well...
 add_subdirectory(modes)
+add_subdirectory(sys)
 
 # Wi-Fly is always enabled in some capacity (to allow for the API to interact with it regardless of Pico W).
 # LWIP and the whole HTTP stack only gets compiled if the Pico W is detected (this is all done in the Wi-Fly subdirectory).
