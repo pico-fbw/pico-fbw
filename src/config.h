@@ -299,7 +299,7 @@ There are no module types, almost all GPS modules use the NMEA-0183 standard so 
 	#endif
 
 	/* Time (in ms) to wait on bootup for the serial interface to initialize. */
-	#define BOOTUP_WAIT_TIME_MS 800
+	#define BOOTUP_WAIT_TIME_MS 900
 
 	/* Enabled by default (misc logs + warning and error statements): */
 	#define FBW_DEBUG_printf    printf

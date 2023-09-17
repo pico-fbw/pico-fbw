@@ -4,6 +4,7 @@
 */
 
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include "../lib/pid.h"
 
@@ -59,6 +60,7 @@ void flight_update(double roll, double pitch, double yaw, bool override) {
 
     // Check flight envelope for irregularities
     if (aircraft.roll > 72 || aircraft.roll < -72 || aircraft.pitch > 35 || aircraft.pitch < -20) {
+        IMU_DEBUG_printf("[imu] flight envelope exceeded! (roll: %f, pitch: %f, yaw: %f)\n", aircraft.roll, aircraft.pitch, aircraft.yaw);
         setIMUSafe(false);
     }
 

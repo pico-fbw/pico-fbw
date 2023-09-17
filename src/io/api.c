@@ -47,7 +47,7 @@ static inline char *stdin_read_line() {
     // Loop through the line until a new line character is found
     while (true) {
         // Get a character from stdin--0 means the function will simply return if there are no characters in stdin and NOT BLOCK!!
-        int c = getchar_timeout_us(0);
+        int c = getchar_timeout_us(API_CHAR_TIMEOUT_US);
         // Check if timeout or end of line were reached
         if (c == PICO_ERROR_TIMEOUT || c == '\n' || c == '\r') {
             break;
@@ -259,7 +259,7 @@ void api_poll() {
                     #endif
                     printf("pico-fbw 200 OK\n");
                 } else {
-                    printf("pico-fbw 404 Unknown Command\n");
+                    printf("pico-fbw 404 Unknown GET Command\n");
                     free(cmd);
                     free(line);
                     return;
@@ -444,7 +444,7 @@ void api_poll() {
                                 printf("pico-fbw 200 OK\n");
                             }
                         } else {
-                            printf("pico-fbw 404 Unknown Command\n");
+                            printf("pico-fbw 404 Unknown SET Command\n");
                             free(cmd);
                             free(line);
                             return;
@@ -459,20 +459,26 @@ void api_poll() {
             // All TEST commands
             } else if (strncmp(cmd, "TEST_", 5) == 0) {
                 // TODO: tests for PWM, IMU, and GPS
-                if (strcmp(cmd, "TEST_SERVO")) {
-                    uint servos[] = {};
+                if (strcmp(cmd, "TEST_SERVO") == 0) {
                     uint num_servos;
                     const uint16_t degrees[] = DEFAULT_SERVO_TEST;
                     if (args == NULL) {
                         // No arguments, test with default values
                         const uint servos[] = SERVO_PINS;
                         num_servos = NUM_SERVOS;
+                        servo_test(servos, num_servos, degrees, NUM_DEFAULT_SERVO_TEST, DEFAULT_SERVO_TEST_PAUSE_MS);
                     } else {
                         // Test the servo that was provided in the command
                         const uint servos[] = {atoi(args)};
                         num_servos = 1;
+                        servo_test(servos, num_servos, degrees, NUM_DEFAULT_SERVO_TEST, DEFAULT_SERVO_TEST_PAUSE_MS);
                     }
-                    servo_test(servos, num_servos, degrees, NUM_DEFAULT_SERVO_TEST, DEFAULT_SERVO_TEST_PAUSE_MS);
+                    printf("pico-fbw 200 OK");
+                } else {
+                    printf("pico-fbw 404 Unknown TEST Command\n");
+                    free(cmd);
+                    free(line);
+                    return;
                 }
             // No-prefix commands
             } else if (strcmp(cmd, "PING") == 0) {
@@ -546,7 +552,7 @@ void api_poll() {
             } else if (strcmp(cmd, "PARMESEAN_PARTY") == 0) {
                 printf("pico-fbw 1022 Party!\n");
             } else {
-                printf("pico-fbw 404 Unknown Command\n");
+                printf("pico-fbw 404 Unknown Command \"%s\"\n", cmd);
             }
             free(cmd);
             free(line);

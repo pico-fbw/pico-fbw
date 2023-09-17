@@ -75,14 +75,17 @@ int main() {
     // Check version
     FBW_DEBUG_printf("[boot] checking for updates\n");
     int versionCheck = info_checkVersion(flash_readString(STRING_SECTOR_VERSION));
-    if (versionCheck != 0) {
-        FBW_DEBUG_printf("[boot] performing a system update from v%s to v%s, please wait...\n", flash_readString(STRING_SECTOR_VERSION), PICO_FBW_VERSION);
-        // << Insert system update code here, if applicable >>
-        // Update flash with new version
-        flash_writeString(STRING_SECTOR_VERSION, PICO_FBW_VERSION);
-        FBW_DEBUG_printf("[boot] system update complete! rebooting now...\n");
-        watchdog_enable(1, false);
-        while (true);
+    if (versionCheck < 0) {
+        if (versionCheck < -1) {
+            platform_boot_complete();
+            error_throw(ERROR_GENERAL, ERROR_LEVEL_FATAL, 250, 0, true, "Failed to run update checker!");
+        } else {
+            FBW_DEBUG_printf("[boot] performing a system update from v%s to v%s, please wait...\n", flash_readString(STRING_SECTOR_VERSION), PICO_FBW_VERSION);
+            // << Insert system update code here, if applicable >>
+            // Update flash with new version
+            flash_writeString(STRING_SECTOR_VERSION, PICO_FBW_VERSION);
+            FBW_DEBUG_printf("[boot] no applicable updates to be performed\n");
+        }
     } else {
         FBW_DEBUG_printf("[boot] no updates required\n");
     }

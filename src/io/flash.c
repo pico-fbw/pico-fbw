@@ -15,29 +15,18 @@
 
 /**
  * Erases a given PHYSICAL sector of flash.
- * @param sector the sector to erase.
- * @return true if the erase was successful, false if not.
+ * @param sector the memory location of the sector to erase.
 */
-static bool flash_erase(uint sector) {
-    uint32_t offset;
-    switch (sector) {
-        case FLOAT_PHYSECTOR:
-            offset = FLOAT_PHYSECTOR_LOC;
-            break;
-        case STRING_PHYSECTOR:
-            offset = STRING_PHYSECTOR_LOC;
-            break;
-        default:
-            return false;
-    }
+static void flash_erase(uint sector) {
+    uint32_t offset = sector;
     uint32_t intr = save_and_disable_interrupts();
     flash_range_erase(offset, FLASH_SECTOR_SIZE);
     restore_interrupts(intr);
 }
 
 void flash_reset() {
-    flash_erase(FLOAT_PHYSECTOR);
-    flash_erase(STRING_PHYSECTOR);
+    flash_erase(GET_PHYSECTOR_LOC(FLOAT_PHYSECTOR));
+    flash_erase(GET_PHYSECTOR_LOC(STRING_PHYSECTOR));
 }
 
 void flash_writeFloat(FloatSector sector, float data[]) {
@@ -56,7 +45,7 @@ void flash_writeFloat(FloatSector sector, float data[]) {
         dataIndex++;
     }
     // Erase sector before writing to it because s c i e n c e
-    flash_erase(FLOAT_PHYSECTOR);
+    flash_erase(GET_PHYSECTOR_LOC(FLOAT_PHYSECTOR));
     // Create memory offset to write into
     uint32_t offset = GET_PHYSECTOR_LOC(FLOAT_PHYSECTOR);
     // Disable interrupts because they can mess with writing
@@ -82,13 +71,11 @@ void flash_writeString(StringSector sector, char data[]) {
         write_data[i] = data[dataIndex];
         dataIndex++;
     }
-    flash_erase(STRING_PHYSECTOR);
+    flash_erase(GET_PHYSECTOR_LOC(STRING_PHYSECTOR));
     uint32_t offset = GET_PHYSECTOR_LOC(STRING_PHYSECTOR);
     uint32_t intr = save_and_disable_interrupts();
     flash_range_program(offset, (uint8_t*)write_data, FLASH_SECTOR_SIZE);
     restore_interrupts(intr);
 }
 
-char *flash_readString(StringSector sector) {
-    return (char*)(XIP_BASE + (GET_PHYSECTOR_LOC(STRING_PHYSECTOR) + (STRING_SECTOR_SIZE_BYTES * sector)));
-}
+char *flash_readString(StringSector sector) { return (char*)(XIP_BASE + (GET_PHYSECTOR_LOC(STRING_PHYSECTOR) + (STRING_SECTOR_SIZE_BYTES * sector))); }

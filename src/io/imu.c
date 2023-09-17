@@ -309,10 +309,11 @@ bool imu_configure() {
             sleep_ms(100);
             imu_write(AXIS_MAP_CONF_REGISTER, 0x24); // Default axis map
             imu_write(AXIS_MAP_SIGN_REGISTER, 0x00); // Default axis signs
-            // If we've calibrated before, load in the axis configuration from then
             bool status;
-            // if (imu_isCalibrated()) {
-            if (false) { // FIXME: there are currently problems with restoring calibration data, thus data is better without it but still should be fixed
+            // FIXME: there are currently problems with restoring calibration data, thus data is better without it but still should be fixed
+            /*
+            // If we've calibrated before, load in the axis configuration from then
+            if (imu_isCalibrated()) {
                 int16_t calibrationData[11];
                 for (uint i = 0; i < FLOAT_SECTOR_SIZE; i++) {
                     calibrationData[i] = (int16_t)flash_readFloat(FLOAT_SECTOR_IMU_CFG0, i);
@@ -337,6 +338,8 @@ bool imu_configure() {
             } else {
                 status = bno_changeMode(MODE_NDOF); // Switch to NDOF, we will calibrate shortly
             }
+            */
+            status = bno_changeMode(MODE_NDOF);
             // TODO: add offset calibration for BNO
             return status;
         case IMU_MODEL_MPU6050:
@@ -377,6 +380,7 @@ Euler imu_getRawAngles() {
             int timeout1 = i2c_read_timeout_us(IMU_I2C, CHIP_REGISTER, euler_data, 6, false, IMU_TIMEOUT_US);
             // Check if any I2C related errors occured, if so, set IMU as unsafe and return no data
             if (timeout0 == PICO_ERROR_GENERIC || timeout0 == PICO_ERROR_TIMEOUT || timeout1 == PICO_ERROR_GENERIC || timeout1 == PICO_ERROR_TIMEOUT) {
+                IMU_DEBUG_printf("[imu] i2c read timeout occured!\n");
                 setIMUSafe(false);
                 return (Euler){0};
             }
@@ -426,6 +430,7 @@ Euler imu_getRawAngles() {
             break;
         }
         default: {
+            FBW_DEBUG_printf("[imu] ERROR: unknown IMU model!\n");
             setIMUSafe(false);
             return (Euler){0};
         }
@@ -444,6 +449,7 @@ Angles imu_getAngles() {
             angles = euler; // MPU6050 is sync; we can just use the cached angles
             break;
         default:
+            FBW_DEBUG_printf("[imu] ERROR: unknown IMU model!\n");
             setIMUSafe(false);
             return (Angles){0};
     }
@@ -486,6 +492,7 @@ Angles imu_getAngles() {
 
     // Check for mapping errors (they really shouldn't occur and should be correctly handled before this function is even called)
     if (roll == -200.0f || pitch == -200.0f || yaw == -200.0f) {
+        IMU_DEBUG_printf("[imu] angle mapping error occured!\n");
         setIMUSafe(false);
         return (Angles){0};
     }
@@ -546,7 +553,6 @@ bool imu_calibrate() {
             }
         }
     }
-    return true; // TODO remove, just for testing for now
     FBW_DEBUG_printf("[imu] starting imu angle mapping calibration\n");
     error_throw(ERROR_IMU, ERROR_LEVEL_STATUS, 500, 100, true, ""); // Blink for calibration status
     float calibration_data[FLOAT_SECTOR_SIZE] = {FLAG_IMU, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}; // {flag, x, y, z, x_dir, y_dir, z_dir}
