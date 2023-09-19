@@ -152,8 +152,9 @@ void flash_writeString(StringSector sector, char data[]);
  * Reads back a string from a previously written STRING data array.
  * @param sector the "sector" to read from
  * @return the requested data string.
+ * @note This can return NULL if no data has been written yet.
 */
-char *flash_readString(StringSector sector);
+const char *flash_readString(StringSector sector);
 
 // DO NOT CHANGE THESE VALUES! IT WILL BRICK/RESET SYSTEMS!!!
 #define FLAG_BOOT 3.1305210f

@@ -1,7 +1,7 @@
 /* IMPORTANT NOTE: All pins signifiy GPIO pin values, not physical pins!! Do NOT mix these up!!! */
 
-#ifndef __CONFIG_H
-#define __CONFIG_H
+#ifndef __CONFIG_OLD_H
+#define __CONFIG_OLD_H
 
 // TODO: config support at runtime instead of compile-time?
 // remember to change current #define list elements to enums when that is done
@@ -293,10 +293,6 @@ There are no module types, almost all GPS modules use the NMEA-0183 standard so 
 
 	/* Uncomment to enable the API over serial. */
 	#define API_ENABLED
-	#ifdef API_ENABLED
-		/* Uncomment to wait for a "PING" command on power-up before booting. */
-		// #define API_WAIT_ON_BOOT
-	#endif
 
 	/* Time (in ms) to wait on bootup for the serial interface to initialize. */
 	#define BOOTUP_WAIT_TIME_MS 900
@@ -332,4 +328,4 @@ There are no module types, almost all GPS modules use the NMEA-0183 standard so 
 
 /* End of configuration. */
 
-#endif // __CONFIG_H
+#endif // __CONFIG_OLD_H

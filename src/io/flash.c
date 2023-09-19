@@ -78,4 +78,12 @@ void flash_writeString(StringSector sector, char data[]) {
     restore_interrupts(intr);
 }
 
-char *flash_readString(StringSector sector) { return (char*)(XIP_BASE + (GET_PHYSECTOR_LOC(STRING_PHYSECTOR) + (STRING_SECTOR_SIZE_BYTES * sector))); }
+const char *flash_readString(StringSector sector) {
+    // Ensure the sector has been initialized
+    const char *data = (const char*)(XIP_BASE + (GET_PHYSECTOR_LOC(STRING_PHYSECTOR) + (STRING_SECTOR_SIZE_BYTES * sector)));
+    if (data[0] != UINT8_MAX) {
+        return data;
+    } else {
+        return NULL;
+    }
+}

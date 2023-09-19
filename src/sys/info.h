@@ -1,8 +1,8 @@
 #ifndef __INFO_H
 #define __INFO_H
 
-#define PICO_FBW_VERSION "1.0.0-beta.2"
-#define PICO_FBW_API_VERSION "1.1"
+#define PICO_FBW_VERSION "1.0.0-alpha.2"
+#define PICO_FBW_API_VERSION "1.0"
 #define WIFLY_VERSION "1.0"
 
 /**
@@ -18,8 +18,9 @@ void info_declare();
  * @return 0 if the versions match,
  * 1 if the version is newer (pre-release),
  * -1 if the version is older,
- * or -2 if there was an error.
+ * -2 if there was no valid version to parse,
+ * or -3 if there was a parse error.
 */
-int info_checkVersion(char *version);
+int info_checkVersion(const char *version);
 
 #endif // __INFO_H

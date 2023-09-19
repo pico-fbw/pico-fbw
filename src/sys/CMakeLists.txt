@@ -1,5 +1,6 @@
 add_library(fbw_sys
     athr.c
+    config.c
     info.c
 )
 

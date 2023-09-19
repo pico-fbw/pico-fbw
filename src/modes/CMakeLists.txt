@@ -11,6 +11,7 @@ add_library(fbw_modes
 target_link_libraries(fbw_modes
     fbw_io
     fbw_lib
+    fbw_sys
     fbw_wifly
     pico_base
     pico_time

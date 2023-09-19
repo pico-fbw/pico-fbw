@@ -50,13 +50,6 @@ int main() {
     #endif
     platform_boot_begin();
 
-    // API
-    #ifdef API_ENABLED
-        printf("[api] enabling api v%s\n", PICO_FBW_API_VERSION);
-        api_init_blocking();
-        error_clear(ERROR_NONE, true);
-    #endif
-
     // Check for first boot
     FBW_DEBUG_printf("[driver] starting bootup process\n");
     if (flash_readFloat(FLOAT_SECTOR_BOOT, 0) != FLAG_BOOT) {
@@ -76,7 +69,7 @@ int main() {
     FBW_DEBUG_printf("[boot] checking for updates\n");
     int versionCheck = info_checkVersion(flash_readString(STRING_SECTOR_VERSION));
     if (versionCheck < 0) {
-        if (versionCheck < -1) {
+        if (versionCheck < -2) {
             platform_boot_complete();
             error_throw(ERROR_GENERAL, ERROR_LEVEL_FATAL, 250, 0, true, "Failed to run update checker!");
         } else {
@@ -178,7 +171,7 @@ int main() {
 
     // GPS
     #ifdef GPS_ENABLED
-        while (time_us_32() < (500 * 1000)); // Give GPS time (at least 500ms after power-up) to initialize
+        while (time_us_64() < (500 * 1000)); // Give GPS time (at least 500ms after power-up) to initialize
         FBW_DEBUG_printf("[boot] initializing GPS\n");
         if (gps_init()) {
             FBW_DEBUG_printf("[boot] GPS ok\n");

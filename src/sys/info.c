@@ -82,20 +82,24 @@ void info_declare() {
     #endif
 }
 
-int info_checkVersion(char *version) {
-    // Parse the version strings into the semantic versioning standard
-    semver_t binary;
-    if (semver_parse(PICO_FBW_VERSION, &binary) < 0) {
-        semver_free(&binary);
-        FBW_DEBUG_printf("[version] unable to parse binary version string\n");
+int info_checkVersion(const char *version) {
+    // Ensure the input version isn't complete garbage
+    if (version[0] == '\0') {
         return -2;
     }
+    // Parse the version strings into the semantic versioning standard
     semver_t compare;
     if (semver_parse(version, &compare) < 0) {
-        semver_free(&binary);
         semver_free(&compare);
-        FBW_DEBUG_printf("[version] unable to parse input version string\n");
-        return -2;
+        FBW_DEBUG_printf("[version] unable to parse input version string!\n");
+        return -3;
+    }
+    semver_t binary;
+    if (semver_parse(PICO_FBW_VERSION, &binary) < 0) {
+        semver_free(&compare);
+        semver_free(&binary);
+        FBW_DEBUG_printf("[version] unable to parse binary version string!\n");
+        return -3;
     }
     // Compare the versions
     switch (semver_compare(binary, compare)) {

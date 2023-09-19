@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 
+#define MODE_MIN DIRECT
 typedef enum Mode {
     DIRECT,
     NORMAL,
@@ -10,7 +11,7 @@ typedef enum Mode {
     TUNE,
     HOLD
 } Mode;
-// If any modes are ever added, the uppermost mode must be added to the API!
+#define MODE_MAX HOLD
 
 #define MAX_MODE_RUNTIME_TIME_MS 500 // The maximum amount of time the system will run a mode for before exiting to direct.
 
