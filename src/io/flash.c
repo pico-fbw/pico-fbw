@@ -5,7 +5,6 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <string.h>
 #include "pico/types.h"
 
 #include "hardware/flash.h"

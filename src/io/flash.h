@@ -5,9 +5,9 @@
 
 /**
  * README:
- * Some important info, because if you've gotten this far, you're probably wondering what a "sector" is and why it's in quotes everywhere.
- * I've created 125 virtual "sectors" that can store 8 floats each, which all fit inside the same physical sector on the flash memory (the last one).
- * Reading/writing to/from the virtual sectors is very different than writing to the physical sectors, so be warned!!
+ * This file is of paramount importance. Please do NOT change anything in here unless you REALLY know what you are doing!
+ * Many values here change where the system looks for flash values, which can cause data corruption/erasure.
+ * Be warned!!
 */
 
 /**
@@ -70,6 +70,9 @@
  *           |  5 - Pitch tI
  *           |  6 - Pitch tD
  *           |  7 - unused
+ * 
+ * 6-15      | CONFIG
+ *           | See sys/config.h for more info
 */
 
 #define FLOAT_SECTOR_MIN FLOAT_SECTOR_PWM
@@ -79,9 +82,19 @@ typedef enum FloatSector {
     FLOAT_SECTOR_IMU_MAP,
     FLOAT_SECTOR_IMU_CFG0,
     FLOAT_SECTOR_IMU_CFG1,
-    FLOAT_SECTOR_PID
+    FLOAT_SECTOR_PID,
+    FLOAT_SECTOR_CONFIG_GENERAL,
+    FLOAT_SECTOR_CONFIG_CONTROL,
+    FLOAT_SECTOR_CONFIG_LIMITS,
+    FLOAT_SECTOR_CONFIG_FLYINGWING,
+    FLOAT_SECTOR_CONFIG_PINS0,
+    FLOAT_SECTOR_CONFIG_PINS1,
+    FLOAT_SECTOR_CONFIG_SENSORS,
+    FLOAT_SECTOR_CONFIG_ROLLPITCHPID,
+    FLOAT_SECTOR_CONFIG_YAWPID,
+    FLOAT_SECTOR_CONFIG_DEBUG
 } FloatSector;
-#define FLOAT_SECTOR_MAX FLOAT_SECTOR_PID
+#define FLOAT_SECTOR_MAX FLOAT_SECTOR_CONFIG_DEBUG
 
 // Gets the memory location of a given PHYSICAL (not virtual!) sector.
 #define GET_PHYSECTOR_LOC(sector) (PICO_FLASH_SIZE_BYTES - (FLASH_SECTOR_SIZE * (sector + 1)))
@@ -95,19 +108,18 @@ typedef enum FloatSector {
 #define FLOAT_SECTOR_SIZE FLOAT_SECTOR_SIZE_FULL/FLASH_NUM_FLOAT_SECTORS
 #define FLOAT_SECTOR_SIZE_BYTES FLOAT_SECTOR_SIZE*sizeof(float)
 // The physical sector that the virtual float "sectors" are placed in
-#define FLOAT_PHYSECTOR 0
-#define FLOAT_PHYSECTOR_LOC GET_PHYSECTOR_LOC(FLOAT_PHYSECTOR)
+#define FLOAT_PHYSECTOR 0 // Sector zero is the last sector on the flash memory (eg. the top of the 2MB flash) so it is far away from program data
 
 #define STRING_SECTOR_MIN STRING_SECTOR_VERSION
 typedef enum StringSector {
     STRING_SECTOR_VERSION,
-    STRING_SECTOR_WIFLY_NETNAME,
-    STRING_SECTOR_WIFLY_PASS
+    STRING_SECTOR_CONFIG_WIFLY_SSID,
+    STRING_SECTOR_CONFIG_WIFLY_PASS
 } StringSector;
-#define STRING_SECTOR_MAX STRING_SECTOR_WIFLY_PASS
+#define STRING_SECTOR_MAX STRING_SECTOR_CONFIG_WIFLY_PASS
 
 // Each "sector" has a max length of 64 characters
-#define FLASH_NUM_STRING_SECTORS 16
+#define FLASH_NUM_STRING_SECTORS 64
 // The amount of chars that can be fit in one flash page
 #define STRING_SECTOR_SIZE_FULL FLASH_SECTOR_SIZE/sizeof(char)
 // The amount of chars that can be fit in one string sector
@@ -115,7 +127,6 @@ typedef enum StringSector {
 #define STRING_SECTOR_SIZE_BYTES STRING_SECTOR_SIZE*sizeof(char)
 // The physical sector that the virtual string "sectors" are placed in
 #define STRING_PHYSECTOR 1
-#define STRING_PHYSECTOR_LOC GET_PHYSECTOR_LOC(STRING_PHYSECTOR)
 
 /**
  * Erases only the flash sectors that the program actually uses.
@@ -156,7 +167,6 @@ void flash_writeString(StringSector sector, char data[]);
 */
 const char *flash_readString(StringSector sector);
 
-// DO NOT CHANGE THESE VALUES! IT WILL BRICK/RESET SYSTEMS!!!
 #define FLAG_BOOT 3.1305210f
 #define FLAG_PWM 0.5f
 #define FLAG_IMU 0.7f

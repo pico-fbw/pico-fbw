@@ -72,7 +72,7 @@ bool mode_autoInit() {
 void mode_auto() {
     // Don't allow re-entering auto mode after the user has exited hold mode and auto is complete
     if (autoComplete) {
-        toMode(NORMAL);
+        toMode(MODE_NORMAL);
         return;
     }
 
@@ -91,7 +91,7 @@ void mode_auto() {
         if (currentWaypoint > wifly_getWaypointCount()) {
             // Auto mode ends here, we enter a holding pattern
             autoComplete = true;
-            toMode(HOLD);
+            toMode(MODE_HOLD);
             return;
         } else {
             // Load the next altitude

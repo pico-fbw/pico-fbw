@@ -32,12 +32,6 @@
 
 #include "imu.h"
 
-typedef enum IMUModel {
-    IMU_MODEL_UNKNOWN,
-    IMU_MODEL_BNO055,
-    IMU_MODEL_MPU6050
-} IMUModel;
-
 typedef enum IMUCalibrationState {
     CALIBRATION_STATE_ROLL,
     CALIBRATION_STATE_PITCH,

@@ -20,8 +20,8 @@ but you will not have access to auto mode (the only place where the autothrottle
 #define ATHR_ENABLED
 
 /* Define the type of mode switch you are using, 3-pos is default and highly recommended. */
-#define SWITCH_3_POS
-// #define SWITCH_2_POS
+#define SWITCH_3_POS_DEF
+// #define SWITCH_2_POS_DEF
 
 /* The maximum value the system will accept as a calibration offset value for PWM input signals.
 If any of the calibration (aileron, elevator, rudder, or switch) channels are larger than this value, the system will throw the error FBW-500 and fail to initialize.
@@ -178,7 +178,7 @@ There are no module types, almost all GPS modules use the NMEA-0183 standard so 
 	#define GPS_BAUDRATE 9600
 
 	/* Define the type of command used to communicate with the GPS. */
-	#define GPS_COMMAND_TYPE_PMTK
+	#define GPS_COMMAND_TYPE_PMTK_DEF
 	// Please let me know if there's a command type you would like supported! MTK appears to be the most common.
 
 	/* These pins must line up with the UART0 interface.
@@ -293,9 +293,6 @@ There are no module types, almost all GPS modules use the NMEA-0183 standard so 
 
 	/* Uncomment to enable the API over serial. */
 	#define API_ENABLED
-
-	/* Time (in ms) to wait on bootup for the serial interface to initialize. */
-	#define BOOTUP_WAIT_TIME_MS 900
 
 	/* Enabled by default (misc logs + warning and error statements): */
 	#define FBW_DEBUG_printf    printf

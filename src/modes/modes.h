@@ -3,15 +3,15 @@
 
 #include <stdbool.h>
 
-#define MODE_MIN DIRECT
+#define MODE_MIN MODE_DIRECT
 typedef enum Mode {
-    DIRECT,
-    NORMAL,
-    AUTO,
-    TUNE,
-    HOLD
+    MODE_DIRECT,
+    MODE_NORMAL,
+    MODE_AUTO,
+    MODE_TUNE,
+    MODE_HOLD
 } Mode;
-#define MODE_MAX HOLD
+#define MODE_MAX MODE_HOLD
 
 #define MAX_MODE_RUNTIME_TIME_MS 500 // The maximum amount of time the system will run a mode for before exiting to direct.
 

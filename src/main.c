@@ -25,40 +25,37 @@
 #include "io/platform.h"
 #include "io/pwm.h"
 #include "io/servo.h"
-#include "io/switch.h"
+#include "modes/modes.h"
+#include "sys/config.h"
+#include "sys/info.h"
+#include "sys/switch.h"
 #include "wifly/wifly.h"
 
-#include "sys/info.h"
-
-#include "modes/modes.h"
-
-#include "config.h"
 #include "validator.h"
 
+#define BOOTUP_WAIT_MS 900 // The amount of time (in ms) to wait for any possible serial connections to be established before booting.
+
 int main() {
-    // Crucial items--initialize comms, api, architecture, io, and LED
     stdio_init_all();
-    #ifdef FBW_DEBUG
-        sleep_ms(BOOTUP_WAIT_TIME_MS); // Wait for serial to begin
-    #endif
+    sleep_ms(BOOTUP_WAIT_MS);
     #if defined(RASPBERRYPI_PICO)
         FBW_DEBUG_printf("\nhello and welcome to pico-fbw v%s!\n", PICO_FBW_VERSION);
     #elif defined(RASPBERRYPI_PICO_W)
         FBW_DEBUG_printf("\nhello and welcome to pico(w)-fbw v%s!\n", PICO_FBW_VERSION);
-        FBW_DEBUG_printf("[driver] initializing cyw43 architecture with predefined country 0x%04X\n", WIFLY_NETWORK_COUNTRY);
-        cyw43_arch_init_with_country(WIFLY_NETWORK_COUNTRY);
+        FBW_DEBUG_printf("[boot] initializing cyw43 architecture\n");
+        cyw43_arch_init();
     #endif
     platform_boot_begin();
 
     // Check for first boot
-    FBW_DEBUG_printf("[driver] starting bootup process\n");
     if (flash_readFloat(FLOAT_SECTOR_BOOT, 0) != FLAG_BOOT) {
-        FBW_DEBUG_printf("[boot] boot flag not found! assuming first boot, initializing flash\n");
+        FBW_DEBUG_printf("[boot] boot flag not found! initializing flash...\n");
         flash_reset();
+        // TODO: initialize default config here
         float boot[FLOAT_SECTOR_SIZE] = {FLAG_BOOT};
         flash_writeFloat(FLOAT_SECTOR_BOOT, boot);
-        FBW_DEBUG_printf("[boot] boot data written! rebooting now...\n");
-        // Reboot is to ensure flash is okay; any problems with the flash will simply cause a bootloop before getting to anything important
+        FBW_DEBUG_printf("[boot] done! rebooting now...\n");
+        // Reboot is done to ensure flash is okay; any problems with the flash will simply cause a bootloop
         watchdog_enable(1, false);
         while (true);
     } else {
@@ -73,15 +70,19 @@ int main() {
             platform_boot_complete();
             error_throw(ERROR_GENERAL, ERROR_LEVEL_FATAL, 250, 0, true, "Failed to run update checker!");
         } else {
-            FBW_DEBUG_printf("[boot] performing a system update from v%s to v%s, please wait...\n", flash_readString(STRING_SECTOR_VERSION), PICO_FBW_VERSION);
+            FBW_DEBUG_printf("[boot] performing a system update from v%s to v%s, please wait...\n", (flash_readString(STRING_SECTOR_VERSION) == NULL) ? "0.0.0" : flash_readString(STRING_SECTOR_VERSION), PICO_FBW_VERSION);
             // << Insert system update code here, if applicable >>
             // Update flash with new version
             flash_writeString(STRING_SECTOR_VERSION, PICO_FBW_VERSION);
-            FBW_DEBUG_printf("[boot] no applicable updates to be performed\n");
+            FBW_DEBUG_printf("[boot] no tasks to be performed\n");
         }
     } else {
         FBW_DEBUG_printf("[boot] no updates required\n");
     }
+
+    // Load config
+    FBW_DEBUG_printf("[boot] loading config\n");
+    config_load();
 
     // PWM (in)
     #if defined(CONTROL_3AXIS)
@@ -190,36 +191,33 @@ int main() {
 
     // Main program loop:
     platform_boot_complete();
-    FBW_DEBUG_printf("[boot] bootup complete! entering main program loop...\n");
+    FBW_DEBUG_printf("[boot] bootup complete!\n");
     while (true) {
         // Update the mode switch's position
         float switchPos = pwm_read(INPUT_SW_PIN, PWM_MODE_DEG);
-        #ifdef SWITCH_2_POS
-            if (switchPos < 90) {
-                // Lower pos
-                updateSwitch(DIRECT);
-            } else {
-                // Upper pos
-                updateSwitch(NORMAL);
-            }
-        #endif // SWITCH_2_POS
-        #ifdef SWITCH_3_POS
-            if (switchPos < 85) {
-                // Lower pos
-                updateSwitch(DIRECT);
-            } else if (switchPos > 95) {
-                // Upper pos
-                updateSwitch(AUTO);
-            } else {
-                // Middle pos
-                updateSwitch(NORMAL);
-            }
-        #endif // SWITCH_3_POS
+        switch (configGeneral.switchType) {
+            case SWITCH_TYPE_2_POS:
+                if (switchPos < 90) {
+                    switch_update(SWITCH_POSITION_LOW);
+                } else {
+                    switch_update(SWITCH_POSITION_HIGH);
+                }
+                break;
+            case SWITCH_TYPE_3_POS:
+                if (switchPos < 85) {
+                    switch_update(SWITCH_POSITION_LOW);
+                } else if (switchPos > 95) {
+                    switch_update(SWITCH_POSITION_HIGH);
+                } else {
+                    switch_update(SWITCH_POSITION_MID);
+                }
+                break;
+        }
 
-        // Run the current mode's runtime
+        // Run the current mode's code
         modeRuntime();
 
-        // Check for new API calls if applicable
+        // Respond to any new API calls
         #ifdef API_ENABLED
             api_poll();
         #endif

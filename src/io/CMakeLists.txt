@@ -8,7 +8,6 @@ add_library(fbw_io
     platform.c
     pwm.c
     servo.c
-    switch.c
 )
 
 pico_generate_pio_header(fbw_io ${CMAKE_CURRENT_LIST_DIR}/pwm.pio)

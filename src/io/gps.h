@@ -5,6 +5,12 @@
 
 #ifdef GPS_ENABLED
 
+typedef enum GPSCommandType {
+    GPS_COMMAND_TYPE_NONE,
+    GPS_COMMAND_TYPE_PMTK
+    // What is the command type used for ublox modules?
+} GPSCommandType;
+
 #define GPS_UART uart1 // GPS uses uart1 because uart0 can be used for debugging in some cases
 #define GPS_UART_IRQ UART1_IRQ
 

@@ -3,6 +3,12 @@
 
 #include "../config.h"
 
+typedef enum IMUModel {
+    IMU_MODEL_UNKNOWN,
+    IMU_MODEL_BNO055,
+    IMU_MODEL_MPU6050
+} IMUModel;
+
 // The i2c bus that will be used for the IMU, do not change this!!
 #define IMU_I2C i2c0
 

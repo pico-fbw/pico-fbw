@@ -140,7 +140,7 @@ static uint api_handle_get(const char *cmd, const char *args) {
         }
     } else if (strcmp(cmd, "GET_GPS") == 0) {
         #ifdef GPS_ENABLED
-            if (getCurrentMode() != DIRECT) {
+            if (getCurrentMode() != MODE_DIRECT) {
                 printf("{\"gps\":[{\"lat\":%f,\"lng\":%f,\"alt\":%d,\"spd\":%f}]}\n", gps.lat, gps.lng, gps.alt, gps.spd);
                 return 200;
             } else {
@@ -150,7 +150,7 @@ static uint api_handle_get(const char *cmd, const char *args) {
             return 501;
         #endif
     } else if (strcmp(cmd, "GET_IMU") == 0) {
-        if (getCurrentMode() != DIRECT) {
+        if (getCurrentMode() != MODE_DIRECT) {
             printf("{\"imu\":[{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f}]}\n", aircraft.roll, aircraft.pitch, aircraft.yaw);
             return 200;
         } else {
@@ -210,7 +210,7 @@ static uint api_handle_get(const char *cmd, const char *args) {
         printf("}}\n");
         return 200;
     } else if (strcmp(cmd, "GET_SENSORS") == 0) {
-        if (getCurrentMode() != DIRECT) {
+        if (getCurrentMode() != MODE_DIRECT) {
             #ifdef GPS_ENABLED
                 printf("{\"imu\":[{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f}],\"gps\":[{\"lat\":%f,\"lng\":%f,\"alt\":%d,\"spd\":%f}]}\n", aircraft.roll, aircraft.pitch, aircraft.yaw, gps.lat, gps.lng, gps.alt, gps.spd);
             #else
@@ -311,7 +311,7 @@ static uint api_handle_set(const char *cmd, const char *args) {
                     goodRequest = true;
                 }
             } else if (strcmp(cmd, "SET_SETPOINTS") == 0) {
-                if (getCurrentMode() == NORMAL) {
+                if (getCurrentMode() == MODE_NORMAL) {
                     float rollSet, pitchSet, yawSet = -255.0f;
                     for (uint i = 0; i < token_count; i++) {
                         if (tokens[i].type == JSMN_STRING) {

@@ -75,7 +75,7 @@ bool gps_init() {
     // Send a command and wait until UART is ready to read, then read back the command response
     // Useful tool for calculating command checksums: https://nmeachecksum.eqth.net/
     GPS_DEBUG_printf("[gps] setting up query schedule\n");
-    #if defined(GPS_COMMAND_TYPE_PMTK)
+    #if defined(GPS_COMMAND_TYPE_PMTK_DEF)
         // PMTK manual: https://cdn.sparkfun.com/assets/parts/1/2/2/8/0/PMTK_Packet_User_Manual.pdf
         // Enable the correct sentences
         sleep_ms(1500); // Acknowledgement is a hit or miss without this delay

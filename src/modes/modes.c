@@ -3,7 +3,6 @@
  * Licensed under the GNU GPL-3.0
 */
 
-#include <stdbool.h>
 #include <stdio.h>
 #include "pico/time.h"
 
@@ -24,7 +23,7 @@
 
 #include "modes.h"
 
-static Mode currentMode = DIRECT;
+static Mode currentMode = MODE_DIRECT;
 static bool imuDataSafe = false;
 static bool gpsDataSafe = false;
 
@@ -42,47 +41,47 @@ static inline int64_t modeOvertime(alarm_id_t id, void *data) {
 void toMode(Mode newMode) {
     // Run deinit code for currentMode and then run init code for newMode
     switch (currentMode) {
-        case DIRECT:
+        case MODE_DIRECT:
             FBW_DEBUG_printf("[modes] exiting direct mode\n");
             break;
-        case NORMAL:
+        case MODE_NORMAL:
             FBW_DEBUG_printf("[modes] exiting normal mode\n");
             mode_normalDeinit();
             break;
-        case AUTO:
+        case MODE_AUTO:
             FBW_DEBUG_printf("[modes] exiting auto mode\n");
             break;
-        case TUNE:
+        case MODE_TUNE:
             FBW_DEBUG_printf("[modes] exiting tune mode\n");
             break;
-        case HOLD:
+        case MODE_HOLD:
             FBW_DEBUG_printf("[modes] exiting hold mode\n");
             break;
     }
     if (imuDataSafe) {
         error_clear(ERROR_IMU, false);
         switch (newMode) {
-            case DIRECT:
+            case MODE_DIRECT:
                 FBW_DEBUG_printf("[modes] entering direct mode\n");
-                currentMode = DIRECT;
+                currentMode = MODE_DIRECT;
                 break;
-            case NORMAL:
+            case MODE_NORMAL:
                 // Automatically enter tune mode if necessary
-                #ifdef PID_AUTOTUNE
+                #ifdef PID_MODE_AUTOMODE_TUNE
                     if (!mode_tuneisCalibrated()) {
-                        toMode(TUNE);
+                        toMode(MODE_TUNE);
                         return;
                     }
                 #else
                     FBW_DEBUG_printf("[modes] entering normal mode\n");
                     mode_normalInit();
-                    currentMode = NORMAL;
+                    currentMode = MODE_NORMAL;
                 #endif
                 break;
-            case AUTO:
-                #ifdef PID_AUTOTUNE
+            case MODE_AUTO:
+                #ifdef PID_MODE_AUTOMODE_TUNE
                     if (!mode_tuneisCalibrated()) {
-                        toMode(TUNE);
+                        toMode(MODE_TUNE);
                         return;
                     }
                 #else
@@ -95,38 +94,38 @@ void toMode(Mode newMode) {
                             }
                             FBW_DEBUG_printf("[modes] entering auto mode\n");
                             if (mode_autoInit()) {
-                                currentMode = AUTO;
+                                currentMode = MODE_AUTO;
                             } else {
-                                toMode(NORMAL);
+                                toMode(MODE_NORMAL);
                                 return;
                             }
                         } else {
                             // GPS is required for auto and hold modes, fallback to normal mode
-                            toMode(NORMAL);
+                            toMode(MODE_NORMAL);
                             return;
                         }
                     #else
                         // GPS is required to run auto mode, fallback
-                        toMode(NORMAL);
+                        toMode(MODE_NORMAL);
                         return;
                     #endif
                 #endif
                 break;
-            case TUNE:
+            case MODE_TUNE:
                 if (!mode_tuneisCalibrated()) {
                     FBW_DEBUG_printf("[modes] entering tune mode\n");
-                    currentMode = TUNE;
+                    currentMode = MODE_TUNE;
                 } else {
-                    toMode(NORMAL);
+                    toMode(MODE_NORMAL);
                     return;
                 }
                 break;
-            case HOLD:
+            case MODE_HOLD:
                 if (gpsDataSafe) {
                     FBW_DEBUG_printf("[modes] entering hold mode\n");
-                    currentMode = HOLD;
+                    currentMode = MODE_HOLD;
                 } else {
-                    toMode(NORMAL);
+                    toMode(MODE_NORMAL);
                     return;
                 }
                 break;
@@ -135,7 +134,7 @@ void toMode(Mode newMode) {
         // If the IMU is unsafe we only have one option...direct mode
         // Trigger FBW-250 because we are entering direct mode due to an IMU failure
         error_throw(ERROR_IMU, ERROR_LEVEL_ERR, 250, 0, true, "Entering direct mode due to an IMU failure!");
-        currentMode = DIRECT;
+        currentMode = MODE_DIRECT;
     }
 }
 
@@ -143,23 +142,23 @@ void modeRuntime() {
     // Schedule an alarm just in case the mode takes longer than its maximum runtime
     alarm_id_t alarm = add_alarm_in_ms(MAX_MODE_RUNTIME_TIME_MS, modeOvertime, NULL, false);
     switch(currentMode) {
-        case DIRECT:
+        case MODE_DIRECT:
             mode_direct();
             break;   
-        case NORMAL:
+        case MODE_NORMAL:
             mode_normal();
             break; 
-        case AUTO:
+        case MODE_AUTO:
             #ifdef GPS_ENABLED
                 mode_auto();
             #endif
             break;
-        case TUNE:
-            #ifdef PID_AUTOTUNE
+        case MODE_TUNE:
+            #ifdef PID_MODE_AUTOMODE_TUNE
                 mode_tune();
             #endif
             break;
-        case HOLD:
+        case MODE_HOLD:
             #ifdef GPS_ENABLED
                 mode_hold();
             #endif
@@ -174,30 +173,26 @@ uint8_t getCurrentMode() { return currentMode; }
 void setIMUSafe(bool state) {
     if (state != imuDataSafe) {
         imuDataSafe = state;
-        #ifdef FBW_DEBUG
-            if (state) {
-                FBW_DEBUG_printf("[modes] IMU set as safe\n");
-            } else {
-                toMode(DIRECT); // Automatically de-init IMU if IMU is deemed unsafe
-                FBW_DEBUG_printf("[modes] IMU set as unsafe\n");
-            }
-        #endif
+        if (state) {
+            FBW_DEBUG_printf("[modes] IMU set as safe\n");
+        } else {
+            toMode(MODE_DIRECT); // Automatically de-init IMU if IMU is deemed unsafe
+            FBW_DEBUG_printf("[modes] IMU set as unsafe\n");
+        }
     }
 }
 
 void setGPSSafe(bool state) {
     if (state != gpsDataSafe) {
         gpsDataSafe = state;
-        #ifdef FBW_DEBUG
-            if (state) {
-                FBW_DEBUG_printf("[modes] GPS set as safe\n");
-                error_clear(ERROR_GPS, false); // Clear any GPS errors
-            } else {
-                FBW_DEBUG_printf("[modes] GPS set as unsafe\n");
-                if (currentMode == AUTO || currentMode == HOLD) {
-                    toMode(NORMAL); // Return to normal mode if GPS is deemed unsafe in Auto or Hold modes (require GPS)
-                }
+        if (state) {
+            FBW_DEBUG_printf("[modes] GPS set as safe\n");
+            error_clear(ERROR_GPS, false); // Clear any GPS errors
+        } else {
+            FBW_DEBUG_printf("[modes] GPS set as unsafe\n");
+            if (currentMode == MODE_AUTO || currentMode == MODE_HOLD) {
+                toMode(MODE_NORMAL); // Return to normal mode if GPS is deemed unsafe in Auto or Hold modes (require GPS)
             }
-        #endif
+        }
     }
 }
