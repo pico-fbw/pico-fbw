@@ -2,6 +2,14 @@
 #define __INFO_H
 
 #define PICO_FBW_VERSION "1.0.0-alpha.2"
+#ifdef NDEBUG
+    #define DEBUG_BUILD false
+    #define DEBUG_SKIP_CALIBRATION false
+#else
+    #define DEBUG_BUILD true
+    #define DEBUG_SKIP_CALIBRATION false
+#endif
+
 #define PICO_FBW_API_VERSION "1.0"
 #define WIFLY_VERSION "1.0"
 

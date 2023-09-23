@@ -26,7 +26,9 @@ target_link_libraries(fbw_io
     hardware_pwm
     hardware_sync
     hardware_uart
+    hardware_watchdog
     pico_base
+    pico_bootrom
     pico_platform
     pico_runtime
     pico_stdio

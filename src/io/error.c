@@ -131,12 +131,8 @@ void error_throw(ErrorType type, ErrorLevel level, uint code, uint pulse_ms, boo
     gb_pulse_ms = pulse_ms;
 
     // Format an error string to be printed
-    const char *levelMsg;
+    const char *levelMsg = NULL;
     switch (level) {
-        case ERROR_LEVEL_NONE:
-            return;
-        case ERROR_LEVEL_STATUS:
-            return;
         case ERROR_LEVEL_WARN:
             levelMsg = ERROR_MSG_WARN;
             break;
@@ -147,7 +143,9 @@ void error_throw(ErrorType type, ErrorLevel level, uint code, uint pulse_ms, boo
             levelMsg = ERROR_MSG_FATAL;
             break;
     }
-    FBW_DEBUG_printf("%s: (FBW-%d) %s\n", levelMsg, code, msg);
+    if (levelMsg) {
+        FBW_DEBUG_printf("%s: (FBW-%d) %s\n", levelMsg, code, msg);
+    }
 
     if (level == ERROR_LEVEL_FATAL) {
         while (true); // Halt execution for fatal errors

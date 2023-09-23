@@ -3,6 +3,7 @@
  * Licensed under the GNU GPL-3.0
 */
 
+#include <stdbool.h>
 #include <stdio.h>
 
 #include "pico/binary_info.h"

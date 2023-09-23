@@ -163,10 +163,8 @@ bool wifly_parseFplan(const char *fplan) {
         char decoded[strlen(json_start) + 1];
         strcpy(decoded, json_start);
         url_decode(decoded);
-        #if WIFLY_DUMP_DATA
-            printf("\n[wifly] Flightplan data URL encoded: %s\n", json_start);
-            printf("\n[wifly] Flightplan data URL decoded: %s\n\n", decoded);
-        #endif
+        WIFLY_DEBUG_printf("\n[wifly] Flightplan data URL encoded: %s\n", json_start);
+        WIFLY_DEBUG_printf("\n[wifly] Flightplan data URL decoded: %s\n\n", decoded);
 
         // Initialize JSON parsing logic
         jsmn_parser parser;
@@ -252,9 +250,7 @@ bool wifly_parseFplan(const char *fplan) {
                         uint waypoint_token_index = i + 2; // Skip the array token
                         // Waypoint iteration
                         for (uint w = 0; w < waypoint_count; w++) {
-                            #if WIFLY_DUMP_DATA
-                                printf("Processing waypoint %d:\n", w + 1);
-                            #endif
+                            WIFLY_DEBUG_printf("Processing waypoint %d:\n", w + 1);
                             if (tokens[waypoint_token_index].type == JSMN_OBJECT) {
                                 uint waypoint_token_count = tokens[waypoint_token_index].size;
                                 uint waypoint_field_token_index = waypoint_token_index + 1; // Skip the object token
@@ -273,27 +269,21 @@ bool wifly_parseFplan(const char *fplan) {
                                             lat[tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start] = '\0';
                                             // Store the latitude value into a waypoint struct
                                             waypoint.lat = atof(lat);
-                                            #if WIFLY_DUMP_DATA
-                                                printf("Latitude: %s\n", lat);
-                                            #endif
+                                            WIFLY_DEBUG_printf("Latitude: %s\n", lat);
                                         } else if (strcmp(waypoint_field_name, "lng") == 0) {
                                             char lng[17];
                                             strncpy(lng, decoded + tokens[waypoint_field_token_index + 1].start,
                                                     tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start);
                                             lng[tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start] = '\0';
                                             waypoint.lng = atof(lng);
-                                            #if WIFLY_DUMP_DATA
-                                                printf("Longitude: %s\n", lng);
-                                            #endif    
+                                            WIFLY_DEBUG_printf("Longitude: %s\n", lng);
                                         } else if (strcmp(waypoint_field_name, "alt") == 0) {
                                             char alt[4];
                                             strncpy(alt, decoded + tokens[waypoint_field_token_index + 1].start,
                                                     tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start);
                                             alt[tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start] = '\0';
                                             waypoint.alt = atoi(alt);
-                                            #if WIFLY_DUMP_DATA
-                                                printf("Altitude: %s\n", alt);
-                                            #endif    
+                                            WIFLY_DEBUG_printf("Altitude: %s\n", alt);
                                         } else {
                                             FBW_DEBUG_printf("[wifly] ERROR: waypoint field name not recognized!\n");
                                             fplanStatus = WIFLY_ERR_PARSE;

@@ -13,8 +13,6 @@ typedef enum Mode {
 } Mode;
 #define MODE_MAX MODE_HOLD
 
-#define MAX_MODE_RUNTIME_TIME_MS 500 // The maximum amount of time the system will run a mode for before exiting to direct.
-
 /**
  * Transitions the system to a specified mode.
  * @param mode The mode to transition to.
@@ -29,7 +27,7 @@ void modeRuntime();
 /**
  * @return The current mode of the system.
 */
-uint8_t getCurrentMode();
+Mode getCurrentMode();
 
 /**
  * Declares whether or not the IMU data is safe to use.

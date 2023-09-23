@@ -60,6 +60,9 @@
  *           |  2 - Gyroscope offset Z
  *           |  3 - Accelerometer radius
  *           |  4 - Magnetometer radius
+ *           |  5 - unused
+ *           |  6 - unused
+ *           |  7 - unused
  * 
  * 5         |  PID tuning flag / data
  *           |  0 - Flag
@@ -76,6 +79,7 @@
 */
 
 #define FLOAT_SECTOR_MIN FLOAT_SECTOR_PWM
+#define FLOAT_SECTOR_MIN_CONFIG FLOAT_SECTOR_CONFIG_GENERAL
 typedef enum FloatSector {
     FLOAT_SECTOR_BOOT,
     FLOAT_SECTOR_PWM,
@@ -90,11 +94,12 @@ typedef enum FloatSector {
     FLOAT_SECTOR_CONFIG_PINS0,
     FLOAT_SECTOR_CONFIG_PINS1,
     FLOAT_SECTOR_CONFIG_SENSORS,
-    FLOAT_SECTOR_CONFIG_ROLLPITCHPID,
-    FLOAT_SECTOR_CONFIG_YAWPID,
+    FLOAT_SECTOR_CONFIG_PID0,
+    FLOAT_SECTOR_CONFIG_PID1,
     FLOAT_SECTOR_CONFIG_DEBUG
 } FloatSector;
 #define FLOAT_SECTOR_MAX FLOAT_SECTOR_CONFIG_DEBUG
+#define FLOAT_SECTOR_MAX_CONFIG FLOAT_SECTOR_CONFIG_DEBUG
 
 // Gets the memory location of a given PHYSICAL (not virtual!) sector.
 #define GET_PHYSECTOR_LOC(sector) (PICO_FLASH_SIZE_BYTES - (FLASH_SECTOR_SIZE * (sector + 1)))
