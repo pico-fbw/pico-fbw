@@ -1,17 +1,13 @@
 #ifndef __GPS_H
 #define __GPS_H
 
-#include "../config.h"
-
-#ifdef GPS_ENABLED
-
 typedef enum GPSCommandType {
     GPS_COMMAND_TYPE_NONE,
     GPS_COMMAND_TYPE_PMTK
     // What is the command type used for ublox modules?
 } GPSCommandType;
 
-#define GPS_UART uart1 // GPS uses uart1 because uart0 can be used for debugging in some cases
+#define GPS_UART uart1
 #define GPS_UART_IRQ UART1_IRQ
 
 // Timeout between waiting for characters during line reads (in microseconds)
@@ -41,7 +37,8 @@ bool gps_init();
 void gps_deinit();
 
 /**
- * Contains latitude and longitude coordinates, altitude, speed, and true track (mag track broken for now) from a connected GPS module when filled using gps_getData().
+ * Contains latitude and longitude coordinates, altitude, speed, and true track
+ * from a connected GPS module when filled using gps_getData().
 */ 
 typedef struct GPS {
     double lat;
@@ -74,7 +71,5 @@ bool gps_isAltOffsetCalibrated();
  * @return 0 if successful, PICO_ERROR_TIMEOUT if a timeout occured, or PICO_ERROR_GENERIC otherwise.
 */
 int gps_calibrateAltOffset(uint num_samples);
-
-#endif // GPS_ENABLED
 
 #endif // __GPS_H

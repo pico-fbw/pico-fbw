@@ -23,7 +23,7 @@
 
 #include "../wifly.h"
 
-#include "../../config.h"
+#include "../../sys/config.h"
 
 #include "dhcp.h"
 
@@ -256,7 +256,7 @@ static void dhcp_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p,
             d->lease[yi].expiry = (cyw43_hal_ticks_ms() + DEFAULT_LEASE_TIME_S * 1000) >> 16;
             dhcp_msg.yiaddr[3] = DHCPS_BASE_IP + yi;
             opt_write_u8(&opt, DHCP_OPT_MSG_TYPE, DHCPACK);
-            DHCP_DEBUG_printf("[dhcp] client connected: MAC=%02x:%02x:%02x:%02x:%02x:%02x IP=%u.%u.%u.%u\n",
+            if (config.debug.debug_network) printf("[dhcp] client connected: MAC=%02x:%02x:%02x:%02x:%02x:%02x IP=%u.%u.%u.%u\n",
                 dhcp_msg.chaddr[0], dhcp_msg.chaddr[1], dhcp_msg.chaddr[2], dhcp_msg.chaddr[3], dhcp_msg.chaddr[4], dhcp_msg.chaddr[5],
                 dhcp_msg.yiaddr[0], dhcp_msg.yiaddr[1], dhcp_msg.yiaddr[2], dhcp_msg.yiaddr[3]);
             break;

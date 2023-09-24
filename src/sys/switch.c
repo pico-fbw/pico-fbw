@@ -24,7 +24,7 @@ void switch_update(SwitchPosition pos) {
                 toMode(MODE_NORMAL);
                 break;
             case SWITCH_POSITION_HIGH:
-                switch (configGeneral.switchType) {
+                switch (config.general.switchType) {
                     case SWITCH_TYPE_2_POS:
                         toMode(MODE_NORMAL);
                         break;

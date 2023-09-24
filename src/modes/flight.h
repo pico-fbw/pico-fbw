@@ -1,17 +1,11 @@
 #ifndef __FLIGHT_H
 #define __FLIGHT_H
 
-#include "../io/imu.h"
 #include "../io/gps.h"
+#include "../io/imu.h"
 
-#include "../config.h"
-
-// Contains the aircraft's inertial angles, will be updated whenever flight_update_core0() is called.
-extern Angles aircraft;
-#ifdef GPS_ENABLED
-    // Contains the aircraft's GPS positioning data, will be updated whenever flight_update_core0() is called.
-    extern GPS gps;
-#endif
+extern Angles aircraft; // Contains the aircraft's inertial angles, will be updated whenever flight_update is called.
+extern GPS gps; // Contains the aircraft's GPS positioning data, will be updated whenever flight_update is called.
 
 /**
  * Initializes the flight system (axis PIDs).

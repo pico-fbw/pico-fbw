@@ -5,24 +5,28 @@
 
 #include <stdbool.h>
 #include "pico/types.h"
-#include "../lib/pid.h"
-#include "../lib/nav.h"
 
 #include "../io/flash.h"
 #include "../io/imu.h"
 #include "../io/gps.h"
-#include "../wifly/wifly.h"
 
-#include "../config.h"
+#include "../lib/pid.h"
+#include "../lib/nav.h"
 
 #include "modes.h"
 #include "normal.h"
 #include "tune.h"
 #include "flight.h"
 
+#include "../sys/config.h"
+
+#include "../wifly/wifly.h"
+
 #include "auto.h"
 
-#ifdef GPS_ENABLED
+// TODO: Aadd documentation for auto mode on the wiki!
+// "materials" and "how to use system" need updating and also a completely new page for wifly and how to use it
+// also make sure to mention it in the readme
 
 static bool autoComplete = false;
 
@@ -30,7 +34,6 @@ static Waypoint *fplan = NULL;
 static uint currentWaypoint = 0;
 static Waypoint currentWpt;
 
-// Current waypoint information
 static double distance;
 static double bearing;
 static int alt;
@@ -112,9 +115,3 @@ void mode_auto() {
         }
     }
 }
-
-// TODO: Aadd documentation for auto mode on the wiki!
-// "materials" and "how to use system" need updating and also a completely new page for wifly and how to use it
-// also make sure to mention it in the readme
-
-#endif // GPS_ENABLED

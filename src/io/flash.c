@@ -7,10 +7,11 @@
 #include <stdint.h>
 #include "pico/types.h"
 
-#include "hardware/flash.h"
 #include "hardware/sync.h"
 
 #include "flash.h"
+
+// TODO: fetch flash data into RAM on startup for speed
 
 /**
  * Erases a given PHYSICAL sector of flash.

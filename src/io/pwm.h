@@ -13,10 +13,16 @@ typedef enum PWMMode {
     PWM_MODE_ESC
 } PWMMode;
 
+typedef enum PWMCalibrationStatus {
+    PWMCALIBRATION_OK,
+    PWMCALIBRATION_INCOMPLETE,
+    PWMCALIBRATION_INVALID
+} PWMCalibrationStatus;
+
 /**
  * @return true if the value is within the maximum calibration offset.
 */
-#define WITHIN_MAX_CALIBRATION_OFFSET(value) ((value) >= -MAX_CALIBRATION_OFFSET && (value) <= MAX_CALIBRATION_OFFSET)
+#define WITHIN_MAX_CALIBRATION_OFFSET(value, offset) ((value) >= -offset && (value) <= offset)
 
 /* You may wonder why there is a limit of seven pins even though there are eight state machines.
 This is because the Pico W reserves one state machine for itself, and even though we could use the full eight on a regular Pico,
@@ -28,7 +34,7 @@ this keeps compatability between models. */
  * @param pin_list the list of pins to enable PWM input on
  * @param num_pins the number of pins you are enabling PWM input on (1-7)
 */
-void pwm_enable(const uint pin_list[], const uint num_pins);
+void pwm_enable(uint pin_list[], uint num_pins);
 
 /**
  * @param pin the GPIO pin to read (must have been already initalized)
@@ -36,7 +42,7 @@ void pwm_enable(const uint pin_list[], const uint num_pins);
  * @return the calculated degree value derived from the pulsewidth on that pin.
  * @note The mode simply changes how data is displayed and not how it is calculated (DEG from 0-180 and ESC from 0-100).
 */
-float pwm_read(const uint pin, PWMMode mode);
+float pwm_read(uint pin, PWMMode mode);
 
 /**
  * Samples a list of pins for deviation from a specified value for a specified number of samples, then saves that offset value to flash.
@@ -49,12 +55,19 @@ float pwm_read(const uint pin, PWMMode mode);
  * 
  * @return true if the calibration was successful, false if not
 */
-bool pwm_calibrate(const uint pin_list[], const uint num_pins, const float deviations[], uint num_samples, uint sample_delay_ms, uint run_times);
+bool pwm_calibrate(uint pin_list[], uint num_pins, float deviations[], uint num_samples, uint sample_delay_ms, uint run_times);
 
 /**
- * Checks if the PWM calibration has been run before.
- * @return 0 if calibration has been run previously, -1 if no calibration has been run, and -2 if the calibration was run in a different control mode.
+ * @return the status of any previous PWM calibration.
 */
-int pwm_isCalibrated();
+PWMCalibrationStatus pwm_isCalibrated();
+
+/**
+ * Gets the GPIO pins, number of pins, and their deviations designated for PWM in the config.
+ * @param pins array of at least 5 elements to fill with pins
+ * @param num_pins pointer to the number of pins
+ * @param deviations array of at least 5 elements to fill with pin calibration deviations
+*/
+void pwm_getPins(uint *pins, uint *num_pins, float *deviations);
 
 #endif // __PWM_H

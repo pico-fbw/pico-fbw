@@ -9,27 +9,31 @@
 #include "../io/servo.h"
 #include "../io/pwm.h"
 
-#include "../config.h"
+#include "../sys/config.h"
 
 #include "direct.h"
 
 /**
- * Quick note for future me/any other developers:
+ * Quick note for future me/any other developers (if there ever are lol):
  * This mode is as low-latency as I can think to make it--the only way (I believe) to make it faster is to
  * reassign the GPIO pins being used for input to DIO instead of PIO and assign them back when switching modes, which
  * gave a basically unnoticeable decrease in latency and it's much more complicated, so I didn't bother to implement it.
 */
 
 void mode_direct() {
-    #if defined(CONTROL_3AXIS)
-        servo_set(SERVO_AIL_PIN, pwm_read(INPUT_AIL_PIN, PWM_MODE_DEG));
-        servo_set(SERVO_ELEV_PIN, pwm_read(INPUT_ELEV_PIN, PWM_MODE_DEG));
-        servo_set(SERVO_RUD_PIN, pwm_read(INPUT_RUD_PIN, PWM_MODE_DEG));
-    #elif defined(CONTROL_FLYINGWING)
-        servo_set(SERVO_ELEVON_L_PIN, pwm_read(INPUT_AIL_PIN, PWM_MODE_DEG));
-        servo_set(SERVO_ELEVON_R_PIN, pwm_read(INPUT_ELEV_PIN, PWM_MODE_DEG));
-    #endif
-    #ifdef ATHR_ENABLED
-        esc_set(ESC_THR_PIN, pwm_read(INPUT_THR_PIN, PWM_MODE_ESC));
-    #endif
+    switch (config.general.controlMode) {
+        case CTRLMODE_3AXIS_ATHR:
+            esc_set(config.pins1.escThrottle, pwm_read(config.pins1.inputThrottle, PWM_MODE_ESC));
+        case CTRLMODE_3AXIS:
+            servo_set(config.pins0.servoAil, pwm_read(config.pins0.inputAil, PWM_MODE_DEG));
+            servo_set(config.pins0.servoElev, pwm_read(config.pins0.inputElev, PWM_MODE_DEG));
+            servo_set(config.pins0.servoRud, pwm_read(config.pins0.inputRud, PWM_MODE_DEG));
+            break;
+        case CTRLMODE_FLYINGWING_ATHR:
+            esc_set(config.pins1.escThrottle, pwm_read(config.pins1.inputThrottle, PWM_MODE_ESC));
+        case CTRLMODE_FLYINGWING:
+            servo_set(config.pins1.servoElevonL, pwm_read(config.pins0.inputAil, PWM_MODE_DEG));
+            servo_set(config.pins1.servoElevonR, pwm_read(config.pins0.inputElev, PWM_MODE_DEG));
+            break;
+    }
 }

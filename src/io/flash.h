@@ -1,14 +1,14 @@
 #ifndef __FLASH_H
 #define __FLASH_H
 
-#include "hardware/flash.h"
-
 /**
  * README:
  * This file is of paramount importance. Please do NOT change anything in here unless you REALLY know what you are doing!
  * Many values here change where the system looks for flash values, which can cause data corruption/erasure.
  * Be warned!!
 */
+
+#include "hardware/flash.h"
 
 /**
  * FLASHMAP (floats):

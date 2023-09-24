@@ -21,14 +21,15 @@
 #include "hardware/i2c.h"
 #include "hardware/gpio.h"
 
-#include "../modes/modes.h"
-#include "../config.h"
-
-#include "../lib/dmp.h"
-
 #include "error.h"
 #include "flash.h"
 #include "platform.h"
+
+#include "../lib/dmp.h"
+
+#include "../modes/modes.h"
+
+#include "../sys/config.h"
 
 #include "imu.h"
 
@@ -53,16 +54,17 @@ typedef enum EulerAxis {
     EULER_AXIS_Z
 } EulerAxis;
 
-static Euler euler; // Holds persistant Euler data between calls to keep a constant stream of data, whether the IMU is ready or not
+/* All IMUs */
 
 // These are all populated when imu_init() is called
-// We must determine the model and some register addresses at runtime to accomodate the fbw board
 static IMUModel imuModel = IMU_MODEL_UNKNOWN;
 static uint CHIP_FREQ_KHZ;
 static unsigned char CHIP_REGISTER;
 static unsigned char ID_REGISTER;
 static unsigned char CHIP_ID;
 static unsigned char PWR_MODE_REGISTER;
+
+static Euler euler; // Holds persistant Euler data between calls to keep a constant stream of data, whether the IMU is ready or not
 
 /**
  * Writes a byte value directly to the IMU.
@@ -79,13 +81,15 @@ static inline int imu_write(unsigned char addr, unsigned char val) {
 static inline IMUAxis getCalibrationAxis(EulerAxis axis) { return (IMUAxis)(flash_readFloat(FLOAT_SECTOR_IMU_MAP, (uint)axis)); }
 static inline bool shouldCompensateAxis(EulerAxis axis) { return (bool)(flash_readFloat(FLOAT_SECTOR_IMU_MAP, (uint)(axis + 3))); }
 
+/* BNO055 only */
+
 /**
  * Changes the working mode of the BNO055.
  * @param mode The code of the mode to change into (for example, 0x0C for NDOF).
  * @return true if success, false if failure.
 */
 static bool bno_changeMode(unsigned char mode) {
-    IMU_DEBUG_printf("[imu] changing to mode 0x%02X\n", mode);
+    if (config.debug.debug_imu) printf("[imu] changing to mode 0x%02X\n", mode);
     imu_write(OPR_MODE_REGISTER, mode);
     sleep_ms(100);
     // Check to ensure mode has changed properly by reading it back
@@ -95,7 +99,7 @@ static bool bno_changeMode(unsigned char mode) {
     if (currentMode == mode) {
         return true;
     } else {
-        IMU_DEBUG_printf("[imu] failed to change mode, mode is still 0x%02X, supposed to be 0x%02X\n", currentMode, mode);
+        if (config.debug.debug_imu) printf("[imu] failed to change mode, mode is still 0x%02X, supposed to be 0x%02X\n", currentMode, mode);
         return false;
     }
 }
@@ -133,7 +137,7 @@ static int bno_getCalibrationData(int16_t *data) {
     int timeout = i2c_read_timeout_us(IMU_I2C, CHIP_REGISTER, buf, sizeof(buf), false, IMU_TIMEOUT_US);
     for (uint8_t i = 0; i < 11; i++) {
         data[i] = (buf[i * 2 + 1] << 8) | buf[i * 2];
-        IMU_DEBUG_printf("[BNO055] read 0x%04X from LSB 0x%02X, MSB 0x%02X\n", data[i], buf[i * 2 + 1], buf[i * 2]);
+        if (config.debug.debug_imu) printf("[BNO055] read 0x%04X from LSB 0x%02X, MSB 0x%02X\n", data[i], buf[i * 2 + 1], buf[i * 2]);
     }
 }
 
@@ -152,7 +156,7 @@ static int bno_saveCalibrationData(int16_t *data, bool mag) {
         for (uint8_t i = 1; i < 12; i++) {
             buf[i * 2] = data[i - 1] & 0xFF; // Store LSB
             buf[i * 2 + 1] = (data[i - 1] >> 8) & 0xFF; // Store MSB
-            IMU_DEBUG_printf("[BNO055] write 0x%04X to LSB 0x%02X, MSB 0x%02X\n", data[i - 1], buf[i * 2 + 1], buf[i * 2]);
+            if (config.debug.debug_imu) printf("[BNO055] write 0x%04X to LSB 0x%02X, MSB 0x%02X\n", data[i - 1], buf[i * 2 + 1], buf[i * 2]);
         }
         return i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, buf, sizeof(buf) - 1, true, IMU_TIMEOUT_US);
     } else {
@@ -163,21 +167,22 @@ static int bno_saveCalibrationData(int16_t *data, bool mag) {
         for (uint8_t i = 1; i < 4; i++) {
             acc[i * 2] = data[i - 1] & 0xFF;
             acc[i * 2 + 1] = (data[i - 1] >> 8) & 0xFF;
-            IMU_DEBUG_printf("[BNO055] (acc) write 0x%04X to LSB 0x%02X, MSB 0x%02X\n", data[i - 1], acc[i * 2 + 1], acc[i * 2]);
+            if (config.debug.debug_imu) printf("[BNO055] (acc) write 0x%04X to LSB 0x%02X, MSB 0x%02X\n", data[i - 1], acc[i * 2 + 1], acc[i * 2]);
         }
         for (uint8_t i = 1; i < 5; i++) {
             gyr_rad[i * 2] = data[i + 5] & 0xFF;
             gyr_rad[i * 2 + 1] = (data[i + 5] >> 8) & 0xFF;
-            IMU_DEBUG_printf("[BNO055] (gyr_rad) write 0x%04X to LSB 0x%02X, MSB 0x%02X\n", data[i + 5], gyr_rad[i * 2 + 1], gyr_rad[i * 2]);
+            if (config.debug.debug_imu) printf("[BNO055] (gyr_rad) write 0x%04X to LSB 0x%02X, MSB 0x%02X\n", data[i + 5], gyr_rad[i * 2 + 1], gyr_rad[i * 2]);
         }
         i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, acc, sizeof(acc) - 1, true, IMU_TIMEOUT_US);
         return i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, gyr_rad, sizeof(gyr_rad) - 1, true, IMU_TIMEOUT_US);
     }
 }
 
+/* MPU6050 only */
+
 static uint16_t fifoCount;
 static unsigned char fifoBuf[DMP_PACKET_SIZE];
-
 struct repeating_timer updateTimer;
 
 /**
@@ -198,19 +203,14 @@ static uint16_t mpu_getFIFOCount() {
 */
 static bool mpu_update(struct repeating_timer *t) { imu_getRawAngles(); }
 
+/* ---------------------------------------- */
 
 int imu_init() {
     // Determine which IMU to use
     if (platform_is_fbw()) {
-        // The FBW platform uses the BNO055 as the IMU, so use that regardless of what is defined
-        imuModel = IMU_MODEL_BNO055;
+        imuModel = IMU_MODEL_BNO055; // The FBW platform uses the BNO055 as the IMU, use that regardless
     } else {
-        // Otherwise, use whatever is defined in the config
-        #if defined(IMU_BNO055)
-            imuModel = IMU_MODEL_BNO055;
-        #elif defined(IMU_MPU6050)
-            imuModel = IMU_MODEL_MPU6050;
-        #endif
+        imuModel = config.sensors.imuModel; // Otherwise, use whatever is defined in the config
     }
     // Some addresses, IDs, etc overlap between models so we have to populate those now for use later
     switch (imuModel) {
@@ -229,75 +229,70 @@ int imu_init() {
             PWR_MODE_REGISTER = MPU_PWR_MODE_REGISTER;
             break;
     }
-    // Steps to init are the same for all IMUs; only things like addresses and IDs change which has been covered above
-    FBW_DEBUG_printf("[imu] initializing ");
+    // Steps to init are the same for all IMUs; only addresses and IDs change
+    if (config.debug.debug_fbw) printf("[imu] initializing ");
     if (IMU_I2C == i2c0) {
-        FBW_DEBUG_printf("i2c0\n");
+        if (config.debug.debug_fbw) printf("i2c0\n");
     } else if (IMU_I2C == i2c1) {
-        FBW_DEBUG_printf("i2c1\n");
+        if (config.debug.debug_fbw) printf("i2c1\n");
     } else {
-        FBW_DEBUG_printf("\n");
+        if (config.debug.debug_fbw) printf("\n");
     }
     i2c_init(IMU_I2C, CHIP_FREQ_KHZ * 1000);
-    gpio_set_function(IMU_SDA_PIN, GPIO_FUNC_I2C);
-    gpio_set_function(IMU_SCL_PIN, GPIO_FUNC_I2C);
-    gpio_pull_up(IMU_SDA_PIN);
-    gpio_pull_up(IMU_SCL_PIN);
+    gpio_set_function(config.sensors.imuSda, GPIO_FUNC_I2C);
+    gpio_set_function(config.sensors.imuScl, GPIO_FUNC_I2C);
+    gpio_pull_up(config.sensors.imuSda);
+    gpio_pull_up(config.sensors.imuScl);
     // Query the ID register for expected values to confirm identity/check comms
-    FBW_DEBUG_printf("[imu] searching for ");
+    if (config.debug.debug_fbw) printf("[imu] searching for ");
     switch (imuModel) {
         case IMU_MODEL_BNO055:
-            FBW_DEBUG_printf("BNO055\n");
+            if (config.debug.debug_fbw) printf("BNO055\n");
             break;
         case IMU_MODEL_MPU6050:
-            FBW_DEBUG_printf("MPU6050\n");
+            if (config.debug.debug_fbw) printf("MPU6050\n");
             break;
     }
-    IMU_DEBUG_printf("[imu] checking ID (writing 0x%02X [ID_REGISTER] to 0x%02X [CHIP_REGISTER]) with timeout of %dus...\n", ID_REGISTER, CHIP_REGISTER, IMU_TIMEOUT_US);
+    if (config.debug.debug_imu) printf("[imu] checking ID (writing 0x%02X [ID_REGISTER] to 0x%02X [CHIP_REGISTER]) with timeout of %dus...\n", ID_REGISTER, CHIP_REGISTER, IMU_TIMEOUT_US);
     int result = i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, &ID_REGISTER, 1, true, IMU_TIMEOUT_US);
     if (result == PICO_ERROR_GENERIC) {
-        IMU_DEBUG_printf("[imu] ERROR: address not acknowledged (no/wrong device present?)\n");
+        if (config.debug.debug_imu) printf("[imu] ERROR: address not acknowledged (no/wrong device present?)\n");
         return PICO_ERROR_GENERIC;
     } else if (result == PICO_ERROR_TIMEOUT) {
-        IMU_DEBUG_printf("[imu] ERROR: write timeout occured (no device present?)\n");
+        if (config.debug.debug_imu) printf("[imu] ERROR: write timeout occured (no device present?)\n");
         return PICO_ERROR_TIMEOUT;
     } else if (result == 1) { // Correct number of bytes written should be 1
-        IMU_DEBUG_printf("[imu] address acknowledged, attempting to read ID...\n");
+        if (config.debug.debug_imu) printf("[imu] address acknowledged, attempting to read ID...\n");
         unsigned char id;
         result = i2c_read_timeout_us(IMU_I2C, CHIP_REGISTER, &id, 1, false, IMU_TIMEOUT_US);
         if (result == PICO_ERROR_GENERIC) {
-            IMU_DEBUG_printf("[imu] ERROR: address not acknowledged\n");
+            if (config.debug.debug_imu) printf("[imu] ERROR: address not acknowledged\n");
             return PICO_ERROR_GENERIC;
         } else if (result== PICO_ERROR_TIMEOUT) {
-            IMU_DEBUG_printf("[imu] ERROR: write timeout occured\n");
+            if (config.debug.debug_imu) printf("[imu] ERROR: write timeout occured\n");
             return PICO_ERROR_TIMEOUT;
         } else {
-            IMU_DEBUG_printf("[imu] ID: 0x%02X\n", id);
+            if (config.debug.debug_imu) printf("[imu] ID: 0x%02X\n", id);
             if (id == CHIP_ID) {
-                IMU_DEBUG_printf("[imu] ID matches expected value\n");
+                if (config.debug.debug_imu) printf("[imu] ID matches expected value\n");
                 return 0;
             } else {
-                IMU_DEBUG_printf("[imu] ERROR: ID does not match expected value\n");
+                if (config.debug.debug_imu) printf("[imu] ERROR: ID does not match expected value\n");
                 return 1;
             }
         }
     } else {
-        IMU_DEBUG_printf("[imu] ERROR: unknown error occured\n");
+        if (config.debug.debug_imu) printf("[imu] ERROR: unknown error occured\n");
         return PICO_ERROR_GENERIC;
     }
 }
 
-void imu_deinit() {
-    i2c_deinit(IMU_I2C);
-}
+void imu_deinit() { i2c_deinit(IMU_I2C); }
 
 bool imu_configure() {
-    FBW_DEBUG_printf("[imu] configuring...\n");
+    if (config.debug.debug_fbw) printf("[imu] configuring...\n");
     switch (imuModel) {
         case IMU_MODEL_BNO055:
-            /* imu_write(SYS_REGISTER, 0x20); // Reset power
-            sleep_ms(100);
-                ^ was causing issues with pico-fbw board, wasn't entirely needed anyways */
             imu_write(SYS_REGISTER, 0x00); // Use internal oscillator
             imu_write(PWR_MODE_REGISTER, PWR_MODE_NORMAL); // Use normal power mode
             sleep_ms(100);
@@ -317,7 +312,7 @@ bool imu_configure() {
                 }
                 int timeout = bno_saveCalibrationData(calibrationData, false);
                 if (timeout == PICO_ERROR_GENERIC || timeout == PICO_ERROR_TIMEOUT) {
-                    FBW_DEBUG_printf("[imu] ERROR: failed to save calibration data!\n");
+                    if (config.debug.debug_fbw) printf("[imu] ERROR: failed to save calibration data!\n");
                     return false;
                 }
                 bool status = bno_changeMode(MODE_NDOF); // Select NDOF mode to calibrate MAG and later obtain Euler data
@@ -326,7 +321,7 @@ bool imu_configure() {
                 bno_getCalibrationStatus(&calibrationSYS, &calibrationGYR, &calibrationACC, &calibrationMAG);
                 while (calibrationMAG < 3) {
                     bno_getCalibrationStatus(&calibrationSYS, &calibrationGYR, &calibrationACC, &calibrationMAG);
-                    FBW_DEBUG_printf("%d/3, %d/3, %d/3, %d/3\n", calibrationSYS, calibrationGYR, calibrationACC, calibrationMAG);
+                    if (config.debug.debug_fbw) printf("%d/3, %d/3, %d/3, %d/3\n", calibrationSYS, calibrationGYR, calibrationACC, calibrationMAG);
                     sleep_ms(1000);
                 }
             } else {
@@ -334,7 +329,7 @@ bool imu_configure() {
             }
             */
             status = bno_changeMode(MODE_NDOF);
-            // TODO: add offset calibration for BNO
+            // TODO: add offset calibration for BNO, similar to MPU's
             return status;
         case IMU_MODEL_MPU6050:
             imu_write(PWR_MODE_REGISTER, 0x80); // Reset power
@@ -349,7 +344,7 @@ bool imu_configure() {
             imu_write(PWR_MODE_REGISTER, 0x01); // Select clock source again (??)
             imu_write(SMPLRT_DIV_REGISTER, 0x04); // Sample rate = gyro rate / (1 + SMPLRT_DIV) [100Hz?]
             imu_write(CONFIG_REGISTER, 0x01); // Digital Low Pass Filter (DLPF) 188Hz
-            IMU_DEBUG_printf("[imu] writing DMP to memory...\n");
+            if (config.debug.debug_imu) printf("[imu] writing DMP to memory...\n");
             dmp_writeMemoryBlock(dmp, DMP_SIZE, 0, 0); // Write DMP to memory
             unsigned char cmd[3] = {DMP_PROG_START_ADDR, 0x04, 0x00}; // DMP program start address
             i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, cmd, 3, true, IMU_TIMEOUT_US);
@@ -357,7 +352,6 @@ bool imu_configure() {
             imu_write(USER_CONTROL_REGISTER, 0xC2); // Enable and reset DMP FIFO
             imu_write(INTERRUPTS_ENABLED_REGISTER, 0x02); // Enable RAW_DMP_INT
             // TODO: port accel and gyro calibrations from DMP lib/i2cdevlib (and use that for the return statement)
-
             add_repeating_timer_us(IMU_SAMPLE_RATE_US, mpu_update, NULL, &updateTimer); // Start the update timer
             return true; // FIXME: do not keep in final; return the actual status!
         default:
@@ -368,13 +362,12 @@ bool imu_configure() {
 Euler imu_getRawAngles() {
     switch (imuModel) {
         case IMU_MODEL_BNO055: {
-            // Get angle data from IMU
             unsigned char euler_data[6];
             int timeout0 = i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, &EULER_BEGIN_REGISTER, 1, true, IMU_TIMEOUT_US);
             int timeout1 = i2c_read_timeout_us(IMU_I2C, CHIP_REGISTER, euler_data, 6, false, IMU_TIMEOUT_US);
             // Check if any I2C related errors occured, if so, set IMU as unsafe and return no data
             if (timeout0 == PICO_ERROR_GENERIC || timeout0 == PICO_ERROR_TIMEOUT || timeout1 == PICO_ERROR_GENERIC || timeout1 == PICO_ERROR_TIMEOUT) {
-                IMU_DEBUG_printf("[imu] i2c read timeout occured!\n");
+                if (config.debug.debug_imu) printf("[imu] i2c read timeout occured!\n");
                 setIMUSafe(false);
                 return (Euler){0};
             }
@@ -401,7 +394,7 @@ Euler imu_getRawAngles() {
             fifoCount = mpu_getFIFOCount();
             if (fifoCount >= 1024) {
                 // FIFO overflow, reset
-                IMU_DEBUG_printf("[imu] WARNING: FIFO overflow!\n");
+                if (config.debug.debug_imu) printf("[imu] WARNING: FIFO overflow!\n");
                 imu_write(USER_CONTROL_REGISTER, 0b00000010);
             } else {
                 if (fifoCount >= DMP_PACKET_SIZE) {
@@ -424,7 +417,7 @@ Euler imu_getRawAngles() {
             break;
         }
         default: {
-            FBW_DEBUG_printf("[imu] ERROR: unknown IMU model!\n");
+            if (config.debug.debug_fbw) printf("[imu] ERROR: unknown IMU model!\n");
             setIMUSafe(false);
             return (Euler){0};
         }
@@ -443,7 +436,7 @@ Angles imu_getAngles() {
             angles = euler; // MPU6050 is sync; we can just use the cached angles
             break;
         default:
-            FBW_DEBUG_printf("[imu] ERROR: unknown IMU model!\n");
+            if (config.debug.debug_fbw) printf("[imu] ERROR: unknown IMU model!\n");
             setIMUSafe(false);
             return (Angles){0};
     }
@@ -486,7 +479,7 @@ Angles imu_getAngles() {
 
     // Check for mapping errors (they really shouldn't occur and should be correctly handled before this function is even called)
     if (roll == -200.0f || pitch == -200.0f || yaw == -200.0f) {
-        IMU_DEBUG_printf("[imu] angle mapping error occured!\n");
+        if (config.debug.debug_imu) printf("[imu] angle mapping error occured!\n");
         setIMUSafe(false);
         return (Angles){0};
     }
@@ -499,16 +492,16 @@ bool imu_calibrate() {
         // If we are on the BNO055, first ensure we have a good calibration
         unsigned char sys, gyr, acc, mag;
         bno_getCalibrationStatus(&sys, &gyr, &acc, &mag);
-        FBW_DEBUG_printf("[imu] BNO055 calibration status: SYS: %d/3, GYR: %d/3, ACC: %d/3, MAG: %d/3\n", sys, gyr, acc, mag);
+        if (config.debug.debug_fbw) printf("[imu] BNO055 calibration status: SYS: %d/3, GYR: %d/3, ACC: %d/3, MAG: %d/3\n", sys, gyr, acc, mag);
         if (sys < 3) {
-            FBW_DEBUG_printf("[imu] sensor calibration must be performed!\n");
+            if (config.debug.debug_fbw) printf("[imu] sensor calibration must be performed!\n");
             error_throw(ERROR_IMU, ERROR_LEVEL_STATUS, 500, 250, true, "");
             while (sys < 3 || acc < 1) {
                 bno_getCalibrationStatus(&sys, &gyr, &acc, &mag);
-                FBW_DEBUG_printf("%d/3, %d/3, %d/3, %d/3\n", sys, gyr, acc, mag);
+                if (config.debug.debug_fbw) printf("%d/3, %d/3, %d/3, %d/3\n", sys, gyr, acc, mag);
                 sleep_ms(2000);
             }
-            FBW_DEBUG_printf("[imu] sensor calibration complete! saving calibration...\n");
+            if (config.debug.debug_fbw) printf("[imu] sensor calibration complete! saving calibration...\n");
             bno_changeMode(MODE_CONFIG); // Must be in CONFIG mode to read calibration data
             int16_t data[11];
             int timeout = bno_getCalibrationData(data);
@@ -525,7 +518,7 @@ bool imu_calibrate() {
                 flash_writeFloat(FLOAT_SECTOR_IMU_CFG0, imu0);
                 flash_writeFloat(FLOAT_SECTOR_IMU_CFG1, imu1);
             } else {
-                FBW_DEBUG_printf("[imu] failed to read BNO055 calibration data!\n");
+                if (config.debug.debug_fbw) printf("[imu] failed to read BNO055 calibration data!\n");
                 return false;
             }
             // Write data back as a test
@@ -538,16 +531,16 @@ bool imu_calibrate() {
             }
             timeout = bno_saveCalibrationData(test, true);
             if (timeout != PICO_ERROR_GENERIC && timeout != PICO_ERROR_TIMEOUT) {
-                FBW_DEBUG_printf("[imu] BNO055 calibration data saved!\n");
+                if (config.debug.debug_fbw) printf("[imu] BNO055 calibration data saved!\n");
                 error_clear(ERROR_IMU, false);
                 bno_changeMode(MODE_NDOF); // Change back to NDOF mode for next step
             } else {
-                FBW_DEBUG_printf("[imu] failed to test save BNO055 calibration data!\n");
+                if (config.debug.debug_fbw) printf("[imu] failed to test save BNO055 calibration data!\n");
                 return false;
             }
         }
     }
-    FBW_DEBUG_printf("[imu] starting imu angle mapping calibration\n");
+    if (config.debug.debug_fbw) printf("[imu] starting imu angle mapping calibration\n");
     error_throw(ERROR_IMU, ERROR_LEVEL_STATUS, 500, 100, true, ""); // Blink for calibration status
     float calibration_data[FLOAT_SECTOR_SIZE] = {FLAG_IMU, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}; // {flag, x, y, z, x_dir, y_dir, z_dir}
     // Complete all axes' calibration
@@ -574,7 +567,7 @@ bool imu_calibrate() {
         switch (state) {
             case CALIBRATION_STATE_ROLL:
                 calibration_data[(uint)movedAxis] = IMU_AXIS_ROLL;
-                IMU_DEBUG_printf("[imu] roll axis is axis %d\n", movedAxis);
+                if (config.debug.debug_imu) printf("[imu] roll axis is axis %d\n", movedAxis);
                 if (movedAngle < 0) {
                     // This indicates a left roll (we are expecting a right), so compensate
                     calibration_data[(uint)movedAxis + 3] = 1.0f;
@@ -582,7 +575,7 @@ bool imu_calibrate() {
                 break;
             case CALIBRATION_STATE_PITCH:
                 calibration_data[(uint)movedAxis] = IMU_AXIS_PITCH;
-                IMU_DEBUG_printf("[imu] pitch axis is axis %d\n", movedAxis);
+                if (config.debug.debug_imu) printf("[imu] pitch axis is axis %d\n", movedAxis);
                 if (movedAngle < 0) {
                     // Indicates a pitch down, compensate
                     calibration_data[(uint)movedAxis + 3] = 1.0f;
@@ -590,7 +583,7 @@ bool imu_calibrate() {
                 break;
             case CALIBRATION_STATE_YAW:
                 calibration_data[(uint)movedAxis] = IMU_AXIS_YAW;
-                IMU_DEBUG_printf("[imu] yaw axis is axis %d\n", movedAxis);
+                if (config.debug.debug_imu) printf("[imu] yaw axis is axis %d\n", movedAxis);
                 if (movedAngle > 0) {
                     // Indicates a right yaw, compensate
                     calibration_data[(uint)movedAxis + 3] = 1.0f;
@@ -619,10 +612,10 @@ bool imu_calibrate() {
     // Check data before writing to flash
     if (calibration_data[1] != calibration_data[2] && calibration_data[1] != calibration_data[3] && calibration_data[2] != calibration_data[1] && calibration_data[2] != calibration_data[3] && calibration_data[3] != calibration_data[1] && calibration_data[3] != calibration_data[2]) {
         flash_writeFloat(FLOAT_SECTOR_IMU_MAP, calibration_data);
-        FBW_DEBUG_printf("[imu] imu angle mapping calibration complete\n");
+        if (config.debug.debug_fbw) printf("[imu] imu angle mapping calibration complete\n");
         return true;
     } else {
-        FBW_DEBUG_printf("[imu] one or more axes were the same, calibration failed!\n");
+        if (config.debug.debug_fbw) printf("[imu] one or more axes were the same, calibration failed!\n");
         return false;
     }
 }

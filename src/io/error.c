@@ -6,12 +6,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include "pico/config.h"
 #include "pico/time.h"
 #include "pico/types.h"
 
 #include "platform.h"
 
-#include "../config.h"
+#include "../sys/config.h"
 
 #include "error.h"
 
@@ -40,7 +41,7 @@ static struct repeating_timer timer;
 static uint32_t gb_pulse_ms = 0;
 
 // TODO: this randomly stops after a bit sometimes?
-// also Pico's LED is just randomly going out as well; the timer is stopping?
+// also Pico (w)'s LED is just randomly going out as well; the timer is stopping?
 
 static inline void led_toggle() {
     if (platform_is_fbw()) {
@@ -144,7 +145,7 @@ void error_throw(ErrorType type, ErrorLevel level, uint code, uint pulse_ms, boo
             break;
     }
     if (levelMsg) {
-        FBW_DEBUG_printf("%s: (FBW-%d) %s\n", levelMsg, code, msg);
+        printf("%s: (FBW-%d) %s\n", levelMsg, code, msg);
     }
 
     if (level == ERROR_LEVEL_FATAL) {

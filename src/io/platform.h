@@ -61,7 +61,7 @@ BootType platform_boot_type();
 
 /**
  * @return true if a PICO or PICO_W is detected.
- * @note this means with FBW and ATHENA as well
+ * @note this means with FBW as well
 */
 bool platform_is_pico();
 

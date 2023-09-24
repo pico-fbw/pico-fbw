@@ -1,8 +1,6 @@
 #ifndef __ERROR_H
 #define __ERROR_H
 
-#include "pico/types.h"
-
 typedef enum ErrorType {
     ERROR_NONE,
     ERROR_PWM,

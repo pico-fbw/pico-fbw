@@ -1,7 +1,14 @@
 #ifndef __HOLD_H
 #define __HOLD_H
 
-#ifdef GPS_ENABLED
+typedef enum HoldStatus {
+    HOLD_AWAITING_TURN,
+    HOLD_TURN_BEGUN,
+    HOLD_TURN_INPROGRESS,
+    HOLD_TURN_ENDING,
+    HOLD_TURN_STABILIZING,
+    HOLD_TURN_UNSCHEDULED
+} HoldStatus;
 
 // The amount of time (in seconds) that the aircraft will fly straight for in the holding pattern, before turning back around 180 degrees.
 #define HOLD_TIME_PER_LEG_S 30
@@ -17,13 +24,6 @@
 // The value (in degrees) within which the heading will be considered intercepted.
 #define HOLD_HEADING_INTERCEPT_WITHIN 2
 
-#define HOLD_AWAITING_TURN 0
-#define HOLD_TURN_BEGUN 1
-#define HOLD_TURN_INPROGRESS 2
-#define HOLD_TURN_ENDING 3
-#define HOLD_TURN_STABILIZING 4
-#define HOLD_TURN_UNSCHEDULED 5
-
 /**
  * Initializes tune mode.
 */
@@ -33,7 +33,5 @@ void mode_holdInit();
  * Executes one cycle of hold mode.
 */
 void mode_hold();
-
-#endif // GPS_ENABLED
 
 #endif // __HOLD_H

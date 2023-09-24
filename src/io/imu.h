@@ -1,8 +1,6 @@
 #ifndef __IMU_H
 #define __IMU_H
 
-#include "../config.h"
-
 typedef enum IMUModel {
     IMU_MODEL_UNKNOWN,
     IMU_MODEL_BNO055,

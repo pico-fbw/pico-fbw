@@ -5,11 +5,5 @@
 
 #include "athr.h"
 
-#include "../config.h"
-
-#ifdef ATHR_ENABLED
-
 // TODO: autothrottle functionality
 // for now possibly just API calls but eventually control this automatically when needed
-
-#endif

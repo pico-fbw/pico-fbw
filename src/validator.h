@@ -3,8 +3,6 @@
 
 /* This file contains the validation of the config options. */
 
-#include "config.h"
-
 #if !defined(RASPBERRYPI_PICO) && !defined(RASPBERRYPI_PICO_W)
     #warning Neither a Pico or Pico W build target were found, some functionality may not work as intended.
 #endif

@@ -8,6 +8,7 @@ add_library(fbw_lib
 
 target_link_libraries(fbw_lib
     fbw_io
+    fbw_sys
     hardware_i2c
     pico_base
 )

@@ -23,7 +23,8 @@
 
 #include "error.h"
 #include "flash.h"
-#include "../config.h"
+
+#include "../sys/config.h"
 
 #include "pwm.h"
 #include "pwm.pio.h"
@@ -67,11 +68,11 @@ static void pio1Handler(void) {
  * @note This function will automatically claim and enable a state machine on the specified PIO instance,
  * or throw an error if none were available
 */
-static void setup_sm(const PIO pio, const uint offset, const uint pin) {
+static void setup_sm(const PIO pio, const uint offset, uint pin) {
     // Find a usable state machine for this pin
     int sm = pio_claim_unused_sm(pio, false);
     if (sm >= 0) {
-        FBW_DEBUG_printf("[pwm] pin %d assigned to state machine %d\n", pin, sm);
+        if (config.debug.debug_fbw) printf("[pwm] pin %d assigned to state machine %d\n", pin, sm);
         // Initialize the state machine's PWMState
         states[(pio == pio0) ? sm : sm + 4].pulsewidth = 0; // Positions 0-3 are for PIO0 0-3 and positions 4-7 are for PIO1 0-3, hence the +4 offset
         states[(pio == pio0) ? sm : sm + 4].period = 0;
@@ -94,9 +95,9 @@ static void setup_sm(const PIO pio, const uint offset, const uint pin) {
     }
 }
 
-void pwm_enable(const uint pin_list[], const uint num_pins) {
+void pwm_enable(uint pin_list[], uint num_pins) {
     if (pio_can_add_program(pio0, &pwm_program)) {
-        FBW_DEBUG_printf("[pwm] loading PWM IN into PIO0 with %d state machines\n", num_pins > 4 ? 4 : num_pins);
+        if (config.debug.debug_fbw) printf("[pwm] loading PWM IN into PIO0 with %d state machines\n", num_pins > 4 ? 4 : num_pins);
         uint offset = pio_add_program(pio0, &pwm_program);
         for (uint i = 0; i < (num_pins > 4 ? 4 : num_pins); i++) {
             setup_sm(pio0, offset, pin_list[i]);
@@ -111,7 +112,7 @@ void pwm_enable(const uint pin_list[], const uint num_pins) {
     // If there are more than 4 pins, PIO1 must also be used
     if (num_pins > 4) {
         if (pio_can_add_program(pio1, &pwm_program)) {
-            FBW_DEBUG_printf("[pwm] loading PWM IN into PIO1 with %d state machines\n", num_pins - 4);
+            if (config.debug.debug_fbw) printf("[pwm] loading PWM IN into PIO1 with %d state machines\n", num_pins - 4);
             uint offset = pio_add_program(pio1, &pwm_program);
             for (uint i = 4; i < num_pins; i++) {
                 setup_sm(pio1, offset, pin_list[i]);
@@ -136,26 +137,18 @@ void pwm_enable(const uint pin_list[], const uint num_pins) {
 static inline float pwmOffsetOf(uint pin) {
     // Look up the correct value to fetch based on the pin
     uint val;
-    switch (pin) {
-        case INPUT_AIL_PIN:
-            val = 1; // Start at 1 so we don't read the flag and index correctly
-            break;
-        case INPUT_ELEV_PIN:
-            val = 2;
-            break;
-        #ifdef CONTROL_3AXIS
-            case INPUT_RUD_PIN:
-                val = 3;
-                break;
-        #endif
-        case INPUT_SW_PIN:
-            val = 4;
-            break;
-        case INPUT_THR_PIN:
-            val = 5;
-            break;
-        default:
-            val = 1;
+    if (pin == config.pins0.inputAil) {
+        val = 1;
+    } else if (pin == config.pins0.inputElev) {
+        val = 2;
+    } else if (pin == config.pins0.inputRud) {
+        val = 3;
+    } else if (pin == config.pins0.inputSwitch) {
+        val = 4;
+    } else if (pin == config.pins1.inputThrottle) {
+        val = 5;
+    } else {
+        val = 1;
     }
     // Read from the correct sector based on the value
     return flash_readFloat(FLOAT_SECTOR_PWM, val);
@@ -167,7 +160,7 @@ static inline float pwmOffsetOf(uint pin) {
  * @param mode the mode of the PWM
  * @return the raw degree value
 */
-static inline float readRaw(const uint pin, PWMMode mode) {
+static inline float readRaw(uint pin, PWMMode mode) {
     // Find the GPIO pin's state machine
     for (uint8_t i = 0; i < (sizeof(states) / sizeof(states[0])); i++) {
         if (states[i].pin == pin) {
@@ -181,7 +174,7 @@ static inline float readRaw(const uint pin, PWMMode mode) {
     }
 }
 
-float pwm_read(const uint pin, PWMMode mode) {
+float pwm_read(uint pin, PWMMode mode) {
     for (uint8_t i = 0; i < (sizeof(states) / sizeof(states[0])); i++) {
         if (states[i].pin == pin) {
             switch (mode) {
@@ -194,8 +187,8 @@ float pwm_read(const uint pin, PWMMode mode) {
     }
 }
 
-bool pwm_calibrate(const uint pin_list[], const uint num_pins, const float deviations[], uint num_samples, uint sample_delay_ms, uint run_times) {
-    FBW_DEBUG_printf("[pwm] starting pwm calibration\n");
+bool pwm_calibrate(uint pin_list[], uint num_pins, float deviations[], uint num_samples, uint sample_delay_ms, uint run_times) {
+    if (config.debug.debug_fbw) printf("[pwm] starting pwm calibration\n");
     if (gb_num_pins < 1) return false; // Ensure PWM has been initialized
     error_throw(ERROR_PWM, ERROR_LEVEL_STATUS, 100, 0, false, ""); // Start blinking LED to signify we are calibrating
     // Create an array where we will arrange our data to later write
@@ -203,12 +196,12 @@ bool pwm_calibrate(const uint pin_list[], const uint num_pins, const float devia
     float calibration_data[FLOAT_SECTOR_SIZE] = {FLAG_PWM};
     for (uint i = 0; i < num_pins; i++) {
         uint pin = pin_list[i];
-        FBW_DEBUG_printf("[pwm] calibrating pin %d (%d/%d)\n", pin, i + 1, num_pins);
+        if (config.debug.debug_fbw) printf("[pwm] calibrating pin %d (%d/%d)\n", pin, i + 1, num_pins);
         float deviation = deviations[i];
         float final_difference = 0.0f;
-        bool isThrottle = pin_list[i] == INPUT_THR_PIN;
+        bool isThrottle = pin_list[i] == config.pins1.inputThrottle;
         for (uint t = 0; t < run_times; t++) {
-            FBW_DEBUG_printf("[pwm] running trial %d out of %d\n", t + 1, run_times);
+            if (config.debug.debug_fbw) printf("[pwm] running trial %d out of %d\n", t + 1, run_times);
             float total_difference = 0.0f;
             for (uint i = 0; i < num_samples; i++) {
                 total_difference += (deviation - (isThrottle ? readRaw(pin, PWM_MODE_ESC) : readRaw(pin, PWM_MODE_DEG)));
@@ -216,7 +209,7 @@ bool pwm_calibrate(const uint pin_list[], const uint num_pins, const float devia
             }
             // Check to see if the deviation is 270 (this value occurs with a pulsewidth of 0 or 1, aka not connected)
             if ((total_difference / num_samples) == 270.0f) {
-                FBW_DEBUG_printf("ERROR: [FBW-500] pin %d's calibration value seems abnormal, is it connected?\n", pin);
+                if (config.debug.debug_fbw) printf("ERROR: [FBW-500] pin %d's calibration value seems abnormal, is it connected?\n", pin);
                 return false;
             }
             // Add the total difference recorded divided by the samples we took (average) to the final difference
@@ -224,92 +217,94 @@ bool pwm_calibrate(const uint pin_list[], const uint num_pins, const float devia
         }
         // Get our final average and save it to the correct byte in our array which we write to flash
         // Any pins over 4 (thus, pins belonging to PIO1) will be in the second array
-        FBW_DEBUG_printf("[pwm] pin %d's final offset is %f\n", pin, (final_difference / run_times));
+        if (config.debug.debug_fbw) printf("[pwm] pin %d's final offset is %f\n", pin, (final_difference / run_times));
         // Find the correct location in the array to write to
         uint loc;
-        switch (pin) {
-            case INPUT_AIL_PIN:
-                loc = 1;
-                break;
-            case INPUT_ELEV_PIN:
-                loc = 2;
-                break;
-            #ifdef CONTROL_3AXIS
-                case INPUT_RUD_PIN:
-                    loc = 3;
-                    break;
-            #endif
-            case INPUT_SW_PIN:
-                loc = 4;
-                break;
-            case INPUT_THR_PIN:
-                loc = 5;
-                break;
-            default:
-                FBW_DEBUG_printf("ERROR: [FBW-500] pin %d is not a valid pin to calibrate!\n", pin);
-                return false;
+        if (pin == config.pins0.inputAil) {
+            loc = 1;
+        } else if (pin == config.pins0.inputElev) {
+            loc = 2;
+        } else if (pin == config.pins0.inputRud) {
+            loc = 3;
+        } else if (pin == config.pins0.inputSwitch) {
+            loc = 4;
+        } else if (pin == config.pins1.inputThrottle) {
+            loc = 5;
+        } else {
+            if (config.debug.debug_fbw) printf("ERROR: [FBW-500] pin %d is not a valid pin to calibrate!\n", pin);
+            return false;
         }
         // Check to ensure the value is within limits before adding it to be written
-        if (!WITHIN_MAX_CALIBRATION_OFFSET(final_difference / run_times)) {
-            if (pin == INPUT_SW_PIN) {
+        if (!WITHIN_MAX_CALIBRATION_OFFSET((final_difference / run_times), config.general.maxCalibrationOffset)) {
+            if (pin == config.pins0.inputSwitch) {
                 // The switch pin is a little special; it can have high offsets but only if they are negative, otherwise modes won't register properly
-                if ((final_difference / run_times) < -200.0f || (final_difference / run_times) > MAX_CALIBRATION_OFFSET) {
+                if ((final_difference / run_times) < -200.0f || (final_difference / run_times) > config.general.maxCalibrationOffset) {
                     goto error;
                 }
             } else {
                 goto error;
             }
             error:
-                FBW_DEBUG_printf("ERROR: [FBW-500] pin %d's calibration value is too high!\n", pin);
+                if (config.debug.debug_fbw) printf("ERROR: [FBW-500] pin %d's calibration value is too high!\n", pin);
                 return false;
         }
         calibration_data[loc] = final_difference / run_times;
     }
-    // Write the current control mode that was used when calibrating data so the data can later be validated
-    #if defined(CONTROL_3AXIS)
-        #ifdef ATHR_ENABLED
-            calibration_data[6] = CTRLMODE_3AXIS_ATHR;
-        #else
-            calibration_data[6] = CTRLMODE_3AXIS;
-        #endif
-    #elif defined(CONTROL_FLYINGWING)
-        #ifdef ATHR_ENABLED
-            calibration_data[6] = CTRLMODE_FLYINGWING_ATHR;
-        #else
-            calibration_data[6] = CTRLMODE_FLYINGWING;
-        #endif
-    #endif
-    FBW_DEBUG_printf("[pwm] writing calibration data to flash\n");
+    calibration_data[6] = (float)config.general.controlMode;
+    if (config.debug.debug_fbw) printf("[pwm] writing calibration data to flash\n");
     flash_writeFloat(FLOAT_SECTOR_PWM, calibration_data);
     error_clear(ERROR_PWM, false);
     return true;
 }
 
-int pwm_isCalibrated() {
+PWMCalibrationStatus pwm_isCalibrated() {
     // Read the calibration flag
     if (flash_readFloat(FLOAT_SECTOR_PWM, 0) == FLAG_PWM) {
         // Ensure that the control mode we are in is the same as the one in which we calibrated
-        ControlMode currentControlMode;
-        #if defined(CONTROL_3AXIS)
-            #ifdef ATHR_ENABLED
-                currentControlMode = CTRLMODE_3AXIS_ATHR;
-            #else
-                currentControlMode = CTRLMODE_3AXIS;
-            #endif
-        #elif defined(CONTROL_FLYINGWING)
-            #ifdef ATHR_ENABLED
-                currentControlMode = CTRLMODE_FLYINGWING_ATHR;
-            #else
-                currentControlMode = CTRLMODE_FLYINGWING;
-            #endif
-        #endif
-        if (currentControlMode != flash_readFloat(FLOAT_SECTOR_PWM, 6)) {
-            return -2;
+        if (config.general.controlMode != flash_readFloat(FLOAT_SECTOR_PWM, 6)) {
+            return PWMCALIBRATION_INVALID;
         }
-        // All checks have passed
-        return 0;
+        return PWMCALIBRATION_OK;
     } else {
-        // Usually, this will turn out to be either 0 if the flash has not been programmed yet or 1 if it has been previously erased/reset
-        return -1;
+        return PWMCALIBRATION_INCOMPLETE;
+    }
+}
+
+void pwm_getPins(uint *pins, uint *num_pins, float *deviations) {
+    // Constant between all control modes
+    pins[0] = config.pins0.inputAil;
+    pins[1] = config.pins0.inputElev;
+    deviations[0] = 90.0f;
+    deviations[1] = 90.0f;
+    // Control mode specific pins
+    switch (config.general.controlMode) {
+        case CTRLMODE_3AXIS_ATHR:
+            pins[2] = config.pins0.inputRud;
+            pins[3] = config.pins0.inputSwitch;
+            pins[4] = config.pins1.inputThrottle;
+            deviations[2] = 90.0f; // We expect all controls to be centered except switch and throttle
+            deviations[3] = 0.0f;
+            deviations[4] = 0.0f;
+            *num_pins = 5;
+            break;
+        case CTRLMODE_3AXIS:
+            pins[2] = config.pins0.inputRud;
+            pins[3] = config.pins0.inputSwitch;
+            deviations[2] = 90.0f;
+            deviations[3] = 0.0f;
+            *num_pins = 4;
+            break;
+        case CTRLMODE_FLYINGWING_ATHR:
+            pins[2] = config.pins0.inputSwitch;
+            pins[3] = config.pins1.inputThrottle;
+            deviations[2] = 0.0f;
+            deviations[3] = 0.0f;
+            *num_pins = 4;
+            break;
+        case CTRLMODE_FLYINGWING:
+            pins[2] = config.pins0.inputSwitch;
+            deviations[2] = 0.0f;
+            *num_pins = 3;
+            break;
     }
 }

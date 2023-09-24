@@ -7,15 +7,15 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "pico/time.h"
+
 #include "../lib/pid.h"
 
+#include "auto.h"
 #include "flight.h"
 
-#include "../config.h"
+#include "../sys/config.h"
 
 #include "hold.h"
-
-#ifdef GPS_ENABLED
 
 static uint8_t turnStatus = HOLD_TURN_UNSCHEDULED;
 
@@ -43,7 +43,8 @@ static int64_t hold_callback(alarm_id_t id, void *data) {
 void mode_holdInit() {
     flight_init();
     // We use a vertical guidance PID here so that we can keep the aircraft level; 0deg pitch does not equal 0 altitude change (sadly)
-    vertGuid = (PIDController){vertGuid_kP, vertGuid_kI, vertGuid_kD, vertGuid_tau, vertGuid_loLim, vertGuid_upLim, vertGuid_integMin, vertGuid_integMax, vertGuid_kT};
+    vertGuid = (PIDController){vertGuid_kP, vertGuid_kI, vertGuid_kD, vertGuid_tau, vertGuid_loLim,
+    vertGuid_upLim, vertGuid_integMin, vertGuid_integMax, vertGuid_kT};
     pid_init(&vertGuid);
     targetAlt = gps.alt; // targetAlt is just the current alt from whenever we enter the mode
 }
@@ -58,7 +59,7 @@ void mode_hold() {
         case HOLD_TURN_BEGUN:
             // Slowly ease into the turn
             if (rollSet <= HOLD_TURN_BANK_ANGLE) {
-                rollSet += (HOLD_TURN_BANK_ANGLE * CONTROL_SENSITIVITY);
+                rollSet += (HOLD_TURN_BANK_ANGLE * config.control.controlSensitivity);
             } else {
                 // We've reached the desired angle, now we need to wait for the turn to complete
                 turnStatus = HOLD_TURN_INPROGRESS;
@@ -73,7 +74,7 @@ void mode_hold() {
         case HOLD_TURN_ENDING:
             // Slowly decrease the turn
             if (rollSet >= HOLD_TURN_SLOW_BANK_ANGLE) {
-                rollSet -= (HOLD_TURN_BANK_ANGLE * CONTROL_SENSITIVITY);
+                rollSet -= (HOLD_TURN_BANK_ANGLE * config.control.controlSensitivity);
             }
             // Move on to stabilization once we've intercepted the target heading
             if (abs(targetTrack - gps.trk_true) <= HOLD_HEADING_INTERCEPT_WITHIN) {
@@ -83,7 +84,7 @@ void mode_hold() {
         case HOLD_TURN_STABILIZING:
             // Stabilize the turn back to 0 degrees of bank, then mark it as completed (unscheduled)
             if (rollSet >= 0) {
-                rollSet -= (HOLD_TURN_BANK_ANGLE * CONTROL_SENSITIVITY);
+                rollSet -= (HOLD_TURN_BANK_ANGLE * config.control.controlSensitivity);
             }
             break;
         case HOLD_TURN_UNSCHEDULED:
@@ -93,5 +94,3 @@ void mode_hold() {
             break;
     }
 }
-
-#endif // GPS_ENABLED

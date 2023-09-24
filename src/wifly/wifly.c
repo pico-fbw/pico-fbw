@@ -16,13 +16,11 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
-#include "pico/config.h" // For board detection
+#include "pico/config.h"
 #include "pico/types.h"
 #ifdef RASPBERRYPI_PICO_W
     #include "pico/cyw43_arch.h"
 #endif
-#define JSMN_HEADER // Only define once!
-#include "../lib/jsmn.h"
 
 #ifdef RASPBERRYPI_PICO_W
     #include "tcp_ip/dhcp.h"
@@ -36,7 +34,10 @@
 
 #include "../io/gps.h"
 
-#include "../config.h"
+#define JSMN_HEADER // Only define once!
+#include "../lib/jsmn.h"
+
+#include "../sys/config.h"
 #include "../sys/info.h"
 
 #include "wifly.h"
@@ -77,7 +78,7 @@ static inline void url_decode(char *str) {
     void wifly_init() {
         state = calloc(1, sizeof(TCP_SERVER_T));
         if (!state) {
-            FBW_DEBUG_printf("[wifly] ERROR: tcp failed to allocate state\n");
+            if (config.debug.debug_fbw) printf("[wifly] ERROR: tcp failed to allocate state\n");
         }
         const char *ap_name = WIFLY_NETWORK_NAME;
         #ifdef WIFLY_NETWORK_USE_PASSWORD
@@ -93,7 +94,7 @@ static inline void url_decode(char *str) {
         dhcp_server_init(&dhcp_server, &state->gw, &mask);
         dns_server_init(&dns_server, &state->gw);
         if (!tcp_server_open(state)) {
-            FBW_DEBUG_printf("[wifly] ERROR: tcp failed to open server\n");
+            if (config.debug.debug_fbw) printf("[wifly] ERROR: tcp failed to open server\n");
         }
     }
 
@@ -151,7 +152,7 @@ bool wifly_parseFplan(const char *fplan) {
         // Find the start of the JSON string
         const char *json_start = strstr(fplan, FPLAN_PARAM);
         if (!json_start) {
-            FBW_DEBUG_printf("[wifly] ERROR: prefix '%s' not found!\n", FPLAN_PARAM);
+            if (config.debug.debug_fbw) printf("[wifly] ERROR: prefix '%s' not found!\n", FPLAN_PARAM);
             fplanStatus = WIFLY_ERR_PARSE;
             return false;
         }
@@ -163,8 +164,8 @@ bool wifly_parseFplan(const char *fplan) {
         char decoded[strlen(json_start) + 1];
         strcpy(decoded, json_start);
         url_decode(decoded);
-        WIFLY_DEBUG_printf("\n[wifly] Flightplan data URL encoded: %s\n", json_start);
-        WIFLY_DEBUG_printf("\n[wifly] Flightplan data URL decoded: %s\n\n", decoded);
+        if (config.debug.debug_wifly) printf("\n[wifly] Flightplan data URL encoded: %s\n", json_start);
+        if (config.debug.debug_wifly) printf("\n[wifly] Flightplan data URL decoded: %s\n\n", decoded);
 
         // Initialize JSON parsing logic
         jsmn_parser parser;
@@ -172,12 +173,12 @@ bool wifly_parseFplan(const char *fplan) {
         jsmn_init(&parser);
         int token_count = jsmn_parse(&parser, decoded, strlen(decoded), tokens, sizeof(tokens)/sizeof(tokens[0]));
         if (token_count < 0) {
-            FBW_DEBUG_printf("[wifly] ERROR: no valid tokens found!\n");
+            if (config.debug.debug_fbw) printf("[wifly] ERROR: no valid tokens found!\n");
             fplanStatus = WIFLY_ERR_PARSE;
             return false;
         }
         if (strlen(decoded) == 0 || decoded[0] != '{' || decoded[strlen(decoded) - 1] != '}') {
-            FBW_DEBUG_printf("[wifly] ERROR: JSON start/end not found!\n");
+            if (config.debug.debug_fbw) printf("[wifly] ERROR: JSON start/end not found!\n");
             fplanStatus = WIFLY_ERR_PARSE;
             return false;
         }
@@ -196,9 +197,9 @@ bool wifly_parseFplan(const char *fplan) {
                     char version[25];
                     strncpy(version, decoded + tokens[i + 1].start, tokens[i + 1].end - tokens[i + 1].start);
                     version[tokens[i + 1].end - tokens[i + 1].start] = '\0';
-                    WIFLY_DEBUG_printf("[wifly] Flightplan version: %s\n", version);
+                    if (config.debug.debug_wifly) printf("[wifly] Flightplan version: %s\n", version);
                     if (strcmp(version, WIFLY_VERSION) != 0) {
-                        FBW_DEBUG_printf("[wifly] ERROR: flightplan version incompatable!\n");
+                        if (config.debug.debug_fbw) printf("[wifly] ERROR: flightplan version incompatable!\n");
                         fplanStatus = WIFLY_ERR_VERSION;
                         return false;
                     }
@@ -208,14 +209,14 @@ bool wifly_parseFplan(const char *fplan) {
                     char versionFw[25];
                     strncpy(versionFw, decoded + tokens[i + 1].start, tokens[i + 1].end - tokens[i + 1].start);
                     versionFw[tokens[i + 1].end - tokens[i + 1].start] = '\0';
-                    WIFLY_DEBUG_printf("[wifly] Firmware version: %s\n", versionFw);
+                    if (config.debug.debug_wifly) printf("[wifly] Firmware version: %s\n", versionFw);
                     int versionCheck = info_checkVersion(versionFw);
                     if (versionCheck < 0) {
                         if (versionCheck < -1) {
-                            FBW_DEBUG_printf("[wifly] ERROR: version check failed!\n");
+                            if (config.debug.debug_fbw) printf("[wifly] ERROR: version check failed!\n");
                             status = WIFLY_ERR_PARSE;
                         } else {
-                            FBW_DEBUG_printf("[wifly] WARNING: a new pico-fbw firmware version is available, please download it!\n");
+                            if (config.debug.debug_fbw) printf("[wifly] WARNING: a new pico-fbw firmware version is available, please download it!\n");
                             status = WIFLY_WARN_FW_VERSION;
                         }
                     }
@@ -227,7 +228,7 @@ bool wifly_parseFplan(const char *fplan) {
                     numGpsSamples = atoi(gpsSamples);
                     // We expect a value between zero and 100 (only calculate if non-zero)
                     if (numGpsSamples <= 100 && numGpsSamples >= 0) {
-                        WIFLY_DEBUG_printf("[wifly] GPS num offset samples: %s\n", gpsSamples);
+                        if (config.debug.debug_wifly) printf("[wifly] GPS num offset samples: %s\n", gpsSamples);
                         if (numGpsSamples != 0) {
                             if (status == WIFLY_STATUS_OK) status = WIFLY_STATUS_GPS_OFFSET; // Only replace the status if it is still OK (no warnings yet)
                         }
@@ -239,18 +240,18 @@ bool wifly_parseFplan(const char *fplan) {
                 } else if (strcmp(field_name, "waypoints") == 0) {
                     if (tokens[i + 1].type == JSMN_ARRAY) {
                         waypoint_count = tokens[i + 1].size;
-                        WIFLY_DEBUG_printf("[wifly] Flightplan contains %d waypoints\n", waypoint_count);
+                        if (config.debug.debug_wifly) printf("[wifly] Flightplan contains %d waypoints\n", waypoint_count);
                         // Allocate memory for the waypoints array
                         waypoints = calloc(waypoint_count, sizeof(Waypoint));
                         if (waypoints == NULL) {
-                            FBW_DEBUG_printf("[wifly] ERROR: memory allocation for waypoint data failed!\n");
+                            if (config.debug.debug_fbw) printf("[wifly] ERROR: memory allocation for waypoint data failed!\n");
                             fplanStatus = WIFLY_ERR_MEM;
                             return false;
                         }
                         uint waypoint_token_index = i + 2; // Skip the array token
                         // Waypoint iteration
                         for (uint w = 0; w < waypoint_count; w++) {
-                            WIFLY_DEBUG_printf("Processing waypoint %d:\n", w + 1);
+                            if (config.debug.debug_wifly) printf("Processing waypoint %d:\n", w + 1);
                             if (tokens[waypoint_token_index].type == JSMN_OBJECT) {
                                 uint waypoint_token_count = tokens[waypoint_token_index].size;
                                 uint waypoint_field_token_index = waypoint_token_index + 1; // Skip the object token
@@ -269,23 +270,23 @@ bool wifly_parseFplan(const char *fplan) {
                                             lat[tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start] = '\0';
                                             // Store the latitude value into a waypoint struct
                                             waypoint.lat = atof(lat);
-                                            WIFLY_DEBUG_printf("Latitude: %s\n", lat);
+                                            if (config.debug.debug_wifly) printf("Latitude: %s\n", lat);
                                         } else if (strcmp(waypoint_field_name, "lng") == 0) {
                                             char lng[17];
                                             strncpy(lng, decoded + tokens[waypoint_field_token_index + 1].start,
                                                     tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start);
                                             lng[tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start] = '\0';
                                             waypoint.lng = atof(lng);
-                                            WIFLY_DEBUG_printf("Longitude: %s\n", lng);
+                                            if (config.debug.debug_wifly) printf("Longitude: %s\n", lng);
                                         } else if (strcmp(waypoint_field_name, "alt") == 0) {
                                             char alt[4];
                                             strncpy(alt, decoded + tokens[waypoint_field_token_index + 1].start,
                                                     tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start);
                                             alt[tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start] = '\0';
                                             waypoint.alt = atoi(alt);
-                                            WIFLY_DEBUG_printf("Altitude: %s\n", alt);
+                                            if (config.debug.debug_wifly) printf("Altitude: %s\n", alt);
                                         } else {
-                                            FBW_DEBUG_printf("[wifly] ERROR: waypoint field name not recognized!\n");
+                                            if (config.debug.debug_fbw) printf("[wifly] ERROR: waypoint field name not recognized!\n");
                                             fplanStatus = WIFLY_ERR_PARSE;
                                             return false;
                                         }
@@ -295,7 +296,7 @@ bool wifly_parseFplan(const char *fplan) {
                                 }
                                 // Check if the waypoint data is valid (we got everything we expected)
                                 if (waypoint.lat == 0 || waypoint.lng == 0 || waypoint.alt == 0) {
-                                    FBW_DEBUG_printf("[wifly] ERROR: waypoint data is invalid!\n");
+                                    if (config.debug.debug_fbw) printf("[wifly] ERROR: waypoint data is invalid!\n");
                                     fplanStatus = WIFLY_ERR_PARSE;
                                     return false;
                                 }
@@ -304,13 +305,13 @@ bool wifly_parseFplan(const char *fplan) {
                                 // Advance to the next waypoint
                                 waypoint_token_index += 7;
                             } else {
-                                FBW_DEBUG_printf("[wifly] ERROR: waypoint token type not recognized!\n");
+                                if (config.debug.debug_fbw) printf("[wifly] ERROR: waypoint token type not recognized!\n");
                                 fplanStatus = WIFLY_ERR_PARSE;
                                 return false;
                             }
                         }
                     } else {
-                        FBW_DEBUG_printf("[wifly] ERROR: waypoints array not found!\n");
+                        if (config.debug.debug_fbw) printf("[wifly] ERROR: waypoints array not found!\n");
                         fplanStatus = WIFLY_ERR_PARSE;
                         return false;
                     }
@@ -318,18 +319,18 @@ bool wifly_parseFplan(const char *fplan) {
             }
         }
         if (!has_version || !has_version_fw || !has_gps_samples) {
-            WIFLY_DEBUG_printf("[wifly] ERROR: crucial fields not present in flightplan!\n");
+            if (config.debug.debug_wifly) printf("[wifly] ERROR: crucial fields not present in flightplan!\n");
             fplanStatus = WIFLY_ERR_PARSE;
             return false;
         }
-        WIFLY_DEBUG_printf("[wifly] Waypoint data:\n");
+        if (config.debug.debug_wifly) printf("[wifly] Waypoint data:\n");
         for (int i = 0; i < waypoint_count; i++) {
-            WIFLY_DEBUG_printf("Waypoint %d: lat=%.10f, lng=%.10f, alt=%d\n", i + 1, waypoints[i].lat, waypoints[i].lng, waypoints[i].alt);
+            if (config.debug.debug_wifly) printf("Waypoint %d: lat=%.10f, lng=%.10f, alt=%d\n", i + 1, waypoints[i].lat, waypoints[i].lng, waypoints[i].alt);
         }
         // Save the flightplan JSON string
         fplanJson = malloc(strlen(decoded) + 1);
         if (fplanJson == NULL) {
-            FBW_DEBUG_printf("[wifly] ERROR: memory allocation for flightplan JSON failed!\n");
+            if (config.debug.debug_fbw) printf("[wifly] ERROR: memory allocation for flightplan JSON failed!\n");
             fplanStatus = WIFLY_ERR_MEM;
             return false;
         }

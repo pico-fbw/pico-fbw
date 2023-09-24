@@ -1,11 +1,9 @@
+// THIS FILE IS DEPRECATED. DO NOT USE IT. IT WILL ONLY EXIST FOR THE NEXT FEW COMMITS FOR DOCUMENTATION PURPOSES.
+
 /* IMPORTANT NOTE: All pins signifiy GPIO pin values, not physical pins!! Do NOT mix these up!!! */
 
 #ifndef __CONFIG_OLD_H
 #define __CONFIG_OLD_H
-
-// TODO: config support at runtime instead of compile-time?
-// remember to change current #define list elements to enums when that is done
-// TODO: also convert #ifdefs to #ifs to make things easier now, and for if we transition
 
 
 

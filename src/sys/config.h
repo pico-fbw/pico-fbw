@@ -8,6 +8,21 @@
 
 #include "switch.h"
 
+/* The amount of time (in ms) to wait for any possible serial connections to be established before booting.
+This option is compiled in as configuration is not yet loaded when this value is needed. */
+#define BOOT_WAIT_MS 900
+
+typedef enum ConfigSource {
+    FROM_FLASH,
+    DEFAULT_VALUES
+} ConfigSource;
+
+typedef enum ConfigSectionType {
+    SECTION_TYPE_NONE,
+    SECTION_TYPE_FLOAT,
+    SECTION_TYPE_STRING
+} ConfigSectionType;
+
 typedef struct ConfigGeneral {
     ControlMode controlMode; // Also stores athrEnabled
     SwitchType switchType;
@@ -15,8 +30,8 @@ typedef struct ConfigGeneral {
     uint servoHz;
     uint escHz;
     bool apiEnabled;
-    uint bootWaitMs;
     bool wiflyUsePass;
+    bool skipCalibration;
 } ConfigGeneral;
 
 #define CONTROL_MODE_DEF CTRLMODE_3AXIS_ATHR
@@ -25,8 +40,8 @@ typedef struct ConfigGeneral {
 #define SERVO_HZ_DEF 50
 #define ESC_HZ_DEF 50
 #define API_ENABLED_DEF true
-#define BOOT_WAIT_MS_DEF 900 // The amount of time (in ms) to wait for any possible serial connections to be established before booting.
 #define WIFLY_USE_PASS_DEF false
+#define SKIP_CALIBRATION_DEF false
 
 typedef struct ConfigControl {
     float controlSensitivity;
@@ -202,26 +217,37 @@ typedef struct ConfigDebug {
 #define DUMP_NETWORK_DEF false
 #define WATCHDOG_TIMEOUT_MS_DEF 4000
 
-typedef enum ConfigSource {
-    FROM_FLASH,
-    DEFAULT_VALUES
-} ConfigSource;
+typedef struct Config {
+    ConfigGeneral general;
+    ConfigControl control;
+    ConfigLimits limits;
+    ConfigFlyingWing flyingWing;
+    ConfigPins0 pins0;
+    ConfigPins1 pins1;
+    ConfigSensors sensors;
+    ConfigWifly wifly;
+    ConfigPID0 pid0;
+    ConfigPID1 pid1;
+    ConfigDebug debug;
+} Config;
 
-extern ConfigGeneral configGeneral;
-extern ConfigControl configControl;
-extern ConfigLimits configLimits;
-extern ConfigFlyingWing configFlyingWing;
-extern ConfigPins0 configPins0;
-extern ConfigPins1 configPins1;
-extern ConfigSensors configSensors;
-extern ConfigWifly configWifly;
-extern ConfigPID0 configPID0;
-extern ConfigPID1 configPID1;
-extern ConfigDebug configDebug;
+extern Config config;
+
+#define NUM_CONFIG_SECTIONS 11
+#define NUM_FLOAT_CONFIG_SECTIONS 10
+#define NUM_STRING_CONFIG_SECTIONS 1
+#define VALUES_PER_SECTION 8 // Based on FLOAT_SECTOR_SIZE
+#define NUM_CONFIG_VALUES (NUM_CONFIG_SECTIONS * VALUES_PER_SECTION)
+
+/**
+ * @param section section of the config to get the type of
+ * @return the type of the config section
+*/
+ConfigSectionType config_getSectionType(const char *section);
 
 /**
  * Loads the config from flash into RAM (or loads default values into RAM).
- * @param source Source of the config data (whether to load from flash or defaults).
+ * @param source source of the config data (whether to load from flash or defaults)
  * @return true if loading was successful, false otherwise (likely due to uninitialized/corrupt data).
 */
 bool config_load(ConfigSource source);
@@ -231,5 +257,41 @@ bool config_load(ConfigSource source);
  * @return true if saving was successful, false if one or more configuration values are invalid (did not pass validation).
 */
 bool config_save();
+
+/**
+ * Gets a value from a float section of the config.
+ * @param section section of the config to get the value from
+ * @param key key of the value to get
+ * @return the value of the config, or inf if the value does not exist
+*/
+float config_getFloat(const char* section, const char* key);
+
+/**
+ * 
+*/
+void config_getAllFloats(float *values, size_t numValues);
+
+/**
+ * 
+*/
+bool config_setFloat(const char *section, const char *key, float value);
+
+/**
+ * Gets a value from a string section of the config.
+ * @param section section of the config to get the value from
+ * @param key key of the value to get
+ * @return the value of the config, or NULL if the value does not exist
+*/
+const char *config_getString(const char *section, const char *key);
+
+/**
+ * 
+*/
+void config_getAllStrings(const char **values, size_t numValues);
+
+/**
+ * 
+*/
+bool config_setString(const char *section, const char *key, const char *value);
 
 #endif // __CONFIG_H
