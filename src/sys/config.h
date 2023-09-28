@@ -23,6 +23,7 @@ typedef enum ConfigSectionType {
     SECTION_TYPE_STRING
 } ConfigSectionType;
 
+#define CONFIG_GENERAL_STR "ConfigGeneral"
 typedef struct ConfigGeneral {
     ControlMode controlMode; // Also stores athrEnabled
     SwitchType switchType;
@@ -43,6 +44,7 @@ typedef struct ConfigGeneral {
 #define WIFLY_USE_PASS_DEF false
 #define SKIP_CALIBRATION_DEF false
 
+#define CONFIG_CONTROL_STR "ConfigControl"
 typedef struct ConfigControl {
     float controlSensitivity;
     float rudderSensitivity;
@@ -62,6 +64,7 @@ typedef struct ConfigControl {
 #define THROTTLE_DETENT_MAX_DEF 90
 #define THROTTLE_MAX_TIME_DEF 10
 
+#define CONFIG_LIMITS_STR "ConfigLimits"
 typedef struct ConfigLimits {
     float rollLimit;
     float rollLimitHold;
@@ -82,6 +85,7 @@ typedef struct ConfigLimits {
 #define MAX_RUD_DEFLECTION_DEF 20
 #define MAX_ELEVON_DEFLECTION_DEF 20
 
+#define CONFIG_FLYING_WING_STR "ConfigFlyingWing"
 typedef struct ConfigFlyingWing {
     float elevonMixingGain;
     float ailMixingBias;
@@ -93,6 +97,7 @@ typedef struct ConfigFlyingWing {
 #define AIL_MIXING_BIAS_DEF 1
 #define ELEV_MIXING_BIAS_DEF 1
 
+#define CONFIG_PINS0_STR "ConfigPins0"
 typedef struct ConfigPins0 {
     uint inputAil;
     uint servoAil;
@@ -112,6 +117,7 @@ typedef struct ConfigPins0 {
 #define SERVO_RUD_DEF 6
 #define INPUT_SWITCH_DEF 9
 
+#define CONFIG_PINS1_STR "ConfigPins1"
 typedef struct ConfigPins1 {
     uint inputThrottle;
     uint escThrottle;
@@ -131,6 +137,7 @@ typedef struct ConfigPins1 {
 #define REVERSE_PITCH_DEF false
 #define REVERSE_YAW_DEF false
 
+#define CONFIG_SENSORS_STR "ConfigSensors"
 typedef struct ConfigSensors {
     IMUModel imuModel;
     uint imuSda;
@@ -151,14 +158,7 @@ typedef struct ConfigSensors {
 #define GPS_TX_DEF 21
 #define GPS_RX_DEF 20
 
-typedef struct ConfigWifly {
-    char ssid[STRING_SECTOR_SIZE];
-    char pass[STRING_SECTOR_SIZE];
-} ConfigWifly;
-
-#define WIFLY_SSID_DEF "pico-fbw"
-#define WIFLY_PASS_DEF "wifly"
-
+#define CONFIG_PID0_STR "ConfigPID0"
 typedef struct ConfigPID0 {
     float rollTau;
     float rollIntegMin;
@@ -179,6 +179,7 @@ typedef struct ConfigPID0 {
 #define PITCH_INTEG_MAX_DEF 50.0
 #define PITCH_KT_DEF 0.01
 
+#define CONFIG_PID1_STR "ConfigPID1"
 typedef struct ConfigPID1 {
     float yawKp;
     float yawKi;
@@ -198,6 +199,7 @@ typedef struct ConfigPID1 {
 #define YAW_INTEG_MAX_DEF 50.0
 #define YAW_KT_DEF 0.01
 
+#define CONFIG_DEBUG_STR "ConfigDebug"
 typedef struct ConfigDebug {
     bool debug;
     bool debug_fbw;
@@ -217,6 +219,29 @@ typedef struct ConfigDebug {
 #define DUMP_NETWORK_DEF false
 #define WATCHDOG_TIMEOUT_MS_DEF 4000
 
+#define CONFIG_WIFLY_STR "ConfigWifly"
+typedef struct ConfigWifly {
+    char ssid[STRING_SECTOR_SIZE];
+    char pass[STRING_SECTOR_SIZE];
+} ConfigWifly;
+
+#define WIFLY_SSID_DEF "pico-fbw"
+#define WIFLY_PASS_DEF "wifly"
+
+typedef enum ConfigSectionIndex {
+    CONFIG_GENERAL,
+    CONFIG_CONTROL,
+    CONFIG_LIMITS,
+    CONFIG_FLYING_WING,
+    CONFIG_PINS0,
+    CONFIG_PINS1,
+    CONFIG_SENSORS,
+    CONFIG_PID0,
+    CONFIG_PID1,
+    CONFIG_DEBUG,
+    CONFIG_WIFLY
+} ConfigSectionIndex;
+
 typedef struct Config {
     ConfigGeneral general;
     ConfigControl control;
@@ -225,10 +250,10 @@ typedef struct Config {
     ConfigPins0 pins0;
     ConfigPins1 pins1;
     ConfigSensors sensors;
-    ConfigWifly wifly;
     ConfigPID0 pid0;
     ConfigPID1 pid1;
     ConfigDebug debug;
+    ConfigWifly wifly;
 } Config;
 
 extern Config config;
@@ -236,8 +261,10 @@ extern Config config;
 #define NUM_CONFIG_SECTIONS 11
 #define NUM_FLOAT_CONFIG_SECTIONS 10
 #define NUM_STRING_CONFIG_SECTIONS 1
-#define VALUES_PER_SECTION 8 // Based on FLOAT_SECTOR_SIZE
-#define NUM_CONFIG_VALUES (NUM_CONFIG_SECTIONS * VALUES_PER_SECTION)
+#define NUM_FLOAT_VALUES_PER_SECTION 8 // Based on FLOAT_SECTOR_SIZE
+#define NUM_FLOAT_CONFIG_VALUES (NUM_FLOAT_CONFIG_SECTIONS * NUM_FLOAT_VALUES_PER_SECTION)
+#define NUM_STRING_VALUES_PER_SECTION 2 // Cause there's only one string section lol
+#define NUM_STRING_CONFIG_VALUES (NUM_STRING_CONFIG_SECTIONS * NUM_STRING_VALUES_PER_SECTION)
 
 /**
  * @param section section of the config to get the type of
@@ -259,12 +286,19 @@ bool config_load(ConfigSource source);
 bool config_save();
 
 /**
+ * 
+*/
+const char *config_sectionToString(ConfigSectionIndex section);
+
+/**
  * Gets a value from a float section of the config.
  * @param section section of the config to get the value from
  * @param key key of the value to get
  * @return the value of the config, or inf if the value does not exist
 */
 float config_getFloat(const char* section, const char* key);
+
+// TODO
 
 /**
  * 

@@ -18,7 +18,7 @@ Look, the readability of the config is really good everywhere BUT here. It's a c
 Just ignore this file and we'll all be happy, okay? Okay. */
 
 ConfigSectionType config_getSectionType(const char *section) {
-    if (strcasecmp(section, "ConfigWifly") == 0) {
+    if (strcasecmp(section, CONFIG_WIFLY_STR) == 0) {
         return SECTION_TYPE_STRING;
     } else {
         return SECTION_TYPE_FLOAT;
@@ -97,20 +97,6 @@ bool config_load(ConfigSource source) {
             config.sensors.gpsTx = (uint)flash_readFloat(FLOAT_SECTOR_CONFIG_SENSORS, 6);
             config.sensors.gpsRx = (uint)flash_readFloat(FLOAT_SECTOR_CONFIG_SENSORS, 7);
 
-            // ConfigWifly
-            const char* ssid = flash_readString(STRING_SECTOR_CONFIG_WIFLY_SSID);
-            if (ssid) {
-                strncpy(config.wifly.ssid, ssid, STRING_SECTOR_SIZE);
-            } else {
-                return false;
-            }
-            const char* pass = flash_readString(STRING_SECTOR_CONFIG_WIFLY_PASS);
-            if (pass) {
-                strncpy(config.wifly.pass, pass, STRING_SECTOR_SIZE);
-            } else {
-                return false;
-            }
-
             // ConfigPID0
             config.pid0.rollTau = flash_readFloat(FLOAT_SECTOR_CONFIG_PID0, 0);
             config.pid0.rollIntegMin = flash_readFloat(FLOAT_SECTOR_CONFIG_PID0, 1);
@@ -150,6 +136,21 @@ bool config_load(ConfigSource source) {
                 config.debug.debug_network = false;
                 config.debug.dump_network = false;
             #endif
+
+            // ConfigWifly
+            const char* ssid = flash_readString(STRING_SECTOR_CONFIG_WIFLY_SSID);
+            if (ssid) {
+                strncpy(config.wifly.ssid, ssid, STRING_SECTOR_SIZE);
+            } else {
+                return false;
+            }
+            const char* pass = flash_readString(STRING_SECTOR_CONFIG_WIFLY_PASS);
+            if (pass) {
+                strncpy(config.wifly.pass, pass, STRING_SECTOR_SIZE);
+            } else {
+                return false;
+            }
+
             break;
         case DEFAULT_VALUES:
             // Very similar except load from DEFault macros instead of flash (and thus no validation)
@@ -215,10 +216,6 @@ bool config_load(ConfigSource source) {
             config.sensors.gpsTx = GPS_TX_DEF;
             config.sensors.gpsRx = GPS_RX_DEF;
 
-            // ConfigWifly
-            strncpy(config.wifly.ssid, WIFLY_SSID_DEF, STRING_SECTOR_SIZE);
-            strncpy(config.wifly.pass, WIFLY_PASS_DEF, STRING_SECTOR_SIZE);
-
             // ConfigPID0
             config.pid0.rollTau = ROLL_TAU_DEF;
             config.pid0.rollIntegMin = ROLL_INTEG_MIN_DEF;
@@ -257,6 +254,10 @@ bool config_load(ConfigSource source) {
                 config.debug.dump_network = false;
             #endif
             config.debug.watchdog_timeout_ms = WATCHDOG_TIMEOUT_MS_DEF;
+            // ConfigWifly
+            strncpy(config.wifly.ssid, WIFLY_SSID_DEF, STRING_SECTOR_SIZE);
+            strncpy(config.wifly.pass, WIFLY_PASS_DEF, STRING_SECTOR_SIZE);
+
             break;
     }
     return true;
@@ -348,10 +349,6 @@ bool config_save() {
     };
     flash_writeFloat(FLOAT_SECTOR_CONFIG_SENSORS, sensors);
 
-    // ConfigWifly -- uses StringsSectors not floats
-    flash_writeString(STRING_SECTOR_CONFIG_WIFLY_SSID, config.wifly.ssid);
-    flash_writeString(STRING_SECTOR_CONFIG_WIFLY_PASS, config.wifly.pass);
-
     // ConfigPID0
     float rollPitchPID[FLOAT_SECTOR_SIZE] = {
         config.pid0.rollTau,
@@ -389,11 +386,45 @@ bool config_save() {
         config.debug.watchdog_timeout_ms
     };
     flash_writeFloat(FLOAT_SECTOR_CONFIG_DEBUG, debug);
+    
+    // ConfigWifly -- uses StringsSectors not floats
+    flash_writeString(STRING_SECTOR_CONFIG_WIFLY_SSID, config.wifly.ssid);
+    flash_writeString(STRING_SECTOR_CONFIG_WIFLY_PASS, config.wifly.pass);
+
     return true;
 }
 
+const char *config_sectionToString(ConfigSectionIndex section) {
+    switch (section) {
+        case CONFIG_GENERAL:
+            return CONFIG_GENERAL_STR;
+        case CONFIG_CONTROL:
+            return CONFIG_CONTROL_STR;
+        case CONFIG_LIMITS:
+            return CONFIG_LIMITS_STR;
+        case CONFIG_FLYING_WING:
+            return CONFIG_FLYING_WING_STR;
+        case CONFIG_PINS0:
+            return CONFIG_PINS0_STR;
+        case CONFIG_PINS1:
+            return CONFIG_PINS1_STR;
+        case CONFIG_SENSORS:
+            return CONFIG_SENSORS_STR;
+        case CONFIG_PID0:
+            return CONFIG_PID0_STR;
+        case CONFIG_PID1:
+            return CONFIG_PINS1_STR;
+        case CONFIG_DEBUG:
+            return CONFIG_DEBUG_STR;
+        case CONFIG_WIFLY:
+            return CONFIG_WIFLY_STR;
+        default:
+            return NULL;
+    }
+}
+
 float config_getFloat(const char* section, const char* key) {
-    if (strcasecmp(section, "ConfigGeneral") == 0) {
+    if (strcasecmp(section, CONFIG_GENERAL_STR) == 0) {
         if (strcasecmp(key, "controlMode") == 0) {
             return (float)config.general.controlMode;
         } else if (strcasecmp(key, "switchType") == 0) {
@@ -411,7 +442,7 @@ float config_getFloat(const char* section, const char* key) {
         } else if (strcasecmp(key, "skipCalibration") == 0) {
             return (float)config.general.skipCalibration;
         }
-    } else if (strcasecmp(section, "ConfigControl") == 0) {
+    } else if (strcasecmp(section, CONFIG_CONTROL_STR) == 0) {
         if (strcasecmp(key, "controlSensitivity") == 0) {
             return config.control.controlSensitivity;
         } else if (strcasecmp(key, "rudderSensitivity") == 0) {
@@ -427,7 +458,7 @@ float config_getFloat(const char* section, const char* key) {
         } else if (strcasecmp(key, "throttleMaxTime") == 0) {
             return (float)config.control.throttleMaxTime;
         }
-    } else if (strcasecmp(section, "ConfigLimits") == 0) {
+    } else if (strcasecmp(section, CONFIG_LIMITS_STR) == 0) {
         if (strcasecmp(key, "rollLimit") == 0) {
             return config.limits.rollLimit;
         } else if (strcasecmp(key, "rollLimitHold") == 0) {
@@ -445,7 +476,7 @@ float config_getFloat(const char* section, const char* key) {
         } else if (strcasecmp(key, "maxElevonDeflection") == 0) {
             return config.limits.maxElevonDeflection;
         }
-    } else if (strcasecmp(section, "ConfigFlyingWing") == 0) {
+    } else if (strcasecmp(section, CONFIG_FLYING_WING_STR) == 0) {
         if (strcasecmp(key, "elevonMixingGain") == 0) {
             return config.flyingWing.elevonMixingGain;
         } else if (strcasecmp(key, "ailMixingBias") == 0) {
@@ -453,7 +484,7 @@ float config_getFloat(const char* section, const char* key) {
         } else if (strcasecmp(key, "elevMixingBias") == 0) {
             return config.flyingWing.elevMixingBias;
         }
-    } else if (strcasecmp(section, "ConfigPins0") == 0) {
+    } else if (strcasecmp(section, CONFIG_PINS0_STR) == 0) {
         if (strcasecmp(key, "inputAil") == 0) {
             return (float)config.pins0.inputAil;
         } else if (strcasecmp(key, "servoAil") == 0) {
@@ -469,7 +500,7 @@ float config_getFloat(const char* section, const char* key) {
         } else if (strcasecmp(key, "inputSwitch") == 0) {
             return (float)config.pins0.inputSwitch;
         }
-    } else if (strcasecmp(section, "ConfigPins1") == 0) {
+    } else if (strcasecmp(section, CONFIG_PINS1_STR) == 0) {
         if (strcasecmp(key, "inputThrottle") == 0) {
             return (float)config.pins1.inputThrottle;
         } else if (strcasecmp(key, "escThrottle") == 0) {
@@ -485,7 +516,7 @@ float config_getFloat(const char* section, const char* key) {
         } else if (strcasecmp(key, "reverseYaw") == 0) {
             return (float)config.pins1.reverseYaw;
         }
-    } else if (strcasecmp(section, "ConfigSensors") == 0) {
+    } else if (strcasecmp(section, CONFIG_SENSORS_STR) == 0) {
         if (strcasecmp(key, "imuModel") == 0) {
             return (float)config.sensors.imuModel;
         } else if (strcasecmp(key, "imuSda") == 0) {
@@ -503,7 +534,7 @@ float config_getFloat(const char* section, const char* key) {
         } else if (strcasecmp(key, "gpsRx") == 0) {
             return (float)config.sensors.gpsRx;
         }
-    } else if (strcasecmp(section, "ConfigPID0") == 0) {
+    } else if (strcasecmp(section, CONFIG_PID0_STR) == 0) {
         if (strcasecmp(key, "rollTau") == 0) {
             return config.pid0.rollTau;
         } else if (strcasecmp(key, "rollIntegMin") == 0) {
@@ -521,7 +552,7 @@ float config_getFloat(const char* section, const char* key) {
         } else if (strcasecmp(key, "pitchKt") == 0) {
             return config.pid0.pitchKt;
         }
-    } else if (strcasecmp(section, "ConfigPID1") == 0) {
+    } else if (strcasecmp(section, CONFIG_PID1_STR) == 0) {
         if (strcasecmp(key, "yawKp") == 0) {
             return config.pid1.yawKp;
         } else if (strcasecmp(key, "yawKi") == 0) {
@@ -537,7 +568,7 @@ float config_getFloat(const char* section, const char* key) {
         } else if (strcasecmp(key, "yawKt") == 0) {
             return config.pid1.yawKt;
         }
-    } else if (strcasecmp(section, "ConfigDebug") == 0) {
+    } else if (strcasecmp(section, CONFIG_DEBUG_STR) == 0) {
         if (strcasecmp(key, "debug") == 0) {
             return (float)config.debug.debug;
         } else if (strcasecmp(key, "debug_fbw") == 0) {
@@ -671,7 +702,7 @@ void config_getAllFloats(float *values, size_t numValues) {
 }
 
 bool config_setFloat(const char *section, const char *key, float value) {
-    if (strcasecmp(section, "ConfigGeneral") == 0) {
+    if (strcasecmp(section, CONFIG_GENERAL_STR) == 0) {
         if (strcasecmp(key, "controlMode") == 0) {
             config.general.controlMode = (ControlMode)value;
             return true;
@@ -697,7 +728,7 @@ bool config_setFloat(const char *section, const char *key, float value) {
             config.general.skipCalibration = (bool)value;
             return true;
         }
-    } else if (strcasecmp(section, "ConfigControl") == 0) {
+    } else if (strcasecmp(section, CONFIG_CONTROL_STR) == 0) {
         if (strcasecmp(key, "controlSensitivity") == 0) {
             config.control.controlSensitivity = value;
             return true;
@@ -720,7 +751,7 @@ bool config_setFloat(const char *section, const char *key, float value) {
             config.control.throttleMaxTime = (uint)value;
             return true;
         }
-    } else if (strcasecmp(section, "ConfigLimits") == 0) {
+    } else if (strcasecmp(section, CONFIG_LIMITS_STR) == 0) {
         if (strcasecmp(key, "rollLimit") == 0) {
             config.limits.rollLimit = value;
             return true;
@@ -746,7 +777,7 @@ bool config_setFloat(const char *section, const char *key, float value) {
             config.limits.maxElevonDeflection = value;
             return true;
         }
-    } else if (strcasecmp(section, "ConfigFlyingWing") == 0) {
+    } else if (strcasecmp(section, CONFIG_FLYING_WING_STR) == 0) {
         if (strcasecmp(key, "elevonMixingGain") == 0) {
             config.flyingWing.elevonMixingGain = value;
             return true;
@@ -757,7 +788,7 @@ bool config_setFloat(const char *section, const char *key, float value) {
             config.flyingWing.elevMixingBias = value;
             return true;
         }
-    } else if (strcasecmp(section, "ConfigPins0") == 0) {
+    } else if (strcasecmp(section, CONFIG_PINS0_STR) == 0) {
         if (strcasecmp(key, "inputAil") == 0) {
             config.pins0.inputAil = (uint)value;
             return true;
@@ -780,7 +811,7 @@ bool config_setFloat(const char *section, const char *key, float value) {
             config.pins0.inputSwitch = (uint)value;
             return true;
         }
-    } else if (strcasecmp(section, "ConfigPins1") == 0) {
+    } else if (strcasecmp(section, CONFIG_PINS1_STR) == 0) {
         if (strcasecmp(key, "inputThrottle") == 0) {
             config.pins1.inputThrottle = (uint)value;
             return true;
@@ -803,7 +834,7 @@ bool config_setFloat(const char *section, const char *key, float value) {
             config.pins1.reverseYaw = (bool)value;
             return true;
         }
-    } else if (strcasecmp(section, "ConfigSensors") == 0) {
+    } else if (strcasecmp(section, CONFIG_SENSORS_STR) == 0) {
         if (strcasecmp(key, "imuModel") == 0) {
             config.sensors.imuModel = (IMUModel)value;
             return true;
@@ -829,7 +860,7 @@ bool config_setFloat(const char *section, const char *key, float value) {
             config.sensors.gpsRx = (uint)value;
             return true;
         }
-    } else if (strcasecmp(section, "ConfigPID0") == 0) {
+    } else if (strcasecmp(section, CONFIG_PID0_STR) == 0) {
         if (strcasecmp(key, "rollTau") == 0) {
             config.pid0.rollTau = value;
             return true;
@@ -855,7 +886,7 @@ bool config_setFloat(const char *section, const char *key, float value) {
             config.pid0.pitchKt = value;
             return true;
         }
-    } else if (strcasecmp(section, "ConfigPID1") == 0) {
+    } else if (strcasecmp(section, CONFIG_PID1_STR) == 0) {
         if (strcasecmp(key, "yawKp") == 0) {
             config.pid1.yawKp = value;
             return true;
@@ -878,7 +909,7 @@ bool config_setFloat(const char *section, const char *key, float value) {
             config.pid1.yawKt = value;
             return true;
         }
-    } else if (strcasecmp(section, "ConfigDebug") == 0) {
+    } else if (strcasecmp(section, CONFIG_DEBUG_STR) == 0) {
         if (strcasecmp(key, "debug") == 0) {
             config.debug.debug = (bool)value;
             return true;
@@ -909,7 +940,7 @@ bool config_setFloat(const char *section, const char *key, float value) {
 }
 
 const char *config_getString(const char *section, const char *key) {
-    if (strcasecmp(section, "ConfigWifly") == 0) {
+    if (strcasecmp(section, CONFIG_WIFLY_STR) == 0) {
         if (strcasecmp(key, "ssid") == 0) {
             return config.wifly.ssid;
         } else if (strcasecmp(key, "pass") == 0) {
@@ -934,7 +965,7 @@ void config_getAllStrings(const char **values, size_t numValues) {
 }
 
 bool config_setString(const char *section, const char *key, const char *value) {
-    if (strcasecmp(section, "ConfigWifly") == 0) {
+    if (strcasecmp(section, CONFIG_WIFLY_STR) == 0) {
         if (strcasecmp(key, "ssid") == 0) {
             strncpy(config.wifly.ssid, value, sizeof(config.wifly.ssid));
             config.wifly.ssid[sizeof(config.wifly.ssid) - 1] = '\0';

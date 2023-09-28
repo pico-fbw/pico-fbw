@@ -101,8 +101,10 @@ typedef enum FloatSector {
 #define FLOAT_SECTOR_MAX FLOAT_SECTOR_CONFIG_DEBUG
 #define FLOAT_SECTOR_MAX_CONFIG FLOAT_SECTOR_CONFIG_DEBUG
 
-// Gets the memory location of a given PHYSICAL (not virtual!) sector.
+// Gets the memory location IN FLASH of a given PHYSICAL (not virtual!) sector.
 #define GET_PHYSECTOR_LOC(sector) (PICO_FLASH_SIZE_BYTES - (FLASH_SECTOR_SIZE * (sector + 1)))
+// Gets the absolute memory location of a given PHYSICAL (not virtual!) sector.
+#define GET_PHYSECTOR_LOC_ABSOLUTE(sector) (XIP_BASE + (GET_PHYSECTOR_LOC(sector)))
 
 // Each "sector" has a max of 8 floats
 // This is a fixed value so that locations of data will not change if more sectors are ever added
@@ -133,10 +135,19 @@ typedef enum StringSector {
 // The physical sector that the virtual string "sectors" are placed in
 #define STRING_PHYSECTOR 1
 
+#define FLASH_MUST_CACHE 1 // If set to 1, the flash cache MUST be run before accessing the flash!
+
 /**
- * Erases only the flash sectors that the program actually uses.
+ * Erases only the flash sectors that the program actually uses, to save flash wear cycles and time.
 */
 void flash_reset();
+
+/**
+ * Caches all the data in the flash memory to RAM to decrease load times.
+ * @returns number of bytes cached.
+ * @note If FLASH_MUST_CACHE is set to 1, this function MUST be run before accessing the flash!
+*/
+uint flash_cache();
 
 /**
  * Writes an array of float data to a certain "sector".

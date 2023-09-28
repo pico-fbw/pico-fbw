@@ -80,18 +80,18 @@ static uint api_handle_get(const char *cmd, const char *args) {
             if (sscanf(args, "%63s %63s", section, key) < 2) return 400;
             switch (config_getSectionType(section)) {
                 case SECTION_TYPE_FLOAT: {
-                    float value = config_getFloat(section, key);
-                    if (value != infinityf()) {
-                        printf("{\"value\":%f}\n", value);
+                    float k = config_getFloat(section, key);
+                    if (k != infinityf()) {
+                        printf("{\"key\":%f}\n", k);
                     } else {
                         return 400;
                     }
                     break;
                 }
                 case SECTION_TYPE_STRING: {
-                    const char *value = config_getString(section, key);
-                    if (value) {
-                        printf("{\"value\":\"%s\"}\n", value);
+                    const char *k = config_getString(section, key);
+                    if (k) {
+                        printf("{\"key\":\"%s\"}\n", k);
                     } else {
                         return 400;
                     }
@@ -99,27 +99,47 @@ static uint api_handle_get(const char *cmd, const char *args) {
                 }
             }
         } else {
-            // No args, print all
-            float config[NUM_CONFIG_VALUES];
-            config_getAllFloats(config, NUM_CONFIG_VALUES);
-            printf("{\"sections\":[{\"values\":[{");
-            for (uint s = 0; s < NUM_FLOAT_CONFIG_SECTIONS; s++) {
-                if (s != NUM_FLOAT_CONFIG_SECTIONS - 1) {
-                    for (uint v = 0; v < VALUES_PER_SECTION; v++) {
-                        float value = config[s * VALUES_PER_SECTION + v];
-                        if (v != VALUES_PER_SECTION - 1) {
-                            isfinite(value) ? printf("\"%d\":%f,", v, value) : printf("\"%d\":null,", v);
+            // No args, gather all data
+            float configFloat[NUM_FLOAT_CONFIG_VALUES];
+            config_getAllFloats(configFloat, NUM_FLOAT_CONFIG_VALUES);
+            const char *configStr[NUM_STRING_CONFIG_VALUES];
+            config_getAllStrings(configStr, NUM_STRING_CONFIG_VALUES);
+            printf("{\"sections\":[");
+            for (ConfigSectionIndex s = 0; s < NUM_CONFIG_SECTIONS; s++) {
+                const char *sectionStr = config_sectionToString(s);
+                printf("{\"name\":\"%s\",\"keys\":[", sectionStr);
+                switch (config_getSectionType(sectionStr)) {
+                    case SECTION_TYPE_FLOAT: {
+                        if (s != NUM_CONFIG_SECTIONS - 1) {
+                            for (uint v = 0; v < NUM_FLOAT_VALUES_PER_SECTION; v++) {
+                                float value = configFloat[s * NUM_FLOAT_VALUES_PER_SECTION + v];
+                                if (v != NUM_FLOAT_VALUES_PER_SECTION - 1) {
+                                    // For float sectors, check for finite values and change them to null because json is dumb
+                                    isfinite(value) ? printf("%f,", value) : printf("null,");
+                                } else {
+                                    isfinite(value) ? printf("%f]},", value) : printf("null]},");
+                                }
+                            }
                         } else {
-                            isfinite(value) ? printf("\"%d\":%f},{", v, value) : printf("\"%d\":null},{", v);
+                            for (uint v = 0; v < NUM_FLOAT_VALUES_PER_SECTION; v++) {
+                                float value = configFloat[s * NUM_FLOAT_VALUES_PER_SECTION + v];
+                                if (v != NUM_FLOAT_VALUES_PER_SECTION - 1) {
+                                    isfinite(value) ? printf("%f,", value) : printf("null,");
+                                } else {
+                                    isfinite(value) ? printf("%f]}]}\n", value) : printf("null]}]}\n");
+                                }
+                            }
                         }
+                        break;
                     }
-                } else {
-                    for (uint v = 0; v < VALUES_PER_SECTION; v++) {
-                        float value = config[s * VALUES_PER_SECTION + v];
-                        if (v != VALUES_PER_SECTION - 1) {
-                            isfinite(value) ? printf("\"%d\":%f,", v, value) : printf("\"%d\":null,", v);
-                        } else {
-                            isfinite(value) ? printf("\"%d\":%f}]}]}\n", v, value) : printf("\"%d\":null}]}]}\n", v);
+                    case SECTION_TYPE_STRING: {
+                        for (uint v = 0; v < NUM_STRING_VALUES_PER_SECTION; v++) {
+                            const char *value = configStr[v];
+                            if (v != NUM_STRING_VALUES_PER_SECTION - 1) {
+                                value ? printf("\"%s\",", value) : printf("\"\",");
+                            } else {
+                                value ? printf("\"%s\"]}]}\n", value) : printf("\"\"]}]}\n");
+                            }
                         }
                     }
                 }
@@ -127,31 +147,18 @@ static uint api_handle_get(const char *cmd, const char *args) {
         }
         return 200;
     } else if (strcasecmp(cmd, "GET_FLASH") == 0) {
-        printf("{\"sectors\":[{\"values\":[{");
-        // For float sectors, check for finite values and change them to null because json is dumb
+        printf("{\"sectors\":[");
         for (FloatSector s = FLOAT_SECTOR_MIN; s <= FLOAT_SECTOR_MAX; s++) {
-            if (s != FLOAT_SECTOR_MAX) {
-                for (uint v = 0; v <= (FLOAT_SECTOR_SIZE - 1); v++) {
-                    float value = flash_readFloat(s, v);
-                    if (v != (FLOAT_SECTOR_SIZE - 1)) {
-                        isfinite(value) ? printf("\"%d\":%f,", v, value) : printf("\"%d\":null,", v);
-                    } else {
-                        isfinite(value) ? printf("\"%d\":%f},{", v, value) : printf("\"%d\":null},{", v);
-                    }
-                }
-            } else {
-                for (uint v = 0; v <= (FLOAT_SECTOR_SIZE - 1); v++) {
-                    float value = flash_readFloat(FLOAT_SECTOR_MAX, v);
-                    if (v != (FLOAT_SECTOR_SIZE - 1)) {
-                        isfinite(value) ? printf("\"%d\":%f,", v, value) : printf("\"%d\":null,", v);
-                    } else {
-                        isfinite(value) ? printf("\"%d\":%f}]}]}\n", v, value) : printf("\"%d\":null}]}]}\n", v);
-                    }
+            printf("{\"values\":[");
+            for (uint v = 0; v <= (FLOAT_SECTOR_SIZE - 1); v++) {
+                float value = flash_readFloat(s, v);
+                if (v != (FLOAT_SECTOR_SIZE - 1)) {
+                    isfinite(value) ? printf("%f,", value) : printf("null,");
+                } else {
+                    isfinite(value) ? printf("%f]},", value) : printf("null]},");
                 }
             }
         }
-        // Now handle string sectors...
-        printf("{\"sectors\":[");
         for (StringSector s = STRING_SECTOR_MIN; s <= STRING_SECTOR_MAX; s++) {
             const char *value = flash_readString(s);
             if (s != STRING_SECTOR_MAX) {
@@ -280,7 +287,10 @@ static uint api_handle_set(const char *cmd, const char *args) {
                     config_setString(section, key, value);
                     break;
             }
-            if (strncasecmp(params, "-S", 2) == 0) config_save(); // Save to flash immediately if requested
+            // Save to flash immediately if requested
+            if (strncasecmp(params, "-S", 2) == 0) {
+                if (!config_save()) return 400;
+            }
         } else {
             if (!config_save()) return 400; // No args, trigger a save to flash
         }

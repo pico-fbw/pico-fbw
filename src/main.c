@@ -44,9 +44,13 @@ int main() {
     #endif
     platform_boot_begin();
 
-    // Check for first boot
+    #if FLASH_MUST_CACHE
+        printf("[boot] cached %d bytes of flash into RAM\n", flash_cache());
+    #endif
+
+    // First boot (with pico-fbw) actions
     if (flash_readFloat(FLOAT_SECTOR_BOOT, 0) != FLAG_BOOT) {
-        printf("[boot] boot flag not found! initializing flash...\n");
+        printf("[boot] boot flag not found! formatting flash...\n");
         flash_reset();
         float boot[FLOAT_SECTOR_SIZE] = {FLAG_BOOT};
         flash_writeFloat(FLOAT_SECTOR_BOOT, boot);
@@ -55,7 +59,6 @@ int main() {
         config_save();
         printf("[boot] done! rebooting now...\n");
         platform_reboot(REBOOT_FAST); // Reboot is done to ensure flash is okay; any problems with the flash will simply cause a bootloop
-        while (true);
     } else {
         printf("[boot] boot flag ok\n");
     }
@@ -94,9 +97,9 @@ int main() {
         if (config.debug.debug_fbw) printf("[boot] validating PWM calibration\n");
         int calibrationResult = pwm_isCalibrated();
         switch (calibrationResult) {
-            case -2:
+            case PWMCALIBRATION_INVALID:
                 if (config.debug.debug_fbw) printf("[boot] PWM calibration was completed for a different control mode!\n");
-            case -1:
+            case PWMCALIBRATION_INCOMPLETE:
                 if (config.debug.debug_fbw) printf("[boot] PWM calibration not found!\n");
                 sleep_ms(2000); // Wait a few moments for tx/rx to set itself up
                 if (config.debug.debug_fbw) printf("[boot] calibrating now...do not touch the transmitter!\n");

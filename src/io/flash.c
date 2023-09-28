@@ -5,13 +5,19 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 #include "pico/types.h"
 
 #include "hardware/sync.h"
 
 #include "flash.h"
 
-// TODO: fetch flash data into RAM on startup for speed
+static float cachedFloats[FLOAT_SECTOR_SIZE_FULL];
+static char cachedStrings[STRING_SECTOR_SIZE_FULL];
+
+#if !FLASH_MUST_CACHE
+    static bool hasCached = false;
+#endif
 
 /**
  * Erases a given PHYSICAL sector of flash.
@@ -29,43 +35,63 @@ void flash_reset() {
     flash_erase(GET_PHYSECTOR_LOC(STRING_PHYSECTOR));
 }
 
+uint flash_cache() {
+    float *float_physector = (float*)GET_PHYSECTOR_LOC_ABSOLUTE(FLOAT_PHYSECTOR);
+    char *string_physector = (char*)GET_PHYSECTOR_LOC_ABSOLUTE(STRING_PHYSECTOR);
+    memcpy(cachedFloats, float_physector, FLOAT_SECTOR_SIZE_FULL);
+    memcpy(cachedStrings, string_physector, STRING_SECTOR_SIZE_FULL);
+    return FLASH_SECTOR_SIZE * 2;
+    #if !FLASH_MUST_CACHE
+        hasCached = true;
+    #endif
+}
+
 void flash_writeFloat(FloatSector sector, float data[]) {
     // Obtain previous physical sector data to ensure we don't overwrite it
-    float *old_data = (float*)(XIP_BASE + (GET_PHYSECTOR_LOC(FLOAT_PHYSECTOR)));
+    float *old_data = (float*)GET_PHYSECTOR_LOC_ABSOLUTE(FLOAT_PHYSECTOR);
     // Integrate old and new data to form the new physical sector data from our virtual "sectors"
     // Start by copying old data over
     float write_data[FLOAT_SECTOR_SIZE_FULL];
-    for (uint i = 0; i < FLOAT_SECTOR_SIZE_FULL; i++) {
-        write_data[i] = old_data[i];
-    }
-    // Overwrite new data section
+    memcpy(write_data, old_data, FLOAT_SECTOR_SIZE_FULL);
+    // Overwrite ONLY the new data section
     uint dataIndex = 0;
     for (uint i = (FLOAT_SECTOR_SIZE * sector); i < (FLOAT_SECTOR_SIZE * (sector + 1)); i++) {
         write_data[i] = data[dataIndex];
         dataIndex++;
     }
-    // Erase sector before writing to it because s c i e n c e
+    // Erase sector before writing to it because s c i e n c e (the data is backed up in RAM at the moment)
     flash_erase(GET_PHYSECTOR_LOC(FLOAT_PHYSECTOR));
-    // Create memory offset to write into
     uint32_t offset = GET_PHYSECTOR_LOC(FLOAT_PHYSECTOR);
-    // Disable interrupts because they can mess with writing
     uint32_t intr = save_and_disable_interrupts();
-    // Write data (cast to bytes because that's the only type you can write to flash)
     flash_range_program(offset, (uint8_t*)write_data, FLASH_SECTOR_SIZE);
     restore_interrupts(intr);
+    // Additionally, cache the new data
+    memcpy(cachedFloats, write_data, FLOAT_SECTOR_SIZE_FULL);
 }
 
 float flash_readFloat(FloatSector sector, uint val) {
-    // Move the pointer forward to whatever address holds the requested value and return it
-    return *(float*)(XIP_BASE + (GET_PHYSECTOR_LOC(FLOAT_PHYSECTOR) + (FLOAT_SECTOR_SIZE_BYTES * sector) + (sizeof(float) * val)));
+    // If strict caching is enabled...
+    #if FLASH_MUST_CACHE
+        // ...pull from cache directly as flash has already been cached
+        goto cache;
+    #else
+        // If not, first check if cached data exists
+        if (hasCached) {
+            goto cache;
+        } else {
+            goto flash;
+        }
+    #endif
+    cache:
+        return cachedFloats[FLOAT_SECTOR_SIZE * sector + val];
+    flash:
+        return *(float*)(GET_PHYSECTOR_LOC_ABSOLUTE(FLOAT_PHYSECTOR) + (FLOAT_SECTOR_SIZE_BYTES * sector) + (sizeof(float) * val));    
 }
 
 void flash_writeString(StringSector sector, char data[]) {
-    char *old_data = (char*)(XIP_BASE + (GET_PHYSECTOR_LOC(STRING_PHYSECTOR)));
+    char *old_data = (char*)GET_PHYSECTOR_LOC_ABSOLUTE(STRING_PHYSECTOR);
     char write_data[STRING_SECTOR_SIZE_FULL];
-    for (uint i = 0; i < STRING_SECTOR_SIZE_FULL; i++) {
-        write_data[i] = old_data[i];
-    }
+    memcpy(write_data, old_data, STRING_SECTOR_SIZE_FULL);
     uint dataIndex = 0;
     for (uint i = (STRING_SECTOR_SIZE * sector); i < (STRING_SECTOR_SIZE * (sector + 1)); i++) {
         write_data[i] = data[dataIndex];
@@ -76,11 +102,21 @@ void flash_writeString(StringSector sector, char data[]) {
     uint32_t intr = save_and_disable_interrupts();
     flash_range_program(offset, (uint8_t*)write_data, FLASH_SECTOR_SIZE);
     restore_interrupts(intr);
+    memcpy(cachedStrings, write_data, STRING_SECTOR_SIZE_FULL);
 }
 
 const char *flash_readString(StringSector sector) {
-    // Ensure the sector has been initialized
-    const char *data = (const char*)(XIP_BASE + (GET_PHYSECTOR_LOC(STRING_PHYSECTOR) + (STRING_SECTOR_SIZE_BYTES * sector)));
+    const char *data;
+    #if FLASH_MUST_CACHE
+        data = &cachedStrings[STRING_SECTOR_SIZE * sector];
+    #else
+        if (hasCached) {
+            data = &cachedStrings[STRING_SECTOR_SIZE * sector];
+        } else {
+            data = (const char*)(GET_PHYSECTOR_LOC_ABSOLUTE(STRING_PHYSECTOR) + (STRING_SECTOR_SIZE_BYTES * sector));
+        }
+    #endif
+    // Ensure the sector has been initialized (flash is by default initialized to 0xFF which UTF-8 and my code are not very fond of)
     if (data[0] != UINT8_MAX) {
         return data;
     } else {
