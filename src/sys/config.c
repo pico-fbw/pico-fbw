@@ -1,11 +1,13 @@
 /**
- * Source file of pico-fbw: https://github.com/MylesAndMore/pico-fbw
+ * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU GPL-3.0
 */
 
 #include <math.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 #include "pico/types.h"
 
@@ -17,12 +19,135 @@ Config config;
 Look, the readability of the config is really good everywhere BUT here. It's a compromise I was willing to make.
 Just ignore this file and we'll all be happy, okay? Okay. */
 
-ConfigSectionType config_getSectionType(const char *section) {
-    if (strcasecmp(section, CONFIG_WIFLY_STR) == 0) {
-        return SECTION_TYPE_STRING;
-    } else {
-        return SECTION_TYPE_FLOAT;
+// Helper function to check if a value occurs more than once in an array
+bool contains_multiple(uint array[], uint size, uint value) {
+    uint count = 0;
+    for (uint i = 0; i < size; i++) {
+        if (array[i] == value) {
+            count++;
+        }
     }
+    return count > 1;
+}
+
+/**
+ * Helper function to check if all pins provided are unique.
+ * @param num_pins number of pins provided
+ * @param ... pins to check (casted to uints)
+ * @return true if all pins are unique, false otherwise
+*/
+bool pins_unique(uint num_pins, ...) {
+    va_list args;
+    va_start(args, num_pins);
+    // Initialize an array to store pin numbers, variadic doesn't support these directly
+    uint pins[num_pins];
+    for (uint i = 0; i < num_pins; i++) {
+        pins[i] = va_arg(args, uint);
+    }
+    va_end(args);
+    for (uint i = 0; i < num_pins; i++) {
+        if (contains_multiple(pins, num_pins, pins[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
+ * Validates current RAM-banked config values.
+ * @return true if config is valid, false if invalid
+*/
+static bool validateConfig() {
+    // Unique pin validation
+    switch (config.general.controlMode) {
+        case CTRLMODE_3AXIS_ATHR:
+            if (!pins_unique(13, config.pins0.inputAil, config.pins0.inputElev, config.pins0.inputRud, config.pins0.inputSwitch,
+            config.pins0.servoAil, config.pins0.servoElev, config.pins0.servoRud, config.pins1.inputThrottle, config.pins1.escThrottle,
+            config.sensors.imuSda, config.sensors.imuScl, config.sensors.gpsRx, config.sensors.gpsTx)) goto invalid;
+            break;
+        case CTRLMODE_3AXIS:
+            if (!pins_unique(11, config.pins0.inputAil, config.pins0.inputElev, config.pins0.inputRud, config.pins0.inputSwitch,
+            config.pins0.servoAil, config.pins0.servoElev, config.pins0.servoRud, config.sensors.imuSda, config.sensors.imuScl,
+            config.sensors.gpsRx, config.sensors.gpsTx)) goto invalid;
+            break;
+        case CTRLMODE_FLYINGWING_ATHR:
+            if (!pins_unique(12, config.pins0.inputAil, config.pins0.inputElev, config.pins0.inputRud, config.pins0.inputSwitch,
+            config.pins1.servoElevonL, config.pins1.servoElevonR, config.pins1.inputThrottle, config.pins1.escThrottle,
+            config.sensors.imuSda, config.sensors.imuScl, config.sensors.gpsRx, config.sensors.gpsTx)) goto invalid;
+            break;
+        case CTRLMODE_FLYINGWING:
+            if (!pins_unique(10, config.pins0.inputAil, config.pins0.inputElev, config.pins0.inputRud, config.pins0.inputSwitch, config.pins1.servoElevonL,
+            config.pins1.servoElevonR, config.sensors.imuSda, config.sensors.imuScl, config.sensors.gpsRx, config.sensors.gpsTx)) goto invalid;
+            break;
+        invalid:
+            if (config.debug.debug_fbw) printf("ERROR: A pin may only be used once.\n");
+            return false;
+    }
+    // Sensor pin validation
+    // IMU_SDA can be on pins 0, 4, 8, 12, 16, 20, 28
+    if (config.sensors.imuSda != 0 && config.sensors.imuSda != 4 && config.sensors.imuSda != 8 && config.sensors.imuSda != 12 &&
+    config.sensors.imuSda != 16 && config.sensors.imuSda != 20 && config.sensors.imuSda != 28) {
+        if (config.debug.debug_fbw) printf("ERROR: IMU_SDA must be on the I2C0_SDA interface.\n");
+        return false;
+    }
+    // IMU_SCL can be on pins 1, 5, 9, 13, 17, 21
+    if (config.sensors.imuScl != 1 && config.sensors.imuScl != 5 && config.sensors.imuScl != 9 && config.sensors.imuScl != 13 &&
+    config.sensors.imuScl != 17 && config.sensors.imuScl != 21) {
+        if (config.debug.debug_fbw) printf("ERROR: IMU_SCL must be on the I2C0_SCL interface.\n");
+        return false;
+    }
+    // GPS_RX can be on pins 4, 8, 20
+    if (config.sensors.gpsRx != 4 && config.sensors.gpsRx != 8 && config.sensors.gpsRx != 20) {
+        if (config.debug.debug_fbw) printf("ERROR: GPS_RX must be on the UART1_RX interface.\n");
+        return false;
+    }
+    // GPS_TX can be on pins 5, 9, 21
+    if (config.sensors.gpsTx != 5 && config.sensors.gpsTx != 9 && config.sensors.gpsTx != 21) {
+        if (config.debug.debug_fbw) printf("ERROR: GPS_TX must be on the UART1_TX interface.\n");
+        return false;
+    }
+    // Limit validation
+    if (config.limits.rollLimit > 72 ||  config.limits.rollLimit < 0) {
+        if (config.debug.debug_fbw) printf("ERROR: Roll limit must be between 0 and 72 degrees.\n");
+        return false;
+    }
+    if (config.limits.rollLimitHold > 72 || config.limits.rollLimitHold < 0) {
+        if (config.debug.debug_fbw) printf("ERROR: Roll limit hold must be between 0 and 72 degrees.\n");
+        return false;
+    }
+    if (config.limits.pitchUpperLimit > 35 || config.limits.pitchUpperLimit < 0) {
+        if (config.debug.debug_fbw) printf("ERROR: Upper pitch limit must be between 0 and 35 degrees.\n");
+        return false;
+    }
+    if (config.limits.pitchLowerLimit < -20 || config.limits.pitchLowerLimit > 0) {
+        if (config.debug.debug_fbw) printf("ERROR: Lower pitch limit must be between -20 and 0 degrees.\n");
+        return false;
+    }
+    switch (config.general.controlMode) {
+        case CTRLMODE_3AXIS_ATHR:
+        case CTRLMODE_3AXIS:
+            if (config.limits.maxAilDeflection > 90 || config.limits.maxAilDeflection < 0) {
+                if (config.debug.debug_fbw) printf("ERROR: Max aileron deflection must be between 0 and 90 degrees.\n");
+                return false;
+            }
+            if (config.limits.maxElevDeflection > 90 || config.limits.maxElevDeflection < 0) {
+                if (config.debug.debug_fbw) printf("ERROR: Max elevator deflection must be between 0 and 90 degrees.\n");
+                return false;
+            }
+            if (config.limits.maxRudDeflection > 90 || config.limits.maxRudDeflection < 0) {
+                if (config.debug.debug_fbw) printf("ERROR: Max rudder deflection must be between 0 and 90 degrees.\n");
+                return false;
+            }
+            break;
+        case CTRLMODE_FLYINGWING_ATHR:
+        case CTRLMODE_FLYINGWING:
+            if (config.limits.maxElevonDeflection > 90 || config.limits.maxElevonDeflection < 0) {
+                if (config.debug.debug_fbw) printf("ERROR: Max elevon deflection must be between 0 and 90 degrees.\n");
+                return false;
+            }
+            break;
+    }
+    return true;
 }
 
 bool config_load(ConfigSource source) {
@@ -263,9 +388,15 @@ bool config_load(ConfigSource source) {
     return true;
 }
 
-// TODO: config validation before saving (replaces what is currently in validator.h)
+bool config_save(bool validate) {
+    // Validate config before saving
+    if (validate) {
+        if (!validateConfig()) {
+            if (config.debug.debug_fbw) printf("Config validation failed, config will not be saved!\n");
+            return false;
+        }
+    }
 
-bool config_save() {
     // ConfigGeneral
     float general[FLOAT_SECTOR_SIZE] = {
         config.general.controlMode,
@@ -394,7 +525,35 @@ bool config_save() {
     return true;
 }
 
-const char *config_sectionToString(ConfigSectionIndex section) {
+ConfigSectionType config_getSectionType(const char *section) {
+    if (strcasecmp(section, CONFIG_GENERAL_STR) == 0) {
+        return SECTION_TYPE_FLOAT;
+    } else if (strcasecmp(section, CONFIG_CONTROL_STR) == 0) {
+        return SECTION_TYPE_FLOAT;
+    } else if (strcasecmp(section, CONFIG_LIMITS_STR) == 0) {
+        return SECTION_TYPE_FLOAT;
+    } else if (strcasecmp(section, CONFIG_FLYING_WING_STR) == 0) {
+        return SECTION_TYPE_FLOAT;
+    } else if (strcasecmp(section, CONFIG_PINS0_STR) == 0) {
+        return SECTION_TYPE_FLOAT;
+    } else if (strcasecmp(section, CONFIG_PINS1_STR) == 0) {
+        return SECTION_TYPE_FLOAT;
+    } else if (strcasecmp(section, CONFIG_SENSORS_STR) == 0) {
+        return SECTION_TYPE_FLOAT;
+    } else if (strcasecmp(section, CONFIG_PID0_STR) == 0) {
+        return SECTION_TYPE_FLOAT;
+    } else if (strcasecmp(section, CONFIG_PID1_STR) == 0) {
+        return SECTION_TYPE_FLOAT;
+    } else if (strcasecmp(section, CONFIG_DEBUG_STR) == 0) {
+        return SECTION_TYPE_FLOAT;
+    } else if (strcasecmp(section, CONFIG_WIFLY_STR) == 0) {
+        return SECTION_TYPE_STRING;
+    } else {
+        return SECTION_TYPE_NONE;
+    }
+}
+
+const char *config_sectionToString(ConfigSection section) {
     switch (section) {
         case CONFIG_GENERAL:
             return CONFIG_GENERAL_STR;
@@ -590,7 +749,7 @@ float config_getFloat(const char* section, const char* key) {
     return infinityf();
 }
 
-void config_getAllFloats(float *values, size_t numValues) {
+void config_getAllFloats(float values[], size_t numValues) {
     if (values && numValues > 0) {
         size_t index = 0;
 
@@ -950,7 +1109,7 @@ const char *config_getString(const char *section, const char *key) {
     return NULL;
 }
 
-void config_getAllStrings(const char **values, size_t numValues) {
+void config_getAllStrings(const char *values[], size_t numValues) {
     if (values && numValues > 0) {
         size_t index = 0;
 

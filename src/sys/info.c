@@ -1,5 +1,5 @@
 /**
- * Source file of pico-fbw: https://github.com/MylesAndMore/pico-fbw
+ * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU GPL-3.0
 */
 
@@ -28,7 +28,7 @@ void info_declare() {
     /* Program info */
     bi_decl(bi_program_description("A fly-by-wire system designed for RC airplanes, for the Rasperry Pi Pico microcontroller."));
     bi_decl(bi_program_version_string(PICO_FBW_VERSION));
-    bi_decl(bi_program_url("https://github.com/MylesAndMore/pico-fbw"));
+    bi_decl(bi_program_url("https://github.com/pico-fbw/pico-fbw"));
 }
 
 int info_checkVersion(const char *version) {

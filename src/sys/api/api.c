@@ -1,5 +1,5 @@
 /**
- * Source file of pico-fbw: https://github.com/MylesAndMore/pico-fbw
+ * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU GPL-3.0
 */
 
@@ -18,24 +18,24 @@
 
 #include "hardware/watchdog.h"
 
-#include "flash.h"
-#include "platform.h"
-#include "servo.h"
+#include "../../io/flash.h"
+#include "../../io/platform.h"
+#include "../../io/servo.h"
 
-#include "../lib/jsmn.h"
+#include "../../lib/jsmn.h"
 
-#include "../modes/flight.h"
-#include "../modes/modes.h"
-#include "../modes/normal.h"
+#include "../../modes/flight.h"
+#include "../../modes/modes.h"
+#include "../../modes/normal.h"
 
-#include "../sys/config.h"
-#include "../sys/info.h"
+#include "../../sys/config.h"
+#include "../../sys/info.h"
 
-#include "../wifly/wifly.h"
+#include "../../wifly/wifly.h"
 
 #include "api.h"
 
-#define API_CHAR_TIMEOUT_US 100 // Timeout when waiting for a character to arrive
+#define API_CHAR_TIMEOUT_US 100
 
 /**
  * Reads a line from stdin if available.
@@ -105,7 +105,7 @@ static uint api_handle_get(const char *cmd, const char *args) {
             const char *configStr[NUM_STRING_CONFIG_VALUES];
             config_getAllStrings(configStr, NUM_STRING_CONFIG_VALUES);
             printf("{\"sections\":[");
-            for (ConfigSectionIndex s = 0; s < NUM_CONFIG_SECTIONS; s++) {
+            for (ConfigSection s = 0; s < NUM_CONFIG_SECTIONS; s++) {
                 const char *sectionStr = config_sectionToString(s);
                 printf("{\"name\":\"%s\",\"keys\":[", sectionStr);
                 switch (config_getSectionType(sectionStr)) {
@@ -286,13 +286,15 @@ static uint api_handle_set(const char *cmd, const char *args) {
                 case SECTION_TYPE_STRING:
                     config_setString(section, key, value);
                     break;
+                default:
+                    return 400;
             }
             // Save to flash immediately if requested
             if (strncasecmp(params, "-S", 2) == 0) {
-                if (!config_save()) return 400;
+                if (!config_save(true)) return 400;
             }
         } else {
-            if (!config_save()) return 400; // No args, trigger a save to flash
+            if (!config_save(true)) return 400; // No args, trigger a save to flash
         }
         return 200;
     } else if (strcasecmp(cmd, "SET_FPLAN") == 0) {

@@ -1,5 +1,5 @@
 /**
- * Source file of pico-fbw: https://github.com/MylesAndMore/pico-fbw
+ * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU GPL-3.0
 */
 
@@ -11,6 +11,8 @@
 #include "hardware/sync.h"
 
 #include "flash.h"
+
+// TODO: allow bulk flash writes to cache and later write to flash all at once to speed up write times
 
 static float cachedFloats[FLOAT_SECTOR_SIZE_FULL];
 static char cachedStrings[STRING_SECTOR_SIZE_FULL];

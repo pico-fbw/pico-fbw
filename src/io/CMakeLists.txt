@@ -1,5 +1,4 @@
 add_library(fbw_io
-    api.c
     error.c
     esc.c
     flash.c
@@ -29,9 +28,5 @@ target_link_libraries(fbw_io
     hardware_watchdog
     pico_base
     pico_bootrom
-    pico_platform
-    pico_runtime
-    pico_stdio
-    pico_stdlib # IO is broken without this for some reason
     pico_time
 )

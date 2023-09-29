@@ -1,5 +1,5 @@
 /**
- * Source file of pico-fbw: https://github.com/MylesAndMore/pico-fbw
+ * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU GPL-3.0
 */
 
@@ -17,7 +17,6 @@
     #include "pico/cyw43_arch.h"
 #endif
 
-#include "io/api.h"
 #include "io/error.h"
 #include "io/esc.h"
 #include "io/flash.h"
@@ -27,6 +26,7 @@
 #include "io/pwm.h"
 #include "io/servo.h"
 #include "modes/modes.h"
+#include "sys/api/api.h"
 #include "sys/config.h"
 #include "sys/info.h"
 #include "sys/switch.h"
@@ -56,7 +56,7 @@ int main() {
         flash_writeFloat(FLOAT_SECTOR_BOOT, boot);
         printf("[boot] writing default config values...\n");
         config_load(DEFAULT_VALUES);
-        config_save();
+        config_save(false);
         printf("[boot] done! rebooting now...\n");
         platform_reboot(REBOOT_FAST); // Reboot is done to ensure flash is okay; any problems with the flash will simply cause a bootloop
     } else {

@@ -9,8 +9,8 @@
 #include "switch.h"
 
 /* The amount of time (in ms) to wait for any possible serial connections to be established before booting.
-This option is compiled in as configuration is not yet loaded when this value is needed. */
-#define BOOT_WAIT_MS 900
+This option is compiled in, as configuration is not yet loaded when this value is needed. */
+#define BOOT_WAIT_MS 1000
 
 typedef enum ConfigSource {
     FROM_FLASH,
@@ -23,7 +23,7 @@ typedef enum ConfigSectionType {
     SECTION_TYPE_STRING
 } ConfigSectionType;
 
-#define CONFIG_GENERAL_STR "ConfigGeneral"
+#define CONFIG_GENERAL_STR "General"
 typedef struct ConfigGeneral {
     ControlMode controlMode; // Also stores athrEnabled
     SwitchType switchType;
@@ -44,7 +44,7 @@ typedef struct ConfigGeneral {
 #define WIFLY_USE_PASS_DEF false
 #define SKIP_CALIBRATION_DEF false
 
-#define CONFIG_CONTROL_STR "ConfigControl"
+#define CONFIG_CONTROL_STR "Control"
 typedef struct ConfigControl {
     float controlSensitivity;
     float rudderSensitivity;
@@ -64,7 +64,7 @@ typedef struct ConfigControl {
 #define THROTTLE_DETENT_MAX_DEF 90
 #define THROTTLE_MAX_TIME_DEF 10
 
-#define CONFIG_LIMITS_STR "ConfigLimits"
+#define CONFIG_LIMITS_STR "Limits"
 typedef struct ConfigLimits {
     float rollLimit;
     float rollLimitHold;
@@ -85,7 +85,7 @@ typedef struct ConfigLimits {
 #define MAX_RUD_DEFLECTION_DEF 20
 #define MAX_ELEVON_DEFLECTION_DEF 20
 
-#define CONFIG_FLYING_WING_STR "ConfigFlyingWing"
+#define CONFIG_FLYING_WING_STR "FlyingWing"
 typedef struct ConfigFlyingWing {
     float elevonMixingGain;
     float ailMixingBias;
@@ -97,7 +97,7 @@ typedef struct ConfigFlyingWing {
 #define AIL_MIXING_BIAS_DEF 1
 #define ELEV_MIXING_BIAS_DEF 1
 
-#define CONFIG_PINS0_STR "ConfigPins0"
+#define CONFIG_PINS0_STR "Pins0"
 typedef struct ConfigPins0 {
     uint inputAil;
     uint servoAil;
@@ -117,7 +117,7 @@ typedef struct ConfigPins0 {
 #define SERVO_RUD_DEF 6
 #define INPUT_SWITCH_DEF 9
 
-#define CONFIG_PINS1_STR "ConfigPins1"
+#define CONFIG_PINS1_STR "Pins1"
 typedef struct ConfigPins1 {
     uint inputThrottle;
     uint escThrottle;
@@ -137,7 +137,7 @@ typedef struct ConfigPins1 {
 #define REVERSE_PITCH_DEF false
 #define REVERSE_YAW_DEF false
 
-#define CONFIG_SENSORS_STR "ConfigSensors"
+#define CONFIG_SENSORS_STR "Sensors"
 typedef struct ConfigSensors {
     IMUModel imuModel;
     uint imuSda;
@@ -158,7 +158,7 @@ typedef struct ConfigSensors {
 #define GPS_TX_DEF 21
 #define GPS_RX_DEF 20
 
-#define CONFIG_PID0_STR "ConfigPID0"
+#define CONFIG_PID0_STR "PID0"
 typedef struct ConfigPID0 {
     float rollTau;
     float rollIntegMin;
@@ -179,7 +179,7 @@ typedef struct ConfigPID0 {
 #define PITCH_INTEG_MAX_DEF 50.0
 #define PITCH_KT_DEF 0.01
 
-#define CONFIG_PID1_STR "ConfigPID1"
+#define CONFIG_PID1_STR "PID1"
 typedef struct ConfigPID1 {
     float yawKp;
     float yawKi;
@@ -199,7 +199,7 @@ typedef struct ConfigPID1 {
 #define YAW_INTEG_MAX_DEF 50.0
 #define YAW_KT_DEF 0.01
 
-#define CONFIG_DEBUG_STR "ConfigDebug"
+#define CONFIG_DEBUG_STR "Debug"
 typedef struct ConfigDebug {
     bool debug;
     bool debug_fbw;
@@ -219,7 +219,7 @@ typedef struct ConfigDebug {
 #define DUMP_NETWORK_DEF false
 #define WATCHDOG_TIMEOUT_MS_DEF 4000
 
-#define CONFIG_WIFLY_STR "ConfigWifly"
+#define CONFIG_WIFLY_STR "Wifly"
 typedef struct ConfigWifly {
     char ssid[STRING_SECTOR_SIZE];
     char pass[STRING_SECTOR_SIZE];
@@ -228,7 +228,7 @@ typedef struct ConfigWifly {
 #define WIFLY_SSID_DEF "pico-fbw"
 #define WIFLY_PASS_DEF "wifly"
 
-typedef enum ConfigSectionIndex {
+typedef enum ConfigSection {
     CONFIG_GENERAL,
     CONFIG_CONTROL,
     CONFIG_LIMITS,
@@ -240,7 +240,7 @@ typedef enum ConfigSectionIndex {
     CONFIG_PID1,
     CONFIG_DEBUG,
     CONFIG_WIFLY
-} ConfigSectionIndex;
+} ConfigSection;
 
 typedef struct Config {
     ConfigGeneral general;
@@ -267,12 +267,6 @@ extern Config config;
 #define NUM_STRING_CONFIG_VALUES (NUM_STRING_CONFIG_SECTIONS * NUM_STRING_VALUES_PER_SECTION)
 
 /**
- * @param section section of the config to get the type of
- * @return the type of the config section
-*/
-ConfigSectionType config_getSectionType(const char *section);
-
-/**
  * Loads the config from flash into RAM (or loads default values into RAM).
  * @param source source of the config data (whether to load from flash or defaults)
  * @return true if loading was successful, false otherwise (likely due to uninitialized/corrupt data).
@@ -281,14 +275,22 @@ bool config_load(ConfigSource source);
 
 /**
  * Saves the config from RAM into flash.
+ * @param validate whether to validate the config before saving (true) or not (false)
  * @return true if saving was successful, false if one or more configuration values are invalid (did not pass validation).
 */
-bool config_save();
+bool config_save(bool validate);
 
 /**
- * 
+ * @param section section of the config to get the type of
+ * @return the type of the config section (float or string)
 */
-const char *config_sectionToString(ConfigSectionIndex section);
+ConfigSectionType config_getSectionType(const char *section);
+
+/**
+ * @param section section of the config to get the string representation of
+ * @return the string representation (name) of the config section
+*/
+const char *config_sectionToString(ConfigSection section);
 
 /**
  * Gets a value from a float section of the config.
@@ -298,33 +300,45 @@ const char *config_sectionToString(ConfigSectionIndex section);
 */
 float config_getFloat(const char* section, const char* key);
 
-// TODO
-
 /**
- * 
+ * Gets all float values from the config (up until max size of numValues).
+ * @param values array to store the values in
+ * @param numValues number of values to store
+ * @note numValues should be at least NUM_FLOAT_CONFIG_VALUES to avoid overflow
 */
-void config_getAllFloats(float *values, size_t numValues);
+void config_getAllFloats(float values[], size_t numValues);
 
 /**
- * 
+ * Sets a value in a float section of the config.
+ * @param section name of the section to set the value in
+ * @param key name of the key to set the value in
+ * @param value value to set
+ * @return true if the value was set, false if the section or key does not exist
 */
 bool config_setFloat(const char *section, const char *key, float value);
 
 /**
  * Gets a value from a string section of the config.
- * @param section section of the config to get the value from
- * @param key key of the value to get
+ * @param section name of the section of the config to get the value from
+ * @param key name of the key to set the value in
  * @return the value of the config, or NULL if the value does not exist
 */
 const char *config_getString(const char *section, const char *key);
 
 /**
- * 
+ * Gets all string values from the config (up until max size of numValues).
+ * @param values array to store the values in
+ * @param numValues number of values to store
+ * @note numValues should be at least NUM_STRING_CONFIG_VALUES to avoid overflow
 */
-void config_getAllStrings(const char **values, size_t numValues);
+void config_getAllStrings(const char *values[], size_t numValues);
 
 /**
- * 
+ * Gets a value from a string section of the config.
+ * @param section section of the config to get the value from
+ * @param key name of the key to set the value in
+ * @param value value to set
+ * @return true if the value was set, false if the section or key does not exist
 */
 bool config_setString(const char *section, const char *key, const char *value);
 
