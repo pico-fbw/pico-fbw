@@ -10,10 +10,6 @@ typedef enum GPSCommandType {
 #define GPS_UART uart1
 #define GPS_UART_IRQ UART1_IRQ
 
-// Timeout between waiting for characters during line reads (in microseconds)
-// Too low and sentences will be chunked up into different function returns breaking parsing, too high and process time will be wasted
-#define GPS_CHAR_TIMEOUT_US 3000
-
 // Maximum timeout between waiting for a response after a command is sent (in milleseconds)
 // This actually needs to be quite long because the GPS may wait to send a response until its update rate comes around which is a bit slow
 #define GPS_COMMAND_TIMEOUT_MS 1300

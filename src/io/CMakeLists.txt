@@ -6,6 +6,7 @@ add_library(fbw_io
     imu.c
     platform.c
     pwm.c
+    serial.c
     servo.c
 )
 
@@ -28,5 +29,6 @@ target_link_libraries(fbw_io
     hardware_watchdog
     pico_base
     pico_bootrom
+    pico_stdio
     pico_time
 )

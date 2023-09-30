@@ -34,8 +34,8 @@
 
 #include "../io/gps.h"
 
-#define JSMN_HEADER // Only define once!
 #include "../lib/jsmn.h"
+#define JSMN_HEADER // Only define once!
 
 #include "../sys/config.h"
 #include "../sys/info.h"
@@ -80,13 +80,12 @@ static inline void url_decode(char *str) {
         if (!state) {
             if (config.debug.debug_fbw) printf("[wifly] ERROR: tcp failed to allocate state\n");
         }
-        const char *ap_name = WIFLY_NETWORK_NAME;
-        #ifdef WIFLY_NETWORK_USE_PASSWORD
-            const char *password = WIFLY_NETWORK_PASSWORD;
-        #else
-            const char *password = NULL;
-        #endif
-        cyw43_arch_enable_ap_mode(ap_name, password, CYW43_AUTH_WPA2_AES_PSK);
+        const char *ap_name = config.wifly.ssid;
+        const char *password = NULL;
+        if (!config.general.wiflyUsePass) {
+            password = config.wifly.pass;
+        }
+        cyw43_arch_enable_ap_mode(ap_name, config.wifly.pass, CYW43_AUTH_WPA2_AES_PSK);
 
         ip4_addr_t mask;
         IP4_ADDR(ip_2_ip4(&state->gw), 192, 168, 4, 1);

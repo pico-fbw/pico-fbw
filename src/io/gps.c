@@ -12,7 +12,6 @@
 #include "pico/types.h"
 
 #include "hardware/gpio.h"
-#include "hardware/irq.h"
 #include "hardware/uart.h"
 
 #include "../lib/minmea.h"
@@ -22,35 +21,10 @@
 
 #include "../sys/config.h"
 
+#include "serial.h"
 #include "error.h"
 
 #include "gps.h"
-
-/**
- * Reads a line from a specified UART instance if available.
- * @param uart The UART instance to read from.
- * @return A pointer to the read line, or NULL if no line could be read.
- * @note This function does not free the memory allocated for the line if read, ensure to free() it after use.
-*/
-static inline char *uart_read_line(uart_inst_t *uart) {
-    char *buf = NULL;
-    if (uart_is_readable(uart)) {
-        uint i = 0;
-        while (uart_is_readable_within_us(uart, GPS_CHAR_TIMEOUT_US)) {
-            char c = uart_getc(uart);
-            if (c == '\r' || c == '\n') {
-                break;
-            }
-            buf = realloc(buf, (i + 1) * sizeof(char));
-            buf[i] = c;
-            i++;
-        }
-        // Null terminate the string
-        buf = realloc(buf, (i + 1) * sizeof(char));
-        buf[i] = '\0';
-    }
-    return buf;
-}
 
 bool gps_init() {
     if (config.debug.debug_fbw) printf("[gps] initializing ");

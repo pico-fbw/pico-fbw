@@ -64,20 +64,18 @@ static int dns_socket_bind(struct udp_pcb **udp, uint32_t ip, uint16_t port) {
     return err;
 }
 
-if (config.debug.dump_network) {
-    static void dump_bytes(const uint8_t *bptr, uint32_t len) {
-        unsigned int i = 0;
+static void dump_bytes(const uint8_t *bptr, uint32_t len) {
+    unsigned int i = 0;
 
-        for (i = 0; i < len;) {
-            if ((i & 0x0f) == 0) {
-                printf("\n");
-            } else if ((i & 0x07) == 0) {
-                printf(" ");
-            }
-            printf("%02x ", bptr[i++]);
+    for (i = 0; i < len;) {
+        if ((i & 0x0f) == 0) {
+            printf("\n");
+        } else if ((i & 0x07) == 0) {
+            printf(" ");
         }
-        printf("\n");
+        printf("%02x ", bptr[i++]);
     }
+    printf("\n");
 }
 
 static int dns_socket_sendto(struct udp_pcb **udp, const void *buf, size_t len, const ip_addr_t *dest, uint16_t port) {

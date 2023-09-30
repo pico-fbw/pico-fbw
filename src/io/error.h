@@ -1,6 +1,10 @@
 #ifndef __ERROR_H
 #define __ERROR_H
 
+#define ERROR_MSG_WARN "WARNING"
+#define ERROR_MSG_ERR "ERROR"
+#define ERROR_MSG_FATAL "FATAL"
+
 typedef enum ErrorType {
     ERROR_NONE,
     ERROR_PWM,

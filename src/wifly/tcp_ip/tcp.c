@@ -88,7 +88,7 @@ static int server_content(const char *request, const char *params, char *result,
         // If there are params, check to see if the flightplan data is there
         if (params) {
             if (strncmp(FPLAN_PARAM, params, sizeof(FPLAN_PARAM) - 1) == 0) {
-                if (config.debug.debug_wifly) printfprintf ("[wifly] Flightplan submission detected, attempting to parse\n");
+                if (config.debug.debug_wifly) printf ("[wifly] Flightplan submission detected, attempting to parse\n");
                 wifly_parseFplan(params); // Status is now set internally inside of wifly.c not tcp
             }
         }

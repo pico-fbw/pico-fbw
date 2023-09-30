@@ -226,7 +226,7 @@ typedef struct ConfigWifly {
 } ConfigWifly;
 
 #define WIFLY_SSID_DEF "pico-fbw"
-#define WIFLY_PASS_DEF "wifly"
+#define WIFLY_PASS_DEF "wifly123"
 
 typedef enum ConfigSection {
     CONFIG_GENERAL,

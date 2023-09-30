@@ -27,10 +27,6 @@
     #undef LED_PIN
 #endif
 
-#define ERROR_MSG_WARN "WARNING"
-#define ERROR_MSG_ERR "ERROR"
-#define ERROR_MSG_FATAL "FATAL"
-
 static bool errs[6][6] = {
     {true, true, true, true, true, true},
     {false, false, false, false, false, false}

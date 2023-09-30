@@ -29,8 +29,8 @@ uint api_handle_test(const char *cmd, const char *args);
  * Handles API MISC (no prefix) commands.
  * @param cmd the command
  * @param args the command arguments
- * @return the status code.
+ * @return either status code 404, or -1 if the command was successful (MISC commands don't have return codes).
 */
-uint api_handle_misc(const char *cmd, const char *args);
+int api_handle_misc(const char *cmd, const char *args);
 
 #endif // __CMDS_H
