@@ -3,6 +3,7 @@
  * Licensed under the GNU GPL-3.0
 */
 
+#include <math.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -45,27 +46,27 @@ void mode_normal() {
     }
     
     // Check for manual overrides of externally set setpoints
-    if (rollInput > config.control.controlDeadband || rollInput < -config.control.controlDeadband ||
-    pitchInput > config.control.controlDeadband || pitchInput < -config.control.controlDeadband ||
-    yawInput > config.control.controlDeadband || yawInput < -config.control.controlDeadband) {
+    if (fabsf(rollInput) > config.control.controlDeadband ||
+    fabsf(pitchInput) > config.control.controlDeadband ||
+    fabsf(yawInput) > config.control.controlDeadband) {
         overrideSetpoints = false;
     }
     if (!overrideSetpoints) {
         // Use the rx inputs to set the setpoint control values
         // Deadband calculations so we don't get crazy values due to PWM fluctuations
-        if (rollInput > config.control.controlDeadband || rollInput < -config.control.controlDeadband) {
+        if (fabsf(rollInput) > config.control.controlDeadband) {
             // If the input is not within the deadband, add the smoothed input value on top of the current setpoint
             // We must smooth the value because this calculation is done many times per second, so no smoothing would result
             // in extremely (and I do really mean extreme) touchy controls.
             rollSet += rollInput * config.control.controlSensitivity;
         }
-        if (pitchInput > config.control.controlDeadband || pitchInput < -config.control.controlDeadband) {
+        if (fabsf(pitchInput) > config.control.controlDeadband) {
             pitchSet += pitchInput * config.control.controlSensitivity;
         }
 
         // Make sure the PID setpoints aren't set to unsafe values so we don't get weird outputs from PID,
         // this is also where our bank/pitch protections come in.
-        if (rollSet > config.limits.rollLimit || rollSet < -config.limits.rollLimit) {
+        if (fabsf(rollSet) > config.limits.rollLimit) {
             // If the roll values are unsafe, we do allow setting up to 67 but constant input is required, so check for that
             if (!(abs(rollInput) >= abs(rollSet))) {
                 if (rollSet > 0) {
