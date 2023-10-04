@@ -1,5 +1,4 @@
 add_library(fbw_io
-    error.c
     esc.c
     flash.c
     gps.c

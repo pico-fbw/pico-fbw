@@ -3,6 +3,7 @@
  * Licensed under the GNU GPL-3.0
 */
 
+#include <math.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -20,9 +21,9 @@
 #include "../modes/modes.h"
 
 #include "../sys/config.h"
+#include "../sys/log.h"
 
 #include "serial.h"
-#include "error.h"
 
 #include "gps.h"
 
@@ -104,7 +105,7 @@ GPS gps_getData() {
                         alt = (int)(minmea_tofloat(&gga.altitude) * 3.28084f); // Conversion from meters to feet
                     } else {
                         setGPSSafe(false);
-                        return (GPS){0};
+                        return (GPS){INFINITY};
                     }
                 } else {
                     if (config.debug.debug_gps) printf("[gps] ERROR: failed parsing $xxGGA sentence\n");
@@ -146,7 +147,7 @@ GPS gps_getData() {
         setGPSSafe(true);
     } else {
         setGPSSafe(false);
-        return (GPS){0};
+        return (GPS){INFINITY};
     }
     return (GPS){lat, lng, alt, spd, trk_true};
 }
@@ -158,8 +159,7 @@ static bool altOffsetCalibrated = false;
 bool gps_isAltOffsetCalibrated() { return altOffsetCalibrated; }
 
 int gps_calibrateAltOffset(uint num_samples) {
-    if (config.debug.debug_fbw) printf("[gps] starting altitude calibration\n");
-    error_throw(ERROR_GPS, ERROR_LEVEL_STATUS, 1000, 100, false, ""); // Blink at 1Hz
+    log_message(INFO, "Starting GPS altitude calibration...", 1000, 100, false);
     // GPS updates should be at 1Hz (give or take 2s) so if the calibration takes longer we cut it short
     absolute_time_t calibrationTimeout = make_timeout_time_ms((num_samples * 1000) + 2000);
     uint samples = 0;
@@ -189,7 +189,7 @@ int gps_calibrateAltOffset(uint num_samples) {
             free(line);
         }
     }
-    error_clear(ERROR_GPS, false);
+    log_clear(INFO);
     if (time_reached(calibrationTimeout)) {
         if (config.debug.debug_fbw) printf("[gps] ERROR: altitude calibration timed out\n");
         return PICO_ERROR_TIMEOUT;

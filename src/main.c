@@ -17,7 +17,6 @@
     #include "pico/cyw43_arch.h"
 #endif
 
-#include "io/error.h"
 #include "io/esc.h"
 #include "io/flash.h"
 #include "io/gps.h"
@@ -29,51 +28,52 @@
 #include "sys/api/api.h"
 #include "sys/config.h"
 #include "sys/info.h"
+#include "sys/log.h"
 #include "sys/switch.h"
 #include "wifly/wifly.h"
 
 int main() {
-    stdio_init_all();
-    sleep_ms(BOOT_WAIT_MS);
+    platform_boot_begin();
+    if (stdio_init_all()) sleep_ms(BOOT_WAIT_MS);
     #if defined(RASPBERRYPI_PICO)
         printf("\nhello and welcome to pico-fbw v%s!\n", PICO_FBW_VERSION);
     #elif defined(RASPBERRYPI_PICO_W)
         printf("\nhello and welcome to pico(w)-fbw v%s!\n", PICO_FBW_VERSION);
-        printf("[boot] initializing cyw43 architecture\n");
+        platform_boot_setProgress(10, "Initializing CYW43 architecture");
         cyw43_arch_init();
     #endif
-    platform_boot_begin();
+    log_init();
 
-    #if FLASH_MUST_CACHE
-        printf("[boot] cached %d bytes of flash into RAM\n", flash_cache());
-    #endif
+    platform_boot_setProgress(20, "Caching flash");
+    printf("[boot] cached %d bytes of flash into RAM\n", flash_cache());
 
     // First boot (with pico-fbw) actions
     if (flash_readFloat(FLOAT_SECTOR_BOOT, 0) != FLAG_BOOT) {
-        printf("[boot] boot flag not found! formatting flash...\n");
+        platform_boot_setProgress(50, "Formatting flash");
         flash_reset();
         float boot[FLOAT_SECTOR_SIZE] = {FLAG_BOOT};
-        flash_writeFloat(FLOAT_SECTOR_BOOT, boot);
-        printf("[boot] writing default config values...\n");
+        flash_writeFloat(FLOAT_SECTOR_BOOT, boot, true);
+        platform_boot_setProgress(80, "Writing default config values");
         config_load(DEFAULT_VALUES);
         config_save(false);
-        printf("[boot] done! rebooting now...\n");
+        platform_boot_setProgress(100, "Rebooting");
         platform_reboot(REBOOT_FAST); // Reboot is done to ensure flash is okay; any problems with the flash will simply cause a bootloop
     } else {
+        platform_boot_setProgress(25, "Checking boot flag");
         printf("[boot] boot flag ok\n");
     }
 
     // Check version
-    printf("[boot] checking for updates\n");
+    platform_boot_setProgress(30, "Checking for updates");
     int versionCheck = info_checkVersion(flash_readString(STRING_SECTOR_VERSION));
     if (versionCheck < 0) {
         if (versionCheck < -2) {
-            error_throw(ERROR_GENERAL, ERROR_LEVEL_FATAL, 250, 0, true, "Failed to run update checker!");
+            log_message(FATAL, "Failed to run update checker!", 250, 0, true);
         } else {
             printf("[boot] performing a system update from v%s to v%s, please wait...\n", (flash_readString(STRING_SECTOR_VERSION) == NULL) ? "0.0.0" : flash_readString(STRING_SECTOR_VERSION), PICO_FBW_VERSION);
             // << Insert system update code here, if applicable >>
             // Update flash with new version
-            flash_writeString(STRING_SECTOR_VERSION, PICO_FBW_VERSION);
+            flash_writeString(STRING_SECTOR_VERSION, PICO_FBW_VERSION, true);
             printf("[boot] no tasks to be performed\n");
         }
     } else {
@@ -81,8 +81,8 @@ int main() {
     }
 
     // Load config
-    printf("[boot] loading config\n");
-    if (!config_load(FROM_FLASH)) error_throw(ERROR_GENERAL, ERROR_LEVEL_FATAL, 250, 0, true, "Failed to load config!");
+    platform_boot_setProgress(35, "Loading config");
+    if (!config_load(FROM_FLASH)) log_message(FATAL, "Failed to load config!", 250, 0, true);
 
     // PWM (in)
     uint num_pins = 5; // Maximum amount is 5 pins, may be overridden
@@ -92,7 +92,7 @@ int main() {
     if (config.general.skipCalibration) {
         if (config.debug.debug_fbw) printf("[boot] skipping PWM calibration, PWM will be disabled!\n");
     } else {
-        if (config.debug.debug_fbw) printf("[boot] enabling PWM\n");
+        platform_boot_setProgress(40, "Enabling PWM");
         pwm_enable(pins, num_pins);
         if (config.debug.debug_fbw) printf("[boot] validating PWM calibration\n");
         int calibrationResult = pwm_isCalibrated();
@@ -104,7 +104,7 @@ int main() {
                 sleep_ms(2000); // Wait a few moments for tx/rx to set itself up
                 if (config.debug.debug_fbw) printf("[boot] calibrating now...do not touch the transmitter!\n");
                 if (!pwm_calibrate(pins, num_pins, deviations, 2000, 2, 3) || pwm_isCalibrated() != 0) {
-                    error_throw(ERROR_PWM, ERROR_LEVEL_FATAL, 500, 0, true, "PWM calibration failed!");
+                    log_message(FATAL, "PWM calibration failed!", 500, 0, true);
                 } else {
                     if (config.debug.debug_fbw) printf("[boot] calibration successful!\n");
                 }
@@ -113,14 +113,14 @@ int main() {
     }
 
     // Servos
-    if (config.debug.debug_fbw) printf("[boot] enabling servos\n");
+    platform_boot_setProgress(50, "Enabling servos");
     uint num_servos = 3;
     uint servos[num_servos];
     servo_getPins(servos, &num_servos);
     for (uint8_t s = 0; s < num_servos; s++) {
         if (servo_enable(servos[s]) != 0) {
             if (config.debug.debug_fbw) printf("[boot] failed to initialize servo %d\n", s);
-            error_throw(ERROR_PWM, ERROR_LEVEL_FATAL, 800, 0, false, "Failed to initialize a servo!");
+            log_message(FATAL, "Failed to initialize a servo!", 800, 0, false);
         }
     }
     const uint16_t degrees[] = DEFAULT_SERVO_TEST;
@@ -128,8 +128,8 @@ int main() {
 
     // ESC
     if (config.general.controlMode == CTRLMODE_3AXIS_ATHR || config.general.controlMode == CTRLMODE_FLYINGWING_ATHR) {
-        if (config.debug.debug_fbw) printf("[boot] enabling ESC\n");
-        if (esc_enable(config.pins1.escThrottle) != 0) error_throw(ERROR_PWM, ERROR_LEVEL_FATAL, 800, 0, false, "Failed to initialize the ESC!");
+        platform_boot_setProgress(60, "Enabling ESC");
+        if (esc_enable(config.pins1.escThrottle) != 0) log_message(FATAL, "Failed to initialize an ESC!", 800, 0, false);
     }
 
     // IMU
@@ -139,7 +139,7 @@ int main() {
     if (config.general.skipCalibration) {
         if (config.debug.debug_fbw) printf("[boot] skipping IMU calibration, IMU will be disabled!\n");
     } else {
-        if (config.debug.debug_fbw) printf("[boot] initializing IMU\n");
+        platform_boot_setProgress(70, "Initializing IMU");
         if (imu_init() == 0) {
             if (imu_configure()) {
                 if (config.debug.debug_fbw) printf("[boot] IMU ok\n");
@@ -148,40 +148,41 @@ int main() {
                 if (!imu_isCalibrated()) {
                     if (config.debug.debug_fbw) printf("[boot] IMU calibration not found! waiting a bit to begin...\n");
                     sleep_ms(2000);
-                    if (!imu_calibrate()) error_throw(ERROR_IMU, ERROR_LEVEL_FATAL, 1000, 0, true, "IMU calibration failed!");
+                    if (!imu_calibrate()) log_message(FATAL, "IMU calibration failed!", 1000, 0, true);
                 }
                 if (config.debug.debug_fbw) printf("[boot] IMU axis calibration ok\n");
             } else {
-                error_throw(ERROR_IMU, ERROR_LEVEL_WARN, 1000, 0, false, "IMU configuration failed!");
+                log_message(WARNING, "IMU configuration failed!", 1000, 0, false);
             }
         } else {
-            error_throw(ERROR_IMU, ERROR_LEVEL_ERR, 1000, 0, false, "IMU not found!");
+            log_message(ERROR, "IMU not found!", 1000, 0, false);
         }
     }
 
     // GPS
     if (config.sensors.gpsEnabled) {
         while (time_us_64() < (1000 * 1000));
-        if (config.debug.debug_fbw) printf("[boot] initializing GPS\n");
+        platform_boot_setProgress(85, "Initializing GPS");
         if (gps_init()) {
             if (config.debug.debug_fbw) printf("[boot] GPS ok\n");
             // We don't set the GPS safe just yet, communications have been established but we are still unsure if the data is okay
-            error_throw(ERROR_GPS, ERROR_LEVEL_STATUS, 1000, 0, false, ""); // Show that GPS does not have a signal yet
+            log_message(LOG, "GPS has no signal.", 2000, 0, false);
         } else {
-            error_throw(ERROR_GPS, ERROR_LEVEL_ERR, 2000, 0, false, "GPS initalization failed!");
+            log_message(ERROR, "GPS not found!", 2000, 0, false);
         }
     }
 
     // Wi-Fly
     #ifdef RASPBERRYPI_PICO_W
-        if (config.debug.debug_fbw) printf("[boot] initializing Wi-Fly\n");
+        platform_boot_setProgress(95, "Initializing Wi-Fly");
         wifly_init();
     #endif
 
     // Watchdog
+    platform_boot_setProgress(100, "Enabling watchdog");
     watchdog_enable(config.debug.watchdog_timeout_ms, true);
     if (platform_boot_type() == BOOT_WATCHDOG) {
-        error_throw(ERROR_GENERAL, ERROR_LEVEL_ERR, 500, 150, true, "Watchdog rebooted!");
+        log_message(ERROR, "Watchdog rebooted!", 500, 150, true);
         if (config.debug.debug_fbw) printf("Please report this error! Only direct mode is available until the next reboot.\n");
         platform_boot_complete();
         toMode(MODE_DIRECT);
@@ -191,9 +192,8 @@ int main() {
         }
     }
 
-    // Main program loop:
     platform_boot_complete();
-    if (config.debug.debug_fbw) printf("[boot] bootup complete!\n");
+    // Main program loop:
     while (true) {
         // Update the mode switch's position, run the current mode's code, respond to any new API calls, and update the watchdog
         float switchPos = pwm_read(config.pins0.inputSwitch, PWM_MODE_DEG);

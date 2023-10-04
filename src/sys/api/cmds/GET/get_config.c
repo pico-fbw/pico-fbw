@@ -20,7 +20,7 @@ uint api_get_config(const char *cmd, const char *args) {
         switch (config_getSectionType(section)) {
             case SECTION_TYPE_FLOAT: {
                 float k = config_getFloat(section, key);
-                if (k != infinityf()) {
+                if (k != INFINITY) {
                     printf("{\"key\":%f}\n", k);
                 } else {
                     return 400;

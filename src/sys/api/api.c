@@ -8,13 +8,14 @@
 #include <stdlib.h>
 #include "pico/types.h"
 
+#include "../../io/serial.h"
+
 #include "cmds/cmds.h"
 
 #include "api.h"
 
 void api_poll() {
     char *line = stdin_read_line();
-    // Check if there has been input
     if (line != NULL) {
         if (strlen(line) < 1) {
             free(line);

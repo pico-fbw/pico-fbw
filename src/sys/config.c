@@ -408,7 +408,7 @@ bool config_save(bool validate) {
         config.general.wiflyUsePass,
         config.general.skipCalibration
     }; // C already casts all elements in the array to a float so there's no need to explicitly cast them
-    flash_writeFloat(FLOAT_SECTOR_CONFIG_GENERAL, general);
+    flash_writeFloat(FLOAT_SECTOR_CONFIG_GENERAL, general, false);
 
     // ConfigControl
     float control[FLOAT_SECTOR_SIZE] = {
@@ -420,7 +420,7 @@ bool config_save(bool validate) {
         config.control.throttleDetentMax,
         config.control.throttleMaxTime
     };
-    flash_writeFloat(FLOAT_SECTOR_CONFIG_CONTROL, control);
+    flash_writeFloat(FLOAT_SECTOR_CONFIG_CONTROL, control, false);
 
     // ConfigLimits
     float limits[FLOAT_SECTOR_SIZE] = {
@@ -433,7 +433,7 @@ bool config_save(bool validate) {
         config.limits.maxRudDeflection,
         config.limits.maxElevonDeflection
     };
-    flash_writeFloat(FLOAT_SECTOR_CONFIG_LIMITS, limits);
+    flash_writeFloat(FLOAT_SECTOR_CONFIG_LIMITS, limits, false);
 
     // ConfigFlyingWing
     float flyingWing[FLOAT_SECTOR_SIZE] = {
@@ -441,7 +441,7 @@ bool config_save(bool validate) {
         config.flyingWing.ailMixingBias,
         config.flyingWing.elevMixingBias
     };
-    flash_writeFloat(FLOAT_SECTOR_CONFIG_FLYINGWING, flyingWing);
+    flash_writeFloat(FLOAT_SECTOR_CONFIG_FLYINGWING, flyingWing, false);
 
     // ConfigPins0
     float pins0[FLOAT_SECTOR_SIZE] = {
@@ -453,7 +453,7 @@ bool config_save(bool validate) {
         config.pins0.servoRud,
         config.pins0.inputSwitch
     };
-    flash_writeFloat(FLOAT_SECTOR_CONFIG_PINS0, pins0);
+    flash_writeFloat(FLOAT_SECTOR_CONFIG_PINS0, pins0, false);
 
     // ConfigPins1
     float pins1[FLOAT_SECTOR_SIZE] = {
@@ -465,7 +465,7 @@ bool config_save(bool validate) {
         config.pins1.reversePitch,
         config.pins1.reverseYaw
     };
-    flash_writeFloat(FLOAT_SECTOR_CONFIG_PINS1, pins1);
+    flash_writeFloat(FLOAT_SECTOR_CONFIG_PINS1, pins1, false);
 
     // ConfigSensors
     float sensors[FLOAT_SECTOR_SIZE] = {
@@ -478,7 +478,7 @@ bool config_save(bool validate) {
         config.sensors.gpsTx,
         config.sensors.gpsRx
     };
-    flash_writeFloat(FLOAT_SECTOR_CONFIG_SENSORS, sensors);
+    flash_writeFloat(FLOAT_SECTOR_CONFIG_SENSORS, sensors, false);
 
     // ConfigPID0
     float rollPitchPID[FLOAT_SECTOR_SIZE] = {
@@ -491,7 +491,7 @@ bool config_save(bool validate) {
         config.pid0.pitchIntegMax,
         config.pid0.pitchKt
     };
-    flash_writeFloat(FLOAT_SECTOR_CONFIG_PID0, rollPitchPID);
+    flash_writeFloat(FLOAT_SECTOR_CONFIG_PID0, rollPitchPID, false);
 
     // ConfigPID1
     float yawPID[FLOAT_SECTOR_SIZE] = {
@@ -503,7 +503,7 @@ bool config_save(bool validate) {
         config.pid1.yawIntegMax,
         config.pid1.yawKt
     };
-    flash_writeFloat(FLOAT_SECTOR_CONFIG_PID1, yawPID);
+    flash_writeFloat(FLOAT_SECTOR_CONFIG_PID1, yawPID, false);
 
     // ConfigDebug
     float debug[FLOAT_SECTOR_SIZE] = {
@@ -516,11 +516,13 @@ bool config_save(bool validate) {
         config.debug.dump_network,
         config.debug.watchdog_timeout_ms
     };
-    flash_writeFloat(FLOAT_SECTOR_CONFIG_DEBUG, debug);
+    flash_writeFloat(FLOAT_SECTOR_CONFIG_DEBUG, debug, false);
     
     // ConfigWifly -- uses StringsSectors not floats
-    flash_writeString(STRING_SECTOR_CONFIG_WIFLY_SSID, config.wifly.ssid);
-    flash_writeString(STRING_SECTOR_CONFIG_WIFLY_PASS, config.wifly.pass);
+    flash_writeString(STRING_SECTOR_CONFIG_WIFLY_SSID, config.wifly.ssid, false);
+    flash_writeString(STRING_SECTOR_CONFIG_WIFLY_PASS, config.wifly.pass, false);
+
+    flash_flushCache(); // All sector data is now cached, flush into flash
 
     return true;
 }
@@ -746,7 +748,7 @@ float config_getFloat(const char* section, const char* key) {
             return (float)config.debug.watchdog_timeout_ms;
         }
     }
-    return infinityf();
+    return INFINITY;
 }
 
 void config_getAllFloats(float values[], size_t numValues) {
@@ -771,7 +773,7 @@ void config_getAllFloats(float values[], size_t numValues) {
         values[index++] = config.control.throttleDetentMCT;
         values[index++] = config.control.throttleDetentMax;
         values[index++] = (float)config.control.throttleMaxTime;
-        values[index++] = infinityf();
+        values[index++] = INFINITY;
 
         // ConfigLimits
         values[index++] = config.limits.rollLimit;
@@ -787,11 +789,11 @@ void config_getAllFloats(float values[], size_t numValues) {
         values[index++] = config.flyingWing.elevonMixingGain;
         values[index++] = config.flyingWing.ailMixingBias;
         values[index++] = config.flyingWing.elevMixingBias;
-        values[index++] = infinityf();
-        values[index++] = infinityf();
-        values[index++] = infinityf();
-        values[index++] = infinityf();
-        values[index++] = infinityf();
+        values[index++] = INFINITY;
+        values[index++] = INFINITY;
+        values[index++] = INFINITY;
+        values[index++] = INFINITY;
+        values[index++] = INFINITY;
 
         // ConfigPins0
         values[index++] = (float)config.pins0.inputAil;
@@ -801,7 +803,7 @@ void config_getAllFloats(float values[], size_t numValues) {
         values[index++] = (float)config.pins0.inputRud;
         values[index++] = (float)config.pins0.servoRud;
         values[index++] = (float)config.pins0.inputSwitch;
-        values[index++] = infinityf();
+        values[index++] = INFINITY;
 
         // ConfigPins1
         values[index++] = (float)config.pins1.inputThrottle;
@@ -811,7 +813,7 @@ void config_getAllFloats(float values[], size_t numValues) {
         values[index++] = (float)config.pins1.reverseRoll;
         values[index++] = (float)config.pins1.reversePitch;
         values[index++] = (float)config.pins1.reverseYaw;
-        values[index++] = infinityf();
+        values[index++] = INFINITY;
 
         // ConfigSensors
         values[index++] = (float)config.sensors.imuModel;
@@ -841,7 +843,7 @@ void config_getAllFloats(float values[], size_t numValues) {
         values[index++] = config.pid1.yawIntegMin;
         values[index++] = config.pid1.yawIntegMax;
         values[index++] = config.pid1.yawKt;
-        values[index++] = infinityf();
+        values[index++] = INFINITY;
 
         // ConfigDebug
         values[index++] = (float)config.debug.debug;
@@ -855,7 +857,7 @@ void config_getAllFloats(float values[], size_t numValues) {
 
         // Fill any remaining values
         while (index < numValues) {
-            values[index++] = infinityf();
+            values[index++] = INFINITY;
         }
     }
 }

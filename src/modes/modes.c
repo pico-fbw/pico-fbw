@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include "pico/time.h"
 
-#include "../io/error.h"
 #include "../io/gps.h"
 #include "../io/imu.h"
 #include "../io/servo.h"
@@ -20,6 +19,7 @@
 #include "tune.h"
 
 #include "../sys/config.h"
+#include "../sys/log.h"
 
 #include "modes.h"
 
@@ -48,7 +48,6 @@ void toMode(Mode newMode) {
             break;
     }
     if (imuDataSafe) {
-        error_clear(ERROR_IMU, false);
         switch (newMode) {
             case MODE_DIRECT:
                 if (config.debug.debug_fbw) printf("[modes] entering direct mode\n");
@@ -114,7 +113,7 @@ void toMode(Mode newMode) {
         }
     } else {
         if (config.debug.debug_fbw) printf("[modes] entering direct mode\n");
-        error_throw(ERROR_IMU, ERROR_LEVEL_ERR, 250, 0, true, "Entering direct mode due to an IMU failure!");
+        log_message(ERROR, "IMU has failed, entering direct mode!", 250, 0, true);
         currentMode = MODE_DIRECT;
     }
 }
@@ -158,7 +157,7 @@ void setGPSSafe(bool state) {
         gpsDataSafe = state;
         if (state) {
             if (config.debug.debug_fbw) printf("[modes] GPS set as safe\n");
-            error_clear(ERROR_GPS, false); // Clear any GPS errors
+            log_clear(INFO);
         } else {
             if (config.debug.debug_fbw) printf("[modes] GPS set as unsafe\n");
             if (currentMode == MODE_AUTO || currentMode == MODE_HOLD) {

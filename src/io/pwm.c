@@ -21,10 +21,10 @@
 #include "hardware/irq.h"
 #include "hardware/pio.h"
 
-#include "error.h"
 #include "flash.h"
 
 #include "../sys/config.h"
+#include "../sys/log.h"
 
 #include "pwm.h"
 #include "pwm.pio.h"
@@ -91,7 +91,7 @@ static void setup_sm(const PIO pio, const uint offset, uint pin) {
         pio_sm_set_enabled(pio, sm, true);
     } else {
         // A state machine was not available, this is fatal because PWM manages the mode switch and control surfaces...maybe important
-        error_throw(ERROR_PWM, ERROR_LEVEL_FATAL, 500, 0, true, "No usable state machines were available for PWM!");
+        log_message(FATAL, "No usable state machines available!", 500, 0, true);
     }
 }
 
@@ -106,7 +106,7 @@ void pwm_enable(uint pin_list[], uint num_pins) {
         irq_set_enabled(PIO0_IRQ_0, true);
         pio0_hw->inte0 = PIO_IRQ0_INTE_SM0_BITS | PIO_IRQ0_INTE_SM1_BITS | PIO_IRQ0_INTE_SM2_BITS | PIO_IRQ0_INTE_SM3_BITS;
     } else {
-        error_throw(ERROR_PWM, ERROR_LEVEL_FATAL, 500, 0, true, "Failed to load PWM program into PIO0!");
+        log_message(FATAL, "Failed to load PIO0!", 500, 0, true);
     }
 
     // If there are more than 4 pins, PIO1 must also be used
@@ -121,7 +121,7 @@ void pwm_enable(uint pin_list[], uint num_pins) {
             irq_set_enabled(PIO1_IRQ_0, true);
             pio1_hw->inte0 = PIO_IRQ0_INTE_SM0_BITS | PIO_IRQ0_INTE_SM1_BITS | PIO_IRQ0_INTE_SM2_BITS | PIO_IRQ0_INTE_SM3_BITS;
         } else {
-            error_throw(ERROR_PWM, ERROR_LEVEL_FATAL, 500, 0, true, "Failed to load PWM program into PIO1!");
+            log_message(FATAL, "Failed to load PIO1!", 500, 0, true);
         }
     }
     gb_num_pins = num_pins;
@@ -190,7 +190,7 @@ float pwm_read(uint pin, PWMMode mode) {
 bool pwm_calibrate(uint pin_list[], uint num_pins, float deviations[], uint num_samples, uint sample_delay_ms, uint run_times) {
     if (config.debug.debug_fbw) printf("[pwm] starting pwm calibration\n");
     if (gb_num_pins < 1) return false; // Ensure PWM has been initialized
-    error_throw(ERROR_PWM, ERROR_LEVEL_STATUS, 100, 0, false, ""); // Start blinking LED to signify we are calibrating
+    log_message(INFO, "Starting PWM calibration...", 100, 0, false);
     // Create an array where we will arrange our data to later write
     // The first position holds a flag to indicate that calibration has been completed; subsequent values will hold the calibration data
     float calibration_data[FLOAT_SECTOR_SIZE] = {FLAG_PWM};
@@ -252,8 +252,8 @@ bool pwm_calibrate(uint pin_list[], uint num_pins, float deviations[], uint num_
     }
     calibration_data[6] = (float)config.general.controlMode;
     if (config.debug.debug_fbw) printf("[pwm] writing calibration data to flash\n");
-    flash_writeFloat(FLOAT_SECTOR_PWM, calibration_data);
-    error_clear(ERROR_PWM, false);
+    flash_writeFloat(FLOAT_SECTOR_PWM, calibration_data, true);
+    log_clear(INFO);
     return true;
 }
 

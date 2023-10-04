@@ -10,9 +10,10 @@
 #include "GET/get_flash.h"
 #include "GET/get_fplan.h"
 #include "GET/get_info.h"
+#include "GET/get_logs.h"
 #include "GET/get_mode.h"
 #include "GET/get_pid.h"
-#include "GET/get_sensor.h"
+#include "GET/get_sensors.h"
 
 #include "SET/set_config.h"
 #include "SET/set_fplan.h"
@@ -32,7 +33,6 @@
 #include "cmds.h"
 
 uint api_handle_get(const char *cmd, const char *args) {
-    // TODO: GET_STATUS command (returns current error/statuses, if any)
     if (strcasecmp(cmd, "GET_CONFIG") == 0) {
         return api_get_config(cmd, args);
     } else if (strcasecmp(cmd, "GET_FLASH") == 0) {
@@ -41,12 +41,14 @@ uint api_handle_get(const char *cmd, const char *args) {
         return api_get_fplan(cmd, args);
     } else if (strcasecmp(cmd, "GET_INFO") == 0) {
         return api_get_info(cmd, args);
+    } else if (strcasecmp(cmd, "GET_LOGS") == 0) {
+        return api_get_logs(cmd, args);
     } else if (strcasecmp(cmd, "GET_MODE") == 0) {
         return api_get_mode(cmd, args);
     } else if (strcasecmp(cmd, "GET_PID") == 0) {
         return api_get_pid(cmd, args);
-    } else if (strcasecmp(cmd, "GET_SENSOR") == 0) {
-        return api_get_sensor(cmd, args);
+    } else if (strcasecmp(cmd, "GET_SENSORS") == 0) {
+        return api_get_sensors(cmd, args);
     } else {
         return 404;
     }
@@ -55,17 +57,17 @@ uint api_handle_get(const char *cmd, const char *args) {
 
 uint api_handle_set(const char *cmd, const char *args) {
     if (strcasecmp(cmd, "SET_CONFIG") == 0) {
-        api_set_config(cmd, args);
+        return api_set_config(cmd, args);
     } else if (strcasecmp(cmd, "SET_FPLAN") == 0) {
-        api_set_fplan(cmd, args);
+        return api_set_fplan(cmd, args);
     } else if (strcasecmp(cmd, "SET_MODE") == 0) {
-        api_set_mode(cmd, args);
+        return api_set_mode(cmd, args);
     } else if (strcasecmp(cmd, "SET_PID") == 0) {
-        api_set_pid(cmd, args);
+        return api_set_pid(cmd, args);
     } else if (strcasecmp(cmd, "SET_SETPOINTS") == 0) {
-        api_set_setpoints(cmd, args);
+        return api_set_setpoints(cmd, args);
     } else if (strcasecmp(cmd, "SET_TARGET") == 0) {
-        api_set_target(cmd, args);
+        return api_set_target(cmd, args);
     } else {
         return 404;
     }
@@ -75,7 +77,7 @@ uint api_handle_set(const char *cmd, const char *args) {
 uint api_handle_test(const char *cmd, const char *args) {
     // TODO: tests for FLASH, PWM, IMU, GPS, and ALL (diagnostic)
     if (strcasecmp(cmd, "TEST_SERVO") == 0) {
-        api_test_servo(cmd, args);
+        return api_test_servo(cmd, args);
     } else {
         return 404;
     }

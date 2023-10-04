@@ -21,7 +21,6 @@
 #include "hardware/i2c.h"
 #include "hardware/gpio.h"
 
-#include "error.h"
 #include "flash.h"
 #include "platform.h"
 
@@ -30,6 +29,7 @@
 #include "../modes/modes.h"
 
 #include "../sys/config.h"
+#include "../sys/log.h"
 
 #include "imu.h"
 
@@ -54,7 +54,7 @@ typedef enum EulerAxis {
     EULER_AXIS_Z
 } EulerAxis;
 
-/* All IMUs */
+/* --- All IMUs --- */
 
 // These are all populated when imu_init() is called
 static IMUModel imuModel = IMU_MODEL_UNKNOWN;
@@ -81,7 +81,7 @@ static inline int imu_write(unsigned char addr, unsigned char val) {
 static inline IMUAxis getCalibrationAxis(EulerAxis axis) { return (IMUAxis)(flash_readFloat(FLOAT_SECTOR_IMU_MAP, (uint)axis)); }
 static inline bool shouldCompensateAxis(EulerAxis axis) { return (bool)(flash_readFloat(FLOAT_SECTOR_IMU_MAP, (uint)(axis + 3))); }
 
-/* BNO055 only */
+/* --- BNO055 only --- */
 
 /**
  * Changes the working mode of the BNO055.
@@ -179,7 +179,7 @@ static int bno_saveCalibrationData(int16_t *data, bool mag) {
     }
 }
 
-/* MPU6050 only */
+/* --- MPU6050 only --- */
 
 static uint16_t fifoCount;
 static unsigned char fifoBuf[DMP_PACKET_SIZE];
@@ -438,7 +438,7 @@ Angles imu_getAngles() {
         default:
             if (config.debug.debug_fbw) printf("[imu] ERROR: unknown IMU model!\n");
             setIMUSafe(false);
-            return (Angles){0};
+            return (Angles){INFINITY};
     }
     
     // Map IMU axes to aircraft axes with correct directions
@@ -481,7 +481,7 @@ Angles imu_getAngles() {
     if (roll == -200.0f || pitch == -200.0f || yaw == -200.0f) {
         if (config.debug.debug_imu) printf("[imu] angle mapping error occured!\n");
         setIMUSafe(false);
-        return (Angles){0};
+        return (Angles){INFINITY};
     }
 
     return (Angles){roll, pitch, yaw};
@@ -495,7 +495,7 @@ bool imu_calibrate() {
         if (config.debug.debug_fbw) printf("[imu] BNO055 calibration status: SYS: %d/3, GYR: %d/3, ACC: %d/3, MAG: %d/3\n", sys, gyr, acc, mag);
         if (sys < 3) {
             if (config.debug.debug_fbw) printf("[imu] sensor calibration must be performed!\n");
-            error_throw(ERROR_IMU, ERROR_LEVEL_STATUS, 500, 250, true, "");
+            log_message(INFO, "Sensor calibration must be performed!", 500, 250, true);
             while (sys < 3 || acc < 1) {
                 bno_getCalibrationStatus(&sys, &gyr, &acc, &mag);
                 if (config.debug.debug_fbw) printf("%d/3, %d/3, %d/3, %d/3\n", sys, gyr, acc, mag);
@@ -515,8 +515,9 @@ bool imu_calibrate() {
                 for (uint i = 0; i < (sizeof(data) / sizeof(int16_t)) - FLOAT_SECTOR_SIZE; i++) {
                     imu1[i] = (float)data[i + FLOAT_SECTOR_SIZE];
                 }
-                flash_writeFloat(FLOAT_SECTOR_IMU_CFG0, imu0);
-                flash_writeFloat(FLOAT_SECTOR_IMU_CFG1, imu1);
+                flash_writeFloat(FLOAT_SECTOR_IMU_CFG0, imu0, false);
+                flash_writeFloat(FLOAT_SECTOR_IMU_CFG1, imu1, false);
+                flash_flushCache();
             } else {
                 if (config.debug.debug_fbw) printf("[imu] failed to read BNO055 calibration data!\n");
                 return false;
@@ -532,7 +533,7 @@ bool imu_calibrate() {
             timeout = bno_saveCalibrationData(test, true);
             if (timeout != PICO_ERROR_GENERIC && timeout != PICO_ERROR_TIMEOUT) {
                 if (config.debug.debug_fbw) printf("[imu] BNO055 calibration data saved!\n");
-                error_clear(ERROR_IMU, false);
+                log_clear(INFO);
                 bno_changeMode(MODE_NDOF); // Change back to NDOF mode for next step
             } else {
                 if (config.debug.debug_fbw) printf("[imu] failed to test save BNO055 calibration data!\n");
@@ -541,11 +542,21 @@ bool imu_calibrate() {
         }
     }
     if (config.debug.debug_fbw) printf("[imu] starting imu angle mapping calibration\n");
-    error_throw(ERROR_IMU, ERROR_LEVEL_STATUS, 500, 100, true, ""); // Blink for calibration status
     float calibration_data[FLOAT_SECTOR_SIZE] = {FLAG_IMU, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}; // {flag, x, y, z, x_dir, y_dir, z_dir}
     // Complete all axes' calibration
     IMUCalibrationState state = CALIBRATION_STATE_ROLL;
     while (state != CALIBRATION_STATE_COMPLETE) {
+        switch (state) {
+            case CALIBRATION_STATE_ROLL:
+                log_message(INFO, "Calibration: roll right...", 500, 100, true);
+                break;
+            case CALIBRATION_STATE_PITCH:
+                log_message(INFO, "Calibration: pitch up...", 500, 100, true);
+                break;
+            case CALIBRATION_STATE_YAW:
+                log_message(INFO, "Calibration: yaw left...", 500, 100, true);
+                break;
+        }
         EulerAxis movedAxis = EULER_AXIS_NONE;
         float movedAngle;
         // Loop until the user has moved the IMU to the next axis
@@ -592,26 +603,25 @@ bool imu_calibrate() {
         }
 
         // 3 blinks to signify an axis has been recognized
-        error_throw(ERROR_IMU, ERROR_LEVEL_STATUS, 250, 100, true, "");
+        log_message(INFO, "Axis recognized! Return to center.", 250, 100, true);
         absolute_time_t resume = make_timeout_time_ms(750);
         while (!time_reached(resume)) {
             // We need to ensure the angles are always being fetched as the MPU isn't async, so we can't simply sleep
             imu_getRawAngles();
         }
-        error_clear(ERROR_IMU, false);
+        log_clear(INFO);
         // Wait for user to re-center, and then advance to the next axis
         resume = make_timeout_time_ms(2000);
         while (!time_reached(resume)) {
             imu_getRawAngles();
         }
-        error_throw(ERROR_IMU, ERROR_LEVEL_STATUS, 500, 100, true, "");
         state++;
     }
-    error_clear(ERROR_IMU, false);
+    log_clear(INFO);
 
     // Check data before writing to flash
     if (calibration_data[1] != calibration_data[2] && calibration_data[1] != calibration_data[3] && calibration_data[2] != calibration_data[1] && calibration_data[2] != calibration_data[3] && calibration_data[3] != calibration_data[1] && calibration_data[3] != calibration_data[2]) {
-        flash_writeFloat(FLOAT_SECTOR_IMU_MAP, calibration_data);
+        flash_writeFloat(FLOAT_SECTOR_IMU_MAP, calibration_data, true);
         if (config.debug.debug_fbw) printf("[imu] imu angle mapping calibration complete\n");
         return true;
     } else {

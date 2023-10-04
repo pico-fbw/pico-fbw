@@ -135,8 +135,6 @@ typedef enum StringSector {
 // The physical sector that the virtual string "sectors" are placed in
 #define STRING_PHYSECTOR 1
 
-#define FLASH_MUST_CACHE 1 // If set to 1, the flash cache MUST be run before accessing the flash!
-
 /**
  * Erases only the flash sectors that the program actually uses, to save flash wear cycles and time.
 */
@@ -155,8 +153,10 @@ uint flash_cache();
  * This WILL overwrite ALL data stored in the given sector!
  * @param sector the "sector" to write to
  * @param data pointer to array of data to write (must be a float array with size of CONFIG_SECTOR_SIZE)
+ * @param toFlash whether to write directly to flash or to RAM cache
+ * @note if toFlash is false, flash_flushCache() must be called to flush the changes to flash.
 */
-void flash_writeFloat(FloatSector sector, float data[]);
+void flash_writeFloat(FloatSector sector, float data[], bool toFlash);
 
 /**
  * Reads back one float value from a previously written FLOAT data array.
@@ -173,7 +173,7 @@ float flash_readFloat(FloatSector sector, uint val);
  * @param sector the "sector" to write to
  * @param data pointer to array of data to write (must be a char array with size of STRING_SECTOR_SIZE)
 */
-void flash_writeString(StringSector sector, char data[]);
+void flash_writeString(StringSector sector, char data[], bool toFlash);
 
 /**
  * Reads back a string from a previously written STRING data array.
@@ -182,6 +182,12 @@ void flash_writeString(StringSector sector, char data[]);
  * @note This can return NULL if no data has been written yet.
 */
 const char *flash_readString(StringSector sector);
+
+/**
+ * Flushes the current contents of RAM cache to flash.
+ * @note This will only work if FLASH_MUST_CACHE is set to 1.
+*/
+void flash_flushCache();
 
 #define FLAG_BOOT 3.1305210f
 #define FLAG_PWM 0.5f

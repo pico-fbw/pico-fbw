@@ -1,25 +1,26 @@
 add_library(fbw_api
     api.c
     cmds/cmds.c
-    cmds/get/get_config.c
-    cmds/get/get_flash.c
-    cmds/get/get_fplan.c
-    cmds/get/get_info.c
-    cmds/get/get_mode.c
-    cmds/get/get_pid.c
-    cmds/get/get_sensor.c
-    cmds/misc/about.c
-    cmds/misc/help.c
-    cmds/misc/ping.c
-    cmds/misc/reboot.c
-    cmds/misc/reset.c
-    cmds/set/set_config.c
-    cmds/set/set_fplan.c
-    cmds/set/set_mode.c
-    cmds/set/set_pid.c
-    cmds/set/set_setpoints.c
-    cmds/set/set_target.c
-    cmds/test/test_servo.c
+    cmds/GET/get_config.c
+    cmds/GET/get_flash.c
+    cmds/GET/get_fplan.c
+    cmds/GET/get_info.c
+    cmds/GET/get_logs.c
+    cmds/GET/get_mode.c
+    cmds/GET/get_pid.c
+    cmds/GET/get_sensors.c
+    cmds/MISC/about.c
+    cmds/MISC/help.c
+    cmds/MISC/ping.c
+    cmds/MISC/reboot.c
+    cmds/MISC/reset.c
+    cmds/SET/set_config.c
+    cmds/SET/set_fplan.c
+    cmds/SET/set_mode.c
+    cmds/SET/set_pid.c
+    cmds/SET/set_setpoints.c
+    cmds/SET/set_target.c
+    cmds/TEST/test_servo.c
 )
 
 target_link_libraries(fbw_api

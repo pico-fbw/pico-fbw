@@ -4,15 +4,6 @@
 #define WATCHDOG_TIMEOUT_MAGIC 0xAC0B3DED
 #define WATCHDOG_FORCE_MAGIC 0xC0DE3298
 
-#define MARBE_I i2c1
-#define MARBE_D 18
-#define MARBE_C 19
-#define MARBE_FKZ 400
-#define MARBE_R 0x74
-#define MARBE_TUS 10000
-
-void marbe_s(uint8_t l1, uint8_t l2, uint8_t l3, uint8_t l4, uint8_t l5, uint8_t l6);
-
 typedef enum Platform {
     PLATFORM_UNKNOWN,
     PLATFORM_PICO,
@@ -37,13 +28,22 @@ typedef enum RebootType {
 void platform_boot_begin();
 
 /**
+ * Signal to the platform at what progress% the boot sequence is at.
+ * @param progress the progress of the boot sequence (from 0-100)
+ * @param message the message to display
+ * @note The message should be short (at most ~32 chars) to fit nicely.
+*/
+void platform_boot_setProgress(float progress, const char *message);
+
+/**
  * Signal to the platform that the boot sequence is complete.
 */
 void platform_boot_complete();
 
 /**
  * Signal to the platform that a reboot is required.
- * @param type the type of reboot to perform.
+ * @param type the type of reboot to perform
+ * @note This function will not return, the function will continue to loop until the processor successfully reboots.
 */
 void platform_reboot(RebootType type);
 
