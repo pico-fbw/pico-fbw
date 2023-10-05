@@ -11,6 +11,8 @@
 #include <string.h>
 #include "pico/types.h"
 
+#include "info.h"
+
 #include "config.h"
 
 Config config;
@@ -242,8 +244,12 @@ bool config_load(ConfigSource source) {
             config.pid1.yawKt = flash_readFloat(FLOAT_SECTOR_CONFIG_PID1, 6);
 
             // ConfigDebug
-            #if defined(LIB_PICO_STDIO_USB) || defined(LIB_PICO_STDIO_UART)
+            #if DEBUG_BUILD
                 config.debug.debug = true;
+            #else
+                config.debug.debug = false;
+            #endif
+            #if defined(LIB_PICO_STDIO_USB) || defined(LIB_PICO_STDIO_UART)
                 config.debug.debug_fbw = (bool)flash_readFloat(FLOAT_SECTOR_CONFIG_DEBUG, 1);
                 config.debug.debug_imu = (bool)flash_readFloat(FLOAT_SECTOR_CONFIG_DEBUG, 2);
                 config.debug.debug_gps = (bool)flash_readFloat(FLOAT_SECTOR_CONFIG_DEBUG, 3);
@@ -253,7 +259,6 @@ bool config_load(ConfigSource source) {
                 config.debug.watchdog_timeout_ms = (uint32_t)flash_readFloat(FLOAT_SECTOR_CONFIG_DEBUG, 7);
             #else
                 // All debugging is automatically disabled when stdio is not enabled
-                config.debug.debug = false;
                 config.debug.debug_fbw = false;
                 config.debug.debug_imu = false;
                 config.debug.debug_gps = false;
@@ -361,8 +366,12 @@ bool config_load(ConfigSource source) {
             config.pid1.yawKt = YAW_KT_DEF;
 
             // ConfigDebug
-            #if defined(LIB_PICO_STDIO_USB) || defined(LIB_PICO_STDIO_UART)
+            #if DEBUG_BUILD
                 config.debug.debug = true;
+            #else
+                config.debug.debug = false;
+            #endif
+            #if defined(LIB_PICO_STDIO_USB) || defined(LIB_PICO_STDIO_UART)
                 config.debug.debug_fbw = DEBUG_FBW_DEF;
                 config.debug.debug_imu = DEBUG_IMU_DEF;
                 config.debug.debug_gps = DEBUG_GPS_DEF;
@@ -370,7 +379,6 @@ bool config_load(ConfigSource source) {
                 config.debug.debug_network = DEBUG_NETWORK_DEF;
                 config.debug.dump_network = DUMP_NETWORK_DEF;
             #else
-                config.debug.debug = false;
                 config.debug.debug_fbw = false;
                 config.debug.debug_imu = false;
                 config.debug.debug_gps = false;

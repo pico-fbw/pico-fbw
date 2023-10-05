@@ -32,6 +32,7 @@ void mode_direct() {
         case CTRLMODE_FLYINGWING_ATHR:
             esc_set(config.pins1.escThrottle, pwm_read(config.pins1.inputThrottle, PWM_MODE_ESC));
         case CTRLMODE_FLYINGWING:
+            // TODO: flying wing mixing here
             servo_set(config.pins1.servoElevonL, pwm_read(config.pins0.inputAil, PWM_MODE_DEG));
             servo_set(config.pins1.servoElevonR, pwm_read(config.pins0.inputElev, PWM_MODE_DEG));
             break;
