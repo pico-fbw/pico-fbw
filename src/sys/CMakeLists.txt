@@ -11,6 +11,7 @@ target_link_libraries(fbw_sys
     fbw_lib
     fbw_modes
     hardware_gpio
+    hardware_watchdog
     pico_base
     pico_binary_info
     pico_time

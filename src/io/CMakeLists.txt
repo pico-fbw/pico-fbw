@@ -1,4 +1,5 @@
 add_library(fbw_io
+    display.c
     esc.c
     flash.c
     gps.c
@@ -28,6 +29,7 @@ target_link_libraries(fbw_io
     hardware_watchdog
     pico_base
     pico_bootrom
+    pico_platform
     pico_stdio
     pico_time
 )

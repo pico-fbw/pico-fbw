@@ -15,6 +15,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include "pico/platform.h"
 #include "pico/time.h"
 #include "pico/types.h"
 
@@ -162,7 +163,7 @@ static inline float pwmOffsetOf(uint pin) {
 */
 static inline float readRaw(uint pin, PWMMode mode) {
     // Find the GPIO pin's state machine
-    for (uint8_t i = 0; i < (sizeof(states) / sizeof(states[0])); i++) {
+    for (uint8_t i = 0; i < count_of(states); i++) {
         if (states[i].pin == pin) {
             switch (mode) {
                 case PWM_MODE_DEG:

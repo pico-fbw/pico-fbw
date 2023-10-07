@@ -1,4 +1,4 @@
-// Huge thank-you to Rasperry Pi (as a part of the Pico examples library) for providing much of the code used in Wi-Fly!
+// Huge thank-you to Raspberry Pi (as a part of the Pico examples library) for providing much of the code used in Wi-Fly!
 
 /**
  * Copyright (c) 2022 Raspberry Pi (Trading) Ltd.
@@ -17,6 +17,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "pico/config.h"
+#include "pico/platform.h"
 #include "pico/types.h"
 #ifdef RASPBERRYPI_PICO_W
     #include "pico/cyw43_arch.h"
@@ -170,7 +171,7 @@ bool wifly_parseFplan(const char *fplan) {
         jsmn_parser parser;
         jsmntok_t tokens[strlen(decoded)];
         jsmn_init(&parser);
-        int token_count = jsmn_parse(&parser, decoded, strlen(decoded), tokens, sizeof(tokens)/sizeof(tokens[0]));
+        int token_count = jsmn_parse(&parser, decoded, strlen(decoded), tokens, count_of(tokens));
         if (token_count < 0) {
             if (config.debug.debug_fbw) printf("[wifly] ERROR: no valid tokens found!\n");
             fplanStatus = WIFLY_ERR_PARSE;

@@ -15,6 +15,7 @@ target_link_libraries(fbw_wifly
     fbw_lib
     fbw_sys
     pico_base
+    pico_platform
     pico_stdlib
 )
 if ("$CACHE{PICO_BOARD}" STREQUAL "pico_w")
