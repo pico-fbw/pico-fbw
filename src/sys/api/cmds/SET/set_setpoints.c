@@ -3,6 +3,7 @@
  * Licensed under the GNU GPL-3.0
 */
 
+#include <math.h>
 #include <stdio.h>
 #include "pico/types.h"
 
@@ -17,9 +18,9 @@ uint api_set_setpoints(const char *cmd, const char *args) {
     if (getCurrentMode() == MODE_NORMAL) {
         float roll, pitch, yaw;
         if ((sscanf(args, "%f %f %f", &roll, &pitch, &yaw) >= 3) &&
-        (roll > config.limits.rollLimitHold || roll < -config.limits.rollLimitHold) &&
-        (pitch > config.limits.pitchUpperLimit || pitch < config.limits.pitchLowerLimit) &&
-        (yaw > config.limits.maxRudDeflection || yaw < -config.limits.maxRudDeflection)) {
+        fabsf(roll) > config.limits.rollLimitHold &&
+        fabsf(pitch) > config.limits.pitchUpperLimit &&
+        fabsf(yaw) > config.limits.maxRudDeflection) {
             if (mode_normalSetSetpoints(roll, pitch, yaw)) {
                 return 200;
             } else {

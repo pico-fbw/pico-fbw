@@ -3,6 +3,7 @@
  * Licensed under the GNU GPL-3.0
 */
 
+#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -67,7 +68,7 @@ void flight_update(double roll, double pitch, double yaw, bool override) {
     if (config.sensors.gpsEnabled) gps = gps_getData();
 
     // Check flight envelope for irregularities
-    if (aircraft.roll > 72 || aircraft.roll < -72 || aircraft.pitch > 35 || aircraft.pitch < -20) {
+    if (fabsf(aircraft.roll) > 72 || aircraft.pitch > 35 || aircraft.pitch < -20) {
         if (config.debug.debug_fbw) printf("WARNING: flight envelope exceeded! (roll: %f, pitch: %f, yaw: %f)\n",
         aircraft.roll, aircraft.pitch, aircraft.yaw);
         setIMUSafe(false);
@@ -84,7 +85,7 @@ void flight_update(double roll, double pitch, double yaw, bool override) {
                 // Yaw override (raw)
                 yawOutput = yaw;
                 yawDamperOn = false;
-            } else if (roll > config.control.controlDeadband || roll < -config.control.controlDeadband) {
+            } else if (fabs(roll) > config.control.controlDeadband) {
                 // Yaw damper disabled (passthrough)
                 yawOutput = roll_c.out * config.control.rudderSensitivity;
                 yawDamperOn = false;

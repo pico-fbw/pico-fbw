@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include "pico/stdio.h"
 
+#include "hardware/uart.h"
+
 #include "serial.h"
 
 char *stdin_read_line() {
