@@ -40,6 +40,7 @@
 
 #include "../sys/config.h"
 #include "../sys/info.h"
+#include "../sys/log.h"
 
 #include "wifly.h"
 
@@ -337,6 +338,7 @@ bool wifly_parseFplan(const char *fplan) {
         strcpy(fplanJson, decoded);
         fplanStatus = status;
         if (fplanStatus == WIFLY_STATUS_OK || fplanStatus == WIFLY_STATUS_GPS_OFFSET || fplanStatus == WIFLY_WARN_FW_VERSION) {
+            log_message(INFO, "Flightplan recieved!", -1, 0, false);
             return true;
         } else {
             return false;

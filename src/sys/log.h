@@ -14,13 +14,14 @@ typedef struct LogEntry {
     LogType type;
     char msg[64];
     int code;
+    uint32_t pulse;
     uint64_t timestamp;
 } LogEntry;
 
-#define MSG_INFO "INFO"
-#define MSG_WARN "WARNING"
-#define MSG_ERROR "ERROR"
-#define MSG_FATAL "FATAL"
+#define MSG_INFO "INFO:"
+#define MSG_WARN "WARNING:"
+#define MSG_ERROR "ERROR:"
+#define MSG_FATAL "FATAL:"
 
 #define DISP_LOG_CONCAT "pico-fbw.org/"
 

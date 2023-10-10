@@ -159,7 +159,7 @@ static bool altOffsetCalibrated = false;
 bool gps_isAltOffsetCalibrated() { return altOffsetCalibrated; }
 
 int gps_calibrateAltOffset(uint num_samples) {
-    log_message(INFO, "Starting GPS altitude calibration...", 1000, 100, false);
+    log_message(INFO, "Calibrating altitude", 1000, 100, false);
     // GPS updates should be at 1Hz (give or take 2s) so if the calibration takes longer we cut it short
     absolute_time_t calibrationTimeout = make_timeout_time_ms((num_samples * 1000) + 2000);
     uint samples = 0;

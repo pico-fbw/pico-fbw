@@ -24,9 +24,6 @@ else ()
 endif ()
 if ("$CACHE{PICO_BOARD}" STREQUAL "pico_w")
     target_link_libraries(${PROJECT_NAME} pico_cyw43_arch_none)
-    # WIFLY_ENABLED now just basically serves as a stand-in for RASPBERRYPI_PICO_W; it cannot be manually enabled/disabled
-    # It's still used in a few places though, and the behavior could possibly be altered...
-    add_compile_definitions(WIFLY_ENABLED)
     include_directories(${CMAKE_CURRENT_LIST_DIR}/wifly)
 endif ()
 

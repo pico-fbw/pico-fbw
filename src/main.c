@@ -101,7 +101,6 @@ int main() {
                 if (config.debug.debug_fbw) printf("[boot] PWM calibration was completed for a different control mode!\n");
             case PWMCALIBRATION_INCOMPLETE:
                 if (config.debug.debug_fbw) printf("[boot] PWM calibration not found!\n");
-                sleep_ms(2000); // Wait a few moments for tx/rx to set itself up
                 if (config.debug.debug_fbw) printf("[boot] calibrating now...do not touch the transmitter!\n");
                 if (!pwm_calibrate(pins, num_pins, deviations, 2000, 2, 3) || pwm_isCalibrated() != 0) {
                     log_message(FATAL, "PWM calibration failed!", 500, 0, true);
@@ -139,14 +138,14 @@ int main() {
     if (config.general.skipCalibration) {
         if (config.debug.debug_fbw) printf("[boot] skipping IMU calibration, IMU will be disabled!\n");
     } else {
-        platform_boot_setProgress(70, "Initializing IMU");
+        platform_boot_setProgress(65, "Initializing IMU");
         if (imu_init() == 0) {
             if (imu_configure()) {
                 if (config.debug.debug_fbw) printf("[boot] IMU ok\n");
                 setIMUSafe(true);
                 if (config.debug.debug_fbw) printf("[boot] checking for IMU calibration\n");
                 if (!imu_isCalibrated()) {
-                    if (config.debug.debug_fbw) printf("[boot] IMU calibration not found! waiting a bit to begin...\n");
+                    if (config.debug.debug_fbw) printf("[boot] IMU calibration not found!\n");
                     sleep_ms(2000);
                     if (!imu_calibrate()) log_message(FATAL, "IMU calibration failed!", 1000, 0, true);
                 }
@@ -162,7 +161,7 @@ int main() {
     // GPS
     if (config.sensors.gpsEnabled) {
         while (time_us_64() < (1000 * 1000));
-        platform_boot_setProgress(85, "Initializing GPS");
+        platform_boot_setProgress(80, "Initializing GPS");
         if (gps_init()) {
             if (config.debug.debug_fbw) printf("[boot] GPS ok\n");
             // We don't set the GPS safe just yet, communications have been established but we are still unsure if the data is okay
@@ -174,13 +173,13 @@ int main() {
 
     // Wi-Fly
     #ifdef RASPBERRYPI_PICO_W
-        platform_boot_setProgress(95, "Initializing Wi-Fly");
+        platform_boot_setProgress(90, "Initializing Wi-Fly");
         wifly_init();
     #endif
 
     // Watchdog
-    platform_boot_setProgress(100, "Enabling watchdog");
-    watchdog_enable(config.debug.watchdog_timeout_ms, true);
+    platform_boot_setProgress(95, "Enabling watchdog");
+    // watchdog_enable(config.debug.watchdog_timeout_ms, true);
     if (platform_boot_type() == BOOT_WATCHDOG) {
         log_message(ERROR, "Watchdog rebooted!", 500, 150, true);
         if (config.debug.debug_fbw) printf("Please report this error! Only direct mode is available until the next reboot.\n");
@@ -192,6 +191,7 @@ int main() {
         }
     }
 
+    platform_boot_setProgress(100, "Done!");
     platform_boot_complete();
     // Main program loop:
     while (true) {

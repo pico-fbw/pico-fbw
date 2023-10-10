@@ -13,6 +13,7 @@
 
 #include "hardware/watchdog.h"
 
+#include "../io/display.h"
 #include "../io/platform.h"
 
 #include "config.h"
@@ -70,7 +71,7 @@ static inline void led_reset() {
 
 static inline int64_t led_pulse_callback(alarm_id_t id, void *data) {
     led_toggle();
-    return 0;
+    return 0; // Don't reschedule
 }
 
 static inline bool led_callback(struct repeating_timer *t) {
@@ -93,29 +94,73 @@ static void log_resetLast() {
     lastLogEntry.code = UINT16_MAX;
 }
 
+static LogEntry queuedEntry;
+
 /**
  * Visually displays a log entry.
  * @param entry The entry to display.
- * @param code The code to display.
- * @param pulse_ms The pulse time in milliseconds (zero for no pulse).
 */
-static void log_displayEntry(LogEntry entry, uint32_t code, uint32_t pulse_ms) {
+static void log_displayEntry(LogEntry entry) {
     if (platform_is_fbw()) {
-        // Format and display on the display
-        // TODO
-        // Note: do not show code for info
-
+        char typeMsg[DISPLAY_MAX_LINE_LEN];
+        switch (entry.type) {
+            case WARNING:
+                strcpy(typeMsg, MSG_WARN);
+                break;
+            case ERROR:
+                strcpy(typeMsg, MSG_ERROR);
+                break;
+            case FATAL:
+                strcpy(typeMsg, MSG_FATAL);
+                break;
+        }
+        char codeStr[DISPLAY_MAX_LINE_LEN];
+        sprintf(codeStr, "%d", entry.code);
+        if (strlen(entry.msg) < DISPLAY_MAX_LINE_LEN + 1) {
+            if (entry.type != INFO) {
+                display_text(typeMsg, entry.msg, DISP_LOG_CONCAT, codeStr, true);
+            } else {
+                // INFO messages shouldn't point people to a URL
+                display_text(typeMsg, entry.msg, NULL, NULL, true);
+            }
+        } else if (strlen(entry.msg) < DISPLAY_MAX_LINE_LEN * 2) {
+            // Get a substring of the first and last DISPLAY_MAX_LINE_LEN chars to display across two lines
+            char line1[DISPLAY_MAX_LINE_LEN] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = 0};
+            char line2[DISPLAY_MAX_LINE_LEN] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = 0};
+            if (entry.msg[DISPLAY_MAX_LINE_LEN] != ' ') {
+                strncpy(line1, entry.msg, DISPLAY_MAX_LINE_LEN - 1);
+                strncpy(line2, entry.msg + DISPLAY_MAX_LINE_LEN - 1, DISPLAY_MAX_LINE_LEN);
+                line1[DISPLAY_MAX_LINE_LEN - 1] = '-';
+            } else {
+                // We don't need a dash here because the line break falls cleanly between words
+                strncpy(line1, entry.msg, DISPLAY_MAX_LINE_LEN);
+                strncpy(line2, entry.msg + DISPLAY_MAX_LINE_LEN, DISPLAY_MAX_LINE_LEN);
+            }
+            if (entry.type != INFO) {
+                display_text(line1, line2, DISP_LOG_CONCAT, codeStr, true);
+            } else {
+                display_text(NULL, line1, line2, NULL, true);
+            }
+        } else {
+            display_text(typeMsg, NULL, DISP_LOG_CONCAT, codeStr, true);
+        }
     } else {
         // Display on Pico built-in LED
         cancel_repeating_timer(&timer);
-        add_repeating_timer_ms(code, led_callback, NULL, &timer);
+        add_repeating_timer_ms((int32_t)entry.code, led_callback, NULL, &timer);
         // If pulse has been enabled, turn the LED off now so it pulses to the on state, not the off state (looks better)
-        if (pulse_ms != 0) {
+        if (entry.pulse != 0) {
             led_set(0);
-            gb_pulse_ms = pulse_ms;
+            gb_pulse_ms = entry.pulse;
         }
     }
     lastDisplayedEntry = entry;
+}
+
+static inline int64_t logProcessQueue(alarm_id_t id, void *data) {
+    if (!platform_is_booted()) return 500;
+    log_displayEntry(queuedEntry);
+    return 0;
 }
 
 void log_init() {
@@ -125,7 +170,7 @@ void log_init() {
             gpio_set_dir(LED_PIN, GPIO_OUT);
         #endif
     #endif
-    if (!platform_is_fbw()) led_set(1); // Save power on FBW boards
+    if (!platform_is_fbw()) led_set(1);
     logCount = 0;
     log_resetLast();
 }
@@ -137,14 +182,20 @@ void log_message(LogType type, char msg[64], int code, uint pulse_ms, bool force
         strncpy(entry.msg, msg, sizeof(entry.msg));
         entry.msg[sizeof(entry.msg) - 1] = '\0';
         entry.code = code;
+        entry.pulse = pulse_ms;
         entry.timestamp = time_us_64();
         logEntries[logCount++] = entry;
 
-        // Display the entry if the error is more severe than the last (or it was forced),
-        // there was a code given, and the type is severe enough
+        // Display the entry if the error is more severe than the last,
+        // there was a code given, the type is severe enough, or if it was forced or of the same type (but newer)
         if (type > LOG && code > -1) {
-            if ((type > lastLogEntry.type && code < lastLogEntry.code) || force) {
-                log_displayEntry(entry, (uint32_t)code, (uint32_t)pulse_ms);
+            if ((type >= lastLogEntry.type && code < lastLogEntry.code) || force) {
+                if (platform_is_booted() || type == FATAL || type == INFO) {
+                    log_displayEntry(entry);
+                } else {
+                    queuedEntry = entry;
+                    add_alarm_in_ms(500, logProcessQueue, NULL, true);
+                }
             }
         }
         lastLogEntry = entry;
@@ -166,7 +217,11 @@ void log_message(LogType type, char msg[64], int code, uint pulse_ms, bool force
                 break;
         }
         if (typeMsg) {
-            printf("%s: (FBW-%d) %s\n", typeMsg, code, msg);
+            if (code > -1) {
+                printf("%s (FBW-%d) %s\n", typeMsg, code, msg);
+            } else {
+                printf("%s %s\n", typeMsg, msg);
+            }
         } else {
             printf("%s\n", msg);
         }
@@ -204,7 +259,7 @@ void log_clear(LogType type) {
             bool hadError = false;
             for (uint i = 0; i < logCount; i++) {
                 if (logEntries[i].type == type) {
-                    log_displayEntry(logEntries[i], (uint32_t)logEntries[i].code, 0);
+                    log_displayEntry(logEntries[i]);
                     hadError = true;
                     break;
                 }

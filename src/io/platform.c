@@ -3,6 +3,7 @@
  * Licensed under the GNU GPL-3.0
 */
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include "pico/bootrom.h"
@@ -18,35 +19,24 @@
 
 #include "platform.h"
 
+bool isBooted = false;
+
 void platform_boot_begin() {
     info_declare();
+    isBooted = false;
     gpio_pull_down(22);
-    if (platform_is_fbw()) {
-        display_init();
-    }
+    if (platform_is_fbw()) display_init();
 }
 
 void platform_boot_setProgress(float progress, const char *message) {
     printf("[boot] (%.1f%%) %s\n", progress, message);
     if (platform_is_fbw()) {
         // Create four lines of text characters to later send to the display
-        char line1[DISPLAY_MAX_LINE_LEN] = { [0 ... 13] = 0};
-        char line2[DISPLAY_MAX_LINE_LEN] = { [0 ... 13] = 0};
-        char line3[DISPLAY_MAX_LINE_LEN] = { [0 ... 13] = 0};
-        char line4[DISPLAY_MAX_LINE_LEN] = { [0 ... 13] = 0};
-
-        // Convert progress to a length between 0 and 10
-        uint progressBarLength = (int)((progress / 100.0) * 10);
-        char progressBarStr[3];
-        sprintf(progressBarStr, "%d", progressBarLength * 10);
-        // Fill in the progress bar and add the progress percentage to be displayed on the bottom line
-        for (uint i = 0; i < DISPLAY_MAX_LINE_LEN; i++) {
-            if (i < 11) {
-                line4[i] = (i < progressBarLength) ? 254 : ' '; // ASCII 254 is a full square
-            } else {
-                line4[i] = progressBarStr[i - 11];
-            }
-        }
+        char line1[DISPLAY_MAX_LINE_LEN] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = 0};
+        char line2[DISPLAY_MAX_LINE_LEN] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = 0};
+        char line3[DISPLAY_MAX_LINE_LEN] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = 0};
+        char line4[DISPLAY_MAX_LINE_LEN] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = 0};
+        display_pBarStr(line4, (uint)progress);
 
         uint numWords = 1;
         for (uint i = 0; message[i] != '\0'; i++) {
@@ -84,7 +74,7 @@ void platform_boot_setProgress(float progress, const char *message) {
                 wordCount++;
             }
         } else {
-            // Split words between lines irregularly; we can't fit each neatly on its own  line
+            // Split words between lines irregularly; we can't fit each neatly on its own line
             split: {
                 uint numLines = (strlen(message) + (DISPLAY_MAX_LINE_LEN - 1)) / DISPLAY_MAX_LINE_LEN;
                 switch (numLines) {
@@ -109,13 +99,16 @@ void platform_boot_setProgress(float progress, const char *message) {
     }
 }
 
+bool platform_is_booted() { return isBooted; }
+
 void platform_boot_complete() {
-    printf("[boot] bootup complete!\n");
     watchdog_hw->scratch[0] = WATCHDOG_TIMEOUT_MAGIC;
     if (platform_is_fbw()) {
         // TODO: boot complete animation & power save mode here
+        // make the animation based on unique board id?
 
     }
+    isBooted = true;
 }
 
 void platform_reboot(RebootType type) {

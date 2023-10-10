@@ -548,13 +548,13 @@ bool imu_calibrate() {
     while (state != CALIBRATION_STATE_COMPLETE) {
         switch (state) {
             case CALIBRATION_STATE_ROLL:
-                log_message(INFO, "Calibration: roll right...", 500, 100, true);
+                log_message(INFO, "Calibration: roll right", 500, 100, true);
                 break;
             case CALIBRATION_STATE_PITCH:
-                log_message(INFO, "Calibration: pitch up...", 500, 100, true);
+                log_message(INFO, "Calibration: pitch up", 500, 100, true);
                 break;
             case CALIBRATION_STATE_YAW:
-                log_message(INFO, "Calibration: yaw left...", 500, 100, true);
+                log_message(INFO, "Calibration: yaw left", 500, 100, true);
                 break;
         }
         EulerAxis movedAxis = EULER_AXIS_NONE;
@@ -603,6 +603,7 @@ bool imu_calibrate() {
         }
 
         // 3 blinks to signify an axis has been recognized
+        log_clear(INFO);
         log_message(INFO, "Axis recognized! Return to center.", 250, 100, true);
         absolute_time_t resume = make_timeout_time_ms(750);
         while (!time_reached(resume)) {
@@ -617,7 +618,6 @@ bool imu_calibrate() {
         }
         state++;
     }
-    log_clear(INFO);
 
     // Check data before writing to flash
     if (calibration_data[1] != calibration_data[2] && calibration_data[1] != calibration_data[3] && calibration_data[2] != calibration_data[1] && calibration_data[2] != calibration_data[3] && calibration_data[3] != calibration_data[1] && calibration_data[3] != calibration_data[2]) {

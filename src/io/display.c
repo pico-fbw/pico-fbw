@@ -73,6 +73,24 @@ static void sendBuf(uint8_t buf[], int buf_len) {
 }
 
 /**
+ * Sets whether the display is scrolling or not.
+ * @param on Whether the display is scrolling or not
+*/
+void setScroll(bool on) {
+    uint8_t cmds[] = {
+        DISPLAY_SET_HORIZ_SCROLL | 0x00,
+        0x00, // Dummy byte
+        0x00, // Start page 0
+        0x00, // Time interval
+        0x03, // End page 3 SSD1306_NUM_PAGES ??
+        0x00, // Dummy byte
+        0xFF, // Dummy byte
+        DISPLAY_SET_SCROLL | (on ? 0x01 : 0) // Start/stop scrolling
+    };
+    sendCmdList(cmds, count_of(cmds));
+}
+
+/**
  * Updates a portion of the display with a render area.
  * @param buf The buffer to update with
  * @param area The render area to update
@@ -103,16 +121,10 @@ static void render_calcBuf(RenderArea *area) {
  * @return the index of a character in the display font.
 */
 static inline int GetFontIndex(uint8_t ch) {
-    if (ch >= 'A' && ch <='Z') {
-        return ch - 'A' + 1;
-    } else if (ch >= '0' && ch <='9') {
-        return ch - '0' + 27;
-    } else if (ch == '-') {
-        return 37;
-    } else if (ch == '_') {
-        return 38;
+    if (ch >= ' ' && ch <= '~') {
+        return ch - 32;
     } else if (ch == 254) {
-        return 39;
+        return 95;
     } else {
         return 0; // Not in the font, return blank
     }
@@ -228,6 +240,7 @@ static void buf_writeString(uint8_t *buf, int16_t x, int16_t y, char *str) {
 */
 static char *centerString(char line[], uint len_max) {
     uint len = strlen(line);
+    if (len > 0 && line[len - 1] == '\0') len--; // Remove trailing null as it can throw off centering
     if (len < len_max) {
         // Create line buffer to be centered and set to spaces (padding)
         char *centered = calloc(len_max, sizeof(char));
@@ -260,7 +273,7 @@ bool display_init() {
     gpio_pull_up(DISPLAY_SDA);
     gpio_pull_up(DISPLAY_SCL);
 
-    uint8_t cmds[] = {
+    uint8_t initCmds[] = {
         DISPLAY_SET_DISP,               // Display off
         /* Memory mapping */
         DISPLAY_SET_MEM_MODE,           // Set memory address mode 0 = horizontal, 1 = vertical, 2 = page
@@ -299,19 +312,28 @@ bool display_init() {
         DISPLAY_SET_SCROLL | 0x00,      // Deactivate horizontal scrolling if set, memory writes will corrupt otherwise
         DISPLAY_SET_DISP | 0x01,        // Turn display on
     };
-    if (!sendCmdList(cmds, count_of(cmds))) return false;
+    if (!sendCmdList(initCmds, count_of(initCmds))) return false;
 
-    // Zero the display
-    memset(buf, 0, DISPLAY_BUF_LEN);
-    // Calculate render area for logo and display
-    frame_area.col_start = 0;
-    frame_area.col_end = LOGO_WIDTH - 1;
     render_calcBuf(&frame_area);
     render(logo, &frame_area);
-    // Reset render area back for text (but do not render yet)
-    frame_area.col_end = DISPLAY_WIDTH - 1;
-    render_calcBuf(&frame_area);
+    memset(buf, 0, DISPLAY_BUF_LEN); // Zero display buffer for text rendfering later
     return true;
+}
+
+void display_pBarStr(char bar[], uint progress) {
+    uint barLen = progress / 10;
+    char lenStr[3] = { [0 ... 2] = 0};
+    sprintf(lenStr, "%d", progress);
+    // Fill in the progress bar and add the progress percentage to be displayed on the bottom line
+    for (uint i = 0; i <= DISPLAY_MAX_LINE_LEN; i++) {
+        if (i < 11) {
+            bar[i] = (i < barLen) ? 254 : ' '; // ASCII 254 is a full square
+        } else if (i < 11 + strlen(lenStr)) {
+            bar[i] = lenStr[i - 11];
+        } else {
+            bar[i] = ' ';
+        }
+    }
 }
 
 void display_text(char l1[], char l2[], char l3[], char l4[], bool center) {

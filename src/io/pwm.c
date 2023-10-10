@@ -22,6 +22,7 @@
 #include "hardware/irq.h"
 #include "hardware/pio.h"
 
+#include "display.h"
 #include "flash.h"
 
 #include "../sys/config.h"
@@ -189,15 +190,18 @@ float pwm_read(uint pin, PWMMode mode) {
 }
 
 bool pwm_calibrate(uint pin_list[], uint num_pins, float deviations[], uint num_samples, uint sample_delay_ms, uint run_times) {
-    if (config.debug.debug_fbw) printf("[pwm] starting pwm calibration\n");
     if (gb_num_pins < 1) return false; // Ensure PWM has been initialized
-    log_message(INFO, "Starting PWM calibration...", 100, 0, false);
+    log_message(INFO, "Calibrating PWM", 100, 0, false);
+    sleep_ms(2000); // Wait a few moments for tx/rx to set itself up
     // Create an array where we will arrange our data to later write
     // The first position holds a flag to indicate that calibration has been completed; subsequent values will hold the calibration data
     float calibration_data[FLOAT_SECTOR_SIZE] = {FLAG_PWM};
     for (uint i = 0; i < num_pins; i++) {
         uint pin = pin_list[i];
         if (config.debug.debug_fbw) printf("[pwm] calibrating pin %d (%d/%d)\n", pin, i + 1, num_pins);
+        char pBar[DISPLAY_MAX_LINE_LEN] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = 0};
+        display_pBarStr(pBar, (uint)(((i + 1) * 100) / num_pins));
+        display_text("Please do not", "touch the", "transmitter!", pBar, true);
         float deviation = deviations[i];
         float final_difference = 0.0f;
         bool isThrottle = pin_list[i] == config.pins1.inputThrottle;

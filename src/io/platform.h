@@ -36,6 +36,11 @@ void platform_boot_begin();
 void platform_boot_setProgress(float progress, const char *message);
 
 /**
+ * @return the current status of the boot process--true if booted, false if not.
+*/
+bool platform_is_booted();
+
+/**
  * Signal to the platform that the boot sequence is complete.
 */
 void platform_boot_complete();
