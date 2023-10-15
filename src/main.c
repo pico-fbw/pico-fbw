@@ -171,15 +171,9 @@ int main() {
         }
     }
 
-    // Wi-Fly
-    #ifdef RASPBERRYPI_PICO_W
-        platform_boot_setProgress(90, "Initializing Wi-Fly");
-        wifly_init();
-    #endif
-
     // Watchdog
-    platform_boot_setProgress(95, "Enabling watchdog");
-    // watchdog_enable(config.debug.watchdog_timeout_ms, true);
+    platform_boot_setProgress(90, "Enabling watchdog");
+    watchdog_enable(config.debug.watchdog_timeout_ms, true);
     if (platform_boot_type() == BOOT_WATCHDOG) {
         log_message(ERROR, "Watchdog rebooted!", 500, 150, true);
         if (config.debug.debug_fbw) printf("Please report this error! Only direct mode is available until the next reboot.\n");
@@ -190,6 +184,14 @@ int main() {
             watchdog_update();
         }
     }
+
+    // Wi-Fly
+    #ifdef RASPBERRYPI_PICO_W
+        if (config.general.wiflyStatus != WIFLY_DISABLED) {
+            platform_boot_setProgress(95, "Initializing Wi-Fly");
+            wifly_init();  
+        }
+    #endif
 
     platform_boot_setProgress(100, "Done!");
     platform_boot_complete();

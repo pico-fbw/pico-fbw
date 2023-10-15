@@ -2,6 +2,8 @@
  * This file utilizes code under the MIT License. See "LICENSE" for details.
 */
 
+// TODO: IMU rewrite: remove MPU6050 (until i can figure out DMP and mag), get BNO055 calibration save working, refactor cause this file stucks, etc..
+
 /**
  * Huge thanks to the contributors of the 'i2cdevlib' repository for the amazing work on the MPU6050 fusion algorithm!
  * Check it out here: https://github.com/jrowberg/i2cdevlib
@@ -542,6 +544,7 @@ bool imu_calibrate() {
         }
     }
     if (config.debug.debug_fbw) printf("[imu] starting imu angle mapping calibration\n");
+    // TODO: restart/zero axes here
     float calibration_data[FLOAT_SECTOR_SIZE] = {FLAG_IMU, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}; // {flag, x, y, z, x_dir, y_dir, z_dir}
     // Complete all axes' calibration
     IMUCalibrationState state = CALIBRATION_STATE_ROLL;

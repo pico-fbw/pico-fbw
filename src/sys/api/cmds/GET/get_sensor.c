@@ -13,9 +13,9 @@
 
 #include "../../../config.h"
 
-#include "get_sensors.h"
+#include "get_sensor.h"
 
-uint api_get_sensors(const char *cmd, const char *args) {
+uint api_get_sensor(const char *cmd, const char *args) {
     Angles imu = imu_getAngles();
     GPS gps = { 0, 0, 0, 0, 0 };
     if (config.sensors.gpsEnabled) {

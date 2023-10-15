@@ -8,7 +8,7 @@ add_library(fbw_api
     cmds/GET/get_logs.c
     cmds/GET/get_mode.c
     cmds/GET/get_pid.c
-    cmds/GET/get_sensors.c
+    cmds/GET/get_sensor.c
     cmds/MISC/about.c
     cmds/MISC/help.c
     cmds/MISC/ping.c

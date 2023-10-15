@@ -84,7 +84,7 @@ static inline void url_decode(char *str) {
         }
         const char *ap_name = config.wifly.ssid;
         const char *password = NULL;
-        if (!config.general.wiflyUsePass) {
+        if (config.general.wiflyStatus == WIFLY_ENABLED_PASS) {
             password = config.wifly.pass;
         }
         cyw43_arch_enable_ap_mode(ap_name, config.wifly.pass, CYW43_AUTH_WPA2_AES_PSK);

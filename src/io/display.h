@@ -12,7 +12,7 @@ typedef struct RenderArea {
 // Display dimensions
 #define DISPLAY_WIDTH 128
 #define DISPLAY_HEIGHT 32
-#define DISPLAY_MAX_LINE_LEN 15 // Should technically be able to fit 16 but 15 looks better
+#define DISPLAY_MAX_LINE_LEN 15 // 15 for margins; 16 can physically be fit but it looks bad
 
 // Display i2c information
 #define DISPLAY_I2C i2c1

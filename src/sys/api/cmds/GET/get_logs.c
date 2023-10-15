@@ -19,7 +19,7 @@ uint api_get_logs(const char *cmd, const char *args) {
             LogEntry *entry = log_get(i);
             printf("{\"type\":%d,\"msg\":\"%s\",\"code\":%d,\"timestamp\":%llu}",
                    entry->type, entry->msg, entry->code, entry->timestamp);
-            if (logCount > 1) printf(",");
+            if (logCount > 1 && i != logCount - 1) printf(",");
         }
         printf("]}\n");
         return 200;

@@ -13,7 +13,7 @@
 #include "GET/get_logs.h"
 #include "GET/get_mode.h"
 #include "GET/get_pid.h"
-#include "GET/get_sensors.h"
+#include "GET/get_sensor.h"
 
 #include "SET/set_config.h"
 #include "SET/set_fplan.h"
@@ -47,8 +47,8 @@ uint api_handle_get(const char *cmd, const char *args) {
         return api_get_mode(cmd, args);
     } else if (strcasecmp(cmd, "GET_PID") == 0) {
         return api_get_pid(cmd, args);
-    } else if (strcasecmp(cmd, "GET_SENSORS") == 0) {
-        return api_get_sensors(cmd, args);
+    } else if (strcasecmp(cmd, "GET_SENSOR") == 0) {
+        return api_get_sensor(cmd, args);
     } else {
         return 404;
     }

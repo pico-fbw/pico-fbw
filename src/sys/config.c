@@ -169,7 +169,7 @@ bool config_load(ConfigSource source) {
             config.general.servoHz = (uint)flash_readFloat(FLOAT_SECTOR_CONFIG_GENERAL, 3);
             config.general.escHz = (uint)flash_readFloat(FLOAT_SECTOR_CONFIG_GENERAL, 4);
             config.general.apiEnabled = (bool)flash_readFloat(FLOAT_SECTOR_CONFIG_GENERAL, 5);
-            config.general.wiflyUsePass = (bool)flash_readFloat(FLOAT_SECTOR_CONFIG_GENERAL, 6);
+            config.general.wiflyStatus = (bool)flash_readFloat(FLOAT_SECTOR_CONFIG_GENERAL, 6);
             config.general.skipCalibration = (bool)flash_readFloat(FLOAT_SECTOR_CONFIG_GENERAL, 7);
 
             // ConfigControl
@@ -291,7 +291,7 @@ bool config_load(ConfigSource source) {
             config.general.servoHz = SERVO_HZ_DEF;
             config.general.escHz = ESC_HZ_DEF;
             config.general.apiEnabled = API_ENABLED_DEF;
-            config.general.wiflyUsePass = WIFLY_USE_PASS_DEF;
+            config.general.wiflyStatus = WIFLY_STATUS_DEF;
             config.general.skipCalibration = SKIP_CALIBRATION_DEF;
 
             // ConfigControl
@@ -413,7 +413,7 @@ bool config_save(bool validate) {
         config.general.servoHz,
         config.general.escHz,
         config.general.apiEnabled,
-        config.general.wiflyUsePass,
+        config.general.wiflyStatus,
         config.general.skipCalibration
     }; // C already casts all elements in the array to a float so there's no need to explicitly cast them
     flash_writeFloat(FLOAT_SECTOR_CONFIG_GENERAL, general, false);
@@ -606,8 +606,8 @@ float config_getFloat(const char* section, const char* key) {
             return (float)config.general.escHz;
         } else if (strcasecmp(key, "apiEnabled") == 0) {
             return (float)config.general.apiEnabled;
-        } else if (strcasecmp(key, "wiflyUsePass") == 0) {
-            return (float)config.general.wiflyUsePass;
+        } else if (strcasecmp(key, "wiflyStatus") == 0) {
+            return (float)config.general.wiflyStatus;
         } else if (strcasecmp(key, "skipCalibration") == 0) {
             return (float)config.general.skipCalibration;
         }
@@ -770,7 +770,7 @@ void config_getAllFloats(float values[], size_t numValues) {
         values[index++] = (float)config.general.servoHz;
         values[index++] = (float)config.general.escHz;
         values[index++] = (float)config.general.apiEnabled;
-        values[index++] = (float)config.general.wiflyUsePass;
+        values[index++] = (float)config.general.wiflyStatus;
         values[index++] = (float)config.general.skipCalibration;
 
         // ConfigControl
@@ -890,8 +890,8 @@ bool config_setFloat(const char *section, const char *key, float value) {
         } else if (strcasecmp(key, "apiEnabled") == 0) {
             config.general.apiEnabled = (bool)value;
             return true;
-        } else if (strcasecmp(key, "wiflyUsePass") == 0) {
-            config.general.wiflyUsePass = (bool)value;
+        } else if (strcasecmp(key, "wiflyStatus") == 0) {
+            config.general.wiflyStatus = (bool)value;
             return true;
         } else if (strcasecmp(key, "skipCalibration") == 0) {
             config.general.skipCalibration = (bool)value;

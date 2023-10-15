@@ -199,7 +199,7 @@ bool pwm_calibrate(uint pin_list[], uint num_pins, float deviations[], uint num_
     for (uint i = 0; i < num_pins; i++) {
         uint pin = pin_list[i];
         if (config.debug.debug_fbw) printf("[pwm] calibrating pin %d (%d/%d)\n", pin, i + 1, num_pins);
-        char pBar[DISPLAY_MAX_LINE_LEN] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = 0};
+        char pBar[DISPLAY_MAX_LINE_LEN] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
         display_pBarStr(pBar, (uint)(((i + 1) * 100) / num_pins));
         display_text("Please do not", "touch the", "transmitter!", pBar, true);
         float deviation = deviations[i];

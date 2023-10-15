@@ -259,14 +259,6 @@ static char *centerString(char line[], uint len_max) {
 
 
 bool display_init() {
-    if (config.debug.debug_fbw) printf("[display] initializing ");
-    if (DISPLAY_I2C == i2c0) {
-        if (config.debug.debug_fbw) printf("i2c0\n");
-    } else if (DISPLAY_I2C == i2c1) {
-        if (config.debug.debug_fbw) printf("i2c1\n");
-    } else {
-        if (config.debug.debug_fbw) printf("\n");
-    }
     i2c_init(DISPLAY_I2C, DISPLAY_FREQ_KHZ * 1000);
     gpio_set_function(DISPLAY_SDA, GPIO_FUNC_I2C);
     gpio_set_function(DISPLAY_SCL, GPIO_FUNC_I2C);
@@ -322,7 +314,7 @@ bool display_init() {
 
 void display_pBarStr(char bar[], uint progress) {
     uint barLen = progress / 10;
-    char lenStr[3] = { [0 ... 2] = 0};
+    char lenStr[3] = { [0 ... 2] = ' '};
     sprintf(lenStr, "%d", progress);
     // Fill in the progress bar and add the progress percentage to be displayed on the bottom line
     for (uint i = 0; i <= DISPLAY_MAX_LINE_LEN; i++) {

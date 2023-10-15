@@ -5,6 +5,7 @@
 #include "../io/gps.h"
 #include "../io/imu.h"
 #include "../io/pwm.h"
+#include "../wifly/wifly.h"
 
 #include "switch.h"
 
@@ -31,7 +32,7 @@ typedef struct ConfigGeneral {
     uint servoHz;
     uint escHz;
     bool apiEnabled;
-    bool wiflyUsePass;
+    WiflyEnableStatus wiflyStatus;
     bool skipCalibration;
 } ConfigGeneral;
 
@@ -41,7 +42,7 @@ typedef struct ConfigGeneral {
 #define SERVO_HZ_DEF 50
 #define ESC_HZ_DEF 50
 #define API_ENABLED_DEF true
-#define WIFLY_USE_PASS_DEF false
+#define WIFLY_STATUS_DEF WIFLY_ENABLED
 #define SKIP_CALIBRATION_DEF false
 
 #define CONFIG_CONTROL_STR "Control"
