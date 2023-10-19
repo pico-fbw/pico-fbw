@@ -1,5 +1,4 @@
 add_library(fbw_lib
-    dmp.c
     minmea.c
     nav.c
     pid.c

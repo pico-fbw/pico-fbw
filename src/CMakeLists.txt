@@ -28,25 +28,23 @@ if ("$CACHE{PICO_BOARD}" STREQUAL "pico_w")
 endif ()
 
 add_subdirectory(io)
-add_subdirectory(lib) # TODO: is it possible to move lib outside of the src/ dir? I tried and it did not go well...
+add_subdirectory(lib) # TODO: is it possible to move lib outside of the src/ dir (/include)? I tried and it did not go well...
 add_subdirectory(modes)
 add_subdirectory(sys)
-
 # Wi-Fly is always enabled in some capacity (to allow for the API to interact with it regardless of Pico W).
 # LWIP and the whole HTTP stack only gets compiled if the Pico W is detected (this is all done in the Wi-Fly subdirectory).
 add_subdirectory(wifly)
 
 
-# Reset program:
+# --- Reset program ---
+
 add_executable(pico-fbw-reset reset.c)
 pico_add_extra_outputs(pico-fbw-reset)
 target_link_libraries(pico-fbw-reset
     fbw_io
     pico_bootrom
 )
-
 pico_set_binary_type(pico-fbw-reset no_flash) # set the executable to upload to RAM because we are dealing with erasing flash
-
 install(TARGETS pico-fbw-reset DESTINATION ${CMAKE_INSTALL_PREFIX})
 
 # At the end of the build process, move the final binaries to the buildroot for easier access

@@ -26,8 +26,6 @@
 #include "flash.h"
 #include "platform.h"
 
-#include "../lib/dmp.h"
-
 #include "../modes/modes.h"
 
 #include "../sys/config.h"
@@ -181,38 +179,12 @@ static int bno_saveCalibrationData(int16_t *data, bool mag) {
     }
 }
 
-/* --- MPU6050 only --- */
-
-static uint16_t fifoCount;
-static unsigned char fifoBuf[DMP_PACKET_SIZE];
-struct repeating_timer updateTimer;
-
-/**
- * Gets the current count of the MPU's FIFO.
- * @return The count of the FIFO.
-*/
-static uint16_t mpu_getFIFOCount() {
-    unsigned char buf[2];
-    i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, &DMP_RA_FIFO_COUNT, 1, true, IMU_TIMEOUT_US);
-    i2c_read_timeout_us(IMU_I2C, CHIP_REGISTER, buf, 2, false, IMU_TIMEOUT_US);
-    return (((uint16_t)buf[0]) << 8) | buf[1];
-}
-
-/**
- * Updates the MPU's DMP.
- * This must be done continually after initialization with the MPU to ensure accurate angles;
- * the angles do not update without communication!
-*/
-static bool mpu_update(struct repeating_timer *t) { imu_getRawAngles(); }
-
 /* ---------------------------------------- */
 
 int imu_init() {
-    // Determine which IMU to use
+    imuModel = config.sensors.imuModel; // Otherwise, use whatever is defined in the config
     if (platform_is_fbw()) {
-        imuModel = IMU_MODEL_BNO055; // The FBW platform uses the BNO055 as the IMU, use that regardless
-    } else {
-        imuModel = config.sensors.imuModel; // Otherwise, use whatever is defined in the config
+        imuModel = IMU_MODEL_BNO055;
     }
     // Some addresses, IDs, etc overlap between models so we have to populate those now for use later
     switch (imuModel) {
@@ -222,13 +194,6 @@ int imu_init() {
             ID_REGISTER = BNO_ID_REGISTER;
             CHIP_ID = BNO_CHIP_ID;
             PWR_MODE_REGISTER = BNO_PWR_MODE_REGISTER;
-            break;
-        case IMU_MODEL_MPU6050:
-            CHIP_FREQ_KHZ = MPU_CHIP_FREQ_KHZ;
-            CHIP_REGISTER = MPU_CHIP_REGISTER;
-            ID_REGISTER = MPU_ID_REGISTER;
-            CHIP_ID = MPU_CHIP_ID;
-            PWR_MODE_REGISTER = MPU_PWR_MODE_REGISTER;
             break;
     }
     // Steps to init are the same for all IMUs; only addresses and IDs change
@@ -251,29 +216,14 @@ int imu_init() {
         case IMU_MODEL_BNO055:
             if (config.debug.debug_fbw) printf("BNO055\n");
             break;
-        case IMU_MODEL_MPU6050:
-            if (config.debug.debug_fbw) printf("MPU6050\n");
-            break;
     }
     if (config.debug.debug_imu) printf("[imu] checking ID (writing 0x%02X [ID_REGISTER] to 0x%02X [CHIP_REGISTER]) with timeout of %dus...\n", ID_REGISTER, CHIP_REGISTER, IMU_TIMEOUT_US);
     int result = i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, &ID_REGISTER, 1, true, IMU_TIMEOUT_US);
-    if (result == PICO_ERROR_GENERIC) {
-        if (config.debug.debug_imu) printf("[imu] ERROR: address not acknowledged (no/wrong device present?)\n");
-        return PICO_ERROR_GENERIC;
-    } else if (result == PICO_ERROR_TIMEOUT) {
-        if (config.debug.debug_imu) printf("[imu] ERROR: write timeout occured (no device present?)\n");
-        return PICO_ERROR_TIMEOUT;
-    } else if (result == 1) { // Correct number of bytes written should be 1
+    if (result == 1) { // Correct number of bytes written should be 1
         if (config.debug.debug_imu) printf("[imu] address acknowledged, attempting to read ID...\n");
         unsigned char id;
         result = i2c_read_timeout_us(IMU_I2C, CHIP_REGISTER, &id, 1, false, IMU_TIMEOUT_US);
-        if (result == PICO_ERROR_GENERIC) {
-            if (config.debug.debug_imu) printf("[imu] ERROR: address not acknowledged\n");
-            return PICO_ERROR_GENERIC;
-        } else if (result== PICO_ERROR_TIMEOUT) {
-            if (config.debug.debug_imu) printf("[imu] ERROR: write timeout occured\n");
-            return PICO_ERROR_TIMEOUT;
-        } else {
+        if (result == 1) {
             if (config.debug.debug_imu) printf("[imu] ID: 0x%02X\n", id);
             if (id == CHIP_ID) {
                 if (config.debug.debug_imu) printf("[imu] ID matches expected value\n");
@@ -282,10 +232,12 @@ int imu_init() {
                 if (config.debug.debug_imu) printf("[imu] ERROR: ID does not match expected value\n");
                 return 1;
             }
+        } else {
+            if (config.debug.debug_fbw) printf("[imu] ERROR: unable to read ID\n");
         }
     } else {
-        if (config.debug.debug_imu) printf("[imu] ERROR: unknown error occured\n");
-        return PICO_ERROR_GENERIC;
+        if (config.debug.debug_imu) printf("[imu] ERROR: address not acknowledged (no/wrong device present?)\n");
+        return result;
     }
 }
 
@@ -331,31 +283,8 @@ bool imu_configure() {
             }
             */
             status = bno_changeMode(MODE_NDOF);
-            // TODO: add offset calibration for BNO, similar to MPU's
+            // TODO: add offseting for BNO
             return status;
-        case IMU_MODEL_MPU6050:
-            imu_write(PWR_MODE_REGISTER, 0x80); // Reset power
-            sleep_ms(100);
-            imu_write(USER_CONTROL_REGISTER, 0b111); // Reset again
-            sleep_ms(100);
-            imu_write(PWR_MODE_REGISTER, 0x01); // PLL_X_GYRO is a slightly better clock source
-            imu_write(INTERRUPTS_ENABLED_REGISTER, 0x00); // Disable interrupts
-            imu_write(FIFO_ENABLED_REGISTER, 0x00); // Disable FIFO (using DMP FIFO)
-            imu_write(ACCEL_CONFIG_REGISTER, 0x00); // Accel full scale = 2g
-            imu_write(INT_PIN_CFG_REGISTER, 0x80); // Enable interrupt pin
-            imu_write(PWR_MODE_REGISTER, 0x01); // Select clock source again (??)
-            imu_write(SMPLRT_DIV_REGISTER, 0x04); // Sample rate = gyro rate / (1 + SMPLRT_DIV) [100Hz?]
-            imu_write(CONFIG_REGISTER, 0x01); // Digital Low Pass Filter (DLPF) 188Hz
-            if (config.debug.debug_imu) printf("[imu] writing DMP to memory...\n");
-            dmp_writeMemoryBlock(dmp, DMP_SIZE, 0, 0); // Write DMP to memory
-            unsigned char cmd[3] = {DMP_PROG_START_ADDR, 0x04, 0x00}; // DMP program start address
-            i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, cmd, 3, true, IMU_TIMEOUT_US);
-            imu_write(GYRO_CONFIG_REGISTER, 0x18); // Gyro full scale = +2000 deg/s
-            imu_write(USER_CONTROL_REGISTER, 0xC2); // Enable and reset DMP FIFO
-            imu_write(INTERRUPTS_ENABLED_REGISTER, 0x02); // Enable RAW_DMP_INT
-            // TODO: port accel and gyro calibrations from DMP lib/i2cdevlib (and use that for the return statement)
-            add_repeating_timer_us(IMU_SAMPLE_RATE_US, mpu_update, NULL, &updateTimer); // Start the update timer
-            return true; // FIXME: do not keep in final; return the actual status!
         default:
             return false;
     }
@@ -389,35 +318,6 @@ Euler imu_getRawAngles() {
             }
             break;
         }
-        case IMU_MODEL_MPU6050: {
-            // FIXME: improve drift...it's really bad
-
-            // Get current FIFO count
-            fifoCount = mpu_getFIFOCount();
-            if (fifoCount >= 1024) {
-                // FIFO overflow, reset
-                if (config.debug.debug_imu) printf("[imu] WARNING: FIFO overflow!\n");
-                imu_write(USER_CONTROL_REGISTER, 0b00000010);
-            } else {
-                if (fifoCount >= DMP_PACKET_SIZE) {
-                    // FIFO is full, read out data
-                    i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, &DMP_RA_FIFO_R_W, 1, true, IMU_TIMEOUT_US);
-                    i2c_read_timeout_us(IMU_I2C, CHIP_REGISTER, fifoBuf, DMP_PACKET_SIZE, false, IMU_TIMEOUT_US);
-                    fifoCount -= DMP_PACKET_SIZE;
-                    // Obtain quaternion data from FIFO
-                    float q[4];
-                    for (uint8_t i = 0; i < 4; i++) {
-                        int16_t qI = ((fifoBuf[i * 4] << 8) | fifoBuf[i * 4 + 1]);
-                        q[i] = (float)qI / 16384.0f;
-                    }
-                    // Convert quaternion to Euler angles
-                    euler.x = (atan2(2 * q[1] * q[2] - 2 * q[0] * q[3], 2 * q[0] * q[0] + 2 * q[1] * q[1] - 1)) * (180 / M_PI);
-                    euler.y = (-asin(2 * q[1] * q[3] + 2 * q[0] * q[2])) * (180 / M_PI);
-                    euler.z = (atan2(2 * q[2] * q[3] - 2 * q[0] * q[1], 2 * q[0] * q[0] + 2 * q[3] * q[3] - 1)) * (180 / M_PI);
-                }
-            }
-            break;
-        }
         default: {
             if (config.debug.debug_fbw) printf("[imu] ERROR: unknown IMU model!\n");
             setIMUSafe(false);
@@ -433,9 +333,6 @@ Angles imu_getAngles() {
     switch (imuModel) {
         case IMU_MODEL_BNO055:
             angles = imu_getRawAngles(); // BNO055 is async; we must fetch the angles
-            break;
-        case IMU_MODEL_MPU6050:
-            angles = euler; // MPU6050 is sync; we can just use the cached angles
             break;
         default:
             if (config.debug.debug_fbw) printf("[imu] ERROR: unknown IMU model!\n");

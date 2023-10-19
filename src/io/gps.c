@@ -87,7 +87,7 @@ GPS gps_getData() {
     This is due to the nature of how getting the data works--one line at a time
     If data was not saved between calls, one call would, for example, return correct coordinates but incorrect alt, and the next
     would return incorrect coordinates but correct alt. */
-    static double lat, lng = -200.0;
+    static long double lat, lng = -200.0;
     static int alt = -100;
     static float spd, trk_true = -100.0f;
     static float pdop, hdop, vdop = -1.0f;

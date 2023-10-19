@@ -58,6 +58,11 @@ void log_clear(LogType type);
 uint8_t log_count();
 
 /**
+ * @return The current number of log entries with severity higher than WARNING (WARNING, ERROR, and FATAL).
+*/
+uint8_t log_countErrs();
+
+/**
  * @return The log entry at the given index.
 */
 LogEntry *log_get(uint index);

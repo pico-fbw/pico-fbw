@@ -37,8 +37,8 @@ void gps_deinit();
  * from a connected GPS module when filled using gps_getData().
 */ 
 typedef struct GPS {
-    double lat;
-    double lng;
+    long double lat;
+    long double lng;
     int alt;
     float spd;
     float trk_true;

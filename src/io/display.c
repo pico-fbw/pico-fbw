@@ -17,12 +17,15 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "pico/time.h"
 #include "pico/types.h"
 
 #include "hardware/gpio.h"
 #include "hardware/i2c.h"
+#include "hardware/watchdog.h"
 
 #include "../sys/config.h"
+#include "../sys/log.h"
 
 #include "display.h"
 
@@ -73,15 +76,19 @@ static void sendBuf(uint8_t buf[], int buf_len) {
 }
 
 /**
- * Sets whether the display is scrolling or not.
+ * Sets whether the display is scrolling or not and specifies the scroll speed.
  * @param on Whether the display is scrolling or not
-*/
-void setScroll(bool on) {
+ * @param speed Scroll speed (0-7, where 0 is the slowest and 7 is the fastest)
+ * @note Scroll speed isn't actually linear, it's quite confusing--anyway 0 is the slowest and 7 is the fastest
+ * but everything in between is just...weird.
+ */
+void setScroll(bool on, uint8_t speed) {
+    speed = speed > 7 ? 7 : speed; // Ensure speed is valid
     uint8_t cmds[] = {
         DISPLAY_SET_HORIZ_SCROLL | 0x00,
         0x00, // Dummy byte
         0x00, // Start page 0
-        0x00, // Time interval
+        speed, // Time interval
         0x03, // End page 3 SSD1306_NUM_PAGES ??
         0x00, // Dummy byte
         0xFF, // Dummy byte
@@ -308,7 +315,7 @@ bool display_init() {
 
     render_calcBuf(&frame_area);
     render(logo, &frame_area);
-    memset(buf, 0, DISPLAY_BUF_LEN); // Zero display buffer for text rendfering later
+    memset(buf, 0, DISPLAY_BUF_LEN); // Zero display buffer for text rendering later
     return true;
 }
 
@@ -344,4 +351,51 @@ void display_text(char l1[], char l2[], char l3[], char l4[], bool center) {
         y += 8;
     }
     render(buf, &frame_area);
+}
+
+struct RenderArea pimg_area = {
+    col_start: 0,
+    col_end : PIMG_W - 1,
+    page_start: 0,
+    page_end: (PIMG_H / DISPLAY_PAGE_HEIGHT) - 1
+};
+
+typedef enum AnimState {
+    ANIM_IDLE,
+    ANIM_SPDN,
+    ANIM_SPDUP,
+    ANIM_PWRSAVE
+} AnimState;
+static AnimState animState = ANIM_IDLE;
+
+static inline int64_t anim_callback(alarm_id_t id, void *data) {
+    switch (animState) {
+        case ANIM_SPDN:
+            setScroll(true, 7);
+            animState++;
+            return 400 * 1000;
+        case ANIM_SPDUP:
+            setScroll(false, 0);
+            display_text("Entering", "power save", "mode", NULL, true);
+            animState++;
+            return 3000 * 1000;
+        case ANIM_PWRSAVE:
+            memset(buf, 0, sizeof(buf));
+            render(buf, &frame_area);
+            animState = ANIM_IDLE;;
+        default:
+            return 0;
+    }
+}
+
+void display_anim() {
+    if (log_countErrs() == 0) {
+        memset(buf, 0, sizeof(buf));
+        render(buf, &frame_area);
+        render_calcBuf(&pimg_area);
+        render(pimg, &pimg_area);
+        setScroll(true, 0);
+        animState = ANIM_SPDN;
+        add_alarm_in_ms(1600, anim_callback, NULL, true);
+    }
 }

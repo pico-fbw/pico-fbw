@@ -8,9 +8,10 @@
 #include <string.h>
 #include "pico/bootrom.h"
 #include "pico/config.h"
+#include "pico/time.h"
+
 #include "hardware/gpio.h"
 #include "hardware/watchdog.h"
-#include "pico/time.h"
 
 #include "display.h"
 
@@ -103,11 +104,7 @@ bool platform_is_booted() { return isBooted; }
 
 void platform_boot_complete() {
     watchdog_hw->scratch[0] = WATCHDOG_TIMEOUT_MAGIC;
-    if (platform_is_fbw()) {
-        // TODO: boot complete animation & power save mode here
-        // make the animation based on unique board id?
-
-    }
+    if (platform_is_fbw()) display_anim();
     isBooted = true;
 }
 

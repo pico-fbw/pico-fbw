@@ -87,7 +87,7 @@ static inline void url_decode(char *str) {
         if (config.general.wiflyStatus == WIFLY_ENABLED_PASS) {
             password = config.wifly.pass;
         }
-        cyw43_arch_enable_ap_mode(ap_name, config.wifly.pass, CYW43_AUTH_WPA2_AES_PSK);
+        cyw43_arch_enable_ap_mode(ap_name, password, CYW43_AUTH_WPA2_AES_PSK);
 
         ip4_addr_t mask;
         IP4_ADDR(ip_2_ip4(&state->gw), 192, 168, 4, 1);

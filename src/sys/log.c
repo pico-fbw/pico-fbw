@@ -158,7 +158,7 @@ static void log_displayEntry(LogEntry entry) {
 }
 
 static inline int64_t logProcessQueue(alarm_id_t id, void *data) {
-    if (!platform_is_booted()) return 500;
+    if (!platform_is_booted()) return 1000 * 1000;
     log_displayEntry(queuedEntry);
     return 0;
 }
@@ -270,6 +270,13 @@ void log_clear(LogType type) {
 }
 
 uint8_t log_count() { return logCount; }
+uint8_t log_countErrs() {
+    uint count = 0;
+    for (uint i = 0; i < logCount; i++) {
+        if (logEntries[i].type == WARNING || logEntries[i].type == ERROR || logEntries[i].type == FATAL) count++;
+    }
+    return count;
+}
 
 LogEntry *log_get(uint index) {
     if (index < logCount) {
