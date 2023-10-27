@@ -218,7 +218,7 @@ bool config_load(ConfigSource source) {
             config.sensors.imuModel = (IMUModel)flash_readFloat(FLOAT_SECTOR_CONFIG_SENSORS, 0);
             config.sensors.imuSda = (uint)flash_readFloat(FLOAT_SECTOR_CONFIG_SENSORS, 1);
             config.sensors.imuScl = (uint)flash_readFloat(FLOAT_SECTOR_CONFIG_SENSORS, 2);
-            config.sensors.gpsEnabled = (bool)flash_readFloat(FLOAT_SECTOR_CONFIG_SENSORS, 3);
+            config.sensors.baroModel = (BaroModel)flash_readFloat(FLOAT_SECTOR_CONFIG_SENSORS, 3);
             config.sensors.gpsBaudrate = (uint)flash_readFloat(FLOAT_SECTOR_CONFIG_SENSORS, 4);
             config.sensors.gpsCommandType = (GPSCommandType)flash_readFloat(FLOAT_SECTOR_CONFIG_SENSORS, 5);
             config.sensors.gpsTx = (uint)flash_readFloat(FLOAT_SECTOR_CONFIG_SENSORS, 6);
@@ -340,7 +340,7 @@ bool config_load(ConfigSource source) {
             config.sensors.imuModel = IMU_MODEL_DEF;
             config.sensors.imuSda = IMU_SDA_DEF;
             config.sensors.imuScl = IMU_SCL_DEF;
-            config.sensors.gpsEnabled = GPS_ENABLED_DEF;
+            config.sensors.baroModel = BARO_MODEL_DEF;
             config.sensors.gpsBaudrate = GPS_BAUDRATE_DEF;
             config.sensors.gpsCommandType = GPS_COMMAND_TYPE_DEF;
             config.sensors.gpsTx = GPS_TX_DEF;
@@ -480,7 +480,7 @@ bool config_save(bool validate) {
         config.sensors.imuModel,
         config.sensors.imuSda,
         config.sensors.imuScl,
-        config.sensors.gpsEnabled,
+        config.sensors.baroModel,
         config.sensors.gpsBaudrate,
         config.sensors.gpsCommandType,
         config.sensors.gpsTx,
@@ -582,7 +582,7 @@ const char *config_sectionToString(ConfigSection section) {
         case CONFIG_PID0:
             return CONFIG_PID0_STR;
         case CONFIG_PID1:
-            return CONFIG_PINS1_STR;
+            return CONFIG_PID1_STR;
         case CONFIG_DEBUG:
             return CONFIG_DEBUG_STR;
         case CONFIG_WIFLY:
@@ -692,8 +692,8 @@ float config_getFloat(const char* section, const char* key) {
             return (float)config.sensors.imuSda;
         } else if (strcasecmp(key, "imuScl") == 0) {
             return (float)config.sensors.imuScl;
-        } else if (strcasecmp(key, "gpsEnabled") == 0) {
-            return (float)config.sensors.gpsEnabled;
+        } else if (strcasecmp(key, "baroModel") == 0) {
+            return (float)config.sensors.baroModel;
         } else if (strcasecmp(key, "gpsBaudrate") == 0) {
             return (float)config.sensors.gpsBaudrate;
         } else if (strcasecmp(key, "gpsCommandType") == 0) {
@@ -827,7 +827,7 @@ void config_getAllFloats(float values[], size_t numValues) {
         values[index++] = (float)config.sensors.imuModel;
         values[index++] = (float)config.sensors.imuSda;
         values[index++] = (float)config.sensors.imuScl;
-        values[index++] = (float)config.sensors.gpsEnabled;
+        values[index++] = (float)config.sensors.baroModel;
         values[index++] = (float)config.sensors.gpsBaudrate;
         values[index++] = (float)config.sensors.gpsCommandType;
         values[index++] = (float)config.sensors.gpsTx;
@@ -1013,8 +1013,8 @@ bool config_setFloat(const char *section, const char *key, float value) {
         } else if (strcasecmp(key, "imuScl") == 0) {
             config.sensors.imuScl = (uint)value;
             return true;
-        } else if (strcasecmp(key, "gpsEnabled") == 0) {
-            config.sensors.gpsEnabled = (bool)value;
+        } else if (strcasecmp(key, "baroModel") == 0) {
+            config.sensors.baroModel = (BaroModel)value;
             return true;
         } else if (strcasecmp(key, "gpsBaudrate") == 0) {
             config.sensors.gpsBaudrate = (uint)value;

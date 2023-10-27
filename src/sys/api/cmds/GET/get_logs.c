@@ -22,7 +22,7 @@ uint api_get_logs(const char *cmd, const char *args) {
             if (logCount > 1 && i != logCount - 1) printf(",");
         }
         printf("]}\n");
-        return 200;
+        return -1;
     }
     return 204;
 }

@@ -1,4 +1,5 @@
 add_library(fbw_io
+    baro.c
     display.c
     esc.c
     flash.c

@@ -34,14 +34,14 @@
  *           |  6 - Control mode flag
  *           |  7 - unused
  * 
- * 2         |  IMU axis mapping and direction flag / data
+ * 2         |  IMU axis mapping flag / data
  *           |  0 - Flag
- *           |  1 - X axis map
- *           |  2 - Y axis map
- *           |  3 - Z axis map
- *           |  4 - X axis direction
- *           |  5 - Y axis direction
- *           |  6 - Z axis direction
+ *           |  1 - IMU type flag
+ *           |  2 - BNO055 axis map byte
+ *           |  3 - BNO055 axis sign byte
+ *           |  4 - unused
+ *           |  5 - unused
+ *           |  6 - unused
  *           |  7 - unused
  * 
  * 3         |  IMU calibration profile flag / data (1)
@@ -108,7 +108,7 @@ typedef enum FloatSector {
 
 // Each "sector" has a max of 8 floats
 // This is a fixed value so that locations of data will not change if more sectors are ever added
-#define FLASH_NUM_FLOAT_SECTORS 125
+#define FLASH_NUM_FLOAT_SECTORS 125 // TODO: make less sectors but more values, merge config sections together
 // The amount of floats that can be fit in one flash page
 #define FLOAT_SECTOR_SIZE_FULL FLASH_SECTOR_SIZE/sizeof(float) // don't use 1024, it's buggy ~ Myles
 // The amount of floats that can be fit in one float sector

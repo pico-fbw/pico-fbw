@@ -68,7 +68,7 @@ void toMode(Mode newMode) {
                     toMode(MODE_TUNE);
                     return;
                 }
-                if (config.sensors.gpsEnabled) {
+                if (config.sensors.gpsCommandType != GPS_COMMAND_TYPE_NONE) {
                     // TODO: have a way for auto mode to re-engage if the gps becomes safe again; this is usually due to bad DOP which fixes itself over time
                     if (gpsDataSafe) {
                         // Check to see if we have to calibrate the GPS alt offset

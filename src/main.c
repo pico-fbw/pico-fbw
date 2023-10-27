@@ -133,7 +133,7 @@ int main() {
 
     // IMU
     if (config.sensors.imuModel == IMU_MODEL_BNO055) {
-        while (time_us_64() < (850 * 1000)); // BNO055 requires at least 850ms to ready up
+        while (time_us_64() < (850 * 1000)) tight_loop_contents(); // BNO055 requires at least 850ms to ready up
     }
     if (config.general.skipCalibration) {
         if (config.debug.debug_fbw) printf("[boot] skipping IMU calibration, IMU will be disabled!\n");
@@ -158,8 +158,16 @@ int main() {
         }
     }
 
+    // Barometer
+    if (config.sensors.baroModel != BARO_MODEL_NONE) {
+        platform_boot_setProgress(75, "Initializing barometer");
+        if (baro_init() != 0) {
+            log_message(WARNING, "Baro initialization failed!", 1500, 0, false);
+        }
+    }
+
     // GPS
-    if (config.sensors.gpsEnabled) {
+    if (config.sensors.gpsCommandType != GPS_COMMAND_TYPE_NONE) {
         while (time_us_64() < (1000 * 1000));
         platform_boot_setProgress(80, "Initializing GPS");
         if (gps_init()) {

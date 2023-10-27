@@ -32,5 +32,5 @@ uint api_get_flash(const char *cmd, const char *args) {
             value ? printf("\"%s\"]}\n", value) : printf("\"\"]}\n");
         }
     }
-    return 200;
+    return -1;
 }

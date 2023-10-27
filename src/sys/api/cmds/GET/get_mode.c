@@ -12,5 +12,5 @@
 
 uint api_get_mode(const char *cmd, const char *args) {
     printf("{\"mode\":%d}\n", getCurrentMode());
-    return 200;
+    return -1;
 }

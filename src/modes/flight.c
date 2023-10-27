@@ -65,7 +65,7 @@ void flight_init() {
 void flight_update(double roll, double pitch, double yaw, bool override) {
     // Update input data
     aircraft = imu_getAngles();
-    if (config.sensors.gpsEnabled) gps = gps_getData();
+    if (config.sensors.gpsCommandType != GPS_COMMAND_TYPE_NONE) gps = gps_getData();
 
     // Check flight envelope for irregularities
     if (fabsf(aircraft.roll) > 72 || aircraft.pitch > 35 || aircraft.pitch < -20) {

@@ -20,5 +20,5 @@ uint api_get_info(const char *cmd, const char *args) {
         printf("{\"version\":\"%s\",\"version_api\":\"%s\",\"version_wifly\":\"%s\",\"is_pico_w\":true,\"rp2040_version\":%d}\n",
             PICO_FBW_VERSION, PICO_FBW_API_VERSION, WIFLY_VERSION, rp2040_chip_version());
     #endif
-    return 200;
+    return -1;
 }

@@ -1,6 +1,7 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
+#include "../io/baro.h"
 #include "../io/flash.h"
 #include "../io/gps.h"
 #include "../io/imu.h"
@@ -42,7 +43,7 @@ typedef struct ConfigGeneral {
 #define SERVO_HZ_DEF 50
 #define ESC_HZ_DEF 50
 #define API_ENABLED_DEF true
-#define WIFLY_STATUS_DEF WIFLY_ENABLED
+#define WIFLY_STATUS_DEF WIFLY_ENABLED_PASS
 #define SKIP_CALIBRATION_DEF false
 
 #define CONFIG_CONTROL_STR "Control"
@@ -143,9 +144,9 @@ typedef struct ConfigSensors {
     IMUModel imuModel;
     uint imuSda;
     uint imuScl;
-    bool gpsEnabled;
+    BaroModel baroModel;
     uint gpsBaudrate;
-    GPSCommandType gpsCommandType;
+    GPSCommandType gpsCommandType; // Also stores gpsEnabled
     uint gpsTx;
     uint gpsRx;
 } ConfigSensors;
@@ -153,7 +154,7 @@ typedef struct ConfigSensors {
 #define IMU_MODEL_DEF IMU_MODEL_BNO055
 #define IMU_SDA_DEF 16
 #define IMU_SCL_DEF 17
-#define GPS_ENABLED_DEF true
+#define BARO_MODEL_DEF BARO_MODEL_NONE
 #define GPS_BAUDRATE_DEF 9600
 #define GPS_COMMAND_TYPE_DEF GPS_COMMAND_TYPE_PMTK
 #define GPS_TX_DEF 21

@@ -7,15 +7,11 @@
 
 #include "nav.h"
 
-/**
- * I'm not writing documentation for this.
-*/
 static inline double toRadians(double degrees) {
     return degrees * M_PI / 180.0;
 }
 
 double calculateBearing(double latA, double lonA, double latB, double lonB) {
-    // Fancy trig woaaaah I definetly came up with this
     double thetaA = toRadians(latA);
     double thetaB = toRadians(latB);
     double deltaL = toRadians(lonB - lonA);

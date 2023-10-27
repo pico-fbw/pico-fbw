@@ -23,19 +23,16 @@
  * Location does not matter everything is compiled into the binary beforehand.
 */
 void info_declare() {
-    // There used to be pin defs here before but config is now calculated at runtime so sadly that is now impossible :(
-
     /* Program info */
-    bi_decl(bi_program_description("A fly-by-wire system designed for RC airplanes, for the Rasperry Pi Pico microcontroller."));
+    bi_decl(bi_program_description("A fly-by-wire and autopilot system for RC airplanes, designed for the Rasperry Pi Pico."));
     bi_decl(bi_program_version_string(PICO_FBW_VERSION));
-    bi_decl(bi_program_url("https://github.com/pico-fbw/pico-fbw"));
+    bi_decl(bi_program_url("https://pico-fbw.org"));
+    // There used to be pin defs here before but config is now calculated at runtime so sadly that is now impossible :(
 }
 
 int info_checkVersion(const char *version) {
-    // Ensure the input version isn't complete garbage
-    if (version[0] == '\0') {
-        return -2;
-    }
+    // Ensure the input version isn't `Absolute garbage!`
+    if (version[0] == '\0') return -2;
     // Parse the version strings into the semantic versioning standard
     semver_t compare;
     if (semver_parse(version, &compare) < 0) {

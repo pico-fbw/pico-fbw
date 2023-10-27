@@ -54,11 +54,11 @@ bool gps_init() {
         case GPS_COMMAND_TYPE_PMTK:
             // PMTK manual: https://cdn.sparkfun.com/assets/parts/1/2/2/8/0/PMTK_Packet_User_Manual.pdf
             // Enable the correct sentences
-            sleep_ms(1500); // Acknowledgement is a hit or miss without this delay
+            sleep_ms(1800); // Acknowledgement is a hit or miss without a delay
             uart_write_blocking(GPS_UART, "$PMTK314,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n", 49); // VTG, GGA, GSA enabled once per fix
-            // Check up to 15 sentences for the acknowledgement
+            // Check up to 20 sentences for the acknowledgement
             uint8_t lines = 0;
-            while (lines < 15) {
+            while (lines < 20) {
                 char *line = NULL;
                 if (uart_is_readable_within_us(GPS_UART, GPS_COMMAND_TIMEOUT_MS * 1000)) {
                     line = uart_read_line(GPS_UART);

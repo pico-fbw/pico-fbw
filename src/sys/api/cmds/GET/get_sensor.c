@@ -18,7 +18,7 @@
 uint api_get_sensor(const char *cmd, const char *args) {
     Angles imu = imu_getAngles();
     GPS gps = { 0, 0, 0, 0, 0 };
-    if (config.sensors.gpsEnabled) {
+    if (config.sensors.gpsCommandType != GPS_COMMAND_TYPE_NONE) {
         gps = gps_getData();
     }
 
@@ -32,7 +32,7 @@ uint api_get_sensor(const char *cmd, const char *args) {
             }
             break;
         case 2: // GPS only
-            if (!config.sensors.gpsEnabled) {
+            if (!config.sensors.gpsCommandType != GPS_COMMAND_TYPE_NONE) {
                 return 501;
             }
             if (gps.lat != INFINITY) {
@@ -59,5 +59,5 @@ uint api_get_sensor(const char *cmd, const char *args) {
             }
             break;
     }
-    return 200;
+    return -1;
 }

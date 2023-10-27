@@ -106,46 +106,48 @@ static inline void url_decode(char *str) {
         // cyw43_arch_deinit();
     }
 
+    int wifly_genPageContent(char *result, size_t max_result_len) {
+        char color[8];
+        char msg[165]; // change this if the longest message gets any larger, this is too small for me to implement malloc and such
+        switch(fplanStatus) {
+            case WIFLY_STATUS_AWAITING:
+                snprintf(color, sizeof(color), WIFLY_HEX_INACTIVE);
+                snprintf(msg, sizeof(msg), "Awaiting flightplan...");
+                break;
+            case WIFLY_STATUS_OK:
+                snprintf(color, sizeof(color), WIFLY_HEX_OK);
+                snprintf(msg, sizeof(msg), "Flightplan successfully uploaded!");
+                break;
+            case WIFLY_STATUS_GPS_OFFSET:
+                snprintf(color, sizeof(color), WIFLY_HEX_OK);
+                snprintf(msg, sizeof(msg), "Flightplan successfully uploaded!<br><br>When ready, please engage auto mode to calibrate the GPS."
+                                        "<br>Auto mode will be automatically disengaged once complete.");
+                break;
+            case WIFLY_ERR_PARSE:
+                snprintf(color, sizeof(color), WIFLY_HEX_ERR);
+                snprintf(msg, sizeof(msg), "<b>Error:</b> parse. Check formatting and try again.");
+                break;
+            case WIFLY_ERR_VERSION:
+                snprintf(color, sizeof(color), WIFLY_HEX_ERR);
+                snprintf(msg, sizeof(msg), "<b>Error:</b> flightplan version incompatable! Please update your firmware.");
+                break;
+            case WIFLY_ERR_MEM:
+                snprintf(color, sizeof(color), WIFLY_HEX_ERR);
+                snprintf(msg, sizeof(msg), "<b>Error:</b> out of memory! Please restart and try again.");
+                break;
+            case WIFLY_WARN_FW_VERSION:
+                snprintf(color, sizeof(color), WIFLY_HEX_WARN);
+                snprintf(msg, sizeof(msg), "<b>Warning:</b> there is a new firmware version available!");
+                break;   
+            default:
+                return 0;
+        }
+        return snprintf(result, max_result_len, PAGE_CONTENT, color, msg);
+    }
+
 #endif // RASPBERRYPI_PICO_W
 
-int wifly_genPageContent(char *result, size_t max_result_len) {
-    char color[8];
-    char msg[165]; // change this if the longest message gets any larger, this is too small for me to implement malloc and such
-    switch(fplanStatus) {
-        case WIFLY_STATUS_AWAITING:
-            snprintf(color, sizeof(color), WIFLY_HEX_INACTIVE);
-            snprintf(msg, sizeof(msg), "Awaiting flightplan...");
-            break;
-        case WIFLY_STATUS_OK:
-            snprintf(color, sizeof(color), WIFLY_HEX_OK);
-            snprintf(msg, sizeof(msg), "Flightplan successfully uploaded!");
-            break;
-        case WIFLY_STATUS_GPS_OFFSET:
-            snprintf(color, sizeof(color), WIFLY_HEX_OK);
-            snprintf(msg, sizeof(msg), "Flightplan successfully uploaded!<br><br>When ready, please engage auto mode to calibrate the GPS."
-                                       "<br>Auto mode will be automatically disengaged once complete.");
-            break;
-        case WIFLY_ERR_PARSE:
-            snprintf(color, sizeof(color), WIFLY_HEX_ERR);
-            snprintf(msg, sizeof(msg), "<b>Error:</b> parse. Check formatting and try again.");
-            break;
-        case WIFLY_ERR_VERSION:
-            snprintf(color, sizeof(color), WIFLY_HEX_ERR);
-            snprintf(msg, sizeof(msg), "<b>Error:</b> flightplan version incompatable! Please update your firmware.");
-            break;
-        case WIFLY_ERR_MEM:
-            snprintf(color, sizeof(color), WIFLY_HEX_ERR);
-            snprintf(msg, sizeof(msg), "<b>Error:</b> out of memory! Please restart and try again.");
-            break;
-        case WIFLY_WARN_FW_VERSION:
-            snprintf(color, sizeof(color), WIFLY_HEX_WARN);
-            snprintf(msg, sizeof(msg), "<b>Warning:</b> there is a new firmware version available!");
-            break;   
-        default:
-            return 0;
-    }
-    return snprintf(result, max_result_len, PAGE_CONTENT, color, msg);
-}
+// TODO: parsing of drop values + implement into auto mode
 
 bool wifly_parseFplan(const char *fplan) {
     // Check if we have already parsed the flightplan

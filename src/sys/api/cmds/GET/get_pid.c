@@ -50,5 +50,5 @@ uint api_get_pid(const char *cmd, const char *args) {
         printf("null");
     }
     printf("}}\n");
-    return 200;
+    return -1;
 }

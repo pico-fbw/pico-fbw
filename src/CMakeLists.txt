@@ -18,7 +18,7 @@ target_link_libraries(${PROJECT_NAME}
 
 # Import Pico W specific libraries and set specific compiler definitions
 if ("$CACHE{PICO_BOARD}" STREQUAL "pico" OR "$CACHE{PICO_BOARD}" STREQUAL "pico_w")
-    message(STATUS "[pico-fbw] $CACHE{PICO_BOARD} is compatable")
+    message(STATUS "[pico-fbw] Board checks passed")
 else ()
     message(WARNING "[pico-fbw] No compatable board found")
 endif ()

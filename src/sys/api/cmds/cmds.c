@@ -22,6 +22,12 @@
 #include "SET/set_setpoints.h"
 #include "SET/set_target.h"
 
+#include "TEST/test_all.h"
+#include "TEST/test_esc.h"
+#include "TEST/test_flash.h"
+#include "TEST/test_gps.h"
+#include "TEST/test_imu.h"
+#include "TEST/test_pwm.h"
 #include "TEST/test_servo.h"
 
 #include "MISC/about.h"
@@ -75,8 +81,19 @@ uint api_handle_set(const char *cmd, const char *args) {
 }
 
 uint api_handle_test(const char *cmd, const char *args) {
-    // TODO: tests for FLASH, PWM, IMU, GPS, and ALL (diagnostic)
-    if (strcasecmp(cmd, "TEST_SERVO") == 0) {
+    if (strcasecmp(cmd, "TEST_ALL") == 0) {
+        return api_test_all(cmd, args);
+    } else if (strcasecmp(cmd, "TEST_ESC") == 0) {
+        return api_test_esc(cmd, args);
+    } else if (strcasecmp(cmd, "TEST_FLASH") == 0) {
+        return api_test_flash(cmd, args);
+    } else if (strcasecmp(cmd, "TEST_GPS") == 0) {
+        return api_test_gps(cmd, args);
+    } else if (strcasecmp(cmd, "TEST_IMU") == 0) {
+        return api_test_imu(cmd, args);
+    } else if (strcasecmp(cmd, "TEST_PWM") == 0) {
+        return api_test_pwm(cmd, args);
+    } else if (strcasecmp(cmd, "TEST_SERVO") == 0) {
         return api_test_servo(cmd, args);
     } else {
         return 404;

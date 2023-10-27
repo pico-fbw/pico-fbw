@@ -14,7 +14,7 @@ uint api_get_fplan(const char *cmd, const char *args) {
     const char *fplan = wifly_getFplanJson();
     if (fplan != NULL && wifly_getWaypointCount() > 0) {
         printf("%s\n", fplan);
-        return 200;
+        return -1;
     } else {
         return 403;
     }

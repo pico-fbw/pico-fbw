@@ -84,5 +84,5 @@ uint api_get_config(const char *cmd, const char *args) {
             }
         }
     }
-    return 200;
+    return -1;
 }
