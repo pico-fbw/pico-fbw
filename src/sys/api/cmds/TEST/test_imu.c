@@ -10,6 +10,6 @@
 
 // TODO: prompt the user to roll, pitch, and yaw in positive directions and evaluate if that is what the IMU sees
 
-void api_test_imu(const char *cmd, const char *args) {
+uint api_test_imu(const char *cmd, const char *args) {
     
 }

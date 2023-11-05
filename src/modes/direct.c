@@ -6,10 +6,9 @@
 #include "pico/types.h"
 
 #include "../io/esc.h"
+#include "../io/flash.h"
 #include "../io/servo.h"
 #include "../io/pwm.h"
-
-#include "../sys/config.h"
 
 #include "direct.h"
 
@@ -21,20 +20,20 @@
 */
 
 void mode_direct() {
-    switch (config.general.controlMode) {
+    switch ((ControlMode)flash.general[GENERAL_CONTROL_MODE]) {
         case CTRLMODE_3AXIS_ATHR:
-            esc_set(config.pins1.escThrottle, pwm_read(config.pins1.inputThrottle, PWM_MODE_ESC));
+            esc_set((uint)flash.pins[PINS_ESC_THROTTLE], pwm_read((uint)flash.pins[PINS_INPUT_THROTTLE], PWM_MODE_ESC));
         case CTRLMODE_3AXIS:
-            servo_set(config.pins0.servoAil, pwm_read(config.pins0.inputAil, PWM_MODE_DEG));
-            servo_set(config.pins0.servoElev, pwm_read(config.pins0.inputElev, PWM_MODE_DEG));
-            servo_set(config.pins0.servoRud, pwm_read(config.pins0.inputRud, PWM_MODE_DEG));
+            servo_set((uint)flash.pins[PINS_SERVO_AIL], pwm_read((uint)flash.pins[PINS_INPUT_AIL], PWM_MODE_DEG));
+            servo_set((uint)flash.pins[PINS_SERVO_ELEV], pwm_read((uint)flash.pins[PINS_INPUT_ELEV], PWM_MODE_DEG));
+            servo_set((uint)flash.pins[PINS_SERVO_RUD], pwm_read((uint)flash.pins[PINS_INPUT_RUD], PWM_MODE_DEG));
             break;
         case CTRLMODE_FLYINGWING_ATHR:
-            esc_set(config.pins1.escThrottle, pwm_read(config.pins1.inputThrottle, PWM_MODE_ESC));
+            esc_set((uint)flash.pins[PINS_ESC_THROTTLE], pwm_read((uint)flash.pins[PINS_INPUT_THROTTLE], PWM_MODE_ESC));
         case CTRLMODE_FLYINGWING:
             // TODO: flying wing mixing here
-            servo_set(config.pins1.servoElevonL, pwm_read(config.pins0.inputAil, PWM_MODE_DEG));
-            servo_set(config.pins1.servoElevonR, pwm_read(config.pins0.inputElev, PWM_MODE_DEG));
+            servo_set((uint)flash.pins[PINS_SERVO_ELEVON_L], pwm_read((uint)flash.pins[PINS_INPUT_AIL], PWM_MODE_DEG));
+            servo_set((uint)flash.pins[PINS_SERVO_ELEVON_R], pwm_read((uint)flash.pins[PINS_INPUT_ELEV], PWM_MODE_DEG));
             break;
     }
 }

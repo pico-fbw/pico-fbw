@@ -5,12 +5,10 @@
 
 #include <math.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include "pico/time.h"
-#include "pico/types.h"
 
 #include "hardware/gpio.h"
 #include "hardware/uart.h"
@@ -20,37 +18,37 @@
 #include "../modes/flight.h"
 #include "../modes/modes.h"
 
-#include "../sys/config.h"
 #include "../sys/log.h"
 
+#include "flash.h"
 #include "serial.h"
 
 #include "gps.h"
 
 bool gps_init() {
-    if (config.debug.debug_fbw) printf("[gps] initializing ");
+    if (print.fbw) printf("[gps] initializing ");
     if (GPS_UART == uart0) {
-        if (config.debug.debug_fbw) printf("uart0\n");
+        if (print.fbw) printf("uart0\n");
     } else if (GPS_UART == uart1) {
-        if (config.debug.debug_fbw) printf("uart1\n");
+        if (print.fbw) printf("uart1\n");
     } else {
-        if (config.debug.debug_fbw) printf("\n");
+        if (print.fbw) printf("\n");
     }
-    uart_init(GPS_UART, config.sensors.gpsBaudrate);
+    uart_init(GPS_UART, (uint)flash.sensors[SENSORS_GPS_BAUDRATE]);
     uart_set_fifo_enabled(GPS_UART, false); // Disable FIFO for setting up query schedule
     uart_set_format(GPS_UART, 8, 1, UART_PARITY_NONE); // NMEA-0183 format
-    gpio_set_function(config.sensors.gpsTx, GPIO_FUNC_UART);
-    gpio_set_function(config.sensors.gpsRx, GPIO_FUNC_UART);
-    gpio_pull_up(config.sensors.gpsTx);
-    gpio_pull_up(config.sensors.gpsRx);
-    if (config.debug.debug_fbw) printf("[gps] configuring...\n");
+    gpio_set_function((uint)flash.pins[PINS_GPS_TX], GPIO_FUNC_UART);
+    gpio_set_function((uint)flash.pins[PINS_GPS_RX], GPIO_FUNC_UART);
+    gpio_pull_up((uint)flash.pins[PINS_GPS_TX]);
+    gpio_pull_up((uint)flash.pins[PINS_GPS_RX]);
+    if (print.fbw) printf("[gps] configuring...\n");
     // Clear FIFO and re-enable
     irq_set_enabled(GPS_UART_IRQ, true);
     uart_set_fifo_enabled(GPS_UART, true);
     // Send a command and wait until UART is ready to read, then read back the command response
     // Useful tool for calculating command checksums: https://nmeachecksum.eqth.net/
-    if (config.debug.debug_gps) printf("[gps] setting up query schedule\n");
-    switch (config.sensors.gpsCommandType) {
+    if (print.gps) printf("[gps] setting up query schedule\n");
+    switch ((GPSCommandType)flash.sensors[SENSORS_GPS_COMMAND_TYPE]) {
         case GPS_COMMAND_TYPE_PMTK:
             // PMTK manual: https://cdn.sparkfun.com/assets/parts/1/2/2/8/0/PMTK_Packet_User_Manual.pdf
             // Enable the correct sentences
@@ -62,17 +60,17 @@ bool gps_init() {
                 char *line = NULL;
                 if (uart_is_readable_within_us(GPS_UART, GPS_COMMAND_TIMEOUT_MS * 1000)) {
                     line = uart_read_line(GPS_UART);
-                    if (config.debug.debug_gps) printf("[gps] response %d: %s\n", lines, line);
+                    if (print.gps) printf("[gps] response %d: %s\n", lines, line);
                     bool result = (strncmp(line, "$PMTK001,314,3*36", 17) == 0); // Acknowledged and successful execution of the command
                     free(line);
                     if (result) return true;
                     lines++;
                 } else {
-                    if (config.debug.debug_fbw) printf("[gps] ERROR: timed out whilst awaiting a response!\n");
+                    if (print.fbw) printf("[gps] ERROR: timed out whilst awaiting a response!\n");
                     return false;
                 }
             }
-            if (config.debug.debug_fbw) printf("[gps] ERROR: %d responses were checked but none were valid!\n", lines);
+            if (print.fbw) printf("[gps] ERROR: %d responses were checked but none were valid!\n", lines);
             return false;
             break;
         default:
@@ -108,7 +106,7 @@ GPS gps_getData() {
                         return (GPS){INFINITY};
                     }
                 } else {
-                    if (config.debug.debug_gps) printf("[gps] ERROR: failed parsing $xxGGA sentence\n");
+                    if (print.gps) printf("[gps] ERROR: failed parsing $xxGGA sentence\n");
                 }
                 break;
             }
@@ -119,7 +117,7 @@ GPS gps_getData() {
                     hdop = minmea_tofloat(&gsa.hdop);
                     vdop = minmea_tofloat(&gsa.vdop);
                 } else {
-                    if (config.debug.debug_gps) printf("[gps] ERROR: failed parsing $xxGSA sentence\n");
+                    if (print.gps) printf("[gps] ERROR: failed parsing $xxGSA sentence\n");
                 }
                 break;
             }
@@ -129,7 +127,7 @@ GPS gps_getData() {
                     spd = minmea_tofloat(&vtg.speed_knots);
                     trk_true = minmea_tofloat(&vtg.true_track_degrees);
                 } else {
-                    if (config.debug.debug_gps) printf("[gps] ERROR: failed parsing $xxVTG sentence\n");
+                    if (print.gps) printf("[gps] ERROR: failed parsing $xxVTG sentence\n");
                 }
                 break;
             }
@@ -175,13 +173,13 @@ int gps_calibrateAltOffset(uint num_samples) {
                         if (strncmp(&gga.altitude_units, "M", 1) == 0) {
                             int calt = (int)(minmea_tofloat(&gga.altitude) * 3.28084f);
                             alts += calt;
-                            if (config.debug.debug_gps) printf("[gps] altitude: %d (%d of %d)\n", calt, samples + 1, num_samples);
+                            if (print.gps) printf("[gps] altitude: %d (%d of %d)\n", calt, samples + 1, num_samples);
                         } else {
-                            if (config.debug.debug_fbw) printf("[gps] ERROR: invalid altitude units during calibration\n");
+                            if (print.fbw) printf("[gps] ERROR: invalid altitude units during calibration\n");
                             return PICO_ERROR_GENERIC;
                         }
                     } else {
-                        if (config.debug.debug_gps) printf("[gps] ERROR: failed parsing $xxGGA sentence during calibration\n");
+                        if (print.gps) printf("[gps] ERROR: failed parsing $xxGGA sentence during calibration\n");
                     }
                     samples++;
                 }
@@ -191,11 +189,11 @@ int gps_calibrateAltOffset(uint num_samples) {
     }
     log_clear(INFO);
     if (time_reached(calibrationTimeout)) {
-        if (config.debug.debug_fbw) printf("[gps] ERROR: altitude calibration timed out\n");
+        if (print.fbw) printf("[gps] ERROR: altitude calibration timed out\n");
         return PICO_ERROR_TIMEOUT;
     } else {
         altOffset = alts / samples;
-        if (config.debug.debug_fbw) printf("[gps] altitude offset calculated as: %d\n", altOffset);
+        if (print.fbw) printf("[gps] altitude offset calculated as: %d\n", altOffset);
         altOffsetCalibrated = true;
         return 0;
     }

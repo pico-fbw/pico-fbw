@@ -16,7 +16,7 @@ void mode_tune() {
 }
 
 bool mode_tuneisCalibrated() {
-    if ((flash_readFloat(FLOAT_SECTOR_PID, 0) == FLAG_PID)) {
+    if ((flash.pid[PID_FLAG] == FLAG_PID)) {
         // TODO: also ensure the values make sense?
         return true;
     } else {

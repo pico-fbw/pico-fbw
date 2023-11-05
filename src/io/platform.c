@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "pico/bootrom.h"
-#include "pico/config.h"
 #include "pico/time.h"
 
 #include "hardware/gpio.h"
@@ -16,7 +15,6 @@
 #include "display.h"
 
 #include "../sys/info.h"
-#include "../sys/config.h"
 
 #include "platform.h"
 

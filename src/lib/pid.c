@@ -14,12 +14,12 @@
 
 #include <stdio.h>
 
-#include "../sys/config.h"
+#include "../io/flash.h"
 
 #include "pid.h"
 
 void pid_init(PIDController *pid) {
-	if (config.debug.debug_fbw) printf("[pid] initializing a PID controller\n");
+	if (print.fbw) printf("[pid] initializing a PID controller\n");
 
 	/* Clear controller variables */
 	pid->integrator = 0.0f;

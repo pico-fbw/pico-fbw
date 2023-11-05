@@ -10,123 +10,167 @@
 
 #include "hardware/flash.h"
 
-/**
- * FLASHMAP (floats):
- * "Sector"  |  Use
- * 
- * 0         |  Boot
- *           |  0 - Flag
- *           |  1 - unused
- *           |  2 - unused
- *           |  3 - unused
- *           |  4 - unused
- *           |  5 - unused
- *           |  6 - unused
- *           |  7 - unused
- * 
- * 1         |  PWM offset calibration flag / data
- *           |  0 - Flag
- *           |  1 - INPUT_AIL_PIN offset
- *           |  2 - INPUT_ELEV_PIN offset
- *           |  3 - INPUT_RUD_PIN offset
- *           |  4 - INPUT_SW_PIN offset
- *           |  5 - INPUT_THR_PIN offset
- *           |  6 - Control mode flag
- *           |  7 - unused
- * 
- * 2         |  IMU axis mapping flag / data
- *           |  0 - Flag
- *           |  1 - IMU type flag
- *           |  2 - BNO055 axis map byte
- *           |  3 - BNO055 axis sign byte
- *           |  4 - unused
- *           |  5 - unused
- *           |  6 - unused
- *           |  7 - unused
- * 
- * 3         |  IMU calibration profile flag / data (1)
- *           |  0 - Flag
- *           |  1 - Accelerometer offset X
- *           |  2 - Accelerometer offset Y
- *           |  3 - Accelerometer offset Z
- *           |  4 - Magnetometer offset X
- *           |  5 - Magnetometer offset Y
- *           |  6 - Magnetometer offset Z
- *           |  7 - unused
- * 
- * 4         |  IMU calibration profile data (2)
- *           |  0 - Gyroscope offset X
- *           |  1 - Gyroscope offset Y
- *           |  2 - Gyroscope offset Z
- *           |  3 - Accelerometer radius
- *           |  4 - Magnetometer radius
- *           |  5 - unused
- *           |  6 - unused
- *           |  7 - unused
- * 
- * 5         |  PID tuning flag / data
- *           |  0 - Flag
- *           |  1 - Roll kP
- *           |  2 - Roll tI
- *           |  3 - Roll tD
- *           |  4 - Pitch kP
- *           |  5 - Pitch tI
- *           |  6 - Pitch tD
- *           |  7 - unused
- * 
- * 6-15      | CONFIG
- *           | See sys/config.h for more info
-*/
+#include "baro.h"
+#include "gps.h"
+#include "imu.h"
+#include "pwm.h"
+#include "../wifly/wifly.h"
+#include "../sys/switch.h"
 
-#define FLOAT_SECTOR_MIN FLOAT_SECTOR_PWM
-#define FLOAT_SECTOR_MIN_CONFIG FLOAT_SECTOR_CONFIG_GENERAL
-typedef enum FloatSector {
-    FLOAT_SECTOR_BOOT,
-    FLOAT_SECTOR_PWM,
-    FLOAT_SECTOR_IMU_MAP,
-    FLOAT_SECTOR_IMU_CFG0,
-    FLOAT_SECTOR_IMU_CFG1,
-    FLOAT_SECTOR_PID,
-    FLOAT_SECTOR_CONFIG_GENERAL,
-    FLOAT_SECTOR_CONFIG_CONTROL,
-    FLOAT_SECTOR_CONFIG_LIMITS,
-    FLOAT_SECTOR_CONFIG_FLYINGWING,
-    FLOAT_SECTOR_CONFIG_PINS0,
-    FLOAT_SECTOR_CONFIG_PINS1,
-    FLOAT_SECTOR_CONFIG_SENSORS,
-    FLOAT_SECTOR_CONFIG_PID0,
-    FLOAT_SECTOR_CONFIG_PID1,
-    FLOAT_SECTOR_CONFIG_DEBUG
-} FloatSector;
-#define FLOAT_SECTOR_MAX FLOAT_SECTOR_CONFIG_DEBUG
-#define FLOAT_SECTOR_MAX_CONFIG FLOAT_SECTOR_CONFIG_DEBUG
+#define FLAG_END -30.54245f
 
-// Gets the memory location IN FLASH of a given PHYSICAL (not virtual!) sector.
-#define GET_PHYSECTOR_LOC(sector) (PICO_FLASH_SIZE_BYTES - (FLASH_SECTOR_SIZE * (sector + 1)))
-// Gets the absolute memory location of a given PHYSICAL (not virtual!) sector.
-#define GET_PHYSECTOR_LOC_ABSOLUTE(sector) (XIP_BASE + (GET_PHYSECTOR_LOC(sector)))
+typedef enum SectorBoot {
+    BOOT_FLAG
+    #define FLAG_BOOT 3.1305210f
+} SectorBoot;
+#define S_BOOT_HIGHEST BOOT_FLAG
 
-// Each "sector" has a max of 8 floats
-// This is a fixed value so that locations of data will not change if more sectors are ever added
-#define FLASH_NUM_FLOAT_SECTORS 125 // TODO: make less sectors but more values, merge config sections together
-// The amount of floats that can be fit in one flash page
-#define FLOAT_SECTOR_SIZE_FULL FLASH_SECTOR_SIZE/sizeof(float) // don't use 1024, it's buggy ~ Myles
+typedef enum SectorPWM {
+    PWM_FLAG,
+    #define FLAG_PWM 0.5f
+    PWM_MODE,
+    PWM_OFFSET_AIL,
+    PWM_OFFSET_ELEV,
+    PWM_OFFSET_RUD,
+    PWM_OFFSET_SW,
+    PWM_OFFSET_THR
+} SectorPWM;
+#define S_PWM_HIGHEST PWM_OFFSET_THR
+
+typedef enum SectorIMU {
+    IMU_FLAG,
+    #define FLAG_IMU 0.7f
+    IMU_MODEL
+    // more, when I figure out calibration for sure
+} SectorIMU;
+#define S_IMU_HIGHEST IMU_MODEL
+
+typedef enum SectorPID {
+    PID_FLAG,
+    #define FLAG_PID 0.3f
+
+    PID_ROLL_KP,
+    PID_ROLL_TI,
+    PID_ROLL_TD,
+    PID_ROLL_KT,
+    PID_ROLL_TAU,
+    PID_ROLL_INTEGMIN,
+    PID_ROLL_INTEGMAX,
+
+    PID_PITCH_KP,
+    PID_PITCH_TI,
+    PID_PITCH_TD,
+    PID_PITCH_KT,
+    PID_PITCH_TAU,
+    PID_PITCH_INTEGMIN,
+    PID_PITCH_INTEGMAX,
+
+    PID_YAW_KP,
+    PID_YAW_TI,
+    PID_YAW_TD,
+    PID_YAW_KT,
+    PID_YAW_TAU,
+    PID_YAW_INTEGMIN,
+    PID_YAW_INTEGMAX
+} SectorPID;
+#define S_PID_HIGHEST PID_YAW_INTEGMAX
+
+typedef enum SectorConfigGeneral {
+    GENERAL_CONTROL_MODE,
+    GENERAL_SWITCH_TYPE,
+    GENERAL_MAX_CALIBRATION_OFFSET,
+    GENERAL_SERVO_HZ,
+    GENERAL_ESC_HZ,
+    GENERAL_API_ENABLED,
+    GENERAL_WIFLY_STATUS,
+    GENERAL_SKIP_CALIBRATION
+} SectorConfigGeneral;
+#define S_GENERAL_HIGHEST GENERAL_SKIP_CALIBRATION
+
+typedef enum SectorConfigControl {
+    CONTROL_SENSITIVITY,
+    CONTROL_RUDDER_SENSITIVITY,
+    CONTROL_DEADBAND,
+
+    CONTROL_THROTTLE_DETENT_IDLE,
+    CONTROL_THROTTLE_DETENT_MCT,
+    CONTROL_THROTTLE_DETENT_MAX,
+    CONTROL_THROTTLE_MAX_TIME,
+
+    CONTROL_ROLL_LIMIT,
+    CONTROL_ROLL_LIMIT_HOLD,
+    CONTROL_PITCH_LOWER_LIMIT,
+    CONTROL_PITCH_UPPER_LIMIT,
+
+    CONTROL_MAX_AIL_DEFLECTION,
+    CONTROL_MAX_ELEV_DEFLECTION,
+    CONTROL_MAX_RUD_DEFLECTION,
+
+    CONTROL_MAX_ELEVON_DEFLECTION,
+    CONTROL_ELEVON_MIXING_GAIN,
+    CONTROL_AIL_MIXING_BIAS,
+    CONTROL_ELEV_MIXING_BIAS
+} SectorConfigControl;
+#define S_CONTROL_HIGHEST CONTROL_ELEV_MIXING_BIAS
+
+typedef enum SectorConfigPins {
+    PINS_INPUT_AIL,
+    PINS_SERVO_AIL,
+    PINS_INPUT_ELEV,
+    PINS_SERVO_ELEV,
+    PINS_INPUT_RUD,
+    PINS_SERVO_RUD,
+    PINS_INPUT_THROTTLE,
+    PINS_ESC_THROTTLE,
+    PINS_INPUT_SWITCH,
+    PINS_SERVO_ELEVON_L,
+    PINS_SERVO_ELEVON_R,
+
+    PINS_AAHRS_SDA,
+    PINS_AAHRS_SCL,
+    PINS_GPS_TX,
+    PINS_GPS_RX,
+
+    PINS_REVERSE_ROLL,
+    PINS_REVERSE_PITCH,
+    PINS_REVERSE_YAW
+} SectorConfigPins;
+#define S_PIN_MIN PINS_INPUT_AIL
+#define S_PIN_MAX PINS_GPS_RX
+#define S_PINS_HIGHEST PINS_REVERSE_YAW
+
+typedef enum SectorConfigSensors {
+    SENSORS_IMU_MODEL,
+    SENSORS_BARO_MODEL,
+    SENSORS_GPS_COMMAND_TYPE,
+    SENSORS_GPS_BAUDRATE,
+} SectorConfigSensors;
+#define S_SENSORS_HIGHEST SENSORS_GPS_BAUDRATE
+
+typedef enum SectorConfigSystem {
+    SYSTEM_DEBUG,
+    SYSTEM_DEBUG_FBW,
+    SYSTEM_DEBUG_IMU,
+    SYSTEM_DEBUG_GPS,
+    SYSTEM_DEBUG_WIFLY,
+    SYSTEM_DEBUG_NETWORK,
+    SYSTEM_DUMP_NETWORK,
+    SYSTEM_WATCHDOG_TIMEOUT
+} SectorConfigSystem;
+#define S_SYSTEM_HIGHEST SYSTEM_WATCHDOG_TIMEOUT
+
+// Total number of float sectors
+#define FLASH_NUM_FLOAT_SECTORS 32
+// The amount of floats that can be fit in one flash page (don't use 1024?)
+#define FLOAT_SECTOR_SIZE_FULL FLASH_SECTOR_SIZE/sizeof(float)
 // The amount of floats that can be fit in one float sector
 #define FLOAT_SECTOR_SIZE FLOAT_SECTOR_SIZE_FULL/FLASH_NUM_FLOAT_SECTORS
 #define FLOAT_SECTOR_SIZE_BYTES FLOAT_SECTOR_SIZE*sizeof(float)
 // The physical sector that the virtual float "sectors" are placed in
 #define FLOAT_PHYSECTOR 0 // Sector zero is the last sector on the flash memory (eg. the top of the 2MB flash) so it is far away from program data
 
-#define STRING_SECTOR_MIN STRING_SECTOR_VERSION
-typedef enum StringSector {
-    STRING_SECTOR_VERSION,
-    STRING_SECTOR_CONFIG_WIFLY_SSID,
-    STRING_SECTOR_CONFIG_WIFLY_PASS
-} StringSector;
-#define STRING_SECTOR_MAX STRING_SECTOR_CONFIG_WIFLY_PASS
-
-// Each "sector" has a max length of 64 characters
-#define FLASH_NUM_STRING_SECTORS 64
+// Total number of string sectors
+#define FLASH_NUM_STRING_SECTORS 32
 // The amount of chars that can be fit in one flash page
 #define STRING_SECTOR_SIZE_FULL FLASH_SECTOR_SIZE/sizeof(char)
 // The amount of chars that can be fit in one string sector
@@ -135,63 +179,57 @@ typedef enum StringSector {
 // The physical sector that the virtual string "sectors" are placed in
 #define STRING_PHYSECTOR 1
 
-/**
- * Erases only the flash sectors that the program actually uses, to save flash wear cycles and time.
-*/
-void flash_reset();
+typedef struct Flash {
+    float boot[FLOAT_SECTOR_SIZE];
+    float pwm[FLOAT_SECTOR_SIZE];
+    float imu[FLOAT_SECTOR_SIZE];
+    float pid[FLOAT_SECTOR_SIZE];
+    float general[FLOAT_SECTOR_SIZE];
+    float control[FLOAT_SECTOR_SIZE];
+    float pins[FLOAT_SECTOR_SIZE];
+    float sensors[FLOAT_SECTOR_SIZE];
+    float system[FLOAT_SECTOR_SIZE];
+
+    char version[STRING_SECTOR_SIZE];
+    char wifly_ssid[STRING_SECTOR_SIZE];
+    char wifly_pass[STRING_SECTOR_SIZE];
+} Flash;
+#define NUM_FLOAT_SECTORS 9
+#define NUM_STRING_SECTORS 3
+
+#define SIZEOF_FLOAT_SECTORS (NUM_FLOAT_SECTORS * FLOAT_SECTOR_SIZE)
+#define SIZEOF_FLOAT_SECTORS_BYTES (NUM_FLOAT_SECTORS * FLOAT_SECTOR_SIZE_BYTES)
+#define SIZEOF_STRING_SECTORS (NUM_STRING_SECTORS * STRING_SECTOR_SIZE)
+#define SIZEOF_STRING_SECTORS_BYTES (NUM_STRING_SECTORS * STRING_SECTOR_SIZE_BYTES)
+
+typedef struct PrintDefs {
+    bool fbw, imu, gps, wifly, network, dumpNetwork;
+} PrintDefs;
+
+extern Flash flash;
+extern PrintDefs print;
+
+// Gets the memory location IN FLASH of a given PHYSICAL (not virtual!) sector.
+#define GET_PHYSECTOR_LOC(sector) (PICO_FLASH_SIZE_BYTES - (FLASH_SECTOR_SIZE * (sector + 1)))
+// Gets the absolute memory location of a given PHYSICAL (not virtual!) sector.
+#define GET_PHYSECTOR_LOC_ABSOLUTE(sector) (XIP_BASE + (GET_PHYSECTOR_LOC(sector)))
 
 /**
- * Caches all the data in the flash memory to RAM to decrease load times.
- * @returns number of bytes cached.
- * @note If FLASH_MUST_CACHE is set to 1, this function MUST be run before accessing the flash!
+ * Loads the current content from flash into the Flash struct.
+ * @return The number of bytes read from flash
+ * @note This function will initialize flash if necessary.
 */
-uint flash_cache();
+uint flash_load();
 
 /**
- * Writes an array of float data to a certain "sector".
- * This function requires the data to be structured as a float array with size of CONFIG_SECTOR_SIZE.
- * This WILL overwrite ALL data stored in the given sector!
- * @param sector the "sector" to write to
- * @param data pointer to array of data to write (must be a float array with size of CONFIG_SECTOR_SIZE)
- * @param toFlash whether to write directly to flash or to RAM cache
- * @note if toFlash is false, flash_flushCache() must be called to flush the changes to flash.
+ * Saves the current content of the Flash struct to flash.
 */
-void flash_writeFloat(FloatSector sector, float data[], bool toFlash);
+void flash_save();
 
 /**
- * Reads back one float value from a previously written FLOAT data array.
- * @param sector the "sector" to read from
- * @param val the value of data to read back. This should be the index of the same value from when you originally wrote the data.
- * @return the requested data according to the parameters.
+ * Formats the flash memory to default values.
+ * @note This doesn't actually format the flash, only corrupts it a bit so that it will be formatted upon the next boot.
 */
-float flash_readFloat(FloatSector sector, uint val);
-
-/**
- * Writes a string to a certain "sector".
- * This function requires the data to be structured as a char array with size of STRING_SECTOR_SIZE.
- * This WILL overwrite ALL data stored in the given sector!
- * @param sector the "sector" to write to
- * @param data pointer to array of data to write (must be a char array with size of STRING_SECTOR_SIZE)
-*/
-void flash_writeString(StringSector sector, char data[], bool toFlash);
-
-/**
- * Reads back a string from a previously written STRING data array.
- * @param sector the "sector" to read from
- * @return the requested data string.
- * @note This can return NULL if no data has been written yet.
-*/
-const char *flash_readString(StringSector sector);
-
-/**
- * Flushes the current contents of RAM cache to flash.
- * @note This will only work if FLASH_MUST_CACHE is set to 1.
-*/
-void flash_flushCache();
-
-#define FLAG_BOOT 3.1305210f
-#define FLAG_PWM 0.5f
-#define FLAG_IMU 0.7f
-#define FLAG_PID 0.3f
+void flash_format();
 
 #endif // __FLASH_H

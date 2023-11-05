@@ -12,13 +12,11 @@
 #include "GET/get_info.h"
 #include "GET/get_logs.h"
 #include "GET/get_mode.h"
-#include "GET/get_pid.h"
 #include "GET/get_sensor.h"
 
 #include "SET/set_config.h"
 #include "SET/set_fplan.h"
 #include "SET/set_mode.h"
-#include "SET/set_pid.h"
 #include "SET/set_setpoints.h"
 #include "SET/set_target.h"
 
@@ -51,8 +49,6 @@ uint api_handle_get(const char *cmd, const char *args) {
         return api_get_logs(cmd, args);
     } else if (strcasecmp(cmd, "GET_MODE") == 0) {
         return api_get_mode(cmd, args);
-    } else if (strcasecmp(cmd, "GET_PID") == 0) {
-        return api_get_pid(cmd, args);
     } else if (strcasecmp(cmd, "GET_SENSOR") == 0) {
         return api_get_sensor(cmd, args);
     } else {
@@ -68,8 +64,6 @@ uint api_handle_set(const char *cmd, const char *args) {
         return api_set_fplan(cmd, args);
     } else if (strcasecmp(cmd, "SET_MODE") == 0) {
         return api_set_mode(cmd, args);
-    } else if (strcasecmp(cmd, "SET_PID") == 0) {
-        return api_set_pid(cmd, args);
     } else if (strcasecmp(cmd, "SET_SETPOINTS") == 0) {
         return api_set_setpoints(cmd, args);
     } else if (strcasecmp(cmd, "SET_TARGET") == 0) {

@@ -16,28 +16,11 @@
 
 #include "reset.h"
 
-static inline bool reset_callback(struct repeating_timer *t) {
-    char *ans = stdin_read_line();
-    if (ans != NULL) {
-        if (strcasecmp(ans, "Y") == 0) {
-            printf("Reset will begin shortly...\n");
-            sleep_ms(2500);
-            flash_reset();
-            printf("Reset complete. Shutting down...\n");
-            platform_shutdown();
-        } else {
-            printf("Reset cancelled.\n");
-        }
-        return false;
-    }
-    return true;
-}
-
 uint api_reset(const char *cmd, const char *args) {
-    if (strncasecmp(args, "-F", 2) != 0) {
-        printf("This will erase ALL data stored on the device! Are you sure? (y/n)\n");
-        // Create timer to avoid making an infinite loop
-        static struct repeating_timer callback;
-        add_repeating_timer_ms(50, reset_callback, NULL, &callback);
-    }
+    printf("This will erase ALL user data stored on the device!\nReset will occur in 10 seconds...power off the device to cancel.\n");
+    absolute_time_t reset = make_timeout_time_ms(10000);
+    while (!time_reached(reset)) watchdog_update();
+    flash_format();
+    printf("Reset complete. Shutting down...\n");
+    platform_shutdown();
 }

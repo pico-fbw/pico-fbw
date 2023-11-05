@@ -8,1142 +8,623 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "pico/types.h"
 
-#include "info.h"
+#include "../io/flash.h"
+#include "../io/pwm.h"
 
 #include "config.h"
 
-Config config;
-
-/* Begin the world's grossest code...
-Look, the readability of the config is really good everywhere BUT here. It's a compromise I was willing to make.
-Just ignore this file and we'll all be happy, okay? Okay. */
-
-// Helper function to check if a value occurs more than once in an array
-bool contains_multiple(uint array[], uint size, uint value) {
-    uint count = 0;
-    for (uint i = 0; i < size; i++) {
-        if (array[i] == value) {
-            count++;
-        }
+static void getFromGeneral(const char *key, float **value) {
+    if (strcasecmp(key, "controlMode") == 0) {
+        *value = &flash.general[GENERAL_CONTROL_MODE];
+    } else if (strcasecmp(key, "switchType") == 0) {
+        *value = &flash.general[GENERAL_SWITCH_TYPE];
+    } else if (strcasecmp(key, "maxCalibrationOffset") == 0) {
+        *value = &flash.general[GENERAL_MAX_CALIBRATION_OFFSET];
+    } else if (strcasecmp(key, "servoHz") == 0) {
+        *value = &flash.general[GENERAL_SERVO_HZ];
+    } else if (strcasecmp(key, "escHz") == 0) {
+        *value = &flash.general[GENERAL_ESC_HZ];
+    } else if (strcasecmp(key, "apiEnabled") == 0) {
+        *value = &flash.general[GENERAL_API_ENABLED];
+    } else if (strcasecmp(key, "wiflyStatus") == 0) {
+        *value = &flash.general[GENERAL_WIFLY_STATUS];
+    } else if (strcasecmp(key, "skipCalibration") == 0) {
+        *value = &flash.general[GENERAL_SKIP_CALIBRATION];
+    } else {
+        *value = NULL;
     }
-    return count > 1;
 }
 
-/**
- * Helper function to check if all pins provided are unique.
- * @param num_pins number of pins provided
- * @param ... pins to check (casted to uints)
- * @return true if all pins are unique, false otherwise
-*/
-bool pins_unique(uint num_pins, ...) {
-    va_list args;
-    va_start(args, num_pins);
-    // Initialize an array to store pin numbers, variadic doesn't support these directly
-    uint pins[num_pins];
-    for (uint i = 0; i < num_pins; i++) {
-        pins[i] = va_arg(args, uint);
-    }
-    va_end(args);
-    for (uint i = 0; i < num_pins; i++) {
-        if (contains_multiple(pins, num_pins, pins[i])) {
-            return false;
-        }
+static bool setToGeneral(const char *key, float value) {
+    if (strcasecmp(key, "controlMode") == 0) {
+        flash.general[GENERAL_CONTROL_MODE] = value;
+    } else if (strcasecmp(key, "switchType") == 0) {
+        flash.general[GENERAL_SWITCH_TYPE] = value;
+    } else if (strcasecmp(key, "maxCalibrationOffset") == 0) {
+        flash.general[GENERAL_MAX_CALIBRATION_OFFSET] = value;
+    } else if (strcasecmp(key, "servoHz") == 0) {
+        flash.general[GENERAL_SERVO_HZ] = value;
+    } else if (strcasecmp(key, "escHz") == 0) {
+        flash.general[GENERAL_ESC_HZ] = value;
+    } else if (strcasecmp(key, "apiEnabled") == 0) {
+        flash.general[GENERAL_API_ENABLED] = value;
+    } else if (strcasecmp(key, "wiflyStatus") == 0) {
+        flash.general[GENERAL_WIFLY_STATUS] = value;
+    } else if (strcasecmp(key, "skipCalibration") == 0) {
+        flash.general[GENERAL_SKIP_CALIBRATION] = value;
+    } else {
+        return false;
     }
     return true;
 }
 
-/**
- * Validates current RAM-banked config values.
- * @return true if config is valid, false if invalid
-*/
-static bool validateConfig() {
+static void getFromControl(const char *key, float **value) {
+    if (strcasecmp(key, "controlSensitivity") == 0) {
+        *value = &flash.control[CONTROL_SENSITIVITY];
+    } else if (strcasecmp(key, "rudderSensitivity") == 0) {
+        *value = &flash.control[CONTROL_RUDDER_SENSITIVITY];
+    } else if (strcasecmp(key, "controlDeadband") == 0) {
+        *value = &flash.control[CONTROL_DEADBAND];
+    } else if (strcasecmp(key, "throttleDetentIdle") == 0) {
+        *value = &flash.control[CONTROL_THROTTLE_DETENT_IDLE];
+    } else if (strcasecmp(key, "throttleDetentMCT") == 0) {
+        *value = &flash.control[CONTROL_THROTTLE_DETENT_MCT];
+    } else if (strcasecmp(key, "throttleDetentMax") == 0) {
+        *value = &flash.control[CONTROL_THROTTLE_DETENT_MAX];
+    } else if (strcasecmp(key, "throttleMaxTime") == 0) {
+        *value = &flash.control[CONTROL_THROTTLE_MAX_TIME];
+    } else if (strcasecmp(key, "rollLimit") == 0) {
+        *value = &flash.control[CONTROL_ROLL_LIMIT];
+    } else if (strcasecmp(key, "rollLimitHold") == 0) {
+        *value = &flash.control[CONTROL_ROLL_LIMIT_HOLD];
+    } else if (strcasecmp(key, "pitchLowerLimit") == 0) {
+        *value = &flash.control[CONTROL_PITCH_LOWER_LIMIT];
+    } else if (strcasecmp(key, "pitchUpperLimit") == 0) {
+        *value = &flash.control[CONTROL_PITCH_UPPER_LIMIT];
+    } else if (strcasecmp(key, "maxAilDeflection") == 0) {
+        *value = &flash.control[CONTROL_MAX_AIL_DEFLECTION];
+    } else if (strcasecmp(key, "maxElevDeflection") == 0) {
+        *value = &flash.control[CONTROL_MAX_ELEV_DEFLECTION];
+    } else if (strcasecmp(key, "maxRudDeflection") == 0) {
+        *value = &flash.control[CONTROL_MAX_RUD_DEFLECTION];
+    } else if (strcasecmp(key, "maxElevonDeflection") == 0) {
+        *value = &flash.control[CONTROL_MAX_ELEVON_DEFLECTION];
+    } else if (strcasecmp(key, "elevonMixingGain") == 0) {
+        *value = &flash.control[CONTROL_ELEVON_MIXING_GAIN];
+    } else if (strcasecmp(key, "ailMixingBias") == 0) {
+        *value = &flash.control[CONTROL_AIL_MIXING_BIAS];
+    } else if (strcasecmp(key, "elevMixingBias") == 0) {
+        *value = &flash.control[CONTROL_ELEV_MIXING_BIAS];
+    } else {
+        *value = NULL;
+    }
+}
+
+static bool setToControl(const char *key, float value) {
+    if (strcasecmp(key, "controlSensitivity") == 0) {
+        flash.control[CONTROL_SENSITIVITY] = value;
+    } else if (strcasecmp(key, "rudderSensitivity") == 0) {
+        flash.control[CONTROL_RUDDER_SENSITIVITY] = value;
+    } else if (strcasecmp(key, "controlDeadband") == 0) {
+        flash.control[CONTROL_DEADBAND] = value;
+    } else if (strcasecmp(key, "throttleDetentIdle") == 0) {
+        flash.control[CONTROL_THROTTLE_DETENT_IDLE] = value;
+    } else if (strcasecmp(key, "throttleDetentMCT") == 0) {
+        flash.control[CONTROL_THROTTLE_DETENT_MCT] = value;
+    } else if (strcasecmp(key, "throttleDetentMax") == 0) {
+        flash.control[CONTROL_THROTTLE_DETENT_MAX] = value;
+    } else if (strcasecmp(key, "throttleMaxTime") == 0) {
+        flash.control[CONTROL_THROTTLE_MAX_TIME] = value;
+    } else if (strcasecmp(key, "rollLimit") == 0) {
+        flash.control[CONTROL_ROLL_LIMIT] = value;
+    } else if (strcasecmp(key, "rollLimitHold") == 0) {
+        flash.control[CONTROL_ROLL_LIMIT_HOLD] = value;
+    } else if (strcasecmp(key, "pitchLowerLimit") == 0) {
+        flash.control[CONTROL_PITCH_LOWER_LIMIT] = value;
+    } else if (strcasecmp(key, "pitchUpperLimit") == 0) {
+        flash.control[CONTROL_PITCH_UPPER_LIMIT] = value;
+    } else if (strcasecmp(key, "maxAilDeflection") == 0) {
+        flash.control[CONTROL_MAX_AIL_DEFLECTION] = value;
+    } else if (strcasecmp(key, "maxElevDeflection") == 0) {
+        flash.control[CONTROL_MAX_ELEV_DEFLECTION] = value;
+    } else if (strcasecmp(key, "maxRudDeflection") == 0) {
+        flash.control[CONTROL_MAX_RUD_DEFLECTION] = value;
+    } else if (strcasecmp(key, "maxElevonDeflection") == 0) {
+        flash.control[CONTROL_MAX_ELEVON_DEFLECTION] = value;
+    } else if (strcasecmp(key, "elevonMixingGain") == 0) {
+        flash.control[CONTROL_ELEVON_MIXING_GAIN] = value;
+    } else if (strcasecmp(key, "ailMixingBias") == 0) {
+        flash.control[CONTROL_AIL_MIXING_BIAS] = value;
+    } else if (strcasecmp(key, "elevMixingBias") == 0) {
+        flash.control[CONTROL_ELEV_MIXING_BIAS] = value;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+static void getFromPins(const char *key, float **value) {
+    if (strcasecmp(key, "inputAil") == 0) {
+        *value = &flash.pins[PINS_INPUT_AIL];
+    } else if (strcasecmp(key, "servoAil") == 0) {
+        *value = &flash.pins[PINS_SERVO_AIL];
+    } else if (strcasecmp(key, "inputElev") == 0) {
+        *value = &flash.pins[PINS_INPUT_ELEV];
+    } else if (strcasecmp(key, "servoElev") == 0) {
+        *value = &flash.pins[PINS_SERVO_ELEV];
+    } else if (strcasecmp(key, "inputRud") == 0) {
+        *value = &flash.pins[PINS_INPUT_RUD];
+    } else if (strcasecmp(key, "servoRud") == 0) {
+        *value = &flash.pins[PINS_SERVO_RUD];
+    } else if (strcasecmp(key, "inputThrottle") == 0) {
+        *value = &flash.pins[PINS_INPUT_THROTTLE];
+    } else if (strcasecmp(key, "escThrottle") == 0) {
+        *value = &flash.pins[PINS_ESC_THROTTLE];
+    } else if (strcasecmp(key, "inputSwitch") == 0) {
+        *value = &flash.pins[PINS_INPUT_SWITCH];
+    } else if (strcasecmp(key, "servoElevonL") == 0) {
+        *value = &flash.pins[PINS_SERVO_ELEVON_L];
+    } else if (strcasecmp(key, "servoElevonR") == 0) {
+        *value = &flash.pins[PINS_SERVO_ELEVON_R];
+    } else if (strcasecmp(key, "aahrsSda") == 0) {
+        *value = &flash.pins[PINS_AAHRS_SDA];
+    } else if (strcasecmp(key, "aahrsScl") == 0) {
+        *value = &flash.pins[PINS_AAHRS_SCL];
+    } else if (strcasecmp(key, "gpsTx") == 0) {
+        *value = &flash.pins[PINS_GPS_TX];
+    } else if (strcasecmp(key, "gpsRx") == 0) {
+        *value = &flash.pins[PINS_GPS_RX];
+    } else if (strcasecmp(key, "reverseRoll") == 0) {
+        *value = &flash.pins[PINS_REVERSE_ROLL];
+    } else if (strcasecmp(key, "reversePitch") == 0) {
+        *value = &flash.pins[PINS_REVERSE_PITCH];
+    } else if (strcasecmp(key, "reverseYaw") == 0) {
+        *value = &flash.pins[PINS_REVERSE_YAW];
+    } else {
+        *value = NULL;
+    }
+}
+
+static bool setToPins(const char *key, float value) {
+    if (strcasecmp(key, "inputAil") == 0) {
+        flash.pins[PINS_INPUT_AIL] = value;
+    } else if (strcasecmp(key, "servoAil") == 0) {
+        flash.pins[PINS_SERVO_AIL] = value;
+    } else if (strcasecmp(key, "inputElev") == 0) {
+        flash.pins[PINS_INPUT_ELEV] = value;
+    } else if (strcasecmp(key, "servoElev") == 0) {
+        flash.pins[PINS_SERVO_ELEV] = value;
+    } else if (strcasecmp(key, "inputRud") == 0) {
+        flash.pins[PINS_INPUT_RUD] = value;
+    } else if (strcasecmp(key, "servoRud") == 0) {
+        flash.pins[PINS_SERVO_RUD] = value;
+    } else if (strcasecmp(key, "inputThrottle") == 0) {
+        flash.pins[PINS_INPUT_THROTTLE] = value;
+    } else if (strcasecmp(key, "escThrottle") == 0) {
+        flash.pins[PINS_ESC_THROTTLE] = value;
+    } else if (strcasecmp(key, "inputSwitch") == 0) {
+        flash.pins[PINS_INPUT_SWITCH] = value;
+    } else if (strcasecmp(key, "servoElevonL") == 0) {
+        flash.pins[PINS_SERVO_ELEVON_L] = value;
+    } else if (strcasecmp(key, "servoElevonR") == 0) {
+        flash.pins[PINS_SERVO_ELEVON_R] = value;
+    } else if (strcasecmp(key, "aahrsSda") == 0) {
+        flash.pins[PINS_AAHRS_SDA] = value;
+    } else if (strcasecmp(key, "aahrsScl") == 0) {
+        flash.pins[PINS_AAHRS_SCL] = value;
+    } else if (strcasecmp(key, "gpsTx") == 0) {
+        flash.pins[PINS_GPS_TX] = value;
+    } else if (strcasecmp(key, "gpsRx") == 0) {
+        flash.pins[PINS_GPS_RX] = value;
+    } else if (strcasecmp(key, "reverseRoll") == 0) {
+        flash.pins[PINS_REVERSE_ROLL] = value;
+    } else if (strcasecmp(key, "reversePitch") == 0) {
+        flash.pins[PINS_REVERSE_PITCH] = value;
+    } else if (strcasecmp(key, "reverseYaw") == 0) {
+        flash.pins[PINS_REVERSE_YAW] = value;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+static void getFromSensors(const char *key, float **value) {
+    if (strcasecmp(key, "imuModel") == 0) {
+        *value = &flash.sensors[SENSORS_IMU_MODEL];
+    } else if (strcasecmp(key, "baroModel") == 0) {
+        *value = &flash.sensors[SENSORS_BARO_MODEL];
+    } else if (strcasecmp(key, "gpsCommandType") == 0) {
+        *value = &flash.sensors[SENSORS_GPS_COMMAND_TYPE];
+    } else if (strcasecmp(key, "gpsBaudrate") == 0) {
+        *value = &flash.sensors[SENSORS_GPS_BAUDRATE];
+    } else {
+        *value = NULL;
+    }
+}
+
+static bool setToSensors(const char *key, float value) {
+    if (strcasecmp(key, "imuModel") == 0) {
+        flash.sensors[SENSORS_IMU_MODEL] = value;
+    } else if (strcasecmp(key, "baroModel") == 0) {
+        flash.sensors[SENSORS_BARO_MODEL] = value;
+    } else if (strcasecmp(key, "gpsCommandType") == 0) {
+        flash.sensors[SENSORS_GPS_COMMAND_TYPE] = value;
+    } else if (strcasecmp(key, "gpsBaudrate") == 0) {
+        flash.sensors[SENSORS_GPS_BAUDRATE] = value;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+static void getFromSystem(const char *key, float **value) {
+    if (strcasecmp(key, "debug") == 0) {
+        *value = &flash.system[SYSTEM_DEBUG];
+    } else if (strcasecmp(key, "debug_fbw") == 0) {
+        *value = &flash.system[SYSTEM_DEBUG_FBW];
+    } else if (strcasecmp(key, "debug_imu") == 0) {
+        *value = &flash.system[SYSTEM_DEBUG_IMU];
+    } else if (strcasecmp(key, "debug_gps") == 0) {
+        *value = &flash.system[SYSTEM_DEBUG_GPS];
+    } else if (strcasecmp(key, "debug_wifly") == 0) {
+        *value = &flash.system[SYSTEM_DEBUG_WIFLY];
+    } else if (strcasecmp(key, "debug_network") == 0) {
+        *value = &flash.system[SYSTEM_DEBUG_NETWORK];
+    } else if (strcasecmp(key, "dump_network") == 0) {
+        *value = &flash.system[SYSTEM_DUMP_NETWORK];
+    } else if (strcasecmp(key, "watchdogTimeout") == 0) {
+        *value = &flash.system[SYSTEM_WATCHDOG_TIMEOUT];
+    } else {
+        *value = NULL;
+    }
+}
+
+static bool setToSystem(const char *key, float value) {
+    if (strcasecmp(key, "debug_fbw") == 0) {
+        flash.system[SYSTEM_DEBUG_FBW] = value;
+    } else if (strcasecmp(key, "debug_imu") == 0) {
+        flash.system[SYSTEM_DEBUG_IMU] = value;
+    } else if (strcasecmp(key, "debug_gps") == 0) {
+        flash.system[SYSTEM_DEBUG_GPS] = value;
+    } else if (strcasecmp(key, "debug_wifly") == 0) {
+        flash.system[SYSTEM_DEBUG_WIFLY] = value;
+    } else if (strcasecmp(key, "debug_network") == 0) {
+        flash.system[SYSTEM_DEBUG_NETWORK] = value;
+    } else if (strcasecmp(key, "dump_network") == 0) {
+        flash.system[SYSTEM_DUMP_NETWORK] = value;
+    } else if (strcasecmp(key, "watchdogTimeout") == 0) {
+        flash.system[SYSTEM_WATCHDOG_TIMEOUT] = value;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+static void getFromPID(const char *key, float **value) {
+    if (strcasecmp(key, "tuneStatus") == 0) {
+        *value = &flash.pid[PID_FLAG];
+    } else if (strcasecmp(key, "roll_kp") == 0) {
+        *value = &flash.pid[PID_ROLL_KP];
+    } else if (strcasecmp(key, "roll_ti") == 0) {
+        *value = &flash.pid[PID_ROLL_TI];
+    } else if (strcasecmp(key, "roll_td") == 0) {
+        *value = &flash.pid[PID_ROLL_TD];
+    } else if (strcasecmp(key, "roll_kt") == 0) {
+        *value = &flash.pid[PID_ROLL_KT];
+    } else if (strcasecmp(key, "roll_tau") == 0) {
+        *value = &flash.pid[PID_ROLL_TAU];
+    } else if (strcasecmp(key, "roll_integMin") == 0) {
+        *value = &flash.pid[PID_ROLL_INTEGMIN];
+    } else if (strcasecmp(key, "roll_integMax") == 0) {
+        *value = &flash.pid[PID_ROLL_INTEGMAX];
+    } else if (strcasecmp(key, "pitch_kp") == 0) {
+        *value = &flash.pid[PID_PITCH_KP];
+    } else if (strcasecmp(key, "pitch_ti") == 0) {
+        *value = &flash.pid[PID_PITCH_TI];
+    } else if (strcasecmp(key, "pitch_td") == 0) {
+        *value = &flash.pid[PID_PITCH_TD];
+    } else if (strcasecmp(key, "pitch_kt") == 0) {
+        *value = &flash.pid[PID_PITCH_KT];
+    } else if (strcasecmp(key, "pitch_tau") == 0) {
+        *value = &flash.pid[PID_PITCH_TAU];
+    } else if (strcasecmp(key, "pitch_integMin") == 0) {
+        *value = &flash.pid[PID_PITCH_INTEGMIN];
+    } else if (strcasecmp(key, "pitch_integMax") == 0) {
+        *value = &flash.pid[PID_PITCH_INTEGMAX];
+    } else if (strcasecmp(key, "yaw_kp") == 0) {
+        *value = &flash.pid[PID_YAW_KP];
+    } else if (strcasecmp(key, "yaw_ti") == 0) {
+        *value = &flash.pid[PID_YAW_TI];
+    } else if (strcasecmp(key, "yaw_td") == 0) {
+        *value = &flash.pid[PID_YAW_TD];
+    } else if (strcasecmp(key, "yaw_kt") == 0) {
+        *value = &flash.pid[PID_YAW_KT];
+    } else if (strcasecmp(key, "yaw_tau") == 0) {
+        *value = &flash.pid[PID_YAW_TAU];
+    } else if (strcasecmp(key, "yaw_integMin") == 0) {
+        *value = &flash.pid[PID_YAW_INTEGMIN];
+    } else if (strcasecmp(key, "yaw_integMax") == 0) {
+        *value = &flash.pid[PID_YAW_INTEGMAX];
+    } else {
+        *value = NULL;
+    }
+}
+
+static bool setToPID(const char *key, float value) {
+    if (strcasecmp(key, "tuneStatus") == 0) {
+        flash.pid[PID_FLAG] = value;
+    } else if (strcasecmp(key, "roll_kp") == 0) {
+        flash.pid[PID_ROLL_KP] = value;
+    } else if (strcasecmp(key, "roll_ti") == 0) {
+        flash.pid[PID_ROLL_TI] = value;
+    } else if (strcasecmp(key, "roll_td") == 0) {
+        flash.pid[PID_ROLL_TD] = value;
+    } else if (strcasecmp(key, "roll_kt") == 0) {
+        flash.pid[PID_ROLL_KT] = value;
+    } else if (strcasecmp(key, "roll_tau") == 0) {
+        flash.pid[PID_ROLL_TAU] = value;
+    } else if (strcasecmp(key, "roll_integMin") == 0) {
+        flash.pid[PID_ROLL_INTEGMIN] = value;
+    } else if (strcasecmp(key, "roll_integMax") == 0) {
+        flash.pid[PID_ROLL_INTEGMAX] = value;
+    } else if (strcasecmp(key, "pitch_kp") == 0) {
+        flash.pid[PID_PITCH_KP] = value;
+    } else if (strcasecmp(key, "pitch_ti") == 0) {
+        flash.pid[PID_PITCH_TI] = value;
+    } else if (strcasecmp(key, "pitch_td") == 0) {
+        flash.pid[PID_PITCH_TD] = value;
+    } else if (strcasecmp(key, "pitch_kt") == 0) {
+        flash.pid[PID_PITCH_KT] = value;
+    } else if (strcasecmp(key, "pitch_tau") == 0) {
+        flash.pid[PID_PITCH_TAU] = value;
+    } else if (strcasecmp(key, "pitch_integMin") == 0) {
+        flash.pid[PID_PITCH_INTEGMIN] = value;
+    } else if (strcasecmp(key, "pitch_integMax") == 0) {
+        flash.pid[PID_PITCH_INTEGMAX] = value;
+    } else if (strcasecmp(key, "yaw_kp") == 0) {
+        flash.pid[PID_YAW_KP] = value;
+    } else if (strcasecmp(key, "yaw_ti") == 0) {
+        flash.pid[PID_YAW_TI] = value;
+    } else if (strcasecmp(key, "yaw_td") == 0) {
+        flash.pid[PID_YAW_TD] = value;
+    } else if (strcasecmp(key, "yaw_kt") == 0) {
+        flash.pid[PID_YAW_KT] = value;
+    } else if (strcasecmp(key, "yaw_tau") == 0) {
+        flash.pid[PID_YAW_TAU] = value;
+    } else if (strcasecmp(key, "yaw_integMin") == 0) {
+        flash.pid[PID_YAW_INTEGMIN] = value;
+    } else if (strcasecmp(key, "yaw_integMax") == 0) {
+        flash.pid[PID_YAW_INTEGMAX] = value;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+static void getFromWifly(const char *key, char **value) {
+    if (strcasecmp(key, "ssid") == 0) {
+        *value = flash.wifly_ssid;
+    } else if (strcasecmp(key, "pass") == 0) {
+        *value = flash.wifly_pass;
+    } else {
+        *value = NULL;
+    }
+}
+
+static bool setToWifly(const char *key, const char *value) {
+    if (strcasecmp(key, "ssid") == 0) {
+        strcpy(flash.wifly_ssid, value);
+    } else if (strcasecmp(key, "pass") == 0) {
+        strcpy(flash.wifly_pass, value);
+    } else {
+        return false;
+    }
+    return true;
+}
+
+
+bool config_validate() {
     // Unique pin validation
-    switch (config.general.controlMode) {
+    int lastPin = -1;
+    switch ((ControlMode)flash.general[GENERAL_CONTROL_MODE]) {
         case CTRLMODE_3AXIS_ATHR:
-            if (!pins_unique(13, config.pins0.inputAil, config.pins0.inputElev, config.pins0.inputRud, config.pins0.inputSwitch,
-            config.pins0.servoAil, config.pins0.servoElev, config.pins0.servoRud, config.pins1.inputThrottle, config.pins1.escThrottle,
-            config.sensors.imuSda, config.sensors.imuScl, config.sensors.gpsRx, config.sensors.gpsTx)) goto invalid;
+            for (uint i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
+                if (i == PINS_SERVO_ELEVON_L || i == PINS_SERVO_ELEVON_R) break; // Pins that aren't used in this mode
+                if ((int)flash.pins[i] == lastPin) goto invalid;
+            }
             break;
         case CTRLMODE_3AXIS:
-            if (!pins_unique(11, config.pins0.inputAil, config.pins0.inputElev, config.pins0.inputRud, config.pins0.inputSwitch,
-            config.pins0.servoAil, config.pins0.servoElev, config.pins0.servoRud, config.sensors.imuSda, config.sensors.imuScl,
-            config.sensors.gpsRx, config.sensors.gpsTx)) goto invalid;
+            for (uint i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
+                if (i == PINS_INPUT_THROTTLE || i == PINS_ESC_THROTTLE ||
+                    i == PINS_SERVO_ELEVON_L || i == PINS_SERVO_ELEVON_R) break;
+                if ((int)flash.pins[i] == lastPin) goto invalid;
+            }
             break;
         case CTRLMODE_FLYINGWING_ATHR:
-            if (!pins_unique(12, config.pins0.inputAil, config.pins0.inputElev, config.pins0.inputRud, config.pins0.inputSwitch,
-            config.pins1.servoElevonL, config.pins1.servoElevonR, config.pins1.inputThrottle, config.pins1.escThrottle,
-            config.sensors.imuSda, config.sensors.imuScl, config.sensors.gpsRx, config.sensors.gpsTx)) goto invalid;
+            for (uint i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
+                if (i == PINS_SERVO_AIL || i == PINS_SERVO_ELEV || i == PINS_SERVO_RUD) break;
+                if ((int)flash.pins[i] == lastPin) goto invalid;
+            }
             break;
         case CTRLMODE_FLYINGWING:
-            if (!pins_unique(10, config.pins0.inputAil, config.pins0.inputElev, config.pins0.inputRud, config.pins0.inputSwitch, config.pins1.servoElevonL,
-            config.pins1.servoElevonR, config.sensors.imuSda, config.sensors.imuScl, config.sensors.gpsRx, config.sensors.gpsTx)) goto invalid;
+            for (uint i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
+                if (i == PINS_SERVO_AIL || i == PINS_SERVO_ELEV || i == PINS_SERVO_RUD ||
+                    i == PINS_INPUT_THROTTLE || i == PINS_ESC_THROTTLE) break;
+                if ((int)flash.pins[i] == lastPin) goto invalid;
+            }
             break;
         invalid:
-            if (config.debug.debug_fbw) printf("ERROR: A pin may only be used once.\n");
+            if (print.fbw) printf("ERROR: A pin may only be used once.\n");
             return false;
     }
     // Sensor pin validation
-    // IMU_SDA can be on pins 0, 4, 8, 12, 16, 20, 28
-    if (config.sensors.imuSda != 0 && config.sensors.imuSda != 4 && config.sensors.imuSda != 8 && config.sensors.imuSda != 12 &&
-    config.sensors.imuSda != 16 && config.sensors.imuSda != 20 && config.sensors.imuSda != 28) {
-        if (config.debug.debug_fbw) printf("ERROR: IMU_SDA must be on the I2C0_SDA interface.\n");
+    // AAHRS_SDA can be on pins 0, 4, 8, 12, 16, 20, 28
+    if ((uint)flash.pins[PINS_AAHRS_SDA] != 0 && (uint)flash.pins[PINS_AAHRS_SDA] != 4 &&(uint)flash.pins[PINS_AAHRS_SDA] != 8 &&
+    (uint)flash.pins[PINS_AAHRS_SDA] != 12 && (uint)flash.pins[PINS_AAHRS_SDA] != 16 && (uint)flash.pins[PINS_AAHRS_SDA] != 20 &&
+    (uint)flash.pins[PINS_AAHRS_SDA] != 28) {
+        if (print.fbw) printf("ERROR: IMU_SDA must be on the I2C0_SDA interface.\n");
         return false;
     }
-    // IMU_SCL can be on pins 1, 5, 9, 13, 17, 21
-    if (config.sensors.imuScl != 1 && config.sensors.imuScl != 5 && config.sensors.imuScl != 9 && config.sensors.imuScl != 13 &&
-    config.sensors.imuScl != 17 && config.sensors.imuScl != 21) {
-        if (config.debug.debug_fbw) printf("ERROR: IMU_SCL must be on the I2C0_SCL interface.\n");
+    // AAHRS_SCL can be on pins 1, 5, 9, 13, 17, 21
+    if ((uint)flash.pins[PINS_AAHRS_SCL] != 1 && (uint)flash.pins[PINS_AAHRS_SCL] != 5 && (uint)flash.pins[PINS_AAHRS_SCL] != 9 &&
+    (uint)flash.pins[PINS_AAHRS_SCL] != 13 && (uint)flash.pins[PINS_AAHRS_SCL] != 17 && (uint)flash.pins[PINS_AAHRS_SCL] != 21) {
+        if (print.fbw) printf("ERROR: IMU_SCL must be on the I2C0_SCL interface.\n");
         return false;
     }
     // GPS_RX can be on pins 4, 8, 20
-    if (config.sensors.gpsRx != 4 && config.sensors.gpsRx != 8 && config.sensors.gpsRx != 20) {
-        if (config.debug.debug_fbw) printf("ERROR: GPS_RX must be on the UART1_RX interface.\n");
+    if ((uint)flash.pins[PINS_GPS_RX] != 4 && (uint)flash.pins[PINS_GPS_RX] != 8 && (uint)flash.pins[PINS_GPS_RX] != 20) {
+        if (print.fbw) printf("ERROR: GPS_RX must be on the UART1_RX interface.\n");
         return false;
     }
     // GPS_TX can be on pins 5, 9, 21
-    if (config.sensors.gpsTx != 5 && config.sensors.gpsTx != 9 && config.sensors.gpsTx != 21) {
-        if (config.debug.debug_fbw) printf("ERROR: GPS_TX must be on the UART1_TX interface.\n");
+    if ((uint)flash.pins[PINS_GPS_TX] != 5 && (uint)flash.pins[PINS_GPS_TX] != 9 && (uint)flash.pins[PINS_GPS_TX] != 21) {
+        if (print.fbw) printf("ERROR: GPS_TX must be on the UART1_TX interface.\n");
         return false;
     }
-    // Limit validation
-    if (config.limits.rollLimit > 72 ||  config.limits.rollLimit < 0) {
-        if (config.debug.debug_fbw) printf("ERROR: Roll limit must be between 0 and 72 degrees.\n");
+    // Limits validation
+    if (flash.control[CONTROL_ROLL_LIMIT] > 72 || flash.control[CONTROL_ROLL_LIMIT] < 0) {
+        if (print.fbw) printf("ERROR: Roll limit must be between 0 and 72 degrees.\n");
         return false;
     }
-    if (config.limits.rollLimitHold > 72 || config.limits.rollLimitHold < 0) {
-        if (config.debug.debug_fbw) printf("ERROR: Roll limit hold must be between 0 and 72 degrees.\n");
+    if (flash.control[CONTROL_ROLL_LIMIT_HOLD] > 72 || flash.control[CONTROL_ROLL_LIMIT_HOLD] < 0) {
+        if (print.fbw) printf("ERROR: Roll limit hold must be between 0 and 72 degrees.\n");
         return false;
     }
-    if (config.limits.pitchUpperLimit > 35 || config.limits.pitchUpperLimit < 0) {
-        if (config.debug.debug_fbw) printf("ERROR: Upper pitch limit must be between 0 and 35 degrees.\n");
+    if (flash.control[CONTROL_PITCH_UPPER_LIMIT] > 35 || flash.control[CONTROL_PITCH_UPPER_LIMIT] < 0) {
+        if (print.fbw) printf("ERROR: Upper pitch limit must be between 0 and 35 degrees.\n");
         return false;
     }
-    if (config.limits.pitchLowerLimit < -20 || config.limits.pitchLowerLimit > 0) {
-        if (config.debug.debug_fbw) printf("ERROR: Lower pitch limit must be between -20 and 0 degrees.\n");
+    if (flash.control[CONTROL_PITCH_LOWER_LIMIT] < -20 || flash.control[CONTROL_PITCH_LOWER_LIMIT] > 0) {
+        if (print.fbw) printf("ERROR: Lower pitch limit must be between -20 and 0 degrees.\n");
         return false;
     }
-    switch (config.general.controlMode) {
+    switch ((ControlMode)flash.general[GENERAL_CONTROL_MODE]) {
         case CTRLMODE_3AXIS_ATHR:
         case CTRLMODE_3AXIS:
-            if (config.limits.maxAilDeflection > 90 || config.limits.maxAilDeflection < 0) {
-                if (config.debug.debug_fbw) printf("ERROR: Max aileron deflection must be between 0 and 90 degrees.\n");
+            if (flash.control[CONTROL_MAX_AIL_DEFLECTION] > 90 || flash.control[CONTROL_MAX_AIL_DEFLECTION] < 0) {
+                if (print.fbw) printf("ERROR: Max aileron deflection must be between 0 and 90 degrees.\n");
                 return false;
             }
-            if (config.limits.maxElevDeflection > 90 || config.limits.maxElevDeflection < 0) {
-                if (config.debug.debug_fbw) printf("ERROR: Max elevator deflection must be between 0 and 90 degrees.\n");
+            if (flash.control[CONTROL_MAX_ELEV_DEFLECTION] > 90 || flash.control[CONTROL_MAX_ELEV_DEFLECTION] < 0) {
+                if (print.fbw) printf("ERROR: Max elevator deflection must be between 0 and 90 degrees.\n");
                 return false;
             }
-            if (config.limits.maxRudDeflection > 90 || config.limits.maxRudDeflection < 0) {
-                if (config.debug.debug_fbw) printf("ERROR: Max rudder deflection must be between 0 and 90 degrees.\n");
+            if (flash.control[CONTROL_MAX_RUD_DEFLECTION] > 90 || flash.control[CONTROL_MAX_RUD_DEFLECTION] < 0) {
+                if (print.fbw) printf("ERROR: Max rudder deflection must be between 0 and 90 degrees.\n");
                 return false;
             }
             break;
         case CTRLMODE_FLYINGWING_ATHR:
         case CTRLMODE_FLYINGWING:
-            if (config.limits.maxElevonDeflection > 90 || config.limits.maxElevonDeflection < 0) {
-                if (config.debug.debug_fbw) printf("ERROR: Max elevon deflection must be between 0 and 90 degrees.\n");
+            if (flash.control[CONTROL_MAX_ELEVON_DEFLECTION] > 90 || flash.control[CONTROL_MAX_ELEVON_DEFLECTION] < 0) {
+                if (print.fbw) printf("ERROR: Max elevon deflection must be between 0 and 90 degrees.\n");
                 return false;
             }
             break;
     }
-    return true;
-}
-
-bool config_load(ConfigSource source) {
-    switch (source) {
-        case FROM_FLASH:
-            // Validate that flash sectors have been written to before loading
-            for (FloatSector s = FLOAT_SECTOR_MIN_CONFIG; s <= FLOAT_SECTOR_MAX_CONFIG; s++) {
-                for (uint v = 0; v < FLOAT_SECTOR_SIZE; v++) {
-                    if (!isfinite(flash_readFloat(s, v))) return false;
-                }
-            }
-
-            // ConfigGeneral
-            config.general.controlMode = (ControlMode)flash_readFloat(FLOAT_SECTOR_CONFIG_GENERAL, 0);
-            config.general.switchType = (SwitchType)flash_readFloat(FLOAT_SECTOR_CONFIG_GENERAL, 1);
-            config.general.maxCalibrationOffset = (uint8_t)flash_readFloat(FLOAT_SECTOR_CONFIG_GENERAL, 2);
-            config.general.servoHz = (uint)flash_readFloat(FLOAT_SECTOR_CONFIG_GENERAL, 3);
-            config.general.escHz = (uint)flash_readFloat(FLOAT_SECTOR_CONFIG_GENERAL, 4);
-            config.general.apiEnabled = (bool)flash_readFloat(FLOAT_SECTOR_CONFIG_GENERAL, 5);
-            config.general.wiflyStatus = (bool)flash_readFloat(FLOAT_SECTOR_CONFIG_GENERAL, 6);
-            config.general.skipCalibration = (bool)flash_readFloat(FLOAT_SECTOR_CONFIG_GENERAL, 7);
-
-            // ConfigControl
-            config.control.controlSensitivity = flash_readFloat(FLOAT_SECTOR_CONFIG_CONTROL, 0);
-            config.control.rudderSensitivity = flash_readFloat(FLOAT_SECTOR_CONFIG_CONTROL, 1);
-            config.control.controlDeadband = flash_readFloat(FLOAT_SECTOR_CONFIG_CONTROL, 2);
-            config.control.throttleDetentIdle = flash_readFloat(FLOAT_SECTOR_CONFIG_CONTROL, 3);
-            config.control.throttleDetentMCT = flash_readFloat(FLOAT_SECTOR_CONFIG_CONTROL, 4);
-            config.control.throttleDetentMax = flash_readFloat(FLOAT_SECTOR_CONFIG_CONTROL, 5);
-            config.control.throttleMaxTime = (uint)flash_readFloat(FLOAT_SECTOR_CONFIG_CONTROL, 6);
-
-            // ConfigLimits
-            config.limits.rollLimit = flash_readFloat(FLOAT_SECTOR_CONFIG_LIMITS, 0);
-            config.limits.rollLimitHold = flash_readFloat(FLOAT_SECTOR_CONFIG_LIMITS, 1);
-            config.limits.pitchUpperLimit = flash_readFloat(FLOAT_SECTOR_CONFIG_LIMITS, 2);
-            config.limits.pitchLowerLimit = flash_readFloat(FLOAT_SECTOR_CONFIG_LIMITS, 3);
-            config.limits.maxAilDeflection = flash_readFloat(FLOAT_SECTOR_CONFIG_LIMITS, 4);
-            config.limits.maxElevDeflection = flash_readFloat(FLOAT_SECTOR_CONFIG_LIMITS, 5);
-            config.limits.maxRudDeflection = flash_readFloat(FLOAT_SECTOR_CONFIG_LIMITS, 6);
-            config.limits.maxElevonDeflection = flash_readFloat(FLOAT_SECTOR_CONFIG_LIMITS, 7);
-
-            // ConfigFlyingWing
-            config.flyingWing.elevonMixingGain = flash_readFloat(FLOAT_SECTOR_CONFIG_FLYINGWING, 0);
-            config.flyingWing.ailMixingBias = flash_readFloat(FLOAT_SECTOR_CONFIG_FLYINGWING, 1);
-            config.flyingWing.elevMixingBias = flash_readFloat(FLOAT_SECTOR_CONFIG_FLYINGWING, 2);
-
-            // ConfigPins0
-            config.pins0.inputAil = (uint)flash_readFloat(FLOAT_SECTOR_CONFIG_PINS0, 0);
-            config.pins0.servoAil = (uint)flash_readFloat(FLOAT_SECTOR_CONFIG_PINS0, 1);
-            config.pins0.inputElev = (uint)flash_readFloat(FLOAT_SECTOR_CONFIG_PINS0, 2);
-            config.pins0.servoElev = (uint)flash_readFloat(FLOAT_SECTOR_CONFIG_PINS0, 3);
-            config.pins0.inputRud = (uint)flash_readFloat(FLOAT_SECTOR_CONFIG_PINS0, 4);
-            config.pins0.servoRud = (uint)flash_readFloat(FLOAT_SECTOR_CONFIG_PINS0, 5);
-            config.pins0.inputSwitch = (uint)flash_readFloat(FLOAT_SECTOR_CONFIG_PINS0, 6);
-
-            // ConfigPins1
-            config.pins1.inputThrottle = (uint)flash_readFloat(FLOAT_SECTOR_CONFIG_PINS1, 0);
-            config.pins1.escThrottle = (uint)flash_readFloat(FLOAT_SECTOR_CONFIG_PINS1, 1);
-            config.pins1.servoElevonL = (uint)flash_readFloat(FLOAT_SECTOR_CONFIG_PINS1, 2);
-            config.pins1.servoElevonR = (uint)flash_readFloat(FLOAT_SECTOR_CONFIG_PINS1, 3);
-            config.pins1.reverseRoll = (bool)flash_readFloat(FLOAT_SECTOR_CONFIG_PINS1, 4);
-            config.pins1.reversePitch = (bool)flash_readFloat(FLOAT_SECTOR_CONFIG_PINS1, 5);
-            config.pins1.reverseYaw = (bool)flash_readFloat(FLOAT_SECTOR_CONFIG_PINS1, 6);
-
-            // ConfigSensors
-            config.sensors.imuModel = (IMUModel)flash_readFloat(FLOAT_SECTOR_CONFIG_SENSORS, 0);
-            config.sensors.imuSda = (uint)flash_readFloat(FLOAT_SECTOR_CONFIG_SENSORS, 1);
-            config.sensors.imuScl = (uint)flash_readFloat(FLOAT_SECTOR_CONFIG_SENSORS, 2);
-            config.sensors.baroModel = (BaroModel)flash_readFloat(FLOAT_SECTOR_CONFIG_SENSORS, 3);
-            config.sensors.gpsBaudrate = (uint)flash_readFloat(FLOAT_SECTOR_CONFIG_SENSORS, 4);
-            config.sensors.gpsCommandType = (GPSCommandType)flash_readFloat(FLOAT_SECTOR_CONFIG_SENSORS, 5);
-            config.sensors.gpsTx = (uint)flash_readFloat(FLOAT_SECTOR_CONFIG_SENSORS, 6);
-            config.sensors.gpsRx = (uint)flash_readFloat(FLOAT_SECTOR_CONFIG_SENSORS, 7);
-
-            // ConfigPID0
-            config.pid0.rollTau = flash_readFloat(FLOAT_SECTOR_CONFIG_PID0, 0);
-            config.pid0.rollIntegMin = flash_readFloat(FLOAT_SECTOR_CONFIG_PID0, 1);
-            config.pid0.rollIntegMax = flash_readFloat(FLOAT_SECTOR_CONFIG_PID0, 2);
-            config.pid0.rollKt = flash_readFloat(FLOAT_SECTOR_CONFIG_PID0, 3);
-            config.pid0.pitchTau = flash_readFloat(FLOAT_SECTOR_CONFIG_PID0, 4);
-            config.pid0.pitchIntegMin = flash_readFloat(FLOAT_SECTOR_CONFIG_PID0, 5);
-            config.pid0.pitchIntegMax = flash_readFloat(FLOAT_SECTOR_CONFIG_PID0, 6);
-            config.pid0.pitchKt = flash_readFloat(FLOAT_SECTOR_CONFIG_PID0, 7);
-
-            // ConfigPID1
-            config.pid1.yawKp = flash_readFloat(FLOAT_SECTOR_CONFIG_PID1, 0);
-            config.pid1.yawKi = flash_readFloat(FLOAT_SECTOR_CONFIG_PID1, 1);
-            config.pid1.yawKd = flash_readFloat(FLOAT_SECTOR_CONFIG_PID1, 2);
-            config.pid1.yawTau = flash_readFloat(FLOAT_SECTOR_CONFIG_PID1, 3);
-            config.pid1.yawIntegMin = flash_readFloat(FLOAT_SECTOR_CONFIG_PID1, 4);
-            config.pid1.yawIntegMax = flash_readFloat(FLOAT_SECTOR_CONFIG_PID1, 5);
-            config.pid1.yawKt = flash_readFloat(FLOAT_SECTOR_CONFIG_PID1, 6);
-
-            // ConfigDebug
-            #if DEBUG_BUILD
-                config.debug.debug = true;
-            #else
-                config.debug.debug = false;
-            #endif
-            #if defined(LIB_PICO_STDIO_USB) || defined(LIB_PICO_STDIO_UART)
-                config.debug.debug_fbw = (bool)flash_readFloat(FLOAT_SECTOR_CONFIG_DEBUG, 1);
-                config.debug.debug_imu = (bool)flash_readFloat(FLOAT_SECTOR_CONFIG_DEBUG, 2);
-                config.debug.debug_gps = (bool)flash_readFloat(FLOAT_SECTOR_CONFIG_DEBUG, 3);
-                config.debug.debug_wifly = (bool)flash_readFloat(FLOAT_SECTOR_CONFIG_DEBUG, 4);
-                config.debug.debug_network = (bool)flash_readFloat(FLOAT_SECTOR_CONFIG_DEBUG, 5);
-                config.debug.dump_network = (bool)flash_readFloat(FLOAT_SECTOR_CONFIG_DEBUG, 6);
-                config.debug.watchdog_timeout_ms = (uint32_t)flash_readFloat(FLOAT_SECTOR_CONFIG_DEBUG, 7);
-            #else
-                // All debugging is automatically disabled when stdio is not enabled
-                config.debug.debug_fbw = false;
-                config.debug.debug_imu = false;
-                config.debug.debug_gps = false;
-                config.debug.debug_wifly = false;
-                config.debug.debug_network = false;
-                config.debug.dump_network = false;
-            #endif
-
-            // ConfigWifly
-            const char* ssid = flash_readString(STRING_SECTOR_CONFIG_WIFLY_SSID);
-            if (ssid) {
-                strncpy(config.wifly.ssid, ssid, STRING_SECTOR_SIZE);
-            } else {
-                return false;
-            }
-            const char* pass = flash_readString(STRING_SECTOR_CONFIG_WIFLY_PASS);
-            if (pass) {
-                strncpy(config.wifly.pass, pass, STRING_SECTOR_SIZE);
-            } else {
-                return false;
-            }
-
-            break;
-        case DEFAULT_VALUES:
-            // Very similar except load from DEFault macros instead of flash (and thus no validation)
-            // ConfigGeneral
-            config.general.controlMode = CONTROL_MODE_DEF;
-            config.general.switchType = SWITCH_TYPE_DEF;
-            config.general.maxCalibrationOffset = MAX_CALIBRATION_OFFSET_DEF;
-            config.general.servoHz = SERVO_HZ_DEF;
-            config.general.escHz = ESC_HZ_DEF;
-            config.general.apiEnabled = API_ENABLED_DEF;
-            config.general.wiflyStatus = WIFLY_STATUS_DEF;
-            config.general.skipCalibration = SKIP_CALIBRATION_DEF;
-
-            // ConfigControl
-            config.control.controlSensitivity = CONTROL_SENSITIVITY_DEF;
-            config.control.rudderSensitivity = RUDDER_SENSITIVITY_DEF;
-            config.control.controlDeadband = CONTROL_DEADBAND_DEF;
-            config.control.throttleDetentIdle = THROTTLE_DETENT_IDLE_DEF;
-            config.control.throttleDetentMCT = THROTTLE_DETENT_MCT_DEF;
-            config.control.throttleDetentMax = THROTTLE_DETENT_MAX_DEF;
-            config.control.throttleMaxTime = THROTTLE_MAX_TIME_DEF;
-
-            // ConfigLimits
-            config.limits.rollLimit = ROLL_LIMIT_DEF;
-            config.limits.rollLimitHold = ROLL_LIMIT_HOLD_DEF;
-            config.limits.pitchUpperLimit = PITCH_UPPER_LIMIT_DEF;
-            config.limits.pitchLowerLimit = PITCH_LOWER_LIMIT_DEF;
-            config.limits.maxAilDeflection = MAX_AIL_DEFLECTION_DEF;
-            config.limits.maxElevDeflection = MAX_ELEV_DEFLECTION_DEF;
-            config.limits.maxRudDeflection = MAX_RUD_DEFLECTION_DEF;
-            config.limits.maxElevonDeflection = MAX_ELEVON_DEFLECTION_DEF;
-
-            // ConfigFlyingWing
-            config.flyingWing.elevonMixingGain = ELEVON_MIXING_GAIN_DEF;
-            config.flyingWing.ailMixingBias = AIL_MIXING_BIAS_DEF;
-            config.flyingWing.elevMixingBias = ELEV_MIXING_BIAS_DEF;
-
-            // ConfigPins0
-            config.pins0.inputAil = INPUT_AIL_DEF;
-            config.pins0.servoAil = SERVO_AIL_DEF;
-            config.pins0.inputElev = INPUT_ELEV_DEF;
-            config.pins0.servoElev = SERVO_ELEV_DEF;
-            config.pins0.inputRud = INPUT_RUD_DEF;
-            config.pins0.servoRud = SERVO_RUD_DEF;
-            config.pins0.inputSwitch = INPUT_SWITCH_DEF;
-
-            // ConfigPins1
-            config.pins1.inputThrottle = INPUT_THROTTLE_DEF;
-            config.pins1.escThrottle = ESC_THROTTLE_DEF;
-            config.pins1.servoElevonL = SERVO_ELEVON_L_DEF;
-            config.pins1.servoElevonR = SERVO_ELEVON_R_DEF;
-            config.pins1.reverseRoll = REVERSE_ROLL_DEF;
-            config.pins1.reversePitch = REVERSE_PITCH_DEF;
-            config.pins1.reverseYaw = REVERSE_YAW_DEF;
-
-            // ConfigSensors
-            config.sensors.imuModel = IMU_MODEL_DEF;
-            config.sensors.imuSda = IMU_SDA_DEF;
-            config.sensors.imuScl = IMU_SCL_DEF;
-            config.sensors.baroModel = BARO_MODEL_DEF;
-            config.sensors.gpsBaudrate = GPS_BAUDRATE_DEF;
-            config.sensors.gpsCommandType = GPS_COMMAND_TYPE_DEF;
-            config.sensors.gpsTx = GPS_TX_DEF;
-            config.sensors.gpsRx = GPS_RX_DEF;
-
-            // ConfigPID0
-            config.pid0.rollTau = ROLL_TAU_DEF;
-            config.pid0.rollIntegMin = ROLL_INTEG_MIN_DEF;
-            config.pid0.rollIntegMax = ROLL_INTEG_MAX_DEF;
-            config.pid0.rollKt = ROLL_KT_DEF;
-            config.pid0.pitchTau = PITCH_TAU_DEF;
-            config.pid0.pitchIntegMin = PITCH_INTEG_MIN_DEF;
-            config.pid0.pitchIntegMax = PITCH_INTEG_MAX_DEF;
-            config.pid0.pitchKt = PITCH_KT_DEF;
-
-            // ConfigPID1
-            config.pid1.yawKp = YAW_KP_DEF;
-            config.pid1.yawKi = YAW_KI_DEF;
-            config.pid1.yawKd = YAW_KD_DEF;
-            config.pid1.yawTau = YAW_TAU_DEF;
-            config.pid1.yawIntegMin = YAW_INTEG_MIN_DEF;
-            config.pid1.yawIntegMax = YAW_INTEG_MAX_DEF;
-            config.pid1.yawKt = YAW_KT_DEF;
-
-            // ConfigDebug
-            #if DEBUG_BUILD
-                config.debug.debug = true;
-            #else
-                config.debug.debug = false;
-            #endif
-            #if defined(LIB_PICO_STDIO_USB) || defined(LIB_PICO_STDIO_UART)
-                config.debug.debug_fbw = DEBUG_FBW_DEF;
-                config.debug.debug_imu = DEBUG_IMU_DEF;
-                config.debug.debug_gps = DEBUG_GPS_DEF;
-                config.debug.debug_wifly = DEBUG_WIFLY_DEF;
-                config.debug.debug_network = DEBUG_NETWORK_DEF;
-                config.debug.dump_network = DUMP_NETWORK_DEF;
-            #else
-                config.debug.debug_fbw = false;
-                config.debug.debug_imu = false;
-                config.debug.debug_gps = false;
-                config.debug.debug_wifly = false;
-                config.debug.debug_network = false;
-                config.debug.dump_network = false;
-            #endif
-            config.debug.watchdog_timeout_ms = WATCHDOG_TIMEOUT_MS_DEF;
-            // ConfigWifly
-            strncpy(config.wifly.ssid, WIFLY_SSID_DEF, STRING_SECTOR_SIZE);
-            strncpy(config.wifly.pass, WIFLY_PASS_DEF, STRING_SECTOR_SIZE);
-
-            break;
+    // Watchdog timeout validation
+    if ((uint)flash.system[SYSTEM_WATCHDOG_TIMEOUT] < 1000) {
+        if (print.fbw) printf("ERROR: Watchdog timeout must be at least 1 second.\n");
+        return false;
     }
     return true;
 }
 
-bool config_save(bool validate) {
-    // Validate config before saving
-    if (validate) {
-        if (!validateConfig()) {
-            if (config.debug.debug_fbw) printf("Config validation failed, config will not be saved!\n");
-            return false;
-        }
-    }
-
-    // ConfigGeneral
-    float general[FLOAT_SECTOR_SIZE] = {
-        config.general.controlMode,
-        config.general.switchType,
-        config.general.maxCalibrationOffset,
-        config.general.servoHz,
-        config.general.escHz,
-        config.general.apiEnabled,
-        config.general.wiflyStatus,
-        config.general.skipCalibration
-    }; // C already casts all elements in the array to a float so there's no need to explicitly cast them
-    flash_writeFloat(FLOAT_SECTOR_CONFIG_GENERAL, general, false);
-
-    // ConfigControl
-    float control[FLOAT_SECTOR_SIZE] = {
-        config.control.controlSensitivity,
-        config.control.rudderSensitivity,
-        config.control.controlDeadband,
-        config.control.throttleDetentIdle,
-        config.control.throttleDetentMCT,
-        config.control.throttleDetentMax,
-        config.control.throttleMaxTime
-    };
-    flash_writeFloat(FLOAT_SECTOR_CONFIG_CONTROL, control, false);
-
-    // ConfigLimits
-    float limits[FLOAT_SECTOR_SIZE] = {
-        config.limits.rollLimit,
-        config.limits.rollLimitHold,
-        config.limits.pitchUpperLimit,
-        config.limits.pitchLowerLimit,
-        config.limits.maxAilDeflection,
-        config.limits.maxElevDeflection,
-        config.limits.maxRudDeflection,
-        config.limits.maxElevonDeflection
-    };
-    flash_writeFloat(FLOAT_SECTOR_CONFIG_LIMITS, limits, false);
-
-    // ConfigFlyingWing
-    float flyingWing[FLOAT_SECTOR_SIZE] = {
-        config.flyingWing.elevonMixingGain,
-        config.flyingWing.ailMixingBias,
-        config.flyingWing.elevMixingBias
-    };
-    flash_writeFloat(FLOAT_SECTOR_CONFIG_FLYINGWING, flyingWing, false);
-
-    // ConfigPins0
-    float pins0[FLOAT_SECTOR_SIZE] = {
-        config.pins0.inputAil,
-        config.pins0.servoAil,
-        config.pins0.inputElev,
-        config.pins0.servoElev,
-        config.pins0.inputRud,
-        config.pins0.servoRud,
-        config.pins0.inputSwitch
-    };
-    flash_writeFloat(FLOAT_SECTOR_CONFIG_PINS0, pins0, false);
-
-    // ConfigPins1
-    float pins1[FLOAT_SECTOR_SIZE] = {
-        config.pins1.inputThrottle,
-        config.pins1.escThrottle,
-        config.pins1.servoElevonL,
-        config.pins1.servoElevonR,
-        config.pins1.reverseRoll,
-        config.pins1.reversePitch,
-        config.pins1.reverseYaw
-    };
-    flash_writeFloat(FLOAT_SECTOR_CONFIG_PINS1, pins1, false);
-
-    // ConfigSensors
-    float sensors[FLOAT_SECTOR_SIZE] = {
-        config.sensors.imuModel,
-        config.sensors.imuSda,
-        config.sensors.imuScl,
-        config.sensors.baroModel,
-        config.sensors.gpsBaudrate,
-        config.sensors.gpsCommandType,
-        config.sensors.gpsTx,
-        config.sensors.gpsRx
-    };
-    flash_writeFloat(FLOAT_SECTOR_CONFIG_SENSORS, sensors, false);
-
-    // ConfigPID0
-    float rollPitchPID[FLOAT_SECTOR_SIZE] = {
-        config.pid0.rollTau,
-        config.pid0.rollIntegMin,
-        config.pid0.rollIntegMax,
-        config.pid0.rollKt,
-        config.pid0.pitchTau,
-        config.pid0.pitchIntegMin,
-        config.pid0.pitchIntegMax,
-        config.pid0.pitchKt
-    };
-    flash_writeFloat(FLOAT_SECTOR_CONFIG_PID0, rollPitchPID, false);
-
-    // ConfigPID1
-    float yawPID[FLOAT_SECTOR_SIZE] = {
-        config.pid1.yawKp,
-        config.pid1.yawKi,
-        config.pid1.yawKd,
-        config.pid1.yawTau,
-        config.pid1.yawIntegMin,
-        config.pid1.yawIntegMax,
-        config.pid1.yawKt
-    };
-    flash_writeFloat(FLOAT_SECTOR_CONFIG_PID1, yawPID, false);
-
-    // ConfigDebug
-    float debug[FLOAT_SECTOR_SIZE] = {
-        config.debug.debug,
-        config.debug.debug_fbw,
-        config.debug.debug_imu,
-        config.debug.debug_gps,
-        config.debug.debug_wifly,
-        config.debug.debug_network,
-        config.debug.dump_network,
-        config.debug.watchdog_timeout_ms
-    };
-    flash_writeFloat(FLOAT_SECTOR_CONFIG_DEBUG, debug, false);
-    
-    // ConfigWifly -- uses StringsSectors not floats
-    flash_writeString(STRING_SECTOR_CONFIG_WIFLY_SSID, config.wifly.ssid, false);
-    flash_writeString(STRING_SECTOR_CONFIG_WIFLY_PASS, config.wifly.pass, false);
-
-    flash_flushCache(); // All sector data is now cached, flush into flash
-
-    return true;
-}
-
-ConfigSectionType config_getSectionType(const char *section) {
+ConfigSectionType config_get(const char *section, const char *key, void **value) {
     if (strcasecmp(section, CONFIG_GENERAL_STR) == 0) {
+        float *v;
+        getFromGeneral(key, &v);
+        *value = v;
         return SECTION_TYPE_FLOAT;
     } else if (strcasecmp(section, CONFIG_CONTROL_STR) == 0) {
+        float *v;
+        getFromControl(key, &v);
+        *value = v;
         return SECTION_TYPE_FLOAT;
-    } else if (strcasecmp(section, CONFIG_LIMITS_STR) == 0) {
-        return SECTION_TYPE_FLOAT;
-    } else if (strcasecmp(section, CONFIG_FLYING_WING_STR) == 0) {
-        return SECTION_TYPE_FLOAT;
-    } else if (strcasecmp(section, CONFIG_PINS0_STR) == 0) {
-        return SECTION_TYPE_FLOAT;
-    } else if (strcasecmp(section, CONFIG_PINS1_STR) == 0) {
+    } else if (strcasecmp(section, CONFIG_PINS_STR) == 0) {
+        float *v;
+        getFromPins(key, &v);
+        *value = v;
         return SECTION_TYPE_FLOAT;
     } else if (strcasecmp(section, CONFIG_SENSORS_STR) == 0) {
-        return SECTION_TYPE_FLOAT;
-    } else if (strcasecmp(section, CONFIG_PID0_STR) == 0) {
-        return SECTION_TYPE_FLOAT;
-    } else if (strcasecmp(section, CONFIG_PID1_STR) == 0) {
-        return SECTION_TYPE_FLOAT;
-    } else if (strcasecmp(section, CONFIG_DEBUG_STR) == 0) {
+        float *v;
+        getFromSensors(key, &v);
+        *value = v;
         return SECTION_TYPE_FLOAT;
     } else if (strcasecmp(section, CONFIG_WIFLY_STR) == 0) {
+        char *v;
+        getFromWifly(key, &v);
+        *value = v;
         return SECTION_TYPE_STRING;
+    } else if (strcasecmp(section, CONFIG_SYSTEM_STR) == 0) {
+        float *v;
+        getFromSystem(key, &v);
+        *value = v;
+        return SECTION_TYPE_FLOAT;
+    } else if (strcasecmp(section, CONFIG_PID_STR) == 0) {
+        float *v;
+        getFromPID(key, &v);
+        *value = v;
+        return SECTION_TYPE_FLOAT;
     } else {
         return SECTION_TYPE_NONE;
     }
 }
 
-const char *config_sectionToString(ConfigSection section) {
+bool config_set(const char *section, const char *key, const char *value) {
+    if (strcasecmp(section, CONFIG_GENERAL_STR) == 0) {
+        return setToGeneral(key, atoff(value));
+    } else if (strcasecmp(section, CONFIG_CONTROL_STR) == 0) {
+        return setToControl(key, atoff(value));
+    } else if (strcasecmp(section, CONFIG_PINS_STR) == 0) {
+        return setToPins(key, atoff(value));
+    } else if (strcasecmp(section, CONFIG_SENSORS_STR) == 0) {
+        return setToSensors(key, atoff(value));
+    } else if (strcasecmp(section, CONFIG_WIFLY_STR) == 0) {
+        return setToWifly(key, value);
+    } else if (strcasecmp(section, CONFIG_SYSTEM_STR) == 0) {
+        return setToSystem(key, atoff(value));
+    } else if (strcasecmp(section, CONFIG_PID_STR) == 0) {
+        return setToPID(key, atoff(value));
+    } else {
+        return false;
+    }
+    return config_validate();
+}
+
+ConfigSectionType config_sectionToString(ConfigSection section, const char **str) {
     switch (section) {
         case CONFIG_GENERAL:
-            return CONFIG_GENERAL_STR;
+            *str = CONFIG_GENERAL_STR;
+            return SECTION_TYPE_FLOAT;
+            break;
         case CONFIG_CONTROL:
-            return CONFIG_CONTROL_STR;
-        case CONFIG_LIMITS:
-            return CONFIG_LIMITS_STR;
-        case CONFIG_FLYING_WING:
-            return CONFIG_FLYING_WING_STR;
-        case CONFIG_PINS0:
-            return CONFIG_PINS0_STR;
-        case CONFIG_PINS1:
-            return CONFIG_PINS1_STR;
+            *str = CONFIG_CONTROL_STR;
+            return SECTION_TYPE_FLOAT;
+            break;
+        case CONFIG_PINS:
+            *str = CONFIG_PINS_STR;
+            return SECTION_TYPE_FLOAT;
+            break;
         case CONFIG_SENSORS:
-            return CONFIG_SENSORS_STR;
-        case CONFIG_PID0:
-            return CONFIG_PID0_STR;
-        case CONFIG_PID1:
-            return CONFIG_PID1_STR;
-        case CONFIG_DEBUG:
-            return CONFIG_DEBUG_STR;
+            *str = CONFIG_SENSORS_STR;
+            return SECTION_TYPE_FLOAT;
+            break;
         case CONFIG_WIFLY:
-            return CONFIG_WIFLY_STR;
-        default:
-            return NULL;
+            *str = CONFIG_WIFLY_STR;
+            return SECTION_TYPE_STRING;
+            break;
+        case CONFIG_SYSTEM:
+            *str = CONFIG_SYSTEM_STR;
+            return SECTION_TYPE_FLOAT;
+            break;
+        case CONFIG_PID:
+            *str = CONFIG_PID_STR;
+            return SECTION_TYPE_FLOAT;
+            break;
     }
-}
-
-float config_getFloat(const char* section, const char* key) {
-    if (strcasecmp(section, CONFIG_GENERAL_STR) == 0) {
-        if (strcasecmp(key, "controlMode") == 0) {
-            return (float)config.general.controlMode;
-        } else if (strcasecmp(key, "switchType") == 0) {
-            return (float)config.general.switchType;
-        } else if (strcasecmp(key, "maxCalibrationOffset") == 0) {
-            return (float)config.general.maxCalibrationOffset;
-        } else if (strcasecmp(key, "servoHz") == 0) {
-            return (float)config.general.servoHz;
-        } else if (strcasecmp(key, "escHz") == 0) {
-            return (float)config.general.escHz;
-        } else if (strcasecmp(key, "apiEnabled") == 0) {
-            return (float)config.general.apiEnabled;
-        } else if (strcasecmp(key, "wiflyStatus") == 0) {
-            return (float)config.general.wiflyStatus;
-        } else if (strcasecmp(key, "skipCalibration") == 0) {
-            return (float)config.general.skipCalibration;
-        }
-    } else if (strcasecmp(section, CONFIG_CONTROL_STR) == 0) {
-        if (strcasecmp(key, "controlSensitivity") == 0) {
-            return config.control.controlSensitivity;
-        } else if (strcasecmp(key, "rudderSensitivity") == 0) {
-            return config.control.rudderSensitivity;
-        } else if (strcasecmp(key, "controlDeadband") == 0) {
-            return config.control.controlDeadband;
-        } else if (strcasecmp(key, "throttleDetentIdle") == 0) {
-            return config.control.throttleDetentIdle;
-        } else if (strcasecmp(key, "throttleDetentMCT") == 0) {
-            return config.control.throttleDetentMCT;
-        } else if (strcasecmp(key, "throttleDetentMax") == 0) {
-            return config.control.throttleDetentMax;
-        } else if (strcasecmp(key, "throttleMaxTime") == 0) {
-            return (float)config.control.throttleMaxTime;
-        }
-    } else if (strcasecmp(section, CONFIG_LIMITS_STR) == 0) {
-        if (strcasecmp(key, "rollLimit") == 0) {
-            return config.limits.rollLimit;
-        } else if (strcasecmp(key, "rollLimitHold") == 0) {
-            return config.limits.rollLimitHold;
-        } else if (strcasecmp(key, "pitchUpperLimit") == 0) {
-            return config.limits.pitchUpperLimit;
-        } else if (strcasecmp(key, "pitchLowerLimit") == 0) {
-            return config.limits.pitchLowerLimit;
-        } else if (strcasecmp(key, "maxAilDeflection") == 0) {
-            return config.limits.maxAilDeflection;
-        } else if (strcasecmp(key, "maxElevDeflection") == 0) {
-            return config.limits.maxElevDeflection;
-        } else if (strcasecmp(key, "maxRudDeflection") == 0) {
-            return config.limits.maxRudDeflection;
-        } else if (strcasecmp(key, "maxElevonDeflection") == 0) {
-            return config.limits.maxElevonDeflection;
-        }
-    } else if (strcasecmp(section, CONFIG_FLYING_WING_STR) == 0) {
-        if (strcasecmp(key, "elevonMixingGain") == 0) {
-            return config.flyingWing.elevonMixingGain;
-        } else if (strcasecmp(key, "ailMixingBias") == 0) {
-            return config.flyingWing.ailMixingBias;
-        } else if (strcasecmp(key, "elevMixingBias") == 0) {
-            return config.flyingWing.elevMixingBias;
-        }
-    } else if (strcasecmp(section, CONFIG_PINS0_STR) == 0) {
-        if (strcasecmp(key, "inputAil") == 0) {
-            return (float)config.pins0.inputAil;
-        } else if (strcasecmp(key, "servoAil") == 0) {
-            return (float)config.pins0.servoAil;
-        } else if (strcasecmp(key, "inputElev") == 0) {
-            return (float)config.pins0.inputElev;
-        } else if (strcasecmp(key, "servoElev") == 0) {
-            return (float)config.pins0.servoElev;
-        } else if (strcasecmp(key, "inputRud") == 0) {
-            return (float)config.pins0.inputRud;
-        } else if (strcasecmp(key, "servoRud") == 0) {
-            return (float)config.pins0.servoRud;
-        } else if (strcasecmp(key, "inputSwitch") == 0) {
-            return (float)config.pins0.inputSwitch;
-        }
-    } else if (strcasecmp(section, CONFIG_PINS1_STR) == 0) {
-        if (strcasecmp(key, "inputThrottle") == 0) {
-            return (float)config.pins1.inputThrottle;
-        } else if (strcasecmp(key, "escThrottle") == 0) {
-            return (float)config.pins1.escThrottle;
-        } else if (strcasecmp(key, "servoElevonL") == 0) {
-            return (float)config.pins1.servoElevonL;
-        } else if (strcasecmp(key, "servoElevonR") == 0) {
-            return (float)config.pins1.servoElevonR;
-        } else if (strcasecmp(key, "reverseRoll") == 0) {
-            return (float)config.pins1.reverseRoll;
-        } else if (strcasecmp(key, "reversePitch") == 0) {
-            return (float)config.pins1.reversePitch;
-        } else if (strcasecmp(key, "reverseYaw") == 0) {
-            return (float)config.pins1.reverseYaw;
-        }
-    } else if (strcasecmp(section, CONFIG_SENSORS_STR) == 0) {
-        if (strcasecmp(key, "imuModel") == 0) {
-            return (float)config.sensors.imuModel;
-        } else if (strcasecmp(key, "imuSda") == 0) {
-            return (float)config.sensors.imuSda;
-        } else if (strcasecmp(key, "imuScl") == 0) {
-            return (float)config.sensors.imuScl;
-        } else if (strcasecmp(key, "baroModel") == 0) {
-            return (float)config.sensors.baroModel;
-        } else if (strcasecmp(key, "gpsBaudrate") == 0) {
-            return (float)config.sensors.gpsBaudrate;
-        } else if (strcasecmp(key, "gpsCommandType") == 0) {
-            return (float)config.sensors.gpsCommandType;
-        } else if (strcasecmp(key, "gpsTx") == 0) {
-            return (float)config.sensors.gpsTx;
-        } else if (strcasecmp(key, "gpsRx") == 0) {
-            return (float)config.sensors.gpsRx;
-        }
-    } else if (strcasecmp(section, CONFIG_PID0_STR) == 0) {
-        if (strcasecmp(key, "rollTau") == 0) {
-            return config.pid0.rollTau;
-        } else if (strcasecmp(key, "rollIntegMin") == 0) {
-            return config.pid0.rollIntegMin;
-        } else if (strcasecmp(key, "rollIntegMax") == 0) {
-            return config.pid0.rollIntegMax;
-        } else if (strcasecmp(key, "rollKt") == 0) {
-            return config.pid0.rollKt;
-        } else if (strcasecmp(key, "pitchTau") == 0) {
-            return config.pid0.pitchTau;
-        } else if (strcasecmp(key, "pitchIntegMin") == 0) {
-            return config.pid0.pitchIntegMin;
-        } else if (strcasecmp(key, "pitchIntegMax") == 0) {
-            return config.pid0.pitchIntegMax;
-        } else if (strcasecmp(key, "pitchKt") == 0) {
-            return config.pid0.pitchKt;
-        }
-    } else if (strcasecmp(section, CONFIG_PID1_STR) == 0) {
-        if (strcasecmp(key, "yawKp") == 0) {
-            return config.pid1.yawKp;
-        } else if (strcasecmp(key, "yawKi") == 0) {
-            return config.pid1.yawKi;
-        } else if (strcasecmp(key, "yawKd") == 0) {
-            return config.pid1.yawKd;
-        } else if (strcasecmp(key, "yawTau") == 0) {
-            return config.pid1.yawTau;
-        } else if (strcasecmp(key, "yawIntegMin") == 0) {
-            return config.pid1.yawIntegMin;
-        } else if (strcasecmp(key, "yawIntegMax") == 0) {
-            return config.pid1.yawIntegMax;
-        } else if (strcasecmp(key, "yawKt") == 0) {
-            return config.pid1.yawKt;
-        }
-    } else if (strcasecmp(section, CONFIG_DEBUG_STR) == 0) {
-        if (strcasecmp(key, "debug") == 0) {
-            return (float)config.debug.debug;
-        } else if (strcasecmp(key, "debug_fbw") == 0) {
-            return (float)config.debug.debug_fbw;
-        } else if (strcasecmp(key, "debug_imu") == 0) {
-            return (float)config.debug.debug_imu;
-        } else if (strcasecmp(key, "debug_gps") == 0) {
-            return (float)config.debug.debug_gps;
-        } else if (strcasecmp(key, "debug_wifly") == 0) {
-            return (float)config.debug.debug_wifly;
-        } else if (strcasecmp(key, "debug_network") == 0) {
-            return (float)config.debug.debug_network;
-        } else if (strcasecmp(key, "dump_network") == 0) {
-            return (float)config.debug.dump_network;
-        } else if (strcasecmp(key, "watchdog_timeout_ms") == 0) {
-            return (float)config.debug.watchdog_timeout_ms;
-        }
-    }
-    return INFINITY;
-}
-
-void config_getAllFloats(float values[], size_t numValues) {
-    if (values && numValues > 0) {
-        size_t index = 0;
-
-        // ConfigGeneral
-        values[index++] = (float)config.general.controlMode;
-        values[index++] = (float)config.general.switchType;
-        values[index++] = (float)config.general.maxCalibrationOffset;
-        values[index++] = (float)config.general.servoHz;
-        values[index++] = (float)config.general.escHz;
-        values[index++] = (float)config.general.apiEnabled;
-        values[index++] = (float)config.general.wiflyStatus;
-        values[index++] = (float)config.general.skipCalibration;
-
-        // ConfigControl
-        values[index++] = config.control.controlSensitivity;
-        values[index++] = config.control.rudderSensitivity;
-        values[index++] = config.control.controlDeadband;
-        values[index++] = config.control.throttleDetentIdle;
-        values[index++] = config.control.throttleDetentMCT;
-        values[index++] = config.control.throttleDetentMax;
-        values[index++] = (float)config.control.throttleMaxTime;
-        values[index++] = INFINITY;
-
-        // ConfigLimits
-        values[index++] = config.limits.rollLimit;
-        values[index++] = config.limits.rollLimitHold;
-        values[index++] = config.limits.pitchUpperLimit;
-        values[index++] = config.limits.pitchLowerLimit;
-        values[index++] = config.limits.maxAilDeflection;
-        values[index++] = config.limits.maxElevDeflection;
-        values[index++] = config.limits.maxRudDeflection;
-        values[index++] = config.limits.maxElevonDeflection;
-
-        // ConfigFlyingWing
-        values[index++] = config.flyingWing.elevonMixingGain;
-        values[index++] = config.flyingWing.ailMixingBias;
-        values[index++] = config.flyingWing.elevMixingBias;
-        values[index++] = INFINITY;
-        values[index++] = INFINITY;
-        values[index++] = INFINITY;
-        values[index++] = INFINITY;
-        values[index++] = INFINITY;
-
-        // ConfigPins0
-        values[index++] = (float)config.pins0.inputAil;
-        values[index++] = (float)config.pins0.servoAil;
-        values[index++] = (float)config.pins0.inputElev;
-        values[index++] = (float)config.pins0.servoElev;
-        values[index++] = (float)config.pins0.inputRud;
-        values[index++] = (float)config.pins0.servoRud;
-        values[index++] = (float)config.pins0.inputSwitch;
-        values[index++] = INFINITY;
-
-        // ConfigPins1
-        values[index++] = (float)config.pins1.inputThrottle;
-        values[index++] = (float)config.pins1.escThrottle;
-        values[index++] = (float)config.pins1.servoElevonL;
-        values[index++] = (float)config.pins1.servoElevonR;
-        values[index++] = (float)config.pins1.reverseRoll;
-        values[index++] = (float)config.pins1.reversePitch;
-        values[index++] = (float)config.pins1.reverseYaw;
-        values[index++] = INFINITY;
-
-        // ConfigSensors
-        values[index++] = (float)config.sensors.imuModel;
-        values[index++] = (float)config.sensors.imuSda;
-        values[index++] = (float)config.sensors.imuScl;
-        values[index++] = (float)config.sensors.baroModel;
-        values[index++] = (float)config.sensors.gpsBaudrate;
-        values[index++] = (float)config.sensors.gpsCommandType;
-        values[index++] = (float)config.sensors.gpsTx;
-        values[index++] = (float)config.sensors.gpsRx;
-
-        // ConfigPID0
-        values[index++] = config.pid0.rollTau;
-        values[index++] = config.pid0.rollIntegMin;
-        values[index++] = config.pid0.rollIntegMax;
-        values[index++] = config.pid0.rollKt;
-        values[index++] = config.pid0.pitchTau;
-        values[index++] = config.pid0.pitchIntegMin;
-        values[index++] = config.pid0.pitchIntegMax;
-        values[index++] = config.pid0.pitchKt;
-
-        // ConfigPID1
-        values[index++] = config.pid1.yawKp;
-        values[index++] = config.pid1.yawKi;
-        values[index++] = config.pid1.yawKd;
-        values[index++] = config.pid1.yawTau;
-        values[index++] = config.pid1.yawIntegMin;
-        values[index++] = config.pid1.yawIntegMax;
-        values[index++] = config.pid1.yawKt;
-        values[index++] = INFINITY;
-
-        // ConfigDebug
-        values[index++] = (float)config.debug.debug;
-        values[index++] = (float)config.debug.debug_fbw;
-        values[index++] = (float)config.debug.debug_imu;
-        values[index++] = (float)config.debug.debug_gps;
-        values[index++] = (float)config.debug.debug_wifly;
-        values[index++] = (float)config.debug.debug_network;
-        values[index++] = (float)config.debug.dump_network;
-        values[index++] = (float)config.debug.watchdog_timeout_ms;
-
-        // Fill any remaining values
-        while (index < numValues) {
-            values[index++] = INFINITY;
-        }
-    }
-}
-
-bool config_setFloat(const char *section, const char *key, float value) {
-    if (strcasecmp(section, CONFIG_GENERAL_STR) == 0) {
-        if (strcasecmp(key, "controlMode") == 0) {
-            config.general.controlMode = (ControlMode)value;
-            return true;
-        } else if (strcasecmp(key, "switchType") == 0) {
-            config.general.switchType = (SwitchType)value;
-            return true;
-        } else if (strcasecmp(key, "maxCalibrationOffset") == 0) {
-            config.general.maxCalibrationOffset = (uint8_t)value;
-            return true;
-        } else if (strcasecmp(key, "servoHz") == 0) {
-            config.general.servoHz = (uint)value;
-            return true;
-        } else if (strcasecmp(key, "escHz") == 0) {
-            config.general.escHz = (uint)value;
-            return true;
-        } else if (strcasecmp(key, "apiEnabled") == 0) {
-            config.general.apiEnabled = (bool)value;
-            return true;
-        } else if (strcasecmp(key, "wiflyStatus") == 0) {
-            config.general.wiflyStatus = (bool)value;
-            return true;
-        } else if (strcasecmp(key, "skipCalibration") == 0) {
-            config.general.skipCalibration = (bool)value;
-            return true;
-        }
-    } else if (strcasecmp(section, CONFIG_CONTROL_STR) == 0) {
-        if (strcasecmp(key, "controlSensitivity") == 0) {
-            config.control.controlSensitivity = value;
-            return true;
-        } else if (strcasecmp(key, "rudderSensitivity") == 0) {
-            config.control.rudderSensitivity = value;
-            return true;
-        } else if (strcasecmp(key, "controlDeadband") == 0) {
-            config.control.controlDeadband = value;
-            return true;
-        } else if (strcasecmp(key, "throttleDetentIdle") == 0) {
-            config.control.throttleDetentIdle = value;
-            return true;
-        } else if (strcasecmp(key, "throttleDetentMCT") == 0) {
-            config.control.throttleDetentMCT = value;
-            return true;
-        } else if (strcasecmp(key, "throttleDetentMax") == 0) {
-            config.control.throttleDetentMax = value;
-            return true;
-        } else if (strcasecmp(key, "throttleMaxTime") == 0) {
-            config.control.throttleMaxTime = (uint)value;
-            return true;
-        }
-    } else if (strcasecmp(section, CONFIG_LIMITS_STR) == 0) {
-        if (strcasecmp(key, "rollLimit") == 0) {
-            config.limits.rollLimit = value;
-            return true;
-        } else if (strcasecmp(key, "rollLimitHold") == 0) {
-            config.limits.rollLimitHold = value;
-            return true;
-        } else if (strcasecmp(key, "pitchUpperLimit") == 0) {
-            config.limits.pitchUpperLimit = value;
-            return true;
-        } else if (strcasecmp(key, "pitchLowerLimit") == 0) {
-            config.limits.pitchLowerLimit = value;
-            return true;
-        } else if (strcasecmp(key, "maxAilDeflection") == 0) {
-            config.limits.maxAilDeflection = value;
-            return true;
-        } else if (strcasecmp(key, "maxElevDeflection") == 0) {
-            config.limits.maxElevDeflection = value;
-            return true;
-        } else if (strcasecmp(key, "maxRudDeflection") == 0) {
-            config.limits.maxRudDeflection = value;
-            return true;
-        } else if (strcasecmp(key, "maxElevonDeflection") == 0) {
-            config.limits.maxElevonDeflection = value;
-            return true;
-        }
-    } else if (strcasecmp(section, CONFIG_FLYING_WING_STR) == 0) {
-        if (strcasecmp(key, "elevonMixingGain") == 0) {
-            config.flyingWing.elevonMixingGain = value;
-            return true;
-        } else if (strcasecmp(key, "ailMixingBias") == 0) {
-            config.flyingWing.ailMixingBias = value;
-            return true;
-        } else if (strcasecmp(key, "elevMixingBias") == 0) {
-            config.flyingWing.elevMixingBias = value;
-            return true;
-        }
-    } else if (strcasecmp(section, CONFIG_PINS0_STR) == 0) {
-        if (strcasecmp(key, "inputAil") == 0) {
-            config.pins0.inputAil = (uint)value;
-            return true;
-        } else if (strcasecmp(key, "servoAil") == 0) {
-            config.pins0.servoAil = (uint)value;
-            return true;
-        } else if (strcasecmp(key, "inputElev") == 0) {
-            config.pins0.inputElev = (uint)value;
-            return true;
-        } else if (strcasecmp(key, "servoElev") == 0) {
-            config.pins0.servoElev = (uint)value;
-            return true;
-        } else if (strcasecmp(key, "inputRud") == 0) {
-            config.pins0.inputRud = (uint)value;
-            return true;
-        } else if (strcasecmp(key, "servoRud") == 0) {
-            config.pins0.servoRud = (uint)value;
-            return true;
-        } else if (strcasecmp(key, "inputSwitch") == 0) {
-            config.pins0.inputSwitch = (uint)value;
-            return true;
-        }
-    } else if (strcasecmp(section, CONFIG_PINS1_STR) == 0) {
-        if (strcasecmp(key, "inputThrottle") == 0) {
-            config.pins1.inputThrottle = (uint)value;
-            return true;
-        } else if (strcasecmp(key, "escThrottle") == 0) {
-            config.pins1.escThrottle = (uint)value;
-            return true;
-        } else if (strcasecmp(key, "servoElevonL") == 0) {
-            config.pins1.servoElevonL = (uint)value;
-            return true;
-        } else if (strcasecmp(key, "servoElevonR") == 0) {
-            config.pins1.servoElevonR = (uint)value;
-            return true;
-        } else if (strcasecmp(key, "reverseRoll") == 0) {
-            config.pins1.reverseRoll = (bool)value;
-            return true;
-        } else if (strcasecmp(key, "reversePitch") == 0) {
-            config.pins1.reversePitch = (bool)value;
-            return true;
-        } else if (strcasecmp(key, "reverseYaw") == 0) {
-            config.pins1.reverseYaw = (bool)value;
-            return true;
-        }
-    } else if (strcasecmp(section, CONFIG_SENSORS_STR) == 0) {
-        if (strcasecmp(key, "imuModel") == 0) {
-            config.sensors.imuModel = (IMUModel)value;
-            return true;
-        } else if (strcasecmp(key, "imuSda") == 0) {
-            config.sensors.imuSda = (uint)value;
-            return true;
-        } else if (strcasecmp(key, "imuScl") == 0) {
-            config.sensors.imuScl = (uint)value;
-            return true;
-        } else if (strcasecmp(key, "baroModel") == 0) {
-            config.sensors.baroModel = (BaroModel)value;
-            return true;
-        } else if (strcasecmp(key, "gpsBaudrate") == 0) {
-            config.sensors.gpsBaudrate = (uint)value;
-            return true;
-        } else if (strcasecmp(key, "gpsCommandType") == 0) {
-            config.sensors.gpsCommandType = (GPSCommandType)value;
-            return true;
-        } else if (strcasecmp(key, "gpsTx") == 0) {
-            config.sensors.gpsTx = (uint)value;
-            return true;
-        } else if (strcasecmp(key, "gpsRx") == 0) {
-            config.sensors.gpsRx = (uint)value;
-            return true;
-        }
-    } else if (strcasecmp(section, CONFIG_PID0_STR) == 0) {
-        if (strcasecmp(key, "rollTau") == 0) {
-            config.pid0.rollTau = value;
-            return true;
-        } else if (strcasecmp(key, "rollIntegMin") == 0) {
-            config.pid0.rollIntegMin = value;
-            return true;
-        } else if (strcasecmp(key, "rollIntegMax") == 0) {
-            config.pid0.rollIntegMax = value;
-            return true;
-        } else if (strcasecmp(key, "rollKt") == 0) {
-            config.pid0.rollKt = value;
-            return true;
-        } else if (strcasecmp(key, "pitchTau") == 0) {
-            config.pid0.pitchTau = value;
-            return true;
-        } else if (strcasecmp(key, "pitchIntegMin") == 0) {
-            config.pid0.pitchIntegMin = value;
-            return true;
-        } else if (strcasecmp(key, "pitchIntegMax") == 0) {
-            config.pid0.pitchIntegMax = value;
-            return true;
-        } else if (strcasecmp(key, "pitchKt") == 0) {
-            config.pid0.pitchKt = value;
-            return true;
-        }
-    } else if (strcasecmp(section, CONFIG_PID1_STR) == 0) {
-        if (strcasecmp(key, "yawKp") == 0) {
-            config.pid1.yawKp = value;
-            return true;
-        } else if (strcasecmp(key, "yawKi") == 0) {
-            config.pid1.yawKi = value;
-            return true;
-        } else if (strcasecmp(key, "yawKd") == 0) {
-            config.pid1.yawKd = value;
-            return true;
-        } else if (strcasecmp(key, "yawTau") == 0) {
-            config.pid1.yawTau = value;
-            return true;
-        } else if (strcasecmp(key, "yawIntegMin") == 0) {
-            config.pid1.yawIntegMin = value;
-            return true;
-        } else if (strcasecmp(key, "yawIntegMax") == 0) {
-            config.pid1.yawIntegMax = value;
-            return true;
-        } else if (strcasecmp(key, "yawKt") == 0) {
-            config.pid1.yawKt = value;
-            return true;
-        }
-    } else if (strcasecmp(section, CONFIG_DEBUG_STR) == 0) {
-        if (strcasecmp(key, "debug") == 0) {
-            config.debug.debug = (bool)value;
-            return true;
-        } else if (strcasecmp(key, "debug_fbw") == 0) {
-            config.debug.debug_fbw = (bool)value;
-            return true;
-        } else if (strcasecmp(key, "debug_imu") == 0) {
-            config.debug.debug_imu = (bool)value;
-            return true;
-        } else if (strcasecmp(key, "debug_gps") == 0) {
-            config.debug.debug_gps = (bool)value;
-            return true;
-        } else if (strcasecmp(key, "debug_wifly") == 0) {
-            config.debug.debug_wifly = (bool)value;
-            return true;
-        } else if (strcasecmp(key, "debug_network") == 0) {
-            config.debug.debug_network = (bool)value;
-            return true;
-        } else if (strcasecmp(key, "dump_network") == 0) {
-            config.debug.dump_network = (bool)value;
-            return true;
-        } else if (strcasecmp(key, "watchdog_timeout_ms") == 0) {
-            config.debug.watchdog_timeout_ms = (uint32_t)value;
-            return true;
-        }
-    }
-    return false;
-}
-
-const char *config_getString(const char *section, const char *key) {
-    if (strcasecmp(section, CONFIG_WIFLY_STR) == 0) {
-        if (strcasecmp(key, "ssid") == 0) {
-            return config.wifly.ssid;
-        } else if (strcasecmp(key, "pass") == 0) {
-            return config.wifly.pass;
-        }
-    }
-    return NULL;
-}
-
-void config_getAllStrings(const char *values[], size_t numValues) {
-    if (values && numValues > 0) {
-        size_t index = 0;
-
-        // ConfigWifly
-        values[index++] = config.wifly.ssid;
-        values[index++] = config.wifly.pass;
-
-        while (index < numValues) {
-            values[index++] = NULL;
-        }
-    }
-}
-
-bool config_setString(const char *section, const char *key, const char *value) {
-    if (strcasecmp(section, CONFIG_WIFLY_STR) == 0) {
-        if (strcasecmp(key, "ssid") == 0) {
-            strncpy(config.wifly.ssid, value, sizeof(config.wifly.ssid));
-            config.wifly.ssid[sizeof(config.wifly.ssid) - 1] = '\0';
-            return true;
-        } else if (strcasecmp(key, "pass") == 0) {
-            strncpy(config.wifly.pass, value, sizeof(config.wifly.pass));
-            config.wifly.pass[sizeof(config.wifly.pass) - 1] = '\0';
-            return true;
-        }
-    }
-    return false;
 }

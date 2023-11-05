@@ -4,6 +4,7 @@
 */
 
 #include <stdbool.h>
+#include "pico/time.h"
 #include "pico/types.h"
 
 #include "../io/flash.h"
@@ -18,8 +19,6 @@
 #include "tune.h"
 #include "flight.h"
 
-#include "../sys/config.h"
-
 #include "../wifly/wifly.h"
 
 #include "auto.h"
@@ -27,6 +26,11 @@
 // TODO: Aadd documentation for auto mode on the wiki!
 // "materials" and "how to use system" need updating and also a completely new page for wifly and how to use it
 // also make sure to mention it in the readme
+
+typedef enum BayPosition {
+    CLOSED,
+    OPEN
+} BayPosition;
 
 static bool autoComplete = false;
 
@@ -40,6 +44,18 @@ static int alt;
 
 static PIDController latGuid;
 static PIDController vertGuid;
+
+/**
+ * @param pos The position to set the drop bay mechanism to (true for open, false for closed).
+*/
+static void setBayPosition(BayPosition pos) {
+    // TODO: bay code here, once we have pins and positions (in conf) figured out
+}
+
+// Callback for when the bay needs to be closed after a user-specified delay (within the flightplan)
+static inline int64_t dropCallback(alarm_id_t id, void *data) {
+    setBayPosition(CLOSED);
+}
 
 bool mode_autoInit() {
     // Import the flightplan data from Wi-Fly and check if it's valid
@@ -84,13 +100,13 @@ void mode_auto() {
     distance = calculateDistance(gps.lat, gps.lng, fplan[currentWaypoint].lat, fplan[currentWaypoint].lng);
 
     // Nested PIDs; latGuid and vertGuid use imu & gps data to command bank/pitch angles which the flight PIDs then use to actuate servos
-    pid_update(&latGuid, bearing, gps.trk_true); // Don't use aircraft heading because that's not always going to be navigational (either true or magnetic)
+    pid_update(&latGuid, bearing, gps.trk_true); // Don't use IMU heading because that's not always going to be navigational
     pid_update(&vertGuid, alt, gps.alt);
     flight_update(latGuid.out, vertGuid.out, 0, false);
 
-    // If we've "intercepted" the waypoint then advance to the next one
+    // If we've "intercepted" the waypoint,
     if (distance <= INTERCEPT_RADIUS) {
-        currentWaypoint++;
+        currentWaypoint++; // then advance to the next one
         if (currentWaypoint > wifly_getWaypointCount()) {
             // Auto mode ends here, we enter a holding pattern
             autoComplete = true;
@@ -102,7 +118,7 @@ void mode_auto() {
                 if (fplan[currentWaypoint].alt < -5) {
                     alt = gps.alt;
                 } else {
-                    // Factor in the altitude offset calculated earlier, if applicable
+                    // Factor in the altitude offset calculated earlier
                     alt = fplan[currentWaypoint].alt + gps_getAltOffset();
                 }
             } else {
@@ -112,6 +128,14 @@ void mode_auto() {
                     alt = fplan[currentWaypoint].alt;
                 }
             }
+            // Initiate a drop if applicable
+            if (fplan[currentWaypoint].drop != 0) {
+                setBayPosition(OPEN);
+                if (fplan[currentWaypoint].drop > 0) {
+                    // Schedule a callback if the bay needs to close after some time
+                    add_alarm_in_ms(fplan[currentWaypoint].drop * 1000, dropCallback, NULL, true);
+                }
+            } 
         }
     }
 }

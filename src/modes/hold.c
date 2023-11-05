@@ -7,13 +7,12 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "pico/time.h"
-
 #include "../lib/pid.h"
+
+#include "../io/flash.h"
 
 #include "auto.h"
 #include "flight.h"
-
-#include "../sys/config.h"
 
 #include "hold.h"
 
@@ -59,7 +58,7 @@ void mode_hold() {
         case HOLD_TURN_BEGUN:
             // Slowly ease into the turn
             if (rollSet <= HOLD_TURN_BANK_ANGLE) {
-                rollSet += (HOLD_TURN_BANK_ANGLE * config.control.controlSensitivity);
+                rollSet += (HOLD_TURN_BANK_ANGLE * flash.control[CONTROL_RUDDER_SENSITIVITY]);
             } else {
                 // We've reached the desired angle, now we need to wait for the turn to complete
                 turnStatus = HOLD_TURN_INPROGRESS;
@@ -74,7 +73,7 @@ void mode_hold() {
         case HOLD_TURN_ENDING:
             // Slowly decrease the turn
             if (rollSet >= HOLD_TURN_SLOW_BANK_ANGLE) {
-                rollSet -= (HOLD_TURN_BANK_ANGLE * config.control.controlSensitivity);
+                rollSet -= (HOLD_TURN_BANK_ANGLE * flash.control[CONTROL_RUDDER_SENSITIVITY]);
             }
             // Move on to stabilization once we've intercepted the target heading
             if (abs(targetTrack - gps.trk_true) <= HOLD_HEADING_INTERCEPT_WITHIN) {
@@ -84,7 +83,7 @@ void mode_hold() {
         case HOLD_TURN_STABILIZING:
             // Stabilize the turn back to 0 degrees of bank, then mark it as completed (unscheduled)
             if (rollSet >= 0) {
-                rollSet -= (HOLD_TURN_BANK_ANGLE * config.control.controlSensitivity);
+                rollSet -= (HOLD_TURN_BANK_ANGLE * flash.control[CONTROL_RUDDER_SENSITIVITY]);
             }
             break;
         case HOLD_TURN_UNSCHEDULED:

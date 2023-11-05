@@ -13,24 +13,26 @@
 
 uint api_get_flash(const char *cmd, const char *args) {
     printf("{\"sectors\":[");
-    for (FloatSector s = FLOAT_SECTOR_MIN; s <= FLOAT_SECTOR_MAX; s++) {
+    float *fvalue = flash.boot;
+    for (uint s = 1; s <= NUM_FLOAT_SECTORS; s++) {
         printf("{\"values\":[");
         for (uint v = 0; v <= (FLOAT_SECTOR_SIZE - 1); v++) {
-            float value = flash_readFloat(s, v);
-            if (v != (FLOAT_SECTOR_SIZE - 1)) {
-                isfinite(value) ? printf("%f,", value) : printf("null,");
+            if (v < (FLOAT_SECTOR_SIZE - 1)) {
+                isfinite(*fvalue) ? printf("%f,", *fvalue) : printf("null,");
             } else {
-                isfinite(value) ? printf("%f]},", value) : printf("null]},");
+                isfinite(*fvalue) ? printf("%f]},", *fvalue) : printf("null]},");
             }
+            fvalue++;
         }
     }
-    for (StringSector s = STRING_SECTOR_MIN; s <= STRING_SECTOR_MAX; s++) {
-        const char *value = flash_readString(s);
-        if (s != STRING_SECTOR_MAX) {
-            value ? printf("\"%s\",", value) : printf("\"\",");
+    char *cvalue = flash.version;
+    for (uint s = 1; s <= NUM_STRING_SECTORS; s++) {
+        if (s < NUM_STRING_SECTORS) {
+            cvalue ? printf("\"%s\",", cvalue) : printf("\"\",");
         } else {
-            value ? printf("\"%s\"]}\n", value) : printf("\"\"]}\n");
+            cvalue ? printf("\"%s\"]}\n", cvalue) : printf("\"\"]}\n");
         }
+        cvalue += STRING_SECTOR_SIZE;
     }
     return -1;
 }

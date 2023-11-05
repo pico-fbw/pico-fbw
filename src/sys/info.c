@@ -9,11 +9,10 @@
 
 #include "hardware/gpio.h"
 
+#include "../io/flash.h"
 #include "../io/platform.h"
 
 #include "../lib/semver.h"
-
-#include "config.h"
 
 #include "info.h"
 
@@ -37,14 +36,14 @@ int info_checkVersion(const char *version) {
     semver_t compare;
     if (semver_parse(version, &compare) < 0) {
         semver_free(&compare);
-        if (config.debug.debug_fbw) printf("[version] unable to parse input version string!\n");
+        if (print.fbw) printf("[version] unable to parse input version string!\n");
         return -3;
     }
     semver_t binary;
     if (semver_parse(PICO_FBW_VERSION, &binary) < 0) {
         semver_free(&compare);
         semver_free(&binary);
-        if (config.debug.debug_fbw) printf("[version] unable to parse binary version string!\n");
+        if (print.fbw) printf("[version] unable to parse binary version string!\n");
         return -3;
     }
     // Compare the versions
@@ -56,7 +55,7 @@ int info_checkVersion(const char *version) {
             if (binary.prerelease[0] == '\0') {
                 return -1; // Lower
             } else {
-                if (config.debug.debug_fbw) printf("[version] thanks for testing %s :)\n", binary.prerelease);
+                if (print.fbw) printf("[version] thanks for testing %s :)\n", binary.prerelease);
                 return 1; // Higher
             }
         case -1:

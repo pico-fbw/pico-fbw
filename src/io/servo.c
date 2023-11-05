@@ -23,15 +23,16 @@
 #include "hardware/irq.h"
 #include "hardware/pwm.h"
 
-#include "../sys/config.h"
+#include "flash.h"
+#include "pwm.h"
 
 #include "servo.h"
 
 uint servo_enable(uint gpio_pin) {
-    if (config.debug.debug_fbw) printf("[servo] setting up servo on pin %d\n", gpio_pin);
+    if (print.fbw) printf("[servo] setting up servo on pin %d\n", gpio_pin);
     gpio_set_function(gpio_pin, GPIO_FUNC_PWM);
     uint8_t slice = pwm_gpio_to_slice_num(gpio_pin);
-    uint freq = config.general.servoHz;
+    uint freq = (uint)flash.general[GENERAL_SERVO_HZ];
     uint32_t source_hz = clock_get_hz(clk_sys);
     uint32_t div16_top = 16 * source_hz / freq;
     uint32_t top = 1;
@@ -50,10 +51,10 @@ uint servo_enable(uint gpio_pin) {
         }
     }
     if (div16_top < 16) {
-        if (config.debug.debug_fbw) printf("[servo] ERROR: frequency too large\n");
+        if (print.fbw) printf("[servo] ERROR: frequency too large\n");
         return 2;
     } else if (div16_top >= 256 * 16) {
-        if (config.debug.debug_fbw) printf("[servo] ERROR: frequency too small\n");
+        if (print.fbw) printf("[servo] ERROR: frequency too small\n");
         return 1;
     }
     pwm_hw->slice[slice].div = div16_top;
@@ -90,18 +91,18 @@ void servo_test(uint servos[], uint num_servos, const uint16_t degrees[], const 
 }
 
 void servo_getPins(uint *servos, uint *num_servos) {
-    switch (config.general.controlMode) {
+    switch ((ControlMode)flash.general[GENERAL_CONTROL_MODE]) {
         case CTRLMODE_3AXIS_ATHR:
         case CTRLMODE_3AXIS:
-            servos[0] = config.pins0.servoAil;
-            servos[1] = config.pins0.servoElev;
-            servos[2] = config.pins0.servoRud;
+            servos[0] = (uint)flash.pins[PINS_SERVO_AIL];
+            servos[1] = (uint)flash.pins[PINS_SERVO_ELEV];
+            servos[2] = (uint)flash.pins[PINS_SERVO_RUD];
             *num_servos = 3;
             break;
         case CTRLMODE_FLYINGWING_ATHR:
         case CTRLMODE_FLYINGWING:
-            servos[0] = config.pins1.servoElevonL;
-            servos[1] = config.pins1.servoElevonR;
+            servos[0] = (uint)flash.pins[PINS_SERVO_ELEVON_L];
+            servos[1] = (uint)flash.pins[PINS_SERVO_ELEVON_R];
             *num_servos = 2;
             break;
     }

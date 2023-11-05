@@ -1,6 +1,9 @@
 #ifndef __GPS_H
 #define __GPS_H
 
+#include <stdbool.h>
+#include "pico/types.h"
+
 typedef enum GPSCommandType {
     GPS_COMMAND_TYPE_NONE,
     GPS_COMMAND_TYPE_PMTK

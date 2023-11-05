@@ -10,6 +10,6 @@
 
 // TODO: the user will jump certain servo pins to pwm in pins (to be decided) and the system will write values and read them back, expecting (almost) the same value
 
-void api_test_pwm(const char *cmd, const char *args) {
+uint api_test_pwm(const char *cmd, const char *args) {
     
 }

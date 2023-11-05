@@ -7,14 +7,14 @@
 
 #include "nav.h"
 
-static inline double toRadians(double degrees) {
+static inline long double toRadians(long double degrees) {
     return degrees * M_PI / 180.0;
 }
 
-double calculateBearing(double latA, double lonA, double latB, double lonB) {
-    double thetaA = toRadians(latA);
-    double thetaB = toRadians(latB);
-    double deltaL = toRadians(lonB - lonA);
+double calculateBearing(long double latA, long double lonA, long double latB, long double lonB) {
+    long double thetaA = toRadians(latA);
+    long double thetaB = toRadians(latB);
+    long double deltaL = toRadians(lonB - lonA);
 
     double X = cos(thetaB) * sin(deltaL);
     double Y = cos(thetaA) * sin(thetaB) - sin(thetaA) * cos(thetaB) * cos(deltaL);
@@ -27,11 +27,11 @@ double calculateBearing(double latA, double lonA, double latB, double lonB) {
     return bearing;
 }
 
-double calculateDistance(double latA, double lonA, double latB, double lonB) {
-    double thetaA = toRadians(latA);
-    double thetaB = toRadians(latB);
-    double deltaT = toRadians(latB - latA);
-    double deltaL = toRadians(lonB - lonA);
+double calculateDistance(long double latA, long double lonA, long double latB, long double lonB) {
+    long double thetaA = toRadians(latA);
+    long double thetaB = toRadians(latB);
+    long double deltaT = toRadians(latB - latA);
+    long double deltaL = toRadians(lonB - lonA);
 
     double a = sin(deltaT / 2) * sin(deltaT / 2) +
                cos(thetaA) * cos(thetaB) *

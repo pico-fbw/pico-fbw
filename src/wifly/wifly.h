@@ -1,6 +1,9 @@
 #ifndef __WIFLY_H
 #define __WIFLY_H
 
+#include <stdbool.h>
+#include <stddef.h>
+
 typedef enum WiflyStatus {
     WIFLY_STATUS_AWAITING,
     WIFLY_STATUS_OK,
@@ -36,6 +39,7 @@ typedef struct Waypoint {
     double lat;
     double lng;
     int alt;
+    int drop;
 } Waypoint;
 
 #ifdef RASPBERRYPI_PICO_W

@@ -5,9 +5,9 @@
 
 #include <stdint.h>
 
-#include "../modes/modes.h"
+#include "../io/flash.h"
 
-#include "config.h"
+#include "../modes/modes.h"
 
 #include "switch.h"
 
@@ -24,7 +24,7 @@ void switch_update(SwitchPosition pos) {
                 toMode(MODE_NORMAL);
                 break;
             case SWITCH_POSITION_HIGH:
-                switch (config.general.switchType) {
+                switch ((SwitchType)flash.general[GENERAL_SWITCH_TYPE]) {
                     case SWITCH_TYPE_2_POS:
                         toMode(MODE_NORMAL);
                         break;

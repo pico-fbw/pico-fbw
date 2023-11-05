@@ -24,7 +24,6 @@
 #include "hardware/i2c.h"
 #include "hardware/watchdog.h"
 
-#include "../sys/config.h"
 #include "../sys/log.h"
 
 #include "display.h"

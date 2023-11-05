@@ -1,6 +1,9 @@
 #ifndef __PWM_H
 #define __PWM_H
 
+#include <stdint.h>
+#include "pico/types.h"
+
 typedef enum ControlMode {
     CTRLMODE_3AXIS_ATHR,
     CTRLMODE_3AXIS,

@@ -4,9 +4,10 @@
 */
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include "pico/types.h"
+
+#include "../../../../io/flash.h"
 
 #include "../../../config.h"
 
@@ -19,16 +20,7 @@ uint api_set_config(const char *cmd, const char *args) {
         char value[64];
         char params[16];
         if (sscanf(args, "%63s %63s %63s %15s", section, key, value, params) < 3) return 400;
-        switch (config_getSectionType(section)) {
-            case SECTION_TYPE_FLOAT:
-                if (!config_setFloat(section, key, atoff(value))) return 400;
-                break;
-            case SECTION_TYPE_STRING:
-                if (!config_setString(section, key, value)) return 400;
-                break;
-            default:
-                return 400;
-        }
+        if (!config_set(section, key, value)) return 400;
         // Save to flash immediately if requested
         if (strncasecmp(params, "-S", 2) == 0) {
             goto save;
@@ -39,6 +31,7 @@ uint api_set_config(const char *cmd, const char *args) {
     return 200;
 
     save:
-        if (!config_save(true)) return 400;
+        if (!config_validate()) return 400;
+        flash_save();
         return 200;
 }

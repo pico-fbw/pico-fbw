@@ -22,16 +22,16 @@
 #include "hardware/irq.h"
 #include "hardware/pwm.h"
 
-#include "../sys/config.h"
+#include "flash.h"
 
 #include "esc.h"
 #include "servo.h"
 
 uint esc_enable(uint gpio_pin) {
-    if (config.debug.debug_fbw) printf("[ESC] setting up ESC on pin %d\n", gpio_pin);
+    if (print.fbw) printf("[ESC] setting up ESC on pin %d\n", gpio_pin);
     gpio_set_function(gpio_pin, GPIO_FUNC_PWM);
     uint8_t slice = pwm_gpio_to_slice_num(gpio_pin);
-    uint freq = config.general.escHz;
+    uint freq = (uint)flash.general[GENERAL_ESC_HZ];
     uint32_t source_hz = clock_get_hz(clk_sys);
     uint32_t div16_top = 16 * source_hz / freq;
     uint32_t top = 1;
@@ -51,10 +51,10 @@ uint esc_enable(uint gpio_pin) {
         }
     }
     if (div16_top < 16) {
-        if (config.debug.debug_fbw) printf("[ESC] ERROR: frequency too large\n");
+        if (print.fbw) printf("[ESC] ERROR: frequency too large\n");
         return 2;
     } else if (div16_top >= 256 * 16) {
-        if (config.debug.debug_fbw) printf("[ESC] ERROR: frequency too small\n");
+        if (print.fbw) printf("[ESC] ERROR: frequency too small\n");
         return 1;
     }
     pwm_hw->slice[slice].div = div16_top;

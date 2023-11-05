@@ -12,7 +12,7 @@
 #endif
 
 int main() {
-    flash_reset();
+    flash_format();
     reset_usb_boot(0, 0); // Reboot into BOOTSEL mode
 
     return 0; // How did we get here? (pt. 2)

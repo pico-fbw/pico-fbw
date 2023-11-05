@@ -16,10 +16,10 @@
 #include "lwip/pbuf.h"
 #include "lwip/tcp.h"
 
+#include "../../io/flash.h"
+
 #include "dhcp.h"
 #include "dns.h"
-
-#include "../../sys/config.h"
 
 #include "tcp.h"
 
@@ -44,7 +44,7 @@ static err_t tcp_close_client_connection(TCP_CONNECT_STATE_T *con_state, struct 
         tcp_err(client_pcb, NULL);
         err_t err = tcp_close(client_pcb);
         if (err != ERR_OK) {
-            if (config.debug.debug_fbw) printf("[tcp] ERROR: close failed %d, calling abort\n", err);
+            if (print.fbw) printf("[tcp] ERROR: close failed %d, calling abort\n", err);
             tcp_abort(client_pcb);
             close_err = ERR_ABRT;
         }
@@ -65,17 +65,17 @@ void tcp_server_close(TCP_SERVER_T *state) {
 
 static err_t tcp_server_sent(void *arg, struct tcp_pcb *pcb, u16_t len) {
     TCP_CONNECT_STATE_T *con_state = (TCP_CONNECT_STATE_T*)arg;
-    if (config.debug.debug_network) printf("[tcp] tcp_server_sent %u\n", len);
+    if (print.network) printf("[tcp] tcp_server_sent %u\n", len);
     con_state->sent_len += len;
     if (con_state->sent_len >= con_state->header_len + con_state->result_len) {
-        if (config.debug.debug_network) printf("[tcp] all done\n");
+        if (print.network) printf("[tcp] all done\n");
         return tcp_close_client_connection(con_state, pcb, ERR_OK);
     }
     return ERR_OK;
 }
 
 static int server_content(const char *request, const char *params, char *result, size_t max_result_len) {
-    if (config.debug.dump_network) printf("[tcp] content params: %s\n", params);
+    if (print.dumpNetwork) printf("[tcp] content params: %s\n", params);
     int len = 0;
     // Check if we need to redirect instead of serving page content
     if (strncmp(request, REDIRECT, sizeof(REDIRECT) - 1) == 0) {
@@ -88,7 +88,7 @@ static int server_content(const char *request, const char *params, char *result,
         // If there are params, check to see if the flightplan data is there
         if (params) {
             if (strncmp(FPLAN_PARAM, params, sizeof(FPLAN_PARAM) - 1) == 0) {
-                if (config.debug.debug_wifly) printf ("[wifly] Flightplan submission detected, attempting to parse\n");
+                if (print.wifly) printf ("[wifly] Flightplan submission detected, attempting to parse\n");
                 wifly_parseFplan(params); // Status is now set internally inside of wifly.c not tcp
             }
         }
@@ -101,13 +101,13 @@ static int server_content(const char *request, const char *params, char *result,
 static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err) {
     TCP_CONNECT_STATE_T *con_state = (TCP_CONNECT_STATE_T*)arg;
     if (!p) {
-        if (config.debug.debug_network) printf("[tcp] connection closed\n");
+        if (print.network) printf("[tcp] connection closed\n");
         return tcp_close_client_connection(con_state, pcb, ERR_OK);
     }
     assert(con_state && con_state->pcb == pcb);
     if (p->tot_len > 0) {
-        if (config.debug.debug_network) printf("[tcp] tcp_server_recv %d err %d\n", p->tot_len, err);
-        if (config.debug.dump_network) {
+        if (print.network) printf("[tcp] tcp_server_recv %d err %d\n", p->tot_len, err);
+        if (print.dumpNetwork) {
             for (struct pbuf *q = p; q != NULL; q = q->next) {
                 printf("in: %.*s\n\n\n", q->len, q->payload);
             }
@@ -121,7 +121,7 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err
             strcat(con_state->accHeaders, con_state->headers);
             // Null termination
             con_state->accHeaders[strlen(con_state->accHeaders)] = '\0';
-            if (config.debug.dump_network) printf("[tcp] {acc} final header: %s\n", con_state->accHeaders);
+            if (print.dumpNetwork) printf("[tcp] {acc} final header: %s\n", con_state->accHeaders);
             // Set the final headers flag
             accHeadersFinal = true;
         }
@@ -148,7 +148,7 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err
             }
             // Add the current headers to the accumulated headers
             strcat(con_state->accHeaders, con_state->headers);
-            if (config.debug.dump_network) if (config.debug.debug_network) printf("[tcp] {acc} current header: %s\n", con_state->accHeaders);
+            if (print.dumpNetwork) if (print.network) printf("[tcp] {acc} current header: %s\n", con_state->accHeaders);
         }
 
         // Handle GET request
@@ -169,12 +169,12 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err
 
             // Generate content
             con_state->result_len = server_content(request, params, con_state->result, sizeof(con_state->result));
-            if (config.debug.debug_network) printf("[tcp] request: %s?%s\n", request, params);
-            if (config.debug.debug_network) printf("[tcp] result_len: %d\n", con_state->result_len);
+            if (print.network) printf("[tcp] request: %s?%s\n", request, params);
+            if (print.network) printf("[tcp] result_len: %d\n", con_state->result_len);
 
             // Check we had enough buffer space
             if (con_state->result_len > sizeof(con_state->result) - 1) {
-                if (config.debug.debug_fbw) printf("[tcp] ERROR: too much result data %d\n", con_state->result_len);
+                if (print.fbw) printf("[tcp] ERROR: too much result data %d\n", con_state->result_len);
                 return tcp_close_client_connection(con_state, pcb, ERR_CLSD);
             }
 
@@ -183,21 +183,21 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err
                 con_state->header_len = snprintf(con_state->headers, sizeof(con_state->headers), HTTP_RESPONSE_HEADERS,
                     200, con_state->result_len);
                 if (con_state->header_len > sizeof(con_state->headers) - 1) {
-                    if (config.debug.debug_fbw) printf("[tcp] ERROR: too much header data %d\n", con_state->header_len);
+                    if (print.fbw) printf("[tcp] ERROR: too much header data %d\n", con_state->header_len);
                     return tcp_close_client_connection(con_state, pcb, ERR_CLSD);
                 }
             } else {
                 // Send redirect
                 con_state->header_len = snprintf(con_state->headers, sizeof(con_state->headers), HTTP_RESPONSE_REDIRECT,
                     ipaddr_ntoa(con_state->gw));
-                if (config.debug.debug_network) printf("[tcp] sending redirect %s", con_state->headers);
+                if (print.network) printf("[tcp] sending redirect %s", con_state->headers);
             }
 
             // Send the headers to the client
             con_state->sent_len = 0;
             err_t err = tcp_write(pcb, con_state->headers, con_state->header_len, 0);
             if (err != ERR_OK) {
-                if (config.debug.debug_fbw) printf("[tcp] ERROR: failed to write header data %d\n", err);
+                if (print.fbw) printf("[tcp] ERROR: failed to write header data %d\n", err);
                 return tcp_close_client_connection(con_state, pcb, err);
             }
 
@@ -205,7 +205,7 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err
             if (con_state->result_len) {
                 err = tcp_write(pcb, con_state->result, con_state->result_len, 0);
                 if (err != ERR_OK) {
-                    if (config.debug.debug_fbw) printf("[tcp] ERROR: failed to write result data %d\n", err);
+                    if (print.fbw) printf("[tcp] ERROR: failed to write result data %d\n", err);
                     return tcp_close_client_connection(con_state, pcb, err);
                 }
             }
@@ -227,14 +227,14 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err
 
 static err_t tcp_server_poll(void *arg, struct tcp_pcb *pcb) {
     TCP_CONNECT_STATE_T *con_state = (TCP_CONNECT_STATE_T*)arg;
-    if (config.debug.debug_network) printf("[tcp] tcp server polling\n");
+    if (print.network) printf("[tcp] tcp server polling\n");
     return tcp_close_client_connection(con_state, pcb, ERR_OK); // Just disconnect clent?
 }
 
 static void tcp_server_err(void *arg, err_t err) {
     TCP_CONNECT_STATE_T *con_state = (TCP_CONNECT_STATE_T*)arg;
     if (err != ERR_ABRT) {
-        if (config.debug.debug_fbw) printf("[tcp] ERROR: %d\n", err);
+        if (print.fbw) printf("[tcp] ERROR: %d\n", err);
         tcp_close_client_connection(con_state, con_state->pcb, err);
     }
 }
@@ -242,15 +242,15 @@ static void tcp_server_err(void *arg, err_t err) {
 static err_t tcp_server_accept(void *arg, struct tcp_pcb *client_pcb, err_t err) {
     TCP_SERVER_T *state = (TCP_SERVER_T*)arg;
     if (err != ERR_OK || client_pcb == NULL) {
-        if (config.debug.debug_fbw) printf("[tcp] failed to accept connection\n");
+        if (print.fbw) printf("[tcp] failed to accept connection\n");
         return ERR_VAL;
     }
-    if (config.debug.debug_network) printf("[tcp] client connected\n");
+    if (print.network) printf("[tcp] client connected\n");
 
     // Create the state for the connection
     TCP_CONNECT_STATE_T *con_state = calloc(1, sizeof(TCP_CONNECT_STATE_T));
     if (!con_state) {
-        if (config.debug.debug_fbw) printf("[tcp] ERROR: failed to allocate connect state\n");
+        if (print.fbw) printf("[tcp] ERROR: failed to allocate connect state\n");
         return ERR_MEM;
     }
     con_state->pcb = client_pcb; // for checking
@@ -268,23 +268,23 @@ static err_t tcp_server_accept(void *arg, struct tcp_pcb *client_pcb, err_t err)
 
 bool tcp_server_open(void *arg) {
     TCP_SERVER_T *state = (TCP_SERVER_T*)arg;
-    if (config.debug.debug_network) printf("[tcp] starting server on port %u\n", TCP_PORT);
+    if (print.network) printf("[tcp] starting server on port %u\n", TCP_PORT);
 
     struct tcp_pcb *pcb = tcp_new_ip_type(IPADDR_TYPE_ANY);
     if (!pcb) {
-        if (config.debug.debug_fbw) printf("[tcp] ERROR: failed to create pcb\n");
+        if (print.fbw) printf("[tcp] ERROR: failed to create pcb\n");
         return false;
     }
 
     err_t err = tcp_bind(pcb, IP_ANY_TYPE, TCP_PORT);
     if (err) {
-        if (config.debug.debug_fbw) printf("[tcp] ERROR: failed to bind to port %d\n");
+        if (print.fbw) printf("[tcp] ERROR: failed to bind to port %d\n");
         return false;
     }
 
     state->server_pcb = tcp_listen_with_backlog(pcb, 1);
     if (!state->server_pcb) {
-        if (config.debug.debug_fbw) printf("[tcp] ERROR: failed to listen\n");
+        if (print.fbw) printf("[tcp] ERROR: failed to listen\n");
         if (pcb) {
             tcp_close(pcb);
         }

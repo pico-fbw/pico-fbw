@@ -7,10 +7,10 @@
 #include <stdio.h>
 #include "pico/types.h"
 
+#include "../../../../io/flash.h"
+
 #include "../../../../modes/modes.h"
 #include "../../../../modes/normal.h"
-
-#include "../../../config.h"
 
 #include "set_setpoints.h"
 
@@ -18,9 +18,10 @@ uint api_set_setpoints(const char *cmd, const char *args) {
     if (getCurrentMode() == MODE_NORMAL) {
         float roll, pitch, yaw;
         if ((sscanf(args, "%f %f %f", &roll, &pitch, &yaw) >= 3) &&
-        fabsf(roll) > config.limits.rollLimitHold &&
-        fabsf(pitch) > config.limits.pitchUpperLimit &&
-        fabsf(yaw) > config.limits.maxRudDeflection) {
+        fabsf(roll) > flash.control[CONTROL_ROLL_LIMIT_HOLD] &&
+        pitch < flash.control[CONTROL_PITCH_UPPER_LIMIT] &&
+        pitch > flash.control[CONTROL_PITCH_LOWER_LIMIT] &&
+        fabsf(yaw) > flash.control[CONTROL_MAX_RUD_DEFLECTION]) {
             if (mode_normalSetSetpoints(roll, pitch, yaw)) {
                 return 200;
             } else {

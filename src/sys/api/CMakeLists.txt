@@ -7,7 +7,6 @@ add_library(fbw_api
     cmds/GET/get_info.c
     cmds/GET/get_logs.c
     cmds/GET/get_mode.c
-    cmds/GET/get_pid.c
     cmds/GET/get_sensor.c
     cmds/MISC/about.c
     cmds/MISC/help.c
@@ -17,7 +16,6 @@ add_library(fbw_api
     cmds/SET/set_config.c
     cmds/SET/set_fplan.c
     cmds/SET/set_mode.c
-    cmds/SET/set_pid.c
     cmds/SET/set_setpoints.c
     cmds/SET/set_target.c
     cmds/TEST/test_all.c

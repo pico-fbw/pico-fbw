@@ -10,6 +10,6 @@
 
 // TODO: set idle detent, then mct and max for a very short time
 
-void api_test_esc(const char *cmd, const char *args) {
+uint api_test_esc(const char *cmd, const char *args) {
     
 }

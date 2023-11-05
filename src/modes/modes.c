@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "pico/time.h"
 
+#include "../io/flash.h"
 #include "../io/gps.h"
 #include "../io/imu.h"
 #include "../io/servo.h"
@@ -18,7 +19,6 @@
 #include "normal.h"
 #include "tune.h"
 
-#include "../sys/config.h"
 #include "../sys/log.h"
 
 #include "modes.h"
@@ -31,26 +31,26 @@ void toMode(Mode newMode) {
     // Run deinit code for currentMode and then run init code for newMode
     switch (currentMode) {
         case MODE_DIRECT:
-            if (config.debug.debug_fbw) printf("[modes] exiting direct mode\n");
+            if (print.fbw) printf("[modes] exiting direct mode\n");
             break;
         case MODE_NORMAL:
-            if (config.debug.debug_fbw) printf("[modes] exiting normal mode\n");
+            if (print.fbw) printf("[modes] exiting normal mode\n");
             mode_normalDeinit();
             break;
         case MODE_AUTO:
-            if (config.debug.debug_fbw) printf("[modes] exiting auto mode\n");
+            if (print.fbw) printf("[modes] exiting auto mode\n");
             break;
         case MODE_TUNE:
-            if (config.debug.debug_fbw) printf("[modes] exiting tune mode\n");
+            if (print.fbw) printf("[modes] exiting tune mode\n");
             break;
         case MODE_HOLD:
-            if (config.debug.debug_fbw) printf("[modes] exiting hold mode\n");
+            if (print.fbw) printf("[modes] exiting hold mode\n");
             break;
     }
     if (imuDataSafe) {
         switch (newMode) {
             case MODE_DIRECT:
-                if (config.debug.debug_fbw) printf("[modes] entering direct mode\n");
+                if (print.fbw) printf("[modes] entering direct mode\n");
                 currentMode = MODE_DIRECT;
                 break;
             case MODE_NORMAL:
@@ -59,7 +59,7 @@ void toMode(Mode newMode) {
                     toMode(MODE_TUNE);
                     return;
                 }
-                if (config.debug.debug_fbw) printf("[modes] entering normal mode\n");
+                if (print.fbw) printf("[modes] entering normal mode\n");
                 mode_normalInit();
                 currentMode = MODE_NORMAL;
                 break;
@@ -68,14 +68,14 @@ void toMode(Mode newMode) {
                     toMode(MODE_TUNE);
                     return;
                 }
-                if (config.sensors.gpsCommandType != GPS_COMMAND_TYPE_NONE) {
+                if ((GPSCommandType)flash.sensors[SENSORS_GPS_COMMAND_TYPE] != GPS_COMMAND_TYPE_NONE) {
                     // TODO: have a way for auto mode to re-engage if the gps becomes safe again; this is usually due to bad DOP which fixes itself over time
                     if (gpsDataSafe) {
                         // Check to see if we have to calibrate the GPS alt offset
                         if (wifly_getNumGPSSamples() > 0) {
                             gps_calibrateAltOffset(wifly_getNumGPSSamples());
                         }
-                        if (config.debug.debug_fbw) printf("[modes] entering auto mode\n");
+                        if (print.fbw) printf("[modes] entering auto mode\n");
                         if (mode_autoInit()) {
                             currentMode = MODE_AUTO;
                         } else {
@@ -94,7 +94,7 @@ void toMode(Mode newMode) {
                 break;
             case MODE_TUNE:
                 if (!mode_tuneisCalibrated()) {
-                    if (config.debug.debug_fbw) printf("[modes] entering tune mode\n");
+                    if (print.fbw) printf("[modes] entering tune mode\n");
                     currentMode = MODE_TUNE;
                 } else {
                     toMode(MODE_NORMAL);
@@ -103,7 +103,7 @@ void toMode(Mode newMode) {
                 break;
             case MODE_HOLD:
                 if (gpsDataSafe) {
-                    if (config.debug.debug_fbw) printf("[modes] entering hold mode\n");
+                    if (print.fbw) printf("[modes] entering hold mode\n");
                     currentMode = MODE_HOLD;
                 } else {
                     toMode(MODE_NORMAL);
@@ -112,7 +112,7 @@ void toMode(Mode newMode) {
                 break;
         }
     } else {
-        if (config.debug.debug_fbw) printf("[modes] entering direct mode\n");
+        if (print.fbw) printf("[modes] entering direct mode\n");
         log_message(ERROR, "IMU has failed, entering direct mode!", 250, 0, true);
         currentMode = MODE_DIRECT;
     }
@@ -144,10 +144,10 @@ void setIMUSafe(bool state) {
     if (state != imuDataSafe) {
         imuDataSafe = state;
         if (state) {
-            if (config.debug.debug_fbw) printf("[modes] IMU set as safe\n");
+            if (print.fbw) printf("[modes] IMU set as safe\n");
         } else {
             toMode(MODE_DIRECT); // Automatically de-init IMU if IMU is deemed unsafe
-            if (config.debug.debug_fbw) printf("[modes] IMU set as unsafe\n");
+            if (print.fbw) printf("[modes] IMU set as unsafe\n");
         }
     }
 }
@@ -156,10 +156,10 @@ void setGPSSafe(bool state) {
     if (state != gpsDataSafe) {
         gpsDataSafe = state;
         if (state) {
-            if (config.debug.debug_fbw) printf("[modes] GPS set as safe\n");
+            if (print.fbw) printf("[modes] GPS set as safe\n");
             log_clear(INFO);
         } else {
-            if (config.debug.debug_fbw) printf("[modes] GPS set as unsafe\n");
+            if (print.fbw) printf("[modes] GPS set as unsafe\n");
             if (currentMode == MODE_AUTO || currentMode == MODE_HOLD) {
                 toMode(MODE_NORMAL); // Return to normal mode if GPS is deemed unsafe in Auto or Hold modes (require GPS)
             }

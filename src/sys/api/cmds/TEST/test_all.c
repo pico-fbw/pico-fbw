@@ -10,6 +10,6 @@
 
 // TODO: finish once rest of test suite is complete
 
-void api_test_all(const char *cmd, const char *args) {
+uint api_test_all(const char *cmd, const char *args) {
     
 }

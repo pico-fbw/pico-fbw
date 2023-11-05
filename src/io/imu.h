@@ -1,13 +1,15 @@
 #ifndef __IMU_H
 #define __IMU_H
 
+#include <stdbool.h>
+
 typedef enum IMUModel {
     IMU_MODEL_NONE,
     IMU_MODEL_BNO055
 } IMUModel;
 
 #define IMU_I2C i2c0 // The i2c bus that will be used for the IMU, do not change this!!
-#define IMU_TIMEOUT_US 50000 // The maximum time to wait for a response from the IMU in microseconds
+#define IMU_TIMEOUT_US 35000 // The maximum time to wait for a response from the IMU in microseconds
 
 // Chip-specific information:
 // CHIP_FREQ_KHZ, CHIP_REGISTER, ID_REGISTER, and CHIP_ID are required for all chips, the rest is usually specific to each chip
@@ -30,7 +32,7 @@ static const unsigned char OPR_MODE_REGISTER = 0x3D;
 static const unsigned char PWR_MODE_REGISTER = 0x3E;
 static const unsigned char AXIS_MAP_CONF_REGISTER = 0x41;
 static const unsigned char AXIS_MAP_SIGN_REGISTER = 0x42;
-
+static const unsigned char SIC_MATRIX_0_LSB_REGISTER = 0x43;
 static const unsigned char ACCEL_OFFSET_X_BEGIN_REGISTER = 0x55;
 static const unsigned char GYRO_OFFSET_X_BEGIN_REGISTER = 0x61;
 
@@ -39,6 +41,7 @@ static const unsigned char EULER_BEGIN_REGISTER = 0x1A;
 
 static const unsigned char MODE_CONFIG = 0x00;
 static const unsigned char MODE_AMG = 0x07;
+static const unsigned char MODE_NDOF_FMC_OFF = 0x0B;
 static const unsigned char MODE_NDOF = 0x0C;
 static const unsigned char PWR_MODE_NORMAL = 0x00;
 

@@ -12,7 +12,7 @@
  * @param lonB Longitude of the second point.
  * @return Bearing in degrees.
 */
-double calculateBearing(double latA, double lonA, double latB, double lonB);
+double calculateBearing(long double latA, long double lonA, long double latB, long double lonB);
 
 /**
  * Calculates the distance between two points.
@@ -22,6 +22,6 @@ double calculateBearing(double latA, double lonA, double latB, double lonB);
  * @param lonB Longitude of the second point.
  * @return Distance in meters.
 */
-double calculateDistance(double latA, double lonA, double latB, double lonB);
+double calculateDistance(long double latA, long double lonA, long double latB, long double lonB);
 
 #endif // __NAV_H

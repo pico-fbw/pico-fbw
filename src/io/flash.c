@@ -5,101 +5,93 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
+#include "pico/platform.h"
 #include "pico/types.h"
 
 #include "hardware/sync.h"
 
+#include "../sys/info.h"
+
 #include "flash.h"
 
-static float cachedFloats[FLOAT_SECTOR_SIZE_FULL];
-static char cachedStrings[STRING_SECTOR_SIZE_FULL];
+/* Default state of the flash struct (for example, holds default config values).
+Locations of values are specified by the sections' respective enums in flash.h. */
+Flash flash = {
+    .boot = { [ 0 ... S_BOOT_HIGHEST] = 0, FLAG_END},
+    .pwm = { [ 0 ... S_PWM_HIGHEST] = 0, FLAG_END},
+    .imu = { [ 0 ... S_IMU_HIGHEST] = 0, FLAG_END},
+    .pid = {0, 0, 0, 0, 0.1, 0.001, -50, 50, 0, 0, 0, 0.01, 0.001, -50, 50, 1.0, 0.0025, 0.001, 0.01, 0.001, -50, 50, FLAG_END},
+    .general = {CTRLMODE_3AXIS_ATHR, SWITCH_TYPE_3_POS, 20, 50, 50, true, WIFLY_ENABLED_PASS, false, FLAG_END},
+    .control = {0.00075, 1.5, 2, 10, 75, 90, 10, 33, 67, -15, 30, 25, 15, 20, 20, 0.5, 1, 1, FLAG_END},
+    .pins = {1, 2, 3, 4, 5, 6, 7, 8, 9, 2, 4, 16, 17, 21, 20, false, false, false, FLAG_END},
+    .sensors = {IMU_MODEL_BNO055, BARO_MODEL_NONE, GPS_COMMAND_TYPE_PMTK, 9600, FLAG_END},
+    .system = {true, true, false, false, false, false, false, 4000, FLAG_END},
+    .version = "",
+    .wifly_ssid = "pico-fbw",
+    .wifly_pass = "wiflyfbw"
+};
 
-/**
- * Erases a given PHYSICAL sector of flash.
- * @param sector the memory location of the sector to erase.
-*/
-static void flash_erase(uint sector) {
-    uint32_t offset = sector;
+PrintDefs print;
+
+static void flash_erase() {
+    uint32_t offset = GET_PHYSECTOR_LOC(FLOAT_PHYSECTOR);
     uint32_t intr = save_and_disable_interrupts();
+    flash_range_erase(offset, FLASH_SECTOR_SIZE);
+    offset = GET_PHYSECTOR_LOC(STRING_PHYSECTOR);
     flash_range_erase(offset, FLASH_SECTOR_SIZE);
     restore_interrupts(intr);
 }
 
-void flash_reset() {
-    flash_erase(GET_PHYSECTOR_LOC(FLOAT_PHYSECTOR));
-    flash_erase(GET_PHYSECTOR_LOC(STRING_PHYSECTOR));
-}
-
-uint flash_cache() {
-    float *float_physector = (float*)GET_PHYSECTOR_LOC_ABSOLUTE(FLOAT_PHYSECTOR);
-    char *string_physector = (char*)GET_PHYSECTOR_LOC_ABSOLUTE(STRING_PHYSECTOR);
-    memcpy(cachedFloats, float_physector, FLOAT_SECTOR_SIZE_FULL);
-    memcpy(cachedStrings, string_physector, STRING_SECTOR_SIZE_FULL);
-    return FLASH_SECTOR_SIZE * 2;
-}
-
-void flash_writeFloat(FloatSector sector, float data[], bool toFlash) {
-    // Integrate old and new data to form the new physical sector data from our virtual "sectors"
-    // Start by copying old data over
-    float write_data[FLOAT_SECTOR_SIZE_FULL];
-    memcpy(write_data, cachedFloats, FLOAT_SECTOR_SIZE_FULL);
-    // Overwrite ONLY the new data sector
-    uint dataIndex = 0;
-    for (uint i = (FLOAT_SECTOR_SIZE * sector); i < (FLOAT_SECTOR_SIZE * (sector + 1)); i++) {
-        write_data[i] = data[dataIndex];
-        dataIndex++;
-    }
-    if (toFlash) {
-        // Erase sector before writing to it because s c i e n c e
-        flash_erase(GET_PHYSECTOR_LOC(FLOAT_PHYSECTOR));
-        uint32_t offset = GET_PHYSECTOR_LOC(FLOAT_PHYSECTOR);
-        uint32_t intr = save_and_disable_interrupts();
-        flash_range_program(offset, (uint8_t*)write_data, FLASH_SECTOR_SIZE);
-        restore_interrupts(intr);
-    }
-    // Cache the new data
-    memcpy(cachedFloats, write_data, FLOAT_SECTOR_SIZE_FULL);
-}
-
-float flash_readFloat(FloatSector sector, uint val) { return cachedFloats[FLOAT_SECTOR_SIZE * sector + val]; }
-
-void flash_writeString(StringSector sector, char data[], bool toFlash) {
-    char write_data[STRING_SECTOR_SIZE_FULL];
-    memcpy(write_data, cachedStrings, STRING_SECTOR_SIZE_FULL);
-    uint dataIndex = 0;
-    for (uint i = (STRING_SECTOR_SIZE * sector); i < (STRING_SECTOR_SIZE * (sector + 1)); i++) {
-        write_data[i] = data[dataIndex];
-        dataIndex++;
-    }
-    if (toFlash) {
-        flash_erase(GET_PHYSECTOR_LOC(STRING_PHYSECTOR));
-        uint32_t offset = GET_PHYSECTOR_LOC(STRING_PHYSECTOR);
-        uint32_t intr = save_and_disable_interrupts();
-        flash_range_program(offset, (uint8_t*)write_data, FLASH_SECTOR_SIZE);
-        restore_interrupts(intr);
-    }
-    memcpy(cachedStrings, write_data, STRING_SECTOR_SIZE_FULL);
-}
-
-const char *flash_readString(StringSector sector) {
-    const char *data = &cachedStrings[STRING_SECTOR_SIZE * sector];
-    // Ensure the sector has been initialized (flash is by default initialized to 0xFF which UTF-8 and my code are not very fond of)
-    if (data[0] != UINT8_MAX) {
-        return data;
-    } else {
-        return NULL;
-    }
-}
-
-void flash_flushCache() {
-    // Write cache data to flash
-    flash_erase(GET_PHYSECTOR_LOC(FLOAT_PHYSECTOR));
-    flash_erase(GET_PHYSECTOR_LOC(STRING_PHYSECTOR));
+void flash_save() {
+    // Convert struct data to writable byte array
+    float floats[FLOAT_SECTOR_SIZE_FULL];
+    memcpy(floats, flash.boot, SIZEOF_FLOAT_SECTORS_BYTES);
+    char strings[STRING_SECTOR_SIZE_FULL];
+    memcpy(strings, flash.version, SIZEOF_STRING_SECTORS_BYTES);
+    // Write data to flash
+    flash_erase(); // Erase all data first because s c i e n c e
     uint32_t offset = GET_PHYSECTOR_LOC(FLOAT_PHYSECTOR);
     uint32_t intr = save_and_disable_interrupts();
-    flash_range_program(offset, (uint8_t*)cachedFloats, FLASH_SECTOR_SIZE);
+    flash_range_program(offset, (uint8_t*)floats, FLASH_SECTOR_SIZE);
     offset = GET_PHYSECTOR_LOC(STRING_PHYSECTOR);
-    flash_range_program(offset, (uint8_t*)cachedStrings, FLASH_SECTOR_SIZE);
+    flash_range_program(offset, (uint8_t*)strings, FLASH_SECTOR_SIZE);
     restore_interrupts(intr);
+}
+
+uint flash_load() {
+    read: {
+        float *floats = (float*)GET_PHYSECTOR_LOC_ABSOLUTE(FLOAT_PHYSECTOR);
+        char *strings = (char*)GET_PHYSECTOR_LOC_ABSOLUTE(STRING_PHYSECTOR);
+        if (floats[0] != FLAG_BOOT) {
+            // First boot, struct contains default value so write those to flash
+            printf("[flash] boot flag not detected, formatting flash now...\n");
+            flash.boot[0] = FLAG_BOOT;
+            flash_save();
+            goto read;
+        }
+        // Flash contains data, copy to RAM-based struct
+        memcpy(flash.boot, floats, SIZEOF_FLOAT_SECTORS_BYTES);
+        memcpy(flash.version, strings, SIZEOF_STRING_SECTORS_BYTES);
+        // Fill in print struct
+        print.fbw = (bool)flash.system[SYSTEM_DEBUG_FBW];
+        print.imu = (bool)flash.system[SYSTEM_DEBUG_IMU];
+        print.gps = (bool)flash.system[SYSTEM_DEBUG_GPS];
+        print.wifly = (bool)flash.system[SYSTEM_DEBUG_WIFLY];
+        print.network = (bool)flash.system[SYSTEM_DEBUG_NETWORK];
+        print.dumpNetwork = (bool)flash.system[SYSTEM_DUMP_NETWORK];
+        // Fill in build type
+        #if DEBUG_BUILD
+            flash.system[SYSTEM_DEBUG] = true;
+        #else
+            flash.system[SYSTEM_DEBUG] = false;
+        #endif
+        return SIZEOF_FLOAT_SECTORS_BYTES + SIZEOF_STRING_SECTORS_BYTES;
+    }
+}
+
+void flash_format() {
+    flash.boot[BOOT_FLAG] = 0; // Corrupt the boot flag so the system will format upon the next boot
+    flash_save();
 }

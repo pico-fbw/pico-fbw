@@ -8,17 +8,16 @@
 #include <stdlib.h>
 #include "pico/types.h"
 
+#include "../../../../io/flash.h"
 #include "../../../../io/imu.h"
 #include "../../../../io/gps.h"
-
-#include "../../../config.h"
 
 #include "get_sensor.h"
 
 uint api_get_sensor(const char *cmd, const char *args) {
     Angles imu = imu_getAngles();
     GPS gps = { 0, 0, 0, 0, 0 };
-    if (config.sensors.gpsCommandType != GPS_COMMAND_TYPE_NONE) {
+    if ((GPSCommandType)flash.sensors[SENSORS_GPS_COMMAND_TYPE] != GPS_COMMAND_TYPE_NONE) {
         gps = gps_getData();
     }
 
@@ -32,9 +31,7 @@ uint api_get_sensor(const char *cmd, const char *args) {
             }
             break;
         case 2: // GPS only
-            if (!config.sensors.gpsCommandType != GPS_COMMAND_TYPE_NONE) {
-                return 501;
-            }
+            if ((GPSCommandType)flash.sensors[SENSORS_GPS_COMMAND_TYPE] == GPS_COMMAND_TYPE_NONE) return 501;
             if (gps.lat != INFINITY) {
                 printf("{\"gps\":[{\"lat\":%f,\"lng\":%f,\"alt\":%d,\"spd\":%f,\"trk\":%f}]}\n",
                        gps.lat, gps.lng, gps.alt, gps.spd, gps.trk_true);
