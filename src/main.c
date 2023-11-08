@@ -143,7 +143,7 @@ int main() {
     }
 
     // Barometer
-    if ((BaroModel)flash.sensors[SENSORS_BARO_MODEL] != BARO_MODEL_NONE) {
+    if ((BaroModel)flash.sensors[SENSORS_BARO_MODEL] != BARO_MODEL_NONE || platform_is_fbw()) {
         platform_boot_setProgress(75, "Initializing barometer");
         if (baro_init() != 0) {
             log_message(WARNING, "Baro initialization failed!", 1500, 0, false);

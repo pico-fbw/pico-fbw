@@ -1,4 +1,17 @@
 add_library(fbw_lib
+    fusion/acc.c
+    fusion/approx.c
+    fusion/calibration.c
+    fusion/data.c
+    fusion/fmath.c
+    fusion/fusion.c
+    fusion/mag.c
+    fusion/matrix.c
+    fusion/orient.c
+    fusion/status.c
+    fusion/drivers/drivers.c
+    fusion/drivers/bno055.c
+    fusion/drivers/icm20948.c
     minmea.c
     nav.c
     pid.c
@@ -9,5 +22,7 @@ target_link_libraries(fbw_lib
     fbw_io
     fbw_sys
     hardware_i2c
+    hardware_gpio
     pico_base
+    pico_time
 )
