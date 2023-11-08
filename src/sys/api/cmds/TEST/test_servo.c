@@ -28,8 +28,6 @@ uint api_test_servo(const char *cmd, const char *args) {
             servo_getPins(servos, &num_servos);
             servo_test(servos, num_servos, degrees, NUM_DEFAULT_SERVO_TEST, DEFAULT_SERVO_TEST_PAUSE_MS);
         }
-    } else {
-        return 403;
-    }
+    } else return 403;
     return 200;
 }

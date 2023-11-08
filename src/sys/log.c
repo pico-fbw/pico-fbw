@@ -113,6 +113,8 @@ static void log_displayEntry(LogEntry entry) {
             case FATAL:
                 strcpy(typeMsg, MSG_FATAL);
                 break;
+            default:
+                break;
         }
         char codeStr[DISPLAY_MAX_LINE_LEN];
         sprintf(codeStr, "%d", entry.code);
@@ -214,6 +216,8 @@ void log_message(LogType type, char msg[64], int code, uint pulse_ms, bool force
                 break;
             case FATAL:
                 typeMsg = MSG_FATAL;
+                break;
+            default:
                 break;
         }
         if (typeMsg) {

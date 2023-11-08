@@ -22,18 +22,18 @@
 void mode_direct() {
     switch ((ControlMode)flash.general[GENERAL_CONTROL_MODE]) {
         case CTRLMODE_3AXIS_ATHR:
-            esc_set((uint)flash.pins[PINS_ESC_THROTTLE], pwm_read((uint)flash.pins[PINS_INPUT_THROTTLE], PWM_MODE_ESC));
+            esc_set((uint)flash.pins[PINS_ESC_THROTTLE], (uint16_t)pwm_read((uint)flash.pins[PINS_INPUT_THROTTLE], PWM_MODE_ESC));
         case CTRLMODE_3AXIS:
-            servo_set((uint)flash.pins[PINS_SERVO_AIL], pwm_read((uint)flash.pins[PINS_INPUT_AIL], PWM_MODE_DEG));
-            servo_set((uint)flash.pins[PINS_SERVO_ELEV], pwm_read((uint)flash.pins[PINS_INPUT_ELEV], PWM_MODE_DEG));
-            servo_set((uint)flash.pins[PINS_SERVO_RUD], pwm_read((uint)flash.pins[PINS_INPUT_RUD], PWM_MODE_DEG));
+            servo_set((uint)flash.pins[PINS_SERVO_AIL], (uint16_t)pwm_read((uint)flash.pins[PINS_INPUT_AIL], PWM_MODE_DEG));
+            servo_set((uint)flash.pins[PINS_SERVO_ELEV], (uint16_t)pwm_read((uint)flash.pins[PINS_INPUT_ELEV], PWM_MODE_DEG));
+            servo_set((uint)flash.pins[PINS_SERVO_RUD], (uint16_t)pwm_read((uint)flash.pins[PINS_INPUT_RUD], PWM_MODE_DEG));
             break;
         case CTRLMODE_FLYINGWING_ATHR:
-            esc_set((uint)flash.pins[PINS_ESC_THROTTLE], pwm_read((uint)flash.pins[PINS_INPUT_THROTTLE], PWM_MODE_ESC));
+            esc_set((uint)flash.pins[PINS_ESC_THROTTLE], (uint16_t)pwm_read((uint)flash.pins[PINS_INPUT_THROTTLE], PWM_MODE_ESC));
         case CTRLMODE_FLYINGWING:
             // TODO: flying wing mixing here
-            servo_set((uint)flash.pins[PINS_SERVO_ELEVON_L], pwm_read((uint)flash.pins[PINS_INPUT_AIL], PWM_MODE_DEG));
-            servo_set((uint)flash.pins[PINS_SERVO_ELEVON_R], pwm_read((uint)flash.pins[PINS_INPUT_ELEV], PWM_MODE_DEG));
+            servo_set((uint)flash.pins[PINS_SERVO_ELEVON_L], (uint16_t)pwm_read((uint)flash.pins[PINS_INPUT_AIL], PWM_MODE_DEG));
+            servo_set((uint)flash.pins[PINS_SERVO_ELEVON_R], (uint16_t)pwm_read((uint)flash.pins[PINS_INPUT_ELEV], PWM_MODE_DEG));
             break;
     }
 }

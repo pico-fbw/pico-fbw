@@ -502,7 +502,7 @@ void initializeFusionEngine(SensorFusionGlobals *sfg)
     pComm = sfg->pControlSubsystem;
 
     sfg->setStatus(sfg, INITIALIZING);
-    initializeDriver();
+    driver_init();
     status = initializeSensors(sfg);
     if (status!=SENSOR_ERROR_NONE) {  // fault condition found - will try again later
         sfg->setStatus(sfg, SOFT_FAULT);

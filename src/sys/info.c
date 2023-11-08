@@ -23,9 +23,9 @@
 */
 void info_declare() {
     /* Program info */
-    bi_decl(bi_program_description("A fly-by-wire and autopilot system for RC airplanes, designed for the Rasperry Pi Pico."));
-    bi_decl(bi_program_version_string(PICO_FBW_VERSION));
-    bi_decl(bi_program_url("https://pico-fbw.org"));
+    bi_decl(bi_program_description("A fly-by-wire and autopilot system for RC airplanes, designed for the Rasperry Pi Pico."))
+    bi_decl(bi_program_version_string(PICO_FBW_VERSION))
+    bi_decl(bi_program_url("https://pico-fbw.org"))
     // There used to be pin defs here before but config is now calculated at runtime so sadly that is now impossible :(
 }
 
@@ -61,4 +61,5 @@ int info_checkVersion(const char *version) {
         case -1:
             return -1;
     }
+    return -2;
 }

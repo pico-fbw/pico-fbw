@@ -16,8 +16,8 @@ double calculateBearing(long double latA, long double lonA, long double latB, lo
     long double thetaB = toRadians(latB);
     long double deltaL = toRadians(lonB - lonA);
 
-    double X = cos(thetaB) * sin(deltaL);
-    double Y = cos(thetaA) * sin(thetaB) - sin(thetaA) * cos(thetaB) * cos(deltaL);
+    double X = cos((double)thetaB) * sin((double)deltaL);
+    double Y = cos((double)thetaA) * sin((double)thetaB) - sin((double)thetaA) * cos((double)thetaB) * cos((double)deltaL);
 
     double bearing = atan2(X, Y) * 180.0 / M_PI;
     // Map to a heading instead of a degree value
@@ -33,9 +33,9 @@ double calculateDistance(long double latA, long double lonA, long double latB, l
     long double deltaT = toRadians(latB - latA);
     long double deltaL = toRadians(lonB - lonA);
 
-    double a = sin(deltaT / 2) * sin(deltaT / 2) +
-               cos(thetaA) * cos(thetaB) *
-               sin(deltaL / 2) * sin(deltaL / 2);
+    double a = sin((double)deltaT / 2) * sin((double)deltaT / 2) +
+               cos((double)thetaA) * cos((double)thetaB) *
+               sin((double)deltaL / 2) * sin((double)deltaL / 2);
     double c = 2 * atan2(sqrt(a), sqrt(1 - a));
 
     return EARTH_RADIUS_M * c;           

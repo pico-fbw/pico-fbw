@@ -41,6 +41,9 @@ int baro_init() {
             CHIP_ID = DPS_CHIP_ID;
             if (print.fbw) printf("DPS310\n");
             break;
+        default:
+            if (print.fbw) printf("\nERROR: unknown baro model!\n");
+            return 1;
     }
     if (print.imu) printf("[baro] checking ID (writing 0x%02X [ID_REGISTER] to 0x%02X [CHIP_REGISTER]) with timeout of %dus...\n", ID_REGISTER, CHIP_REGISTER, BARO_TIMEOUT_US);
     int result = i2c_write_timeout_us(IMU_I2C, CHIP_REGISTER, &ID_REGISTER, 1, true, BARO_TIMEOUT_US);

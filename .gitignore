@@ -67,8 +67,14 @@ CTestTestfile.cmake
 _deps
 
 
-### Other ###
+### Build process ###
 build/
 build_pfc/
-.vscode
+cmake-build-debug/
+
+### IDEs ###
+.vscode/
+.idea/
+
+### Other ###
 .DS_Store

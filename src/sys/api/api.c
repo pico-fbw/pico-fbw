@@ -32,13 +32,13 @@ void api_poll() {
         }
 
         // Command handler
-        int status = 500; // Default to internal error
+        int status;
         if (strncasecmp(cmd, "GET_", 4) == 0) {
-            status = api_handle_get(cmd, args);
+            status = (int)api_handle_get(cmd, args);
         } else if (strncasecmp(cmd, "SET_", 4) == 0) {
-            status = api_handle_set(cmd, args);
+            status = (int)api_handle_set(cmd, args);
         } else if (strncasecmp(cmd, "TEST_", 5) == 0) {
-            status = api_handle_test(cmd, args);
+            status = (int)api_handle_test(cmd, args);
         } else {
             status = api_handle_misc(cmd, args);
         }

@@ -33,6 +33,8 @@ static float *getSectionMem(ConfigSection section) {
             return flash.system;
         case CONFIG_PID:
             return flash.pid;
+        default:
+            return NULL;
     }
 }
 
@@ -65,6 +67,7 @@ uint api_get_config(const char *cmd, const char *args) {
             switch (type) {
                 case SECTION_TYPE_FLOAT: {
                     float *section = getSectionMem(s);
+                    if (section == NULL) return 400;
                     for (uint v = 0; v < FLOAT_SECTOR_SIZE; v++) {
                         // Read values, up until we hit the end of the data (signified by FLAG_END) or end of the sector
                         if (section[v + 1] != FLAG_END && v < FLOAT_SECTOR_SIZE - 1) {
@@ -90,7 +93,12 @@ uint api_get_config(const char *cmd, const char *args) {
                             } else {
                                 printf("\"%s\",\"%s\"]}]}\n", flash.wifly_ssid, flash.wifly_pass);
                             }
+                        default:
+                            return 400;
                     }
+                }
+                default: {
+                    return 400;
                 }
             }
         }

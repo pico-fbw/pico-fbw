@@ -31,10 +31,10 @@
 static uint8_t buf[DISPLAY_BUF_LEN];
 
 static RenderArea frame_area = {
-    col_start: 0,
-    col_end : DISPLAY_WIDTH - 1,
-    page_start : 0,
-    page_end : DISPLAY_NUM_PAGES - 1
+    .col_start =  0,
+    .col_end =  DISPLAY_WIDTH - 1,
+    .page_start =  0,
+    .page_end =  DISPLAY_NUM_PAGES - 1
 };
 
 /**
@@ -43,8 +43,8 @@ static RenderArea frame_area = {
  * @return The return code of the i2c_write_timeout_us call.
 */
 static inline int sendCmd(uint8_t cmd) {
-    uint8_t buf[2] = {0x80, cmd};
-    return i2c_write_timeout_us(DISPLAY_I2C, (DISPLAY_ADDR & DISPLAY_WRITE_MODE), buf, 2, false, DISPLAY_TIMEOUT_US);
+    uint8_t cbuf[2] = {0x80, cmd};
+    return i2c_write_timeout_us(DISPLAY_I2C, (DISPLAY_ADDR & DISPLAY_WRITE_MODE), cbuf, 2, false, DISPLAY_TIMEOUT_US);
 }
 
 /**
@@ -208,7 +208,7 @@ static void buf_drawLine(uint8_t *buf, int x0, int y0, int x1, int y1, bool on) 
 */
 static void buf_writeChar(uint8_t *buf, int16_t x, int16_t y, uint8_t ch) {
     if (x > DISPLAY_WIDTH - 8 || y > DISPLAY_HEIGHT - 8) return;
-    y = y / 8; // Only write on Y row boundaries (every 8 vertical pixels)
+    y = (int16_t)(y / 8); // Only write on Y row boundaries (every 8 vertical pixels)
 
     ch = toupper(ch);
     int idx = GetFontIndex(ch);
@@ -345,7 +345,7 @@ void display_text(char l1[], char l2[], char l3[], char l4[], bool center) {
     int y = 0;
     for (uint i = 0; i < count_of(text); i++) {
         if (text[i] == NULL) continue;
-        buf_writeString(buf, 5, y, text[i]);
+        buf_writeString(buf, 5, (int16_t)y, text[i]);
         free(text[i]);
         y += 8;
     }
@@ -353,10 +353,10 @@ void display_text(char l1[], char l2[], char l3[], char l4[], bool center) {
 }
 
 struct RenderArea pimg_area = {
-    col_start: 0,
-    col_end : PIMG_W - 1,
-    page_start: 0,
-    page_end: (PIMG_H / DISPLAY_PAGE_HEIGHT) - 1
+    .col_start = 0,
+    .col_end = PIMG_W - 1,
+    .page_start = 0,
+    .page_end = (PIMG_H / DISPLAY_PAGE_HEIGHT) - 1
 };
 
 typedef enum AnimState {
@@ -381,7 +381,7 @@ static inline int64_t anim_callback(alarm_id_t id, void *data) {
         case ANIM_PWRSAVE:
             memset(buf, 0, sizeof(buf));
             render(buf, &frame_area);
-            animState = ANIM_IDLE;;
+            animState = ANIM_IDLE;
         default:
             return 0;
     }

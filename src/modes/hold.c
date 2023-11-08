@@ -3,9 +3,9 @@
  * Licensed under the GNU GPL-3.0
 */
 
-#include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <math.h>
 #include "pico/time.h"
 #include "../lib/pid.h"
 
@@ -53,8 +53,6 @@ void mode_hold() {
     flight_update(rollSet, vertGuid.out, 0, false);
 
     switch (turnStatus) {
-        case HOLD_AWAITING_TURN:
-            break;
         case HOLD_TURN_BEGUN:
             // Slowly ease into the turn
             if (rollSet <= HOLD_TURN_BANK_ANGLE) {
@@ -66,7 +64,7 @@ void mode_hold() {
             break;    
         case HOLD_TURN_INPROGRESS:
             // Wait until it is time to decrease the turn
-            if (abs(targetTrack - gps.trk_true) <= HOLD_HEADING_DECREASE_WITHIN) {
+            if (fabsf(targetTrack - gps.trk_true) <= HOLD_HEADING_DECREASE_WITHIN) {
                 turnStatus = HOLD_TURN_ENDING;
             }
             break;
@@ -76,7 +74,7 @@ void mode_hold() {
                 rollSet -= (HOLD_TURN_BANK_ANGLE * flash.control[CONTROL_RUDDER_SENSITIVITY]);
             }
             // Move on to stabilization once we've intercepted the target heading
-            if (abs(targetTrack - gps.trk_true) <= HOLD_HEADING_INTERCEPT_WITHIN) {
+            if (fabsf(targetTrack - gps.trk_true) <= HOLD_HEADING_INTERCEPT_WITHIN) {
                 turnStatus = HOLD_TURN_STABILIZING;
             }
             break;
@@ -90,6 +88,8 @@ void mode_hold() {
             if (add_alarm_in_ms((HOLD_TIME_PER_LEG_S * 1000), hold_callback, NULL, true) >= 0) {
                 turnStatus = HOLD_AWAITING_TURN;
             }
+            break;
+        default:
             break;
     }
 }

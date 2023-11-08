@@ -4,9 +4,7 @@
 */
 
 #include <math.h>
-#include <stdlib.h>
 #include <stdbool.h>
-#include <stdio.h>
 
 #include "../io/flash.h"
 #include "../io/imu.h"
@@ -67,11 +65,11 @@ void mode_normal() {
         // this is also where our bank/pitch protections come in.
         if (fabsf(rollSet) > flash.control[CONTROL_ROLL_LIMIT]) {
             // If the roll values are unsafe, we do allow setting up to 67 but constant input is required, so check for that
-            if (!(abs(rollInput) >= abs(rollSet))) {
+            if (fabsf(rollInput) < fabsf(rollSet)) {
                 if (rollSet > 0) {
-                    rollSet -= 0.05;
+                    rollSet -= 0.05f;
                 } else if (rollSet < 0) {
-                    rollSet += 0.05;
+                    rollSet += 0.05f;
                 }
             }
             if (rollSet > flash.control[CONTROL_ROLL_LIMIT_HOLD]) {
@@ -102,8 +100,8 @@ void mode_normal() {
 }
 
 void mode_normalDeinit() {
-    rollSet = 0.0;
-    pitchSet = 0.0;
+    rollSet = 0.0f;
+    pitchSet = 0.0f;
     overrideYaw = false;
 }
 

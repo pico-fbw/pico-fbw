@@ -10,6 +10,14 @@
 
 #include "serial.h"
 
+static inline char *tryRealloc(char *buf, size_t size) {
+    char *nbuf = (char*)realloc(buf, size);
+    if (!nbuf) {
+        free(buf);
+    }
+    return nbuf;
+}
+
 char *stdin_read_line() {
     char *buf = NULL;
     uint i = 0;
@@ -19,14 +27,15 @@ char *stdin_read_line() {
             break;
         } else {
             // Otherwise, store character in buffer and increment
-            buf = (char*)realloc(buf, (i + 1) * sizeof(char));
-            buf[i] = c;
-            i++;
+            buf = tryRealloc(buf, (i + 1) * sizeof(char));
+            if (!buf) return NULL;
+            buf[i++] = c;
         }
     }
     // Null-terminate the buffer if we read a line, otherwise return NULL
     if (i != 0) {
-        buf = (char*)realloc(buf, (i + 1) * sizeof(char));
+        buf = tryRealloc(buf, (i + 1) * sizeof(char));
+        if (!buf) return NULL;
         buf[i] = '\0';
     }
     return buf;
@@ -41,12 +50,13 @@ char *uart_read_line(uart_inst_t *uart) {
             if (c == '\r' || c == '\n') {
                 break;
             }
-            buf = realloc(buf, (i + 1) * sizeof(char));
-            buf[i] = c;
-            i++;
+            buf = tryRealloc(buf, (i + 1) * sizeof(char));
+            if (!buf) return NULL;
+            buf[i++] = c;
         }
         // Null terminate the string
-        buf = realloc(buf, (i + 1) * sizeof(char));
+        buf = tryRealloc(buf, (i + 1) * sizeof(char));
+        if (!buf) return NULL;
         buf[i] = '\0';
     }
     return buf;

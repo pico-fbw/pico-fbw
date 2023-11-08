@@ -55,6 +55,7 @@ static void setBayPosition(BayPosition pos) {
 // Callback for when the bay needs to be closed after a user-specified delay (within the flightplan)
 static inline int64_t dropCallback(alarm_id_t id, void *data) {
     setBayPosition(CLOSED);
+    return 0;
 }
 
 bool mode_autoInit() {

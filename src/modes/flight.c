@@ -82,11 +82,11 @@ void flight_update(double roll, double pitch, double yaw, bool override) {
             // Yaw damper computation
             if (override) {
                 // Yaw override (raw)
-                yawOutput = yaw;
+                yawOutput = (float)yaw;
                 yawDamperOn = false;
             } else if (fabs(roll) > flash.control[CONTROL_DEADBAND]) {
                 // Yaw damper disabled (passthrough)
-                yawOutput = roll_c.out * flash.control[CONTROL_RUDDER_SENSITIVITY];
+                yawOutput = (float)(roll_c.out * flash.control[CONTROL_RUDDER_SENSITIVITY]);
                 yawDamperOn = false;
             } else {
                 // Yaw damper enabled
@@ -94,7 +94,7 @@ void flight_update(double roll, double pitch, double yaw, bool override) {
                     flightYawSetpoint = aircraft.yaw; // Yaw damper was just enabled, create our setpoint
                 }
                 pid_update(&yaw_c, flightYawSetpoint, aircraft.yaw);
-                yawOutput = yaw_c.out;
+                yawOutput = (float)yaw_c.out;
                 yawDamperOn = true;
             }
 
@@ -109,18 +109,18 @@ void flight_update(double roll, double pitch, double yaw, bool override) {
         case CTRLMODE_FLYINGWING_ATHR:
         case CTRLMODE_FLYINGWING:
             // Control mixing computations
-            lElevonOutput = (((bool)flash.pins[PINS_REVERSE_ROLL] ? -1 : 1) * roll_c.out * flash.control[CONTROL_AIL_MIXING_BIAS] +
+            lElevonOutput = (float)(((bool)flash.pins[PINS_REVERSE_ROLL] ? -1 : 1) * roll_c.out * flash.control[CONTROL_AIL_MIXING_BIAS] +
                             ((bool)flash.pins[PINS_REVERSE_PITCH] ? -1 : 1) * pitch_c.out * flash.control[CONTROL_ELEV_MIXING_BIAS]) *
                             flash.control[CONTROL_ELEVON_MIXING_GAIN];
-            rElevonOutput = (((bool)flash.pins[PINS_REVERSE_ROLL] ? -1 : 1) * roll_c.out * flash.control[CONTROL_AIL_MIXING_BIAS] -
+            rElevonOutput = (float)(((bool)flash.pins[PINS_REVERSE_ROLL] ? -1 : 1) * roll_c.out * flash.control[CONTROL_AIL_MIXING_BIAS] -
                             ((bool)flash.pins[PINS_REVERSE_PITCH] ? -1 : 1) * pitch_c.out * flash.control[CONTROL_ELEV_MIXING_BIAS]) *
                             flash.control[CONTROL_ELEVON_MIXING_GAIN];
 
             // Limit elevon outputs
-            if (abs(lElevonOutput) > flash.control[CONTROL_MAX_ELEVON_DEFLECTION]) {
+            if (fabsf(lElevonOutput) > flash.control[CONTROL_MAX_ELEVON_DEFLECTION]) {
                 lElevonOutput = (lElevonOutput > 0) ? flash.control[CONTROL_MAX_ELEVON_DEFLECTION] : -flash.control[CONTROL_MAX_ELEVON_DEFLECTION];
             }
-            if (abs(rElevonOutput) > flash.control[CONTROL_MAX_ELEVON_DEFLECTION]) {
+            if (fabsf(rElevonOutput) > flash.control[CONTROL_MAX_ELEVON_DEFLECTION]) {
                 rElevonOutput = (rElevonOutput > 0) ? flash.control[CONTROL_MAX_ELEVON_DEFLECTION] : -flash.control[CONTROL_MAX_ELEVON_DEFLECTION];
             }
 

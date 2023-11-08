@@ -53,7 +53,7 @@ bool gps_init() {
             // PMTK manual: https://cdn.sparkfun.com/assets/parts/1/2/2/8/0/PMTK_Packet_User_Manual.pdf
             // Enable the correct sentences
             sleep_ms(1800); // Acknowledgement is a hit or miss without a delay
-            uart_write_blocking(GPS_UART, "$PMTK314,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n", 49); // VTG, GGA, GSA enabled once per fix
+            uart_write_blocking(GPS_UART, (const uint8_t*)"$PMTK314,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n", 49); // VTG, GGA, GSA enabled once per fix
             // Check up to 20 sentences for the acknowledgement
             uint8_t lines = 0;
             while (lines < 20) {
@@ -86,8 +86,8 @@ GPS gps_getData() {
     If data was not saved between calls, one call would, for example, return correct coordinates but incorrect alt, and the next
     would return incorrect coordinates but correct alt. */
     static long double lat, lng = -200.0;
-    static int alt = -100;
-    static float spd, trk_true = -100.0f;
+    static int alt = -1;
+    static float spd, trk_true = -1.0f;
     static float pdop, hdop, vdop = -1.0f;
 
     // Read a line from the GPS and parse it
@@ -141,11 +141,14 @@ GPS gps_getData() {
         free(line);
     }
 
-    if (lat <= 90 && lat >= -90 && lng <= 180 && lng >= -180 && alt >= 0 && spd >= 0 && lat != INFINITY && lng != INFINITY && alt != INFINITY && spd != INFINITY && trk_true != INFINITY && lat != NAN && lng != NAN && alt != NAN && spd != NAN && trk_true != NAN && pdop < GPS_SAFE_PDOP_THRESHOLD && hdop < GPS_SAFE_HDOP_THRESHOLD && vdop < GPS_SAFE_VDOP_THRESHOLD) {
+    if (lat <= 90 && lat >= -90 && lng <= 180 && lng >= -180 && alt >= 0 && spd >= 0 &&
+        lat != INFINITY && lng != INFINITY && spd != INFINITY && trk_true != INFINITY &&
+        lat != NAN && lng != NAN && spd != NAN && trk_true != NAN &&
+        pdop < GPS_SAFE_PDOP_THRESHOLD && hdop < GPS_SAFE_HDOP_THRESHOLD && vdop < GPS_SAFE_VDOP_THRESHOLD) {
         setGPSSafe(true);
     } else {
         setGPSSafe(false);
-        return (GPS){INFINITY};
+        return (GPS){INFINITY, INFINITY, -1, INFINITY, INFINITY};
     }
     return (GPS){lat, lng, alt, spd, trk_true};
 }
@@ -183,6 +186,9 @@ int gps_calibrateAltOffset(uint num_samples) {
                     }
                     samples++;
                 }
+                default: {
+                    break;
+                }
             }
             free(line);
         }
@@ -192,7 +198,7 @@ int gps_calibrateAltOffset(uint num_samples) {
         if (print.fbw) printf("[gps] ERROR: altitude calibration timed out\n");
         return PICO_ERROR_TIMEOUT;
     } else {
-        altOffset = alts / samples;
+        altOffset = (int)(alts / samples);
         if (print.fbw) printf("[gps] altitude offset calculated as: %d\n", altOffset);
         altOffsetCalibrated = true;
         return 0;

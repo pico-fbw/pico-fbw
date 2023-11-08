@@ -1,5 +1,5 @@
 #ifndef __PID_H
-#define __PID_
+#define __PID_H
 
 typedef struct PIDController {
 

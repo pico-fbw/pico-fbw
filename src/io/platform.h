@@ -50,14 +50,14 @@ void platform_boot_complete();
  * @param type the type of reboot to perform
  * @note This function will not return, the function will continue to loop until the processor successfully reboots.
 */
-void platform_reboot(RebootType type);
+void __attribute__((noreturn)) platform_reboot(RebootType type);
 
 /**
  * Signal to the platform that a shutdown is required.
  * @note This simply reboots the system in bootloader but quietly;
  * no mass storage is mounted, so it will appear as shut down.
 */
-void platform_shutdown();
+void __attribute__((noreturn)) platform_shutdown();
 
 /**
  * Gets the type of boot that occured.

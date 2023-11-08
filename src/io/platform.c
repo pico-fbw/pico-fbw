@@ -106,7 +106,7 @@ void platform_boot_complete() {
     isBooted = true;
 }
 
-void platform_reboot(RebootType type) {
+void __attribute__((noreturn)) platform_reboot(RebootType type) {
     switch (type) {
         case REBOOT_FAST:
             watchdog_hw->scratch[0] = WATCHDOG_FORCE_MAGIC;
@@ -114,14 +114,12 @@ void platform_reboot(RebootType type) {
             break;
         case REBOOT_BOOTLOADER:
             reset_usb_boot(0, 0);
-            break;
     }
     while (true) tight_loop_contents(); // Stall for impending reboot
 }
 
-void platform_shutdown() {
+void __attribute__((noreturn)) platform_shutdown() {
     reset_usb_boot(0, 1); // Reboot into bootloader but don't mount mass storage
-    while (true) tight_loop_contents();
 }
 
 BootType platform_boot_type() {

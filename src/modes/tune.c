@@ -16,7 +16,7 @@ void mode_tune() {
 }
 
 bool mode_tuneisCalibrated() {
-    if ((flash.pid[PID_FLAG] == FLAG_PID)) {
+    if (flash.pid[PID_FLAG] == FLAG_PID) {
         // TODO: also ensure the values make sense?
         return true;
     } else {

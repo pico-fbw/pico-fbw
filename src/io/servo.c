@@ -83,7 +83,7 @@ void servo_disable(uint gpio_pin) {
 
 void servo_test(uint servos[], uint num_servos, const uint16_t degrees[], const uint num_degrees, const uint pause_between_moves_ms) {
     for (uint8_t d = 0; d < num_degrees; d++) {
-        for (uint8_t s = 0; s < num_servos; s++) {
+        for (uint s = 0; s < num_servos; s++) {
             servo_set(servos[s], degrees[d]);
         }
         sleep_ms(pause_between_moves_ms);

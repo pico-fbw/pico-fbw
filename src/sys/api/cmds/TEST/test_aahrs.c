@@ -6,10 +6,12 @@
 #include <stdio.h>
 #include "pico/types.h"
 
-#include "test_imu.h"
+#include "test_aahrs.h"
 
 // TODO: prompt the user to roll, pitch, and yaw in positive directions and evaluate if that is what the IMU sees
+// also test baro
+// all when fusion subsystem is done
 
-uint api_test_imu(const char *cmd, const char *args) {
+uint api_test_aahrs(const char *cmd, const char *args) {
     
 }

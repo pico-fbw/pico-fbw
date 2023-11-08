@@ -577,19 +577,19 @@ ConfigSectionType config_get(const char *section, const char *key, void **value)
 
 bool config_set(const char *section, const char *key, const char *value) {
     if (strcasecmp(section, CONFIG_GENERAL_STR) == 0) {
-        return setToGeneral(key, atoff(value));
+        if (!setToGeneral(key, atoff(value))) return false;
     } else if (strcasecmp(section, CONFIG_CONTROL_STR) == 0) {
-        return setToControl(key, atoff(value));
+        if (!setToControl(key, atoff(value))) return false;
     } else if (strcasecmp(section, CONFIG_PINS_STR) == 0) {
-        return setToPins(key, atoff(value));
+        if (!setToPins(key, atoff(value))) return false;
     } else if (strcasecmp(section, CONFIG_SENSORS_STR) == 0) {
-        return setToSensors(key, atoff(value));
+        if (!setToSensors(key, atoff(value))) return false;
     } else if (strcasecmp(section, CONFIG_WIFLY_STR) == 0) {
-        return setToWifly(key, value);
+        if (!setToWifly(key, value)) return false;
     } else if (strcasecmp(section, CONFIG_SYSTEM_STR) == 0) {
-        return setToSystem(key, atoff(value));
+        if (!setToSystem(key, atoff(value))) return false;
     } else if (strcasecmp(section, CONFIG_PID_STR) == 0) {
-        return setToPID(key, atoff(value));
+        if (!setToPID(key, atoff(value))) return false;
     } else {
         return false;
     }
@@ -601,30 +601,23 @@ ConfigSectionType config_sectionToString(ConfigSection section, const char **str
         case CONFIG_GENERAL:
             *str = CONFIG_GENERAL_STR;
             return SECTION_TYPE_FLOAT;
-            break;
         case CONFIG_CONTROL:
             *str = CONFIG_CONTROL_STR;
             return SECTION_TYPE_FLOAT;
-            break;
         case CONFIG_PINS:
             *str = CONFIG_PINS_STR;
             return SECTION_TYPE_FLOAT;
-            break;
         case CONFIG_SENSORS:
             *str = CONFIG_SENSORS_STR;
             return SECTION_TYPE_FLOAT;
-            break;
         case CONFIG_WIFLY:
             *str = CONFIG_WIFLY_STR;
             return SECTION_TYPE_STRING;
-            break;
         case CONFIG_SYSTEM:
             *str = CONFIG_SYSTEM_STR;
             return SECTION_TYPE_FLOAT;
-            break;
         case CONFIG_PID:
             *str = CONFIG_PID_STR;
             return SECTION_TYPE_FLOAT;
-            break;
     }
 }

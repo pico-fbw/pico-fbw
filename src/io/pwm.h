@@ -58,7 +58,7 @@ float pwm_read(uint pin, PWMMode mode);
  * 
  * @return true if the calibration was successful, false if not
 */
-bool pwm_calibrate(uint pin_list[], uint num_pins, float deviations[], uint num_samples, uint sample_delay_ms, uint run_times);
+bool pwm_calibrate(const uint pin_list[], uint num_pins, const float deviations[], uint num_samples, uint sample_delay_ms, uint run_times);
 
 /**
  * @return the status of any previous PWM calibration.

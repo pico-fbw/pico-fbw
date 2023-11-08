@@ -28,7 +28,6 @@ uint api_set_setpoints(const char *cmd, const char *args) {
                 return 423; // Rejected by normal mode, user probably inputting already
             }
         }
-    } else {
-        return 403;
     }
+    return 403;
 }

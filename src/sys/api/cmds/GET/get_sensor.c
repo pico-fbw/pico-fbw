@@ -33,7 +33,7 @@ uint api_get_sensor(const char *cmd, const char *args) {
         case 2: // GPS only
             if ((GPSCommandType)flash.sensors[SENSORS_GPS_COMMAND_TYPE] == GPS_COMMAND_TYPE_NONE) return 501;
             if (gps.lat != INFINITY) {
-                printf("{\"gps\":[{\"lat\":%f,\"lng\":%f,\"alt\":%d,\"spd\":%f,\"trk\":%f}]}\n",
+                printf("{\"gps\":[{\"lat\":%Lf,\"lng\":%Lf,\"alt\":%d,\"spd\":%f,\"trk\":%f}]}\n",
                        gps.lat, gps.lng, gps.alt, gps.spd, gps.trk_true);
             } else {
                 printf("{\"gps\":[{\"lat\":null,\"lng\":null,\"alt\":null,\"spd\":null,\"trk\":null}]}\n");

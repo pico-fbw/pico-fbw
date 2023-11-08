@@ -14,7 +14,7 @@
 
 #include <stdbool.h>
 #include <stdio.h>
-#include <string.h>
+#include <math.h>
 #include "pico/platform.h"
 #include "pico/time.h"
 
@@ -31,7 +31,7 @@
 
 typedef struct PWMState {
     uint32_t pulsewidth, period;
-    uint8_t pin;
+    uint pin;
 } PWMState;
 
 static PWMState states[8];
@@ -137,9 +137,7 @@ void pwm_enable(uint pin_list[], uint num_pins) {
 static inline float pwmOffsetOf(uint pin) {
     // Look up the correct value to fetch based on the pin
     uint val;
-    if (pin == (uint)flash.pins[PINS_INPUT_AIL]) {
-        val = PWM_OFFSET_AIL;
-    } else if (pin == (uint)flash.pins[PINS_INPUT_ELEV]) {
+    if (pin == (uint)flash.pins[PINS_INPUT_ELEV]) {
         val = PWM_OFFSET_ELEV;
     } else if (pin == (uint)flash.pins[PINS_INPUT_RUD]) {
         val = PWM_OFFSET_RUD;
@@ -148,7 +146,7 @@ static inline float pwmOffsetOf(uint pin) {
     } else if (pin == (uint)flash.pins[PINS_INPUT_THROTTLE]) {
         val = PWM_OFFSET_THR;
     } else {
-        val = PWM_OFFSET_AIL;
+        val = PWM_OFFSET_AIL; // Default as well as AIL
     }
     // Read from the correct sector based on the value
     return flash.pwm[val];
@@ -162,39 +160,40 @@ static inline float pwmOffsetOf(uint pin) {
 */
 static inline float readRaw(uint pin, PWMMode mode) {
     // Find the GPIO pin's state machine
-    for (uint8_t i = 0; i < count_of(states); i++) {
+    for (uint i = 0; i < count_of(states); i++) {
         if (states[i].pin == pin) {
             switch (mode) {
                 case PWM_MODE_DEG:
-                    return (180000 * ((float)states[i].pulsewidth * 0.000000016 - 0.001)); // 0-180
+                    return (180000.0f * ((float)states[i].pulsewidth * 0.000000016f - 0.001f)); // 0-180
                 case PWM_MODE_ESC:
-                    return (100000 * ((float)states[i].pulsewidth * 0.000000016 - 0.001)); // 0-100
+                    return (100000.0f * ((float)states[i].pulsewidth * 0.000000016f - 0.001f)); // 0-100
             }
         }
     }
+    return INFINITY; // Error?
 }
 
 float pwm_read(uint pin, PWMMode mode) {
-    for (uint8_t i = 0; i < (sizeof(states) / sizeof(states[0])); i++) {
+    for (uint i = 0; i < (sizeof(states) / sizeof(states[0])); i++) {
         if (states[i].pin == pin) {
             switch (mode) {
                 case PWM_MODE_DEG:
-                    return (180000 * ((float)states[i].pulsewidth * 0.000000016 - 0.001) + pwmOffsetOf(pin));
+                    return (180000.0f * ((float)states[i].pulsewidth * 0.000000016f - 0.001f) + pwmOffsetOf(pin));
                 case PWM_MODE_ESC:
-                    return (100000 * ((float)states[i].pulsewidth * 0.000000016 - 0.001) + pwmOffsetOf(pin));
+                    return (100000.0f * ((float)states[i].pulsewidth * 0.000000016f - 0.001f) + pwmOffsetOf(pin));
             }
         }
     }
+    return INFINITY;
 }
 
-bool pwm_calibrate(uint pin_list[], uint num_pins, float deviations[], uint num_samples, uint sample_delay_ms, uint run_times) {
+bool pwm_calibrate(const uint pin_list[], uint num_pins, const float deviations[], uint num_samples, uint sample_delay_ms, uint run_times) {
     if (gb_num_pins < 1) return false; // Ensure PWM has been initialized
     log_message(INFO, "Calibrating PWM", 100, 0, false);
     sleep_ms(2000); // Wait a few moments for tx/rx to set itself up
     // The first position of PWM sector holds a flag to indicate that calibration has been completed;
     // subsequent values will hold the calibration data
     flash.pwm[PWM_FLAG] = FLAG_PWM;
-    float calibration_data[FLOAT_SECTOR_SIZE] = {FLAG_PWM};
     for (uint i = 0; i < num_pins; i++) {
         uint pin = pin_list[i];
         if (print.fbw) printf("[pwm] calibrating pin %d (%d/%d)\n", pin, i + 1, num_pins);
@@ -207,21 +206,21 @@ bool pwm_calibrate(uint pin_list[], uint num_pins, float deviations[], uint num_
         for (uint t = 0; t < run_times; t++) {
             if (print.fbw) printf("[pwm] running trial %d out of %d\n", t + 1, run_times);
             float total_difference = 0.0f;
-            for (uint i = 0; i < num_samples; i++) {
+            for (uint s = 0; s < num_samples; s++) {
                 total_difference += (deviation - (isThrottle ? readRaw(pin, PWM_MODE_ESC) : readRaw(pin, PWM_MODE_DEG)));
                 sleep_ms(sample_delay_ms);
             }
             // Check to see if the deviation is 270 (this value occurs with a pulsewidth of 0 or 1, aka not connected)
-            if ((total_difference / num_samples) == 270.0f) {
+            if ((total_difference / (float)num_samples) == 270.0f) {
                 if (print.fbw) printf("ERROR: [FBW-500] pin %d's calibration value seems abnormal, is it connected?\n", pin);
                 return false;
             }
             // Add the total difference recorded divided by the samples we took (average) to the final difference
-            final_difference = final_difference + (total_difference / num_samples);
+            final_difference = final_difference + (total_difference / (float)num_samples);
         }
         // Get our final average and save it to the correct byte in our array which we write to flash
         // Any pins over 4 (thus, pins belonging to PIO1) will be in the second array
-        if (print.fbw) printf("[pwm] pin %d's final offset is %f\n", pin, (final_difference / run_times));
+        if (print.fbw) printf("[pwm] pin %d's final offset is %f\n", pin, (final_difference / (float)run_times));
         // Find the correct location in the array to write to
         SectorPWM loc;
         if (pin == (uint)flash.pins[PINS_INPUT_AIL]) {
@@ -242,7 +241,7 @@ bool pwm_calibrate(uint pin_list[], uint num_pins, float deviations[], uint num_
         if (!WITHIN_MAX_CALIBRATION_OFFSET((final_difference / run_times), flash.general[GENERAL_MAX_CALIBRATION_OFFSET])) {
             if (pin == (uint)flash.pins[PINS_INPUT_SWITCH]) {
                 // The switch pin is a little special; it can have high offsets but only if they are negative, otherwise modes won't register properly
-                if ((final_difference / run_times) < -200.0f || (final_difference / run_times) > flash.general[GENERAL_MAX_CALIBRATION_OFFSET]) {
+                if ((final_difference / (float)run_times) < -200.0f || (final_difference / (float)run_times) > flash.general[GENERAL_MAX_CALIBRATION_OFFSET]) {
                     goto error;
                 }
             } else {
@@ -252,7 +251,7 @@ bool pwm_calibrate(uint pin_list[], uint num_pins, float deviations[], uint num_
                 if (print.fbw) printf("ERROR: [FBW-500] pin %d's calibration value is too high!\n", pin);
                 return false;
         }
-        flash.pwm[loc] = final_difference / run_times;
+        flash.pwm[loc] = final_difference / (float)run_times;
     }
     flash.pwm[PWM_MODE] = (ControlMode)flash.general[GENERAL_CONTROL_MODE];
     if (print.fbw) printf("[pwm] writing calibration data\n");
