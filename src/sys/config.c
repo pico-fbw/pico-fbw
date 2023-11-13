@@ -12,7 +12,9 @@
 #include <string.h>
 #include "pico/types.h"
 
+#include "../io/aahrs.h"
 #include "../io/flash.h"
+#include "../io/gps.h"
 #include "../io/pwm.h"
 
 #include "config.h"
@@ -77,6 +79,10 @@ static void getFromControl(const char *key, float **value) {
         *value = &flash.control[CONTROL_THROTTLE_DETENT_MAX];
     } else if (strcasecmp(key, "throttleMaxTime") == 0) {
         *value = &flash.control[CONTROL_THROTTLE_MAX_TIME];
+    } else if (strcasecmp(key, "dropDetentClosed") == 0) {
+        *value = &flash.control[CONTROL_DROP_DETENT_CLOSED];
+    } else if (strcasecmp(key, "dropDetentOpen") == 0) {
+        *value = &flash.control[CONTROL_DROP_DETENT_OPEN];
     } else if (strcasecmp(key, "rollLimit") == 0) {
         *value = &flash.control[CONTROL_ROLL_LIMIT];
     } else if (strcasecmp(key, "rollLimitHold") == 0) {
@@ -119,6 +125,10 @@ static bool setToControl(const char *key, float value) {
         flash.control[CONTROL_THROTTLE_DETENT_MAX] = value;
     } else if (strcasecmp(key, "throttleMaxTime") == 0) {
         flash.control[CONTROL_THROTTLE_MAX_TIME] = value;
+    } else if (strcasecmp(key, "dropDetentClosed") == 0) {
+        flash.control[CONTROL_DROP_DETENT_CLOSED] = value;
+    } else if (strcasecmp(key, "dropDetentOpen") == 0) {
+        flash.control[CONTROL_DROP_DETENT_OPEN] = value;
     } else if (strcasecmp(key, "rollLimit") == 0) {
         flash.control[CONTROL_ROLL_LIMIT] = value;
     } else if (strcasecmp(key, "rollLimitHold") == 0) {
@@ -166,6 +176,8 @@ static void getFromPins(const char *key, float **value) {
         *value = &flash.pins[PINS_ESC_THROTTLE];
     } else if (strcasecmp(key, "inputSwitch") == 0) {
         *value = &flash.pins[PINS_INPUT_SWITCH];
+    } else if (strcasecmp(key, "servoDrop") == 0) {
+        *value = &flash.pins[PINS_SERVO_DROP];
     } else if (strcasecmp(key, "servoElevonL") == 0) {
         *value = &flash.pins[PINS_SERVO_ELEVON_L];
     } else if (strcasecmp(key, "servoElevonR") == 0) {
@@ -208,6 +220,8 @@ static bool setToPins(const char *key, float value) {
         flash.pins[PINS_ESC_THROTTLE] = value;
     } else if (strcasecmp(key, "inputSwitch") == 0) {
         flash.pins[PINS_INPUT_SWITCH] = value;
+    } else if (strcasecmp(key, "servoDrop") == 0) {
+        flash.pins[PINS_SERVO_DROP] = value;
     } else if (strcasecmp(key, "servoElevonL") == 0) {
         flash.pins[PINS_SERVO_ELEVON_L] = value;
     } else if (strcasecmp(key, "servoElevonR") == 0) {
@@ -266,8 +280,8 @@ static void getFromSystem(const char *key, float **value) {
         *value = &flash.system[SYSTEM_DEBUG];
     } else if (strcasecmp(key, "debug_fbw") == 0) {
         *value = &flash.system[SYSTEM_DEBUG_FBW];
-    } else if (strcasecmp(key, "debug_imu") == 0) {
-        *value = &flash.system[SYSTEM_DEBUG_IMU];
+    } else if (strcasecmp(key, "debug_aahrs") == 0) {
+        *value = &flash.system[SYSTEM_DEBUG_AAHRS];
     } else if (strcasecmp(key, "debug_gps") == 0) {
         *value = &flash.system[SYSTEM_DEBUG_GPS];
     } else if (strcasecmp(key, "debug_wifly") == 0) {
@@ -286,8 +300,8 @@ static void getFromSystem(const char *key, float **value) {
 static bool setToSystem(const char *key, float value) {
     if (strcasecmp(key, "debug_fbw") == 0) {
         flash.system[SYSTEM_DEBUG_FBW] = value;
-    } else if (strcasecmp(key, "debug_imu") == 0) {
-        flash.system[SYSTEM_DEBUG_IMU] = value;
+    } else if (strcasecmp(key, "debug_aahrs") == 0) {
+        flash.system[SYSTEM_DEBUG_AAHRS] = value;
     } else if (strcasecmp(key, "debug_gps") == 0) {
         flash.system[SYSTEM_DEBUG_GPS] = value;
     } else if (strcasecmp(key, "debug_wifly") == 0) {
@@ -502,6 +516,19 @@ bool config_validate() {
         if (print.fbw) printf("ERROR: Lower pitch limit must be between -20 and 0 degrees.\n");
         return false;
     }
+    // Sensor model validation
+    if (flash.sensors[SENSORS_IMU_MODEL] < IMU_MODEL_MIN || flash.sensors[SENSORS_IMU_MODEL] > IMU_MODEL_MAX) {
+        if (print.fbw) printf("ERROR: IMU model must be between %d and %d.\n", IMU_MODEL_MIN, IMU_MODEL_MAX);
+        return false;
+    }
+    if (flash.sensors[SENSORS_BARO_MODEL] < BARO_MODEL_MIN || flash.sensors[SENSORS_BARO_MODEL] > BARO_MODEL_MAX) {
+        if (print.fbw) printf("ERROR: Barometer model must be between %d and %d.\n", BARO_MODEL_MIN, BARO_MODEL_MAX);
+        return false;
+    }
+    if (flash.sensors[SENSORS_GPS_COMMAND_TYPE] < GPS_COMMAND_TYPE_MIN || flash.sensors[SENSORS_GPS_COMMAND_TYPE] > GPS_COMMAND_TYPE_MAX) {
+        if (print.fbw) printf("ERROR: GPS command type must be between %d and %d.\n", GPS_COMMAND_TYPE_MIN, GPS_COMMAND_TYPE_MAX);
+    }
+    // Control/limit validation
     switch ((ControlMode)flash.general[GENERAL_CONTROL_MODE]) {
         case CTRLMODE_3AXIS_ATHR:
         case CTRLMODE_3AXIS:
@@ -526,8 +553,16 @@ bool config_validate() {
             }
             break;
     }
+    if (flash.control[CONTROL_DROP_DETENT_CLOSED] < 0 || flash.control[CONTROL_DROP_DETENT_OPEN] > 180) {
+        if (print.fbw) printf("ERROR: Drop detent (closed) must be between 0 and 180 degrees.\n");
+        return false;
+    }
+    if (flash.control[CONTROL_DROP_DETENT_OPEN] < 0 || flash.control[CONTROL_DROP_DETENT_OPEN] > 180) {
+        if (print.fbw) printf("ERROR: Drop detent (open) must be between 0 and 180 degrees.\n");
+        return false;
+    }
     // Watchdog timeout validation
-    if ((uint)flash.system[SYSTEM_WATCHDOG_TIMEOUT] < 1000) {
+    if ((uint)flash.system[SYSTEM_WATCHDOG_TIMEOUT] < 1000 && (uint)flash.system[SYSTEM_WATCHDOG_TIMEOUT] > 0) {
         if (print.fbw) printf("ERROR: Watchdog timeout must be at least 1 second.\n");
         return false;
     }

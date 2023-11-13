@@ -4,11 +4,13 @@
 #include <stdbool.h>
 #include "pico/types.h"
 
+#define GPS_COMMAND_TYPE_MIN GPS_COMMAND_TYPE_NONE
 typedef enum GPSCommandType {
     GPS_COMMAND_TYPE_NONE,
     GPS_COMMAND_TYPE_PMTK
     // What is the command type used for ublox modules?
 } GPSCommandType;
+#define GPS_COMMAND_TYPE_MAX GPS_COMMAND_TYPE_PMTK
 
 #define GPS_UART uart1
 #define GPS_UART_IRQ UART1_IRQ

@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include "../lib/pid.h"
 
+#include "../io/aahrs.h"
 #include "../io/flash.h"
 #include "../io/servo.h"
 
@@ -17,7 +18,6 @@
 
 #include "flight.h"
 
-Angles aircraft;
 GPS gps;
 
 static PIDController roll_c;
@@ -63,19 +63,19 @@ void flight_init() {
 
 void flight_update(double roll, double pitch, double yaw, bool override) {
     // Update input data
-    aircraft = imu_getAngles();
+    // AAHRS is updated asyncronously by core 1; we only need to update GPS when applicable
     if (flash.sensors[SENSORS_GPS_COMMAND_TYPE] != GPS_COMMAND_TYPE_NONE) gps = gps_getData();
 
     // Check flight envelope for irregularities
-    if (fabsf(aircraft.roll) > 72 || aircraft.pitch > 35 || aircraft.pitch < -20) {
+    if (fabsf(aahrs.roll) > 72 || aahrs.pitch > 35 || aahrs.pitch < -20) {
         if (print.fbw) printf("WARNING: flight envelope exceeded! (roll: %f, pitch: %f, yaw: %f)\n",
-        aircraft.roll, aircraft.pitch, aircraft.yaw);
-        setIMUSafe(false);
+                              aahrs.roll, aahrs.pitch, aahrs.yaw);
+        aircraft.setAAHRSSafe(false);
     }
 
     // Update PID controllers
-    pid_update(&roll_c, roll, aircraft.roll);
-    pid_update(&pitch_c, pitch, aircraft.pitch);
+    pid_update(&roll_c, roll, aahrs.roll);
+    pid_update(&pitch_c, pitch, aahrs.pitch);
     switch ((ControlMode)flash.general[GENERAL_CONTROL_MODE]) {
         case CTRLMODE_3AXIS_ATHR:
         case CTRLMODE_3AXIS:
@@ -91,9 +91,9 @@ void flight_update(double roll, double pitch, double yaw, bool override) {
             } else {
                 // Yaw damper enabled
                 if (!yawDamperOn) {
-                    flightYawSetpoint = aircraft.yaw; // Yaw damper was just enabled, create our setpoint
+                    flightYawSetpoint = aahrs.yaw; // Yaw damper was just enabled, create our setpoint
                 }
-                pid_update(&yaw_c, flightYawSetpoint, aircraft.yaw);
+                pid_update(&yaw_c, flightYawSetpoint, aahrs.yaw);
                 yawOutput = (float)yaw_c.out;
                 yawDamperOn = true;
             }

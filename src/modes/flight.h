@@ -2,9 +2,7 @@
 #define __FLIGHT_H
 
 #include "../io/gps.h"
-#include "../io/imu.h"
 
-extern Angles aircraft; // Contains the aircraft's inertial angles, will be updated whenever flight_update is called.
 extern GPS gps; // Contains the aircraft's GPS positioning data, will be updated whenever flight_update is called.
 
 /**

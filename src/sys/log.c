@@ -4,12 +4,10 @@
 */
 
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include "pico/config.h"
 #include "pico/time.h"
-#include "pico/types.h"
 
 #include "hardware/watchdog.h"
 
@@ -100,10 +98,10 @@ static LogEntry queuedEntry;
  * Visually displays a log entry.
  * @param entry The entry to display.
 */
-static void log_displayEntry(LogEntry entry) {
+static void log_displayEntry(LogEntry *entry) {
     if (platform_is_fbw()) {
         char typeMsg[DISPLAY_MAX_LINE_LEN];
-        switch (entry.type) {
+        switch (entry->type) {
             case WARNING:
                 strcpy(typeMsg, MSG_WARN);
                 break;
@@ -117,28 +115,32 @@ static void log_displayEntry(LogEntry entry) {
                 break;
         }
         char codeStr[DISPLAY_MAX_LINE_LEN];
-        sprintf(codeStr, "%d", entry.code);
-        if (strlen(entry.msg) < DISPLAY_MAX_LINE_LEN + 1) {
-            if (entry.type != INFO) {
-                display_text(typeMsg, entry.msg, DISP_LOG_CONCAT, codeStr, true);
+        sprintf(codeStr, "%d", entry->code);
+        if (strlen(entry->msg) < DISPLAY_MAX_LINE_LEN + 1) {
+            if (entry->type != INFO) {
+                display_text(typeMsg, entry->msg, DISP_LOG_CONCAT, codeStr, true);
             } else {
                 // INFO messages shouldn't point people to a URL
-                display_text(typeMsg, entry.msg, NULL, NULL, true);
+                display_text(typeMsg, entry->msg, NULL, NULL, true);
             }
-        } else if (strlen(entry.msg) < DISPLAY_MAX_LINE_LEN * 2) {
+        } else if (strlen(entry->msg) < DISPLAY_MAX_LINE_LEN * 2) {
             // Get a substring of the first and last DISPLAY_MAX_LINE_LEN chars to display across two lines
             char line1[DISPLAY_MAX_LINE_LEN] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
             char line2[DISPLAY_MAX_LINE_LEN] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
-            if (entry.msg[DISPLAY_MAX_LINE_LEN] != ' ') {
-                strncpy(line1, entry.msg, DISPLAY_MAX_LINE_LEN - 1);
-                strncpy(line2, entry.msg + DISPLAY_MAX_LINE_LEN - 1, DISPLAY_MAX_LINE_LEN);
+            if (entry->msg[DISPLAY_MAX_LINE_LEN] != ' ') {
+                strncpy(line1, entry->msg, DISPLAY_MAX_LINE_LEN - 1);
+                line1[DISPLAY_MAX_LINE_LEN] = '\0';
                 line1[DISPLAY_MAX_LINE_LEN - 1] = '-';
+                strncpy(line2, entry->msg + DISPLAY_MAX_LINE_LEN - 1, DISPLAY_MAX_LINE_LEN);
+                line2[DISPLAY_MAX_LINE_LEN] = '\0';
             } else {
                 // We don't need a dash here because the line break falls cleanly between words
-                strncpy(line1, entry.msg, DISPLAY_MAX_LINE_LEN);
-                strncpy(line2, entry.msg + DISPLAY_MAX_LINE_LEN, DISPLAY_MAX_LINE_LEN);
+                strncpy(line1, entry->msg, DISPLAY_MAX_LINE_LEN);
+                line1[DISPLAY_MAX_LINE_LEN] = '\0';
+                strncpy(line2, entry->msg + DISPLAY_MAX_LINE_LEN, DISPLAY_MAX_LINE_LEN);
+                line2[DISPLAY_MAX_LINE_LEN] = '\0';
             }
-            if (entry.type != INFO) {
+            if (entry->type != INFO) {
                 display_text(line1, line2, DISP_LOG_CONCAT, codeStr, true);
             } else {
                 display_text(NULL, line1, line2, NULL, true);
@@ -149,19 +151,19 @@ static void log_displayEntry(LogEntry entry) {
     } else {
         // Display on Pico built-in LED
         cancel_repeating_timer(&timer);
-        add_repeating_timer_ms((int32_t)entry.code, led_callback, NULL, &timer);
+        add_repeating_timer_ms((int32_t)entry->code, led_callback, NULL, &timer);
         // If pulse has been enabled, turn the LED off now so it pulses to the on state, not the off state (looks better)
-        if (entry.pulse != 0) {
+        if (entry->pulse != 0) {
             led_set(0);
-            gb_pulse_ms = entry.pulse;
+            gb_pulse_ms = entry->pulse;
         }
     }
-    lastDisplayedEntry = entry;
+    lastDisplayedEntry = *entry;
 }
 
 static inline int64_t logProcessQueue(alarm_id_t id, void *data) {
     if (!platform_is_booted()) return 1000 * 1000;
-    log_displayEntry(queuedEntry);
+    log_displayEntry(&queuedEntry);
     return 0;
 }
 
@@ -189,11 +191,11 @@ void log_message(LogType type, char msg[64], int code, uint pulse_ms, bool force
         logEntries[logCount++] = entry;
 
         // Display the entry if the error is more severe than the last,
-        // there was a code given, the type is severe enough, or if it was forced or of the same type (but newer)
+        // there was a code given, the type is severe enough, it was forced, or of the same type (but newer)
         if (type > LOG && code > -1) {
-            if ((type >= lastLogEntry.type && code < lastLogEntry.code) || force) {
+            if ((type >= lastLogEntry.type && code <= lastLogEntry.code) || force) {
                 if (platform_is_booted() || type == FATAL || type == INFO) {
-                    log_displayEntry(entry);
+                    log_displayEntry(&entry);
                 } else {
                     queuedEntry = entry;
                     add_alarm_in_ms(500, logProcessQueue, NULL, true);
@@ -232,6 +234,7 @@ void log_message(LogType type, char msg[64], int code, uint pulse_ms, bool force
 
         if (type == FATAL) {
             // Halt execution for fatal errors
+            printf("\nFatal error encountered, halting pico-fbw!");
             while (true) {
                 watchdog_update();
                 tight_loop_contents();
@@ -263,7 +266,7 @@ void log_clear(LogType type) {
             bool hadError = false;
             for (uint i = 0; i < logCount; i++) {
                 if (logEntries[i].type == type) {
-                    log_displayEntry(logEntries[i]);
+                    log_displayEntry(&logEntries[i]);
                     hadError = true;
                     break;
                 }

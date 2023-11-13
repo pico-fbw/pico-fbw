@@ -39,15 +39,13 @@ struct AccelSensor;  // actual typedef is located in sensor_fusion_types.h
 /// Initialize the accelerometer calibration functions
 void fInitializeAccelCalibration(
     AccelCalibration *pthisAccelCal,             ///< Accelerometer calibration parameter structure
-    AccelBuffer *pthisAccelBuffer,               ///< Buffer of measurements used as input to the accel calibration functions
-    volatile int8_t *AccelCalPacketOn                   ///< Used to coordinate calibration sample storage and communications
+    AccelBuffer *pthisAccelBuffer               ///< Buffer of measurements used as input to the accel calibration functions
 );
 /// Update the buffer used to store samples used for accelerometer calibration.
 void fUpdateAccelBuffer(
     AccelCalibration *pthisAccelCal,             ///< Accelerometer calibration parameter structure
     AccelBuffer *pthisAccelBuffer,               ///< Buffer of measurements used as input to the accel calibration functions
-    struct AccelSensor* pthisAccel,                     ///< Pointer to the accelerometer input/state structure
-    volatile int8_t *AccelCalPacketOn                   ///< Used to coordinate calibration sample storage and communications
+    struct AccelSensor* pthisAccel                     ///< Pointer to the accelerometer input/state structure
 );
 /// function maps the accelerometer data fGs (g) onto precision calibrated and de-rotated data fGc (g), iGc (counts)
 void fInvertAccelCal(

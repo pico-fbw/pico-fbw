@@ -15,7 +15,7 @@
 #include "set_setpoints.h"
 
 uint api_set_setpoints(const char *cmd, const char *args) {
-    if (getCurrentMode() == MODE_NORMAL) {
+    if (aircraft.getMode() == MODE_NORMAL) {
         float roll, pitch, yaw;
         if ((sscanf(args, "%f %f %f", &roll, &pitch, &yaw) >= 3) &&
         fabsf(roll) > flash.control[CONTROL_ROLL_LIMIT_HOLD] &&

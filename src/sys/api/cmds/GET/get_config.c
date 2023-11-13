@@ -94,11 +94,8 @@ uint api_get_config(const char *cmd, const char *args) {
                                 printf("\"%s\",\"%s\"]}]}\n", flash.wifly_ssid, flash.wifly_pass);
                             }
                         default:
-                            return 400;
+                            break;
                     }
-                }
-                default: {
-                    return 400;
                 }
             }
         }

@@ -16,7 +16,6 @@ typedef struct StatusSubsystem {
 	ssGetStatus_t           *get;	        ///< return status
 	ssSetStatus_t           *queue;         ///< queue status change for next regular interval
 	ssUpdateStatus_t        *update;        ///< make pending status active/visible
-	ssUpdateStatus_t        *test ;         ///< unit test which simply increments to next state
 	// application-specific internal variables
 	uint8_t toggle;                      ///< This implementation can change LED color and have either solid/toggle
 } StatusSubsystem ;

@@ -6,7 +6,7 @@
 #include "hardware/i2c.h"
 
 #define DRIVER_I2C i2c0 // The I2C bus to use for communicating with sensors
-#define DRIVER_TIMEOUT_US 35000 // The maximum time in microseconds that the driver will wait for a response from the sensor
+#define DRIVER_TIMEOUT_US 50000 // The maximum time in microseconds that the driver will wait for a response from the sensor
 
 /*******************************************************************************
  * Definitions

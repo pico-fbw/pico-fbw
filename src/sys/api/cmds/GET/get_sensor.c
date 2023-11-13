@@ -8,14 +8,13 @@
 #include <stdlib.h>
 #include "pico/types.h"
 
+#include "../../../../io/aahrs.h"
 #include "../../../../io/flash.h"
-#include "../../../../io/imu.h"
 #include "../../../../io/gps.h"
 
 #include "get_sensor.h"
 
 uint api_get_sensor(const char *cmd, const char *args) {
-    Angles imu = imu_getAngles();
     GPS gps = { 0, 0, 0, 0, 0 };
     if ((GPSCommandType)flash.sensors[SENSORS_GPS_COMMAND_TYPE] != GPS_COMMAND_TYPE_NONE) {
         gps = gps_getData();
@@ -24,8 +23,8 @@ uint api_get_sensor(const char *cmd, const char *args) {
     // Prepare the JSON output based on sensor type
     switch (atoi(args)) {
         case 1: // IMU only
-            if (imu.roll == INFINITY) {
-                printf("{\"imu\":[{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f}]}\n", imu.roll, imu.pitch, imu.yaw);
+            if (aahrs.roll != INFINITY) {
+                printf("{\"imu\":[{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f}]}\n", aahrs.roll, aahrs.pitch, aahrs.yaw);
             } else {
                 printf("{\"imu\":[{\"roll\":null,\"pitch\":null,\"yaw\":null}]}\n");
             }
@@ -41,15 +40,15 @@ uint api_get_sensor(const char *cmd, const char *args) {
             break;
         case 0: // All sensors
         default:
-            if (imu.roll != INFINITY) {
+            if (aahrs.roll != INFINITY) {
                 if (gps.lat != INFINITY) {
                     printf("{\"imu\":[{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f}],"
                            "\"gps\":[{\"lat\":%f,\"lng\":%f,\"alt\":%d,\"spd\":%f,\"trk\":%f}]}\n",
-                           imu.roll, imu.pitch, imu.yaw, gps.lat, gps.lng, gps.alt, gps.spd, gps.trk_true);
+                           aahrs.roll, aahrs.pitch, aahrs.yaw, gps.lat, gps.lng, gps.alt, gps.spd, gps.trk_true);
                 } else {
                     printf("{\"imu\":[{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f}],"
                            "\"gps\":[{\"lat\":null,\"lng\":null,\"alt\":null,\"spd\":null,\"trk\":null}]}\n",
-                           imu.roll, imu.pitch, imu.yaw);
+                           aahrs.roll, aahrs.pitch, aahrs.yaw);
                 }
             } else {
                 return 204;

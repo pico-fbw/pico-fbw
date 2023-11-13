@@ -16,16 +16,10 @@
 
 #define I2C_FREQ_KHZ 400 // Frequency to use on the sensor i2c bus
 
-// Board name and type, passed in packets to Sensor Toolbox.  
-// Suspect these fields are only informational. 
-#define BOARD_NAME "ESP32 WROVER"
-#define THIS_BOARD  9   //impersonates a FRDM_K22F. Sent in packets to PC-based App.
-#define THIS_SHIELD 4   //impersonates shield AGMP03. Sent in packets to PC-based App.
-
 // sensor hardware details
 #define GYRO_FIFO_SIZE  32	///< FXAX21000, FXAS21002 have 32 element FIFO
 #define ACCEL_FIFO_SIZE 32	///< FXOS8700 (accel), MMA8652, FXLS8952 all have 32 element FIFO
-#define MAG_FIFO_SIZE 	1	///< FXOS8700 (mag) and MAG3110 have no FIFO so equivalent to 1 element FIFO. For 
+#define MAG_FIFO_SIZE 	32	///< FXOS8700 (mag) and MAG3110 have no FIFO so equivalent to 1 element FIFO. For 
 //these ICs we save 6 bytes * 31 = 186 bytes of RAM by setting this FIFO size to 1
 
 
@@ -74,6 +68,8 @@
     0x0000 ///< 6DOF accel and gyro (Kalman) algorithm selector              - 0x2000 to include, 0x0000 otherwise
 #define F_9DOF_GBY_KALMAN \
     0x4000 ///< 9DOF accel, mag and gyro algorithm selector                  - 0x4000 to include, 0x0000 otherwise
+#define F_9DOF_GBY_KALMAN_SYSTICK \
+    6742 // Measured systick on RP2040 running 9DOF_GBY_KALMAN
 ///@}
 
 /// @name SensorParameters
@@ -86,18 +82,7 @@
 //FXOS8700 magnetometer) and don't want to skip any readings then need to read at same rate as ODR. 
 //If FIFO exists or willing to skip readings, then usually set same as FUSION_HZ. See also sensor_fusion_class.h
 #define FUSION_HZ       40  ///< (int) rate of fusion algorithm execution
-// TODO: check how often fusion is calculated and set proper FUSION_HZ
-
-// Output data rate parameters
-#define MAXPACKETRATEHZ 40  //max rate at which data packets can practically be sent (e.g. to Fusion Toolbox)
-#define RATERESOLUTION 1000 //When throttling back on output rate, this is the resolution in ms
-
-//Specify which output method(s) to use for sending serial data packets and receiving commands
-//At least one path is needed if using the Orientation Library with the NXP Sensor Toolbox program.
-//Neither is needed if using the sensor_fusion_class.* to interface with the Orientation library.
-#define F_USE_WIRELESS_UART     0x0000	///< 0x0001 to include, 0x0000 otherwise
-#define F_USE_WIRED_UART        0x0000	///< 0x0002 to include, 0x0000 otherwise
-
-//#define INCLUDE_DEBUG_FUNCTIONS // Comment this line to disable the ApplyPerturbation function
+#define MIN_SYSTICK_DEVIATION 5 // Min deviation to where the algorithm will attempt to correct the systick in us
+#define MAX_SYSTICK_DEVIATION 50 // Max acceptable deviation from the expected systick in us--algorithm will crash if this is exceeded
 
 #endif // __FCONFIG_H

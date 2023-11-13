@@ -1,6 +1,9 @@
 #ifndef __LOG_H
 #define __LOG_H
 
+#include <stdint.h>
+#include "pico/types.h"
+
 typedef enum LogType {
     NONE,
     LOG, // Logs are simply printed to the console

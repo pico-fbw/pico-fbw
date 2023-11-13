@@ -1,10 +1,9 @@
 add_library(fbw_io
-    baro.c
+    aahrs.c
     display.c
     esc.c
     flash.c
     gps.c
-    imu.c
     platform.c
     pwm.c
     serial.c
@@ -30,6 +29,7 @@ target_link_libraries(fbw_io
     hardware_watchdog
     pico_base
     pico_bootrom
+    pico_multicore
     pico_platform
     pico_stdio
     pico_time

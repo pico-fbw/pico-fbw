@@ -1,7 +1,7 @@
 #ifndef __INFO_H
 #define __INFO_H
 
-#define PICO_FBW_VERSION "1.0.0-alpha.2"
+#define PICO_FBW_VERSION "1.0.0-alpha.3"
 #ifdef NDEBUG
     #define DEBUG_BUILD false
 #else

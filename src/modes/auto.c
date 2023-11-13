@@ -8,8 +8,8 @@
 #include "pico/types.h"
 
 #include "../io/flash.h"
-#include "../io/imu.h"
 #include "../io/gps.h"
+#include "../io/servo.h"
 
 #include "../lib/pid.h"
 #include "../lib/nav.h"
@@ -46,10 +46,18 @@ static PIDController latGuid;
 static PIDController vertGuid;
 
 /**
- * @param pos The position to set the drop bay mechanism to (true for open, false for closed).
+ * @param pos The position to set the drop bay mechanism to.
 */
 static void setBayPosition(BayPosition pos) {
-    // TODO: bay code here, once we have pins and positions (in conf) figured out
+    switch (pos) {
+        case OPEN:
+            servo_set(flash.pins[PINS_SERVO_DROP], flash.control[CONTROL_DROP_DETENT_OPEN]);
+            break;
+        case CLOSED:
+        default:
+            servo_set(flash.pins[PINS_SERVO_DROP], flash.control[CONTROL_DROP_DETENT_CLOSED]);
+            break;
+    }
 }
 
 // Callback for when the bay needs to be closed after a user-specified delay (within the flightplan)
@@ -92,7 +100,7 @@ bool mode_autoInit() {
 void mode_auto() {
     // Don't allow re-entering auto mode after the user has exited hold mode and auto is complete
     if (autoComplete) {
-        toMode(MODE_NORMAL);
+        aircraft.changeTo(MODE_NORMAL);
         return;
     }
 
@@ -100,7 +108,7 @@ void mode_auto() {
     bearing = calculateBearing(gps.lat, gps.lng, fplan[currentWaypoint].lat, fplan[currentWaypoint].lng);
     distance = calculateDistance(gps.lat, gps.lng, fplan[currentWaypoint].lat, fplan[currentWaypoint].lng);
 
-    // Nested PIDs; latGuid and vertGuid use imu & gps data to command bank/pitch angles which the flight PIDs then use to actuate servos
+    // Nested PIDs; latGuid and vertGuid use gps data to command bank/pitch angles which the flight PIDs then use to actuate servos
     pid_update(&latGuid, bearing, gps.trk_true); // Don't use IMU heading because that's not always going to be navigational
     pid_update(&vertGuid, alt, gps.alt);
     flight_update(latGuid.out, vertGuid.out, 0, false);
@@ -111,7 +119,7 @@ void mode_auto() {
         if (currentWaypoint > wifly_getWaypointCount()) {
             // Auto mode ends here, we enter a holding pattern
             autoComplete = true;
-            toMode(MODE_HOLD);
+            aircraft.changeTo(MODE_HOLD);
             return;
         } else {
             // Load the next altitude

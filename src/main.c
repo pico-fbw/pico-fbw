@@ -18,10 +18,10 @@
     #include "pico/cyw43_arch.h"
 #endif
 
+#include "io/aahrs.h"
 #include "io/esc.h"
 #include "io/flash.h"
 #include "io/gps.h"
-#include "io/imu.h"
 #include "io/platform.h"
 #include "io/pwm.h"
 #include "io/servo.h"
@@ -52,7 +52,7 @@ int main() {
     platform_boot_setProgress(30, "Checking for updates");
     const char *version = flash.version;
     int versionCheck = info_checkVersion(version);
-    if (versionCheck < 0) {
+    if (versionCheck != 0) {
         if (versionCheck < -2) {
             log_message(FATAL, "Failed to run update checker!", 250, 0, true);
         } else {
@@ -96,12 +96,12 @@ int main() {
 
     // Servos
     platform_boot_setProgress(45, "Enabling servos");
-    uint num_servos = 3;
+    uint num_servos = 4; // Maximum is 4 servos, may be overridden
     uint servos[num_servos];
     servo_getPins(servos, &num_servos);
     for (uint8_t s = 0; s < num_servos; s++) {
         if (servo_enable(servos[s]) != 0) {
-            if (print.fbw) printf("[boot] failed to initialize servo %d\n", s);
+            if (print.fbw) printf("[boot] failed to initialize servo #%d\n", s);
             log_message(FATAL, "Failed to initialize a servo!", 800, 0, false);
         }
     }
@@ -111,43 +111,14 @@ int main() {
     // ESC
     if ((ControlMode)flash.general[GENERAL_CONTROL_MODE] == CTRLMODE_3AXIS_ATHR ||
         (ControlMode)flash.general[GENERAL_CONTROL_MODE] == CTRLMODE_FLYINGWING_ATHR) {
-        platform_boot_setProgress(55, "Enabling ESC");
+        platform_boot_setProgress(60, "Enabling ESC");
         if (esc_enable((uint)flash.pins[PINS_ESC_THROTTLE]) != 0) log_message(FATAL, "Failed to initialize an ESC!", 800, 0, false);
     }
 
-    // IMU
-    if ((IMUModel)flash.sensors[SENSORS_IMU_MODEL] == IMU_MODEL_BNO055) {
-        while (time_us_64() < (850 * 1000)) tight_loop_contents(); // BNO055 requires at least 850ms to ready up
-    }
-    if ((bool)flash.general[GENERAL_SKIP_CALIBRATION]) {
-        if (print.fbw) printf("[boot] skipping IMU calibration, IMU will be disabled!\n");
-    } else {
-        platform_boot_setProgress(60, "Initializing IMU");
-        if (imu_init() == 0) {
-            if (imu_configure()) {
-                if (print.fbw) printf("[boot] IMU ok\n");
-                setIMUSafe(true);
-                if (print.fbw) printf("[boot] checking for IMU calibration\n");
-                if (!imu_isCalibrated()) {
-                    if (print.fbw) printf("[boot] IMU calibration not found!\n");
-                    sleep_ms(2000);
-                    if (!imu_calibrate()) log_message(FATAL, "IMU calibration failed!", 1000, 0, true);
-                }
-                if (print.fbw) printf("[boot] IMU axis calibration ok\n");
-            } else {
-                log_message(WARNING, "IMU configuration failed!", 1000, 0, false);
-            }
-        } else {
-            log_message(ERROR, "IMU not found!", 1000, 0, false);
-        }
-    }
-
-    // Barometer
-    if ((BaroModel)flash.sensors[SENSORS_BARO_MODEL] != BARO_MODEL_NONE || platform_is_fbw()) {
-        platform_boot_setProgress(75, "Initializing barometer");
-        if (baro_init() != 0) {
-            log_message(WARNING, "Baro initialization failed!", 1500, 0, false);
-        }
+    // AAHRS
+    platform_boot_setProgress(65, "Initializing AAHRS");
+    if (!aahrs_init()) {
+        log_message(ERROR, "AAHRS initialization failed!", 1000, 0, false);
     }
 
     // GPS
@@ -165,14 +136,14 @@ int main() {
 
     // Watchdog
     platform_boot_setProgress(90, "Enabling watchdog");
-    watchdog_enable((uint32_t)flash.system[SYSTEM_WATCHDOG_TIMEOUT], true);
+    platform_enable_watchdog();
     if (platform_boot_type() == BOOT_WATCHDOG) {
         log_message(ERROR, "Watchdog rebooted!", 500, 150, true);
         if (print.fbw) printf("\nPlease report this error! Only direct mode is available until the next reboot.\n\n");
         platform_boot_complete();
-        toMode(MODE_DIRECT);
+        aircraft.changeTo(MODE_DIRECT);
         while (true) {
-            modeRuntime();
+            aircraft.update();
             watchdog_update();
         }
     }
@@ -209,7 +180,7 @@ int main() {
                 }
                 break;
         }
-        modeRuntime();
+        aircraft.update();
         if ((bool)flash.general[GENERAL_API_ENABLED]) api_poll();
         watchdog_update();
     }

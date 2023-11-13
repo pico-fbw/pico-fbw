@@ -13,30 +13,36 @@ typedef enum Mode {
 } Mode;
 #define MODE_MAX MODE_HOLD
 
-/**
- * Transitions the system to a specified mode.
- * @param mode The mode to transition to.
-*/
-void toMode(Mode mode);
+typedef void (*aircraft_update_t)();
+typedef void (*aircraft_changeto_t)(Mode);
+typedef Mode (*aircraft_getmode_t)();
+typedef void (*aircraft_setaahrssafe_t)(bool);
+typedef void (*aircraft_setgpssafe_t)(bool);
 
-/**
- * Runs the code of the system's currently selected mode.
-*/
-void modeRuntime();
+typedef struct Aircraft {
+    /**
+     * Runs the code of the system's currently selected mode.
+    */
+    aircraft_update_t update;
+    /**
+     * Transitions the aircraft to a specified mode.
+     * @param mode The mode to transition to.
+    */
+    aircraft_changeto_t changeTo;
+    /**
+     * @return The current mode of the system.
+    */
+    aircraft_getmode_t getMode;
+    /**
+     * @param state Declares whether or not the AAHRS data is safe to use.
+    */
+    aircraft_setaahrssafe_t setAAHRSSafe;
+    /**
+     * @param state Declares whether or not the GPS data is safe to use.
+    */
+    aircraft_setgpssafe_t setGPSSafe;
+} Aircraft;
 
-/**
- * @return The current mode of the system.
-*/
-Mode getCurrentMode();
-
-/**
- * Declares whether or not the IMU data is safe to use.
-*/
-void setIMUSafe(bool state);
-
-/**
- * Declares whether or not the GPS data is safe to use.
-*/
-void setGPSSafe(bool state);
+extern Aircraft aircraft;
 
 #endif // __MODES_H

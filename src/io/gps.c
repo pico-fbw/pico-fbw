@@ -25,15 +25,41 @@
 
 #include "gps.h"
 
+static inline bool pos_valid(float lat, float lng) {
+    return lat <= 90 && lat >= -90 && lng <= 180 && lng >= -180 &&
+           isfinite(lat) && isfinite(lng);
+}
+
+static inline bool alt_valid(int alt) {
+    return alt >= 0;
+}
+
+static inline bool spd_valid(float spd) {
+    return spd >= 0 && isfinite(spd);
+}
+
+static inline bool trk_valid(float trk) {
+    return trk >= 0 && isfinite(trk);
+}
+
+static inline bool dop_valid(float pdop, float hdop, float vdop) {
+    return pdop < GPS_SAFE_PDOP_THRESHOLD && hdop < GPS_SAFE_HDOP_THRESHOLD &&
+           vdop < GPS_SAFE_VDOP_THRESHOLD;
+}
+
+static inline bool data_valid(float lat, float lng, int alt, float spd, float trk, float pdop, float hdop, float vdop) {
+    return pos_valid(lat, lng) && alt_valid(alt) && spd_valid(spd) && trk_valid(trk) && dop_valid(pdop, hdop, vdop);
+}
+
 bool gps_init() {
     if (print.fbw) printf("[gps] initializing ");
     if (GPS_UART == uart0) {
-        if (print.fbw) printf("uart0\n");
+        if (print.fbw) printf("uart0 ");
     } else if (GPS_UART == uart1) {
-        if (print.fbw) printf("uart1\n");
-    } else {
-        if (print.fbw) printf("\n");
+        if (print.fbw) printf("uart1 ");
     }
+    if (print.fbw) printf("at baudrate %d, on pins %d (tx) and %d (rx)\n", (uint)flash.sensors[SENSORS_GPS_BAUDRATE],
+                          (uint)flash.pins[PINS_GPS_TX], (uint)flash.pins[PINS_GPS_RX]);
     uart_init(GPS_UART, (uint)flash.sensors[SENSORS_GPS_BAUDRATE]);
     uart_set_fifo_enabled(GPS_UART, false); // Disable FIFO for setting up query schedule
     uart_set_format(GPS_UART, 8, 1, UART_PARITY_NONE); // NMEA-0183 format
@@ -54,9 +80,9 @@ bool gps_init() {
             // Enable the correct sentences
             sleep_ms(1800); // Acknowledgement is a hit or miss without a delay
             uart_write_blocking(GPS_UART, (const uint8_t*)"$PMTK314,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n", 49); // VTG, GGA, GSA enabled once per fix
-            // Check up to 20 sentences for the acknowledgement
+            // Check up to 30 sentences for the acknowledgement
             uint8_t lines = 0;
-            while (lines < 20) {
+            while (lines < 30) {
                 char *line = NULL;
                 if (uart_is_readable_within_us(GPS_UART, GPS_COMMAND_TIMEOUT_MS * 1000)) {
                     line = uart_read_line(GPS_UART);
@@ -102,7 +128,7 @@ GPS gps_getData() {
                     if (strncmp(&gga.altitude_units, "M", 1) == 0) {
                         alt = (int)(minmea_tofloat(&gga.altitude) * 3.28084f); // Conversion from meters to feet
                     } else {
-                        setGPSSafe(false);
+                        aircraft.setGPSSafe(false);
                         return (GPS){INFINITY};
                     }
                 } else {
@@ -141,13 +167,10 @@ GPS gps_getData() {
         free(line);
     }
 
-    if (lat <= 90 && lat >= -90 && lng <= 180 && lng >= -180 && alt >= 0 && spd >= 0 &&
-        lat != INFINITY && lng != INFINITY && spd != INFINITY && trk_true != INFINITY &&
-        lat != NAN && lng != NAN && spd != NAN && trk_true != NAN &&
-        pdop < GPS_SAFE_PDOP_THRESHOLD && hdop < GPS_SAFE_HDOP_THRESHOLD && vdop < GPS_SAFE_VDOP_THRESHOLD) {
-        setGPSSafe(true);
+    if (data_valid(lat, lng, alt, spd, trk_true, pdop, hdop, vdop)) {
+        aircraft.setGPSSafe(true);
     } else {
-        setGPSSafe(false);
+        aircraft.setGPSSafe(false);
         return (GPS){INFINITY, INFINITY, -1, INFINITY, INFINITY};
     }
     return (GPS){lat, lng, alt, spd, trk_true};

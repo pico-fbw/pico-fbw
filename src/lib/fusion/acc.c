@@ -18,17 +18,13 @@
 
 // function resets the accelerometer buffer and accelerometer calibration
 void fInitializeAccelCalibration(AccelCalibration *pthisAccelCal,
-                                 AccelBuffer *pthisAccelBuffer,
-                                 volatile int8_t *AccelCalPacketOn)
+                                 AccelBuffer *pthisAccelBuffer)
 {
     int8_t  i,
             j;          // loop counters
 
     // set flags to false to denote no precision accelerometer measurements
     pthisAccelBuffer->iStoreFlags = 0;
-
-    // perform one transmission of the precision calibration (using invalid value MAX_ACCEL_CAL_ORIENTATIONS for calibration only)
-    *AccelCalPacketOn = MAX_ACCEL_CAL_ORIENTATIONS;
 
     // check to see if the stored accelerometer calibration has been erased
 #ifndef SIMULATION
@@ -67,7 +63,7 @@ void fInitializeAccelCalibration(AccelCalibration *pthisAccelCal,
 
 void fUpdateAccelBuffer( AccelCalibration *pthisAccelCal,
                          AccelBuffer *pthisAccelBuffer,
-                        struct AccelSensor *pthisAccel, volatile int8_t *AccelCalPacketOn)
+                        struct AccelSensor *pthisAccel)
 {
     int16_t i;          // loop counter
 
@@ -108,9 +104,6 @@ void fUpdateAccelBuffer( AccelCalibration *pthisAccelCal,
 
         // compute the new precision accelerometer calibration including rotation using all measurements
         fRunAccelCalibration(pthisAccelCal, pthisAccelBuffer, pthisAccel);
-
-        // and make one packet transmission of this measurement with the new calibration
-        *AccelCalPacketOn = pthisAccelBuffer->iStoreLocation;
     }
 
     return;

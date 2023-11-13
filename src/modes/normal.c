@@ -7,7 +7,6 @@
 #include <stdbool.h>
 
 #include "../io/flash.h"
-#include "../io/imu.h"
 #include "../io/pwm.h"
 #include "../io/servo.h"
 

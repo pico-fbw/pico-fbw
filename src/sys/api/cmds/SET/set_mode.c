@@ -15,7 +15,7 @@ uint api_set_mode(const char *cmd, const char *args) {
     Mode mode = atoi(args);
     // Ensure mode is valid before setting it
     if (mode >= MODE_MIN && mode <= MODE_MAX) {
-        toMode(mode);
+        aircraft.changeTo(mode);
         return 200;
     } else {
         return 400;

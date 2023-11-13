@@ -64,7 +64,6 @@ typedef enum quaternion {
 struct SensorFusionGlobals;                     ///< Top level structure has pointers to everything else
 struct StatusSubsystem;                         ///< Application-specific status subsystem
 struct PhysicalSensor;                          ///< We'll have one of these for each physical sensor (FXOS8700 = 1 physical sensor)
-struct ControlSubsystem;                        ///< Application-specific serial communications system
 
 typedef enum {                                  ///  These are the state definitions for the status subsystem
 	OFF,                                    ///< Application hasn't started
@@ -104,7 +103,6 @@ typedef void   (initializeFusionEngine_t) 	(struct SensorFusionGlobals *sfg);
 typedef void   (runFusion_t) 			(struct SensorFusionGlobals *sfg);
 typedef void   (clearFIFOs_t) 			(struct SensorFusionGlobals *sfg);
 typedef void   (conditionSensorReadings_t) 	(struct SensorFusionGlobals *sfg);
-typedef void   (applyPerturbation_t) 		(struct SensorFusionGlobals *sfg) ;
 typedef void   (setStatus_t) 			(struct SensorFusionGlobals *sfg, fusion_status_t status);
 typedef fusion_status_t  (getStatus_t) 			(struct SensorFusionGlobals *sfg);
 typedef void   (updateStatus_t) 		(struct SensorFusionGlobals *sfg);
@@ -430,7 +428,6 @@ typedef struct SensorFusionGlobals
         /// The Status and Control subsystems can be used as-is, or completely
         /// replaced with alternate implementations, as long as those implementations
         /// provide the same interfaces defined in control.h and status.h.
-	struct ControlSubsystem *pControlSubsystem;
 	struct StatusSubsystem *pStatusSubsystem;
         ///@}
         ///@{
@@ -496,7 +493,6 @@ typedef struct SensorFusionGlobals
         /// Function pointers (the SF library external interface)
 	installSensor_t 	*installSensor;         ///< function for installing a new sensor
 	initializeFusionEngine_t *initializeFusionEngine ;  ///< set sensor fusion structures to initial values
-	applyPerturbation_t     *applyPerturbation ;	///< apply step function for testing purposes
 	readSensors_t		*readSensors;		///< read all physical sensors
 	runFusion_t		*runFusion;		///< run the fusion routines
         conditionSensorReadings_t *conditionSensorReadings;  ///< preprocessing step for sensor fusion
@@ -504,7 +500,6 @@ typedef struct SensorFusionGlobals
 	setStatus_t		*setStatus;		///< change status indicator immediately
 	setStatus_t		*queueStatus;  	        ///< queue status change for next regular interval
 	updateStatus_t		*updateStatus; 		///< status=next status
-	updateStatus_t		*testStatus; 		///< increment to next enumerated status value (test only)
   getStatus_t 	*getStatus;	///< fetch the current status from the Status Subsystem
 
         ///@}
@@ -513,8 +508,7 @@ typedef struct SensorFusionGlobals
 // The following functions are defined in sensor_fusion.c
 void initSensorFusionGlobals(
     SensorFusionGlobals *sfg,                           ///< Global data structure pointer
-    struct StatusSubsystem *pStatusSubsystem,           ///< Status subsystem pointer
-    struct ControlSubsystem *pControlSubsystem          ///< Control subsystem pointer
+    struct StatusSubsystem *pStatusSubsystem           ///< Status subsystem pointer
 );
 installSensor_t installSensor;
 initializeFusionEngine_t initializeFusionEngine ;
@@ -578,13 +572,5 @@ void ApplyMagHAL(
 void ApplyGyroHAL(
     struct GyroSensor *Gyro                                    ///< pointer to gyroscope logical sensor
 );
-/// \brief ApplyPerturbation is a reverse unit-step test function
-///
-/// The ApplyPerturbation function applies a user-specified step function to
-/// prior fusion results which is then "released" in the next fusion cycle.
-/// When used in conjuction with the NXP Sensor Fusion Toolbox, this provides
-/// a visual indication of the dynamic behavior of the library. ApplyPerturbation()
-/// is defined in fusion_testing.c.
-applyPerturbation_t ApplyPerturbation;
 
 #endif // __FUSION_H

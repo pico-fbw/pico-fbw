@@ -17,6 +17,10 @@ int8_t BNO055_read_mag(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
 int8_t BNO055_read_gyro(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
 int8_t BNO055_read(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
 
+/* I2C Addresses */
+#define BNO055_I2C_ADDR_LOW            (0x28)
+#define BNO055_I2C_ADDR_HIGH           (0x29)
+
 /* Expected chip WHO_AM_I/ID value */
 #define BNO055_CHIP_WHO_AM_I           (0xA0)
 

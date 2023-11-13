@@ -14,7 +14,6 @@
 #include <stdio.h>
 
 #include "fmath.h"
-#include "data.h"
 #include "status.h"
 #include "drivers/drivers.h"
 
@@ -48,15 +47,9 @@ void updateStatus(SensorFusionGlobals *sfg)
     sfg->pStatusSubsystem->update(sfg->pStatusSubsystem);
 }
 
-void testStatus(SensorFusionGlobals *sfg)
-{
-    sfg->pStatusSubsystem->test(sfg->pStatusSubsystem);
-}
-
 /// utility function to insert default values in the top level structure
 void initSensorFusionGlobals(SensorFusionGlobals *sfg,
-                             StatusSubsystem *pStatusSubsystem,
-                             ControlSubsystem *pControlSubsystem)
+                             StatusSubsystem *pStatusSubsystem)
 {
     sfg->iFlags = // all of the following defines are either 0x0000 or a 1-bit value (2, 4, 8 ...) and are defined in build.h
                 F_USING_ACCEL           |
@@ -73,7 +66,6 @@ void initSensorFusionGlobals(SensorFusionGlobals *sfg,
                 F_6DOF_GY_KALMAN        |	// 6DOF accel and gyro (Kalman): (accel + gyro)
                 F_9DOF_GBY_KALMAN	;	// 9DOF accel, mag and gyro (Kalman): (accel + mag + gyro)
 
-    sfg->pControlSubsystem = pControlSubsystem;
     sfg->pStatusSubsystem = pStatusSubsystem;
     sfg->loopcounter = 0;                     // counter incrementing each iteration of sensor fusion (typically 25Hz)
     sfg->systick_I2C = 0;                     // systick counter to benchmark I2C reads
@@ -83,14 +75,12 @@ void initSensorFusionGlobals(SensorFusionGlobals *sfg,
     sfg->initializeFusionEngine = initializeFusionEngine;   // initializes fusion variables
     sfg->readSensors = readSensors;           // function for reading a sensor
     sfg->runFusion = runFusion;               // function for running fusion algorithms
-    sfg->applyPerturbation = ApplyPerturbation; // function used for step function testing
     sfg->conditionSensorReadings = conditionSensorReadings; // function does averaging, HAL adjustments, etc.
-    sfg->clearFIFOs = clearFIFOs;             // function to clear FIFO flags    sfg->applyPerturbation = ApplyPerturbation; // function used for step function testing
+    sfg->clearFIFOs = clearFIFOs;             // function to clear FIFO flags
     sfg->setStatus = setStatus;               // function to immediately set status change
     sfg->getStatus = getStatus;               // function to report status
     sfg->queueStatus = queueStatus;           // function to queue status change
     sfg->updateStatus = updateStatus;         // function to promote queued status change
-    sfg->testStatus = testStatus;             // function for unit testing the status subsystem
     sfg->pSensors = NULL;                     // pointer to linked list of physical sensors
 //  put error value into whoAmI as initial value
 #if F_USING_ACCEL
@@ -173,7 +163,9 @@ void processAccelData(SensorFusionGlobals *sfg)
       sfg->setStatus(sfg, SOFT_FAULT);
     }
 
-    ApplyAccelHAL(&(sfg->Accel));     // This function is board-dependent
+    // FIXME: all the ApplyHAL functions are just axis remaps, inline the previous code when necessary?
+    // https://github.com/BjarneBitscrambler/OrientationSensorFusion-ESP/blob/865cf36f22a0a9b30a37a657f8ea825728025b89/src/sensor_fusion/hal_axis_remap.c#L58
+    // ApplyAccelHAL(&(sfg->Accel));     // This function is board-dependent
 
     // calculate the average HAL-corrected measurement
     for (j = CHX; j <= CHZ; j++) iSum[j] = 0;
@@ -195,8 +187,7 @@ void processAccelData(SensorFusionGlobals *sfg)
     // update the precision accelerometer data buffer
     fUpdateAccelBuffer(&(sfg->AccelCal),
                        &(sfg->AccelBuffer),
-                       &(sfg->Accel),
-                       &(sfg->pControlSubsystem->AccelCalPacketOn));
+                       &(sfg->Accel));
     return;
 } // end processAccelData()
 #endif
@@ -211,7 +202,8 @@ void processMagData(SensorFusionGlobals *sfg)
       sfg->setStatus(sfg, SOFT_FAULT);
     }
 
-    ApplyMagHAL(&(sfg->Mag));         // This function is board-dependent
+    // FIXME
+    // ApplyMagHAL(&(sfg->Mag));         // This function is board-dependent
 
     // calculate the average HAL-corrected measurement
     for (j = CHX; j <= CHZ; j++) iSum[j] = 0;
@@ -248,7 +240,8 @@ void processGyroData(SensorFusionGlobals *sfg)
       sfg->setStatus(sfg, SOFT_FAULT);
     }
 
-    ApplyGyroHAL(&(sfg->Gyro));       // This function is board-dependent
+    // FIXME
+    // ApplyGyroHAL(&(sfg->Gyro));       // This function is board-dependent
 
     // calculate the average HAL-corrected measurement.  This is used for offset
     // initialization, display purposes and in the 3-axis gyro-only algorithm.
@@ -498,25 +491,13 @@ void runFusion(SensorFusionGlobals *sfg)
 void initializeFusionEngine(SensorFusionGlobals *sfg)
 {
     int16_t status = SENSOR_ERROR_NONE;
-    struct ControlSubsystem    *pComm;
-    pComm = sfg->pControlSubsystem;
 
     sfg->setStatus(sfg, INITIALIZING);
     driver_init();
     status = initializeSensors(sfg);
-    if (status!=SENSOR_ERROR_NONE) {  // fault condition found - will try again later
+    if (status != SENSOR_ERROR_NONE) {  // fault condition found - will try again later
         sfg->setStatus(sfg, SOFT_FAULT);
     }
-
-    // recall: typedef enum quaternion {Q3, Q3M, Q3G, Q6MA, Q6AG, Q9} quaternion_type;
-    // Set the default quaternion to the most sophisticated supported by this build
-    pComm->DefaultQuaternionPacketType = Q3;
-    if (sfg->iFlags & F_3DOF_B_BASIC) pComm->DefaultQuaternionPacketType = Q3M;
-    if (sfg->iFlags & F_3DOF_Y_BASIC) pComm->DefaultQuaternionPacketType = Q3G;
-    if (sfg->iFlags & F_6DOF_GB_BASIC) pComm->DefaultQuaternionPacketType = Q6MA;
-    if (sfg->iFlags & F_6DOF_GY_KALMAN) pComm->DefaultQuaternionPacketType = Q6AG;
-    if (sfg->iFlags & F_9DOF_GBY_KALMAN) pComm->DefaultQuaternionPacketType = Q9;
-    pComm->QuaternionPacketType = pComm->DefaultQuaternionPacketType ;
 
     // initialize the sensor fusion algorithms
     fInitializeFusion(sfg);
@@ -531,7 +512,7 @@ void initializeFusionEngine(SensorFusionGlobals *sfg)
 
     // initialize the precision accelerometer calibration and accelerometer data buffer
 #if F_USING_ACCEL
-    fInitializeAccelCalibration(&sfg->AccelCal, &sfg->AccelBuffer, &sfg->pControlSubsystem->AccelCalPacketOn );
+    fInitializeAccelCalibration(&sfg->AccelCal, &sfg->AccelBuffer );
 #endif
 
     clearFIFOs(sfg);

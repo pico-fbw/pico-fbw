@@ -17,7 +17,7 @@
 #include "test_esc.h"
 
 uint api_test_esc(const char *cmd, const char *args) {
-    if (getCurrentMode() == MODE_DIRECT) {
+    if (aircraft.getMode() == MODE_DIRECT) {
         uint t_idle = 5, t_mct = 2, t_max = 1;
         if (args) {
             if (sscanf(args, "%d %d %d", &t_idle, &t_mct, &t_max) < 3) return 400;

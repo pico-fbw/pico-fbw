@@ -2,7 +2,6 @@ add_library(fbw_lib
     fusion/acc.c
     fusion/approx.c
     fusion/calibration.c
-    fusion/data.c
     fusion/fmath.c
     fusion/fusion.c
     fusion/mag.c

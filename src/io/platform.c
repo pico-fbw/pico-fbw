@@ -13,6 +13,7 @@
 #include "hardware/watchdog.h"
 
 #include "display.h"
+#include "flash.h"
 
 #include "../sys/info.h"
 
@@ -98,10 +99,16 @@ void platform_boot_setProgress(float progress, const char *message) {
     }
 }
 
+void platform_enable_watchdog() {
+    if ((int)flash.system[SYSTEM_WATCHDOG_TIMEOUT] > 0) {
+        watchdog_enable((uint32_t)flash.system[SYSTEM_WATCHDOG_TIMEOUT], true);
+        watchdog_hw->scratch[0] = WATCHDOG_TIMEOUT_MAGIC;
+    }
+}
+
 bool platform_is_booted() { return isBooted; }
 
 void platform_boot_complete() {
-    watchdog_hw->scratch[0] = WATCHDOG_TIMEOUT_MAGIC;
     if (platform_is_fbw()) display_anim();
     isBooted = true;
 }
@@ -123,17 +130,17 @@ void __attribute__((noreturn)) platform_shutdown() {
 }
 
 BootType platform_boot_type() {
-    if (watchdog_enable_caused_reboot()) {
-        // If the reboot was intentional (forced), WATCHDOG_FORCE_MAGIC would have been set
+    if (watchdog_caused_reboot()) {
+        // If the reboot was intentional (forced by firmware or API), WATCHDOG_FORCE_MAGIC would have been set
         if (watchdog_hw->scratch[0] == WATCHDOG_FORCE_MAGIC) {
             return BOOT_REBOOT;
         } else if (watchdog_hw->scratch[0] == WATCHDOG_TIMEOUT_MAGIC) {
-            return BOOT_WATCHDOG;
+            return BOOT_WATCHDOG; // Not good...watchdog had to reboot while program was running (after boot)
         } else {
-            return BOOT_NORMAL; // Watchdog caused reboot before the system finished booting, likely BOOTSEL
+            return BOOT_BOOTSEL; // Watchdog caused reboot before pico-fbw finished booting, likely BOOTSEL (it uses watchdog)
         }
     } else {
-        return BOOT_NORMAL;
+        return BOOT_COLD;
     }
 }
 

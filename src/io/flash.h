@@ -10,14 +10,11 @@
 
 #include "hardware/flash.h"
 
-#include "baro.h"
+#include "aahrs.h"
 #include "gps.h"
-#include "imu.h"
 #include "pwm.h"
 #include "../wifly/wifly.h"
 #include "../sys/switch.h"
-
-#define FLAG_END -30.54245f
 
 typedef enum SectorBoot {
     BOOT_FLAG
@@ -36,14 +33,6 @@ typedef enum SectorPWM {
     PWM_OFFSET_THR
 } SectorPWM;
 #define S_PWM_HIGHEST PWM_OFFSET_THR
-
-typedef enum SectorIMU {
-    IMU_FLAG,
-    #define FLAG_IMU 0.7f
-    IMU_MODEL
-    // more, when I figure out calibration for sure
-} SectorIMU;
-#define S_IMU_HIGHEST IMU_MODEL
 
 typedef enum SectorPID {
     PID_FLAG,
@@ -97,6 +86,9 @@ typedef enum SectorConfigControl {
     CONTROL_THROTTLE_DETENT_MAX,
     CONTROL_THROTTLE_MAX_TIME,
 
+    CONTROL_DROP_DETENT_CLOSED,
+    CONTROL_DROP_DETENT_OPEN,
+
     CONTROL_ROLL_LIMIT,
     CONTROL_ROLL_LIMIT_HOLD,
     CONTROL_PITCH_LOWER_LIMIT,
@@ -123,6 +115,7 @@ typedef enum SectorConfigPins {
     PINS_INPUT_THROTTLE,
     PINS_ESC_THROTTLE,
     PINS_INPUT_SWITCH,
+    PINS_SERVO_DROP,
     PINS_SERVO_ELEVON_L,
     PINS_SERVO_ELEVON_R,
 
@@ -150,7 +143,7 @@ typedef enum SectorConfigSensors {
 typedef enum SectorConfigSystem {
     SYSTEM_DEBUG,
     SYSTEM_DEBUG_FBW,
-    SYSTEM_DEBUG_IMU,
+    SYSTEM_DEBUG_AAHRS,
     SYSTEM_DEBUG_GPS,
     SYSTEM_DEBUG_WIFLY,
     SYSTEM_DEBUG_NETWORK,
@@ -179,11 +172,17 @@ typedef enum SectorConfigSystem {
 // The physical sector that the virtual string "sectors" are placed in
 #define STRING_PHYSECTOR 1
 
+// Signifies the end of a flash sector if it doesn't take up the entire allotted memory
+// Used mostly for the GET_CONFIG API command, pico-fbw itself only really cares about the locations of data
+#define FLAG_END (-30.54245f)
+
 typedef struct Flash {
+    /* Auto-generated system settings */
     float boot[FLOAT_SECTOR_SIZE];
     float pwm[FLOAT_SECTOR_SIZE];
-    float imu[FLOAT_SECTOR_SIZE];
     float pid[FLOAT_SECTOR_SIZE];
+    float aahrs[FLOAT_SECTOR_SIZE * 8]; // AAHRS is given a large block of flash to store calibrations; it has its own FS
+    /* User-defined config */
     float general[FLOAT_SECTOR_SIZE];
     float control[FLOAT_SECTOR_SIZE];
     float pins[FLOAT_SECTOR_SIZE];
@@ -194,7 +193,7 @@ typedef struct Flash {
     char wifly_ssid[STRING_SECTOR_SIZE];
     char wifly_pass[STRING_SECTOR_SIZE];
 } Flash;
-#define NUM_FLOAT_SECTORS 9
+#define NUM_FLOAT_SECTORS 16 // AAHRS counts as 8
 #define NUM_STRING_SECTORS 3
 
 #define SIZEOF_FLOAT_SECTORS (NUM_FLOAT_SECTORS * FLOAT_SECTOR_SIZE)
@@ -203,7 +202,7 @@ typedef struct Flash {
 #define SIZEOF_STRING_SECTORS_BYTES (NUM_STRING_SECTORS * STRING_SECTOR_SIZE_BYTES)
 
 typedef struct PrintDefs {
-    bool fbw, imu, gps, wifly, network, dumpNetwork;
+    bool fbw, aahrs, gps, wifly, network, dumpNetwork;
 } PrintDefs;
 
 extern Flash flash;

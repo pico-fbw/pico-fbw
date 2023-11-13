@@ -46,8 +46,8 @@
 //fetch the Magnetic calibration values from non-volatile memory.
 //If cal values are unavailable, returns false. If successful, returns true.
 bool GetMagCalibrationFromNVM( float *cal_values ) {
-    if( NULL == cal_values ) {
-      return false;
+    if (cal_values == NULL) {
+        return false;
     }
 #if F_USING_MAG
     //header of each calibration block type contains 

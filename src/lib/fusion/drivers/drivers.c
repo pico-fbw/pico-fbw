@@ -84,19 +84,19 @@ static bool i2cWriteBytes(unsigned char addr, unsigned char reg, const unsigned 
 }
 
 void driver_init() {
+    if (print.fbw) printf("[AAHRS] initializing ");
+    if (DRIVER_I2C == i2c0) {
+        if (print.fbw) printf("i2c0 ");
+    } else if (DRIVER_I2C == i2c1) {
+        if (print.fbw) printf("i2c1 ");
+    }
+    if (print.fbw) printf("at %d kHz, on pins %d (SDA) and %d (SCL)\n", I2C_FREQ_KHZ,
+                          (uint)flash.pins[PINS_AAHRS_SDA], (uint)flash.pins[PINS_AAHRS_SCL]);
     gpio_set_function((uint)flash.pins[PINS_AAHRS_SDA], GPIO_FUNC_I2C);
     gpio_set_function((uint)flash.pins[PINS_AAHRS_SCL], GPIO_FUNC_I2C);
     gpio_pull_up((uint)flash.pins[PINS_AAHRS_SDA]);
     gpio_pull_up((uint)flash.pins[PINS_AAHRS_SCL]);
-    if (print.fbw) printf("[AAHRS] initializing ");
-    if (IMU_I2C == i2c0) {
-        if (print.fbw) printf("i2c0\n");
-    } else if (IMU_I2C == i2c1) {
-        if (print.fbw) printf("i2c1\n");
-    } else {
-        if (print.fbw) printf("\n");
-    }
-    i2c_init(IMU_I2C, I2C_FREQ_KHZ * 1000);
+    i2c_init(DRIVER_I2C, I2C_FREQ_KHZ * 1000);
 }
 
 int32_t driver_read(registerDeviceInfo_t *devInfo, uint16_t peripheralAddress, const registerReadlist_t *pReadList, uint8_t *pOutBuf) {

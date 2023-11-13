@@ -12,8 +12,9 @@ typedef enum Platform {
 } Platform;
 
 typedef enum BootType {
-    BOOT_NORMAL,
+    BOOT_COLD,
     BOOT_REBOOT,
+    BOOT_BOOTSEL,
     BOOT_WATCHDOG
 } BootType;
 
@@ -34,6 +35,11 @@ void platform_boot_begin();
  * @note The message should be short (at most ~32 chars) to fit nicely.
 */
 void platform_boot_setProgress(float progress, const char *message);
+
+/**
+ * Enables the watchdog timer as set in the config.
+*/
+void platform_enable_watchdog();
 
 /**
  * @return the current status of the boot process--true if booted, false if not.

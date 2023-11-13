@@ -13,7 +13,7 @@ You can find a copy of the License at the following URL:
 MIT License
 ======================================
 
-The following files (and their corresponding Header [.h] files) of this project utilize code that is licensed under the MIT License:
+The following files (and their corresponding Header [.h] files, when applicable) of this project utilize code that is licensed under the MIT License:
 
 - dhcp.c
 - dmp.c
@@ -33,11 +33,27 @@ You can find a copy of the License at the following URL:
 BSD 3-Clause License
 ======================================
 
-The following files (and their corresponding Header [.h] files) of this project utilize code that is licensed under the BSD 3-Clause License:
+The following files (and their corresponding Header [.h] files, when applicable) of this project utilize code that is licensed under the BSD 3-Clause License:
 
+- acc.c
+- approx.c
+- bno055.c
+- calibration.c
+- data.c
 - dns.c
+- drivers.c
+- fmath.c
+- fusion.c
+- icm20948.c
+- mag.c
+- matrix.c
+- orient.c
+- status.c
 - tcp.c
 - wifly.c
 
 You can find a copy of the License at the following URL:
 <https://opensource.org/licenses/BSD-3-Clause>
+
+
+pico-fbw would not be possible without the hard work and dedication of open-source software developers. Thank you!

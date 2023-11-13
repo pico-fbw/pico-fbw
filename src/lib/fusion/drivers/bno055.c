@@ -13,6 +13,14 @@
  * Licensed under the GNU GPL-3.0
 */
 
+#include <stdio.h>
+
+#include "../../../io/aahrs.h"
+#include "../../../io/flash.h"
+#include "../../../io/platform.h"
+
+#include "../../../sys/log.h"
+
 #include "pico/types.h"
 
 #include "bno055.h"
@@ -40,44 +48,52 @@ registerReadlist_t BNO055_GYRO_DATA_READ[] = {
 
 // Each entry in a RegisterWriteList is composed of: register address, value to write, bit-mask to apply to write (0 enables)
 const registerwritelist_t BNO055_Initialization[] = {
+    // TODO: figure out bitmasks and stuff to make this more readable, i just want this to work at the moment
     { BNO055_SYS_TRIGGER, 0x00, 0x00 }, // Use internal oscillator
     { BNO055_PWR_MODE, BNO055_POWER_MODE_NORMAL, 0x00 },
     { BNO055_UNIT_SEL, 0x01, 0x00 }, // Select units (Windows orientation, °C, °, °/s, mg)
-    { BNO055_OPR_MODE, BNO055_OPERATION_MODE_AMG, 0x00 },
+    /* TODO: these configs were removed as fusion appears to operate better without them, but some may still be relavent,
+     * I'm just not entirely sure of the effects.
+    { BNO055_PAGE_ID, BNO055_PAGE_ONE, 0x00 }, // Switch to page 1
+    { BNO055_ACCEL_CONFIG, 0b00010000, 0x00 }, // Accel config (normal opmode, 125Hz bandwidth, ±2G range)
+    { BNO055_GYRO_CONFIG, 0b00010011, 0x00 }, // Gyro config (normal opmode, 116Hz bandwidth, ±250°/s range)
+    { BNO055_MAG_CONFIG, 0b0010111, 0x00 }, // Mag config (normal power mode, enhanced opmode, 30Hz ODR)
+    { BNO055_PAGE_ID, BNO055_PAGE_ZERO, 0x00 }, // Switch back to page 0
+    */
+    { BNO055_OPR_MODE, BNO055_OPERATION_MODE_AMG, 0x00 }, // Set operation mode to AMG (accel, mag, gyro) for raw data
     __END_WRITE_DATA__
 };
-
-/* All sensor drivers and initialization functions have a similar prototype
-sensor = pointer to linked list element used by the sensor fusion subsystem to specify required sensors
-sfg = pointer to top level data structure for sensor fusion */
-
-int8_t BNO055_init_accel(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
-    // TODO: do we need to modify sensor bandwidths / ODRs? (also for other sensor inits)
-    return SENSOR_ERROR_NONE;
-}
 
 // We use mG (milli-G) units of acceleration which are 1:1 (datasheet pg. 33) and there are 1000 mG in one G, thus 1000 CPG
 #define BNO055_COUNTS_PER_G 1000
 
-int8_t BNO055_init_mag(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
-    return SENSOR_ERROR_NONE;
-}
-
 #define BNO055_COUNTS_PER_UT 16 // (datasheet pg. 34)
-
-int8_t BNO055_init_gyro(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
-    return SENSOR_ERROR_NONE;
-}
 
 #define BNO055_COUNTS_PER_DPS 16 // (datasheet pg. 35)
 
 int8_t BNO055_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
     int32_t status;
     uint8_t reg;
+    if (platform_boot_type() == BOOT_WATCHDOG) {
+        return SENSOR_ERROR_INIT; // Don't halt the system as it may be in flight, but do not initialize the sensor further
+    } else if (platform_boot_type() != BOOT_COLD) {
+        // The BNO055 has a bug in where it can't be soft-reset with an I2C command, it must either be hard-reset with the RESET pin
+        // (which we don't have access to) or simply power cycled, so we must force the user to power-cycle the device
+        // because it's likely still running from this previous soft-reboot
+        log_message(FATAL, "Please reboot pico-fbw.", 1000, 0, true);
+        return SENSOR_ERROR_INIT;
+    }
+    // Wait if BNO055 isn't ready yet (takes 850ms)
+    while (time_us_64() < (850 * 1000)) tight_loop_contents();
     // Check that the sensor comms are okay and that it's a BNO055
+    if (print.aahrs) printf("[BNO055] initializing...\n");
     status = driver_read_register(&sensor->deviceInfo, sensor->addr, BNO055_WHO_AM_I_READ[0].readFrom, BNO055_WHO_AM_I_READ[0].numBytes, &reg);
-    if (status != SENSOR_ERROR_NONE) return status;
+    if (status != SENSOR_ERROR_NONE) {
+        if (print.aahrs) printf("[BNO055] ERROR: address not acknowledged! (no/wrong device present?)\n");
+        return status;
+    };
     if (reg != BNO055_CHIP_WHO_AM_I) {
+        if (print.aahrs) printf("[BNO055] ERROR: could not verify chip!\n");
         return SENSOR_ERROR_INIT;
     }
     // Set up sensor data for fusion algorithms later
@@ -100,8 +116,17 @@ int8_t BNO055_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
     #endif
 
     // Configure sensor
+    if (print.aahrs) printf("[BNO055] configuring...\n");
     status = driver_write_list(&sensor->deviceInfo, sensor->addr, BNO055_Initialization);
-    sensor->isInitialized = F_USING_ACCEL | F_USING_MAG;
+    sleep_ms(200);
+    // Read back mode change
+    unsigned char mode;
+    driver_read_register(&sensor->deviceInfo, sensor->addr, BNO055_OPR_MODE, 1, &mode);
+    if (mode != BNO055_OPERATION_MODE_AMG) {
+        if (print.aahrs) printf("[BNO055] ERROR: could not configure sensor mode %02X (still %02X)!\n", BNO055_OPERATION_MODE_AMG, mode);
+        return SENSOR_ERROR_INIT;
+    }
+    
     #if F_USING_ACCEL
         sfg->Accel.isEnabled = true;
     #endif
@@ -111,6 +136,8 @@ int8_t BNO055_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
     #if F_USING_GYRO
         sfg->Gyro.isEnabled = true;
     #endif
+    if (print.aahrs) printf("[BNO055] sensor ready!\n");
+    sensor->isInitialized = F_USING_ACCEL | F_USING_MAG | F_USING_GYRO;
 
     return status;
 }
@@ -124,12 +151,13 @@ int8_t BNO055_read_accel(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg
         int16_t sample[3];
         // Shift LSB and MSB together
         for (uint i = 0; i < count_of(sample); i++) {
-            sample[i] = (int16_t)((buf[i * 2 + 1] << 8) | buf[i * 2]);
+            sample[i] = (buf[i * 2 + 1] << 8) | buf[i * 2]; // Casting breaks things here for some reason?
         }
         // Normalize data and add to FIFO
         conditionSample(sample);
         addToFifo((union FifoSensor*) &(sfg->Accel), ACCEL_FIFO_SIZE, sample);
-    } else return status;
+    }
+    return status;
 }
 #endif
 
@@ -141,11 +169,12 @@ int8_t BNO055_read_mag(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) 
     if (status == SENSOR_ERROR_NONE) {
         int16_t sample[3];
         for (uint i = 0; i < count_of(sample); i++) {
-            sample[i] = (int16_t)((buf[i * 2 + 1] << 8) | buf[i * 2]);
+            sample[i] = (buf[i * 2 + 1] << 8) | buf[i * 2];
         }
         conditionSample(sample);
         addToFifo((union FifoSensor*) &(sfg->Mag), MAG_FIFO_SIZE, sample);
-    } else return status;
+    }
+    return status;
 }
 #endif
 
@@ -157,11 +186,12 @@ int8_t BNO055_read_gyro(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg)
     if (status == SENSOR_ERROR_NONE) {
         int16_t sample[3];
         for (uint i = 0; i < count_of(sample); i++) {
-            sample[i] = (int16_t)((buf[i * 2 + 1] << 8) | buf[i * 2]);
+            sample[i] = (buf[i * 2 + 1] << 8) | buf[i * 2];
         }
         conditionSample(sample);
         addToFifo((union FifoSensor*) &(sfg->Gyro), GYRO_FIFO_SIZE, sample);
-    } else return status;
+    }
+    return status;
 }
 #endif
 

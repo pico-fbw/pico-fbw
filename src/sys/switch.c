@@ -18,18 +18,18 @@ void switch_update(SwitchPosition pos) {
     if (lastPos != pos) {
         switch (pos) {
             case SWITCH_POSITION_LOW:
-                toMode(MODE_DIRECT);
+                aircraft.changeTo(MODE_DIRECT);
                 break;
             case SWITCH_POSITION_MID:
-                toMode(MODE_NORMAL);
+                aircraft.changeTo(MODE_NORMAL);
                 break;
             case SWITCH_POSITION_HIGH:
                 switch ((SwitchType)flash.general[GENERAL_SWITCH_TYPE]) {
                     case SWITCH_TYPE_2_POS:
-                        toMode(MODE_NORMAL);
+                        aircraft.changeTo(MODE_NORMAL);
                         break;
                     case SWITCH_TYPE_3_POS:
-                        toMode(MODE_AUTO);
+                        aircraft.changeTo(MODE_AUTO);
                         break;
                 }
                 break;

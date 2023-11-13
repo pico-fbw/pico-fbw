@@ -82,9 +82,18 @@ void servo_disable(uint gpio_pin) {
 }
 
 void servo_test(uint servos[], uint num_servos, const uint16_t degrees[], const uint num_degrees, const uint pause_between_moves_ms) {
-    for (uint8_t d = 0; d < num_degrees; d++) {
+    for (uint d = 0; d < num_degrees; d++) {
         for (uint s = 0; s < num_servos; s++) {
-            servo_set(servos[s], degrees[d]);
+            if (servos[s] == (uint)flash.pins[PINS_SERVO_DROP]) {
+                // The drop servo will be set to the configured detents so as not to possibly break it
+                if (d < (num_degrees / 2)) {
+                    servo_set(servos[s], flash.control[CONTROL_DROP_DETENT_OPEN]);
+                } else {
+                    servo_set(servos[s], flash.control[CONTROL_DROP_DETENT_CLOSED]);
+                }
+            } else {
+                servo_set(servos[s], degrees[d]);
+            }
         }
         sleep_ms(pause_between_moves_ms);
     }
@@ -97,13 +106,15 @@ void servo_getPins(uint *servos, uint *num_servos) {
             servos[0] = (uint)flash.pins[PINS_SERVO_AIL];
             servos[1] = (uint)flash.pins[PINS_SERVO_ELEV];
             servos[2] = (uint)flash.pins[PINS_SERVO_RUD];
-            *num_servos = 3;
+            servos[3] = (uint)flash.pins[PINS_SERVO_DROP];
+            *num_servos = 4;
             break;
         case CTRLMODE_FLYINGWING_ATHR:
         case CTRLMODE_FLYINGWING:
             servos[0] = (uint)flash.pins[PINS_SERVO_ELEVON_L];
             servos[1] = (uint)flash.pins[PINS_SERVO_ELEVON_R];
-            *num_servos = 2;
+            servos[2] = (uint)flash.pins[PINS_SERVO_DROP];
+            *num_servos = 3;
             break;
     }
 }
