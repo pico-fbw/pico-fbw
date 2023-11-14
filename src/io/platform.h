@@ -66,6 +66,14 @@ void __attribute__((noreturn)) platform_reboot(RebootType type);
 void __attribute__((noreturn)) platform_shutdown();
 
 /**
+ * Performs a blocking sleep (watchdog-safe).
+ * @param ms the number of milliseconds to sleep
+ * @note This should be used after the system is booted when a longer sleep must be performed,
+ * as using normal sleep_ms would trigger the watchdog interrupt.
+*/
+void platform_sleep_ms(uint32_t ms);
+
+/**
  * Gets the type of boot that occured.
 */
 BootType platform_boot_type();

@@ -24,8 +24,8 @@
 #include "modes.h"
 
 static Mode currentMode = MODE_DIRECT;
-static bool aahrsDataSafe = false;
-static bool gpsDataSafe = false;
+static bool aahrsSafe = false;
+static bool gpsSafe = false;
 
 void update() {
     switch(currentMode) {
@@ -67,7 +67,7 @@ void changeTo(Mode newMode) {
             if (print.fbw) printf("[modes] exiting hold mode\n");
             break;
     }
-    if (aahrsDataSafe) {
+    if (aahrsSafe) {
         switch (newMode) {
             case MODE_DIRECT:
                 if (print.fbw) printf("[modes] entering direct mode\n");
@@ -90,10 +90,10 @@ void changeTo(Mode newMode) {
                 }
                 if ((GPSCommandType)flash.sensors[SENSORS_GPS_COMMAND_TYPE] != GPS_COMMAND_TYPE_NONE) {
                     // TODO: have a way for auto mode to re-engage if the gps becomes safe again; this is usually due to bad DOP which fixes itself over time
-                    if (gpsDataSafe) {
+                    if (gpsSafe) {
                         // Check to see if we have to calibrate the GPS alt offset
-                        if (wifly_getNumGPSSamples() > 0) {
-                            gps_calibrateAltOffset(wifly_getNumGPSSamples());
+                        if (wifly_getNumAltSamples() > 0) {
+                            gps_calibrateAltOffset(wifly_getNumAltSamples());
                         }
                         if (print.fbw) printf("[modes] entering auto mode\n");
                         if (mode_autoInit()) {
@@ -122,7 +122,7 @@ void changeTo(Mode newMode) {
                 }
                 break;
             case MODE_HOLD:
-                if (gpsDataSafe) {
+                if (gpsSafe) {
                     if (print.fbw) printf("[modes] entering hold mode\n");
                     currentMode = MODE_HOLD;
                 } else {
@@ -138,11 +138,11 @@ void changeTo(Mode newMode) {
     }
 }
 
-Mode getMode() { return currentMode; }
+Mode mode() { return currentMode; }
 
 void setAAHRSSafe(bool state) {
-    if (state != aahrsDataSafe) {
-        aahrsDataSafe = state;
+    if (state != aahrsSafe) {
+        aahrsSafe = state;
         if (state) {
             if (print.fbw) printf("[modes] AAHRS set as safe\n");
         } else {
@@ -154,9 +154,11 @@ void setAAHRSSafe(bool state) {
     }
 }
 
+bool AAHRSSafe() { return aahrsSafe; }
+
 void setGPSSafe(bool state) {
-    if (state != gpsDataSafe) {
-        gpsDataSafe = state;
+    if (state != gpsSafe) {
+        gpsSafe = state;
         if (state) {
             if (print.fbw) printf("[modes] GPS set as safe\n");
             log_clear(INFO);
@@ -169,10 +171,14 @@ void setGPSSafe(bool state) {
     }
 }
 
+bool GPSSafe() { return gpsSafe; }
+
 Aircraft aircraft = {
     .update = update,
     .changeTo = changeTo,
-    .getMode = getMode,
+    .mode = mode,
     .setAAHRSSafe = setAAHRSSafe,
+    .AAHRSSafe = AAHRSSafe,
     .setGPSSafe = setGPSSafe,
+    .GPSSafe = GPSSafe
 };

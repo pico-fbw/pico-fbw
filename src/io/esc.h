@@ -16,6 +16,18 @@ uint esc_enable(uint gpio_pin);
 void esc_set(uint gpio_pin, uint16_t speed);
 
 /**
+ * Calibrates the ESC's throttle detents (IDLE, MCT, MAX) in the config.
+ * @param gpio_pin the GPIO pin the ESC is attached to
+ * @return true if the calibration was successful, false if a timeout occured.
+*/
+bool esc_calibrate(uint gpio_pin);
+
+/**
+ * @return the status of any previous ESC detent calibration.
+*/
+bool esc_isCalibrated();
+
+/**
  * Disables ESC control on a certain pin.
  * @param gpio_pin the GPIO pin the ESC is attached to
 */

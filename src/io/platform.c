@@ -129,6 +129,14 @@ void __attribute__((noreturn)) platform_shutdown() {
     reset_usb_boot(0, 1); // Reboot into bootloader but don't mount mass storage
 }
 
+void platform_sleep_ms(uint32_t ms) {
+    absolute_time_t wakeup_time = make_timeout_time_ms(ms);
+    while (!time_reached(wakeup_time)) {
+        watchdog_update();
+        tight_loop_contents();
+    }
+}
+
 BootType platform_boot_type() {
     if (watchdog_caused_reboot()) {
         // If the reboot was intentional (forced by firmware or API), WATCHDOG_FORCE_MAGIC would have been set

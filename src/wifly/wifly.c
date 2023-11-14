@@ -50,7 +50,7 @@ static uint waypoint_count = 0;
 
 static char *fplanJson = NULL; // Once the flightplan is downloaded it will be stored here and NOT freed!
 
-int numGpsSamples = -1; // Holds the number of GPS samples to be taken (if other than zero) once the flightplan has been parsed
+int numAltSamples = -1; // Holds the number of GPS samples to be taken (if other than zero) once the flightplan has been parsed
 
 static inline void url_decode(char *str) {
     char *p = str;
@@ -182,7 +182,7 @@ bool wifly_parseFplan(const char *fplan) {
         }
 
         WiflyStatus status = WIFLY_STATUS_OK;
-        bool has_version, has_version_fw, has_gps_samples = false;
+        bool has_version = false, has_version_fw = false, has_alt_samples = false;
         // Process all tokens and extract any needed data; things here are mostly self-explanatory
         for (uint i = 0; i < token_count; i++) {
             // Token field (name) iteration
@@ -219,23 +219,23 @@ bool wifly_parseFplan(const char *fplan) {
                         }
                     }
                     has_version_fw = true;
-                } else if (strcmp(field_name, "gps_samples") == 0) {
-                    char gpsSamples[25];
-                    strncpy(gpsSamples, decoded + tokens[i + 1].start, tokens[i + 1].end - tokens[i + 1].start);
-                    gpsSamples[tokens[i + 1].end - tokens[i + 1].start] = '\0';
-                    numGpsSamples = atoi(gpsSamples);
+                } else if (strcmp(field_name, "alt_samples") == 0) {
+                    char altSamples[25];
+                    strncpy(altSamples, decoded + tokens[i + 1].start, tokens[i + 1].end - tokens[i + 1].start);
+                    altSamples[tokens[i + 1].end - tokens[i + 1].start] = '\0';
+                    numAltSamples = atoi(altSamples);
 
                     // We expect a value between zero and 100 (only calculate if non-zero)
-                    if (numGpsSamples <= 100 && numGpsSamples >= 0) {
-                        if (print.wifly) printf("[wifly] GPS num offset samples: %s\n", gpsSamples);
-                        if (numGpsSamples != 0) {
+                    if (numAltSamples <= 100 && numAltSamples >= 0) {
+                        if (print.wifly) printf("[wifly] GPS num offset samples: %d\n", numAltSamples);
+                        if (numAltSamples != 0) {
                             if (status == WIFLY_STATUS_OK) status = WIFLY_STATUS_GPS_OFFSET; // Only replace the status if it is still OK (no warnings yet)
                         }
                     } else {
                         status = WIFLY_ERR_PARSE;
                         return false;
                     }
-                    has_gps_samples = true;
+                    has_alt_samples = true;
                 } else if (strcmp(field_name, "waypoints") == 0) {
                     if (tokens[i + 1].type == JSMN_ARRAY) {
                         waypoint_count = tokens[i + 1].size;
@@ -330,7 +330,7 @@ bool wifly_parseFplan(const char *fplan) {
                 }
             }
         }
-        if (!has_version || !has_version_fw || !has_gps_samples) {
+        if (!has_version || !has_version_fw || !has_alt_samples) {
             if (print.wifly) printf("[wifly] ERROR: flightplan missing data!\n");
             fplanStatus = WIFLY_ERR_PARSE;
             return false;
@@ -366,4 +366,4 @@ const char *wifly_getFplanJson() { return fplanJson; }
 
 uint wifly_getWaypointCount() { return waypoint_count; }
 
-int wifly_getNumGPSSamples() { return numGpsSamples; }
+int wifly_getNumAltSamples() { return numAltSamples; }

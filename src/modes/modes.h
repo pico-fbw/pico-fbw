@@ -15,9 +15,11 @@ typedef enum Mode {
 
 typedef void (*aircraft_update_t)();
 typedef void (*aircraft_changeto_t)(Mode);
-typedef Mode (*aircraft_getmode_t)();
+typedef Mode (*aircraft_mode_t)();
 typedef void (*aircraft_setaahrssafe_t)(bool);
+typedef bool (*aircraft_aahrssafe_t)();
 typedef void (*aircraft_setgpssafe_t)(bool);
+typedef bool (*aircraft_gpssafe_t)();
 
 typedef struct Aircraft {
     /**
@@ -32,15 +34,23 @@ typedef struct Aircraft {
     /**
      * @return The current mode of the system.
     */
-    aircraft_getmode_t getMode;
+    aircraft_mode_t mode;
     /**
      * @param state Declares whether or not the AAHRS data is safe to use.
     */
     aircraft_setaahrssafe_t setAAHRSSafe;
     /**
+     * @return Whether or not the AAHRS data is safe to use.
+    */
+    aircraft_aahrssafe_t AAHRSSafe;
+    /**
      * @param state Declares whether or not the GPS data is safe to use.
     */
     aircraft_setgpssafe_t setGPSSafe;
+    /**
+     * @return Whether or not the GPS data is safe to use.
+    */
+    aircraft_gpssafe_t GPSSafe;
 } Aircraft;
 
 extern Aircraft aircraft;

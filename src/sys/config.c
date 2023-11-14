@@ -71,6 +71,8 @@ static void getFromControl(const char *key, float **value) {
         *value = &flash.control[CONTROL_RUDDER_SENSITIVITY];
     } else if (strcasecmp(key, "controlDeadband") == 0) {
         *value = &flash.control[CONTROL_DEADBAND];
+    } else if (strcasecmp(key, "throttleDetentsCalibrated") == 0) {
+        *value = &flash.control[CONTROL_THROTTLE_DETENTS_CALIBRATED];
     } else if (strcasecmp(key, "throttleDetentIdle") == 0) {
         *value = &flash.control[CONTROL_THROTTLE_DETENT_IDLE];
     } else if (strcasecmp(key, "throttleDetentMCT") == 0) {
@@ -117,6 +119,8 @@ static bool setToControl(const char *key, float value) {
         flash.control[CONTROL_RUDDER_SENSITIVITY] = value;
     } else if (strcasecmp(key, "controlDeadband") == 0) {
         flash.control[CONTROL_DEADBAND] = value;
+    } else if (strcasecmp(key, "throttleDetentsCalibrated") == 0) {
+        flash.control[CONTROL_THROTTLE_DETENTS_CALIBRATED] = value;
     } else if (strcasecmp(key, "throttleDetentIdle") == 0) {
         flash.control[CONTROL_THROTTLE_DETENT_IDLE] = value;
     } else if (strcasecmp(key, "throttleDetentMCT") == 0) {

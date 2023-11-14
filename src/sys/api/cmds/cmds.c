@@ -72,14 +72,14 @@ uint api_handle_set(const char *cmd, const char *args) {
 }
 
 uint api_handle_test(const char *cmd, const char *args) {
-    if (strcasecmp(cmd, "TEST_ALL") == 0) {
+    if (strcasecmp(cmd, "TEST_AAHRS") == 0) {
+        return api_test_aahrs(cmd, args);
+    } else if (strcasecmp(cmd, "TEST_ALL") == 0) {
         return api_test_all(cmd, args);
     } else if (strcasecmp(cmd, "TEST_ESC") == 0) {
         return api_test_esc(cmd, args);
     } else if (strcasecmp(cmd, "TEST_GPS") == 0) {
         return api_test_gps(cmd, args);
-    } else if (strcasecmp(cmd, "TEST_IMU") == 0) {
-        return api_test_aahrs(cmd, args);
     } else if (strcasecmp(cmd, "TEST_PWM") == 0) {
         return api_test_pwm(cmd, args);
     } else if (strcasecmp(cmd, "TEST_SERVO") == 0) {

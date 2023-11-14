@@ -27,7 +27,7 @@ Flash flash = {
     .pwm = { [ 0 ... S_PWM_HIGHEST] = 0, FLAG_END},
     .pid = {0, 0, 0, 0, 0.1f, 0.001f, -50, 50, 0, 0, 0, 0.01f, 0.001f, -50, 50, 1.0f, 0.0025f, 0.001f, 0.01f, 0.001f, -50, 50, FLAG_END},
     .general = {CTRLMODE_3AXIS_ATHR, SWITCH_TYPE_3_POS, 20, 50, 50, true, WIFLY_ENABLED_PASS, false, FLAG_END},
-    .control = {0.00075f, 1.5f, 2, 10, 75, 90, 10, 180, 0, 33, 67, -15, 30, 25, 15, 20, 20, 0.5f, 1, 1, FLAG_END},
+    .control = {0.00075f, 1.5f, 2, false, 10, 75, 90, 10, 180, 0, 33, 67, -15, 30, 25, 15, 20, 20, 0.5f, 1, 1, FLAG_END},
     .pins = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 2, 4, 16, 17, 21, 20, false, false, false, FLAG_END},
     .sensors = {IMU_MODEL_BNO055, BARO_MODEL_NONE, GPS_COMMAND_TYPE_PMTK, 9600, FLAG_END},
     .system = {true, true, false, false, false, false, false, 4000, FLAG_END},

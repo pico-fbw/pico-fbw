@@ -20,7 +20,7 @@ add_library(fbw_api
     cmds/SET/set_target.c
     cmds/TEST/test_all.c
     cmds/TEST/test_esc.c
-        cmds/TEST/test_gps.c
+    cmds/TEST/test_gps.c
     cmds/TEST/test_aahrs.c
     cmds/TEST/test_pwm.c
     cmds/TEST/test_servo.c
@@ -34,6 +34,7 @@ target_link_libraries(fbw_api
     hardware_watchdog
     pico_base
     pico_platform
+    pico_rand
     pico_runtime
     pico_time
 )

@@ -11,6 +11,6 @@
 #include "get_mode.h"
 
 uint api_get_mode(const char *cmd, const char *args) {
-    printf("{\"mode\":%d}\n", aircraft.getMode());
+    printf("{\"mode\":%d}\n", aircraft.mode());
     return -1;
 }

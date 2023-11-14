@@ -72,11 +72,9 @@ int main() {
     uint pins[num_pins];
     float deviations[num_pins];
     pwm_getPins(pins, &num_pins, deviations);
-    if ((bool)flash.general[GENERAL_SKIP_CALIBRATION]) {
-        if (print.fbw) printf("[boot] skipping PWM calibration, PWM will be disabled!\n");
-    } else {
-        platform_boot_setProgress(35, "Enabling PWM");
-        pwm_enable(pins, num_pins);
+    platform_boot_setProgress(35, "Enabling PWM");
+    pwm_enable(pins, num_pins);
+    if (!(bool)flash.general[GENERAL_SKIP_CALIBRATION]) {
         if (print.fbw) printf("[boot] validating PWM calibration\n");
         int calibrationResult = pwm_isCalibrated();
         switch (calibrationResult) {
@@ -92,6 +90,8 @@ int main() {
                 }
                 break;
         }
+    } else {
+        log_message(WARNING, "PWM calibration skipped!", 500, 0, false);
     }
 
     // Servos
@@ -112,7 +112,22 @@ int main() {
     if ((ControlMode)flash.general[GENERAL_CONTROL_MODE] == CTRLMODE_3AXIS_ATHR ||
         (ControlMode)flash.general[GENERAL_CONTROL_MODE] == CTRLMODE_FLYINGWING_ATHR) {
         platform_boot_setProgress(60, "Enabling ESC");
-        if (esc_enable((uint)flash.pins[PINS_ESC_THROTTLE]) != 0) log_message(FATAL, "Failed to initialize an ESC!", 800, 0, false);
+        if (esc_enable((uint)flash.pins[PINS_ESC_THROTTLE]) != 0) {
+            log_message(FATAL, "Failed to initialize an ESC!", 800, 0, false);
+        }
+        if (!(bool)flash.general[GENERAL_SKIP_CALIBRATION]) {
+            if (print.fbw) printf("[boot] validating throttle detent calibration\n");
+            if (!esc_isCalibrated()) {
+                if (print.fbw) printf("[boot] throttle detent calibration not found!\n");
+                if (!esc_calibrate((uint)flash.pins[PINS_ESC_THROTTLE])) {
+                    log_message(ERROR, "Throttle detent calibration failed!", 800, 0, false);
+                } else {
+                    if (print.fbw) printf("[boot] throttle detent calibration successful!\n");
+                }
+            }
+        } else {
+            log_message(WARNING, "Throttle detent calibration skipped!", 800, 0, false);
+        }
     }
 
     // AAHRS

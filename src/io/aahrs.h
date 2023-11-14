@@ -11,6 +11,13 @@ typedef enum IMUModel {
 } IMUModel;
 #define IMU_MODEL_MAX IMU_MODEL_ICM20948
 
+typedef enum IMUAxis {
+    IMU_AXIS_NONE,
+    IMU_AXIS_ROLL,
+    IMU_AXIS_PITCH,
+    IMU_AXIS_YAW
+} IMUAxis;
+
 #define BARO_MODEL_MIN BARO_MODEL_NONE // No barometer is a valid configuration
 typedef enum BaroModel {
     BARO_MODEL_NONE,
@@ -30,6 +37,12 @@ typedef struct AAHRS {
 } AAHRS;
 
 extern AAHRS aahrs;
+
+/**
+ * Obtains the difference between two angles in degrees.
+*/
+#define ANGLE_DIFFERENCE(a1, a2) \
+    ((a2 - a1 + 180) % 360 - 180) < -180 ? ((a2 - a1 + 180) % 360 - 180) + 360 : ((a2 - a1 + 180) % 360 - 180)
 
 /**
  * Initializes the AAHRS computation layer, sensor hardware, and underlying fusion algorithms.

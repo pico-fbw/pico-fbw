@@ -23,6 +23,7 @@
 
 #include "display.h"
 #include "flash.h"
+#include "platform.h"
 
 #include "../sys/log.h"
 
@@ -197,9 +198,11 @@ bool pwm_calibrate(const uint pin_list[], uint num_pins, const float deviations[
     for (uint i = 0; i < num_pins; i++) {
         uint pin = pin_list[i];
         if (print.fbw) printf("[pwm] calibrating pin %d (%d/%d)\n", pin, i + 1, num_pins);
-        char pBar[DISPLAY_MAX_LINE_LEN] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
-        display_pBarStr(pBar, (uint)(((i + 1) * 100) / num_pins));
-        display_text("Please do not", "touch the", "transmitter!", pBar, true);
+        if (platform_is_fbw()) {
+            char pBar[DISPLAY_MAX_LINE_LEN] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
+            display_pBarStr(pBar, (uint)(((i + 1) * 100) / num_pins));
+            display_text("Please do not", "touch the", "transmitter!", pBar, true);
+        }
         float deviation = deviations[i];
         float final_difference = 0.0f;
         bool isThrottle = pin_list[i] == (uint)flash.pins[PINS_INPUT_THROTTLE];
@@ -254,7 +257,7 @@ bool pwm_calibrate(const uint pin_list[], uint num_pins, const float deviations[
         flash.pwm[loc] = final_difference / (float)run_times;
     }
     flash.pwm[PWM_MODE] = (ControlMode)flash.general[GENERAL_CONTROL_MODE];
-    if (print.fbw) printf("[pwm] writing calibration data\n");
+    if (print.fbw) printf("[pwm] saving calibration to flash\n");
     flash_save();
     log_clear(INFO);
     return true;
