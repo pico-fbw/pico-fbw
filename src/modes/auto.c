@@ -80,12 +80,12 @@ bool mode_autoInit() {
     pid_init(&vertGuid);
     // Load the first altitude from the flightplan (subsequent altitudes will be loaded on waypoint interception)
     // if it is -5 (default) just discard it (by setting it to our current alt; no change)
-    if (gps_isAltOffsetCalibrated()) {
+    if (gps.altOffset_calibrated) {
         if (fplan[currentWaypoint].alt < -5) {
             alt = gps.alt;
         } else {
             // Factor in the altitude offset calculated earlier, if applicable
-            alt = fplan[currentWaypoint].alt + gps_getAltOffset();
+            alt = fplan[currentWaypoint].alt + gps.altOffset;
         }
     } else {
         if (fplan[currentWaypoint].alt < -5) {
@@ -109,7 +109,7 @@ void mode_auto() {
     distance = calculateDistance(gps.lat, gps.lng, fplan[currentWaypoint].lat, fplan[currentWaypoint].lng);
 
     // Nested PIDs; latGuid and vertGuid use gps data to command bank/pitch angles which the flight PIDs then use to actuate servos
-    pid_update(&latGuid, bearing, gps.trk_true); // Don't use IMU heading because that's not always going to be navigational
+    pid_update(&latGuid, bearing, gps.trk); // Don't use IMU heading because that's not always going to be navigational (more likely magnetic)
     pid_update(&vertGuid, alt, gps.alt);
     flight_update(latGuid.out, vertGuid.out, 0, false);
 
@@ -123,12 +123,12 @@ void mode_auto() {
             return;
         } else {
             // Load the next altitude
-            if (gps_isAltOffsetCalibrated()) {
+            if (gps.altOffset_calibrated) {
                 if (fplan[currentWaypoint].alt < -5) {
                     alt = gps.alt;
                 } else {
                     // Factor in the altitude offset calculated earlier
-                    alt = fplan[currentWaypoint].alt + gps_getAltOffset();
+                    alt = fplan[currentWaypoint].alt + gps.altOffset;
                 }
             } else {
                 if (fplan[currentWaypoint].alt < -5) {

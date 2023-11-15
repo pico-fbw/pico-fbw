@@ -42,6 +42,7 @@ static inline bool trk_valid(float trk) {
     return trk >= 0 && isfinite(trk);
 }
 
+// (DOP stands for dilution of precision, basically a mesaure of how confident the GPS is in its output)
 static inline bool dop_valid(float pdop, float hdop, float vdop) {
     return pdop < GPS_SAFE_PDOP_THRESHOLD && hdop < GPS_SAFE_HDOP_THRESHOLD &&
            vdop < GPS_SAFE_VDOP_THRESHOLD;
@@ -79,7 +80,8 @@ bool gps_init() {
             // PMTK manual: https://cdn.sparkfun.com/assets/parts/1/2/2/8/0/PMTK_Packet_User_Manual.pdf
             // Enable the correct sentences
             sleep_ms(1800); // Acknowledgement is a hit or miss without a delay
-            uart_write_blocking(GPS_UART, (const uint8_t*)"$PMTK314,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n", 49); // VTG, GGA, GSA enabled once per fix
+            // VTG enabled 5x per fix (for fast track updates), GGA, GSA enabled once per fix
+            uart_write_blocking(GPS_UART, (const uint8_t*)"$PMTK314,0,0,5,1,1,0,0,0,0,0,0,0,0,0,0,0,0*2D\r\n", 49);
             // Check up to 30 sentences for the acknowledgement
             uint8_t lines = 0;
             while (lines < 30) {
@@ -106,30 +108,22 @@ bool gps_init() {
 
 void gps_deinit() { uart_deinit(GPS_UART); }
 
-GPS gps_getData() {
-    /* These variables are static so that they persist between calls to gps_getData()
-    This is due to the nature of how getting the data works--one line at a time
-    If data was not saved between calls, one call would, for example, return correct coordinates but incorrect alt, and the next
-    would return incorrect coordinates but correct alt. */
-    static long double lat, lng = -200.0;
-    static int alt = -1;
-    static float spd, trk_true = -1.0f;
-    static float pdop, hdop, vdop = -1.0f;
-
-    // Read a line from the GPS and parse it
+void gps_update() {
+    // Read line(s) from the GPS and parse them until there are none remaining
     char *line = uart_read_line(GPS_UART);
-    if (line != NULL) {
+    while (line != NULL) {
         switch (minmea_sentence_id(line, false)) {
             case MINMEA_SENTENCE_GGA: {
                 minmea_sentence_gga gga;
                 if (minmea_parse_gga(&gga, line)) {
-                    lat = minmea_tocoord(&gga.latitude);
-                    lng = minmea_tocoord(&gga.longitude);
+                    gps.lat = minmea_tocoord(&gga.latitude);
+                    gps.lng = minmea_tocoord(&gga.longitude);
                     if (strncmp(&gga.altitude_units, "M", 1) == 0) {
-                        alt = (int)(minmea_tofloat(&gga.altitude) * 3.28084f); // Conversion from meters to feet
+                        gps.alt = (int)(minmea_tofloat(&gga.altitude) * 3.28084f); // Conversion from meters to feet
                     } else {
                         aircraft.setGPSSafe(false);
-                        return (GPS){INFINITY};
+                        if (print.fbw) printf("[gps] ERROR: incorrect altitude units!\n");
+                        return;
                     }
                 } else {
                     if (print.gps) printf("[gps] ERROR: failed parsing $xxGGA sentence\n");
@@ -139,9 +133,9 @@ GPS gps_getData() {
             case MINMEA_SENTENCE_GSA: {
                 minmea_sentence_gsa gsa;
                 if (minmea_parse_gsa(&gsa, line)) {
-                    pdop = minmea_tofloat(&gsa.pdop);
-                    hdop = minmea_tofloat(&gsa.hdop);
-                    vdop = minmea_tofloat(&gsa.vdop);
+                    gps.pdop = minmea_tofloat(&gsa.pdop);
+                    gps.hdop = minmea_tofloat(&gsa.hdop);
+                    gps.vdop = minmea_tofloat(&gsa.vdop);
                 } else {
                     if (print.gps) printf("[gps] ERROR: failed parsing $xxGSA sentence\n");
                 }
@@ -150,37 +144,26 @@ GPS gps_getData() {
             case MINMEA_SENTENCE_VTG: {
                 minmea_sentence_vtg vtg;
                 if (minmea_parse_vtg(&vtg, line)) {
-                    spd = minmea_tofloat(&vtg.speed_knots);
-                    trk_true = minmea_tofloat(&vtg.true_track_degrees);
+                    gps.spd = minmea_tofloat(&vtg.speed_knots);
+                    gps.trk = minmea_tofloat(&vtg.true_track_degrees);
                 } else {
                     if (print.gps) printf("[gps] ERROR: failed parsing $xxVTG sentence\n");
                 }
                 break;
             }
             
-            /* All of these indicate parse errors but happen every so often and don't really mean anything, so they do not warrant a message. */
+            // All of these indicate parse errors but happen every so often and don't really mean anything, so they do not warrant a message
             case MINMEA_INVALID:
             case MINMEA_UNKNOWN:
             default:
                 break;
         }
+        // Clear the line and attempt to read in a new one
         free(line);
+        line = uart_read_line(GPS_UART);
     }
-
-    if (data_valid(lat, lng, alt, spd, trk_true, pdop, hdop, vdop)) {
-        aircraft.setGPSSafe(true);
-    } else {
-        aircraft.setGPSSafe(false);
-        return (GPS){INFINITY, INFINITY, -1, INFINITY, INFINITY};
-    }
-    return (GPS){lat, lng, alt, spd, trk_true};
+    aircraft.setGPSSafe(data_valid(gps.lat, gps.lng, gps.alt, gps.spd, gps.trk, gps.pdop, gps.hdop, gps.vdop));
 }
-
-static int altOffset = 0; // The offset of the aircraft's altitude in feet
-int gps_getAltOffset() { return altOffset; }
-
-static bool altOffsetCalibrated = false;
-bool gps_isAltOffsetCalibrated() { return altOffsetCalibrated; }
 
 int gps_calibrateAltOffset(uint num_samples) {
     log_message(INFO, "Calibrating altitude", 1000, 100, false);
@@ -221,9 +204,26 @@ int gps_calibrateAltOffset(uint num_samples) {
         if (print.fbw) printf("[gps] ERROR: altitude calibration timed out\n");
         return PICO_ERROR_TIMEOUT;
     } else {
-        altOffset = (int)(alts / samples);
-        if (print.fbw) printf("[gps] altitude offset calculated as: %d\n", altOffset);
-        altOffsetCalibrated = true;
+        gps.altOffset = (int)(alts / samples);
+        if (print.fbw) printf("[gps] altitude offset calculated as: %d\n", gps.altOffset);
+        gps.altOffset_calibrated = true;
         return 0;
     }
 }
+
+GPS gps = {
+    .lat = -200.0,
+    .lng = -200.0,
+    .alt = -1,
+    .spd = -1.0f,
+    .trk = -1.0f,
+    .pdop = -1.0f,
+    .hdop = -1.0f,
+    .vdop = -1.0f,
+    .altOffset = 0,
+    .altOffset_calibrated = false,
+    .init = gps_init,
+    .deinit = gps_deinit,
+    .update = gps_update,
+    .calibrateAltOffset = gps_calibrateAltOffset,
+};

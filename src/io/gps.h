@@ -24,53 +24,41 @@ typedef enum GPSCommandType {
 #define GPS_SAFE_HDOP_THRESHOLD 5
 #define GPS_SAFE_VDOP_THRESHOLD 3
 
-// TODO: naturally, once gps is done it needs to be added to wiki
+// TODO: gps needs to be added to wiki
 
-/**
- * Initializes the GPS module.
- * @return true if successful, false if not.
-*/
-bool gps_init();
+typedef bool (*gps_init_t)();
+typedef void (*gps_deinit_t)();
+typedef void (*gps_update_t)();
+typedef int (*gps_calibrateAltOffset_t)(uint);
 
-/**
- * Deinitializes the GPS module.
-*/
-void gps_deinit();
-
-/**
- * Contains latitude and longitude coordinates, altitude, speed, and true track
- * from a connected GPS module when filled using gps_getData().
-*/ 
 typedef struct GPS {
-    long double lat;
-    long double lng;
+    long double lat, lng;
     int alt;
-    float spd;
-    float trk_true;
+    float spd, trk;
+    float pdop, hdop, vdop;
+    int altOffset; // This is a positive value (basically where the GPS is MSL) or possibly zero if no calibration has been performed.
+    bool altOffset_calibrated;
+    /**
+     * Initializes the GPS module.
+     * @return true if successful, false if not.
+    */
+    gps_init_t init;
+    /**
+     * Deinitializes the GPS module.
+    */
+    gps_deinit_t deinit;
+    /**
+     * Obtains updated data from the GPS module and stores it in this GPS struct.
+    */
+    gps_update_t update;
+    /**
+     * Calibrates the altitude offset from the GPS.
+     * @param num_samples the number of samples to take.
+     * @return 0 if successful, PICO_ERROR_TIMEOUT if a timeout occured, or PICO_ERROR_GENERIC otherwise.
+    */
+    gps_calibrateAltOffset_t calibrateAltOffset;
 } GPS;
 
-/**
- * Gets the current coordinates from the GPS module.
- * @return an updated GPS struct.
-*/
-GPS gps_getData();
-
-/**
- * @return the current altitude offset from prior GPS altitude calibration.
- * @note This is a positive value (basically where the GPS is MSL) or possibly zero if no calibration has been performed.
-*/
-int gps_getAltOffset();
-
-/**
- * @return true if the GPS altitude offset has been calibrated, false if not.
-*/
-bool gps_isAltOffsetCalibrated();
-
-/**
- * Calibrates the altitude offset from the GPS.
- * @param num_samples the number of samples to take.
- * @return 0 if successful, PICO_ERROR_TIMEOUT if a timeout occured, or PICO_ERROR_GENERIC otherwise.
-*/
-int gps_calibrateAltOffset(uint num_samples);
+extern GPS gps;
 
 #endif // __GPS_H

@@ -196,6 +196,7 @@ int main() {
                 break;
         }
         aircraft.update();
+        gps.update();
         if ((bool)flash.general[GENERAL_API_ENABLED]) api_poll();
         watchdog_update();
     }

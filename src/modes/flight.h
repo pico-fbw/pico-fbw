@@ -3,8 +3,6 @@
 
 #include "../io/gps.h"
 
-extern GPS gps; // Contains the aircraft's GPS positioning data, will be updated whenever flight_update is called.
-
 /**
  * Initializes the flight system (axis PIDs).
 */

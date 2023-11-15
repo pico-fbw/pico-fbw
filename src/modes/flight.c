@@ -18,8 +18,6 @@
 
 #include "flight.h"
 
-GPS gps;
-
 static PIDController roll_c;
 static PIDController pitch_c;
 
@@ -62,10 +60,6 @@ void flight_init() {
 }
 
 void flight_update(double roll, double pitch, double yaw, bool override) {
-    // Update input data
-    // AAHRS is updated asyncronously by core 1; we only need to update GPS when applicable
-    if (flash.sensors[SENSORS_GPS_COMMAND_TYPE] != GPS_COMMAND_TYPE_NONE) gps = gps_getData();
-
     // Check flight envelope for irregularities
     if (fabsf(aahrs.roll) > 72 || aahrs.pitch > 35 || aahrs.pitch < -20) {
         if (print.fbw) printf("WARNING: flight envelope exceeded! (roll: %f, pitch: %f, yaw: %f)\n",

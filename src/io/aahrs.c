@@ -37,15 +37,6 @@ static StatusSubsystem status;
 static struct PhysicalSensor *sensors;
 static uint rateDelay = 0; // Delay between fusion algorithm runs in microseconds
 
-// Default the public AAHRS struct to unsafe values, the fusion algorithm will fill it in when safe
-AAHRS aahrs = {
-    .roll = INFINITY,
-    .pitch = INFINITY,
-    .yaw = INFINITY,
-    .alt = -1,
-    .lock = true
-};
-
 void aahrs_update(void) {
     multicore_lockout_victim_init();
     absolute_time_t runFusionT = make_timeout_time_us(rateDelay);
@@ -125,3 +116,13 @@ void aahrs_deinit() {
     aahrs.yaw = INFINITY;
     aahrs.alt = -1;
 }
+
+AAHRS aahrs = {
+    .roll = INFINITY,
+    .pitch = INFINITY,
+    .yaw = INFINITY,
+    .alt = -1,
+    .lock = true,
+    .init = aahrs_init,
+    .deinit = aahrs_deinit
+};

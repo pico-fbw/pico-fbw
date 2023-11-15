@@ -3,8 +3,8 @@
  * Licensed under the GNU GPL-3.0
 */
 
+#include <math.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include "pico/rand.h"
 #include "pico/time.h"
 #include "pico/types.h"
@@ -18,7 +18,7 @@
 #include "test_pwm.h"
 
 uint api_test_pwm(const char *cmd, const char *args) {
-    if (aircraft.mode() == MODE_DIRECT) {
+    if (aircraft.mode == MODE_DIRECT) {
         uint in[] = {flash.pins[PINS_INPUT_AIL], flash.pins[PINS_INPUT_ELEV], flash.pins[PINS_INPUT_RUD],
                      flash.pins[PINS_INPUT_THROTTLE], flash.pins[PINS_INPUT_SWITCH]};
         uint out[] = {flash.pins[PINS_SERVO_AIL], flash.pins[PINS_SERVO_ELEV], flash.pins[PINS_SERVO_RUD],
@@ -37,9 +37,9 @@ uint api_test_pwm(const char *cmd, const char *args) {
             uint16_t deg = get_rand_32() % 180;
             servo_set(out[i], deg);
             sleep_ms(100);
-            uint16_t degRead = (uint16_t)pwm_read(in[i], PWM_MODE_DEG);
-            if (abs(deg - degRead) > MAX_PWM_DEV) {
-                printf("[api] failed! read %d, expected %d\n", degRead, deg);
+            float degRead = pwm_read(in[i], PWM_MODE_DEG);
+            if (fabsf(deg - degRead) > flash.control[CONTROL_DEADBAND]) {
+                printf("[api] failed! read %f, expected %d\n", degRead, deg);
                 return 500;
             }
         }

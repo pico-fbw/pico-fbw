@@ -25,6 +25,9 @@ typedef enum BaroModel {
 } BaroModel;
 #define BARO_MODEL_MAX BARO_MODEL_DPS310
 
+typedef bool (*aahrs_init_t)();
+typedef void (*aahrs_deinit_t)();
+
 // Altitude-Attitude Heading Reference System (AAHRS)
 typedef struct AAHRS {
     float roll;
@@ -34,6 +37,15 @@ typedef struct AAHRS {
     // Whether AAHRS should lock the opposite core when writing values
     // This should be false ONLY when it is certain AAHRS is not being accessed and critical operations must be performed!
     volatile bool lock;
+    /**
+     * Initializes the AAHRS computation layer, sensor hardware, and underlying fusion algorithms.
+     * @return true if successful, false if not.
+    */
+    aahrs_init_t init;
+    /**
+     * Deinitializes and stops the AAHRS system.
+    */
+    aahrs_deinit_t deinit;
 } AAHRS;
 
 extern AAHRS aahrs;
@@ -43,16 +55,5 @@ extern AAHRS aahrs;
 */
 #define ANGLE_DIFFERENCE(a1, a2) \
     ((a2 - a1 + 180) % 360 - 180) < -180 ? ((a2 - a1 + 180) % 360 - 180) + 360 : ((a2 - a1 + 180) % 360 - 180)
-
-/**
- * Initializes the AAHRS computation layer, sensor hardware, and underlying fusion algorithms.
- * @return true if successful, false if not.
-*/
-bool aahrs_init();
-
-/**
- * Deinitializes and stops the AAHRS system.
-*/
-void aahrs_deinit();
 
 #endif // __AAHRS_H

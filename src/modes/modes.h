@@ -14,14 +14,14 @@ typedef enum Mode {
 #define MODE_MAX MODE_HOLD
 
 typedef void (*aircraft_update_t)();
-typedef void (*aircraft_changeto_t)(Mode);
-typedef Mode (*aircraft_mode_t)();
-typedef void (*aircraft_setaahrssafe_t)(bool);
-typedef bool (*aircraft_aahrssafe_t)();
-typedef void (*aircraft_setgpssafe_t)(bool);
-typedef bool (*aircraft_gpssafe_t)();
+typedef void (*aircraft_changeTo_t)(Mode);
+typedef void (*aircraft_setAAHRSSafe_t)(bool);
+typedef void (*aircraft_setGPSSafe_t)(bool);
 
 typedef struct Aircraft {
+    Mode mode;
+    bool AAHRSSafe;
+    bool GPSSafe;
     /**
      * Runs the code of the system's currently selected mode.
     */
@@ -30,27 +30,15 @@ typedef struct Aircraft {
      * Transitions the aircraft to a specified mode.
      * @param mode The mode to transition to.
     */
-    aircraft_changeto_t changeTo;
-    /**
-     * @return The current mode of the system.
-    */
-    aircraft_mode_t mode;
+    aircraft_changeTo_t changeTo;
     /**
      * @param state Declares whether or not the AAHRS data is safe to use.
     */
-    aircraft_setaahrssafe_t setAAHRSSafe;
-    /**
-     * @return Whether or not the AAHRS data is safe to use.
-    */
-    aircraft_aahrssafe_t AAHRSSafe;
+    aircraft_setAAHRSSafe_t setAAHRSSafe;
     /**
      * @param state Declares whether or not the GPS data is safe to use.
     */
-    aircraft_setgpssafe_t setGPSSafe;
-    /**
-     * @return Whether or not the GPS data is safe to use.
-    */
-    aircraft_gpssafe_t GPSSafe;
+    aircraft_setGPSSafe_t setGPSSafe;
 } Aircraft;
 
 extern Aircraft aircraft;

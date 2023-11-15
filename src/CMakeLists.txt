@@ -35,22 +35,7 @@ add_subdirectory(sys)
 # LWIP and the whole HTTP stack only gets compiled if the Pico W is detected (this is all done in the Wi-Fly subdirectory).
 add_subdirectory(wifly)
 
-
-# --- Reset program ---
-
-add_executable(pico-fbw-reset reset.c)
-pico_add_extra_outputs(pico-fbw-reset)
-target_link_libraries(pico-fbw-reset
-    fbw_io
-    pico_bootrom
-)
-pico_set_binary_type(pico-fbw-reset no_flash) # set the executable to upload to RAM because we are dealing with erasing flash
-install(TARGETS pico-fbw-reset DESTINATION ${CMAKE_INSTALL_PREFIX})
-
 # At the end of the build process, move the final binaries to the buildroot for easier access
 add_custom_command(TARGET pico-fbw POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E rename "${CMAKE_BINARY_DIR}/src/${PROJECT_NAME}.uf2" "${CMAKE_BINARY_DIR}/${PROJECT_NAME}.uf2"
-)
-add_custom_command(TARGET pico-fbw-reset POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E rename "${CMAKE_BINARY_DIR}/src/pico-fbw-reset.uf2" "${CMAKE_BINARY_DIR}/pico-fbw-reset.uf2"
 )

@@ -14,7 +14,7 @@
 #include "test_servo.h"
 
 uint api_test_servo(const char *cmd, const char *args) {
-    if (aircraft.mode() == MODE_DIRECT) {
+    if (aircraft.mode == MODE_DIRECT) {
         uint num_servos = 3;
         uint servos[num_servos];
         const uint16_t degrees[] = DEFAULT_SERVO_TEST;

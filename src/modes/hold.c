@@ -29,7 +29,7 @@ static PIDController vertGuid;
 // Callback for when a turnaround should be completed in a holding pattern.
 static int64_t hold_callback(alarm_id_t id, void *data) {
     // Get current track (beginning of the turn)
-    oldTrack = gps.trk_true;
+    oldTrack = gps.trk;
     // Set our target heading based on this (with wrap protection)
     targetTrack = (oldTrack + 180);
     if (targetTrack > 360) {
@@ -64,7 +64,7 @@ void mode_hold() {
             break;    
         case HOLD_TURN_INPROGRESS:
             // Wait until it is time to decrease the turn
-            if (fabsf(targetTrack - gps.trk_true) <= HOLD_HEADING_DECREASE_WITHIN) {
+            if (fabsf(targetTrack - gps.trk) <= HOLD_HEADING_DECREASE_WITHIN) {
                 turnStatus = HOLD_TURN_ENDING;
             }
             break;
@@ -74,7 +74,7 @@ void mode_hold() {
                 rollSet -= (HOLD_TURN_BANK_ANGLE * flash.control[CONTROL_RUDDER_SENSITIVITY]);
             }
             // Move on to stabilization once we've intercepted the target heading
-            if (fabsf(targetTrack - gps.trk_true) <= HOLD_HEADING_INTERCEPT_WITHIN) {
+            if (fabsf(targetTrack - gps.trk) <= HOLD_HEADING_INTERCEPT_WITHIN) {
                 turnStatus = HOLD_TURN_STABILIZING;
             }
             break;
