@@ -46,7 +46,7 @@ void fInitializeMagCalibration(struct MagCalibration *pthisMagCal,
 #ifndef SIMULATION
     float   *pFlash;    // pointer to flash float words
     float   cal_vals[16];    // cal values from flash
-    if (GetMagCalibrationFromNVM(cal_vals))
+    if (GetMagCalibrationFromFlash(cal_vals))
     {
       pFlash = cal_vals;
       // a magnetic calibration is present in flash

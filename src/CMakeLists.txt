@@ -28,7 +28,7 @@ if ("$CACHE{PICO_BOARD}" STREQUAL "pico_w")
 endif ()
 
 add_subdirectory(io)
-add_subdirectory(lib) # TODO: is it possible to move lib outside of the src/ dir (/include)? I tried and it did not go well...
+add_subdirectory(lib)
 add_subdirectory(modes)
 add_subdirectory(sys)
 # Wi-Fly is always enabled in some capacity (to allow for the API to interact with it regardless of Pico W).

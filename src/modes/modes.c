@@ -89,7 +89,7 @@ void changeTo(Mode newMode) {
                     if (aircraft.GPSSafe) {
                         // Check to see if we have to calibrate the GPS alt offset
                         if (wifly_getNumAltSamples() > 0) {
-                            gps_calibrateAltOffset(wifly_getNumAltSamples());
+                            gps.calibrateAltOffset(wifly_getNumAltSamples());
                         }
                         if (print.fbw) printf("[modes] entering auto mode\n");
                         if (mode_autoInit()) {
@@ -142,7 +142,7 @@ void setAAHRSSafe(bool state) {
         } else {
             // Change to direct mode as it doesn't require AAHRS, and deinit
             changeTo(MODE_DIRECT);
-            aahrs_deinit();
+            aahrs.deinit();
             if (print.fbw) printf("[modes] AAHRS set as unsafe\n");
         }
     }

@@ -132,7 +132,7 @@ int main() {
 
     // AAHRS
     platform_boot_setProgress(65, "Initializing AAHRS");
-    if (!aahrs_init()) {
+    if (!aahrs.init) {
         log_message(ERROR, "AAHRS initialization failed!", 1000, 0, false);
     }
 
@@ -140,7 +140,7 @@ int main() {
     if ((GPSCommandType)flash.sensors[SENSORS_GPS_COMMAND_TYPE] != GPS_COMMAND_TYPE_NONE) {
         while (time_us_64() < (1000 * 1000));
         platform_boot_setProgress(80, "Initializing GPS");
-        if (gps_init()) {
+        if (gps.init) {
             if (print.fbw) printf("[boot] GPS ok\n");
             // We don't set the GPS safe just yet, communications have been established but we are still unsure if the data is okay
             log_message(LOG, "GPS has no signal.", 2000, 0, false);

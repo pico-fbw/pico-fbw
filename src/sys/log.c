@@ -125,12 +125,12 @@ static void log_displayEntry(LogEntry *entry) {
             }
         } else if (strlen(entry->msg) < DISPLAY_MAX_LINE_LEN * 2) {
             // Get a substring of the first and last DISPLAY_MAX_LINE_LEN chars to display across two lines
-            char line1[DISPLAY_MAX_LINE_LEN] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
-            char line2[DISPLAY_MAX_LINE_LEN] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
+            char line1[DISPLAY_MAX_LINE_LEN + 1] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
+            char line2[DISPLAY_MAX_LINE_LEN + 1] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
             if (entry->msg[DISPLAY_MAX_LINE_LEN] != ' ') {
                 strncpy(line1, entry->msg, DISPLAY_MAX_LINE_LEN - 1);
-                line1[DISPLAY_MAX_LINE_LEN] = '\0';
                 line1[DISPLAY_MAX_LINE_LEN - 1] = '-';
+                line1[DISPLAY_MAX_LINE_LEN] = '\0';
                 strncpy(line2, entry->msg + DISPLAY_MAX_LINE_LEN - 1, DISPLAY_MAX_LINE_LEN);
                 line2[DISPLAY_MAX_LINE_LEN] = '\0';
             } else {

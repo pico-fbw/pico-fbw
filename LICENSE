@@ -35,6 +35,7 @@ BSD 3-Clause License
 
 The following files (and their corresponding Header [.h] files, when applicable) of this project utilize code that is licensed under the BSD 3-Clause License:
 
+- aahrs.c
 - acc.c
 - approx.c
 - bno055.c

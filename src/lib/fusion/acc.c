@@ -30,7 +30,7 @@ void fInitializeAccelCalibration(AccelCalibration *pthisAccelCal,
 #ifndef SIMULATION
     float   *pFlash;    // pointer to flash float words
     float   cal_vals[21];    // cal values from flash
-    if (GetAccelCalibrationFromNVM(cal_vals))
+    if (GetAccelCalibrationFromFlash(cal_vals))
     {
       pFlash = cal_vals;
       // precision Accel calibration is present in flash
@@ -147,6 +147,8 @@ void fInvertAccelCal(struct AccelSensor *pthisAccel,
 
     return;
 }
+
+// TODO: allow monitoring which type of calibration is occuring?
 
 // function runs the precision accelerometer calibration
 void fRunAccelCalibration(AccelCalibration *pthisAccelCal,

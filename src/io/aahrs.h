@@ -27,6 +27,7 @@ typedef enum BaroModel {
 
 typedef bool (*aahrs_init_t)();
 typedef void (*aahrs_deinit_t)();
+typedef bool (*aahrs_calibrate_t)();
 
 // Altitude-Attitude Heading Reference System (AAHRS)
 typedef struct AAHRS {
@@ -46,13 +47,17 @@ typedef struct AAHRS {
      * Deinitializes and stops the AAHRS system.
     */
     aahrs_deinit_t deinit;
+    /**
+     * Initiates a calibration of the AAHRS system.
+     * This includes relavent accelerometer, magnetometer, gyroscope, and barometer calibration.
+     * @return true if successful, false if not.
+    */
+    aahrs_calibrate_t calibrate;
 } AAHRS;
 
 extern AAHRS aahrs;
 
-/**
- * Obtains the difference between two angles in degrees.
-*/
+// Obtains the difference between two angles in degrees.
 #define ANGLE_DIFFERENCE(a1, a2) \
     ((a2 - a1 + 180) % 360 - 180) < -180 ? ((a2 - a1 + 180) % 360 - 180) + 360 : ((a2 - a1 + 180) % 360 - 180)
 

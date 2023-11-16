@@ -1,6 +1,7 @@
 #ifndef __FUSION_H
 #define __FUSION_H
 
+// https://www.nxp.com/docs/en/user-guide/NSFK_Prod_UG.pdf
 // https://www.nxp.com/docs/en/data-sheet/NSFK_DS.pdf
 
 #include <math.h>

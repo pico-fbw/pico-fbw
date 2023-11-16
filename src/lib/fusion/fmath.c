@@ -305,7 +305,7 @@ void fInit_6DOF_GY_KALMAN(struct SV_6DOF_GY_KALMAN *pthisSV,
     // check to see if a gyro calibration exists in flash, and load it
 #ifndef SIMULATION
     float   pFlash[3];    // pointer to flash float words
-    if (GetGyroCalibrationFromNVM(pFlash))
+    if (GetGyroCalibrationFromFlash(pFlash))
     {
         // copy the gyro calibration from flash into the state vector
         for (i = CHX; i <= CHZ; i++) pthisSV->fbPl[i] = pFlash[i];
@@ -370,7 +370,7 @@ void fInit_9DOF_GBY_KALMAN(struct SV_9DOF_GBY_KALMAN *pthisSV, struct AccelSenso
     // check to see if a gyro calibration exists in flash
 #ifndef SIMULATION
     float   pFlash[3];    // pointer to flash float words
-    if (GetGyroCalibrationFromNVM(pFlash))
+    if (GetGyroCalibrationFromFlash(pFlash))
     {
         // copy the gyro calibration from flash into the state vector
         for (i = CHX; i <= CHZ; i++) pthisSV->fbPl[i] = pFlash[i];

@@ -13,8 +13,9 @@
 #include "aahrs.h"
 #include "gps.h"
 #include "pwm.h"
-#include "../wifly/wifly.h"
+#include "../lib/fusion/calibration.h"
 #include "../sys/switch.h"
+#include "../wifly/wifly.h"
 
 typedef enum SectorBoot {
     BOOT_FLAG
@@ -182,7 +183,7 @@ typedef struct Flash {
     float boot[FLOAT_SECTOR_SIZE];
     float pwm[FLOAT_SECTOR_SIZE];
     float pid[FLOAT_SECTOR_SIZE];
-    float aahrs[FLOAT_SECTOR_SIZE * 8]; // AAHRS is given a large block of flash to store calibrations; it has its own FS
+    float aahrs[FUSION_CALIBRATION_STORAGE_SIZE];
     /* User-defined config */
     float general[FLOAT_SECTOR_SIZE];
     float control[FLOAT_SECTOR_SIZE];
@@ -194,7 +195,7 @@ typedef struct Flash {
     char wifly_ssid[STRING_SECTOR_SIZE];
     char wifly_pass[STRING_SECTOR_SIZE];
 } Flash;
-#define NUM_FLOAT_SECTORS 16 // AAHRS counts as 8
+#define NUM_FLOAT_SECTORS (8 + (FUSION_CALIBRATION_STORAGE_SIZE / sizeof(float)))
 #define NUM_STRING_SECTORS 3
 
 #define SIZEOF_FLOAT_SECTORS (NUM_FLOAT_SECTORS * FLOAT_SECTOR_SIZE)

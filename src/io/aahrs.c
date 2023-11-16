@@ -117,6 +117,11 @@ void aahrs_deinit() {
     aahrs.alt = -1;
 }
 
+bool aahrs_calibrate() {
+    // TODO: do we have to invoke calibration or is it automatic?
+    // at least give a procedure for the user here, because I know for a fact you have to move the sensor around a bit
+}
+
 AAHRS aahrs = {
     .roll = INFINITY,
     .pitch = INFINITY,
@@ -124,5 +129,6 @@ AAHRS aahrs = {
     .alt = -1,
     .lock = true,
     .init = aahrs_init,
-    .deinit = aahrs_deinit
+    .deinit = aahrs_deinit,
+    .calibrate = aahrs_calibrate
 };

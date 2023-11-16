@@ -7,14 +7,7 @@
 
 #include "drivers.h"
 
-int8_t BNO055_init_accel(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
-int8_t BNO055_init_mag(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
-int8_t BNO055_init_gyro(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
 int8_t BNO055_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
-
-int8_t BNO055_read_accel(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
-int8_t BNO055_read_mag(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
-int8_t BNO055_read_gyro(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
 int8_t BNO055_read(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
 
 /* I2C Addresses */

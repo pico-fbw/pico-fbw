@@ -14,6 +14,8 @@
 #ifndef __FCONFIG_H
 #define __FCONFIG_H
 
+// TODO: take most important things out of FCONFIG and make them runtime
+
 #define I2C_FREQ_KHZ 400 // Frequency to use on the sensor i2c bus
 
 // sensor hardware details
@@ -69,7 +71,7 @@
 #define F_9DOF_GBY_KALMAN \
     0x4000 ///< 9DOF accel, mag and gyro algorithm selector                  - 0x4000 to include, 0x0000 otherwise
 #define F_9DOF_GBY_KALMAN_SYSTICK \
-    6742 // Measured systick on RP2040 running 9DOF_GBY_KALMAN
+    6742 // Measured average systick on RP2040 running 9DOF_GBY_KALMAN
 ///@}
 
 /// @name SensorParameters
@@ -78,11 +80,8 @@
 #define GYRO_ODR_HZ     400 ///< (int) requested gyroscope ODR Hz
 #define ACCEL_ODR_HZ    200 ///< (int) requested accelerometer ODR Hz (overrides MAG_ODR_HZ for FXOS8700)
 #define MAG_ODR_HZ      200 ///< (int) requested magnetometer ODR Hz (overridden by ACCEL_ODR_HZ for FXOS8700)
-#define LOOP_RATE_HZ     40 //adjust according to the size of the FIFOs on sensors. If no FIFO (e.g. 
-//FXOS8700 magnetometer) and don't want to skip any readings then need to read at same rate as ODR. 
-//If FIFO exists or willing to skip readings, then usually set same as FUSION_HZ. See also sensor_fusion_class.h
-#define FUSION_HZ       40  ///< (int) rate of fusion algorithm execution
+#define FUSION_HZ       25  ///< (int) rate of fusion algorithm execution
 #define MIN_SYSTICK_DEVIATION 5 // Min deviation to where the algorithm will attempt to correct the systick in us
-#define MAX_SYSTICK_DEVIATION 50 // Max acceptable deviation from the expected systick in us--algorithm will crash if this is exceeded
+#define MAX_SYSTICK_DEVIATION 20 // Max acceptable deviation from the expected systick in us--algorithm will crash if this is exceeded
 
 #endif // __FCONFIG_H
