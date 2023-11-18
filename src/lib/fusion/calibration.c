@@ -109,7 +109,7 @@ void SaveMagCalibrationToFlash(SensorFusionGlobals *sfg) {
 void SaveGyroCalibrationToFlash(SensorFusionGlobals *sfg) {
     #if F_USING_GYRO && (F_9DOF_GBY_KALMAN || F_6DOF_GY_KALMAN)
         // Obtain source of the data which is different per fusion algorithm
-        float *src;
+        float (*src)[3];
         #if F_9DOF_GBY_KALMAN
             src = &(sfg->SV_9DOF_GBY_KALMAN.fbPl);
         #elif F_6DOF_GY_KALMAN

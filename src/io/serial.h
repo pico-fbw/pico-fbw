@@ -4,11 +4,11 @@
 #include "hardware/uart.h"
 
 // Timeout between waiting for characters in the stdio read function (in microseconds)
-#define STDIO_TIMEOUT_US 100
+#define STDIO_TIMEOUT_US 1000
 
 // Timeout between waiting for characters in the UART read function (in microseconds)
-// This is currently only used for GPS modules which operate at a lower baud, so this value must be higher
-#define UART_TIMEOUT_US (STDIO_TIMEOUT_US * 30)
+// This is used for GPS modules which operate at a lower baud, so this value must be higher
+#define UART_TIMEOUT_US (STDIO_TIMEOUT_US * 4)
 
 /**
  * Reads a line from stdin if available.

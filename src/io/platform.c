@@ -1,4 +1,10 @@
 /**
+ * Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
+ * 
+ * This file utilizes code under the BSD-3-Clause License. See "LICENSE" for details.
+*/
+
+/**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU GPL-3.0
 */
@@ -10,8 +16,12 @@
 #include "pico/time.h"
 
 #include "hardware/gpio.h"
+#include "hardware/sync.h"
 #include "hardware/watchdog.h"
+#include "hardware/structs/ioqspi.h"
+#include "hardware/structs/sio.h"
 
+#include "aahrs.h"
 #include "display.h"
 #include "flash.h"
 
@@ -113,6 +123,21 @@ void platform_boot_complete() {
     isBooted = true;
 }
 
+BootType platform_boot_type() {
+    if (watchdog_caused_reboot()) {
+        // If the reboot was intentional (forced by firmware or API), WATCHDOG_FORCE_MAGIC would have been set
+        if (watchdog_hw->scratch[0] == WATCHDOG_FORCE_MAGIC) {
+            return BOOT_REBOOT;
+        } else if (watchdog_hw->scratch[0] == WATCHDOG_TIMEOUT_MAGIC) {
+            return BOOT_WATCHDOG; // Not good...watchdog had to reboot while program was running (after boot)
+        } else {
+            return BOOT_BOOTSEL; // Watchdog caused reboot before pico-fbw finished booting, likely BOOTSEL (it uses watchdog)
+        }
+    } else {
+        return BOOT_COLD;
+    }
+}
+
 void __attribute__((noreturn)) platform_reboot(RebootType type) {
     switch (type) {
         case REBOOT_FAST:
@@ -132,24 +157,28 @@ void __attribute__((noreturn)) platform_shutdown() {
 void platform_sleep_ms(uint32_t ms) {
     absolute_time_t wakeup_time = make_timeout_time_ms(ms);
     while (!time_reached(wakeup_time)) {
+        aahrs.update();
         watchdog_update();
         tight_loop_contents();
     }
 }
 
-BootType platform_boot_type() {
-    if (watchdog_caused_reboot()) {
-        // If the reboot was intentional (forced by firmware or API), WATCHDOG_FORCE_MAGIC would have been set
-        if (watchdog_hw->scratch[0] == WATCHDOG_FORCE_MAGIC) {
-            return BOOT_REBOOT;
-        } else if (watchdog_hw->scratch[0] == WATCHDOG_TIMEOUT_MAGIC) {
-            return BOOT_WATCHDOG; // Not good...watchdog had to reboot while program was running (after boot)
-        } else {
-            return BOOT_BOOTSEL; // Watchdog caused reboot before pico-fbw finished booting, likely BOOTSEL (it uses watchdog)
-        }
-    } else {
-        return BOOT_COLD;
-    }
+bool __no_inline_not_in_flash_func(platform_buttonPressed)() {
+    const uint CS_PIN_INDEX = 1;
+    uint32_t intr = save_and_disable_interrupts();
+    // Set chip select to Hi-Z
+    hw_write_masked(&ioqspi_hw->io[CS_PIN_INDEX].ctrl,
+                    GPIO_OVERRIDE_LOW << IO_QSPI_GPIO_QSPI_SS_CTRL_OEOVER_LSB,
+                    IO_QSPI_GPIO_QSPI_SS_CTRL_OEOVER_BITS);
+    for (volatile uint i = 0; i < 1000; i++); // (Can't sleep)
+    // Note the button pulls the pin on QSPI low when pressed.
+    bool btnState = !(sio_hw->gpio_hi_in & (1u << CS_PIN_INDEX));
+    // Restore the state of chip select
+    hw_write_masked(&ioqspi_hw->io[CS_PIN_INDEX].ctrl,
+                    GPIO_OVERRIDE_NORMAL << IO_QSPI_GPIO_QSPI_SS_CTRL_OEOVER_LSB,
+                    IO_QSPI_GPIO_QSPI_SS_CTRL_OEOVER_BITS);
+    restore_interrupts(intr);
+    return btnState;
 }
 
 bool platform_is_pico() {

@@ -7,7 +7,7 @@
 // Floats, not bytes
 // Changing this WILL resize the system's flash FS, so beware! It will likely cause data corruption if not handled correctly.
 // Must also be aligned to FLOAT_SECTOR_SIZE
-#define FUSION_CALIBRATION_STORAGE_SIZE 48
+#define FUSION_CALIBRATION_STORAGE_SIZE 64
 
 bool GetMagCalibrationFromFlash(float *cal_values);
 bool GetGyroCalibrationFromFlash(float *cal_values);

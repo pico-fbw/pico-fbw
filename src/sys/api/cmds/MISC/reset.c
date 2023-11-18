@@ -19,7 +19,7 @@
 uint api_reset(const char *cmd, const char *args) {
     printf("This will erase ALL user data stored on the device!\nReset will occur in 10 seconds...power off the device to cancel.\n");
     platform_sleep_ms(10000);
-    flash_format();
+    flash_erase();
     printf("Reset complete. Shutting down...\n");
     platform_shutdown();
 }

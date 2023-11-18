@@ -57,6 +57,7 @@ static bool waitForAxis(IMUAxis axis, uint breakpoint, uint32_t timeout_ms) {
             moved = IMU_AXIS_YAW;
             break;
         }
+        aahrs.update();
         watchdog_update();
     }
     return moved == axis;

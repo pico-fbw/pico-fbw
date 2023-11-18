@@ -437,7 +437,7 @@ typedef struct SensorFusionGlobals
 	struct PhysicalSensor *pSensors;    	        ///< a linked list of physical sensors
 	volatile uint8_t iPerturbation;	        ///< test perturbation to be applied
 	// Book-keeping variables
-	int32_t loopcounter;			///< counter incrementing each iteration of sensor fusion (typically 25Hz)
+	uint64_t loopcounter;			///< counter incrementing each iteration of sensor fusion (typically 25Hz)
 	int32_t systick_I2C;			///< systick counter to benchmark I2C reads
 	int32_t systick_Spare;			///< systick counter for counts spare waiting for timing interrupt
         ///@}

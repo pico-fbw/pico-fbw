@@ -7,6 +7,8 @@
 typedef enum ControlMode {
     CTRLMODE_3AXIS_ATHR,
     CTRLMODE_3AXIS,
+    CTRLMODE_2AXIS_ATHR,
+    CTRLMODE_2AXIS,
     CTRLMODE_FLYINGWING_ATHR,
     CTRLMODE_FLYINGWING
 } ControlMode;
@@ -72,5 +74,11 @@ PWMCalibrationStatus pwm_isCalibrated();
  * @param deviations array of at least 5 elements to fill with pin calibration deviations
 */
 void pwm_getPins(uint *pins, uint *num_pins, float *deviations);
+
+/**
+ * @return true if PWM has been set up with an autothrottle input (aka an autothrottle control mode has been selected),
+ * false if not.
+*/
+bool pwm_hasAthr();
 
 #endif // __PWM_H

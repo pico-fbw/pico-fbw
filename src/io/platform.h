@@ -52,6 +52,11 @@ bool platform_is_booted();
 void platform_boot_complete();
 
 /**
+ * Gets the type of boot that occured.
+*/
+BootType platform_boot_type();
+
+/**
  * Signal to the platform that a reboot is required.
  * @param type the type of reboot to perform
  * @note This function will not return, the function will continue to loop until the processor successfully reboots.
@@ -74,9 +79,10 @@ void __attribute__((noreturn)) platform_shutdown();
 void platform_sleep_ms(uint32_t ms);
 
 /**
- * Gets the type of boot that occured.
+ * Gets the current state of the BOOTSEL button.
+ * @return true if the button is pressed, false if not.
 */
-BootType platform_boot_type();
+bool platform_buttonPressed();
 
 /**
  * @return true if a PICO or PICO_W is detected.

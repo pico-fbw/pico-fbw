@@ -3,11 +3,11 @@
  * Licensed under the GNU GPL-3.0
 */
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include "pico/multicore.h"
 #include "pico/platform.h"
 #include "pico/time.h"
 #include "pico/types.h"
@@ -38,7 +38,7 @@ Flash flash = {
 
 PrintDefs print;
 
-static void flash_erase() {
+void flash_erase() {
     uint32_t offset = GET_PHYSECTOR_LOC(FLOAT_PHYSECTOR);
     uint32_t intr = save_and_disable_interrupts();
     flash_range_erase(offset, FLASH_SECTOR_SIZE);
@@ -53,10 +53,7 @@ void flash_save() {
     memcpy(floats, flash.boot, SIZEOF_FLOAT_SECTORS_BYTES);
     char strings[STRING_SECTOR_SIZE_FULL];
     memcpy(strings, flash.version, SIZEOF_STRING_SECTORS_BYTES);
-    // Write data to flash
-    aahrs.lock = false; // Request AAHRS to not lock while we're writing
-    sleep_us(5000);
-    // Erase all data first because science
+    // Write data to flash; erase all data first because science, then write
     flash_erase();
     uint32_t offset = GET_PHYSECTOR_LOC(FLOAT_PHYSECTOR);
     uint32_t intr = save_and_disable_interrupts();
@@ -64,11 +61,12 @@ void flash_save() {
     offset = GET_PHYSECTOR_LOC(STRING_PHYSECTOR);
     flash_range_program(offset, (uint8_t*)strings, FLASH_SECTOR_SIZE);
     restore_interrupts(intr);
-    aahrs.lock = true;
 }
 
 uint flash_load() {
     read: {
+        // This assertion will catch most sizing bugs before they get anywhere (as well as the compiler)--it should ALWAYS be true
+        assert((SIZEOF_FLOAT_SECTORS_BYTES + SIZEOF_STRING_SECTORS_BYTES) == sizeof(Flash));
         float *floats = (float*)GET_PHYSECTOR_LOC_ABSOLUTE(FLOAT_PHYSECTOR);
         char *strings = (char*)GET_PHYSECTOR_LOC_ABSOLUTE(STRING_PHYSECTOR);
         if (floats[0] != FLAG_BOOT) {
@@ -94,11 +92,6 @@ uint flash_load() {
         #else
             flash.system[SYSTEM_DEBUG] = false;
         #endif
-        return SIZEOF_FLOAT_SECTORS_BYTES + SIZEOF_STRING_SECTORS_BYTES;
+        return sizeof(Flash);
     }
-}
-
-void flash_format() {
-    flash.boot[BOOT_FLAG] = 0; // Corrupt the boot flag so the system will format upon the next boot
-    flash_save();
 }

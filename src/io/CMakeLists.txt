@@ -24,12 +24,12 @@ target_link_libraries(fbw_io
     hardware_irq
     hardware_pio
     hardware_pwm
+    hardware_structs
     hardware_sync
     hardware_uart
     hardware_watchdog
     pico_base
     pico_bootrom
-    pico_multicore
     pico_platform
     pico_stdio
     pico_time

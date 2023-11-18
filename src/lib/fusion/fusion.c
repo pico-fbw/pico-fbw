@@ -478,6 +478,7 @@ void runFusion(SensorFusionGlobals *sfg)
                  pSV_9DOF_GBY_KALMAN, pAccel, pMag, pGyro,
                  pPressure, pMagCal);
     clearFIFOs(sfg);
+    sfg->loopcounter++;
 } // end runFusion()
 
 /// This function is responsible for initializing the system prior to starting

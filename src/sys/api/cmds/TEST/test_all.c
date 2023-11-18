@@ -29,9 +29,9 @@ uint api_test_all(const char *cmd, const char *args) {
     printf("\nAAHRS: %d", status[0]);
     if (status[0] == 200) printf(" (PASSED)");
     printf("\nGPS:   %d", status[1]);
-    if (status[2] == 200) printf(" (PASSED, VERIFY)");
+    if (status[1] == 200) printf(" (PASSED, VERIFY)");
     printf("\nPWM:   %d", status[2]);
-    if (status[3] == 200) printf(" (PASSED)");
+    if (status[2] == 200) printf(" (PASSED)");
     printf("\nTOTAL: %d/%d", passed, count_of(status));
     if (passed == count_of(status)) printf(" PASS");
     printf("\n==================================\n");

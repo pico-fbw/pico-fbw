@@ -462,6 +462,19 @@ bool config_validate() {
                 if ((int)flash.pins[i] == lastPin) goto invalid;
             }
             break;
+        case CTRLMODE_2AXIS_ATHR:
+            for (uint i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
+                if (i == PINS_INPUT_RUD || i == PINS_SERVO_ELEVON_L || i == PINS_SERVO_ELEVON_R) break;
+                if ((int)flash.pins[i] == lastPin) goto invalid;
+            }
+            break;
+        case CTRLMODE_2AXIS:
+            for (uint i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
+                if (i == PINS_INPUT_RUD || i == PINS_INPUT_THROTTLE || i == PINS_ESC_THROTTLE ||
+                    i == PINS_SERVO_ELEVON_L || i == PINS_SERVO_ELEVON_R) break;
+                if ((int)flash.pins[i] == lastPin) goto invalid;
+            }
+            break;
         case CTRLMODE_FLYINGWING_ATHR:
             for (uint i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
                 if (i == PINS_SERVO_AIL || i == PINS_SERVO_ELEV || i == PINS_SERVO_RUD) break;

@@ -195,7 +195,7 @@ typedef struct Flash {
     char wifly_ssid[STRING_SECTOR_SIZE];
     char wifly_pass[STRING_SECTOR_SIZE];
 } Flash;
-#define NUM_FLOAT_SECTORS (8 + (FUSION_CALIBRATION_STORAGE_SIZE / sizeof(float)))
+#define NUM_FLOAT_SECTORS (8 + (FUSION_CALIBRATION_STORAGE_SIZE / (FLOAT_SECTOR_SIZE)))
 #define NUM_STRING_SECTORS 3
 
 #define SIZEOF_FLOAT_SECTORS (NUM_FLOAT_SECTORS * FLOAT_SECTOR_SIZE)
@@ -216,6 +216,12 @@ extern PrintDefs print;
 #define GET_PHYSECTOR_LOC_ABSOLUTE(sector) (XIP_BASE + (GET_PHYSECTOR_LOC(sector)))
 
 /**
+ * This will erase ALL flash sectors used by pico-fbw, destroying ANY config/calibration data!
+ * @note It will also put the physical sectors into a writable state.
+*/
+void flash_erase();
+
+/**
  * Loads the current content from flash into the Flash struct.
  * @return The number of bytes read from flash
  * @note This function will initialize flash if necessary.
@@ -226,11 +232,5 @@ uint flash_load();
  * Saves the current content of the Flash struct to flash.
 */
 void flash_save();
-
-/**
- * Formats the flash memory to default values.
- * @note This doesn't actually format the flash, only corrupts it a bit so that it will be formatted upon the next boot.
-*/
-void flash_format();
 
 #endif // __FLASH_H

@@ -81,7 +81,5 @@
 #define ACCEL_ODR_HZ    200 ///< (int) requested accelerometer ODR Hz (overrides MAG_ODR_HZ for FXOS8700)
 #define MAG_ODR_HZ      200 ///< (int) requested magnetometer ODR Hz (overridden by ACCEL_ODR_HZ for FXOS8700)
 #define FUSION_HZ       25  ///< (int) rate of fusion algorithm execution
-#define MIN_SYSTICK_DEVIATION 5 // Min deviation to where the algorithm will attempt to correct the systick in us
-#define MAX_SYSTICK_DEVIATION 20 // Max acceptable deviation from the expected systick in us--algorithm will crash if this is exceeded
 
 #endif // __FCONFIG_H

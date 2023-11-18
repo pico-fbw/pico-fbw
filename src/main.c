@@ -34,6 +34,7 @@
 #include "wifly/wifly.h"
 
 int main() {
+    // Establish comms and initialize critical systems
     platform_boot_begin();
     if (stdio_init_all()) sleep_ms(BOOT_WAIT_MS);
     #if defined(RASPBERRYPI_PICO)
@@ -45,6 +46,13 @@ int main() {
     #endif
     log_init();
 
+    // Load flash into RAM
+    if (platform_buttonPressed()) {
+        // If the button is being held down, erase flash and shut down if it continues to be held down for 3s
+        flash_erase();
+        printf("[boot] flash erased");
+        platform_shutdown();
+    }
     platform_boot_setProgress(20, "Loading flash");
     printf("[flash] loaded %d bytes\n", flash_load());
 
@@ -109,8 +117,7 @@ int main() {
     servo_test(servos, num_servos, degrees, NUM_DEFAULT_SERVO_TEST, DEFAULT_SERVO_TEST_PAUSE_MS);
 
     // ESC
-    if ((ControlMode)flash.general[GENERAL_CONTROL_MODE] == CTRLMODE_3AXIS_ATHR ||
-        (ControlMode)flash.general[GENERAL_CONTROL_MODE] == CTRLMODE_FLYINGWING_ATHR) {
+    if (pwm_hasAthr()) {
         platform_boot_setProgress(60, "Enabling ESC");
         if (esc_enable((uint)flash.pins[PINS_ESC_THROTTLE]) != 0) {
             log_message(FATAL, "Failed to initialize an ESC!", 800, 0, false);
@@ -132,7 +139,7 @@ int main() {
 
     // AAHRS
     platform_boot_setProgress(65, "Initializing AAHRS");
-    if (!aahrs.init) {
+    if (!aahrs.init()) {
         log_message(ERROR, "AAHRS initialization failed!", 1000, 0, false);
     }
 
@@ -140,7 +147,7 @@ int main() {
     if ((GPSCommandType)flash.sensors[SENSORS_GPS_COMMAND_TYPE] != GPS_COMMAND_TYPE_NONE) {
         while (time_us_64() < (1000 * 1000));
         platform_boot_setProgress(80, "Initializing GPS");
-        if (gps.init) {
+        if (gps.init()) {
             if (print.fbw) printf("[boot] GPS ok\n");
             // We don't set the GPS safe just yet, communications have been established but we are still unsure if the data is okay
             log_message(LOG, "GPS has no signal.", 2000, 0, false);
@@ -195,8 +202,9 @@ int main() {
                 }
                 break;
         }
+        aahrs.update();
+        if ((GPSCommandType)flash.sensors[SENSORS_GPS_COMMAND_TYPE] != GPS_COMMAND_TYPE_NONE) gps.update();
         aircraft.update();
-        gps.update();
         if ((bool)flash.general[GENERAL_API_ENABLED]) api_poll();
         watchdog_update();
     }

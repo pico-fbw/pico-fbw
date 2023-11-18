@@ -36,8 +36,8 @@ typedef enum WiflyEnableStatus {
 // Keep in mind that if the content is made larger then both the result size and possibly LWIP's memory size need to be increased
 
 typedef struct Waypoint {
-    double lat;
-    double lng;
+    long double lat;
+    long double lng;
     int alt;
     int drop;
 } Waypoint;

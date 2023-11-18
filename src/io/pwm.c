@@ -215,7 +215,7 @@ bool pwm_calibrate(const uint pin_list[], uint num_pins, const float deviations[
             }
             // Check to see if the deviation is 270 (this value occurs with a pulsewidth of 0 or 1, aka not connected)
             if ((total_difference / (float)num_samples) == 270.0f) {
-                if (print.fbw) printf("ERROR: [FBW-500] pin %d's calibration value seems abnormal, is it connected?\n", pin);
+                if (print.fbw) printf("WARNING: pin %d's calibration value seems abnormal, is it connected?\n", pin);
                 return false;
             }
             // Add the total difference recorded divided by the samples we took (average) to the final difference
@@ -300,6 +300,18 @@ void pwm_getPins(uint *pins, uint *num_pins, float *deviations) {
             deviations[3] = 0.0f;
             *num_pins = 4;
             break;
+        case CTRLMODE_2AXIS_ATHR:
+            pins[2] = (uint)flash.pins[PINS_INPUT_SWITCH];
+            pins[3] = (uint)flash.pins[PINS_INPUT_THROTTLE];
+            deviations[2] = 0.0f;
+            deviations[3] = 0.0f;
+            *num_pins = 4;
+            break;
+        case CTRLMODE_2AXIS:
+            pins[2] = (uint)flash.pins[PINS_INPUT_SWITCH];
+            deviations[2] = 0.0f;
+            *num_pins = 3;
+            break;
         case CTRLMODE_FLYINGWING_ATHR:
             pins[2] = (uint)flash.pins[PINS_INPUT_SWITCH];
             pins[3] = (uint)flash.pins[PINS_INPUT_THROTTLE];
@@ -313,4 +325,10 @@ void pwm_getPins(uint *pins, uint *num_pins, float *deviations) {
             *num_pins = 3;
             break;
     }
+}
+
+bool pwm_hasAthr() {
+    return (ControlMode)flash.general[GENERAL_CONTROL_MODE] == CTRLMODE_3AXIS_ATHR ||
+    (ControlMode)flash.general[GENERAL_CONTROL_MODE] == CTRLMODE_2AXIS_ATHR ||
+    (ControlMode)flash.general[GENERAL_CONTROL_MODE] == CTRLMODE_FLYINGWING_ATHR;
 }

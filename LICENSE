@@ -21,6 +21,7 @@ The following files (and their corresponding Header [.h] files, when applicable)
 - imu.c
 - jsmn.h
 - pid.c
+- platform.c
 - pwm.c
 - pwm.pio
 - semver.c
