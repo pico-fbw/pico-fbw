@@ -142,6 +142,19 @@ int main() {
     if (!aahrs.init()) {
         log_message(ERROR, "AAHRS initialization failed!", 1000, 0, false);
     }
+    if (!(bool)flash.general[GENERAL_SKIP_CALIBRATION]) {
+        if (print.fbw) printf("[boot] validating AAHRS calibration\n");
+        if (!aahrs.isCalibrated) {
+            if (print.fbw) printf("[boot] AAHRS calibration not found!\n");
+            if (!aahrs.calibrate()) {
+                log_message(FATAL, "AAHRS calibration failed!", 1000, 0, true);
+            } else {
+                if (print.fbw) printf("[boot] AAHRS calibration successful!\n");
+            }
+        }
+    } else {
+        log_message(WARNING, "AAHRS calibration skipped!", 1000, 0, false);
+    }
 
     // GPS
     if ((GPSCommandType)flash.sensors[SENSORS_GPS_COMMAND_TYPE] != GPS_COMMAND_TYPE_NONE) {
@@ -158,7 +171,6 @@ int main() {
 
     // Watchdog
     platform_boot_setProgress(90, "Enabling watchdog");
-    platform_enable_watchdog();
     if (platform_boot_type() == BOOT_WATCHDOG) {
         log_message(ERROR, "Watchdog rebooted!", 500, 150, true);
         if (print.fbw) printf("\nPlease report this error! Only direct mode is available until the next reboot.\n\n");
@@ -169,6 +181,7 @@ int main() {
             watchdog_update();
         }
     }
+    platform_enable_watchdog();
 
     // Wi-Fly
     #ifdef RASPBERRYPI_PICO_W

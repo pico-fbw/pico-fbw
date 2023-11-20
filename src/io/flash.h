@@ -17,27 +17,22 @@
 #include "../sys/switch.h"
 #include "../wifly/wifly.h"
 
-typedef enum SectorBoot {
-    BOOT_FLAG
+typedef enum SectorCalibration {
+    CALIBRATION_BOOT_FLAG,
     #define FLAG_BOOT 3.1305210f
-} SectorBoot;
-#define S_BOOT_HIGHEST BOOT_FLAG
-
-typedef enum SectorPWM {
-    PWM_FLAG,
-    #define FLAG_PWM 0.5f
-    PWM_MODE,
-    PWM_OFFSET_AIL,
-    PWM_OFFSET_ELEV,
-    PWM_OFFSET_RUD,
-    PWM_OFFSET_SW,
-    PWM_OFFSET_THR
-} SectorPWM;
-#define S_PWM_HIGHEST PWM_OFFSET_THR
+    CALIBRATION_PWM_CALIBRATED,
+    CALIBRATION_PWM_MODE,
+    CALIBRATION_PWM_OFFSET_AIL,
+    CALIBRATION_PWM_OFFSET_ELEV,
+    CALIBRATION_PWM_OFFSET_RUD,
+    CALIBRATION_PWM_OFFSET_SW,
+    CALIBRATION_PWM_OFFSET_THR,
+    CALIBRATION_AAHRS_CALIBRATED
+} SectorCalibration;
+#define S_CALIBRATION_HIGHEST CALIBRATION_AAHRS_CALIBRATED
 
 typedef enum SectorPID {
     PID_FLAG,
-    #define FLAG_PID 0.3f
 
     PID_ROLL_KP,
     PID_ROLL_TI,
@@ -179,9 +174,8 @@ typedef enum SectorConfigSystem {
 #define FLAG_END (-30.54245f)
 
 typedef struct Flash {
-    /* Auto-generated system settings */
-    float boot[FLOAT_SECTOR_SIZE];
-    float pwm[FLOAT_SECTOR_SIZE];
+    /* Auto-generated system settings/calibrations */
+    float calibration[FLOAT_SECTOR_SIZE];
     float pid[FLOAT_SECTOR_SIZE];
     float aahrs[FUSION_CALIBRATION_STORAGE_SIZE];
     /* User-defined config */
@@ -195,7 +189,7 @@ typedef struct Flash {
     char wifly_ssid[STRING_SECTOR_SIZE];
     char wifly_pass[STRING_SECTOR_SIZE];
 } Flash;
-#define NUM_FLOAT_SECTORS (8 + (FUSION_CALIBRATION_STORAGE_SIZE / (FLOAT_SECTOR_SIZE)))
+#define NUM_FLOAT_SECTORS (7 + (FUSION_CALIBRATION_STORAGE_SIZE / (FLOAT_SECTOR_SIZE)))
 #define NUM_STRING_SECTORS 3
 
 #define SIZEOF_FLOAT_SECTORS (NUM_FLOAT_SECTORS * FLOAT_SECTOR_SIZE)

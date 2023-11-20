@@ -139,18 +139,18 @@ static inline float pwmOffsetOf(uint pin) {
     // Look up the correct value to fetch based on the pin
     uint val;
     if (pin == (uint)flash.pins[PINS_INPUT_ELEV]) {
-        val = PWM_OFFSET_ELEV;
+        val = CALIBRATION_PWM_OFFSET_ELEV;
     } else if (pin == (uint)flash.pins[PINS_INPUT_RUD]) {
-        val = PWM_OFFSET_RUD;
+        val = CALIBRATION_PWM_OFFSET_RUD;
     } else if (pin == (uint)flash.pins[PINS_INPUT_SWITCH]) {
-        val = PWM_OFFSET_SW;
+        val = CALIBRATION_PWM_OFFSET_SW;
     } else if (pin == (uint)flash.pins[PINS_INPUT_THROTTLE]) {
-        val = PWM_OFFSET_THR;
+        val = CALIBRATION_PWM_OFFSET_THR;
     } else {
-        val = PWM_OFFSET_AIL; // Default as well as AIL
+        val = CALIBRATION_PWM_OFFSET_AIL; // Default as well as AIL
     }
     // Read from the correct sector based on the value
-    return flash.pwm[val];
+    return flash.calibration[val];
 }
 
 /**
@@ -192,9 +192,6 @@ bool pwm_calibrate(const uint pin_list[], uint num_pins, const float deviations[
     if (gb_num_pins < 1) return false; // Ensure PWM has been initialized
     log_message(INFO, "Calibrating PWM", 100, 0, false);
     sleep_ms(2000); // Wait a few moments for tx/rx to set itself up
-    // The first position of PWM sector holds a flag to indicate that calibration has been completed;
-    // subsequent values will hold the calibration data
-    flash.pwm[PWM_FLAG] = FLAG_PWM;
     for (uint i = 0; i < num_pins; i++) {
         uint pin = pin_list[i];
         if (print.fbw) printf("[pwm] calibrating pin %d (%d/%d)\n", pin, i + 1, num_pins);
@@ -225,17 +222,17 @@ bool pwm_calibrate(const uint pin_list[], uint num_pins, const float deviations[
         // Any pins over 4 (thus, pins belonging to PIO1) will be in the second array
         if (print.fbw) printf("[pwm] pin %d's final offset is %f\n", pin, (final_difference / (float)run_times));
         // Find the correct location in the array to write to
-        SectorPWM loc;
+        SectorCalibration loc;
         if (pin == (uint)flash.pins[PINS_INPUT_AIL]) {
-            loc = PWM_OFFSET_AIL;
+            loc = CALIBRATION_PWM_OFFSET_AIL;
         } else if (pin == (uint)flash.pins[PINS_INPUT_ELEV]) {
-            loc = PWM_OFFSET_ELEV;
+            loc = CALIBRATION_PWM_OFFSET_ELEV;
         } else if (pin == (uint)flash.pins[PINS_INPUT_RUD]) {
-            loc = PWM_OFFSET_RUD;
+            loc = CALIBRATION_PWM_OFFSET_RUD;
         } else if (pin == (uint)flash.pins[PINS_INPUT_SWITCH]) {
-            loc = PWM_OFFSET_SW;
+            loc = CALIBRATION_PWM_OFFSET_SW;
         } else if (pin == (uint)flash.pins[PINS_INPUT_THROTTLE]) {
-            loc = PWM_OFFSET_THR;
+            loc = CALIBRATION_PWM_OFFSET_THR;
         } else {
             if (print.fbw) printf("ERROR: [FBW-500] pin %d is not a valid pin to calibrate!\n", pin);
             return false;
@@ -254,9 +251,10 @@ bool pwm_calibrate(const uint pin_list[], uint num_pins, const float deviations[
                 if (print.fbw) printf("ERROR: [FBW-500] pin %d's calibration value is too high!\n", pin);
                 return false;
         }
-        flash.pwm[loc] = final_difference / (float)run_times;
+        flash.calibration[loc] = final_difference / (float)run_times;
     }
-    flash.pwm[PWM_MODE] = (ControlMode)flash.general[GENERAL_CONTROL_MODE];
+    flash.calibration[CALIBRATION_PWM_CALIBRATED] = true;
+    flash.calibration[CALIBRATION_PWM_MODE] = (ControlMode)flash.general[GENERAL_CONTROL_MODE];
     if (print.fbw) printf("[pwm] saving calibration to flash\n");
     flash_save();
     log_clear(INFO);
@@ -265,9 +263,9 @@ bool pwm_calibrate(const uint pin_list[], uint num_pins, const float deviations[
 
 PWMCalibrationStatus pwm_isCalibrated() {
     // Read the calibration flag
-    if (flash.pwm[PWM_FLAG] == FLAG_PWM) {
+    if ((bool)flash.calibration[CALIBRATION_PWM_CALIBRATED]) {
         // Ensure that the control mode we are in is the same as the one in which we calibrated
-        if ((ControlMode)flash.general[GENERAL_CONTROL_MODE] != (ControlMode)flash.pwm[PWM_MODE]) {
+        if ((ControlMode)flash.general[GENERAL_CONTROL_MODE] != (ControlMode)flash.calibration[CALIBRATION_PWM_MODE]) {
             return PWMCALIBRATION_INVALID;
         }
         return PWMCALIBRATION_OK;

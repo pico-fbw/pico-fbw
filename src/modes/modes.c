@@ -43,6 +43,8 @@ void update() {
     }
 }
 
+// TODO: launch mode?
+
 void changeTo(Mode newMode) {
     // Run deinit code for aircraft.mode and then run init code for newMode
     switch (aircraft.mode) {
@@ -65,24 +67,25 @@ void changeTo(Mode newMode) {
     }
     if (aircraft.AAHRSSafe) {
         switch (newMode) {
+            DIRECT:
             case MODE_DIRECT:
                 if (print.fbw) printf("[modes] entering direct mode\n");
                 aircraft.mode = MODE_DIRECT;
                 break;
+            NORMAL:
             case MODE_NORMAL:
                 // Automatically enter tune mode if necessary
                 if (!mode_tuneisCalibrated()) {
-                    changeTo(MODE_TUNE);
-                    return;
+                    goto TUNE;
                 }
                 if (print.fbw) printf("[modes] entering normal mode\n");
                 mode_normalInit();
                 aircraft.mode = MODE_NORMAL;
                 break;
+            AUTO:
             case MODE_AUTO:
                 if (!mode_tuneisCalibrated()) {
-                    changeTo(MODE_TUNE);
-                    return;
+                    goto TUNE;
                 }
                 if ((GPSCommandType)flash.sensors[SENSORS_GPS_COMMAND_TYPE] != GPS_COMMAND_TYPE_NONE) {
                     // TODO: have a way for auto mode to re-engage if the gps becomes safe again; this is usually due to bad DOP which fixes itself over time
@@ -95,35 +98,32 @@ void changeTo(Mode newMode) {
                         if (mode_autoInit()) {
                             aircraft.mode = MODE_AUTO;
                         } else {
-                            changeTo(MODE_NORMAL);
-                            return;
+                            goto NORMAL;
                         }
                     } else {
                         // GPS is required to be safe for auto and hold modes, fallback to normal mode
-                        changeTo(MODE_NORMAL);
-                        return;
+                        goto NORMAL;
                     }
                 } else {
-                    changeTo(MODE_NORMAL);
-                    return;
+                    goto NORMAL;
                 }
                 break;
+            TUNE:
             case MODE_TUNE:
                 if (!mode_tuneisCalibrated()) {
                     if (print.fbw) printf("[modes] entering tune mode\n");
                     aircraft.mode = MODE_TUNE;
                 } else {
-                    changeTo(MODE_NORMAL);
-                    return;
+                    goto NORMAL;
                 }
                 break;
+            HOLD:
             case MODE_HOLD:
                 if (aircraft.GPSSafe) {
                     if (print.fbw) printf("[modes] entering hold mode\n");
                     aircraft.mode = MODE_HOLD;
                 } else {
-                    changeTo(MODE_NORMAL);
-                    return;
+                    goto NORMAL;
                 }
                 break;
         }

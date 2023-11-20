@@ -46,7 +46,7 @@
 #endif
 
 float *calibration_mag = &flash.aahrs[CALIBRATION_BUF_MAGNETIC_START];
-float *calibration_gyro = &flash.aahrs[CALIBRATION_BUF_ACCEL_START];
+float *calibration_gyro = &flash.aahrs[CALIBRATION_BUF_GYRO_START];
 float *calibration_accel = &flash.aahrs[CALIBRATION_BUF_ACCEL_START];
 
 bool GetMagCalibrationFromFlash(float *cal_values) {
@@ -55,9 +55,7 @@ bool GetMagCalibrationFromFlash(float *cal_values) {
             return false;
         }
         // Calibration header is valid, read the calibration into provided destination
-        for (uint i = 0; i < CALIBRATION_BUF_MAGNETIC_VAL_SIZE; i++) {
-            cal_values[i] = calibration_mag[i + CALIBRATION_BUF_MAGNETIC_HEADER_SIZE];
-        }
+        memcpy(cal_values, &calibration_mag[CALIBRATION_BUF_MAGNETIC_HEADER_SIZE], CALIBRATION_BUF_MAGNETIC_VAL_SIZE_BYTES);
         return true;
     #else
         return false;
@@ -69,9 +67,7 @@ bool GetGyroCalibrationFromFlash(float *cal_values) {
         if (cal_values == NULL || !GyroCalibrationExists()) {
             return false;
         }
-        for (uint i = 0; i < CALIBRATION_BUF_GYRO_VAL_SIZE; i++) {
-            cal_values[i] = calibration_gyro[i + CALIBRATION_BUF_GYRO_HEADER_SIZE];
-        }
+        memcpy(cal_values, &calibration_gyro[CALIBRATION_BUF_GYRO_HEADER_SIZE], CALIBRATION_BUF_GYRO_VAL_SIZE_BYTES);
         return true;
     #else
         return false;
@@ -83,9 +79,7 @@ bool GetAccelCalibrationFromFlash(float *cal_values) {
         if (cal_values == NULL || !AccelCalibrationExists()) {
             return false;
         }
-        for (uint i = 0; i < CALIBRATION_BUF_ACCEL_VAL_SIZE; i++) {
-            cal_values[i] = calibration_accel[i + CALIBRATION_BUF_ACCEL_HEADER_SIZE];
-        }
+        memcpy(cal_values, &calibration_accel[CALIBRATION_BUF_ACCEL_HEADER_SIZE], CALIBRATION_BUF_ACCEL_VAL_SIZE_BYTES);
         return true;
     #else
         return false;
@@ -104,16 +98,14 @@ void SaveMagCalibrationToFlash(SensorFusionGlobals *sfg) {
     #endif
 }
 
-// TODO: gyro never saved (no calibration process), make one if necessary?
-
 void SaveGyroCalibrationToFlash(SensorFusionGlobals *sfg) {
     #if F_USING_GYRO && (F_9DOF_GBY_KALMAN || F_6DOF_GY_KALMAN)
         // Obtain source of the data which is different per fusion algorithm
-        float (*src)[3];
+        float *src;
         #if F_9DOF_GBY_KALMAN
-            src = &(sfg->SV_9DOF_GBY_KALMAN.fbPl);
+            src = &(sfg->SV_9DOF_GBY_KALMAN.fbPl[0]);
         #elif F_6DOF_GY_KALMAN
-            src = &(sfg->SV_6DOF_GY_KALMAN.fbPl);
+            src = &(sfg->SV_6DOF_GY_KALMAN.fbPl[0]);
         #endif
         memcpy(&calibration_gyro[CALIBRATION_BUF_GYRO_HEADER_SIZE], src, CALIBRATION_BUF_GYRO_VAL_SIZE_BYTES);
         calibration_gyro[0] = CALIBRATION_BUF_GYRO_HEADER_MAGIC;

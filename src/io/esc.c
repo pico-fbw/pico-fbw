@@ -125,12 +125,12 @@ bool esc_calibrate(uint gpio_pin) {
     log_message(INFO, "Calibrating ESC", 200, 0, false);
     char pBar[DISPLAY_MAX_LINE_LEN] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
     if (platform_is_fbw()) {
-        display_pBarStr(pBar, 33);
+        display_pBarStr(pBar, 0);
         display_text("Select idle", "thrust.", "", pBar, true);
     }
     if (!waitForDetent(gpio_pin, &flash.control[CONTROL_THROTTLE_DETENT_IDLE], 10000, 4000)) return false;
     if (platform_is_fbw()) {
-        display_pBarStr(pBar, 66);
+        display_pBarStr(pBar, 33);
         display_text("Select max", "continuous", "thrust (MCT).", pBar, true);
     }
     if (!waitForDetent(gpio_pin, &flash.control[CONTROL_THROTTLE_DETENT_MCT], 10000, 2000)) return false;
@@ -144,6 +144,7 @@ bool esc_calibrate(uint gpio_pin) {
     flash.control[CONTROL_THROTTLE_DETENTS_CALIBRATED] = true;
     if (print.fbw) printf("[ESC] saving detents to flash\n");
     flash_save();
+    log_clear(INFO);
     return true;
 }
 

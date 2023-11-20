@@ -23,8 +23,7 @@
 /* Default state of the flash struct (for example, holds default config values).
 Locations of values are specified by the sections' respective enums in flash.h. */
 Flash flash = {
-    .boot = { [ 0 ... S_BOOT_HIGHEST] = 0, FLAG_END},
-    .pwm = { [ 0 ... S_PWM_HIGHEST] = 0, FLAG_END},
+    .calibration = { [ 0 ... S_CALIBRATION_HIGHEST] = 0, FLAG_END},
     .pid = {0, 0, 0, 0, 0.1f, 0.001f, -50, 50, 0, 0, 0, 0.01f, 0.001f, -50, 50, 1.0f, 0.0025f, 0.001f, 0.01f, 0.001f, -50, 50, FLAG_END},
     .general = {CTRLMODE_3AXIS_ATHR, SWITCH_TYPE_3_POS, 20, 50, 50, true, WIFLY_ENABLED_PASS, false, FLAG_END},
     .control = {0.00075f, 1.5f, 2, false, 10, 75, 90, 10, 180, 0, 33, 67, -15, 30, 25, 15, 20, 20, 0.5f, 1, 1, FLAG_END},
@@ -50,7 +49,7 @@ void flash_erase() {
 void flash_save() {
     // Convert struct data to writable byte array
     float floats[FLOAT_SECTOR_SIZE_FULL];
-    memcpy(floats, flash.boot, SIZEOF_FLOAT_SECTORS_BYTES);
+    memcpy(floats, flash.calibration, SIZEOF_FLOAT_SECTORS_BYTES);
     char strings[STRING_SECTOR_SIZE_FULL];
     memcpy(strings, flash.version, SIZEOF_STRING_SECTORS_BYTES);
     // Write data to flash; erase all data first because science, then write
@@ -72,12 +71,12 @@ uint flash_load() {
         if (floats[0] != FLAG_BOOT) {
             // First boot, struct contains default value so write those to flash
             printf("[flash] boot flag not detected, formatting flash now...\n");
-            flash.boot[0] = FLAG_BOOT;
+            flash.calibration[CALIBRATION_BOOT_FLAG] = FLAG_BOOT;
             flash_save();
             goto read;
         }
         // Flash contains data, copy to RAM-based struct
-        memcpy(flash.boot, floats, SIZEOF_FLOAT_SECTORS_BYTES);
+        memcpy(flash.calibration, floats, SIZEOF_FLOAT_SECTORS_BYTES);
         memcpy(flash.version, strings, SIZEOF_STRING_SECTORS_BYTES);
         // Fill in print struct
         print.fbw = (bool)flash.system[SYSTEM_DEBUG_FBW];

@@ -11,6 +11,7 @@
  * Licensed under the GNU GPL-3.0
 */
 
+#include <assert.h>
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdint.h>

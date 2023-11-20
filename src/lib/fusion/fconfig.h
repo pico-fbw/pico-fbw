@@ -71,8 +71,12 @@
 #define F_9DOF_GBY_KALMAN \
     0x4000 ///< 9DOF accel, mag and gyro algorithm selector                  - 0x4000 to include, 0x0000 otherwise
 #define F_9DOF_GBY_KALMAN_SYSTICK \
-    6742 // Measured average systick on RP2040 running 9DOF_GBY_KALMAN
+    6742 // Measured average systick (us) on RP2040 running 9DOF_GBY_KALMAN
 ///@}
+
+// Measured average systick (us) on RP2040 running sfg->conditionSensorReadings
+// The systick is known to spike by a few hundred microseconds when complex computations are done, such as mag calibration re-evaluation
+#define F_CONDITION_SENSOR_READINGS_SYSTICK 150
 
 /// @name SensorParameters
 // The Output Data Rates (ODR) are set by the calls to *_Init() for each physical sensor.
@@ -80,6 +84,6 @@
 #define GYRO_ODR_HZ     400 ///< (int) requested gyroscope ODR Hz
 #define ACCEL_ODR_HZ    200 ///< (int) requested accelerometer ODR Hz (overrides MAG_ODR_HZ for FXOS8700)
 #define MAG_ODR_HZ      200 ///< (int) requested magnetometer ODR Hz (overridden by ACCEL_ODR_HZ for FXOS8700)
-#define FUSION_HZ       25  ///< (int) rate of fusion algorithm execution
+#define FUSION_HZ       40  ///< (int) rate of fusion algorithm execution
 
 #endif // __FCONFIG_H

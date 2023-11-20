@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 
+// https://www.nxp.com/docs/en/application-note/AN5286.pdf
+// https://www.nxp.com/docs/en/application-note/AN4399.pdf
+
 /// calibration constants
 #define ACCEL_CAL_AVERAGING_SECS	2		///< calibration measurement averaging period (s)
 #define MAX_ACCEL_CAL_ORIENTATIONS	12		///< number of stored precision accelerometer measurements

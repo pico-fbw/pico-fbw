@@ -28,7 +28,7 @@ typedef struct LogEntry {
 
 #define DISP_LOG_CONCAT "pico-fbw.org/"
 
-#define MAX_LOG_ENTRIES 20
+#define MAX_LOG_ENTRIES 32
 
 /**
  * Initialize the logging system.

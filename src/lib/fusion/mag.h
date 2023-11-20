@@ -16,7 +16,7 @@
 #define MINMEASUREMENTS7CAL 220			///< minimum number of measurements for 7 element calibration
 #define MINMEASUREMENTS10CAL 330		///< minimum number of measurements for 10 element calibration
 #define MAXMEASUREMENTS 360			///< maximum number of measurements used for calibration
-#define CAL_INTERVAL_SECS 30			///< 30s interval for regular calibration checks // TODO: does this need to be changed?
+#define CAL_INTERVAL_SECS 30			///< 30s interval for regular calibration checks
 #define MINBFITUT 10.0F				///< minimum acceptable geomagnetic field B (uT) for valid calibration
 #define MAXBFITUT 90.0F				///< maximum acceptable geomagnetic field B (uT) for valid calibration
 #define FITERRORAGINGSECS 86400.0F		///< 24 hours: time (s) for fit error to increase (age) by e=2.718

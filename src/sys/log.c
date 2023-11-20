@@ -37,6 +37,7 @@ static LogEntry lastLogEntry;
 
 static LogEntry lastDisplayedEntry;
 static struct repeating_timer timer;
+static alarm_id_t timer_pulse = -1;
 static uint32_t gb_pulse_ms = 0;
 
 static inline void led_toggle() {
@@ -63,6 +64,9 @@ static inline void led_set(bool on) {
 
 static inline void led_reset() {
     cancel_repeating_timer(&timer);
+    if (timer_pulse > 0) {
+        cancel_alarm(timer_pulse);
+    }
     gb_pulse_ms = 0;
     led_set(1);
 }
@@ -76,7 +80,7 @@ static inline bool led_callback(struct repeating_timer *t) {
     // Toggle LED immediately, then schedule an additional pulse toggle if applicable (non-zero)
     led_toggle();
     if (gb_pulse_ms != 0) {
-        add_alarm_in_ms(gb_pulse_ms, led_pulse_callback, NULL, false);
+        timer_pulse = add_alarm_in_ms(gb_pulse_ms, led_pulse_callback, NULL, false);
     }
     return true;
 }
@@ -149,20 +153,20 @@ static void log_displayEntry(LogEntry *entry) {
             display_text(typeMsg, NULL, DISP_LOG_CONCAT, codeStr, true);
         }
     } else {
-        // Display on Pico built-in LED
-        cancel_repeating_timer(&timer);
-        add_repeating_timer_ms((int32_t)entry->code, led_callback, NULL, &timer);
+        led_reset();
         // If pulse has been enabled, turn the LED off now so it pulses to the on state, not the off state (looks better)
         if (entry->pulse != 0) {
             led_set(0);
             gb_pulse_ms = entry->pulse;
         }
+        // Display on Pico built-in LED
+        add_repeating_timer_ms((int32_t)entry->code, led_callback, NULL, &timer);
     }
     lastDisplayedEntry = *entry;
 }
 
 static inline int64_t logProcessQueue(alarm_id_t id, void *data) {
-    if (!platform_is_booted()) return 1000 * 1000;
+    if (!platform_is_booted()) return (1000 * 1000);
     log_displayEntry(&queuedEntry);
     return 0;
 }
