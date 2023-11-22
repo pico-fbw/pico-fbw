@@ -28,8 +28,8 @@
 #define FQVY_6DOF_GY_KALMAN			2E2     ///< gyro sensor noise variance units (deg/s)^2
 #define FQVG_6DOF_GY_KALMAN			1.2E-3  ///< accelerometer sensor noise variance units g^2
 #define FQWB_6DOF_GY_KALMAN			2E-2F   ///< gyro offset random walk units (deg/s)^2
-#define FMIN_6DOF_GY_BPL			-7.0F   ///< minimum permissible power on gyro offsets (deg/s)
-#define FMAX_6DOF_GY_BPL			7.0F    ///< maximum permissible power on gyro offsets (deg/s)
+#define FMIN_6DOF_GY_BPL		   -20.0F   ///< minimum permissible power on gyro offsets (deg/s)
+#define FMAX_6DOF_GY_BPL			20.0F    ///< maximum permissible power on gyro offsets (deg/s)
 ///@}
 
 /// @name COMPUTE_9DOF_GBY_KALMAN constants
@@ -40,8 +40,8 @@
 #define FQVG_9DOF_GBY_KALMAN		1.2E-3	        ///< accelerometer sensor noise variance units g^2 defining minimum deviation from 1g sphere
 #define FQVB_9DOF_GBY_KALMAN		5E0		///< magnetometer sensor noise variance units uT^2 defining minimum deviation from geomagnetic sphere.
 #define FQWB_9DOF_GBY_KALMAN		2E-2F	        ///< gyro offset random walk units (deg/s)^2
-#define FMIN_9DOF_GBY_BPL		-7.0F           ///< minimum permissible power on gyro offsets (deg/s)
-#define FMAX_9DOF_GBY_BPL		7.0F            ///< maximum permissible power on gyro offsets (deg/s)
+#define FMIN_9DOF_GBY_BPL		   -20.0F           ///< minimum permissible power on gyro offsets (deg/s)
+#define FMAX_9DOF_GBY_BPL		    20.0F            ///< maximum permissible power on gyro offsets (deg/s)
 ///@}
 
 /// @name Fusion Function Prototypes

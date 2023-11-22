@@ -2,7 +2,6 @@ add_executable(${PROJECT_NAME} main.c)
 pico_add_extra_outputs(${PROJECT_NAME})
 
 target_link_libraries(${PROJECT_NAME}
-    fbw_api
     fbw_io
     fbw_lib
     fbw_modes

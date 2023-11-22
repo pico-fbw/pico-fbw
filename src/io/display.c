@@ -25,7 +25,7 @@
 #include "hardware/i2c.h"
 #include "hardware/watchdog.h"
 
-#include "../sys/log.h"
+#include "platform.h"
 
 #include "display.h"
 
@@ -264,7 +264,6 @@ static char *centerString(char line[], uint len_max) {
     return strdup(line); // No centering needed
 }
 
-
 bool display_init() {
     i2c_init(DISPLAY_I2C, DISPLAY_FREQ_KHZ * 1000);
     gpio_set_function(DISPLAY_SDA, GPIO_FUNC_I2C);
@@ -353,49 +352,22 @@ void display_text(char l1[], char l2[], char l3[], char l4[], bool center) {
     render(buf, &frame_area);
 }
 
-struct RenderArea pimg_area = {
-    .col_start = 0,
-    .col_end = PIMG_W - 1,
-    .page_start = 0,
-    .page_end = (PIMG_H / DISPLAY_PAGE_HEIGHT) - 1
-};
-
-typedef enum AnimState {
-    ANIM_IDLE,
-    ANIM_SPDN,
-    ANIM_SPDUP,
-    ANIM_PWRSAVE
-} AnimState;
-static AnimState animState = ANIM_IDLE;
-
-static inline int64_t anim_callback(alarm_id_t id, void *data) {
-    switch (animState) {
-        case ANIM_SPDN:
-            setScroll(true, 7);
-            animState++;
-            return 400 * 1000;
-        case ANIM_SPDUP:
-            setScroll(false, 0);
-            display_text("Entering", "power save", "mode", NULL, true);
-            animState++;
-            return 3000 * 1000;
-        case ANIM_PWRSAVE:
-            memset(buf, 0, sizeof(buf));
-            render(buf, &frame_area);
-            animState = ANIM_IDLE;
-        default:
-            return 0;
-    }
+void display_powerSave() {
+    display_text("Entering", "power save", "mode", NULL, true);
+    platform_sleep_ms(2000);
+    memset(buf, 0, sizeof(buf));
+    render(buf, &frame_area);
 }
 
 void display_anim() {
-    if (log_countErrs() == 0) {
-        memset(buf, 0, sizeof(buf));
-        render(buf, &frame_area);
-        render_calcBuf(&pimg_area);
-        render(pimg, &pimg_area);
-        setScroll(true, 0);
-        animState = ANIM_SPDN;
-        add_alarm_in_ms(1600, anim_callback, NULL, true);
+    memset(buf, 0, sizeof(buf));
+    render(buf, &frame_area);
+    absolute_time_t wait = make_timeout_time_ms(4000);
+    while (!time_reached(wait)) {
+        for (uint i = 0; i < count_of(lightspeed); i++) {
+            render(lightspeed[i], &frame_area);
+            platform_sleep_ms(2);
+        }
     }
+    display_powerSave();
 }

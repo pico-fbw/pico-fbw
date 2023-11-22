@@ -23,6 +23,8 @@ typedef enum RebootType {
     REBOOT_BOOTLOADER
 } RebootType;
 
+/** @section Boot functions */
+
 /**
  * Signal to the platform that the boot sequence is starting.
 */
@@ -51,6 +53,8 @@ bool platform_is_booted();
 */
 void platform_boot_complete();
 
+/** @section Power functions */
+
 /**
  * Gets the type of boot that occured.
 */
@@ -70,8 +74,16 @@ void __attribute__((noreturn)) platform_reboot(RebootType type);
 */
 void __attribute__((noreturn)) platform_shutdown();
 
+/** @section Runtime functions */
+
 /**
- * Performs a blocking sleep (watchdog-safe).
+ * Runs the main loop code of the program.
+ * This should be called in an infinite loop after the system is booted.
+*/
+void platform_loop();
+
+/**
+ * Performs a non-blocking sleep, as platform_loop() is run in the background.
  * @param ms the number of milliseconds to sleep
  * @note This should be used after the system is booted when a longer sleep must be performed,
  * as using normal sleep_ms would trigger the watchdog interrupt.
@@ -83,6 +95,8 @@ void platform_sleep_ms(uint32_t ms);
  * @return true if the button is pressed, false if not.
 */
 bool platform_buttonPressed();
+
+/** @section Platform type functions */
 
 /**
  * @return true if a PICO or PICO_W is detected.

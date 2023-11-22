@@ -3,10 +3,12 @@
 
 #include <stdbool.h>
 
+// The number of samples to average when calculating the gyroscope offset
+#define GYRO_AVG_SAMPLES 100
 // The maximum velocity (in deg/s) under which the gyroscope is considered to be stationary
-#define GYRO_STILL_VELOCITY 2
+#define GYRO_STILL_VELOCITY 3
 // The maximum number of attempts to get a good (< 3.5%) magnetometer calibration, calibration will fail above this
-#define MAX_MAG_ATTEMPTS 5
+#define MAX_MAG_ATTEMPTS 10
 
 #define IMU_MODEL_MIN IMU_MODEL_BNO055
 typedef enum IMUModel {

@@ -15,6 +15,7 @@ bool GetAccelCalibrationFromFlash(float *cal_values);
 void SaveMagCalibrationToFlash(SensorFusionGlobals *sfg);
 void SaveGyroCalibrationToFlash(SensorFusionGlobals *sfg);
 void SaveAccelCalibrationToFlash(SensorFusionGlobals *sfg);
+void EraseFusionCalibration();
 bool MagCalibrationExists();
 bool GyroCalibrationExists();
 bool AccelCalibrationExists();

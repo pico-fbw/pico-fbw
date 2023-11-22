@@ -62,7 +62,7 @@ typedef struct
     uint16_t writeTo; /* Address where the value is writes to.*/
     uint8_t value;    /* value. Note that value should be shifted based on the bit position.*/
     uint8_t mask;     /* mask of the field to be set with given value.*/
-} registerwritelist_t;
+} registerWriteList_t;
 
 /*!
  * @brief This structure defines the Read command List.
@@ -71,7 +71,7 @@ typedef struct
 {
     uint16_t readFrom; /* Address where the value is read from .*/
     uint8_t numBytes;  /* Number of bytes to read.*/
-} registerReadlist_t;
+} registerReadList_t;
 
 /*!
  * @brief This is the register idle function type.
@@ -89,8 +89,8 @@ typedef struct
 } registerDeviceInfo_t;
 
 void driver_init();
-int32_t driver_read(registerDeviceInfo_t *devInfo, uint16_t peripheralAddress, const registerReadlist_t *pReadList, uint8_t *pOutBuf);
+int32_t driver_read(registerDeviceInfo_t *devInfo, uint16_t peripheralAddress, const registerReadList_t *pReadList, uint8_t *pOutBuf);
 int32_t driver_read_register(registerDeviceInfo_t *devInfo, uint16_t peripheralAddress, uint8_t offset, uint8_t len, uint8_t *pOutBuf);
-int8_t driver_write_list(registerDeviceInfo_t *devInfo, uint16_t peripheralAddress, const registerwritelist_t *pRegWriteList);
+int8_t driver_write_list(registerDeviceInfo_t *devInfo, uint16_t peripheralAddress, const registerWriteList_t *pRegWriteList);
 
 #endif //__DRIVERS_H

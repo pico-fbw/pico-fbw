@@ -26,11 +26,9 @@
 #include "io/pwm.h"
 #include "io/servo.h"
 #include "modes/modes.h"
-#include "sys/api/api.h"
 #include "sys/config.h"
 #include "sys/info.h"
 #include "sys/log.h"
-#include "sys/switch.h"
 #include "wifly/wifly.h"
 
 int main() {
@@ -84,10 +82,13 @@ int main() {
     pwm_enable(pins, num_pins);
     if (!(bool)flash.general[GENERAL_SKIP_CALIBRATION]) {
         if (print.fbw) printf("[boot] validating PWM calibration\n");
-        int calibrationResult = pwm_isCalibrated();
+        PWMCalibrationStatus calibrationResult = pwm_isCalibrated();
         switch (calibrationResult) {
+            case PWMCALIBRATION_OK:
+                break;
             case PWMCALIBRATION_INVALID:
                 if (print.fbw) printf("[boot] PWM calibration was completed for a different control mode!\n");
+            default:
             case PWMCALIBRATION_INCOMPLETE:
                 if (print.fbw) printf("[boot] PWM calibration not found!\n");
                 if (print.fbw) printf("[boot] calibrating now...do not touch the transmitter!\n");
@@ -140,7 +141,9 @@ int main() {
     // AAHRS
     platform_boot_setProgress(65, "Initializing AAHRS");
     if (!aahrs.init()) {
-        log_message(ERROR, "AAHRS initialization failed!", 1000, 0, false);
+        // If AAHRS is calibrated only throw an error as we could be in flight and we want to finish the boot,
+        // but if it's not calibrated we shouldn't be in flight, thus we should throw a fatal error so calibration does not commence
+        log_message(aahrs.isCalibrated ? ERROR : FATAL, "AAHRS initialization failed!", 1000, 0, false);
     }
     if (!(bool)flash.general[GENERAL_SKIP_CALIBRATION]) {
         if (print.fbw) printf("[boot] validating AAHRS calibration\n");
@@ -195,31 +198,7 @@ int main() {
     platform_boot_complete();
     // Main program loop:
     while (true) {
-        // Update the mode switch's position, run the current mode's code, respond to any new API calls, and update the watchdog
-        float switchPos = pwm_read((uint)flash.pins[PINS_INPUT_SWITCH], PWM_MODE_DEG);
-        switch ((SwitchType)flash.general[GENERAL_SWITCH_TYPE]) {
-            case SWITCH_TYPE_2_POS:
-                if (switchPos < 90) {
-                    switch_update(SWITCH_POSITION_LOW);
-                } else {
-                    switch_update(SWITCH_POSITION_HIGH);
-                }
-                break;
-            case SWITCH_TYPE_3_POS:
-                if (switchPos < 85) {
-                    switch_update(SWITCH_POSITION_LOW);
-                } else if (switchPos > 95) {
-                    switch_update(SWITCH_POSITION_HIGH);
-                } else {
-                    switch_update(SWITCH_POSITION_MID);
-                }
-                break;
-        }
-        aahrs.update();
-        if ((GPSCommandType)flash.sensors[SENSORS_GPS_COMMAND_TYPE] != GPS_COMMAND_TYPE_NONE) gps.update();
-        aircraft.update();
-        if ((bool)flash.general[GENERAL_API_ENABLED]) api_poll();
-        watchdog_update();
+        platform_loop();
     }
 
     return 0; // How did we get here?

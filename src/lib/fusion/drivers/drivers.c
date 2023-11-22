@@ -32,7 +32,7 @@
  * @param dest The destination buffer
  * @return True if the read was successful
 */
-static bool i2cReadByte(unsigned char addr, unsigned char reg, unsigned char *dest) {
+static bool i2cReadByte(uint8_t addr, uint8_t reg, uint8_t *dest) {
     int timeout = i2c_write_timeout_us(DRIVER_I2C, addr, &reg, sizeof(reg), true, DRIVER_TIMEOUT_US);
     if (timeout != sizeof(reg)) return false;
     timeout = i2c_read_timeout_us(DRIVER_I2C, addr, dest, sizeof(*dest), false, DRIVER_TIMEOUT_US);
@@ -47,7 +47,7 @@ static bool i2cReadByte(unsigned char addr, unsigned char reg, unsigned char *de
  * @param len The number of bytes to read
  * @return True if the read was successful
 */
-static bool i2cReadBytes(unsigned char addr, unsigned char reg, unsigned char *dest, size_t len) {
+static bool i2cReadBytes(uint8_t addr, uint8_t reg, uint8_t *dest, size_t len) {
     int timeout = i2c_write_timeout_us(DRIVER_I2C, addr, &reg, sizeof(reg), true, DRIVER_TIMEOUT_US);
     if (timeout != sizeof(reg)) return false;
     timeout = i2c_read_timeout_us(DRIVER_I2C, addr, dest, len, false, DRIVER_TIMEOUT_US);
@@ -61,8 +61,8 @@ static bool i2cReadBytes(unsigned char addr, unsigned char reg, unsigned char *d
  * @param val The value to write
  * @return True if the write was successful
 */
-static bool i2cWriteByte(unsigned char addr, unsigned char reg, unsigned char val) {
-    unsigned char c[] = {reg, val};
+static bool i2cWriteByte(uint8_t addr, uint8_t reg, uint8_t val) {
+    uint8_t c[] = {reg, val};
     int timeout = i2c_write_timeout_us(DRIVER_I2C, addr, c, sizeof(c), true, DRIVER_TIMEOUT_US);
     return timeout == sizeof(c);
 }
@@ -75,8 +75,8 @@ static bool i2cWriteByte(unsigned char addr, unsigned char reg, unsigned char va
  * @param len The length of the value
  * @return True if the write was successful
 */
-static bool i2cWriteBytes(unsigned char addr, unsigned char reg, const unsigned char *val, size_t len) {
-    unsigned char c[len + 1];
+static bool i2cWriteBytes(uint8_t addr, uint8_t reg, const uint8_t *val, size_t len) {
+    uint8_t c[len + 1];
     c[0] = reg;
     memcpy(&c[1], val, len);
     int timeout = i2c_write_timeout_us(DRIVER_I2C, addr, c, len + 1, true, DRIVER_TIMEOUT_US);
@@ -99,18 +99,18 @@ void driver_init() {
     i2c_init(DRIVER_I2C, I2C_FREQ_KHZ * 1000);
 }
 
-int32_t driver_read(registerDeviceInfo_t *devInfo, uint16_t peripheralAddress, const registerReadlist_t *pReadList, uint8_t *pOutBuf) {
+int32_t driver_read(registerDeviceInfo_t *devInfo, uint16_t peripheralAddress, const registerReadList_t *pReadList, uint8_t *pOutBuf) {
     uint8_t *pBuf;
 
     // Validate handle
     if (pReadList == NULL || pOutBuf == NULL) {
         return SENSOR_ERROR_BAD_ADDRESS;
     }
-    const registerReadlist_t *pCmd = pReadList;
+    const registerReadList_t *pCmd = pReadList;
 
     // Traverse the read list and read the registers one by one unless the register read list numBytes is zero
     for (pBuf = pOutBuf; pCmd->numBytes != 0; pCmd++) {
-        if (!i2cReadBytes((unsigned char)peripheralAddress, (unsigned char)pCmd->readFrom, pBuf, pCmd->numBytes)) {
+        if (!i2cReadBytes((uint8_t)peripheralAddress, (uint8_t)pCmd->readFrom, pBuf, pCmd->numBytes)) {
             return SENSOR_ERROR_READ;
         }
         pBuf += pCmd->numBytes;
@@ -119,24 +119,24 @@ int32_t driver_read(registerDeviceInfo_t *devInfo, uint16_t peripheralAddress, c
 }
 
 int32_t driver_read_register(registerDeviceInfo_t *devInfo, uint16_t peripheralAddress, uint8_t offset, uint8_t len, uint8_t *pOutBuf) {
-    if (i2cReadBytes((unsigned char)peripheralAddress, offset, pOutBuf, len)) {
+    if (i2cReadBytes((uint8_t)peripheralAddress, offset, pOutBuf, len)) {
         return SENSOR_ERROR_NONE;
     } else {
         return SENSOR_ERROR_READ;
     }
 }
 
-int8_t driver_write_list(registerDeviceInfo_t *devInfo, uint16_t peripheralAddress, const registerwritelist_t *pRegWriteList) {
+int8_t driver_write_list(registerDeviceInfo_t *devInfo, uint16_t peripheralAddress, const registerWriteList_t *pRegWriteList) {
     // Validate handle
     if (pRegWriteList == NULL) {
         return SENSOR_ERROR_BAD_ADDRESS;
     }
 
-    const registerwritelist_t *pCmd = pRegWriteList;
+    const registerWriteList_t *pCmd = pRegWriteList;
     // Update register values based on register write list until the next cmd is the list terminator.
     while (pCmd->writeTo != 0xFFFF) {
         // Set the register based on the values in the register value pair
-        if (!i2cWriteByte((unsigned char)peripheralAddress, (unsigned char)pCmd->writeTo, pCmd->value)) {
+        if (!i2cWriteByte((uint8_t)peripheralAddress, (uint8_t)pCmd->writeTo, pCmd->value)) {
             return SENSOR_ERROR_WRITE;
         }
         ++pCmd;

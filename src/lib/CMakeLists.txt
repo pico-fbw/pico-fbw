@@ -9,6 +9,7 @@ add_library(fbw_lib
     fusion/orient.c
     fusion/status.c
     fusion/drivers/drivers.c
+    fusion/drivers/ak09916.c
     fusion/drivers/bno055.c
     fusion/drivers/icm20948.c
     minmea.c

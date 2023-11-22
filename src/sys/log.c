@@ -166,7 +166,7 @@ static void log_displayEntry(LogEntry *entry) {
 }
 
 static inline int64_t logProcessQueue(alarm_id_t id, void *data) {
-    if (!platform_is_booted()) return (1000 * 1000);
+    if (!platform_is_booted()) return (500 * 1000);
     log_displayEntry(&queuedEntry);
     return 0;
 }
@@ -201,6 +201,8 @@ void log_message(LogType type, char msg[64], int code, uint pulse_ms, bool force
                 if (platform_is_booted() || type == FATAL || type == INFO) {
                     log_displayEntry(&entry);
                 } else {
+                    // The system isn't booted and the type isn't severe enough to warrant displaying it at the moment,
+                    // so we'll check every 500ms if the system is booted and display it if it is
                     queuedEntry = entry;
                     add_alarm_in_ms(500, logProcessQueue, NULL, true);
                 }
@@ -264,10 +266,9 @@ void log_clear(LogType type) {
     if (lastLogEntry.type == type) log_resetLast();
     // Reset the error display if the current displayed error is of this type
     if (lastDisplayedEntry.type == type) {
-        if (!platform_is_fbw()) led_reset();
         // Go through all log types in reverse order to find the most fatal error (if it exists), and display it instead
+        bool hadError = false;
         for (LogType type = FATAL; type >= INFO; type--) {
-            bool hadError = false;
             for (uint i = 0; i < logCount; i++) {
                 if (logEntries[i].type == type) {
                     log_displayEntry(&logEntries[i]);
@@ -276,6 +277,14 @@ void log_clear(LogType type) {
                 }
             }
             if (hadError) break;
+        }
+        // If there was no error, reset the display
+        if (!hadError) {
+            if (platform_is_fbw()) {
+                display_powerSave();
+            } else {
+                led_reset();
+            }
         }
     }
 }

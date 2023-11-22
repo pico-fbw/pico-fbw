@@ -125,6 +125,20 @@ void SaveAccelCalibrationToFlash(SensorFusionGlobals *sfg) {
     #endif
 }
 
+void EraseFusionCalibration() {
+    // Corrupt the headers so fusion believes there is no calibration
+    #if F_USING_MAG
+        calibration_mag[0] = 0;
+    #endif
+    #if F_USING_GYRO
+        calibration_gyro[0] = 0;
+    #endif
+    #if F_USING_ACCEL
+        calibration_accel[0] = 0;
+    #endif
+    flash_save();
+}
+
 bool MagCalibrationExists() {
     // The header of each calibration block type contains magic value if valid calibration has been previously stored
     return (calibration_mag[0] == CALIBRATION_BUF_MAGNETIC_HEADER_MAGIC);

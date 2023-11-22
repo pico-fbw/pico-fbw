@@ -10,12 +10,12 @@
 int8_t BNO055_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
 int8_t BNO055_read(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
 
-/* I2C Addresses */
+/* I2C Addresses*/
 #define BNO055_I2C_ADDR_LOW            (0x28)
 #define BNO055_I2C_ADDR_HIGH           (0x29)
 
-/* Expected chip WHO_AM_I/ID value */
-#define BNO055_CHIP_WHO_AM_I           (0xA0)
+/* Expected chip ID value*/
+#define BNO055_CHIP_ID_EXPECTED        (0xA0)
 
 /* Page id register definition*/
 #define BNO055_PAGE_ID                 (0X07)
@@ -29,7 +29,7 @@ int8_t BNO055_read(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
 #define BNO055_SW_REV_ID_MSB           (0x05)
 #define BNO055_BL_REV_ID               (0X06)
 
-/* Accel data register*/
+/* Accel data registers*/
 #define BNO055_ACCEL_DATA_X_LSB        (0X08)
 #define BNO055_ACCEL_DATA_X_MSB        (0X09)
 #define BNO055_ACCEL_DATA_Y_LSB        (0X0A)
@@ -37,7 +37,7 @@ int8_t BNO055_read(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
 #define BNO055_ACCEL_DATA_Z_LSB        (0X0C)
 #define BNO055_ACCEL_DATA_Z_MSB        (0X0D)
 
-/* Mag data register*/
+/* Mag data registers*/
 #define BNO055_MAG_DATA_X_LSB          (0X0E)
 #define BNO055_MAG_DATA_X_MSB          (0X0F)
 #define BNO055_MAG_DATA_Y_LSB          (0X10)

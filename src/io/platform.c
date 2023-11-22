@@ -24,10 +24,19 @@
 #include "aahrs.h"
 #include "display.h"
 #include "flash.h"
+#include "gps.h"
+#include "pwm.h"
 
+#include "../modes/modes.h"
+
+#include "../sys/api/api.h"
 #include "../sys/info.h"
+#include "../sys/log.h"
+#include "../sys/switch.h"
 
 #include "platform.h"
+
+/** @section Boot functions */
 
 bool isBooted = false;
 
@@ -119,9 +128,11 @@ void platform_enable_watchdog() {
 bool platform_is_booted() { return isBooted; }
 
 void platform_boot_complete() {
-    if (platform_is_fbw()) display_anim();
+    if (platform_is_fbw() && log_countErrs() == 0) display_anim();
     isBooted = true;
 }
+
+/** @section Power functions */
 
 BootType platform_boot_type() {
     if (watchdog_caused_reboot()) {
@@ -154,12 +165,40 @@ void __attribute__((noreturn)) platform_shutdown() {
     reset_usb_boot(0, 1); // Reboot into bootloader but don't mount mass storage
 }
 
+/** @section Runtime functions */
+
+void platform_loop() {
+    // Update the mode switch's position, update sensors, run the current mode's code, respond to any new API calls, and update the watchdog
+    float switchPos = pwm_read((uint)flash.pins[PINS_INPUT_SWITCH], PWM_MODE_DEG);
+    switch ((SwitchType)flash.general[GENERAL_SWITCH_TYPE]) {
+        case SWITCH_TYPE_2_POS:
+            if (switchPos < 90) {
+                switch_update(SWITCH_POSITION_LOW);
+            } else {
+                switch_update(SWITCH_POSITION_HIGH);
+            }
+            break;
+        case SWITCH_TYPE_3_POS:
+            if (switchPos < 85) {
+                switch_update(SWITCH_POSITION_LOW);
+            } else if (switchPos > 95) {
+                switch_update(SWITCH_POSITION_HIGH);
+            } else {
+                switch_update(SWITCH_POSITION_MID);
+            }
+            break;
+    }
+    aahrs.update();
+    if ((GPSCommandType)flash.sensors[SENSORS_GPS_COMMAND_TYPE] != GPS_COMMAND_TYPE_NONE) gps.update();
+    aircraft.update();
+    if ((bool)flash.general[GENERAL_API_ENABLED]) api_poll();
+    watchdog_update();
+}
+
 void platform_sleep_ms(uint32_t ms) {
     absolute_time_t wakeup_time = make_timeout_time_ms(ms);
     while (!time_reached(wakeup_time)) {
-        aahrs.update();
-        watchdog_update();
-        tight_loop_contents();
+        platform_loop();
     }
 }
 
@@ -181,6 +220,8 @@ bool __no_inline_not_in_flash_func(platform_buttonPressed)() {
     return btnState;
 }
 
+/** @section Platform type functions */
+
 bool platform_is_pico() {
     #if defined(RASPBERRYPI_PICO) || defined(RASPBERRYPI_PICO_W)
         return true;
@@ -189,7 +230,7 @@ bool platform_is_pico() {
     #endif
 }
 
-bool platform_is_fbw() { return gpio_get(22); }
+bool platform_is_fbw() { return true; }
 
 Platform platform_type() {
     if (platform_is_fbw()) {

@@ -102,12 +102,11 @@ static inline void url_decode(char *str) {
         dns_server_deinit(&dns_server);
         dhcp_server_deinit(&dhcp_server);
         tcp_server_close(state);
-        // cyw43_arch_deinit();
     }
 
     int wifly_genPageContent(char *result, size_t max_result_len) {
         char color[8];
-        char msg[165]; // change this if the longest message gets any larger, this is too small for me to implement malloc and such
+        char msg[165]; // change this if the longest message gets any larger, this is too small for me to implement dynamic mem
         switch(fplanStatus) {
             case WIFLY_STATUS_AWAITING:
                 snprintf(color, sizeof(color), WIFLY_HEX_INACTIVE);
@@ -119,8 +118,9 @@ static inline void url_decode(char *str) {
                 break;
             case WIFLY_STATUS_GPS_OFFSET:
                 snprintf(color, sizeof(color), WIFLY_HEX_OK);
-                snprintf(msg, sizeof(msg), "Flightplan successfully uploaded!<br><br>When ready, please engage auto mode to calibrate the GPS."
-                                        "<br>Auto mode will be automatically disengaged once complete.");
+                snprintf(msg, sizeof(msg), "Flightplan successfully uploaded!<br><br>"
+                                           "When ready, please engage auto mode to calibrate the GPS."
+                                           "<br>Auto mode will be automatically disengaged once complete.");
                 break;
             case WIFLY_ERR_PARSE:
                 snprintf(color, sizeof(color), WIFLY_HEX_ERR);
@@ -136,7 +136,8 @@ static inline void url_decode(char *str) {
                 break;
             case WIFLY_WARN_FW_VERSION:
                 snprintf(color, sizeof(color), WIFLY_HEX_WARN);
-                snprintf(msg, sizeof(msg), "<b>Warning:</b> there is a new firmware version available!");
+                snprintf(msg, sizeof(msg), "There is a new firmware version available!<br>"
+                                           "Download it <a href=\"https://github.com/pico-fbw/pico-fbw/releases/latest\">here</a>.");
                 break;   
             default:
                 return 0;
