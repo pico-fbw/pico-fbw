@@ -163,7 +163,7 @@ void processAccelData(SensorFusionGlobals *sfg)
       sfg->setStatus(sfg, SOFT_FAULT);
     }
 
-    // FIXME: all the ApplyHAL functions are just axis remaps, inline the previous code when necessary?
+    // FIXME: remake the ApplyHAL funcs (for accel, mag, gyro) which transform X/Y/Z to NED coords, different for each sensor
     // https://github.com/BjarneBitscrambler/OrientationSensorFusion-ESP/blob/865cf36f22a0a9b30a37a657f8ea825728025b89/src/sensor_fusion/hal_axis_remap.c#L58
     // ApplyAccelHAL(&(sfg->Accel));     // This function is board-dependent
 

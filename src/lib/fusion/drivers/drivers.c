@@ -90,13 +90,13 @@ void driver_init() {
     } else if (DRIVER_I2C == i2c1) {
         if (print.fbw) printf("i2c1 ");
     }
-    if (print.fbw) printf("at %d kHz, on pins %d (SDA) and %d (SCL)\n", I2C_FREQ_KHZ,
+    if (print.fbw) printf("at %d kHz, on pins %d (SDA) and %d (SCL)\n", DRIVER_FREQ_KHZ,
                           (uint)flash.pins[PINS_AAHRS_SDA], (uint)flash.pins[PINS_AAHRS_SCL]);
     gpio_set_function((uint)flash.pins[PINS_AAHRS_SDA], GPIO_FUNC_I2C);
     gpio_set_function((uint)flash.pins[PINS_AAHRS_SCL], GPIO_FUNC_I2C);
     gpio_pull_up((uint)flash.pins[PINS_AAHRS_SDA]);
     gpio_pull_up((uint)flash.pins[PINS_AAHRS_SCL]);
-    i2c_init(DRIVER_I2C, I2C_FREQ_KHZ * 1000);
+    i2c_init(DRIVER_I2C, DRIVER_FREQ_KHZ * 1000);
 }
 
 int32_t driver_read(registerDeviceInfo_t *devInfo, uint16_t peripheralAddress, const registerReadList_t *pReadList, uint8_t *pOutBuf) {

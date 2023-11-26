@@ -167,7 +167,7 @@ void __attribute__((noreturn)) platform_shutdown() {
 
 /** @section Runtime functions */
 
-void platform_loop() {
+void platform_loop(bool updateAircraft) {
     // Update the mode switch's position, update sensors, run the current mode's code, respond to any new API calls, and update the watchdog
     float switchPos = pwm_read((uint)flash.pins[PINS_INPUT_SWITCH], PWM_MODE_DEG);
     switch ((SwitchType)flash.general[GENERAL_SWITCH_TYPE]) {
@@ -179,9 +179,9 @@ void platform_loop() {
             }
             break;
         case SWITCH_TYPE_3_POS:
-            if (switchPos < 85) {
+            if (switchPos < 45) {
                 switch_update(SWITCH_POSITION_LOW);
-            } else if (switchPos > 95) {
+            } else if (switchPos > 135) {
                 switch_update(SWITCH_POSITION_HIGH);
             } else {
                 switch_update(SWITCH_POSITION_MID);
@@ -190,15 +190,15 @@ void platform_loop() {
     }
     aahrs.update();
     if ((GPSCommandType)flash.sensors[SENSORS_GPS_COMMAND_TYPE] != GPS_COMMAND_TYPE_NONE) gps.update();
-    aircraft.update();
+    if (updateAircraft) aircraft.update();
     if ((bool)flash.general[GENERAL_API_ENABLED]) api_poll();
     watchdog_update();
 }
 
-void platform_sleep_ms(uint32_t ms) {
+void platform_sleep_ms(uint32_t ms, bool updateAircraft) {
     absolute_time_t wakeup_time = make_timeout_time_ms(ms);
     while (!time_reached(wakeup_time)) {
-        platform_loop();
+        platform_loop(updateAircraft);
     }
 }
 
@@ -230,7 +230,7 @@ bool platform_is_pico() {
     #endif
 }
 
-bool platform_is_fbw() { return true; }
+bool platform_is_fbw() { return gpio_get(22); }
 
 Platform platform_type() {
     if (platform_is_fbw()) {

@@ -76,9 +76,13 @@ PWMCalibrationStatus pwm_isCalibrated();
 void pwm_getPins(uint *pins, uint *num_pins, float *deviations);
 
 /**
- * @return true if PWM has been set up with an autothrottle input (aka an autothrottle control mode has been selected),
- * false if not.
+ * @return true if PWM has been set up with an autothrottle input (aka an autothrottle control mode has been selected), false if not.
 */
 bool pwm_hasAthr();
+
+/**
+ * @return true if PWM has been set up with a rudder input (aka a rudder control mode has been selected), false if not.
+*/
+bool pwm_hasRud();
 
 #endif // __PWM_H

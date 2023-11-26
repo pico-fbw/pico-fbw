@@ -1,6 +1,9 @@
 #ifndef __ORIENT_H
 #define __ORIENT_H
 
+// https://www.nxp.com/docs/en/application-note/AN5017.pdf
+// https://www.nxp.com/docs/en/application-note/AN5021.pdf
+
 /// quaternion structure definition
 typedef struct Quaternion       
 {

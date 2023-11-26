@@ -24,7 +24,7 @@
 #include "modes.h"
 
 void update() {
-    switch(aircraft.mode) {
+    switch (aircraft.mode) {
         case MODE_DIRECT:
             mode_direct();
             break;   
@@ -43,7 +43,7 @@ void update() {
     }
 }
 
-// TODO: launch mode?
+// TODO: autolaunch(detect accel and fly away)->normal/auto mode?
 
 void changeTo(Mode newMode) {
     // Run deinit code for aircraft.mode and then run init code for newMode
@@ -74,16 +74,13 @@ void changeTo(Mode newMode) {
                 break;
             NORMAL:
             case MODE_NORMAL:
-                // Automatically enter tune mode if necessary
-                if (!mode_tuneisCalibrated()) {
-                    goto TUNE;
-                }
                 if (print.fbw) printf("[modes] entering normal mode\n");
                 mode_normalInit();
                 aircraft.mode = MODE_NORMAL;
                 break;
             AUTO:
             case MODE_AUTO:
+                // Automatically enter tune mode if necessary
                 if (!mode_tuneisCalibrated()) {
                     goto TUNE;
                 }
@@ -128,8 +125,8 @@ void changeTo(Mode newMode) {
                 break;
         }
     } else {
-        if (print.fbw) printf("[modes] entering direct mode\n");
-        log_message(ERROR, "AAHRS has failed, entering direct mode!", 250, 0, true);
+        if (print.fbw) printf("[modes] AAHRS has failed, entering direct mode!\n");
+        log_message(ERROR, "AAHRS has failed!", 250, 0, true);
         aircraft.mode = MODE_DIRECT;
     }
 }

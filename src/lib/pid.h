@@ -27,6 +27,7 @@ typedef struct PIDController {
 	double prevError;			/* Required for integrator */
 	double differentiator;
 	double prevMeasurement;		/* Required for differentiator */
+	double prevT;
 
 	/* Controller output */
 	double out;

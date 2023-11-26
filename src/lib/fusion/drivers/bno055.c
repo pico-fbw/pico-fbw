@@ -83,8 +83,13 @@ int8_t BNO055_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
     // Wait if BNO055 isn't ready yet (takes 850ms)
     while (time_us_64() < (850 * 1000)) tight_loop_contents();
     // Check that the sensor comms are okay and that it's a BNO055
-    if (print.aahrs) printf("[BNO055] initializing...\n");
-    status = driver_read_register(&sensor->deviceInfo, sensor->addr, BNO055_CHIP_ID_READ[0].readFrom, BNO055_CHIP_ID_READ[0].numBytes, &reg);
+    if (print.aahrs) printf("[BNO055] initializing...");
+    for (uint i = 0; i < DRIVER_INIT_ATTEMPTS; i++) {
+        if (print.aahrs) printf("attempt %d ", i);
+        status = driver_read_register(&sensor->deviceInfo, sensor->addr, BNO055_CHIP_ID_READ[0].readFrom, BNO055_CHIP_ID_READ[0].numBytes, &reg);
+        if (status == SENSOR_ERROR_NONE && reg == BNO055_CHIP_ID_EXPECTED) break;
+    }
+    if (print.aahrs) printf("\n");
     if (status != SENSOR_ERROR_NONE) {
         if (print.fbw) printf("[BNO055] ERROR: address not acknowledged! (no/wrong device present?)\n");
         return status;

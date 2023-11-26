@@ -79,16 +79,19 @@ void __attribute__((noreturn)) platform_shutdown();
 /**
  * Runs the main loop code of the program.
  * This should be called in an infinite loop after the system is booted.
+ * @param updateAircraft whether to update the aircraft state (run the current mode) or not.
 */
-void platform_loop();
+void platform_loop(bool updateAircraft);
 
 /**
  * Performs a non-blocking sleep, as platform_loop() is run in the background.
  * @param ms the number of milliseconds to sleep
+ * @param updateAircraft whether to update the aircraft state (run the current mode) or not.
+ * This may be desirable if interacting with aircraft systems externally, such as servos/ESC.
  * @note This should be used after the system is booted when a longer sleep must be performed,
  * as using normal sleep_ms would trigger the watchdog interrupt.
 */
-void platform_sleep_ms(uint32_t ms);
+void platform_sleep_ms(uint32_t ms, bool updateAircraft);
 
 /**
  * Gets the current state of the BOOTSEL button.

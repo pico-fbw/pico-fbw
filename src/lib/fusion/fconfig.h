@@ -14,10 +14,6 @@
 #ifndef __FCONFIG_H
 #define __FCONFIG_H
 
-// TODO: take most important things out of FCONFIG and make them runtime
-
-#define I2C_FREQ_KHZ 400 // Frequency to use on the sensor i2c bus
-
 // sensor hardware details
 #define GYRO_FIFO_SIZE  32	///< FXAX21000, FXAS21002 have 32 element FIFO
 #define ACCEL_FIFO_SIZE 32	///< FXOS8700 (accel), MMA8652, FXLS8952 all have 32 element FIFO
@@ -42,7 +38,6 @@
 /// Change bit-field values to 0x0000 for any features NOT USED.
 /// These bitmasks are also used to set the pSensor->isInitialized flag once a particular
 /// sensor is communicating successfully. F_USING_NONE indicates a problem with that sensor.
-//TODO - unhandled exception if trying to not use gyro (and possibly others)
 #define F_USING_NONE        0x0000 ///< 0x0000 indicates a sensor is unavailable / unconfigured.
 #define F_USING_ACCEL       0x0001 ///< nominally 0x0001 if an accelerometer is to be used, 0x0000 otherwise
 #define F_USING_MAG         0x0002 ///< nominally 0x0002 if an magnetometer  is to be used, 0x0000 otherwise

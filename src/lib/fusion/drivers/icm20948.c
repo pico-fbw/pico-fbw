@@ -47,23 +47,28 @@ const registerWriteList_t ICM20948_CONFIGURE[] = {
     { ICM20948_USER_CTRL, 0x40, 0x00 }, // Enable FIFO
     { ICM20948_INT_PIN_CFG, 0x02, 0x00 }, // Enable bypass mode (for mag)
     { ICM20948_BANK_SEL, ICM20948_SEL_BANK_2, 0x00 },
-    { ICM20948_GYRO_CONFIG_1, 0x29, 0x00 }, // Gyro 250 deg/s, 17Hz low-pass filter
+    { ICM20948_GYRO_CONFIG_1, 0x2D, 0x00 }, // Gyro 1000 deg/s, 17Hz low-pass filter
     { ICM20948_GYRO_SMPLRT_DIV, 0x0A, 0x00 }, // Gyro 100Hz ODR
-    { ICM20948_ACCEL_CONFIG_1, 0x29, 0x00 }, // Accel ±2G, 17Hz low-pass filter
+    { ICM20948_ACCEL_CONFIG_1, 0x2B, 0x00 }, // Accel ±4G, 17Hz low-pass filter
     { ICM20948_ACCEL_SMPLRT_DIV_2, 0x0A, 0x00 }, // Accel 100Hz±2 ODR
     { ICM20948_BANK_SEL, ICM20948_SEL_BANK_0, 0x00 },
     __END_WRITE_DATA__
 };
 
-#define ICM20948_COUNTS_PER_G 16384 // (datasheet pg. 12, we use ±2G range so ACCEL_FS=0)
+#define ICM20948_COUNTS_PER_G 8192 // (datasheet pg. 12, we use ±4G range so ACCEL_FS=1)
 
-#define ICM20948_COUNTS_PER_DPS 131 // (datasheet pg. 11, we use 250 deg/s so GYRO_FS_SEL=0)
+#define ICM20948_COUNTS_PER_DPS 32.8 // (datasheet pg. 11, we use 1000 deg/s so GYRO_FS_SEL=2)
 
 int8_t ICM20948_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
     int32_t status;
     uint8_t reg;
-    if (print.aahrs) printf("[ICM20948] initializing...\n");
-    status = driver_read_register(&sensor->deviceInfo, sensor->addr, ICM20948_WHO_AM_I_READ[0].readFrom, ICM20948_WHO_AM_I_READ[0].numBytes, &reg);
+    if (print.aahrs) printf("[ICM20948] initializing...");
+    for (uint i = 0; i < DRIVER_INIT_ATTEMPTS; i++) {
+        if (print.aahrs) printf("attempt %d ", i);
+        status = driver_read_register(&sensor->deviceInfo, sensor->addr, ICM20948_WHO_AM_I_READ[0].readFrom, ICM20948_WHO_AM_I_READ[0].numBytes, &reg);
+        if (status == SENSOR_ERROR_NONE && reg == ICM20948_WHO_AM_I_EXPECTED) break;
+    }
+    if (print.aahrs) printf("\n");
     if (status != SENSOR_ERROR_NONE) {
         if (print.fbw) printf("[ICM20948] ERROR: address not acknowledged! (no/wrong device present?)\n");
         return status;
@@ -80,7 +85,7 @@ int8_t ICM20948_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
     #endif
     #if F_USING_GYRO
         sfg->Gyro.iWhoAmI = reg;
-        sfg->Gyro.iCountsPerDegPerSec = ICM20948_COUNTS_PER_DPS;
+        sfg->Gyro.iCountsPerDegPerSec = (int16_t)ICM20948_COUNTS_PER_DPS;
         sfg->Gyro.fDegPerSecPerCount = 1.0f/ICM20948_COUNTS_PER_DPS;
     #endif
 

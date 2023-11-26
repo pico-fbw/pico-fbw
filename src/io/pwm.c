@@ -330,3 +330,8 @@ bool pwm_hasAthr() {
     (ControlMode)flash.general[GENERAL_CONTROL_MODE] == CTRLMODE_2AXIS_ATHR ||
     (ControlMode)flash.general[GENERAL_CONTROL_MODE] == CTRLMODE_FLYINGWING_ATHR;
 }
+
+bool pwm_hasRud() {
+    return (ControlMode)flash.general[GENERAL_CONTROL_MODE] == CTRLMODE_3AXIS ||
+           (ControlMode)flash.general[GENERAL_CONTROL_MODE] == CTRLMODE_3AXIS_ATHR;
+}

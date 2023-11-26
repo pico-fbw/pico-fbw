@@ -3,7 +3,7 @@
 */
 
 /**
- * Credit goes to "pms67" and "drbitboy" for developing this PID implementation, check it out here:
+ * Credit goes to pms67 and drbitboy for developing this PID implementation, check it out here:
  * https://github.com/drbitboy/PID
 */
 
@@ -13,6 +13,7 @@
 */
 
 #include <stdio.h>
+#include "pico/time.h"
 
 #include "../io/flash.h"
 
@@ -33,6 +34,11 @@ void pid_init(PIDController *pid) {
 }
 
 void pid_update(PIDController *pid, double setpoint, double measurement) {
+
+	/*
+	* Time
+	*/
+	pid->T = time_us_64() / 1E6 - pid->prevT;
 
 	/*
 	* Error signal
@@ -82,8 +88,9 @@ void pid_update(PIDController *pid, double setpoint, double measurement) {
 
     }
 
-	/* Store error and measurement for later use */
+	/* Store error, measurement, and time for later use */
     pid->prevError       = error;
     pid->prevMeasurement = measurement;
+	pid->prevT = time_us_64() / 1E6;
 
 }

@@ -198,7 +198,7 @@ int main() {
     platform_boot_complete();
     // Main program loop:
     while (true) {
-        platform_loop();
+        platform_loop(true);
     }
 
     return 0; // How did we get here?

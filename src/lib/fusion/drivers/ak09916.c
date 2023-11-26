@@ -52,16 +52,21 @@ const registerWriteList_t AK09916_CONFIGURE[] = {
 int8_t AK09916_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
     int32_t status;
     uint8_t reg;
-    if (print.aahrs) printf("[AK09916] initializing...\n");
-    status = driver_read_register(&sensor->deviceInfo, sensor->addr, AK09916_DEVICE_ID_READ[0].readFrom, AK09916_DEVICE_ID_READ[0].numBytes, &reg);
-    // if (status != SENSOR_ERROR_NONE) {
-    //     if (print.fbw) printf("[AK09916] ERROR: address not acknowledged! (no/wrong device present?)\n");
-    //     return status;
-    // }
-    // if (reg != AK09916_DEVICE_ID_EXPECTED) {
-    //     if (print.fbw) printf("[AK09916] ERROR: could not verify chip!\n");
-    //     return SENSOR_ERROR_INIT;
-    // }
+    if (print.aahrs) printf("[AK09916] initializing...");
+    for (uint i = 0; i < DRIVER_INIT_ATTEMPTS; i++) {
+        if (print.aahrs) printf("attempt %d ", i);
+        status = driver_read_register(&sensor->deviceInfo, sensor->addr, AK09916_DEVICE_ID_READ[0].readFrom, AK09916_DEVICE_ID_READ[0].numBytes, &reg);
+        if (status == SENSOR_ERROR_NONE && reg == AK09916_DEVICE_ID_EXPECTED) break;
+    }
+    if (print.aahrs) printf("\n");
+    if (status != SENSOR_ERROR_NONE) {
+        if (print.fbw) printf("[AK09916] ERROR: address not acknowledged! (no/wrong device present?)\n");
+        return status;
+    }
+    if (reg != AK09916_DEVICE_ID_EXPECTED) {
+        if (print.fbw) printf("[AK09916] ERROR: could not verify chip!\n");
+        return SENSOR_ERROR_INIT;
+    }
     #if F_USING_MAG
         sfg->Mag.iWhoAmI = reg;
         sfg->Mag.iCountsPeruT = (int16_t)(AK09916_COUNTS_PER_UT + 0.5f);

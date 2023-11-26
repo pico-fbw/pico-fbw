@@ -67,11 +67,11 @@ uint api_test_aahrs(const char *cmd, const char *args) {
     printf("[api] awaiting right roll...\n");
     if (!waitForAxis(IMU_AXIS_ROLL, 20, 10000)) return 500;
     printf("[api] return to center.\n");
-    platform_sleep_ms(1500);
+    platform_sleep_ms(1500, false);
     printf("[api] awaiting pitch up...\n");
     if (!waitForAxis(IMU_AXIS_PITCH, 20, 10000)) return 500;
     printf("[api] return to center.\n");
-    platform_sleep_ms(1500);
+    platform_sleep_ms(1500, false);
     printf("[api] awaiting right yaw...\n");
     if (!waitForAxis(IMU_AXIS_YAW, 20, 10000)) return 500;
     return 200;

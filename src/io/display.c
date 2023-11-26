@@ -354,7 +354,7 @@ void display_text(char l1[], char l2[], char l3[], char l4[], bool center) {
 
 void display_powerSave() {
     display_text("Entering", "power save", "mode", NULL, true);
-    platform_sleep_ms(2000);
+    platform_sleep_ms(2000, true);
     memset(buf, 0, sizeof(buf));
     render(buf, &frame_area);
 }
@@ -366,7 +366,7 @@ void display_anim() {
     while (!time_reached(wait)) {
         for (uint i = 0; i < count_of(lightspeed); i++) {
             render(lightspeed[i], &frame_area);
-            platform_sleep_ms(2);
+            platform_sleep_ms(2, true);
         }
     }
     display_powerSave();

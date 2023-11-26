@@ -327,12 +327,10 @@ static void getFromPID(const char *key, float **value) {
         *value = &flash.pid[PID_FLAG];
     } else if (strcasecmp(key, "roll_kp") == 0) {
         *value = &flash.pid[PID_ROLL_KP];
-    } else if (strcasecmp(key, "roll_ti") == 0) {
-        *value = &flash.pid[PID_ROLL_TI];
-    } else if (strcasecmp(key, "roll_td") == 0) {
-        *value = &flash.pid[PID_ROLL_TD];
-    } else if (strcasecmp(key, "roll_kt") == 0) {
-        *value = &flash.pid[PID_ROLL_KT];
+    } else if (strcasecmp(key, "roll_ki") == 0) {
+        *value = &flash.pid[PID_ROLL_KI];
+    } else if (strcasecmp(key, "roll_kd") == 0) {
+        *value = &flash.pid[PID_ROLL_KD];
     } else if (strcasecmp(key, "roll_tau") == 0) {
         *value = &flash.pid[PID_ROLL_TAU];
     } else if (strcasecmp(key, "roll_integMin") == 0) {
@@ -341,12 +339,10 @@ static void getFromPID(const char *key, float **value) {
         *value = &flash.pid[PID_ROLL_INTEGMAX];
     } else if (strcasecmp(key, "pitch_kp") == 0) {
         *value = &flash.pid[PID_PITCH_KP];
-    } else if (strcasecmp(key, "pitch_ti") == 0) {
-        *value = &flash.pid[PID_PITCH_TI];
-    } else if (strcasecmp(key, "pitch_td") == 0) {
-        *value = &flash.pid[PID_PITCH_TD];
-    } else if (strcasecmp(key, "pitch_kt") == 0) {
-        *value = &flash.pid[PID_PITCH_KT];
+    } else if (strcasecmp(key, "pitch_ki") == 0) {
+        *value = &flash.pid[PID_PITCH_KI];
+    } else if (strcasecmp(key, "pitch_kd") == 0) {
+        *value = &flash.pid[PID_PITCH_KD];
     } else if (strcasecmp(key, "pitch_tau") == 0) {
         *value = &flash.pid[PID_PITCH_TAU];
     } else if (strcasecmp(key, "pitch_integMin") == 0) {
@@ -355,12 +351,10 @@ static void getFromPID(const char *key, float **value) {
         *value = &flash.pid[PID_PITCH_INTEGMAX];
     } else if (strcasecmp(key, "yaw_kp") == 0) {
         *value = &flash.pid[PID_YAW_KP];
-    } else if (strcasecmp(key, "yaw_ti") == 0) {
-        *value = &flash.pid[PID_YAW_TI];
-    } else if (strcasecmp(key, "yaw_td") == 0) {
-        *value = &flash.pid[PID_YAW_TD];
-    } else if (strcasecmp(key, "yaw_kt") == 0) {
-        *value = &flash.pid[PID_YAW_KT];
+    } else if (strcasecmp(key, "yaw_ki") == 0) {
+        *value = &flash.pid[PID_YAW_KI];
+    } else if (strcasecmp(key, "yaw_kd") == 0) {
+        *value = &flash.pid[PID_YAW_KD];
     } else if (strcasecmp(key, "yaw_tau") == 0) {
         *value = &flash.pid[PID_YAW_TAU];
     } else if (strcasecmp(key, "yaw_integMin") == 0) {
@@ -377,12 +371,10 @@ static bool setToPID(const char *key, float value) {
         flash.pid[PID_FLAG] = value;
     } else if (strcasecmp(key, "roll_kp") == 0) {
         flash.pid[PID_ROLL_KP] = value;
-    } else if (strcasecmp(key, "roll_ti") == 0) {
-        flash.pid[PID_ROLL_TI] = value;
-    } else if (strcasecmp(key, "roll_td") == 0) {
-        flash.pid[PID_ROLL_TD] = value;
-    } else if (strcasecmp(key, "roll_kt") == 0) {
-        flash.pid[PID_ROLL_KT] = value;
+    } else if (strcasecmp(key, "roll_ki") == 0) {
+        flash.pid[PID_ROLL_KI] = value;
+    } else if (strcasecmp(key, "roll_kd") == 0) {
+        flash.pid[PID_ROLL_KD] = value;
     } else if (strcasecmp(key, "roll_tau") == 0) {
         flash.pid[PID_ROLL_TAU] = value;
     } else if (strcasecmp(key, "roll_integMin") == 0) {
@@ -391,12 +383,10 @@ static bool setToPID(const char *key, float value) {
         flash.pid[PID_ROLL_INTEGMAX] = value;
     } else if (strcasecmp(key, "pitch_kp") == 0) {
         flash.pid[PID_PITCH_KP] = value;
-    } else if (strcasecmp(key, "pitch_ti") == 0) {
-        flash.pid[PID_PITCH_TI] = value;
-    } else if (strcasecmp(key, "pitch_td") == 0) {
-        flash.pid[PID_PITCH_TD] = value;
-    } else if (strcasecmp(key, "pitch_kt") == 0) {
-        flash.pid[PID_PITCH_KT] = value;
+    } else if (strcasecmp(key, "pitch_ki") == 0) {
+        flash.pid[PID_PITCH_KI] = value;
+    } else if (strcasecmp(key, "pitch_kd") == 0) {
+        flash.pid[PID_PITCH_KD] = value;
     } else if (strcasecmp(key, "pitch_tau") == 0) {
         flash.pid[PID_PITCH_TAU] = value;
     } else if (strcasecmp(key, "pitch_integMin") == 0) {
@@ -405,12 +395,10 @@ static bool setToPID(const char *key, float value) {
         flash.pid[PID_PITCH_INTEGMAX] = value;
     } else if (strcasecmp(key, "yaw_kp") == 0) {
         flash.pid[PID_YAW_KP] = value;
-    } else if (strcasecmp(key, "yaw_ti") == 0) {
-        flash.pid[PID_YAW_TI] = value;
-    } else if (strcasecmp(key, "yaw_td") == 0) {
-        flash.pid[PID_YAW_TD] = value;
-    } else if (strcasecmp(key, "yaw_kt") == 0) {
-        flash.pid[PID_YAW_KT] = value;
+    } else if (strcasecmp(key, "yaw_ki") == 0) {
+        flash.pid[PID_YAW_KI] = value;
+    } else if (strcasecmp(key, "yaw_kd") == 0) {
+        flash.pid[PID_YAW_KD] = value;
     } else if (strcasecmp(key, "yaw_tau") == 0) {
         flash.pid[PID_YAW_TAU] = value;
     } else if (strcasecmp(key, "yaw_integMin") == 0) {

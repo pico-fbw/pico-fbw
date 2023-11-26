@@ -34,17 +34,18 @@ void mode_normalInit() {
 
 void mode_normal() {
     // Refresh input data from rx
-    rollInput = pwm_read((uint)flash.pins[PINS_SERVO_AIL], PWM_MODE_DEG) - 90;
-    pitchInput = pwm_read((uint)flash.pins[PINS_SERVO_ELEV], PWM_MODE_DEG) - 90;
-    if ((ControlMode)flash.general[GENERAL_CONTROL_MODE] == CTRLMODE_3AXIS_ATHR ||
-        (ControlMode)flash.general[GENERAL_CONTROL_MODE] == CTRLMODE_3AXIS) {
-        yawInput = pwm_read((uint)flash.pins[PINS_SERVO_RUD], PWM_MODE_DEG) - 90;
+    rollInput = pwm_read((uint)flash.pins[PINS_INPUT_AIL], PWM_MODE_DEG) - 90;
+    pitchInput = pwm_read((uint)flash.pins[PINS_INPUT_ELEV], PWM_MODE_DEG) - 90;
+    if (pwm_hasRud()) {
+        yawInput = pwm_read((uint)flash.pins[PINS_INPUT_RUD], PWM_MODE_DEG) - 90;
     }
+    // This comment is a tribute to the world's stupidest bug where the above code was set to READ from the SERVOS
+    // and it took me much longer than I'm willing to admit to find (cue the facepalms, I know ._.)
     
-    // Check for manual overrides of externally set setpoints
+    // Check for manual overrides of externally set (by API) setpoints
     if (fabsf(rollInput) > flash.control[CONTROL_DEADBAND] ||
-    fabsf(pitchInput) > flash.control[CONTROL_DEADBAND] ||
-    fabsf(yawInput) > flash.control[CONTROL_DEADBAND]) {
+        fabsf(pitchInput) > flash.control[CONTROL_DEADBAND] ||
+        fabsf(yawInput) > flash.control[CONTROL_DEADBAND]) {
         overrideSetpoints = false;
     }
     if (!overrideSetpoints) {
@@ -63,7 +64,7 @@ void mode_normal() {
         // Make sure the PID setpoints aren't set to unsafe values so we don't get weird outputs from PID,
         // this is also where our bank/pitch protections come in.
         if (fabsf(rollSet) > flash.control[CONTROL_ROLL_LIMIT]) {
-            // If the roll values are unsafe, we do allow setting up to 67 but constant input is required, so check for that
+            // If the roll values are unsafe, we do allow setting up to to the hold limit but constant input is required, so check for that
             if (fabsf(rollInput) < fabsf(rollSet)) {
                 if (rollSet > 0) {
                     rollSet -= 0.05f;
@@ -77,10 +78,10 @@ void mode_normal() {
                 rollSet = -flash.control[CONTROL_ROLL_LIMIT_HOLD];
             }
         }
-        if (pitchSet >flash.control[CONTROL_PITCH_UPPER_LIMIT] || pitchSet < flash.control[CONTROL_PITCH_LOWER_LIMIT]) {
+        if (pitchSet > flash.control[CONTROL_PITCH_UPPER_LIMIT] || pitchSet < flash.control[CONTROL_PITCH_LOWER_LIMIT]) {
             // Pitch is simply limited to the unsafe thresholds
-            if (pitchSet >flash.control[CONTROL_PITCH_UPPER_LIMIT]) {
-                pitchSet =flash.control[CONTROL_PITCH_UPPER_LIMIT];
+            if (pitchSet > flash.control[CONTROL_PITCH_UPPER_LIMIT]) {
+                pitchSet = flash.control[CONTROL_PITCH_UPPER_LIMIT];
             } else if (pitchSet < flash.control[CONTROL_PITCH_LOWER_LIMIT]) {
                 pitchSet = flash.control[CONTROL_PITCH_LOWER_LIMIT];
             }
@@ -96,6 +97,8 @@ void mode_normal() {
 
     // Update the flight system with calculated setpoints
     flight_update((double)rollSet, (double)pitchSet, (double)yawInput, overrideYaw);
+    // FIXME: for now just passing throttle into ESC, when athr is done replace this with athr
+    if (pwm_hasAthr()) esc_set((uint)flash.pins[PINS_ESC_THROTTLE], (uint16_t)pwm_read((uint)flash.pins[PINS_INPUT_THROTTLE], PWM_MODE_ESC));
 }
 
 void mode_normalDeinit() {
@@ -106,15 +109,14 @@ void mode_normalDeinit() {
 
 bool mode_normalSetSetpoints(float roll, float pitch, float yaw) {
     // Ensure there are no manual control inputs before we allow setpoints to be externally set
-    if (rollInput < flash.control[CONTROL_DEADBAND] && rollInput > -flash.control[CONTROL_DEADBAND] &&
-    pitchInput < flash.control[CONTROL_DEADBAND] && pitchInput > -flash.control[CONTROL_DEADBAND] &&
-    yawInput < flash.control[CONTROL_DEADBAND] && yawInput > -flash.control[CONTROL_DEADBAND]) {
+    if (fabsf(rollInput) > flash.control[CONTROL_DEADBAND] &&
+        fabsf(pitchInput) > flash.control[CONTROL_DEADBAND] &&
+        fabsf(yawInput) > flash.control[CONTROL_DEADBAND]) {
         return false;
-    } else {
-        rollSet = roll;
-        pitchSet = pitch;
-        yawInput = yaw;
-        overrideSetpoints = true;
-        return true;
     }
+    rollSet = roll;
+    pitchSet = pitch;
+    yawInput = yaw;
+    overrideSetpoints = true;
+    return true;
 }

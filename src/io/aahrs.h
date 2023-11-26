@@ -7,8 +7,9 @@
 #define GYRO_AVG_SAMPLES 100
 // The maximum velocity (in deg/s) under which the gyroscope is considered to be stationary
 #define GYRO_STILL_VELOCITY 3
-// The maximum number of attempts to get a good (< 3.5%) magnetometer calibration, calibration will fail above this
-#define MAX_MAG_ATTEMPTS 10
+// The maximum number of attempts to get a magnetometer calibration using the 10 element (best) solver
+// The best current calibration will be used if the magnetometer is not calibrated after this many attempts, and a warning will be generated
+#define MAX_MAG_ATTEMPTS 15
 
 #define IMU_MODEL_MIN IMU_MODEL_BNO055
 typedef enum IMUModel {

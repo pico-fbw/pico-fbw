@@ -46,14 +46,16 @@ static uint rateDelay = 0; // Delay between fusion algorithm runs in microsecond
 static absolute_time_t ranFusion; // Time of the last fusion algorithm run
 
 bool aahrs_init() {
+    // Check the state of any previous calibration
     aahrs.isCalibrated = (bool)flash.calibration[CALIBRATION_AAHRS_CALIBRATED];
     if (aahrs.isCalibrated && ((IMUModel)flash.calibration[CALIBRATION_AAHRS_IMU_MODEL] != (IMUModel)flash.sensors[SENSORS_IMU_MODEL] ||
                                (BaroModel)flash.calibration[CALIBRATION_AAHRS_BARO_MODEL] != (BaroModel)flash.sensors[SENSORS_BARO_MODEL])) {
-        if (print.aahrs) printf("[AAHRS] calibration was performed on a different model, recalibration is necessary!\n");
+        if (print.aahrs) printf("[AAHRS] calibration was performed on different models, recalibration is necessary!\n");
         // This ensures the system won't load any bad calibration into the fusion algorithms
         EraseFusionCalibration();
         aahrs.isCalibrated = false;
     }
+    // Initialize (memory of) fusion systems
     if (print.aahrs) printf("[AAHRS] initialized ");
     initializeStatusSubsystem(&status);
     if (print.aahrs) printf("status, ");
@@ -147,17 +149,21 @@ bool aahrs_calibrate() {
 
     // GYRO: Wait for gyro to stabilize, calculate its offsets a number of times, then average them and save
     #if F_USING_GYRO && (F_9DOF_GBY_KALMAN || F_6DOF_GY_KALMAN)
-        log_message(INFO, "Please hold still...", 1000, 200, true);
+        log_message(INFO, "Please hold still!", 1000, 200, true);
         if (platform_is_fbw()) {
             display_pBarStr(pBar, 0);
-            display_text("Please hold", "still...", "", pBar, true);
+            display_text("Please hold", "still!", "", pBar, true);
         }
         // Wait for gyro (and user) to stabilize
-        wait = make_timeout_time_ms(3000);
+        wait = make_timeout_time_ms(5000);
         while (!time_reached(wait)) aahrs.update();
         // Take GYRO_AVG_SAMPLES offsets
         float offsets[3];
         for (uint i = 0; i < GYRO_AVG_SAMPLES; i++) {
+            if (platform_is_fbw()) {
+                display_pBarStr(pBar, (i + 1) * (33.0f / GYRO_AVG_SAMPLES));
+                display_text("Please hold", "still!", "", pBar, true);
+            }
             // Reqest a reset from the algorithm so that the gyro offsets get calculated
             #if F_9DOF_GBY_KALMAN
                 fusion.SV_9DOF_GBY_KALMAN.resetflag = true;
@@ -204,7 +210,13 @@ bool aahrs_calibrate() {
         SaveGyroCalibrationToFlash(&fusion);
     #endif
 
+    // TODO: axis remap here
+    // also code a HAL remap for each driver--it will normalize everything to XYZ and correct signs, this will be a
+    // different axis remap for if users mount the IMU board in a different orientation
+
     // ACCEL: Iterate through all 12 positions and take an average accel measurment at each
+    /* Note: positions 1-4 should be rotating 90° through roll axis, 5-8 through pitch axis, 9-12 through yaw axis
+             positions 1, 5, and 9 are the same (level) position */
     for (uint i = 0; i < MAX_ACCEL_CAL_ORIENTATIONS; i++) {
         char msg[64];
         sprintf(msg, "Calibration: please move to position #%d/%d", i + 1, MAX_ACCEL_CAL_ORIENTATIONS);
@@ -212,7 +224,7 @@ bool aahrs_calibrate() {
         if (platform_is_fbw()) {
             char currentOrient[7] = { [0 ... 6] = ' '};
             sprintf(currentOrient, "#%d/%d", i + 1, MAX_ACCEL_CAL_ORIENTATIONS);
-            display_pBarStr(pBar, (i + 1) * (33 / MAX_ACCEL_CAL_ORIENTATIONS) + 33);
+            display_pBarStr(pBar, (i + 1) * (33.0f / MAX_ACCEL_CAL_ORIENTATIONS) + 33);
             display_text("Please move", "to position", currentOrient, pBar, true);
         }
         // Wait for the sensor to move...
@@ -220,12 +232,12 @@ bool aahrs_calibrate() {
             aahrs.update();
             hasMoved = aahrs.roll_rate > GYRO_STILL_VELOCITY || aahrs.pitch_rate > GYRO_STILL_VELOCITY || aahrs.yaw_rate > GYRO_STILL_VELOCITY;
         }
-        // ...and then for it to be still for 1s
+        // ...and then for it to be still for 0.5s
         while (true) {
             aahrs.update();
             hasMoved = aahrs.roll_rate > GYRO_STILL_VELOCITY || aahrs.pitch_rate > GYRO_STILL_VELOCITY || aahrs.yaw_rate > GYRO_STILL_VELOCITY;
             if (!hasMoved) {
-                wait = make_timeout_time_ms(1000);
+                wait = make_timeout_time_ms(500);
                 while (!hasMoved && !time_reached(wait)) {
                     aahrs.update();
                     hasMoved = aahrs.roll_rate > GYRO_STILL_VELOCITY || aahrs.pitch_rate > GYRO_STILL_VELOCITY || aahrs.yaw_rate > GYRO_STILL_VELOCITY;
@@ -256,7 +268,7 @@ bool aahrs_calibrate() {
     }
     SaveAccelCalibrationToFlash(&fusion);
 
-    // MAG: Collect mag measurements into buffer until the error is less than 3.5% (or we reach the max attempts)
+    // MAG: Collect mag measurements into buffer until a 10 element calibration is accepted by the algorithm
     log_message(INFO, "Calibration: please rotate on all axes", 1000, 200, true);
     for (uint i = 0; i < MAX_MAG_ATTEMPTS; i++) {
         // Wait until the algorithm begins a calibration, and take measurements
@@ -265,10 +277,10 @@ bool aahrs_calibrate() {
             if (platform_is_fbw()) {
                 char currentMeasure[8] = { [0 ... 7] = ' '};
                 sprintf(currentMeasure, "%d/%d", fusion.MagBuffer.iMagBufferCount, MINMEASUREMENTS10CAL);
-                display_pBarStr(pBar, fusion.MagBuffer.iMagBufferCount * (33 / MINMEASUREMENTS10CAL) + 66);
+                display_pBarStr(pBar, fusion.MagBuffer.iMagBufferCount * (33.0f / MAXMEASUREMENTS) + 66);
                 display_text(currentMeasure, "measurements", "taken", pBar, true);
             }
-            platform_sleep_ms(1000);
+            platform_sleep_ms(1000, false);
         }
         // Calibration is being calculated, wait for it to finish
         if (print.fbw) printf("[AAHRS] calibration in progress, please wait...\n");
@@ -276,13 +288,12 @@ bool aahrs_calibrate() {
             display_text("Calibration", "in progress,", "please wait", pBar, true);
         }
         while (fusion.MagCal.iCalInProgress) aahrs.update();
-        printf("[AAHRS] fit error was %f (attempt %d)\n", fusion.MagCal.ftrFitErrorpc, i);
-        // If the error is less than 3.5%, that's acceptable, stop
-        if (fusion.MagCal.ftrFitErrorpc < 3.5F) break;
+        printf("[AAHRS] fit error was %f (attempt %d/%d)\n", fusion.MagCal.ftrFitErrorpc, i + 1, MAX_MAG_ATTEMPTS);
+        // The optimal solver is the 10 element, so we're done if it was used for the most recent valid calibration
+        if (fusion.MagCal.iValidMagCal >= 10) break;
     }
-    if (fusion.MagCal.ftrFitErrorpc > 3.5F) {
-        if (print.fbw) printf("[AAHRS] ERROR: mag calibration failed!\n");
-        return false;
+    if (fusion.MagCal.iValidMagCal < 10) {
+        log_message(WARNING, "Mag calibration not optimal!", 1000, 0, false);
     }
     if (print.fbw) printf("[AAHRS] saving magnetometer calibration\n");
     if (print.aahrs) {
@@ -305,8 +316,6 @@ bool aahrs_calibrate() {
     log_clear(INFO);
     return true;
 }
-
-// TODO: do we need an axis remap of some kind?
 
 AAHRS aahrs = {
     .roll = INFINITY,

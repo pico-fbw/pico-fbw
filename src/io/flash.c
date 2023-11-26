@@ -21,15 +21,15 @@
 #include "flash.h"
 
 /* Default state of the flash struct (for example, holds default config values).
-Locations of values are specified by the sections' respective enums in flash.h. */
+Refer to the sections' respective enums in flash.h for an indication of what each value is. */
 Flash flash = {
     .calibration = { [ 0 ... S_CALIBRATION_HIGHEST] = 0, FLAG_END},
-    .pid = {0, 0, 0, 0, 0.1f, 0.001f, -50, 50, 0, 0, 0, 0.01f, 0.001f, -50, 50, 1.0f, 0.0025f, 0.001f, 0.01f, 0.001f, -50, 50, FLAG_END},
-    .general = {CTRLMODE_3AXIS_ATHR, SWITCH_TYPE_3_POS, 20, 50, 50, true, WIFLY_ENABLED_PASS, false, FLAG_END},
-    .control = {0.00075f, 1.5f, 2, false, 10, 75, 90, 10, 180, 0, 33, 67, -15, 30, 25, 15, 20, 20, 0.5f, 1, 1, FLAG_END},
+    .pid = {0, 0.8f, 0.02f, 0.01f, 0.001f, -40, 40, 1.5f, 0.01f, 0.01f, 0.001f, -20, 20, 0.5f, 0.015f, 0.01f, 0.001f, -20, 20, FLAG_END},
+    .general = {CTRLMODE_2AXIS_ATHR, SWITCH_TYPE_3_POS, 20, 50, 50, true, WIFLY_ENABLED_PASS, false, FLAG_END},
+    .control = {0.0025f, 1.5f, 5, false, 10, 75, 90, 10, 180, 0, 33, 67, -15, 30, 25, 15, 20, 20, 0.5f, 1, 1, FLAG_END},
     .pins = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 2, 4, 16, 17, 21, 20, false, false, false, FLAG_END},
     .sensors = {IMU_MODEL_BNO055, BARO_MODEL_NONE, GPS_COMMAND_TYPE_PMTK, 9600, FLAG_END},
-    .system = {true, true, false, false, false, false, false, 4000, FLAG_END},
+    .system = {true, true, false, false, false, false, false, 2000, FLAG_END},
     .version = "",
     .wifly_ssid = "pico-fbw",
     .wifly_pass = "wiflyfbw"
