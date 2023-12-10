@@ -81,10 +81,9 @@ void changeTo(Mode newMode) {
             AUTO:
             case MODE_AUTO:
                 // Automatically enter tune mode if necessary
-                if (!mode_tuneisCalibrated()) {
+                if (!mode_tuneisCalibrated())
                     goto TUNE;
-                }
-                if ((GPSCommandType)flash.sensors[SENSORS_GPS_COMMAND_TYPE] != GPS_COMMAND_TYPE_NONE) {
+                if (gps.isSupported()) {
                     // TODO: have a way for auto mode to re-engage if the gps becomes safe again; this is usually due to bad DOP which fixes itself over time
                     if (aircraft.GPSSafe) {
                         // Check to see if we have to calibrate the GPS alt offset
@@ -94,34 +93,25 @@ void changeTo(Mode newMode) {
                         if (print.fbw) printf("[modes] entering auto mode\n");
                         if (mode_autoInit()) {
                             aircraft.mode = MODE_AUTO;
-                        } else {
-                            goto NORMAL;
-                        }
-                    } else {
-                        // GPS is required to be safe for auto and hold modes, fallback to normal mode
-                        goto NORMAL;
-                    }
-                } else {
-                    goto NORMAL;
-                }
+                        } else goto NORMAL;
+                    } else goto NORMAL; // GPS is required to be safe for auto and hold modes, fallback to normal mode
+                } else goto NORMAL;
                 break;
             TUNE:
             case MODE_TUNE:
                 if (!mode_tuneisCalibrated()) {
                     if (print.fbw) printf("[modes] entering tune mode\n");
                     aircraft.mode = MODE_TUNE;
-                } else {
-                    goto NORMAL;
-                }
+                } else goto NORMAL;
                 break;
             HOLD:
             case MODE_HOLD:
                 if (aircraft.GPSSafe) {
                     if (print.fbw) printf("[modes] entering hold mode\n");
-                    aircraft.mode = MODE_HOLD;
-                } else {
-                    goto NORMAL;
-                }
+                    if (mode_holdInit()) {
+                        aircraft.mode = MODE_HOLD;
+                    } else goto NORMAL;
+                } else goto NORMAL;
                 break;
         }
     } else {

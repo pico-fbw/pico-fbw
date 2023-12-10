@@ -255,8 +255,13 @@ bool wifly_parseFplan(const char *fplan) {
                             if (tokens[waypoint_token_index].type == JSMN_OBJECT) {
                                 uint waypoint_token_count = tokens[waypoint_token_index].size;
                                 uint waypoint_field_token_index = waypoint_token_index + 1; // Skip the object token
-
-                                Waypoint waypoint;
+                                Waypoint waypoint = {
+                                    .lat = INFINITY,
+                                    .lng = INFINITY,
+                                    .alt = INT16_MIN,
+                                    .speed = INFINITY,
+                                    .drop = 0,
+                                };
                                 // Waypoint field iteration
                                 for (uint j = 0; j < waypoint_token_count; j++) {
                                     if (tokens[waypoint_field_token_index].type == JSMN_STRING) {
@@ -270,8 +275,8 @@ bool wifly_parseFplan(const char *fplan) {
                                             strncpy(lat, decoded + tokens[waypoint_field_token_index + 1].start,
                                                     tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start);
                                             lat[tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start] = '\0';
-                                            
-                                            // Store the latitude value into a waypoint struct
+
+                                            // Store the latitude value into a Waypoint
                                             waypoint.lat = strtold(lat, NULL);
                                             if (print.wifly) printf("Latitude: %s\n", lat);
                                         } else if (strcmp(waypoint_field_name, "lng") == 0) {
@@ -290,14 +295,22 @@ bool wifly_parseFplan(const char *fplan) {
                                             
                                             waypoint.alt = atoi(alt);
                                             if (print.wifly) printf("Altitude: %s\n", alt);
-                                        } else if (strcmp(waypoint_field_name, "drop") == 0) {
-                                            char drop[4];
-                                            strncpy(drop, decoded + tokens[waypoint_field_token_index + 1].start,
+                                        } else if (strcmp(waypoint_field_name, "spd") == 0) {
+                                            char spd[25];
+                                            strncpy(spd, decoded + tokens[waypoint_field_token_index + 1].start,
                                                     tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start);
-                                            drop[tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start] = '\0';
+                                            spd[tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start] = '\0';
+
+                                            waypoint.speed = strtof(spd, NULL);
+                                            if (print.wifly) printf("Speed: %s\n", spd);
+                                        } else if (strcmp(waypoint_field_name, "drp") == 0) {
+                                            char drp[4];
+                                            strncpy(drp, decoded + tokens[waypoint_field_token_index + 1].start,
+                                                    tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start);
+                                            drp[tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start] = '\0';
                                             
-                                            waypoint.drop = atoi(drop);
-                                            if (print.wifly) printf("Drop: %s\n", drop);
+                                            waypoint.drop = atoi(drp);
+                                            if (print.wifly) printf("Drop: %s\n", drp);
                                         } else {
                                             if (print.fbw) printf("[wifly] ERROR: waypoint field name not recognized!\n");
                                             fplanStatus = WIFLY_ERR_PARSE;
@@ -307,16 +320,16 @@ bool wifly_parseFplan(const char *fplan) {
                                         waypoint_field_token_index += 2;
                                     }
                                 }
-                                // Check if the waypoint data is valid (we got everything we expected)
-                                if (waypoint.lat == 0 || waypoint.lng == 0 || waypoint.alt == 0) {
+                                // Check if the waypoint data is valid (aka that we got everything we expect and need)
+                                if (waypoint.lat == INFINITY || waypoint.lng == INFINITY || waypoint.alt == INT16_MIN || waypoint.speed == INFINITY) {
                                     if (print.fbw) printf("[wifly] ERROR: waypoint data is invalid!\n");
                                     fplanStatus = WIFLY_ERR_PARSE;
                                     return false;
                                 }
-                                // Store the generated waypoint into the master array
+                                // Store the parsed waypoint into the master array
                                 waypoints[w] = waypoint;
                                 // Advance to the next waypoint
-                                waypoint_token_index += 9; // Number of fields in a waypoint * 2 + 1 (object token)
+                                waypoint_token_index += WAYPOINT_NUM_FIELDS * 2 + 1; // + 1 for object token yet again
                             } else {
                                 if (print.fbw) printf("[wifly] ERROR: waypoint token type not recognized!\n");
                                 fplanStatus = WIFLY_ERR_PARSE;
@@ -339,7 +352,8 @@ bool wifly_parseFplan(const char *fplan) {
         
         if (print.wifly) printf("[wifly] Waypoint data:\n");
         for (int i = 0; i < waypoint_count; i++) {
-            if (print.wifly) printf("Waypoint %d: lat=%.10f, lng=%.10f, alt=%d\n", i + 1, waypoints[i].lat, waypoints[i].lng, waypoints[i].alt);
+            if (print.wifly) printf("Waypoint #%d: lat=%.10f, lng=%.10f, alt=%d, speed=%f, drop=%d\n",
+                                    i + 1, waypoints[i].lat, waypoints[i].lng, waypoints[i].alt, waypoints[i].speed, waypoints[i].drop);
         }
         // Save the flightplan JSON string
         fplanJson = malloc(strlen(decoded) + 1);

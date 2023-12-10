@@ -20,7 +20,7 @@ typedef struct RenderArea {
 #define DISPLAY_ADDR 0x3C
 #define DISPLAY_SDA 18
 #define DISPLAY_SCL 19
-#define DISPLAY_TIMEOUT_US 100000 // The time (in microseconds) before the display is considered unresponsive and no further updates are sent
+#define DISPLAY_TIMEOUT_US 100E3 // The time (in microseconds) before the display is considered unresponsive and no further updates are sent
 
 // Datasheet: https://cdn-shop.adafruit.com/datasheets/DISPLAY.pdf
 // Commands:

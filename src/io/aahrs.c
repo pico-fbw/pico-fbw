@@ -106,7 +106,7 @@ bool aahrs_init() {
     if (fusion.getStatus(&fusion) != NORMAL) return false;
     // Calculate the delay needed between fusion updates to obtain FUSION_HZ
     #if F_9DOF_GBY_KALMAN
-        rateDelay = (uint)((1.0f / FUSION_HZ) * 1000000 - (F_9DOF_GBY_KALMAN_SYSTICK + F_CONDITION_SENSOR_READINGS_SYSTICK));
+        rateDelay = (uint)((1.0f / FUSION_HZ) * 1E6f - (F_9DOF_GBY_KALMAN_SYSTICK + F_CONDITION_SENSOR_READINGS_SYSTICK));
     #endif
     if (print.aahrs) printf("[AAHRS] to obtain update rate of %dHz, using delay of %dus\n", FUSION_HZ, rateDelay);
     return true;

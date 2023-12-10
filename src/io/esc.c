@@ -13,11 +13,9 @@
 */
 
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "pico/time.h"
-#include "pico/types.h"
 
 #include "hardware/clocks.h"
 #include "hardware/gpio.h"

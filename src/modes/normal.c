@@ -6,9 +6,12 @@
 #include <math.h>
 #include <stdbool.h>
 
+#include "../io/esc.h"
 #include "../io/flash.h"
 #include "../io/pwm.h"
 #include "../io/servo.h"
+
+#include "../sys/throttle.h"
 
 #include "modes.h"
 #include "auto.h"
@@ -17,19 +20,16 @@
 
 #include "normal.h"
 
-static float rollInput;
-static float pitchInput;
-static float yawInput;
-
-static float rollSet;
-static float pitchSet;
+static float rollInput, pitchInput, yawInput;
+static float rollSet, pitchSet, throttleSet;
 
 static bool overrideYaw = false;
-
 static bool overrideSetpoints = false;
 
 void mode_normalInit() {
-    flight_init(); // Initialize baseline flight system
+    flight_init();
+    throttle.init();
+    throttle.mode = THRMODE_THRUST;
 }
 
 void mode_normal() {
@@ -39,6 +39,7 @@ void mode_normal() {
     if (pwm_hasRud()) {
         yawInput = pwm_read((uint)flash.pins[PINS_INPUT_RUD], PWM_MODE_DEG) - 90;
     }
+    throttleSet = pwm_read((uint)flash.pins[PINS_INPUT_THROTTLE], PWM_MODE_ESC);
     // This comment is a tribute to the world's stupidest bug where the above code was set to READ from the SERVOS
     // and it took me much longer than I'm willing to admit to find (cue the facepalms, I know ._.)
     
@@ -95,10 +96,10 @@ void mode_normal() {
         overrideYaw = false;
     }
 
-    // Update the flight system with calculated setpoints
+    // Update the flight and throttle systems with calculated setpoints
     flight_update((double)rollSet, (double)pitchSet, (double)yawInput, overrideYaw);
-    // FIXME: for now just passing throttle into ESC, when athr is done replace this with athr
-    if (pwm_hasAthr()) esc_set((uint)flash.pins[PINS_ESC_THROTTLE], (uint16_t)pwm_read((uint)flash.pins[PINS_INPUT_THROTTLE], PWM_MODE_ESC));
+    throttle.target = throttleSet;
+    throttle.update();
 }
 
 void mode_normalDeinit() {
@@ -107,16 +108,16 @@ void mode_normalDeinit() {
     overrideYaw = false;
 }
 
-bool mode_normalSetSetpoints(float roll, float pitch, float yaw) {
+bool mode_normalSetExtern(float roll, float pitch, float yaw, float throttle, bool useThrottle) {
     // Ensure there are no manual control inputs before we allow setpoints to be externally set
-    if (fabsf(rollInput) > flash.control[CONTROL_DEADBAND] &&
-        fabsf(pitchInput) > flash.control[CONTROL_DEADBAND] &&
-        fabsf(yawInput) > flash.control[CONTROL_DEADBAND]) {
+    if (fabsf(rollInput) > flash.control[CONTROL_DEADBAND] ||
+        fabsf(pitchInput) > flash.control[CONTROL_DEADBAND] ||
+        fabsf(yawInput) > flash.control[CONTROL_DEADBAND])
         return false;
-    }
     rollSet = roll;
     pitchSet = pitch;
     yawInput = yaw;
+    if (useThrottle) throttleSet = throttle;
     overrideSetpoints = true;
     return true;
 }

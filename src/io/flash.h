@@ -35,29 +35,36 @@ typedef enum SectorCalibration {
 
 typedef enum SectorPID {
     PID_FLAG,
-
+    // Roll PID parameters
     PID_ROLL_KP,
     PID_ROLL_KI,
     PID_ROLL_KD,
     PID_ROLL_TAU,
     PID_ROLL_INTEGMIN,
     PID_ROLL_INTEGMAX,
-
+    // Pitch PID parameters
     PID_PITCH_KP,
     PID_PITCH_KI,
     PID_PITCH_KD,
     PID_PITCH_TAU,
     PID_PITCH_INTEGMIN,
     PID_PITCH_INTEGMAX,
-
+    // Yaw PID parameters
     PID_YAW_KP,
     PID_YAW_KI,
     PID_YAW_KD,
     PID_YAW_TAU,
     PID_YAW_INTEGMIN,
-    PID_YAW_INTEGMAX
+    PID_YAW_INTEGMAX,
+    // Throttle PID parameters
+    PID_THROTTLE_KP,
+    PID_THROTTLE_KI,
+    PID_THROTTLE_KD,
+    PID_THROTTLE_TAU,
+    PID_THROTTLE_INTEGMIN,
+    PID_THROTTLE_INTEGMAX
 } SectorPID;
-#define S_PID_HIGHEST PID_YAW_INTEGMAX
+#define S_PID_HIGHEST PID_THROTTLE_INTEGMAX
 
 typedef enum SectorConfigGeneral {
     GENERAL_CONTROL_MODE,
@@ -72,28 +79,31 @@ typedef enum SectorConfigGeneral {
 #define S_GENERAL_HIGHEST GENERAL_SKIP_CALIBRATION
 
 typedef enum SectorConfigControl {
+    // Control handling preferences
     CONTROL_SENSITIVITY,
     CONTROL_RUDDER_SENSITIVITY,
     CONTROL_DEADBAND,
-
+    // Throttle detent/autothrottle configuration
     CONTROL_THROTTLE_DETENTS_CALIBRATED,
     CONTROL_THROTTLE_DETENT_IDLE,
     CONTROL_THROTTLE_DETENT_MCT,
     CONTROL_THROTTLE_DETENT_MAX,
     CONTROL_THROTTLE_MAX_TIME,
-
+    CONTROL_THROTTLE_COOLDOWN_TIME,
+    CONTROL_THROTTLE_SENSITIVITY,
+    // Drop bay detent settings
     CONTROL_DROP_DETENT_CLOSED,
     CONTROL_DROP_DETENT_OPEN,
-
+    // Control limits
     CONTROL_ROLL_LIMIT,
     CONTROL_ROLL_LIMIT_HOLD,
     CONTROL_PITCH_LOWER_LIMIT,
     CONTROL_PITCH_UPPER_LIMIT,
-
+    // Physical control surface limits
     CONTROL_MAX_AIL_DEFLECTION,
     CONTROL_MAX_ELEV_DEFLECTION,
     CONTROL_MAX_RUD_DEFLECTION,
-
+    // Flying wing configuration
     CONTROL_MAX_ELEVON_DEFLECTION,
     CONTROL_ELEVON_MIXING_GAIN,
     CONTROL_AIL_MIXING_BIAS,
@@ -102,6 +112,7 @@ typedef enum SectorConfigControl {
 #define S_CONTROL_HIGHEST CONTROL_ELEV_MIXING_BIAS
 
 typedef enum SectorConfigPins {
+    // Control IO pins
     PINS_INPUT_AIL,
     PINS_SERVO_AIL,
     PINS_INPUT_ELEV,
@@ -114,12 +125,12 @@ typedef enum SectorConfigPins {
     PINS_SERVO_DROP,
     PINS_SERVO_ELEVON_L,
     PINS_SERVO_ELEVON_R,
-
+    // Sensor communications pins
     PINS_AAHRS_SDA,
     PINS_AAHRS_SCL,
     PINS_GPS_TX,
     PINS_GPS_RX,
-
+   // Servo reverse flags 
     PINS_REVERSE_ROLL,
     PINS_REVERSE_PITCH,
     PINS_REVERSE_YAW
@@ -173,7 +184,7 @@ typedef enum SectorConfigSystem {
 #define FLAG_END (-30.54245f)
 
 typedef struct Flash {
-    /* Auto-generated system settings/calibrations */
+    /* System-generated settings/calibrations */
     float calibration[FLOAT_SECTOR_SIZE];
     float pid[FLOAT_SECTOR_SIZE];
     float aahrs[FUSION_CALIBRATION_STORAGE_SIZE];

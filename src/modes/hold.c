@@ -7,9 +7,13 @@
 #include <stdint.h>
 #include <math.h>
 #include "pico/time.h"
-#include "../lib/pid.h"
 
 #include "../io/flash.h"
+
+#include "../lib/pid.h"
+
+#include "../sys/log.h"
+#include "../sys/throttle.h"
 
 #include "auto.h"
 #include "flight.h"
@@ -29,7 +33,7 @@ static PIDController vertGuid;
 // Callback for when a turnaround should be completed in a holding pattern.
 static int64_t hold_callback(alarm_id_t id, void *data) {
     // Get current track (beginning of the turn)
-    oldTrack = gps.trk;
+    oldTrack = gps.track;
     // Set our target heading based on this (with wrap protection)
     targetTrack = (oldTrack + 180);
     if (targetTrack > 360) {
@@ -39,18 +43,28 @@ static int64_t hold_callback(alarm_id_t id, void *data) {
     return 0; // Tells Pico to not reschedule alarm, we will wait until the turn is complete to do that
 }
 
-void mode_holdInit() {
+bool mode_holdInit() {
     flight_init();
+    throttle.init();
+    if (throttle.supportedMode < THRMODE_SPEED) {
+        log_message(WARNING, "SPEED mode required!", 2000, 0, false);
+        return false;
+    }
+    throttle.mode = THRMODE_SPEED;
+    // We try to maintain the speed of the aircraft as it was entering the holding pattern
+    throttle.target = gps.speed;
     // We use a vertical guidance PID here so that we can keep the aircraft level; 0deg pitch does not equal 0 altitude change (sadly)
     vertGuid = (PIDController){vertGuid_kP, vertGuid_kI, vertGuid_kD, vertGuid_tau, vertGuid_loLim,
     vertGuid_upLim, vertGuid_integMin, vertGuid_integMax, vertGuid_kT};
     pid_init(&vertGuid);
     targetAlt = gps.alt; // targetAlt is just the current alt from whenever we enter the mode
+    return true;
 }
 
 void mode_hold() {
     pid_update(&vertGuid, targetAlt, gps.alt);
     flight_update(rollSet, vertGuid.out, 0, false);
+    throttle.update();
 
     switch (turnStatus) {
         case HOLD_TURN_BEGUN:
@@ -64,7 +78,7 @@ void mode_hold() {
             break;    
         case HOLD_TURN_INPROGRESS:
             // Wait until it is time to decrease the turn
-            if (fabsf(targetTrack - gps.trk) <= HOLD_HEADING_DECREASE_WITHIN) {
+            if (fabsf(targetTrack - gps.track) <= HOLD_HEADING_DECREASE_WITHIN) {
                 turnStatus = HOLD_TURN_ENDING;
             }
             break;
@@ -74,7 +88,7 @@ void mode_hold() {
                 rollSet -= (HOLD_TURN_BANK_ANGLE * flash.control[CONTROL_RUDDER_SENSITIVITY]);
             }
             // Move on to stabilization once we've intercepted the target heading
-            if (fabsf(targetTrack - gps.trk) <= HOLD_HEADING_INTERCEPT_WITHIN) {
+            if (fabsf(targetTrack - gps.track) <= HOLD_HEADING_INTERCEPT_WITHIN) {
                 turnStatus = HOLD_TURN_STABILIZING;
             }
             break;

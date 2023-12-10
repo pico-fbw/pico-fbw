@@ -16,14 +16,13 @@ add_library(fbw_api
     cmds/SET/set_config.c
     cmds/SET/set_fplan.c
     cmds/SET/set_mode.c
-    cmds/SET/set_setpoints.c
     cmds/SET/set_target.c
     cmds/TEST/test_all.c
-    cmds/TEST/test_esc.c
     cmds/TEST/test_gps.c
     cmds/TEST/test_aahrs.c
     cmds/TEST/test_pwm.c
     cmds/TEST/test_servo.c
+    cmds/TEST/test_throttle.c
 )
 
 target_link_libraries(fbw_api

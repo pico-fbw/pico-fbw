@@ -1,6 +1,9 @@
 #ifndef __ESC_H
 #define __ESC_H
 
+#include <stdint.h>
+#include "pico/types.h"
+
 /**
  * Enables ESC control on a certain pin.
  * @param gpio_pin the GPIO pin the ESC is attached to

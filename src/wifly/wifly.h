@@ -36,11 +36,12 @@ typedef enum WiflyEnableStatus {
 // Keep in mind that if the content is made larger then both the result size and possibly LWIP's memory size need to be increased
 
 typedef struct Waypoint {
-    long double lat;
-    long double lng;
+    long double lat, lng;
     int alt;
+    float speed;
     int drop;
 } Waypoint;
+#define WAYPOINT_NUM_FIELDS 5
 
 #ifdef RASPBERRYPI_PICO_W
 
@@ -72,7 +73,7 @@ bool wifly_parseFplan(const char *fplan);
 
 /**
  * Gets the current flightplan (structured as a list of Waypoints).
- * @return A pointer to the current flightplan in Waypoint form, or NULL if there is none.
+ * @return A pointer to the current flightplan in Waypoint[] form, or NULL if there is none.
 */
 Waypoint *wifly_getFplan();
 

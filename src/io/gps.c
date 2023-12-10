@@ -34,12 +34,12 @@ static inline bool alt_valid(int alt) {
     return alt >= 0;
 }
 
-static inline bool spd_valid(float spd) {
-    return spd >= 0 && isfinite(spd);
+static inline bool speed_valid(float speed) {
+    return speed >= 0 && isfinite(speed);
 }
 
-static inline bool trk_valid(float trk) {
-    return trk >= 0 && isfinite(trk);
+static inline bool track_valid(float track) {
+    return track >= 0 && isfinite(track);
 }
 
 // (DOP stands for dilution of precision, basically a mesaure of how confident the GPS is in its output)
@@ -48,8 +48,8 @@ static inline bool dop_valid(float pdop, float hdop, float vdop) {
            vdop < GPS_SAFE_VDOP_THRESHOLD;
 }
 
-static inline bool data_valid(float lat, float lng, int alt, float spd, float trk, float pdop, float hdop, float vdop) {
-    return pos_valid(lat, lng) && alt_valid(alt) && spd_valid(spd) && trk_valid(trk) && dop_valid(pdop, hdop, vdop);
+static inline bool data_valid(float lat, float lng, int alt, float speed, float track, float pdop, float hdop, float vdop) {
+    return pos_valid(lat, lng) && alt_valid(alt) && speed_valid(speed) && track_valid(track) && dop_valid(pdop, hdop, vdop);
 }
 
 bool gps_init() {
@@ -119,7 +119,7 @@ void gps_update() {
                     gps.lat = minmea_tocoord(&gga.latitude);
                     gps.lng = minmea_tocoord(&gga.longitude);
                     if (strncmp(&gga.altitude_units, "M", 1) == 0) {
-                        gps.alt = (int)(minmea_tofloat(&gga.altitude) * 3.28084f); // Conversion from meters to feet
+                        gps.alt = (int)(minmea_tofloat(&gga.altitude) * M_TO_FT);
                     } else {
                         aircraft.setGPSSafe(false);
                         if (print.fbw) printf("[gps] ERROR: incorrect altitude units!\n");
@@ -144,8 +144,8 @@ void gps_update() {
             case MINMEA_SENTENCE_VTG: {
                 minmea_sentence_vtg vtg;
                 if (minmea_parse_vtg(&vtg, line)) {
-                    gps.spd = minmea_tofloat(&vtg.speed_knots);
-                    gps.trk = minmea_tofloat(&vtg.true_track_degrees);
+                    gps.speed = minmea_tofloat(&vtg.speed_knots);
+                    gps.track = minmea_tofloat(&vtg.true_track_degrees);
                 } else {
                     if (print.gps) printf("[gps] ERROR: failed parsing $xxVTG sentence\n");
                 }
@@ -162,7 +162,7 @@ void gps_update() {
         free(line);
         line = uart_read_line(GPS_UART);
     }
-    aircraft.setGPSSafe(data_valid(gps.lat, gps.lng, gps.alt, gps.spd, gps.trk, gps.pdop, gps.hdop, gps.vdop));
+    aircraft.setGPSSafe(data_valid(gps.lat, gps.lng, gps.alt, gps.speed, gps.track, gps.pdop, gps.hdop, gps.vdop));
 }
 
 int gps_calibrateAltOffset(uint num_samples) {
@@ -211,12 +211,14 @@ int gps_calibrateAltOffset(uint num_samples) {
     }
 }
 
+bool gps_isSupported() { return ((GPSCommandType)flash.sensors[SENSORS_GPS_COMMAND_TYPE] != GPS_COMMAND_TYPE_NONE); }
+
 GPS gps = {
     .lat = -200.0,
     .lng = -200.0,
     .alt = -1,
-    .spd = -1.0f,
-    .trk = -1.0f,
+    .speed = -1.0f,
+    .track = -1.0f,
     .pdop = -1.0f,
     .hdop = -1.0f,
     .vdop = -1.0f,
@@ -226,4 +228,5 @@ GPS gps = {
     .deinit = gps_deinit,
     .update = gps_update,
     .calibrateAltOffset = gps_calibrateAltOffset,
+    .isSupported = gps_isSupported
 };

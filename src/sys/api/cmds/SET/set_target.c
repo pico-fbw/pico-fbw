@@ -3,11 +3,30 @@
  * Licensed under the GNU GPL-3.0
 */
 
+#include <math.h>
 #include <stdio.h>
 #include "pico/types.h"
+
+#include "../../../../io/flash.h"
+
+#include "../../../../modes/modes.h"
+#include "../../../../modes/normal.h"
 
 #include "set_target.h"
 
 uint api_set_target(const char *cmd, const char *args) {
-    return 501; // TODO: implement once athr lib is complete
+    if (aircraft.mode == MODE_NORMAL) {
+        float roll, pitch, yaw, throttle;
+        int numArgs = sscanf(args, "%f %f %f %f", &roll, &pitch, &yaw, &throttle);
+        if (numArgs < 3) return 400;
+        bool hasThrottle = (numArgs >= 4);
+        // Ensure setpoints are within config-defined limits
+        if (fabsf(roll) > flash.control[CONTROL_ROLL_LIMIT_HOLD] ||
+            pitch > flash.control[CONTROL_PITCH_UPPER_LIMIT] ||
+            pitch < flash.control[CONTROL_PITCH_LOWER_LIMIT] ||
+            fabsf(yaw) > flash.control[CONTROL_MAX_RUD_DEFLECTION])
+            return 400;
+        // Pass the setpoints into normal mode, 423 will be returned if the mode rejects the code (user input takes priority)
+        return mode_normalSetExtern(roll, pitch, yaw, throttle, hasThrottle) ? 200 : 423;
+    } else return 403;
 }

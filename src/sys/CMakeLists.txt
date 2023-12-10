@@ -1,5 +1,5 @@
 add_library(fbw_sys
-    athr.c
+    throttle.c
     config.c
     info.c
     log.c

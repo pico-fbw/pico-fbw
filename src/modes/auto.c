@@ -14,16 +14,19 @@
 #include "../lib/pid.h"
 #include "../lib/nav.h"
 
+#include "../sys/log.h"
+#include "../sys/throttle.h"
+
+#include "../wifly/wifly.h"
+
 #include "modes.h"
 #include "normal.h"
 #include "tune.h"
 #include "flight.h"
 
-#include "../wifly/wifly.h"
-
 #include "auto.h"
 
-// TODO: Aadd documentation for auto mode on the wiki!
+// TODO: Add documentation for auto mode on the wiki!
 // "materials" and "how to use system" need updating and also a completely new page for wifly and how to use it
 // also make sure to mention it in the readme
 
@@ -72,8 +75,15 @@ bool mode_autoInit() {
     if (fplan == NULL || wifly_getWaypointCount() == 0) {
         return false;
     }
-    // Initialize (clear) PIDs
     flight_init();
+    throttle.init();
+    // Check if SPEED mode is supported, which we need for autopilot
+    if (throttle.supportedMode < THRMODE_SPEED) {
+        log_message(WARNING, "SPEED mode required!", 2000, 0, false);
+        return false;
+    }
+    throttle.mode = THRMODE_SPEED;
+    // Initialize (clear) PIDs
     latGuid = (PIDController){latGuid_kP, latGuid_kI, latGuid_kD, latGuid_tau, -latGuid_lim, latGuid_lim, latGuid_integMin, latGuid_integMax, latGuid_kT};
     vertGuid = (PIDController){vertGuid_kP, vertGuid_kI, vertGuid_kD, vertGuid_tau, vertGuid_loLim, vertGuid_upLim, vertGuid_integMin, vertGuid_integMax, vertGuid_kT};
     pid_init(&latGuid);
@@ -109,9 +119,10 @@ void mode_auto() {
     distance = calculateDistance(gps.lat, gps.lng, fplan[currentWaypoint].lat, fplan[currentWaypoint].lng);
 
     // Nested PIDs; latGuid and vertGuid use gps data to command bank/pitch angles which the flight PIDs then use to actuate servos
-    pid_update(&latGuid, bearing, gps.trk); // Don't use IMU heading because that's not always going to be navigational (more likely magnetic)
+    pid_update(&latGuid, bearing, gps.track); // Don't use IMU heading because that's not always going to be navigational (more likely magnetic)
     pid_update(&vertGuid, alt, gps.alt);
     flight_update(latGuid.out, vertGuid.out, 0, false);
+    throttle.update();
 
     // If we've "intercepted" the waypoint,
     if (distance <= INTERCEPT_RADIUS) {
@@ -137,6 +148,8 @@ void mode_auto() {
                     alt = fplan[currentWaypoint].alt;
                 }
             }
+            // Set the (possibly new) target speed
+            throttle.target = fplan[currentWaypoint].speed;
             // Initiate a drop if applicable
             if (fplan[currentWaypoint].drop != 0) {
                 setBayPosition(OPEN);

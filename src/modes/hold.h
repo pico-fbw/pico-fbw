@@ -26,8 +26,9 @@ typedef enum HoldStatus {
 
 /**
  * Initializes tune mode.
+ * @return true if initialization was successful, false if not.
 */
-void mode_holdInit();
+bool mode_holdInit();
 
 /**
  * Executes one cycle of hold mode.

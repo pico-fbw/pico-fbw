@@ -7,7 +7,7 @@
 
 #define DRIVER_I2C i2c0 // The I2C bus to use for communicating with sensors
 #define DRIVER_FREQ_KHZ 400  // The frequency of the I2C bus in kHz
-#define DRIVER_TIMEOUT_US 50000 // The maximum time in microseconds that the driver will wait for a response from the sensor
+#define DRIVER_TIMEOUT_US 50E3 // The maximum time in microseconds that the driver will wait for a response from the sensor
 #define DRIVER_INIT_ATTEMPTS 3 // The maximum number of attempts that the driver will make to initialize the sensor
 
 /*******************************************************************************

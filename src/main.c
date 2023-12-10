@@ -160,7 +160,7 @@ int main() {
     }
 
     // GPS
-    if ((GPSCommandType)flash.sensors[SENSORS_GPS_COMMAND_TYPE] != GPS_COMMAND_TYPE_NONE) {
+    if (gps.isSupported()) {
         while (time_us_64() < (1000 * 1000));
         platform_boot_setProgress(80, "Initializing GPS");
         if (gps.init()) {

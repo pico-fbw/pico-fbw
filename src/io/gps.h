@@ -24,18 +24,23 @@ typedef enum GPSCommandType {
 #define GPS_SAFE_HDOP_THRESHOLD 5
 #define GPS_SAFE_VDOP_THRESHOLD 3
 
+#define M_TO_FT 3.28084f // Meters to feet conversion constant
+
 // TODO: gps needs to be added to wiki
 
 typedef bool (*gps_init_t)();
 typedef void (*gps_deinit_t)();
 typedef void (*gps_update_t)();
 typedef int (*gps_calibrateAltOffset_t)(uint);
+typedef bool (*gps_isSupported_t)();
 
 typedef struct GPS {
-    long double lat, lng;
-    int alt;
-    float spd, trk;
-    float pdop, hdop, vdop;
+    long double lat; // -90 to 90 deg.
+    long double lng; // -180 to 180 deg.
+    int alt; // MSL, ft.
+    float speed; // Groundspeed, kts.
+    float track; // True (NOT magnetic) heading, 0 to 360 deg.
+    float pdop, hdop, vdop; // GPS DOP (dilution of precision) measurements for position, horizontal, and vertical
     int altOffset; // This is a positive value (basically where the GPS is MSL) or possibly zero if no calibration has been performed.
     bool altOffset_calibrated;
     /**
@@ -57,6 +62,10 @@ typedef struct GPS {
      * @return 0 if successful, PICO_ERROR_TIMEOUT if a timeout occured, or PICO_ERROR_GENERIC otherwise.
     */
     gps_calibrateAltOffset_t calibrateAltOffset;
+    /**
+     * @return whether or not the GPS sensor is supported in the current system configuration.
+    */
+    gps_isSupported_t isSupported;
 } GPS;
 
 extern GPS gps;

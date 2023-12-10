@@ -18,10 +18,10 @@ uint api_test_gps(const char *cmd, const char *args) {
     if (!aircraft.GPSSafe) return 500;
     printf("[api] dumping GPS data, check for validity!\n"
            "==================================\n"
-           "lat::%.10f, lng::%.10f, alt::%d, spd::%f, trk::%f, "
+           "lat::%.10f, lng::%.10f, alt::%d, speed::%f, track::%f, "
            "pdop::%f, hdop::%f, vdop::%f, altOffset::%d, altOffset_calibrated::%d\n"
            "==================================\n",
-           gps.lat, gps.lng, gps.alt, gps.spd, gps.trk,
+           gps.lat, gps.lng, gps.alt, gps.speed, gps.track,
            gps.pdop, gps.hdop, gps.vdop, gps.altOffset, gps.altOffset_calibrated);
     return 200;
 }

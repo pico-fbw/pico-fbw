@@ -28,10 +28,10 @@ uint api_get_sensor(const char *cmd, const char *args) {
         case 2: // GPS only
             if ((GPSCommandType)flash.sensors[SENSORS_GPS_COMMAND_TYPE] == GPS_COMMAND_TYPE_NONE) return 403;
             if (aircraft.GPSSafe) {
-                printf("{\"gps\":[{\"lat\":%.10f,\"lng\":%.10f,\"alt\":%d,\"spd\":%.4f,\"trk\":%.4f}]}\n",
-                        gps.lat, gps.lng, gps.alt, gps.spd, gps.trk);
+                printf("{\"gps\":[{\"lat\":%.10f,\"lng\":%.10f,\"alt\":%d,\"speed\":%.4f,\"track\":%.4f}]}\n",
+                        gps.lat, gps.lng, gps.alt, gps.speed, gps.track);
             } else {
-                printf("{\"gps\":[{\"lat\":null,\"lng\":null,\"alt\":null,\"spd\":null,\"trk\":null}]}\n");
+                printf("{\"gps\":[{\"lat\":null,\"lng\":null,\"alt\":null,\"speed\":null,\"track\":null}]}\n");
             }
             break;
         case 0: // All sensors
@@ -39,19 +39,19 @@ uint api_get_sensor(const char *cmd, const char *args) {
             if ((GPSCommandType)flash.sensors[SENSORS_GPS_COMMAND_TYPE] == GPS_COMMAND_TYPE_NONE) return 403;
             if (aircraft.AAHRSSafe && aircraft.GPSSafe) {
                 printf("{\"imu\":[{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f}],"
-                       "\"gps\":[{\"lat\":%.10f,\"lng\":%.10f,\"alt\":%d,\"spd\":%.4f,\"trk\":%.4f}]}\n",
-                       aahrs.roll, aahrs.pitch, aahrs.yaw, gps.lat, gps.lng, gps.alt, gps.spd, gps.trk);
+                       "\"gps\":[{\"lat\":%.10f,\"lng\":%.10f,\"alt\":%d,\"speed\":%.4f,\"track\":%.4f}]}\n",
+                       aahrs.roll, aahrs.pitch, aahrs.yaw, gps.lat, gps.lng, gps.alt, gps.speed, gps.track);
             } else if (aircraft.AAHRSSafe) {
                 printf("{\"imu\":[{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f}],"
-                       "\"gps\":[{\"lat\":null,\"lng\":null,\"alt\":null,\"spd\":null,\"trk\":null}]}\n",
+                       "\"gps\":[{\"lat\":null,\"lng\":null,\"alt\":null,\"speed\":null,\"track\":null}]}\n",
                        aahrs.roll, aahrs.pitch, aahrs.yaw);
             } else if (aircraft.GPSSafe) {
                 printf("{\"imu\":[{\"roll\":null,\"pitch\":null,\"yaw\":null}],"
-                       "\"gps\":[{\"lat\":%.10f,\"lng\":%.10f,\"alt\":%d,\"spd\":%.4f,\"trk\":%.4f}]}\n",
-                       gps.lat, gps.lng, gps.alt, gps.spd, gps.trk);
+                       "\"gps\":[{\"lat\":%.10f,\"lng\":%.10f,\"alt\":%d,\"speed\":%.4f,\"track\":%.4f}]}\n",
+                       gps.lat, gps.lng, gps.alt, gps.speed, gps.track);
             } else {
                 printf("{\"imu\":[{\"roll\":null,\"pitch\":null,\"yaw\":null}],"
-                       "\"gps\":[{\"lat\":null,\"lng\":null,\"alt\":null,\"spd\":null,\"trk\":null}]}\n");
+                       "\"gps\":[{\"lat\":null,\"lng\":null,\"alt\":null,\"speed\":null,\"track\":null}]}\n");
             }
             break;
     }

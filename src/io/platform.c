@@ -189,7 +189,7 @@ void platform_loop(bool updateAircraft) {
             break;
     }
     aahrs.update();
-    if ((GPSCommandType)flash.sensors[SENSORS_GPS_COMMAND_TYPE] != GPS_COMMAND_TYPE_NONE) gps.update();
+    if (gps.isSupported()) gps.update();
     if (updateAircraft) aircraft.update();
     if ((bool)flash.general[GENERAL_API_ENABLED]) api_poll();
     watchdog_update();

@@ -58,9 +58,7 @@ static bool setToGeneral(const char *key, float value) {
         flash.general[GENERAL_WIFLY_STATUS] = value;
     } else if (strcasecmp(key, "skipCalibration") == 0) {
         flash.general[GENERAL_SKIP_CALIBRATION] = value;
-    } else {
-        return false;
-    }
+    } else return false;
     return true;
 }
 
@@ -81,6 +79,10 @@ static void getFromControl(const char *key, float **value) {
         *value = &flash.control[CONTROL_THROTTLE_DETENT_MAX];
     } else if (strcasecmp(key, "throttleMaxTime") == 0) {
         *value = &flash.control[CONTROL_THROTTLE_MAX_TIME];
+    } else if (strcasecmp(key, "throttleCooldownTime") == 0) {
+        *value = &flash.control[CONTROL_THROTTLE_COOLDOWN_TIME];
+    } else if (strcasecmp(key, "throttleSensitivity") == 0) {
+        *value = &flash.control[CONTROL_THROTTLE_SENSITIVITY];
     } else if (strcasecmp(key, "dropDetentClosed") == 0) {
         *value = &flash.control[CONTROL_DROP_DETENT_CLOSED];
     } else if (strcasecmp(key, "dropDetentOpen") == 0) {
@@ -129,6 +131,10 @@ static bool setToControl(const char *key, float value) {
         flash.control[CONTROL_THROTTLE_DETENT_MAX] = value;
     } else if (strcasecmp(key, "throttleMaxTime") == 0) {
         flash.control[CONTROL_THROTTLE_MAX_TIME] = value;
+    } else if (strcasecmp(key, "throttleCooldownTime") == 0) {
+        flash.control[CONTROL_THROTTLE_COOLDOWN_TIME] = value;
+    } else if (strcasecmp(key, "throttleSensitivity") == 0) {
+        flash.control[CONTROL_THROTTLE_SENSITIVITY] = value;
     } else if (strcasecmp(key, "dropDetentClosed") == 0) {
         flash.control[CONTROL_DROP_DETENT_CLOSED] = value;
     } else if (strcasecmp(key, "dropDetentOpen") == 0) {
@@ -155,9 +161,7 @@ static bool setToControl(const char *key, float value) {
         flash.control[CONTROL_AIL_MIXING_BIAS] = value;
     } else if (strcasecmp(key, "elevMixingBias") == 0) {
         flash.control[CONTROL_ELEV_MIXING_BIAS] = value;
-    } else {
-        return false;
-    }
+    } else return false;
     return true;
 }
 
@@ -244,9 +248,7 @@ static bool setToPins(const char *key, float value) {
         flash.pins[PINS_REVERSE_PITCH] = value;
     } else if (strcasecmp(key, "reverseYaw") == 0) {
         flash.pins[PINS_REVERSE_YAW] = value;
-    } else {
-        return false;
-    }
+    } else return false;
     return true;
 }
 
@@ -273,9 +275,7 @@ static bool setToSensors(const char *key, float value) {
         flash.sensors[SENSORS_GPS_COMMAND_TYPE] = value;
     } else if (strcasecmp(key, "gpsBaudrate") == 0) {
         flash.sensors[SENSORS_GPS_BAUDRATE] = value;
-    } else {
-        return false;
-    }
+    } else return false;
     return true;
 }
 
@@ -316,9 +316,7 @@ static bool setToSystem(const char *key, float value) {
         flash.system[SYSTEM_DUMP_NETWORK] = value;
     } else if (strcasecmp(key, "watchdogTimeout") == 0) {
         flash.system[SYSTEM_WATCHDOG_TIMEOUT] = value;
-    } else {
-        return false;
-    }
+    } else return false;
     return true;
 }
 
@@ -361,6 +359,18 @@ static void getFromPID(const char *key, float **value) {
         *value = &flash.pid[PID_YAW_INTEGMIN];
     } else if (strcasecmp(key, "yaw_integMax") == 0) {
         *value = &flash.pid[PID_YAW_INTEGMAX];
+    } else if (strcasecmp(key, "throttle_kp") == 0) {
+        *value = &flash.pid[PID_THROTTLE_KP];
+    } else if (strcasecmp(key, "throttle_ki") == 0) {
+        *value = &flash.pid[PID_THROTTLE_KI];
+    } else if (strcasecmp(key, "throttle_kd") == 0) {
+        *value = &flash.pid[PID_THROTTLE_KD];
+    } else if (strcasecmp(key, "throttle_tau") == 0) {
+        *value = &flash.pid[PID_THROTTLE_TAU];
+    } else if (strcasecmp(key, "throttle_integMin") == 0) {
+        *value = &flash.pid[PID_THROTTLE_INTEGMIN];
+    } else if (strcasecmp(key, "throttle_integMax") == 0) {
+        *value = &flash.pid[PID_THROTTLE_INTEGMAX];
     } else {
         *value = NULL;
     }
@@ -405,9 +415,19 @@ static bool setToPID(const char *key, float value) {
         flash.pid[PID_YAW_INTEGMIN] = value;
     } else if (strcasecmp(key, "yaw_integMax") == 0) {
         flash.pid[PID_YAW_INTEGMAX] = value;
-    } else {
-        return false;
-    }
+    } else if (strcasecmp(key, "throttle_kp") == 0) {
+        flash.pid[PID_THROTTLE_KP] = value;
+    } else if (strcasecmp(key, "throttle_ki") == 0) {
+        flash.pid[PID_THROTTLE_KI] = value;
+    } else if (strcasecmp(key, "throttle_kd") == 0) {
+        flash.pid[PID_THROTTLE_KD] = value;
+    } else if (strcasecmp(key, "throttle_tau") == 0) {
+        flash.pid[PID_THROTTLE_TAU] = value;
+    } else if (strcasecmp(key, "throttle_integMin") == 0) {
+        flash.pid[PID_THROTTLE_INTEGMIN] = value;
+    } else if (strcasecmp(key, "throttle_integMax") == 0) {
+        flash.pid[PID_THROTTLE_INTEGMAX] = value;
+    } else return false;
     return true;
 }
 
@@ -426,12 +446,9 @@ static bool setToWifly(const char *key, const char *value) {
         strcpy(flash.wifly_ssid, value);
     } else if (strcasecmp(key, "pass") == 0) {
         strcpy(flash.wifly_pass, value);
-    } else {
-        return false;
-    }
+    } else return false;
     return true;
 }
-
 
 bool config_validate() {
     // Unique pin validation
@@ -532,8 +549,35 @@ bool config_validate() {
     }
     if (flash.sensors[SENSORS_GPS_COMMAND_TYPE] < GPS_COMMAND_TYPE_MIN || flash.sensors[SENSORS_GPS_COMMAND_TYPE] > GPS_COMMAND_TYPE_MAX) {
         if (print.fbw) printf("ERROR: GPS command type must be between %d and %d.\n", GPS_COMMAND_TYPE_MIN, GPS_COMMAND_TYPE_MAX);
+        return false;
     }
-    // Control/limit validation
+    // Throttle detent and configuration validation
+    if (flash.control[CONTROL_THROTTLE_DETENT_IDLE] < 0.0f || flash.control[CONTROL_THROTTLE_DETENT_IDLE] > 100.0f) {
+        if (print.fbw) printf("ERROR: Idle throttle detent must be between 0 and 100 percent.\n");
+        return false;
+    }
+    if (flash.control[CONTROL_THROTTLE_DETENT_MCT] < 0.0f || flash.control[CONTROL_THROTTLE_DETENT_MCT] > 100.0f) {
+        if (print.fbw) printf("ERROR: MCT throttle detent must be between 0 and 100 percent.\n");
+        return false;
+    }
+    if (flash.control[CONTROL_THROTTLE_DETENT_MAX] < 0.0f || flash.control[CONTROL_THROTTLE_DETENT_MAX] > 100.0f) {
+        if (print.fbw) printf("ERROR: Max throttle detent must be between 0 and 100 percent.\n");
+        return false;
+    }
+    if (flash.control[CONTROL_THROTTLE_SENSITIVITY] < 0.0f || flash.control[CONTROL_THROTTLE_SENSITIVITY] > 1.0f) {
+        if (print.fbw) printf("ERROR: Throttle sensitivity must be between 0.0 and 1.0.\n");
+        return false;
+    }
+    // Drop (servo position) validation
+    if (flash.control[CONTROL_DROP_DETENT_CLOSED] < 0 || flash.control[CONTROL_DROP_DETENT_OPEN] > 180) {
+        if (print.fbw) printf("ERROR: Drop detent (closed) must be between 0 and 180 degrees.\n");
+        return false;
+    }
+    if (flash.control[CONTROL_DROP_DETENT_OPEN] < 0 || flash.control[CONTROL_DROP_DETENT_OPEN] > 180) {
+        if (print.fbw) printf("ERROR: Drop detent (open) must be between 0 and 180 degrees.\n");
+        return false;
+    }
+    // Control limit validation
     switch ((ControlMode)flash.general[GENERAL_CONTROL_MODE]) {
         case CTRLMODE_3AXIS_ATHR:
         case CTRLMODE_3AXIS:
@@ -557,14 +601,6 @@ bool config_validate() {
                 return false;
             }
             break;
-    }
-    if (flash.control[CONTROL_DROP_DETENT_CLOSED] < 0 || flash.control[CONTROL_DROP_DETENT_OPEN] > 180) {
-        if (print.fbw) printf("ERROR: Drop detent (closed) must be between 0 and 180 degrees.\n");
-        return false;
-    }
-    if (flash.control[CONTROL_DROP_DETENT_OPEN] < 0 || flash.control[CONTROL_DROP_DETENT_OPEN] > 180) {
-        if (print.fbw) printf("ERROR: Drop detent (open) must be between 0 and 180 degrees.\n");
-        return false;
     }
     // Watchdog timeout validation
     if ((uint)flash.system[SYSTEM_WATCHDOG_TIMEOUT] < 1000 && (uint)flash.system[SYSTEM_WATCHDOG_TIMEOUT] > 0) {
@@ -630,9 +666,7 @@ bool config_set(const char *section, const char *key, const char *value) {
         if (!setToSystem(key, atoff(value))) return false;
     } else if (strcasecmp(section, CONFIG_PID_STR) == 0) {
         if (!setToPID(key, atoff(value))) return false;
-    } else {
-        return false;
-    }
+    } else return false;
     return config_validate();
 }
 

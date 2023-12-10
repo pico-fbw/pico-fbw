@@ -165,9 +165,9 @@ static inline float readRaw(uint pin, PWMMode mode) {
         if (states[i].pin == pin) {
             switch (mode) {
                 case PWM_MODE_DEG:
-                    return (180000.0f * ((float)states[i].pulsewidth * 0.000000016f - 0.001f)); // 0-180
+                    return (180E3f * ((float)states[i].pulsewidth * 1.6E-8f - 1E-3f)); // 0-180
                 case PWM_MODE_ESC:
-                    return (100000.0f * ((float)states[i].pulsewidth * 0.000000016f - 0.001f)); // 0-100
+                    return (100E3f * ((float)states[i].pulsewidth * 1.6E-8f - 1E-3f)); // 0-100
             }
         }
     }
@@ -179,9 +179,9 @@ float pwm_read(uint pin, PWMMode mode) {
         if (states[i].pin == pin) {
             switch (mode) {
                 case PWM_MODE_DEG:
-                    return (180000.0f * ((float)states[i].pulsewidth * 0.000000016f - 0.001f) + pwmOffsetOf(pin));
+                    return (180E3f * ((float)states[i].pulsewidth * 1.6E-8f - 1E-3f) + pwmOffsetOf(pin));
                 case PWM_MODE_ESC:
-                    return (100000.0f * ((float)states[i].pulsewidth * 0.000000016f - 0.001f) + pwmOffsetOf(pin));
+                    return (100E3f * ((float)states[i].pulsewidth * 1.6E-8f - 1E-3f) + pwmOffsetOf(pin));
             }
         }
     }
