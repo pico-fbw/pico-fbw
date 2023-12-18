@@ -3,7 +3,7 @@
  * Licensed under the GNU GPL-3.0
 */
 
-#include <math.h>
+#include "pico/time.h"
 
 #include "../io/esc.h"
 #include "../io/flash.h"

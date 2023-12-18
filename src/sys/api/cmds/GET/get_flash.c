@@ -11,7 +11,7 @@
 
 #include "get_flash.h"
 
-uint api_get_flash(const char *cmd, const char *args) {
+int api_get_flash(const char *cmd, const char *args) {
     printf("{\"sectors\":[");
     float *fvalue = flash.calibration;
     for (uint s = 1; s <= NUM_FLOAT_SECTORS; s++) {

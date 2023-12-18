@@ -38,7 +38,7 @@ static float *getSectionMem(ConfigSection section) {
     }
 }
 
-uint api_get_config(const char *cmd, const char *args) {
+int api_get_config(const char *cmd, const char *args) {
     if (args) {
         char section[64];
         char key[64];

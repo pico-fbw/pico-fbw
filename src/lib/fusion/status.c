@@ -13,7 +13,7 @@
 
 #include "../../sys/log.h"
 
-#include "../../modes/modes.h"
+#include "../../modes/aircraft.h"
 
 #include "drivers/drivers.h"
 #include "fconfig.h"

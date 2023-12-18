@@ -111,15 +111,10 @@ void servo_getPins(uint *servos, uint *num_servos) {
             break;
         case CTRLMODE_2AXIS_ATHR:
         case CTRLMODE_2AXIS:
-            servos[0] = (uint)flash.pins[PINS_SERVO_AIL];
-            servos[1] = (uint)flash.pins[PINS_SERVO_ELEV];
-            servos[2] = (uint)flash.pins[PINS_SERVO_DROP];
-            *num_servos = 3;
-            break;
         case CTRLMODE_FLYINGWING_ATHR:
         case CTRLMODE_FLYINGWING:
-            servos[0] = (uint)flash.pins[PINS_SERVO_ELEVON_L];
-            servos[1] = (uint)flash.pins[PINS_SERVO_ELEVON_R];
+            servos[0] = (uint)flash.pins[PINS_SERVO_AIL];
+            servos[1] = (uint)flash.pins[PINS_SERVO_ELEV];
             servos[2] = (uint)flash.pins[PINS_SERVO_DROP];
             *num_servos = 3;
             break;

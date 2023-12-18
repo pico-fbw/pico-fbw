@@ -13,7 +13,7 @@
 
 #include "../sys/throttle.h"
 
-#include "modes.h"
+#include "aircraft.h"
 #include "auto.h"
 #include "tune.h"
 #include "flight.h"

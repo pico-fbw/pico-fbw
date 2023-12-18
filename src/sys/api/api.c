@@ -16,7 +16,7 @@
 
 void api_poll() {
     char *line = stdin_read_line();
-    if (line != NULL) {
+    if (line) {
         if (strlen(line) < 1) {
             free(line);
             return;

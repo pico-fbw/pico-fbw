@@ -9,11 +9,11 @@
 #include "../../../../io/flash.h"
 #include "../../../../io/gps.h"
 
-#include "../../../../modes/modes.h"
+#include "../../../../modes/aircraft.h"
 
 #include "test_gps.h"
 
-uint api_test_gps(const char *cmd, const char *args) {
+int api_test_gps(const char *cmd, const char *args) {
     if ((GPSCommandType)flash.sensors[SENSORS_GPS_COMMAND_TYPE] == GPS_COMMAND_TYPE_NONE) return 403;
     if (!aircraft.GPSSafe) return 500;
     printf("[api] dumping GPS data, check for validity!\n"

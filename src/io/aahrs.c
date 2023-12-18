@@ -30,7 +30,7 @@
 
 #include "../sys/log.h"
 
-#include "../modes/modes.h"
+#include "../modes/aircraft.h"
 
 #include "display.h"
 #include "flash.h"

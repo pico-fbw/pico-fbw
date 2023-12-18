@@ -5,6 +5,7 @@ add_library(fbw_api
     cmds/GET/get_flash.c
     cmds/GET/get_fplan.c
     cmds/GET/get_info.c
+    cmds/GET/get_input.c
     cmds/GET/get_logs.c
     cmds/GET/get_mode.c
     cmds/GET/get_sensor.c

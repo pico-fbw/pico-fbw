@@ -7,7 +7,7 @@
 
 #include "../io/flash.h"
 
-#include "../modes/modes.h"
+#include "../modes/aircraft.h"
 
 #include "switch.h"
 
@@ -26,7 +26,11 @@ void switch_update(SwitchPosition pos) {
             case SWITCH_POSITION_HIGH:
                 switch ((SwitchType)flash.general[GENERAL_SWITCH_TYPE]) {
                     case SWITCH_TYPE_2_POS:
-                        aircraft.changeTo(MODE_NORMAL);
+                        if (wifly_fplanExists()) {
+                            aircraft.changeTo(MODE_AUTO);
+                        } else {
+                            aircraft.changeTo(MODE_NORMAL);
+                        }
                         break;
                     case SWITCH_TYPE_3_POS:
                         aircraft.changeTo(MODE_AUTO);

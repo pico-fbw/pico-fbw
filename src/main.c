@@ -25,7 +25,7 @@
 #include "io/platform.h"
 #include "io/pwm.h"
 #include "io/servo.h"
-#include "modes/modes.h"
+#include "modes/aircraft.h"
 #include "sys/config.h"
 #include "sys/info.h"
 #include "sys/log.h"

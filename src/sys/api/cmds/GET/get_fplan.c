@@ -10,10 +10,9 @@
 
 #include "get_fplan.h"
 
-uint api_get_fplan(const char *cmd, const char *args) {
-    const char *fplan = wifly_getFplanJson();
-    if (fplan != NULL && wifly_getWaypointCount() > 0) {
-        printf("%s\n", fplan);
+int api_get_fplan(const char *cmd, const char *args) {
+    if (wifly_fplanExists()) {
+        printf("%s\n", wifly_getFplanJson());
         return -1;
     } else {
         return 403;

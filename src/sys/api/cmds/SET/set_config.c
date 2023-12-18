@@ -13,7 +13,7 @@
 
 #include "set_config.h"
 
-uint api_set_config(const char *cmd, const char *args) {
+int api_set_config(const char *cmd, const char *args) {
     if (args) {
         char section[64];
         char key[64];

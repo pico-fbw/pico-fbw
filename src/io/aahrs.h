@@ -41,14 +41,14 @@ typedef bool (*aahrs_isCalibrated_t)();
 
 // Altitude-Attitude Heading Reference System (AAHRS)
 typedef struct AAHRS {
-    float roll;
-    float roll_rate;
-    float pitch;
-    float pitch_rate;
-    float yaw;
-    float yaw_rate;
-    float alt;
-    bool isCalibrated;
+    float roll; // (Read-only)
+    float roll_rate; // (Read-only)
+    float pitch; // (Read-only)
+    float pitch_rate; // (Read-only)
+    float yaw; // (Read-only)
+    float yaw_rate; // (Read-only)
+    float alt; // (Read-only)
+    bool isCalibrated; // (Read-only)
     /**
      * Initializes the AAHRS computation layer, sensor hardware, and underlying fusion algorithms.
      * @return true if successful, false if not.

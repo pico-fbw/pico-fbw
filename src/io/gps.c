@@ -16,7 +16,7 @@
 #include "../lib/minmea.h"
 
 #include "../modes/flight.h"
-#include "../modes/modes.h"
+#include "../modes/aircraft.h"
 
 #include "../sys/log.h"
 
@@ -111,7 +111,7 @@ void gps_deinit() { uart_deinit(GPS_UART); }
 void gps_update() {
     // Read line(s) from the GPS and parse them until there are none remaining
     char *line = uart_read_line(GPS_UART);
-    while (line != NULL) {
+    while (line) {
         switch (minmea_sentence_id(line, false)) {
             case MINMEA_SENTENCE_GGA: {
                 minmea_sentence_gga gga;
@@ -174,7 +174,7 @@ int gps_calibrateAltOffset(uint num_samples) {
     while (samples < num_samples && !time_reached(calibrationTimeout)) {
         // printf("time reached: %d\n", time_reached(calibrationTimeout));
         char *line = uart_read_line(GPS_UART);
-        if (line != NULL) {
+        if (line) {
             switch (minmea_sentence_id(line, false)) {
                 case MINMEA_SENTENCE_GGA: {
                     minmea_sentence_gga gga;

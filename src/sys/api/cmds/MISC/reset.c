@@ -16,7 +16,7 @@
 
 #include "reset.h"
 
-uint api_reset(const char *cmd, const char *args) {
+void api_reset(const char *cmd, const char *args) {
     printf("This will erase ALL user data stored on the device!\nReset will occur in 10 seconds...power off the device to cancel.\n");
     platform_sleep_ms(10000, false);
     flash_erase();

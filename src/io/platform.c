@@ -27,7 +27,7 @@
 #include "gps.h"
 #include "pwm.h"
 
-#include "../modes/modes.h"
+#include "../modes/aircraft.h"
 
 #include "../sys/api/api.h"
 #include "../sys/info.h"
@@ -68,7 +68,7 @@ void platform_boot_setProgress(float progress, const char *message) {
             strcpy(messageCopy, message);
             uint wordCount = 0;
             char *token = strtok(messageCopy, " ");
-            while (token != NULL && wordCount < 3) {
+            while (token && wordCount < 3) {
                 if (wordCount == 0) {
                     if (strlen(token) <= DISPLAY_MAX_LINE_LEN) {
                         strncpy(line1, token, DISPLAY_MAX_LINE_LEN);

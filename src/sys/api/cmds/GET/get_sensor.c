@@ -11,11 +11,11 @@
 #include "../../../../io/flash.h"
 #include "../../../../io/gps.h"
 
-#include "../../../../modes/modes.h"
+#include "../../../../modes/aircraft.h"
 
 #include "get_sensor.h"
 
-uint api_get_sensor(const char *cmd, const char *args) {
+int api_get_sensor(const char *cmd, const char *args) {
     // Prepare the JSON output based on sensor type
     switch (atoi(args)) {
         case 1: // IMU only

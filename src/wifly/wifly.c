@@ -375,6 +375,8 @@ bool wifly_parseFplan(const char *fplan) {
     }
 }
 
+bool wifly_fplanExists() { return waypoints && waypoint_count > 0; }
+
 Waypoint *wifly_getFplan() { return waypoints; }
 
 const char *wifly_getFplanJson() { return fplanJson; }

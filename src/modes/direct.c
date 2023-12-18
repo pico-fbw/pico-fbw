@@ -32,8 +32,8 @@ void mode_direct() {
         case CTRLMODE_FLYINGWING_ATHR:
         case CTRLMODE_FLYINGWING:
             // TODO: flying wing mixing here
-            servo_set((uint)flash.pins[PINS_SERVO_ELEVON_L], (uint16_t)pwm_read((uint)flash.pins[PINS_INPUT_AIL], PWM_MODE_DEG));
-            servo_set((uint)flash.pins[PINS_SERVO_ELEVON_R], (uint16_t)pwm_read((uint)flash.pins[PINS_INPUT_ELEV], PWM_MODE_DEG));
+            servo_set((uint)flash.pins[PINS_SERVO_AIL], (uint16_t)pwm_read((uint)flash.pins[PINS_INPUT_AIL], PWM_MODE_DEG));
+            servo_set((uint)flash.pins[PINS_SERVO_ELEV], (uint16_t)pwm_read((uint)flash.pins[PINS_INPUT_ELEV], PWM_MODE_DEG));
             break;
     }
     if (pwm_hasAthr()) esc_set((uint)flash.pins[PINS_ESC_THROTTLE], (uint16_t)pwm_read((uint)flash.pins[PINS_INPUT_THROTTLE], PWM_MODE_ESC));

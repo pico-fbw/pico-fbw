@@ -11,7 +11,7 @@
 
 #include "get_logs.h"
 
-uint api_get_logs(const char *cmd, const char *args) {
+int api_get_logs(const char *cmd, const char *args) {
     uint logCount = log_count();
     if (logCount > 0) {
         printf("{\"logs\":[");

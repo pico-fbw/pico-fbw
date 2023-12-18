@@ -72,6 +72,11 @@ int wifly_genPageContent(char *result, size_t max_result_len);
 bool wifly_parseFplan(const char *fplan);
 
 /**
+ * @return true if a flightplan exists (has been uploaded and parsed), false if not.
+*/
+bool wifly_fplanExists();
+
+/**
  * Gets the current flightplan (structured as a list of Waypoints).
  * @return A pointer to the current flightplan in Waypoint[] form, or NULL if there is none.
 */

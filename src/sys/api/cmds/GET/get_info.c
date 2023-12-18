@@ -12,7 +12,7 @@
 
 #include "get_info.h"
 
-uint api_get_info(const char *cmd, const char *args) {
+int api_get_info(const char *cmd, const char *args) {
     #if defined(RASPBERRYPI_PICO)
         printf("{\"version\":\"%s\",\"version_api\":\"%s\",\"version_wifly\":\"\",\"is_pico_w\":false,\"rp2040_version\":%d}\n",
             PICO_FBW_VERSION, PICO_FBW_API_VERSION, rp2040_chip_version());

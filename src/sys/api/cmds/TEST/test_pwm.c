@@ -13,11 +13,11 @@
 #include "../../../../io/pwm.h"
 #include "../../../../io/servo.h"
 
-#include "../../../../modes/modes.h"
+#include "../../../../modes/aircraft.h"
 
 #include "test_pwm.h"
 
-uint api_test_pwm(const char *cmd, const char *args) {
+int api_test_pwm(const char *cmd, const char *args) {
     if (aircraft.mode == MODE_DIRECT) {
         uint in[] = {flash.pins[PINS_INPUT_AIL], flash.pins[PINS_INPUT_ELEV], flash.pins[PINS_INPUT_RUD],
                      flash.pins[PINS_INPUT_THROTTLE], flash.pins[PINS_INPUT_SWITCH]};

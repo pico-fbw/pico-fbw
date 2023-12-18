@@ -9,11 +9,11 @@
 
 #include "../../../../io/servo.h"
 
-#include "../../../../modes/modes.h"
+#include "../../../../modes/aircraft.h"
 
 #include "test_servo.h"
 
-uint api_test_servo(const char *cmd, const char *args) {
+int api_test_servo(const char *cmd, const char *args) {
     if (aircraft.mode == MODE_DIRECT) {
         uint num_servos = 3;
         uint servos[num_servos];

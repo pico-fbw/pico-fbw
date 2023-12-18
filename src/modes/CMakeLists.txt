@@ -1,9 +1,9 @@
 add_library(fbw_modes
+    aircraft.c
     auto.c
     direct.c
     flight.c
     hold.c
-    modes.c
     normal.c
     tune.c
 )

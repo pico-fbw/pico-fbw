@@ -14,7 +14,7 @@
 #include "../io/pwm.h"
 #include "../io/servo.h"
 
-#include "modes.h"
+#include "aircraft.h"
 #include "tune.h"
 
 #include "flight.h"
@@ -126,8 +126,8 @@ void flight_update(double roll, double pitch, double yaw, bool override) {
                 rElevonOut = (rElevonOut > 0) ? flash.control[CONTROL_MAX_ELEVON_DEFLECTION] : -flash.control[CONTROL_MAX_ELEVON_DEFLECTION];
             }
 
-            servo_set((uint)flash.pins[PINS_SERVO_ELEVON_L], lElevonOut + 90);
-            servo_set((uint)flash.pins[PINS_SERVO_ELEVON_R], rElevonOut + 90);
+            servo_set((uint)flash.pins[PINS_SERVO_AIL], lElevonOut + 90);
+            servo_set((uint)flash.pins[PINS_SERVO_ELEV], rElevonOut + 90);
             break;
         }
         default: {

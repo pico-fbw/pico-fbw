@@ -26,8 +26,6 @@ typedef enum GPSCommandType {
 
 #define M_TO_FT 3.28084f // Meters to feet conversion constant
 
-// TODO: gps needs to be added to wiki
-
 typedef bool (*gps_init_t)();
 typedef void (*gps_deinit_t)();
 typedef void (*gps_update_t)();
@@ -35,14 +33,14 @@ typedef int (*gps_calibrateAltOffset_t)(uint);
 typedef bool (*gps_isSupported_t)();
 
 typedef struct GPS {
-    long double lat; // -90 to 90 deg.
-    long double lng; // -180 to 180 deg.
-    int alt; // MSL, ft.
-    float speed; // Groundspeed, kts.
-    float track; // True (NOT magnetic) heading, 0 to 360 deg.
-    float pdop, hdop, vdop; // GPS DOP (dilution of precision) measurements for position, horizontal, and vertical
-    int altOffset; // This is a positive value (basically where the GPS is MSL) or possibly zero if no calibration has been performed.
-    bool altOffset_calibrated;
+    long double lat; // -90 to 90 deg. (Read-only)
+    long double lng; // -180 to 180 deg. (Read-only)
+    int alt; // MSL, ft. (Read-only)
+    float speed; // Groundspeed, kts. (Read-only)
+    float track; // True (NOT magnetic) heading, 0 to 360 deg. (Read-only)
+    float pdop, hdop, vdop; // GPS DOP (dilution of precision) measurements for position, horizontal, and vertical (Read-only)
+    int altOffset; // This is a positive value (basically where the GPS is MSL) or possibly zero if no calibration has been performed. (Read-only)
+    bool altOffset_calibrated; // (Read-only)
     /**
      * Initializes the GPS module.
      * @return true if successful, false if not.

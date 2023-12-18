@@ -1,5 +1,5 @@
-#ifndef __MODES_H
-#define __MODES_H
+#ifndef __AIRCRAFT_H
+#define __AIRCRAFT_H
 
 #include <stdbool.h>
 
@@ -19,9 +19,9 @@ typedef void (*aircraft_setAAHRSSafe_t)(bool);
 typedef void (*aircraft_setGPSSafe_t)(bool);
 
 typedef struct Aircraft {
-    Mode mode;
-    bool AAHRSSafe;
-    bool GPSSafe;
+    Mode mode; // (Read-only)
+    bool AAHRSSafe; // (Read-only)
+    bool GPSSafe; // (Read-only)
     /**
      * Runs the code of the system's currently selected mode.
     */
@@ -43,4 +43,4 @@ typedef struct Aircraft {
 
 extern Aircraft aircraft;
 
-#endif // __MODES_H
+#endif // __AIRCRAFT_H

@@ -42,7 +42,7 @@ Flash flash = {
                 25, 15, 20, // Physical control surface limits
                 20, 0.5f, 1, 1, // Flying wing configuration
                 FLAG_END},
-    .pins = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 2, 4, // Control IO pins
+    .pins = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, // Control IO pins
              16, 17, 21, 20, // Sensor communications pins
              false, false, false, // Servo reverse flags
              FLAG_END},

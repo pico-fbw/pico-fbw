@@ -14,7 +14,7 @@
 
 #include "test_all.h"
 
-uint api_test_all(const char *cmd, const char *args) {
+int api_test_all(const char *cmd, const char *args) {
     uint status[4];
     uint passed = 0;
     status[0] = api_test_aahrs(cmd, args);

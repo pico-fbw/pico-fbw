@@ -12,7 +12,7 @@
 #include "../../../../io/flash.h"
 #include "../../../../io/platform.h"
 
-#include "../../../../modes/modes.h"
+#include "../../../../modes/aircraft.h"
 
 #include "../../../../sys/throttle.h"
 
@@ -30,7 +30,7 @@ static void waitFor(uint32_t s) {
     }
 }
 
-uint api_test_throttle(const char *cmd, const char *args) {
+int api_test_throttle(const char *cmd, const char *args) {
     if (aircraft.mode == MODE_DIRECT) {
         float *idle = &flash.control[CONTROL_THROTTLE_DETENT_IDLE];
         float *mct = &flash.control[CONTROL_THROTTLE_DETENT_MCT];

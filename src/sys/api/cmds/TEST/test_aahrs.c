@@ -63,7 +63,7 @@ static bool waitForAxis(IMUAxis axis, uint breakpoint, uint32_t timeout_ms) {
     return moved == axis;
 }
 
-uint api_test_aahrs(const char *cmd, const char *args) {
+int api_test_aahrs(const char *cmd, const char *args) {
     printf("[api] awaiting right roll...\n");
     if (!waitForAxis(IMU_AXIS_ROLL, 20, 10000)) return 500;
     printf("[api] return to center.\n");

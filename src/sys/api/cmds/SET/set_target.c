@@ -9,12 +9,12 @@
 
 #include "../../../../io/flash.h"
 
-#include "../../../../modes/modes.h"
+#include "../../../../modes/aircraft.h"
 #include "../../../../modes/normal.h"
 
 #include "set_target.h"
 
-uint api_set_target(const char *cmd, const char *args) {
+int api_set_target(const char *cmd, const char *args) {
     if (aircraft.mode == MODE_NORMAL) {
         float roll, pitch, yaw, throttle;
         int numArgs = sscanf(args, "%f %f %f %f", &roll, &pitch, &yaw, &throttle);

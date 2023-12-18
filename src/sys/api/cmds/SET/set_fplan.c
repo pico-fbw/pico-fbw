@@ -12,7 +12,7 @@
 
 #include "set_fplan.h"
 
-uint api_set_fplan(const char *cmd, const char *args) {
+int api_set_fplan(const char *cmd, const char *args) {
     char *fplan = malloc(strlen(args) + strlen(FPLAN_PARAM_CONCAT) + 1);
     if (fplan != NULL) {
         // Format as an HTTP request for the parser

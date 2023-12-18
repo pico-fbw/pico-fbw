@@ -123,14 +123,12 @@ typedef enum SectorConfigPins {
     PINS_ESC_THROTTLE,
     PINS_INPUT_SWITCH,
     PINS_SERVO_DROP,
-    PINS_SERVO_ELEVON_L,
-    PINS_SERVO_ELEVON_R,
     // Sensor communications pins
     PINS_AAHRS_SDA,
     PINS_AAHRS_SCL,
     PINS_GPS_TX,
     PINS_GPS_RX,
-   // Servo reverse flags 
+    // Servo reverse flags 
     PINS_REVERSE_ROLL,
     PINS_REVERSE_PITCH,
     PINS_REVERSE_YAW

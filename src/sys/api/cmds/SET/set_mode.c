@@ -7,11 +7,11 @@
 #include <stdlib.h>
 #include "pico/types.h"
 
-#include "../../../../modes/modes.h"
+#include "../../../../modes/aircraft.h"
 
 #include "set_mode.h"
 
-uint api_set_mode(const char *cmd, const char *args) {
+int api_set_mode(const char *cmd, const char *args) {
     Mode mode = atoi(args);
     // Ensure mode is valid before setting it
     if (mode >= MODE_MIN && mode <= MODE_MAX) {

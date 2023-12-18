@@ -186,10 +186,6 @@ static void getFromPins(const char *key, float **value) {
         *value = &flash.pins[PINS_INPUT_SWITCH];
     } else if (strcasecmp(key, "servoDrop") == 0) {
         *value = &flash.pins[PINS_SERVO_DROP];
-    } else if (strcasecmp(key, "servoElevonL") == 0) {
-        *value = &flash.pins[PINS_SERVO_ELEVON_L];
-    } else if (strcasecmp(key, "servoElevonR") == 0) {
-        *value = &flash.pins[PINS_SERVO_ELEVON_R];
     } else if (strcasecmp(key, "aahrsSda") == 0) {
         *value = &flash.pins[PINS_AAHRS_SDA];
     } else if (strcasecmp(key, "aahrsScl") == 0) {
@@ -230,10 +226,6 @@ static bool setToPins(const char *key, float value) {
         flash.pins[PINS_INPUT_SWITCH] = value;
     } else if (strcasecmp(key, "servoDrop") == 0) {
         flash.pins[PINS_SERVO_DROP] = value;
-    } else if (strcasecmp(key, "servoElevonL") == 0) {
-        flash.pins[PINS_SERVO_ELEVON_L] = value;
-    } else if (strcasecmp(key, "servoElevonR") == 0) {
-        flash.pins[PINS_SERVO_ELEVON_R] = value;
     } else if (strcasecmp(key, "aahrsSda") == 0) {
         flash.pins[PINS_AAHRS_SDA] = value;
     } else if (strcasecmp(key, "aahrsScl") == 0) {
@@ -456,40 +448,27 @@ bool config_validate() {
     switch ((ControlMode)flash.general[GENERAL_CONTROL_MODE]) {
         case CTRLMODE_3AXIS_ATHR:
             for (uint i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
-                if (i == PINS_SERVO_ELEVON_L || i == PINS_SERVO_ELEVON_R) break; // Pins that aren't used in this mode
                 if ((int)flash.pins[i] == lastPin) goto invalid;
             }
             break;
         case CTRLMODE_3AXIS:
             for (uint i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
-                if (i == PINS_INPUT_THROTTLE || i == PINS_ESC_THROTTLE ||
-                    i == PINS_SERVO_ELEVON_L || i == PINS_SERVO_ELEVON_R) break;
+                // Skip pins that aren't utilized in this mode
+                if (i == PINS_INPUT_THROTTLE || i == PINS_ESC_THROTTLE) break;
                 if ((int)flash.pins[i] == lastPin) goto invalid;
             }
             break;
         case CTRLMODE_2AXIS_ATHR:
+        case CTRLMODE_FLYINGWING_ATHR:
             for (uint i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
-                if (i == PINS_INPUT_RUD || i == PINS_SERVO_ELEVON_L || i == PINS_SERVO_ELEVON_R) break;
+                if (i == PINS_INPUT_RUD) break;
                 if ((int)flash.pins[i] == lastPin) goto invalid;
             }
             break;
         case CTRLMODE_2AXIS:
-            for (uint i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
-                if (i == PINS_INPUT_RUD || i == PINS_INPUT_THROTTLE || i == PINS_ESC_THROTTLE ||
-                    i == PINS_SERVO_ELEVON_L || i == PINS_SERVO_ELEVON_R) break;
-                if ((int)flash.pins[i] == lastPin) goto invalid;
-            }
-            break;
-        case CTRLMODE_FLYINGWING_ATHR:
-            for (uint i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
-                if (i == PINS_SERVO_AIL || i == PINS_SERVO_ELEV || i == PINS_SERVO_RUD) break;
-                if ((int)flash.pins[i] == lastPin) goto invalid;
-            }
-            break;
         case CTRLMODE_FLYINGWING:
             for (uint i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
-                if (i == PINS_SERVO_AIL || i == PINS_SERVO_ELEV || i == PINS_SERVO_RUD ||
-                    i == PINS_INPUT_THROTTLE || i == PINS_ESC_THROTTLE) break;
+                if (i == PINS_INPUT_RUD || i == PINS_INPUT_THROTTLE || i == PINS_ESC_THROTTLE) break;
                 if ((int)flash.pins[i] == lastPin) goto invalid;
             }
             break;

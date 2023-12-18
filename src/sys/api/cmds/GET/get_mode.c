@@ -6,11 +6,11 @@
 #include <stdio.h>
 #include "pico/types.h"
 
-#include "../../../../modes/modes.h"
+#include "../../../../modes/aircraft.h"
 
 #include "get_mode.h"
 
-uint api_get_mode(const char *cmd, const char *args) {
+int api_get_mode(const char *cmd, const char *args) {
     printf("{\"mode\":%d}\n", aircraft.mode);
     return -1;
 }

@@ -19,16 +19,12 @@
 
 #include "../wifly/wifly.h"
 
-#include "modes.h"
+#include "aircraft.h"
 #include "normal.h"
 #include "tune.h"
 #include "flight.h"
 
 #include "auto.h"
-
-// TODO: Add documentation for auto mode on the wiki!
-// "materials" and "how to use system" need updating and also a completely new page for wifly and how to use it
-// also make sure to mention it in the readme
 
 typedef enum BayPosition {
     CLOSED,
@@ -70,11 +66,10 @@ static inline int64_t dropCallback(alarm_id_t id, void *data) {
 }
 
 bool mode_autoInit() {
-    // Import the flightplan data from Wi-Fly and check if it's valid
-    fplan = wifly_getFplan();
-    if (fplan == NULL || wifly_getWaypointCount() == 0) {
+    // Import the flightplan data from Wi-Fly
+    if (!wifly_fplanExists())
         return false;
-    }
+    fplan = wifly_getFplan();
     flight_init();
     throttle.init();
     // Check if SPEED mode is supported, which we need for autopilot
