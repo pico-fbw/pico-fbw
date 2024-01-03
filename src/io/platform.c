@@ -9,11 +9,11 @@
  * Licensed under the GNU GPL-3.0
 */
 
-#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include "pico/bootrom.h"
 #include "pico/time.h"
+#include "pico/types.h"
 
 #include "hardware/gpio.h"
 #include "hardware/sync.h"

@@ -5,7 +5,6 @@
 
 #include <math.h>
 #include <stdio.h>
-#include "pico/types.h"
 
 #include "../../../../io/flash.h"
 
@@ -27,6 +26,6 @@ int api_set_target(const char *cmd, const char *args) {
             fabsf(yaw) > flash.control[CONTROL_MAX_RUD_DEFLECTION])
             return 400;
         // Pass the setpoints into normal mode, 423 will be returned if the mode rejects the code (user input takes priority)
-        return mode_normalSetExtern(roll, pitch, yaw, throttle, hasThrottle) ? 200 : 423;
+        return normal_set(roll, pitch, yaw, throttle, hasThrottle) ? 200 : 423;
     } else return 403;
 }

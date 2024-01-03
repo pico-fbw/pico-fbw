@@ -4,7 +4,6 @@
 */
 
 #include <stdio.h>
-#include "pico/types.h"
 
 #include "../../../info.h"
 
@@ -22,10 +21,12 @@ void api_help(const char *cmd, const char *args) {
            "GET_MODE - Get the current flight mode\n"
            "GET_SENSOR <0/1/2> - Get sensor data <0=all, 1=AAHRS only, 2=GPS only>\n"
            "GET_THRUST - Get current thrust value\n"
+           "SET_BAY <0/1> - Set the current position of the drop bay <0=closed, 1=open>"
            "SET_CONFIG <section> <key> <value> [-S] - Set configuration value (providing no arguments will save config to flash)\n"
            "SET_FPLAN <json> - Set the flightplan JSON\n"
            "SET_MODE <mode> - Set the flight mode\n"
-           "SET_TARGET <roll> <pitch> <yaw> [thrust]} - Set the desired attitude/thrust target in normal mode\n"
+           "SET_TARGET <roll> <pitch> <yaw> [thrust] - Set the desired attitude/thrust target in normal mode\n"
+           "SET_WAYPOINT <lat> <lng> [alt] [speed] [drop] - Create and track onto a waypoint with the desired parameters in auto mode\n"
            "TEST_ALL - Runs all possible system tests using default values\n"
            "TEST_AAHRS - Tests the AAHRS (Altitude-Attitude Heading Reference System)\n"
            "TEST_GPS - Tests the GPS module (must be outside with good sky visibility)\n"
@@ -39,11 +40,12 @@ void api_help(const char *cmd, const char *args) {
            "RESET - Reset pico-fbw to factory defaults\n\n"
            "Responses:\n"
            "200 OK - Request successful\n"
+           "202 Accepted - Request successful, but not complete yet\n"
            "204 No Content - Request successful, but no content available to return\n"
            "400 Bad Request - Invalid request format or parameters\n"
            "403 Forbidden - Request not allowed in the current state\n"
            "404 Unknown Command - Command not found\n"
-           "423 Locked - Changes are not allowed in the current state\n"
-           "500 Internal Error - Internal error executing the requested command\n",
+           "500 Internal Error - Internal error executing the requested command\n\n"
+           "More information can be found at https://pico-fbw.org/wiki/docs/API",
            PICO_FBW_API_VERSION);
 }

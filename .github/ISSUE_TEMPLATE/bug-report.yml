@@ -1,0 +1,50 @@
+name: Bug Report
+description: File a bug report
+title: "[Bug]: "
+labels: ["bug"]
+body:
+    - type: textarea
+    id: what-happened
+    attributes:
+        label: What happened?
+        description: And, what did you expect to happen?
+    validations:
+        required: true
+    - type: textarea
+    id: steps-to-reproduce
+    attributes:
+        label: Steps To Reproduce
+        description: Steps to reproduce the behavior.
+        placeholder: |
+        1. In this context...
+        1. With this config...
+        1. Do '...'
+        1. See error...
+    validations:
+        required: false
+    - type: dropdown
+    id: version
+    attributes:
+    label: Version
+        description: What version of pico-fbw are you using?
+        options:
+        - 1.0.0
+        - 1.0.0-rc.*
+        - 1.0.0-beta.*
+        - 1.0.0-alpha.*
+        default: 0
+    validations:
+        required: true
+    - type: checkboxes
+    id: exists
+    attributes:
+        label: Is there an existing issue for this?
+        description: Please [search here](https://github.com/pico-fbw/pico-fbw/issues) to see if an issue has already been made.
+        options:
+        - label: I have searched for existing issues before opening this issue.
+        required: true
+    - type: markdown
+    attributes:
+        value: |
+            Thanks for taking the time to fill out this bug report!
+            Please note that we may ask for additional information to clarify and fix your bug, so please keep watch on this issue thread.

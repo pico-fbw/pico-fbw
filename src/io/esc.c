@@ -126,17 +126,17 @@ bool esc_calibrate(uint gpio_pin) {
         display_pBarStr(pBar, 0);
         display_text("Select idle", "thrust.", "", pBar, true);
     }
-    if (!waitForDetent(gpio_pin, &flash.control[CONTROL_THROTTLE_DETENT_IDLE], 10000, 4000)) return false;
+    if (!waitForDetent(gpio_pin, &flash.control[CONTROL_THROTTLE_DETENT_IDLE], (uint32_t)20E3, 4000)) return false;
     if (platform_is_fbw()) {
         display_pBarStr(pBar, 33);
         display_text("Select max", "continuous", "thrust (MCT).", pBar, true);
     }
-    if (!waitForDetent(gpio_pin, &flash.control[CONTROL_THROTTLE_DETENT_MCT], 10000, 2000)) return false;
+    if (!waitForDetent(gpio_pin, &flash.control[CONTROL_THROTTLE_DETENT_MCT], (uint32_t)10E3, 2000)) return false;
     if (platform_is_fbw()) {
         display_pBarStr(pBar, 66);
         display_text("Select max", "thrust.", "", pBar, true);
     }
-    if (!waitForDetent(gpio_pin, &flash.control[CONTROL_THROTTLE_DETENT_MAX], 10000, 1000)) return false;
+    if (!waitForDetent(gpio_pin, &flash.control[CONTROL_THROTTLE_DETENT_MAX], (uint32_t)10E3, 1000)) return false;
     if (print.fbw) printf("[ESC] final detents: %d, %d, %d\n", (uint16_t)flash.control[CONTROL_THROTTLE_DETENT_IDLE],
                           (uint16_t)flash.control[CONTROL_THROTTLE_DETENT_MCT], (uint16_t)flash.control[CONTROL_THROTTLE_DETENT_MAX]);
     flash.control[CONTROL_THROTTLE_DETENTS_CALIBRATED] = true;

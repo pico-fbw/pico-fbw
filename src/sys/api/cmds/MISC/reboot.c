@@ -5,7 +5,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "pico/types.h"
 
 #include "../../../../io/platform.h"
 

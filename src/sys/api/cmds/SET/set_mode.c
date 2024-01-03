@@ -5,7 +5,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "pico/types.h"
 
 #include "../../../../modes/aircraft.h"
 
@@ -17,7 +16,5 @@ int api_set_mode(const char *cmd, const char *args) {
     if (mode >= MODE_MIN && mode <= MODE_MAX) {
         aircraft.changeTo(mode);
         return 200;
-    } else {
-        return 400;
-    }
+    } else return 400;
 }

@@ -1,6 +1,8 @@
 #ifndef __PLATFORM_H
 #define __PLATFORM_H
 
+#include <stdbool.h>
+
 #define WATCHDOG_TIMEOUT_MAGIC 0xAC0B3DED
 #define WATCHDOG_FORCE_MAGIC 0xC0DE3298
 

@@ -14,10 +14,12 @@ add_library(fbw_api
     cmds/MISC/ping.c
     cmds/MISC/reboot.c
     cmds/MISC/reset.c
+    cmds/SET/set_bay.c
     cmds/SET/set_config.c
     cmds/SET/set_fplan.c
     cmds/SET/set_mode.c
     cmds/SET/set_target.c
+    cmds/SET/set_waypoint.c
     cmds/TEST/test_all.c
     cmds/TEST/test_gps.c
     cmds/TEST/test_aahrs.c
@@ -31,6 +33,7 @@ target_link_libraries(fbw_api
     fbw_lib
     fbw_modes
     fbw_wifly
+    hardware_gpio
     hardware_watchdog
     pico_base
     pico_platform

@@ -31,7 +31,7 @@ typedef enum SectorCalibration {
     CALIBRATION_AAHRS_IMU_MODEL,
     CALIBRATION_AAHRS_BARO_MODEL
 } SectorCalibration;
-#define S_CALIBRATION_HIGHEST CALIBRATION_AAHRS_CALIBRATED
+#define S_CALIBRATION_HIGHEST CALIBRATION_AAHRS_BARO_MODEL
 
 typedef enum SectorPID {
     PID_FLAG,
@@ -122,7 +122,7 @@ typedef enum SectorConfigPins {
     PINS_INPUT_THROTTLE,
     PINS_ESC_THROTTLE,
     PINS_INPUT_SWITCH,
-    PINS_SERVO_DROP,
+    PINS_SERVO_BAY,
     // Sensor communications pins
     PINS_AAHRS_SDA,
     PINS_AAHRS_SCL,
@@ -224,15 +224,15 @@ extern PrintDefs print;
 void flash_erase();
 
 /**
- * Loads the current content from flash into the Flash struct.
- * @return The number of bytes read from flash
- * @note This function will initialize flash if necessary.
-*/
-uint flash_load();
-
-/**
  * Saves the current content of the Flash struct to flash.
 */
 void flash_save();
+
+/**
+ * Loads the current content from flash into the Flash struct.
+ * @return The number of bytes read from flash, or 0 if flash was just initialized
+ * @note This function will initialize flash if necessary.
+*/
+uint flash_load();
 
 #endif // __FLASH_H

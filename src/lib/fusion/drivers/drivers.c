@@ -103,7 +103,7 @@ int32_t driver_read(registerDeviceInfo_t *devInfo, uint16_t peripheralAddress, c
     uint8_t *pBuf;
 
     // Validate handle
-    if (pReadList == NULL || pOutBuf == NULL) {
+    if (!pReadList || !pOutBuf) {
         return SENSOR_ERROR_BAD_ADDRESS;
     }
     const registerReadList_t *pCmd = pReadList;
@@ -128,7 +128,7 @@ int32_t driver_read_register(registerDeviceInfo_t *devInfo, uint16_t peripheralA
 
 int8_t driver_write_list(registerDeviceInfo_t *devInfo, uint16_t peripheralAddress, const registerWriteList_t *pRegWriteList) {
     // Validate handle
-    if (pRegWriteList == NULL) {
+    if (!pRegWriteList) {
         return SENSOR_ERROR_BAD_ADDRESS;
     }
 

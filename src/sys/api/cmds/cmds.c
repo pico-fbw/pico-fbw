@@ -15,10 +15,12 @@
 #include "GET/get_mode.h"
 #include "GET/get_sensor.h"
 
+#include "SET/set_bay.h"
 #include "SET/set_config.h"
 #include "SET/set_fplan.h"
 #include "SET/set_mode.h"
 #include "SET/set_target.h"
+#include "SET/set_waypoint.h"
 
 #include "TEST/test_all.h"
 #include "TEST/test_aahrs.h"
@@ -56,7 +58,9 @@ int api_handle_get(const char *cmd, const char *args) {
 }
 
 int api_handle_set(const char *cmd, const char *args) {
-    if (strcasecmp(cmd, "SET_CONFIG") == 0) {
+    if (strcasecmp(cmd, "SET_BAY") == 0) {
+        return api_set_bay(cmd, args);
+    } else if (strcasecmp(cmd, "SET_CONFIG") == 0) {
         return api_set_config(cmd, args);
     } else if (strcasecmp(cmd, "SET_FPLAN") == 0) {
         return api_set_fplan(cmd, args);
@@ -64,6 +68,8 @@ int api_handle_set(const char *cmd, const char *args) {
         return api_set_mode(cmd, args);
     } else if (strcasecmp(cmd, "SET_TARGET") == 0) {
         return api_set_target(cmd, args);
+    } else if (strcasecmp(cmd, "SET_WAYPOINT") == 0) {
+        return api_set_waypoint(cmd, args);
     } else return 404;
 }
 

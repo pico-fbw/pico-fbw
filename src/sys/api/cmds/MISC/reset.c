@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "pico/time.h"
-#include "pico/types.h"
 
 #include "hardware/watchdog.h"
 

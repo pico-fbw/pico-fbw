@@ -4,20 +4,20 @@
 /**
  * Initializes normal mode.
 */
-void mode_normalInit();
+void normal_init();
 
 /**
  * Executes one cycle of normal mode.
 */
-void mode_normal();
+void normal_update();
 
 /**
  * Fully de-initializes normal mode.
 */
-void mode_normalDeinit();
+void normal_deinit();
 
 /**
- * Manually adjust the setpoints of normal mode.
+ * Manually adjusts the setpoints of normal mode.
  * @param roll the roll setpoint
  * @param pitch the pitch setpoint
  * @param yaw the yaw setpoint
@@ -25,6 +25,6 @@ void mode_normalDeinit();
  * @param useThrottle whether or not to use the throttle setpoint
  * @return true if the setpoints were adjusted, false if it was prevented by the user (already manually inputting).
 */
-bool mode_normalSetExtern(float roll, float pitch, float yaw, float throttle, bool useThrottle);
+bool normal_set(float roll, float pitch, float yaw, float throttle, bool useThrottle);
 
 #endif // __NORMAL_H

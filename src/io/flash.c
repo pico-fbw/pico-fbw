@@ -86,11 +86,13 @@ uint flash_load() {
     // These pointers point to the location of our data in the flash chip
     float *floats = (float*)GET_PHYSECTOR_LOC_ABSOLUTE(FLOAT_PHYSECTOR);
     char *strings = (char*)GET_PHYSECTOR_LOC_ABSOLUTE(STRING_PHYSECTOR);
+    bool firstBoot = false;
     if (floats[0] != FLAG_BOOT) {
         // Indicates first boot, struct contains default value so write those to flash
-        printf("[flash] boot flag not detected, formatting flash now...\n");
+        printf("[flash] boot flag not detected, initializing flash now...\n");
         flash.calibration[CALIBRATION_BOOT_FLAG] = FLAG_BOOT;
         flash_save();
+        firstBoot = true;
     }
     // Flash contains valid data, copy to RAM-based struct
     memcpy(flash.calibration, floats, SIZEOF_FLOAT_SECTORS_BYTES);
@@ -108,5 +110,5 @@ uint flash_load() {
     #else
         flash.system[SYSTEM_DEBUG] = false;
     #endif
-    return sizeof(Flash);
+    return firstBoot ? sizeof(Flash) : 0;
 }

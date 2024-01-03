@@ -22,7 +22,7 @@ int api_test_pwm(const char *cmd, const char *args) {
         uint in[] = {flash.pins[PINS_INPUT_AIL], flash.pins[PINS_INPUT_ELEV], flash.pins[PINS_INPUT_RUD],
                      flash.pins[PINS_INPUT_THROTTLE], flash.pins[PINS_INPUT_SWITCH]};
         uint out[] = {flash.pins[PINS_SERVO_AIL], flash.pins[PINS_SERVO_ELEV], flash.pins[PINS_SERVO_RUD],
-                      flash.pins[PINS_ESC_THROTTLE], flash.pins[PINS_SERVO_DROP]};
+                      flash.pins[PINS_ESC_THROTTLE], flash.pins[PINS_SERVO_BAY]};
         uint numBridges = 5;
         // Use bridges specified by command if any, if not the defaults will be kept
         if (args) {

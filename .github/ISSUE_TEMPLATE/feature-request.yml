@@ -1,0 +1,30 @@
+name: Feature Request
+description: Suggest a new feature for pico-fbw
+title: "[Feature]: "
+labels: ["feature"]
+body:
+    - type: textarea
+    id: description
+    attributes:
+        label: Describe your feature!
+        description: Be as detailed as possible.
+    validations:
+        required: true
+    - type: checkboxes
+    id: exists
+    attributes:
+        label: Is there an existing issue for this?
+        description: Please [search here](https://github.com/pico-fbw/pico-fbw/issues) to see if an issue has already been made.
+        options:
+            - label: I have searched for existing issues before opening this issue.
+            required: true
+    - type: checkboxes
+    id: guarantee
+    attributes:
+        options:
+            - label: I am aware that there is no guarantee that this feature will be implemented.
+            required: true
+    - type: markdown
+    attributes:
+        value: |
+            Please note that if we accept your request, we may ask for additional information to properly implement your feature, so please keep watch on this issue thread.

@@ -1,6 +1,8 @@
 #ifndef __AUTO_H
 #define __AUTO_H
 
+#include "../wifly/wifly.h"
+
 /* PID constants for the autopilot's lateral guidance. */
 #define latGuid_kP 0.005
 #define latGuid_kI 0.008
@@ -25,15 +27,33 @@
 #define INTERCEPT_RADIUS 25 // The radius at which to consider a waypoint "incercepted" in meters
 // TODO: do I need to change this for different speeds? idk if it will make too much of a difference, remember what aviation simmer said
 
+typedef enum BayPosition {
+    CLOSED,
+    OPEN
+} BayPosition;
+
 /**
  * Initializes auto mode.
  * @return true if initialization was successful, false if not
 */
-bool mode_autoInit();
+bool auto_init();
 
 /**
  * Executes one cycle of auto mode.
 */
-void mode_auto();
+void auto_update();
+
+/**
+ * Manually sets a temporary Waypoint target.
+ * @param wpt The Waypoint to target
+ * @param callback Callback function to call when the target is reached
+*/
+void auto_set(Waypoint wpt, void (*callback)(void));
+
+/**
+ * Sets the position of the drop bay (servo) mechanism.
+ * @param pos The position to set the drop bay mechanism to
+*/
+void auto_setBayPosition(BayPosition pos);
 
 #endif // __AUTO_H

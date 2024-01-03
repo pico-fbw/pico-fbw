@@ -5,7 +5,6 @@
 
 #include <stdio.h>
 #include "pico/platform.h"
-#include "pico/types.h"
 
 #include "../../../../io/platform.h"
 
@@ -29,7 +28,7 @@ void api_about(const char *cmd, const char *args) {
                     PICO_FBW_VERSION, PICO_FBW_API_VERSION, rp2040_chip_version());
             break;
     }
-    printf("Copyright (C) 2023 pico-fbw\n\n"
+    printf("Copyright (C) 2023-2024 pico-fbw\n\n"
            "This program is free software: you can redistribute it and/or modify "
            "it under the terms of the GNU General Public License as published by "
            "the Free Software Foundation, either version 3 of the License, or "

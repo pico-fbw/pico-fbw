@@ -5,7 +5,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "pico/types.h"
 
 #include "../../../../io/flash.h"
 

@@ -4,6 +4,6 @@
 /**
  * Executes one cycle of direct mode.
 */
-void mode_direct();
+void direct_update();
 
 #endif // __DIRECT_H

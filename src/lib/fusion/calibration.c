@@ -51,7 +51,7 @@ float *calibration_accel = &flash.aahrs[CALIBRATION_BUF_ACCEL_START];
 
 bool GetMagCalibrationFromFlash(float *cal_values) {
     #if F_USING_MAG
-        if (cal_values == NULL || !MagCalibrationExists()) {
+        if (!cal_values || !MagCalibrationExists()) {
             return false;
         }
         // Calibration header is valid, read the calibration into provided destination
@@ -64,7 +64,7 @@ bool GetMagCalibrationFromFlash(float *cal_values) {
 
 bool GetGyroCalibrationFromFlash(float *cal_values) {
     #if F_USING_GYRO
-        if (cal_values == NULL || !GyroCalibrationExists()) {
+        if (!cal_values || !GyroCalibrationExists()) {
             return false;
         }
         memcpy(cal_values, &calibration_gyro[CALIBRATION_BUF_GYRO_HEADER_SIZE], CALIBRATION_BUF_GYRO_VAL_SIZE_BYTES);
@@ -76,7 +76,7 @@ bool GetGyroCalibrationFromFlash(float *cal_values) {
 
 bool GetAccelCalibrationFromFlash(float *cal_values) {
     #if F_USING_ACCEL
-        if (cal_values == NULL || !AccelCalibrationExists()) {
+        if (!cal_values || !AccelCalibrationExists()) {
             return false;
         }
         memcpy(cal_values, &calibration_accel[CALIBRATION_BUF_ACCEL_HEADER_SIZE], CALIBRATION_BUF_ACCEL_VAL_SIZE_BYTES);

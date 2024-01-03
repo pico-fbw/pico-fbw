@@ -39,18 +39,19 @@ int main() {
         printf("\nhello and welcome to pico-fbw v%s!\n", PICO_FBW_VERSION);
     #elif defined(RASPBERRYPI_PICO_W)
         printf("\nhello and welcome to pico(w)-fbw v%s!\n", PICO_FBW_VERSION);
-        platform_boot_setProgress(10, "Initializing CYW43 architecture");
+        platform_boot_setProgress(10, "Initializing CYW43");
         cyw43_arch_init();
     #endif
     log_init();
 
-    // Load flash into RAM
     if (platform_buttonPressed()) {
         // If the button is being held down, erase flash and shut down if it continues to be held down for 3s
         flash_erase();
         printf("[boot] flash erased");
+        platform_boot_setProgress(100, "Flash erased");
         platform_shutdown();
     }
+    // Load flash into RAM
     platform_boot_setProgress(20, "Loading flash");
     printf("[flash] loaded %d bytes\n", flash_load());
 

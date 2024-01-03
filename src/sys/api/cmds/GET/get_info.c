@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include "pico/config.h"
 #include "pico/platform.h"
-#include "pico/types.h"
 
 #include "../../../info.h"
 

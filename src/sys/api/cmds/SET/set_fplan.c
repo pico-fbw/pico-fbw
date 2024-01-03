@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "pico/types.h"
 
 #include "../../../../wifly/wifly.h"
 

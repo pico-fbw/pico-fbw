@@ -25,14 +25,14 @@ typedef enum HoldStatus {
 #define HOLD_HEADING_INTERCEPT_WITHIN 2
 
 /**
- * Initializes tune mode.
+ * Initializes hold mode.
  * @return true if initialization was successful, false if not.
 */
-bool mode_holdInit();
+bool hold_init();
 
 /**
  * Executes one cycle of hold mode.
 */
-void mode_hold();
+void hold_update();
 
 #endif // __HOLD_H

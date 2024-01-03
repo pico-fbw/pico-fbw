@@ -19,7 +19,7 @@
  * gave a basically unnoticeable decrease in latency and it's much more complicated, so I didn't bother to implement it.
 */
 
-void mode_direct() {
+void direct_update() {
     switch ((ControlMode)flash.general[GENERAL_CONTROL_MODE]) {
         case CTRLMODE_3AXIS_ATHR:
         case CTRLMODE_3AXIS:

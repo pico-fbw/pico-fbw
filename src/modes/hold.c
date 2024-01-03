@@ -31,7 +31,7 @@ static double rollSet;
 static PIDController vertGuid;
 
 // Callback for when a turnaround should be completed in a holding pattern.
-static int64_t hold_callback(alarm_id_t id, void *data) {
+static int64_t turnAround(alarm_id_t id, void *data) {
     // Get current track (beginning of the turn)
     oldTrack = gps.track;
     // Set our target heading based on this (with wrap protection)
@@ -43,7 +43,7 @@ static int64_t hold_callback(alarm_id_t id, void *data) {
     return 0; // Tells Pico to not reschedule alarm, we will wait until the turn is complete to do that
 }
 
-bool mode_holdInit() {
+bool hold_init() {
     flight_init();
     throttle.init();
     if (throttle.supportedMode < THRMODE_SPEED) {
@@ -61,7 +61,7 @@ bool mode_holdInit() {
     return true;
 }
 
-void mode_hold() {
+void hold_update() {
     pid_update(&vertGuid, targetAlt, gps.alt);
     flight_update(rollSet, vertGuid.out, 0, false);
     throttle.update();
@@ -99,7 +99,7 @@ void mode_hold() {
             }
             break;
         case HOLD_TURN_UNSCHEDULED:
-            if (add_alarm_in_ms((HOLD_TIME_PER_LEG_S * 1000), hold_callback, NULL, true) >= 0) {
+            if (add_alarm_in_ms((HOLD_TIME_PER_LEG_S * 1000), turnAround, NULL, true) >= 0) {
                 turnStatus = HOLD_AWAITING_TURN;
             }
             break;

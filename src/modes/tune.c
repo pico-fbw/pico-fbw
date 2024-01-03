@@ -11,10 +11,10 @@
 
 // TODO: autotune was too messy and iffy for now, going to come back to it later :)
 
-void mode_tune() {
+void tune_update() {
     
 }
 
-bool mode_tuneisCalibrated() {
+bool tune_isCalibrated() {
     return (bool)flash.pid[PID_FLAG];
 }

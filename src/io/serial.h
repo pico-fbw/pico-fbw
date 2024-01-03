@@ -15,6 +15,7 @@
  * @return A pointer to the line read if there was one (automatically null-terminated),
  *         or NULL if there was no input available.
  * @note This function does not free the memory allocated for the line if read, ensure to free() it after use.
+ * @note On the Pico, stdin includes all serial I/O compiled into the build by CMake; by default on pico-fbw this includes both USB and UART.
 */
 char *stdin_read_line();
 

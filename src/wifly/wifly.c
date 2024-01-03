@@ -148,7 +148,7 @@ static inline void url_decode(char *str) {
 #endif // RASPBERRYPI_PICO_W
 
 bool wifly_parseFplan(const char *fplan) {
-    if (fplanJson == NULL) {
+    if (!fplanJson) {
         // If we haven't already parsed, find the start of the JSON string
         const char *json_start = strstr(fplan, FPLAN_PARAM);
         if (!json_start) {
@@ -243,7 +243,7 @@ bool wifly_parseFplan(const char *fplan) {
                         if (print.wifly) printf("[wifly] Flightplan contains %d waypoints\n", waypoint_count);
                         // Allocate memory for the waypoints array
                         waypoints = calloc(waypoint_count, sizeof(Waypoint));
-                        if (waypoints == NULL) {
+                        if (!waypoints) {
                             if (print.fbw) printf("[wifly] ERROR: memory allocation for waypoint data failed!\n");
                             fplanStatus = WIFLY_ERR_MEM;
                             return false;
@@ -357,7 +357,7 @@ bool wifly_parseFplan(const char *fplan) {
         }
         // Save the flightplan JSON string
         fplanJson = malloc(strlen(decoded) + 1);
-        if (fplanJson == NULL) {
+        if (!fplanJson) {
             if (print.fbw) printf("[wifly] ERROR: memory allocation for flightplan JSON failed!\n");
             fplanStatus = WIFLY_ERR_MEM;
             return false;
@@ -370,9 +370,7 @@ bool wifly_parseFplan(const char *fplan) {
         } else {
             return false;
         }
-    } else {
-        return true;
-    }
+    } else return true;
 }
 
 bool wifly_fplanExists() { return waypoints && waypoint_count > 0; }

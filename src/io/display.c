@@ -251,7 +251,7 @@ static char *centerString(char line[], uint len_max) {
     if (len < len_max) {
         // Create line buffer to be centered and set to spaces (padding)
         char *centered = calloc(len_max, sizeof(char));
-        if (centered == NULL) return NULL;
+        if (!centered) return NULL;
         memset(centered, ' ', len_max);
         // Calculate padding needed
         uint padding = (len_max - len) / 2;
@@ -344,7 +344,7 @@ void display_text(char l1[], char l2[], char l3[], char l4[], bool center) {
 
     int y = 0;
     for (uint i = 0; i < count_of(text); i++) {
-        if (text[i] == NULL) continue;
+        if (!text[i]) continue;
         buf_writeString(buf, 5, (int16_t)y, text[i]);
         free(text[i]);
         y += 8;

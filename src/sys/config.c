@@ -184,8 +184,8 @@ static void getFromPins(const char *key, float **value) {
         *value = &flash.pins[PINS_ESC_THROTTLE];
     } else if (strcasecmp(key, "inputSwitch") == 0) {
         *value = &flash.pins[PINS_INPUT_SWITCH];
-    } else if (strcasecmp(key, "servoDrop") == 0) {
-        *value = &flash.pins[PINS_SERVO_DROP];
+    } else if (strcasecmp(key, "servoBay") == 0) {
+        *value = &flash.pins[PINS_SERVO_BAY];
     } else if (strcasecmp(key, "aahrsSda") == 0) {
         *value = &flash.pins[PINS_AAHRS_SDA];
     } else if (strcasecmp(key, "aahrsScl") == 0) {
@@ -224,8 +224,8 @@ static bool setToPins(const char *key, float value) {
         flash.pins[PINS_ESC_THROTTLE] = value;
     } else if (strcasecmp(key, "inputSwitch") == 0) {
         flash.pins[PINS_INPUT_SWITCH] = value;
-    } else if (strcasecmp(key, "servoDrop") == 0) {
-        flash.pins[PINS_SERVO_DROP] = value;
+    } else if (strcasecmp(key, "servoBay") == 0) {
+        flash.pins[PINS_SERVO_BAY] = value;
     } else if (strcasecmp(key, "aahrsSda") == 0) {
         flash.pins[PINS_AAHRS_SDA] = value;
     } else if (strcasecmp(key, "aahrsScl") == 0) {

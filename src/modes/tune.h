@@ -2,14 +2,14 @@
 #define __TUNE_H
 
 /**
- * Executes tune mode.
+ * Executes one cycle of tune mode.
 */
-void mode_tune();
+void tune_update();
 
 /**
  * Checks if the tuning mode has been run before.
  * @return true if calibration has been run previously, false if not.
 */
-bool mode_tuneisCalibrated();
+bool tune_isCalibrated();
 
 #endif // __TUNE_H

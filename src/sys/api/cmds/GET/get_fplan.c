@@ -4,7 +4,6 @@
 */
 
 #include <stdio.h>
-#include "pico/types.h"
 
 #include "../../../../wifly/wifly.h"
 

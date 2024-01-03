@@ -26,13 +26,13 @@ static float rollSet, pitchSet, throttleSet;
 static bool overrideYaw = false;
 static bool overrideSetpoints = false;
 
-void mode_normalInit() {
+void normal_init() {
     flight_init();
     throttle.init();
     throttle.mode = THRMODE_THRUST;
 }
 
-void mode_normal() {
+void normal_update() {
     // Refresh input data from rx
     rollInput = pwm_read((uint)flash.pins[PINS_INPUT_AIL], PWM_MODE_DEG) - 90;
     pitchInput = pwm_read((uint)flash.pins[PINS_INPUT_ELEV], PWM_MODE_DEG) - 90;
@@ -102,13 +102,13 @@ void mode_normal() {
     throttle.update();
 }
 
-void mode_normalDeinit() {
+void normal_deinit() {
     rollSet = 0.0f;
     pitchSet = 0.0f;
     overrideYaw = false;
 }
 
-bool mode_normalSetExtern(float roll, float pitch, float yaw, float throttle, bool useThrottle) {
+bool normal_set(float roll, float pitch, float yaw, float throttle, bool useThrottle) {
     // Ensure there are no manual control inputs before we allow setpoints to be externally set
     if (fabsf(rollInput) > flash.control[CONTROL_DEADBAND] ||
         fabsf(pitchInput) > flash.control[CONTROL_DEADBAND] ||

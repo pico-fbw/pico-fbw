@@ -45,7 +45,7 @@ int api_get_config(const char *cmd, const char *args) {
         if (sscanf(args, "%63s %63s", section, key) < 2) return 400;
         void *value = NULL;
         ConfigSectionType type = config_get(section, key, &value);
-        if (value == NULL) return 400;
+        if (!value) return 400;
         switch (type) {
             case SECTION_TYPE_FLOAT:
                 printf("{\"key\":%f}\n", *(float*)value);
@@ -67,7 +67,7 @@ int api_get_config(const char *cmd, const char *args) {
             switch (type) {
                 case SECTION_TYPE_FLOAT: {
                     float *section = getSectionMem(s);
-                    if (section == NULL) return 400;
+                    if (!section) return 400;
                     for (uint v = 0; v < FLOAT_SECTOR_SIZE; v++) {
                         // Read values, up until we hit the end of the data (signified by FLAG_END) or end of the sector
                         if (section[v + 1] != FLAG_END && v < FLOAT_SECTOR_SIZE - 1) {
