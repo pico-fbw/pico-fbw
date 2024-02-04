@@ -1,5 +1,7 @@
-#ifndef __CONFIG_H
-#define __CONFIG_H
+#ifndef __CONFIGURATION_H
+#define __CONFIGURATION_H
+
+#include <stdbool.h>
 
 /* The amount of time (in ms) to wait for any possible serial connections to be established before booting.
 This option is compiled in, as configuration is not yet loaded when this value is needed. */
@@ -66,4 +68,4 @@ bool config_set(const char *section, const char *key, const char *value);
 */
 ConfigSectionType config_sectionToString(ConfigSection section, const char **str);
 
-#endif // __CONFIG_H
+#endif // __CONFIGURATION_H

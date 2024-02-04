@@ -1,17 +1,17 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <math.h>
 #include <stdio.h>
 
-#include "../../../../io/flash.h"
+#include "io/flash.h"
 
-#include "../../../../modes/aircraft.h"
-#include "../../../../modes/normal.h"
+#include "modes/aircraft.h"
+#include "modes/normal.h"
 
-#include "set_target.h"
+#include "sys/api/cmds/SET/set_target.h"
 
 int api_set_target(const char *cmd, const char *args) {
     if (aircraft.mode == MODE_NORMAL) {

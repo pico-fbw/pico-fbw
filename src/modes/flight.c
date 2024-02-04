@@ -1,23 +1,23 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "../lib/pid.h"
+#include "lib/pid.h"
 
-#include "../io/aahrs.h"
-#include "../io/flash.h"
-#include "../io/pwm.h"
-#include "../io/servo.h"
+#include "io/aahrs.h"
+#include "io/flash.h"
+#include "io/pwm.h"
+#include "io/servo.h"
 
-#include "aircraft.h"
-#include "tune.h"
+#include "modes/aircraft.h"
+#include "modes/tune.h"
 
-#include "flight.h"
+#include "modes/flight.h"
 
 static PIDController roll_c, pitch_c, yaw_c;
 static uint16_t ailOut, elevOut, rudOut, lElevonOut, rElevonOut;

@@ -1,7 +1,7 @@
 #ifndef __TCP_H
 #define __TCP_H
 
-#include "../wifly.h"
+#include "wifly/wifly.h"
 
 typedef struct TCP_SERVER_T_ {
     struct tcp_pcb *server_pcb;

@@ -1,6 +1,6 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <stdbool.h>
@@ -9,12 +9,12 @@
 
 #include "hardware/gpio.h"
 
-#include "../io/flash.h"
-#include "../io/platform.h"
+#include "io/flash.h"
+#include "io/platform.h"
 
-#include "../lib/semver.h"
+#include "lib/semver.h"
 
-#include "info.h"
+#include "sys/info.h"
 
 /**
  * Declares all relavent information from pico-fbw into the binary.

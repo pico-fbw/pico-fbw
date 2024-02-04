@@ -1,16 +1,16 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <stdio.h>
 #include "pico/platform.h"
 
-#include "../../../../io/platform.h"
+#include "io/platform.h"
 
-#include "../../../info.h"
+#include "sys/info.h"
 
-#include "about.h"
+#include "sys/api/cmds/MISC/about.h"
 
 void api_about(const char *cmd, const char *args) {
     switch (platform_type()) {

@@ -1,18 +1,18 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../../../../io/aahrs.h"
-#include "../../../../io/flash.h"
-#include "../../../../io/gps.h"
+#include "io/aahrs.h"
+#include "io/flash.h"
+#include "io/gps.h"
 
-#include "../../../../modes/aircraft.h"
+#include "modes/aircraft.h"
 
-#include "get_sensor.h"
+#include "sys/api/cmds/GET/get_sensor.h"
 
 int api_get_sensor(const char *cmd, const char *args) {
     // Prepare the JSON output based on sensor type

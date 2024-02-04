@@ -9,10 +9,9 @@
 
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "pico/time.h"
@@ -22,15 +21,15 @@
 #include "hardware/irq.h"
 #include "hardware/pwm.h"
 
-#include "display.h"
-#include "flash.h"
-#include "platform.h"
-#include "pwm.h"
+#include "io/display.h"
+#include "io/flash.h"
+#include "io/platform.h"
+#include "io/pwm.h"
 
-#include "../sys/log.h"
+#include "sys/log.h"
 
-#include "esc.h"
-#include "servo.h"
+#include "io/esc.h"
+#include "io/servo.h"
 
 /**
  * Waits up to timeout_ms for the throttle input to move, then wait for duration_ms after it stops moving, and write to *detent.
@@ -121,21 +120,14 @@ void esc_set(uint gpio_pin, uint16_t speed) {
 
 bool esc_calibrate(uint gpio_pin) {
     log_message(INFO, "Calibrating ESC", 200, 0, false);
-    char pBar[DISPLAY_MAX_LINE_LEN] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
-    if (platform_is_fbw()) {
-        display_pBarStr(pBar, 0);
-        display_text("Select idle", "thrust.", "", pBar, true);
-    }
+    if (platform_is_fbw())
+        display_string("Select idle thrust.", 0);
     if (!waitForDetent(gpio_pin, &flash.control[CONTROL_THROTTLE_DETENT_IDLE], (uint32_t)20E3, 4000)) return false;
-    if (platform_is_fbw()) {
-        display_pBarStr(pBar, 33);
-        display_text("Select max", "continuous", "thrust (MCT).", pBar, true);
-    }
+    if (platform_is_fbw())
+        display_string("Select max continuous thrust.", 33);
     if (!waitForDetent(gpio_pin, &flash.control[CONTROL_THROTTLE_DETENT_MCT], (uint32_t)10E3, 2000)) return false;
-    if (platform_is_fbw()) {
-        display_pBarStr(pBar, 66);
-        display_text("Select max", "thrust.", "", pBar, true);
-    }
+    if (platform_is_fbw())
+        display_string("Select max thrust.", 66);
     if (!waitForDetent(gpio_pin, &flash.control[CONTROL_THROTTLE_DETENT_MAX], (uint32_t)10E3, 1000)) return false;
     if (print.fbw) printf("[ESC] final detents: %d, %d, %d\n", (uint16_t)flash.control[CONTROL_THROTTLE_DETENT_IDLE],
                           (uint16_t)flash.control[CONTROL_THROTTLE_DETENT_MCT], (uint16_t)flash.control[CONTROL_THROTTLE_DETENT_MAX]);

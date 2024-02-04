@@ -1,10 +1,9 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <assert.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -14,15 +13,16 @@
 
 #include "hardware/sync.h"
 
-#include "aahrs.h"
+#include "io/aahrs.h"
 
-#include "../sys/info.h"
+#include "sys/info.h"
 
-#include "flash.h"
+#include "io/flash.h"
 
 // TODO: look into using LittleFS (https://github.com/littlefs-project/littlefs) for a "black box" sort of thing
 // (and maybe just replace this flash thing with LittleFS if possible, it's not very good)
 // also this exists: https://github.com/lurk101/pico-littlefs
+// it would also allow easier portability to other platforms, so it would make sense to go with if speed isn't an issue (run benchmarks!)
 
 /* Default state of the flash struct (for example, holds default config values).
 Refer to the sections' respective enums in flash.h for an indication of what each value is. */

@@ -1,15 +1,15 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <stdio.h>
 #include "pico/config.h"
 #include "pico/platform.h"
 
-#include "../../../info.h"
+#include "sys/info.h"
 
-#include "get_info.h"
+#include "sys/api/cmds/GET/get_info.h"
 
 int api_get_info(const char *cmd, const char *args) {
     #if defined(RASPBERRYPI_PICO)

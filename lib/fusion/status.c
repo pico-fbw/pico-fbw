@@ -8,17 +8,17 @@
 
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
-#include "../../sys/log.h"
+#include "sys/log.h"
 
-#include "../../modes/aircraft.h"
+#include "modes/aircraft.h"
 
-#include "drivers/drivers.h"
-#include "fconfig.h"
+#include "lib/fusion/drivers/drivers.h"
+#include "lib/fusion/fconfig.h"
 
-#include "status.h"
+#include "lib/fusion/status.h"
 
 // Do an immediate status update
 void ssSetStatusNow(StatusSubsystem *pStatus, fusion_status_t status)

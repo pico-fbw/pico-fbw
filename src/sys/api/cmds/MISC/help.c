@@ -1,13 +1,13 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <stdio.h>
 
-#include "../../../info.h"
+#include "sys/info.h"
 
-#include "help.h"
+#include "sys/api/cmds/MISC/help.h"
 
 void api_help(const char *cmd, const char *args) {
     printf("\npico-fbw API v%s\n"

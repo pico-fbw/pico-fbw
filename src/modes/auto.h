@@ -1,7 +1,8 @@
 #ifndef __AUTO_H
 #define __AUTO_H
 
-#include "../wifly/wifly.h"
+#include <stdbool.h>
+#include "wifly/wifly.h"
 
 /* PID constants for the autopilot's lateral guidance. */
 #define latGuid_kP 0.005

@@ -9,7 +9,7 @@
 
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <stdio.h>
@@ -19,11 +19,11 @@
 
 #include "hardware/gpio.h"
 
-#include "../../../io/flash.h"
+#include "io/flash.h"
 
-#include "../fconfig.h"
+#include "lib/fusion/fconfig.h"
 
-#include "drivers.h"
+#include "lib/fusion/drivers/drivers.h"
 
 /**
  * Reads a byte to from addr at reg and stores it in dest.

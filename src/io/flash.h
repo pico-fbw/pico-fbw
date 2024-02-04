@@ -1,6 +1,8 @@
 #ifndef __FLASH_H
 #define __FLASH_H
 
+#include <stdbool.h>
+
 /**
  * README:
  * This file is of paramount importance. Please do NOT change anything in here unless you REALLY know what you are doing!
@@ -13,9 +15,9 @@
 #include "aahrs.h"
 #include "gps.h"
 #include "pwm.h"
-#include "../lib/fusion/calibration.h"
-#include "../sys/switch.h"
-#include "../wifly/wifly.h"
+#include "lib/fusion/calibration.h"
+#include "sys/switch.h"
+#include "wifly/wifly.h"
 
 typedef enum SectorCalibration {
     CALIBRATION_BOOT_FLAG,

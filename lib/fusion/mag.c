@@ -9,7 +9,7 @@
 
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <math.h>
@@ -17,10 +17,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "calibration.h"
-#include "fusion.h"
+#include "lib/fusion/calibration.h"
+#include "lib/fusion/fusion.h"
 
-#include "mag.h"
+#include "lib/fusion/mag.h"
 
 #if F_USING_MAG
 // function resets the magnetometer buffer and magnetic calibration

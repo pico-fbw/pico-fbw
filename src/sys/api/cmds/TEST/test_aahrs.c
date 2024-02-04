@@ -1,6 +1,6 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <stdbool.h>
@@ -12,10 +12,10 @@
 
 #include "hardware/watchdog.h"
 
-#include "../../../../io/aahrs.h"
-#include "../../../../io/platform.h"
+#include "io/aahrs.h"
+#include "io/platform.h"
 
-#include "test_aahrs.h"
+#include "sys/api/cmds/TEST/test_aahrs.h"
 
 /**
  * Waits up to timeout_ms for an IMU axis to move past the breakpoint.

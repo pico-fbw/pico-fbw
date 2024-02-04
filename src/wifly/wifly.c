@@ -8,8 +8,10 @@
 
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
+
+// TODO: move wifly code to sys, network code into platform during the refactor
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -32,16 +34,16 @@
     TCP_SERVER_T *state;
 #endif
 
-#include "../io/flash.h"
-#include "../io/gps.h"
+#include "io/flash.h"
+#include "io/gps.h"
 
-#include "../lib/jsmn.h"
+#include "lib/jsmn.h"
 #define JSMN_HEADER // Only define once!
 
-#include "../sys/info.h"
-#include "../sys/log.h"
+#include "sys/info.h"
+#include "sys/log.h"
 
-#include "wifly.h"
+#include "wifly/wifly.h"
 
 static WiflyStatus fplanStatus = WIFLY_STATUS_AWAITING;
 

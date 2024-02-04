@@ -6,8 +6,10 @@
 
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
+
+// TODO: refactor platform into larger HAL; stray away from pico functions to make easier to port, maybe add just a bit of compile-time config back?
 
 #include <stdio.h>
 #include <string.h>
@@ -21,20 +23,20 @@
 #include "hardware/structs/ioqspi.h"
 #include "hardware/structs/sio.h"
 
-#include "aahrs.h"
-#include "display.h"
-#include "flash.h"
-#include "gps.h"
-#include "pwm.h"
+#include "io/aahrs.h"
+#include "io/display.h"
+#include "io/flash.h"
+#include "io/gps.h"
+#include "io/pwm.h"
 
-#include "../modes/aircraft.h"
+#include "modes/aircraft.h"
 
-#include "../sys/api/api.h"
-#include "../sys/info.h"
-#include "../sys/log.h"
-#include "../sys/switch.h"
+#include "sys/api/api.h"
+#include "sys/info.h"
+#include "sys/log.h"
+#include "sys/switch.h"
 
-#include "platform.h"
+#include "io/platform.h"
 
 /** @section Boot functions */
 
@@ -50,71 +52,7 @@ void platform_boot_begin() {
 void platform_boot_setProgress(float progress, const char *message) {
     printf("[boot] (%.1f%%) %s\n", progress, message);
     if (platform_is_fbw()) {
-        // Create four lines of text characters to later send to the display
-        char line1[DISPLAY_MAX_LINE_LEN] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
-        char line2[DISPLAY_MAX_LINE_LEN] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
-        char line3[DISPLAY_MAX_LINE_LEN] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
-        char line4[DISPLAY_MAX_LINE_LEN] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
-        display_pBarStr(line4, (uint)progress);
-
-        uint numWords = 1;
-        for (uint i = 0; message[i] != '\0'; i++) {
-            if (message[i] == ' ' && message[i + 1] != ' ') numWords++;    
-        }
-        if (numWords <= 3) {
-            // Each word can probably fit on one line
-            // First split into each line
-            char messageCopy[strlen(message) + 1];
-            strcpy(messageCopy, message);
-            uint wordCount = 0;
-            char *token = strtok(messageCopy, " ");
-            while (token && wordCount < 3) {
-                if (wordCount == 0) {
-                    if (strlen(token) <= DISPLAY_MAX_LINE_LEN) {
-                        strncpy(line1, token, DISPLAY_MAX_LINE_LEN);
-                    } else {
-                        // Word was longer than the line
-                        goto split;
-                    }
-                } else if (wordCount == 1) {
-                    if (strlen(token) <= DISPLAY_MAX_LINE_LEN) {
-                        strncpy(line2, token, DISPLAY_MAX_LINE_LEN);
-                    } else {
-                        goto split;
-                    }
-                } else if (wordCount == 2) {
-                    if (strlen(token) <= DISPLAY_MAX_LINE_LEN) {
-                        strncpy(line3, token, DISPLAY_MAX_LINE_LEN);
-                    } else {
-                        goto split;
-                    }
-                }
-                token = strtok(NULL, " ");
-                wordCount++;
-            }
-        } else {
-            // Split words between lines irregularly; we can't fit each neatly on its own line
-            split: {
-                uint numLines = (strlen(message) + (DISPLAY_MAX_LINE_LEN - 1)) / DISPLAY_MAX_LINE_LEN;
-                switch (numLines) {
-                    case 1:
-                        strncpy(line1, message, DISPLAY_MAX_LINE_LEN);
-                        break;
-                    case 2:
-                        strncpy(line1, message, DISPLAY_MAX_LINE_LEN);
-                        strncpy(line2, message + DISPLAY_MAX_LINE_LEN, DISPLAY_MAX_LINE_LEN);
-                        break;
-                    case 3:
-                        strncpy(line1, message, DISPLAY_MAX_LINE_LEN);
-                        strncpy(line2, message + DISPLAY_MAX_LINE_LEN, DISPLAY_MAX_LINE_LEN);
-                        strncpy(line3, message + (DISPLAY_MAX_LINE_LEN * 2), DISPLAY_MAX_LINE_LEN);
-                        break;
-                    default:
-                        return; // Won't fit at all
-                }
-            }
-        }
-        display_text(line1, line2, line3, line4, true);
+        display_string(message, (int)progress);
     }
 }
 

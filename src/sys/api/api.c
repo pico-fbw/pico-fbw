@@ -1,6 +1,6 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <string.h>
@@ -10,12 +10,12 @@
 
 #include "hardware/gpio.h"
 
-#include "../../io/flash.h"
-#include "../../io/serial.h"
+#include "io/flash.h"
+#include "io/serial.h"
 
-#include "cmds/cmds.h"
+#include "sys/api/cmds/cmds.h"
 
-#include "api.h"
+#include "sys/api/api.h"
 
 int api_poll() {
     char *line = stdin_read_line();

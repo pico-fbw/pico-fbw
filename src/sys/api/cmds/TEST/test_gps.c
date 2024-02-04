@@ -1,16 +1,16 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <stdio.h>
 
-#include "../../../../io/flash.h"
-#include "../../../../io/gps.h"
+#include "io/flash.h"
+#include "io/gps.h"
 
-#include "../../../../modes/aircraft.h"
+#include "modes/aircraft.h"
 
-#include "test_gps.h"
+#include "sys/api/cmds/TEST/test_gps.h"
 
 int api_test_gps(const char *cmd, const char *args) {
     if ((GPSCommandType)flash.sensors[SENSORS_GPS_COMMAND_TYPE] == GPS_COMMAND_TYPE_NONE) return 403;

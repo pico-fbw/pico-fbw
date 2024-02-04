@@ -1,6 +1,6 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <math.h>
@@ -9,11 +9,11 @@
 #include "pico/platform.h"
 #include "pico/types.h"
 
-#include "../../../../io/flash.h"
+#include "io/flash.h"
 
-#include "../../../config.h"
+#include "sys/configuration.h"
 
-#include "get_config.h"
+#include "sys/api/cmds/GET/get_config.h"
 
 /**
  * @param section The section to get the memory offset of

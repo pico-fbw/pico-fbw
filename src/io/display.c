@@ -8,12 +8,11 @@
 
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <assert.h>
 #include <ctype.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -25,9 +24,9 @@
 #include "hardware/i2c.h"
 #include "hardware/watchdog.h"
 
-#include "platform.h"
+#include "io/platform.h"
 
-#include "display.h"
+#include "io/display.h"
 
 static uint8_t buf[DISPLAY_BUF_LEN];
 
@@ -318,7 +317,7 @@ bool display_init() {
     return true;
 }
 
-void display_pBarStr(char bar[], uint progress) {
+void display_createProgBar(char bar[], uint progress) {
     uint barLen = progress / 10;
     char lenStr[3] = { [0 ... 2] = ' '};
     sprintf(lenStr, "%d", progress);
@@ -334,7 +333,7 @@ void display_pBarStr(char bar[], uint progress) {
     }
 }
 
-void display_text(char l1[], char l2[], char l3[], char l4[], bool center) {
+void display_lines(char l1[], char l2[], char l3[], char l4[], bool center) {
     memset(buf, 0, DISPLAY_BUF_LEN); // Clear anything that may be in VRAM buffer
     char *text[4];
     text[0] = center ? centerString(l1, DISPLAY_MAX_LINE_LEN) : l1;
@@ -352,8 +351,72 @@ void display_text(char l1[], char l2[], char l3[], char l4[], bool center) {
     render(buf, &frame_area);
 }
 
+void display_string(const char *str, int progress) {
+    // Create the four individual lines of text, we will split the string over these lines
+    char line1[DISPLAY_MAX_LINE_LEN] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
+    char line2[DISPLAY_MAX_LINE_LEN] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
+    char line3[DISPLAY_MAX_LINE_LEN] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
+    char line4[DISPLAY_MAX_LINE_LEN] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
+    // First, count the number of words in the string
+    uint numWords = 1;
+    for (uint i = 0; str[i] != '\0'; i++) {
+        if (str[i] == ' ' && str[i + 1] != ' ') numWords++;    
+    }
+    // If we have 4 or less words...
+    if (numWords <= 4) {
+        // ...each word can probably fit on one line
+        // First, split onto each line
+        char strCpy[strlen(str) + 1];
+        strcpy(strCpy, str);
+        uint wordCount = 0;
+        char *token = strtok(strCpy, " ");
+        while (token && wordCount < 4) {
+            if (wordCount == 0) {
+                if (strlen(token) <= DISPLAY_MAX_LINE_LEN) {
+                    strncpy(line1, token, DISPLAY_MAX_LINE_LEN);
+                } else goto split; // Word was longer than the line
+            } else if (wordCount == 1) {
+                if (strlen(token) <= DISPLAY_MAX_LINE_LEN) {
+                    strncpy(line2, token, DISPLAY_MAX_LINE_LEN);
+                } else goto split;
+            } else if (wordCount == 2) {
+                if (strlen(token) <= DISPLAY_MAX_LINE_LEN) {
+                    strncpy(line3, token, DISPLAY_MAX_LINE_LEN);
+                } else goto split;
+            } else if (wordCount == 3) {
+                if (strlen(token) <= DISPLAY_MAX_LINE_LEN) {
+                    strncpy(line4, token, DISPLAY_MAX_LINE_LEN);
+                } else goto split;
+            }
+            token = strtok(NULL, " ");
+            wordCount++;
+        }
+    } else {
+        // Split words between lines irregularly; we can't fit each neatly on its own line
+        split: {
+            uint numLines = (strlen(str) + (DISPLAY_MAX_LINE_LEN - 1)) / DISPLAY_MAX_LINE_LEN;
+            switch (numLines) {
+                default:
+                    strncpy(line4, str + (DISPLAY_MAX_LINE_LEN * 3), DISPLAY_MAX_LINE_LEN);
+                case 3:
+                    strncpy(line3, str + (DISPLAY_MAX_LINE_LEN * 2), DISPLAY_MAX_LINE_LEN);
+                case 2:
+                    strncpy(line2, str + DISPLAY_MAX_LINE_LEN, DISPLAY_MAX_LINE_LEN);
+                case 1:
+                    strncpy(line1, str, DISPLAY_MAX_LINE_LEN);
+                    break;
+            }
+        }
+    }
+    // If we have a progress bar, create it now
+    if (progress >= 0) {
+        display_createProgBar(line4, progress);
+    }
+    display_lines(line1, line2, line3, line4, true);
+}
+
 void display_powerSave() {
-    display_text("Entering", "power save", "mode", NULL, true);
+    display_lines("Entering", "power save", "mode", NULL, true);
     platform_sleep_ms(2000, true);
     memset(buf, 0, sizeof(buf));
     render(buf, &frame_area);

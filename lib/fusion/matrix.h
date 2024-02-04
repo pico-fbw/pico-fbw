@@ -1,5 +1,5 @@
-#ifndef MATRIX_H
-#define MATRIX_H
+#ifndef __MATRIX_H
+#define __MATRIX_H
 
 #include <stdint.h>
 
@@ -95,4 +95,4 @@ void fVeq3x3AxV(
     float A[][3]
 );
 
-#endif   // #ifndef MATRIX_H
+#endif // #ifndef __MATRIX_H

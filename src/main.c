@@ -1,6 +1,6 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <stdbool.h>
@@ -26,7 +26,7 @@
 #include "io/pwm.h"
 #include "io/servo.h"
 #include "modes/aircraft.h"
-#include "sys/config.h"
+#include "sys/configuration.h"
 #include "sys/info.h"
 #include "sys/log.h"
 #include "wifly/wifly.h"

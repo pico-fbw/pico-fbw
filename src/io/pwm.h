@@ -1,6 +1,7 @@
 #ifndef __PWM_H
 #define __PWM_H
 
+#include <stdbool.h>
 #include <stdint.h>
 #include "pico/types.h"
 

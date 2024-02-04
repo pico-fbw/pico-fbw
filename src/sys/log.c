@@ -1,6 +1,6 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <stdbool.h>
@@ -11,12 +11,12 @@
 
 #include "hardware/watchdog.h"
 
-#include "../io/display.h"
-#include "../io/platform.h"
+#include "io/display.h"
+#include "io/platform.h"
 
-#include "config.h"
+#include "sys/configuration.h"
 
-#include "log.h"
+#include "sys/log.h"
 
 #if defined(RASPBERRYPI_PICO)
     #include "hardware/gpio.h"
@@ -122,10 +122,10 @@ static void log_displayEntry(LogEntry *entry) {
         sprintf(codeStr, "%d", entry->code);
         if (strlen(entry->msg) < DISPLAY_MAX_LINE_LEN + 1) {
             if (entry->type != INFO) {
-                display_text(typeMsg, entry->msg, DISP_LOG_CONCAT, codeStr, true);
+                display_lines(typeMsg, entry->msg, DISP_LOG_CONCAT, codeStr, true);
             } else {
                 // INFO messages shouldn't point people to a URL
-                display_text(typeMsg, entry->msg, NULL, NULL, true);
+                display_lines(typeMsg, entry->msg, NULL, NULL, true);
             }
         } else if (strlen(entry->msg) < DISPLAY_MAX_LINE_LEN * 2) {
             // Get a substring of the first and last DISPLAY_MAX_LINE_LEN chars to display across two lines
@@ -145,12 +145,12 @@ static void log_displayEntry(LogEntry *entry) {
                 line2[DISPLAY_MAX_LINE_LEN] = '\0';
             }
             if (entry->type != INFO) {
-                display_text(line1, line2, DISP_LOG_CONCAT, codeStr, true);
+                display_lines(line1, line2, DISP_LOG_CONCAT, codeStr, true);
             } else {
-                display_text(NULL, line1, line2, NULL, true);
+                display_lines(NULL, line1, line2, NULL, true);
             }
         } else {
-            display_text(typeMsg, NULL, DISP_LOG_CONCAT, codeStr, true);
+            display_lines(typeMsg, NULL, DISP_LOG_CONCAT, codeStr, true);
         }
     } else {
         led_reset();

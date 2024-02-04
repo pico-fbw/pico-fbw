@@ -1,15 +1,15 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "../../../../wifly/wifly.h"
+#include "wifly/wifly.h"
 
-#include "set_fplan.h"
+#include "sys/api/cmds/SET/set_fplan.h"
 
 int api_set_fplan(const char *cmd, const char *args) {
     char *fplan = malloc(strlen(args) + strlen(FPLAN_PARAM_CONCAT) + 1);

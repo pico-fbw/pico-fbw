@@ -1,6 +1,6 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <stdio.h>
@@ -9,14 +9,14 @@
 
 #include "hardware/watchdog.h"
 
-#include "../../../../io/flash.h"
-#include "../../../../io/platform.h"
+#include "io/flash.h"
+#include "io/platform.h"
 
-#include "../../../../modes/aircraft.h"
+#include "modes/aircraft.h"
 
-#include "../../../../sys/throttle.h"
+#include "sys/throttle.h"
 
-#include "test_throttle.h"
+#include "sys/api/cmds/TEST/test_throttle.h"
 
 /**
  * Waits for a given number of seconds whilst updating the throttle.

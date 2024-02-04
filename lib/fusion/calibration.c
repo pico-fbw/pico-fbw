@@ -8,7 +8,7 @@
 
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 // https://github.com/BjarneBitscrambler/OrientationSensorFusion-ESP/wiki/Calibration#calibration
@@ -16,9 +16,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "../../io/flash.h"
+#include "io/flash.h"
 
-#include "calibration.h"
+#include "lib/fusion/calibration.h"
 
 #define CALIBRATION_BUF_MAGNETIC_START 0
 #define CALIBRATION_BUF_MAGNETIC_HEADER_SIZE 1

@@ -9,10 +9,9 @@
 
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include "pico/time.h"
@@ -23,10 +22,10 @@
 #include "hardware/irq.h"
 #include "hardware/pwm.h"
 
-#include "flash.h"
-#include "pwm.h"
+#include "io/flash.h"
+#include "io/pwm.h"
 
-#include "servo.h"
+#include "io/servo.h"
 
 uint servo_enable(uint gpio_pin) {
     if (print.fbw) printf("[servo] setting up servo on pin %d\n", gpio_pin);

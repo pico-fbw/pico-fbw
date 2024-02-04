@@ -8,14 +8,14 @@
 
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "approx.h"
+#include "lib/fusion/approx.h"
 
 // function returns an approximation to angle(deg)=asin(x) for x in the range -1 <= x <= 1
 // and returns -90 <= angle <= 90 deg

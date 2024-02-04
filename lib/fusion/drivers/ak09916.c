@@ -9,17 +9,17 @@
 
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <stdio.h>
 #include "pico/platform.h"
 #include "pico/types.h"
 
-#include "../../../io/aahrs.h"
-#include "../../../io/flash.h"
+#include "io/aahrs.h"
+#include "io/flash.h"
 
-#include "ak09916.h"
+#include "lib/fusion/drivers/ak09916.h"
 
 /* 
    AK09916

@@ -9,10 +9,9 @@
 
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
-#include <stdbool.h>
 #include <stdio.h>
 #include <math.h>
 #include "pico/platform.h"
@@ -21,13 +20,13 @@
 #include "hardware/irq.h"
 #include "hardware/pio.h"
 
-#include "display.h"
-#include "flash.h"
-#include "platform.h"
+#include "io/display.h"
+#include "io/flash.h"
+#include "io/platform.h"
 
-#include "../sys/log.h"
+#include "sys/log.h"
 
-#include "pwm.h"
+#include "io/pwm.h"
 #include "pwm.pio.h"
 
 typedef struct PWMState {
@@ -195,11 +194,8 @@ bool pwm_calibrate(const uint pin_list[], uint num_pins, const float deviations[
     for (uint i = 0; i < num_pins; i++) {
         uint pin = pin_list[i];
         if (print.fbw) printf("[pwm] calibrating pin %d (%d/%d)\n", pin, i + 1, num_pins);
-        if (platform_is_fbw()) {
-            char pBar[DISPLAY_MAX_LINE_LEN] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
-            display_pBarStr(pBar, (uint)(((i + 1) * 100) / num_pins));
-            display_text("Please do not", "touch the", "transmitter!", pBar, true);
-        }
+        if (platform_is_fbw())
+            display_string("Please do not touch the transmitter!", ((i + 1) * 100) / num_pins);
         float deviation = deviations[i];
         float final_difference = 0.0f;
         bool isThrottle = pin_list[i] == (uint)flash.pins[PINS_INPUT_THROTTLE];

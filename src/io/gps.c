@@ -1,6 +1,6 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <math.h>
@@ -13,17 +13,17 @@
 #include "hardware/gpio.h"
 #include "hardware/uart.h"
 
-#include "../lib/minmea.h"
+#include "lib/minmea.h"
 
-#include "../modes/flight.h"
-#include "../modes/aircraft.h"
+#include "modes/flight.h"
+#include "modes/aircraft.h"
 
-#include "../sys/log.h"
+#include "sys/log.h"
 
-#include "flash.h"
-#include "serial.h"
+#include "io/flash.h"
+#include "io/serial.h"
 
-#include "gps.h"
+#include "io/gps.h"
 
 static inline bool pos_valid(float lat, float lng) {
     return lat <= 90 && lat >= -90 && lng <= 180 && lng >= -180 &&

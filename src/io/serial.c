@@ -1,6 +1,6 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <stdlib.h>
@@ -8,7 +8,7 @@
 
 #include "hardware/uart.h"
 
-#include "serial.h"
+#include "io/serial.h"
 
 static inline char *tryRealloc(char *buf, size_t size) {
     char *nbuf = (char*)realloc(buf, size);

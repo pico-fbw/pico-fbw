@@ -1,16 +1,16 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <stdio.h>
 
-#include "../../../../modes/aircraft.h"
-#include "../../../../modes/auto.h"
+#include "modes/aircraft.h"
+#include "modes/auto.h"
 
-#include "../../../../wifly/wifly.h"
+#include "wifly/wifly.h"
 
-#include "set_waypoint.h"
+#include "sys/api/cmds/SET/set_waypoint.h"
 
 void interceptCallback() {
     printf("pico-fbw 200 [WPTINTC]\n");

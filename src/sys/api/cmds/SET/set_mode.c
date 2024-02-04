@@ -1,14 +1,14 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../../../../modes/aircraft.h"
+#include "modes/aircraft.h"
 
-#include "set_mode.h"
+#include "sys/api/cmds/SET/set_mode.h"
 
 int api_set_mode(const char *cmd, const char *args) {
     Mode mode = atoi(args);

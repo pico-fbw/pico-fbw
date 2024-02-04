@@ -1,6 +1,6 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <stdbool.h>
@@ -8,17 +8,17 @@
 #include <math.h>
 #include "pico/time.h"
 
-#include "../io/flash.h"
+#include "io/flash.h"
 
-#include "../lib/pid.h"
+#include "lib/pid.h"
 
-#include "../sys/log.h"
-#include "../sys/throttle.h"
+#include "sys/log.h"
+#include "sys/throttle.h"
 
-#include "auto.h"
-#include "flight.h"
+#include "modes/auto.h"
+#include "modes/flight.h"
 
-#include "hold.h"
+#include "modes/hold.h"
 
 static uint8_t turnStatus = HOLD_TURN_UNSCHEDULED;
 

@@ -8,16 +8,16 @@
 
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <math.h>
 
-#include "approx.h"
-#include "fusion.h"
-#include "matrix.h"
+#include "lib/fusion/approx.h"
+#include "lib/fusion/fusion.h"
+#include "lib/fusion/matrix.h"
 
-#include "orient.h"
+#include "lib/fusion/orient.h"
 
 // compile time constants that are private to this file
 #define SMALLQ0 1E-4F		// limit of quaternion scalar component requiring special algorithm

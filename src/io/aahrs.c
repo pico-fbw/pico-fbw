@@ -7,7 +7,7 @@
 
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <math.h>
@@ -16,27 +16,27 @@
 #include "pico/time.h"
 #include "pico/types.h"
 
-#include "../lib/fusion/acc.h"
-#include "../lib/fusion/calibration.h"
-#include "../lib/fusion/fconfig.h"
-#include "../lib/fusion/fusion.h"
-#include "../lib/fusion/mag.h"
-#include "../lib/fusion/status.h"
+#include "lib/fusion/acc.h"
+#include "lib/fusion/calibration.h"
+#include "lib/fusion/fconfig.h"
+#include "lib/fusion/fusion.h"
+#include "lib/fusion/mag.h"
+#include "lib/fusion/status.h"
 
-#include "../lib/fusion/drivers/drivers.h"
-#include "../lib/fusion/drivers/ak09916.h"
-#include "../lib/fusion/drivers/bno055.h"
-#include "../lib/fusion/drivers/icm20948.h"
+#include "lib/fusion/drivers/drivers.h"
+#include "lib/fusion/drivers/ak09916.h"
+#include "lib/fusion/drivers/bno055.h"
+#include "lib/fusion/drivers/icm20948.h"
 
-#include "../sys/log.h"
+#include "sys/log.h"
 
-#include "../modes/aircraft.h"
+#include "modes/aircraft.h"
 
-#include "display.h"
-#include "flash.h"
-#include "platform.h"
+#include "io/display.h"
+#include "io/flash.h"
+#include "io/platform.h"
 
-#include "aahrs.h"
+#include "io/aahrs.h"
 
 static SensorFusionGlobals fusion;
 static StatusSubsystem status;
@@ -143,7 +143,6 @@ void aahrs_update() {
 }
 
 bool aahrs_calibrate() {
-    char pBar[DISPLAY_MAX_LINE_LEN] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
     absolute_time_t wait;
     bool hasMoved = false;
 
@@ -151,8 +150,7 @@ bool aahrs_calibrate() {
     #if F_USING_GYRO && (F_9DOF_GBY_KALMAN || F_6DOF_GY_KALMAN)
         log_message(INFO, "Please hold still!", 1000, 200, true);
         if (platform_is_fbw()) {
-            display_pBarStr(pBar, 0);
-            display_text("Please hold", "still!", "", pBar, true);
+            display_string("Please hold still!", 0);
         }
         // Wait for gyro (and user) to stabilize
         wait = make_timeout_time_ms(5000);
@@ -161,8 +159,7 @@ bool aahrs_calibrate() {
         float offsets[3];
         for (uint i = 0; i < GYRO_AVG_SAMPLES; i++) {
             if (platform_is_fbw()) {
-                display_pBarStr(pBar, (i + 1) * (33.0f / GYRO_AVG_SAMPLES));
-                display_text("Please hold", "still!", "", pBar, true);
+                display_string("Please hold still!", (i + 1) * (33.0f / GYRO_AVG_SAMPLES));
             }
             // Reqest a reset from the algorithm so that the gyro offsets get calculated
             #if F_9DOF_GBY_KALMAN
@@ -222,10 +219,9 @@ bool aahrs_calibrate() {
         sprintf(msg, "Calibration: please move to position #%d/%d", i + 1, MAX_ACCEL_CAL_ORIENTATIONS);
         log_message(INFO, msg, 500, 200, true);
         if (platform_is_fbw()) {
-            char currentOrient[7] = { [0 ... 6] = ' '};
-            sprintf(currentOrient, "#%d/%d", i + 1, MAX_ACCEL_CAL_ORIENTATIONS);
-            display_pBarStr(pBar, (i + 1) * (33.0f / MAX_ACCEL_CAL_ORIENTATIONS) + 33);
-            display_text("Please move", "to position", currentOrient, pBar, true);
+            char orientMsg[60] = { [0 ... 59] = ' '};
+            sprintf(orientMsg, "Please move to position #%d/%d", i + 1, MAX_ACCEL_CAL_ORIENTATIONS);
+            display_string(orientMsg, (i + 1) * (33.0f / MAX_ACCEL_CAL_ORIENTATIONS) + 33);
         }
         // Wait for the sensor to move...
         while (!hasMoved) {
@@ -248,7 +244,7 @@ bool aahrs_calibrate() {
         // Blink signify a position is being recorded
         log_message(INFO, "Calibration: recording position...", 250, 100, true);
         if (platform_is_fbw()) {
-            display_text("Recording", "position...", "", pBar, true);
+            display_string("Recording position...", (i + 1) * (33.0f / MAX_ACCEL_CAL_ORIENTATIONS) + 33);
         }
         // Set the current physical location of the sensor
         fusion.AccelBuffer.iStoreLocation = i;
@@ -275,17 +271,16 @@ bool aahrs_calibrate() {
         while (!fusion.MagCal.iCalInProgress) {
             if (print.fbw) printf("[AAHRS] %d/%d measurements taken\n", fusion.MagBuffer.iMagBufferCount, MINMEASUREMENTS10CAL);
             if (platform_is_fbw()) {
-                char currentMeasure[8] = { [0 ... 7] = ' '};
-                sprintf(currentMeasure, "%d/%d", fusion.MagBuffer.iMagBufferCount, MINMEASUREMENTS10CAL);
-                display_pBarStr(pBar, fusion.MagBuffer.iMagBufferCount * (33.0f / MAXMEASUREMENTS) + 66);
-                display_text(currentMeasure, "measurements", "taken", pBar, true);
+                char measureMsg[60] = { [0 ... 59] = ' '};
+                sprintf(measureMsg, "%d/%d measurements taken", fusion.MagBuffer.iMagBufferCount, MINMEASUREMENTS10CAL);
+                display_string(measureMsg, fusion.MagBuffer.iMagBufferCount * (33.0f / MAXMEASUREMENTS) + 66);
             }
             platform_sleep_ms(1000, false);
         }
         // Calibration is being calculated, wait for it to finish
         if (print.fbw) printf("[AAHRS] calibration in progress, please wait...\n");
         if (platform_is_fbw()) {
-            display_text("Calibration", "in progress,", "please wait", pBar, true);
+            display_string("Calibration in progress, please wait", fusion.MagBuffer.iMagBufferCount * (33.0f / MAXMEASUREMENTS) + 66);
         }
         while (fusion.MagCal.iCalInProgress) aahrs.update();
         printf("[AAHRS] fit error was %f (attempt %d/%d)\n", fusion.MagCal.ftrFitErrorpc, i + 1, MAX_MAG_ATTEMPTS);

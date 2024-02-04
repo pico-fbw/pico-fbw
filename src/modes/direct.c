@@ -1,16 +1,16 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include "pico/types.h"
 
-#include "../io/esc.h"
-#include "../io/flash.h"
-#include "../io/servo.h"
-#include "../io/pwm.h"
+#include "io/esc.h"
+#include "io/flash.h"
+#include "io/servo.h"
+#include "io/pwm.h"
 
-#include "direct.h"
+#include "modes/direct.h"
 
 /**
  * Quick note for future me/any other developers (if there ever are lol):

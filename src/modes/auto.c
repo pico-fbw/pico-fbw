@@ -1,28 +1,27 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
-#include <stdbool.h>
 #include "pico/time.h"
 #include "pico/types.h"
 
-#include "../io/flash.h"
-#include "../io/gps.h"
-#include "../io/servo.h"
+#include "io/flash.h"
+#include "io/gps.h"
+#include "io/servo.h"
 
-#include "../lib/pid.h"
-#include "../lib/nav.h"
+#include "lib/pid.h"
+#include "lib/nav.h"
 
-#include "../sys/log.h"
-#include "../sys/throttle.h"
+#include "sys/log.h"
+#include "sys/throttle.h"
 
-#include "aircraft.h"
-#include "normal.h"
-#include "tune.h"
-#include "flight.h"
+#include "modes/aircraft.h"
+#include "modes/normal.h"
+#include "modes/tune.h"
+#include "modes/flight.h"
 
-#include "auto.h"
+#include "modes/auto.h"
 
 typedef enum GuidanceSource {
     FPLAN,

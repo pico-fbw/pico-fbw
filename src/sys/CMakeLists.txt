@@ -1,6 +1,6 @@
 add_library(fbw_sys
     throttle.c
-    config.c
+    configuration.c
     info.c
     log.c
     switch.c
@@ -22,3 +22,5 @@ if ("$CACHE{PICO_BOARD}" STREQUAL "pico_w")
 endif()
 
 add_subdirectory(api)
+
+target_include_directories(fbw_sys PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/src)

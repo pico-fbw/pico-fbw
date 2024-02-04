@@ -10,7 +10,7 @@
 #include <string.h>
 #include <stdarg.h>
 
-#include "minmea.h"
+#include "lib/minmea.h"
 
 #define boolstr(s) ((s) ? "true" : "false")
 

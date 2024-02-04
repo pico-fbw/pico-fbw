@@ -59,3 +59,7 @@ You can find all of the information about building and configuring the project o
 ## Issues, Feedback, and Features
 
 If you experience any issues, have any ideas for new features, or just any general feedback about the project in general, don't hesitate to reach out! You can submit an issue on our [issues page](https://github.com/MylesAndMore/pico-fbw/issues/new)--just please be sure to label your issure accordingly. And if you are a developer looking to suggest or improve on our code, feel free to leave me an issue or [pull request](https://github.com/MylesAndMore/pico-fbw/compare)!
+
+TODO: update/restucture, more technical info, summary at top etc
+
+## Technical Overview

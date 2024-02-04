@@ -8,13 +8,13 @@
 
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
-#include "calibration.h"
-#include "fusion.h"
+#include "lib/fusion/calibration.h"
+#include "lib/fusion/fusion.h"
 
-#include "acc.h"
+#include "lib/fusion/acc.h"
 
 // function resets the accelerometer buffer and accelerometer calibration
 void fInitializeAccelCalibration(AccelCalibration *pthisAccelCal,
@@ -147,8 +147,6 @@ void fInvertAccelCal(struct AccelSensor *pthisAccel,
 
     return;
 }
-
-// TODO: allow monitoring which type of calibration is occuring?
 
 // function runs the precision accelerometer calibration
 void fRunAccelCalibration(AccelCalibration *pthisAccelCal,

@@ -26,3 +26,5 @@ target_link_libraries(fbw_lib
     pico_base
     pico_time
 )
+
+target_include_directories(fbw_lib PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/src)

@@ -1,17 +1,17 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include "pico/time.h"
 
-#include "../io/esc.h"
-#include "../io/flash.h"
-#include "../io/gps.h"
+#include "io/esc.h"
+#include "io/flash.h"
+#include "io/gps.h"
 
-#include "../lib/pid.h"
+#include "lib/pid.h"
 
-#include "throttle.h"
+#include "sys/throttle.h"
 
 static PIDController athr_c;
 

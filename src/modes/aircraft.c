@@ -1,27 +1,27 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <stdio.h>
 #include "pico/time.h"
 
-#include "../io/aahrs.h"
-#include "../io/flash.h"
-#include "../io/gps.h"
-#include "../io/servo.h"
+#include "io/aahrs.h"
+#include "io/flash.h"
+#include "io/gps.h"
+#include "io/servo.h"
 
-#include "../wifly/wifly.h"
+#include "wifly/wifly.h"
 
-#include "auto.h"
-#include "direct.h"
-#include "hold.h"
-#include "normal.h"
-#include "tune.h"
+#include "modes/auto.h"
+#include "modes/direct.h"
+#include "modes/hold.h"
+#include "modes/normal.h"
+#include "modes/tune.h"
 
-#include "../sys/log.h"
+#include "sys/log.h"
 
-#include "aircraft.h"
+#include "modes/aircraft.h"
 
 void update() {
     switch (aircraft.mode) {

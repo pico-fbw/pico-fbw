@@ -10,19 +10,19 @@
 
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <stdio.h>
 #include "pico/platform.h"
 #include "pico/types.h"
 
-#include "../../../io/flash.h"
-#include "../../../io/platform.h"
+#include "io/flash.h"
+#include "io/platform.h"
 
-#include "../../../sys/log.h"
+#include "sys/log.h"
 
-#include "bno055.h"
+#include "lib/fusion/drivers/bno055.h"
 
 /* 
    BNO055 

@@ -1,15 +1,15 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../../../../modes/aircraft.h"
-#include "../../../../modes/auto.h"
+#include "modes/aircraft.h"
+#include "modes/auto.h"
 
-#include "set_bay.h"
+#include "sys/api/cmds/SET/set_bay.h"
 
 int api_set_bay(const char *cmd, const char *args) {
     if (aircraft.mode == MODE_NORMAL) {

@@ -1,6 +1,6 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <math.h>
@@ -9,13 +9,13 @@
 #include "pico/time.h"
 #include "pico/types.h"
 
-#include "../../../../io/flash.h"
-#include "../../../../io/pwm.h"
-#include "../../../../io/servo.h"
+#include "io/flash.h"
+#include "io/pwm.h"
+#include "io/servo.h"
 
-#include "../../../../modes/aircraft.h"
+#include "modes/aircraft.h"
 
-#include "test_pwm.h"
+#include "sys/api/cmds/TEST/test_pwm.h"
 
 int api_test_pwm(const char *cmd, const char *args) {
     if (aircraft.mode == MODE_DIRECT) {

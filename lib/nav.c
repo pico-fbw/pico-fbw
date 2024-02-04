@@ -1,11 +1,11 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <math.h>
 
-#include "nav.h"
+#include "lib/nav.h"
 
 static inline long double toRadians(long double degrees) {
     return degrees * M_PI / 180.0;

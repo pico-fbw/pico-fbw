@@ -1,13 +1,13 @@
-Copyright (c) 2023, pico-fbw
+Copyright (c) 2023-2024, pico-fbw
 
 ======================================
-GNU General Public License, Version 3
+GNU Affero General Public License, Version 3
 ======================================
 
-pico-fbw is licensed under the GNU General Public License, Version 3.
+pico-fbw is licensed under the GNU Affero General Public License, Version 3.
 
 You can find a copy of the License at the following URL:
-<https://opensource.org/license/gpl-3-0/>
+<https://opensource.org/license/agpl-v3/>
 
 ======================================
 MIT License
@@ -57,5 +57,6 @@ The following files (and their corresponding Header [.h] files, when applicable)
 You can find a copy of the License at the following URL:
 <https://opensource.org/licenses/BSD-3-Clause>
 
+======================================
 
 pico-fbw would not be possible without the hard work and dedication of open-source software developers. Thank you!

@@ -1,23 +1,22 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <math.h>
 #include <stdarg.h>
-#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "pico/types.h"
 
-#include "../io/aahrs.h"
-#include "../io/flash.h"
-#include "../io/gps.h"
-#include "../io/pwm.h"
+#include "io/aahrs.h"
+#include "io/flash.h"
+#include "io/gps.h"
+#include "io/pwm.h"
 
-#include "config.h"
+#include "sys/configuration.h"
 
 static void getFromGeneral(const char *key, float **value) {
     if (strcasecmp(key, "controlMode") == 0) {

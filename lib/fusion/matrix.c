@@ -8,15 +8,15 @@
 
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <stdbool.h>
 #include "math.h"
 
-#include "fusion.h"
+#include "lib/fusion/fusion.h"
 
-#include "matrix.h"
+#include "lib/fusion/matrix.h"
 
 // compile time constants that are private to this file
 #define CORRUPTMATRIX   0.001F  // column vector modulus limit for rotation matrix

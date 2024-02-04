@@ -1,41 +1,41 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <string.h>
 #include "pico/types.h"
 
-#include "GET/get_config.h"
-#include "GET/get_flash.h"
-#include "GET/get_fplan.h"
-#include "GET/get_info.h"
-#include "GET/get_input.h"
-#include "GET/get_logs.h"
-#include "GET/get_mode.h"
-#include "GET/get_sensor.h"
+#include "sys/api/cmds/GET/get_config.h"
+#include "sys/api/cmds/GET/get_flash.h"
+#include "sys/api/cmds/GET/get_fplan.h"
+#include "sys/api/cmds/GET/get_info.h"
+#include "sys/api/cmds/GET/get_input.h"
+#include "sys/api/cmds/GET/get_logs.h"
+#include "sys/api/cmds/GET/get_mode.h"
+#include "sys/api/cmds/GET/get_sensor.h"
 
-#include "SET/set_bay.h"
-#include "SET/set_config.h"
-#include "SET/set_fplan.h"
-#include "SET/set_mode.h"
-#include "SET/set_target.h"
-#include "SET/set_waypoint.h"
+#include "sys/api/cmds/SET/set_bay.h"
+#include "sys/api/cmds/SET/set_config.h"
+#include "sys/api/cmds/SET/set_fplan.h"
+#include "sys/api/cmds/SET/set_mode.h"
+#include "sys/api/cmds/SET/set_target.h"
+#include "sys/api/cmds/SET/set_waypoint.h"
 
-#include "TEST/test_all.h"
-#include "TEST/test_aahrs.h"
-#include "TEST/test_gps.h"
-#include "TEST/test_pwm.h"
-#include "TEST/test_servo.h"
-#include "TEST/test_throttle.h"
+#include "sys/api/cmds/TEST/test_all.h"
+#include "sys/api/cmds/TEST/test_aahrs.h"
+#include "sys/api/cmds/TEST/test_gps.h"
+#include "sys/api/cmds/TEST/test_pwm.h"
+#include "sys/api/cmds/TEST/test_servo.h"
+#include "sys/api/cmds/TEST/test_throttle.h"
 
-#include "MISC/about.h"
-#include "MISC/help.h"
-#include "MISC/ping.h"
-#include "MISC/reboot.h"
-#include "MISC/reset.h"
+#include "sys/api/cmds/MISC/about.h"
+#include "sys/api/cmds/MISC/help.h"
+#include "sys/api/cmds/MISC/ping.h"
+#include "sys/api/cmds/MISC/reboot.h"
+#include "sys/api/cmds/MISC/reset.h"
 
-#include "cmds.h"
+#include "sys/api/cmds/cmds.h"
 
 int api_handle_get(const char *cmd, const char *args) {
     if (strcasecmp(cmd, "GET_CONFIG") == 0) {

@@ -9,16 +9,16 @@
 
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <stdio.h>
 #include "pico/platform.h"
 #include "pico/types.h"
 
-#include "../../../io/flash.h"
+#include "io/flash.h"
 
-#include "icm20948.h"
+#include "lib/fusion/drivers/icm20948.h"
 
 /* 
    ICM20948

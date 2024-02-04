@@ -15,6 +15,8 @@ target_link_libraries(${PROJECT_NAME}
     pico_time
 )
 
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/src)
+
 # Import Pico W specific libraries and set specific compiler definitions
 if ("$CACHE{PICO_BOARD}" STREQUAL "pico" OR "$CACHE{PICO_BOARD}" STREQUAL "pico_w")
     message(STATUS "[pico-fbw] Board checks passed")
@@ -27,7 +29,6 @@ if ("$CACHE{PICO_BOARD}" STREQUAL "pico_w")
 endif ()
 
 add_subdirectory(io)
-add_subdirectory(lib)
 add_subdirectory(modes)
 add_subdirectory(sys)
 # Wi-Fly is always enabled in some capacity (to allow for the API to interact with it regardless of Pico W).
@@ -35,6 +36,7 @@ add_subdirectory(sys)
 add_subdirectory(wifly)
 
 # At the end of the build process, move the final binaries to the buildroot for easier access
+# TODO: change this for each platform
 add_custom_command(TARGET pico-fbw POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E rename "${CMAKE_BINARY_DIR}/src/${PROJECT_NAME}.uf2" "${CMAKE_BINARY_DIR}/${PROJECT_NAME}.uf2"
 )

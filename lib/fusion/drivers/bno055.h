@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "../fusion.h"
+#include "lib/fusion/fusion.h"
 
 #include "drivers.h"
 

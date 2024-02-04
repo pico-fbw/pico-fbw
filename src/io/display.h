@@ -1,13 +1,7 @@
 #ifndef __DISPLAY_H
 #define __DISPLAY_H
 
-typedef struct RenderArea {
-    uint8_t col_start;
-    uint8_t col_end;
-    uint8_t page_start;
-    uint8_t page_end;
-    int buf_len;
-} RenderArea;
+#include <stdbool.h>
 
 // Display dimensions
 #define DISPLAY_WIDTH 128
@@ -57,6 +51,14 @@ typedef struct RenderArea {
 
 #define DISPLAY_WRITE_MODE           0xFE
 #define DISPLAY_READ_MODE            0xFF
+
+typedef struct RenderArea {
+    uint8_t col_start;
+    uint8_t col_end;
+    uint8_t page_start;
+    uint8_t page_end;
+    int buf_len;
+} RenderArea;
 
 static uint8_t font[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // Space
@@ -290,19 +292,28 @@ bool display_init();
  * @param progress The progress to display (0-100)
  * @note The length of bar[] should be of DISPLAY_MAX_LINE_LEN
 */
-void display_pBarStr(char bar[], uint progress);
+void display_createProgBar(char bar[], uint progress);
 
 /**
- * Renders text on the display.
+ * Renders lines of text on the display.
  * @param l1 The first line of text
  * @param l2 The second line of text
  * @param l3 The third line of text
  * @param l4 The fourth line of text
  * @param center Whether to center the text (false leaves it as-is)
- * @note The display supports 4 lines of text, with a maximum of ~14-16 characters per line.
+ * @note The display supports 4 lines of text, with a maximum of ~15 characters per line.
  * Any more characters will be truncated.
 */
-void display_text(char l1[], char l2[], char l3[], char l4[], bool center);
+void display_lines(char l1[], char l2[], char l3[], char l4[], bool center);
+
+/**
+ * Renders a string on the display.
+ * @param str The string to display
+ * @param progress The progress of am optional progress bar (0-100), or -1 if not needed
+ * @note This function will try its best to wrap words between lines, but it's not perfect, so use display_lines() if you can.
+ * The maximum string length is ~60 characters (or 45 is a progress bar is used), any more will be truncated.
+*/
+void display_string(const char *str, int progress);
 
 /**
  * Puts the display into "power save" mode, where a small note is shortly displayed and then the screen is shut off.

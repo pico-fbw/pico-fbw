@@ -21,3 +21,5 @@ target_link_libraries(fbw_wifly
 if ("$CACHE{PICO_BOARD}" STREQUAL "pico_w")
     target_link_libraries(fbw_wifly pico_cyw43_arch_lwip_threadsafe_background)
 endif ()
+
+target_include_directories(fbw_wifly PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/src)

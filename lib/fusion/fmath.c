@@ -8,7 +8,7 @@
 
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 /* This is the file that contains the fusion routines.
@@ -18,13 +18,13 @@ It is STRONGLY RECOMMENDED that the casual developer NOT TOUCH THIS FILE. */
 
 #include "pico/time.h"
 
-#include "approx.h"
-#include "calibration.h"
-#include "fusion.h"
-#include "matrix.h"
-#include "orient.h"
+#include "lib/fusion/approx.h"
+#include "lib/fusion/calibration.h"
+#include "lib/fusion/fusion.h"
+#include "lib/fusion/matrix.h"
+#include "lib/fusion/orient.h"
 
-#include "fmath.h"
+#include "lib/fusion/fmath.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // intialization functions for the sensor fusion algorithms

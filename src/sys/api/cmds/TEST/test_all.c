@@ -1,18 +1,18 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <stdio.h>
 #include "pico/platform.h"
 #include "pico/types.h"
 
-#include "test_aahrs.h"
-#include "test_gps.h"
-#include "test_pwm.h"
-#include "test_servo.h"
+#include "sys/api/cmds/TEST/test_aahrs.h"
+#include "sys/api/cmds/TEST/test_gps.h"
+#include "sys/api/cmds/TEST/test_pwm.h"
+#include "sys/api/cmds/TEST/test_servo.h"
 
-#include "test_all.h"
+#include "sys/api/cmds/TEST/test_all.h"
 
 int api_test_all(const char *cmd, const char *args) {
     uint status[4];

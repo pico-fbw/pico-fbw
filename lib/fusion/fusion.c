@@ -8,16 +8,16 @@
 
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the GNU AGPL-3.0
 */
 
 #include <stdio.h>
 
-#include "fmath.h"
-#include "status.h"
-#include "drivers/drivers.h"
+#include "lib/fusion/fmath.h"
+#include "lib/fusion/status.h"
+#include "lib/fusion/drivers/drivers.h"
 
-#include "fusion.h"
+#include "lib/fusion/fusion.h"
 
 /// Poor man's inheritance for status subsystem setStatus command
 /// This function is normally invoked via the "sfg." global pointer.

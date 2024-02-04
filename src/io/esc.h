@@ -1,6 +1,7 @@
 #ifndef __ESC_H
 #define __ESC_H
 
+#include <stdbool.h>
 #include <stdint.h>
 #include "pico/types.h"
 
