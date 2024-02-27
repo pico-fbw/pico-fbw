@@ -18,16 +18,3 @@ ENV PICO_SDK_PATH=$SDK_PATH
 # Set up project
 WORKDIR /app
 COPY . /app/
-ARG BUILD_TYPE=Debug
-
-# Build: pico
-ARG CURRENT_PLATFORM=pico
-ARG BUILD_DIR=build_${CURRENT_PLATFORM}
-RUN \
-    cmake -B ${BUILD_DIR} -DFBW_PLATFORM=${CURRENT_PLATFORM} -DCMAKE_BUILD_TYPE=${BUILD_TYPE} && \
-    cmake --build ${BUILD_DIR} --config ${BUILD_TYPE}
-# Build: pico_w
-ARG CURRENT_PLATFORM=pico_w
-RUN \
-    cmake -B ${BUILD_DIR} -DFBW_PLATFORM=${CURRENT_PLATFORM} -DCMAKE_BUILD_TYPE=${BUILD_TYPE} && \
-    cmake --build ${BUILD_DIR} --config ${BUILD_TYPE}

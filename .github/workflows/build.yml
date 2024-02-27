@@ -6,17 +6,25 @@ on:
   pull_request:
     branches: [ "main", "beta", "alpha" ]
     
+env:
+  BUILD_TYPE: Debug
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: "ubuntu-latest"
 
     steps:
-    - name: Checkout code
+    - name: "Checkout code"
       uses: actions/checkout@v3
 
-    - name: Build Docker image
+    - name: "Build Docker image"
       run: docker build -t pico-fbw-build .
 
-    - name: Create Docker container
-      run: docker run pico-fbw-build
+    - name: "Start Docker container"
+      run: docker run -d --name build-container pico-fbw-build
+
+    - name: "Build: pico"
+      run: docker exec build-container /bin/bash -c "cmake -B build_pico -DFBW_PLATFORM=pico -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} && cmake --build build_pico --config ${{env.BUILD_TYPE}}"
+
+    - name: "Build: pico_w"
+      run: docker exec build-container /bin/bash -c "cmake -B build_pico_w -DFBW_PLATFORM=pico_w -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} && cmake --build build_pico_w --config ${{env.BUILD_TYPE}}"
