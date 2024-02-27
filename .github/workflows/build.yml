@@ -1,0 +1,22 @@
+name: Build
+
+on:
+  push:
+    branches: [ "main", "beta", "alpha" ]
+  pull_request:
+    branches: [ "main", "beta", "alpha" ]
+    
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Build Docker image
+      run: docker build -t pico-fbw-build .
+
+    - name: Create Docker container
+      run: docker run pico-fbw-build
