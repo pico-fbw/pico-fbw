@@ -1,26 +1,20 @@
+add_subdirectory(api)
+
 add_library(fbw_sys
-    throttle.c
+    boot.c
     configuration.c
-    info.c
     log.c
-    switch.c
+    runtime.c
+    throttle.c
+    version.c
 )
 
 target_link_libraries(fbw_sys
+    fbw_api
     fbw_io
     fbw_lib
     fbw_modes
-    hardware_gpio
-    hardware_watchdog
-    pico_base
-    pico_binary_info
-    pico_time
+    fbw_wifly
 )
-
-if ("$CACHE{PICO_BOARD}" STREQUAL "pico_w")
-    target_link_libraries(fbw_sys pico_cyw43_arch_none)
-endif()
-
-add_subdirectory(api)
 
 target_include_directories(fbw_sys PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/src)

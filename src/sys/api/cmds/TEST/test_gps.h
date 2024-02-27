@@ -1,6 +1,5 @@
-#ifndef __TEST_GPS_H
-#define __TEST_GPS_H
+#pragma once
 
-int api_test_gps(const char *cmd, const char *args);
+#include "platform/int.h"
 
-#endif // __TEST_GPS_H
+i32 api_test_gps(const char *cmd, const char *args);

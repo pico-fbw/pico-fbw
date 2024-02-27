@@ -1,6 +1,3 @@
-#ifndef __REBOOT_H
-#define __REBOOT_H
+#pragma once
 
 void api_reboot(const char *cmd, const char *args);
-
-#endif // __REBOOT_H

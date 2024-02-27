@@ -1,6 +1,5 @@
-#ifndef __GET_SENSOR_H
-#define __GET_SENSOR_H
+#pragma once
 
-int api_get_sensor(const char *cmd, const char *args);
+#include "platform/int.h"
 
-#endif // __GET_SENSOR_H
+i32 api_get_sensor(const char *cmd, const char *args);

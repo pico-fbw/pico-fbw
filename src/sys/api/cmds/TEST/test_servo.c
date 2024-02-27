@@ -3,21 +3,19 @@
  * Licensed under the GNU AGPL-3.0
 */
 
-#include <stdio.h>
 #include <stdlib.h>
-#include "pico/types.h"
 
 #include "io/servo.h"
 
 #include "modes/aircraft.h"
 
-#include "sys/api/cmds/TEST/test_servo.h"
+#include "test_servo.h"
 
-int api_test_servo(const char *cmd, const char *args) {
+i32 api_test_servo(const char *cmd, const char *args) {
     if (aircraft.mode == MODE_DIRECT) {
-        uint num_servos = 3;
-        uint servos[num_servos];
-        const uint16_t degrees[] = DEFAULT_SERVO_TEST;
+        u32 num_servos = 3;
+        u32 servos[num_servos];
+        const u16 degrees[] = DEFAULT_SERVO_TEST;
         if (args) {
             // Test the servo that was provided in the command
             servos[0] = atoi(args);

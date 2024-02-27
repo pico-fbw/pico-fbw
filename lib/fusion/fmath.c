@@ -15,8 +15,7 @@
 It is STRONGLY RECOMMENDED that the casual developer NOT TOUCH THIS FILE. */
 
 #include <math.h>
-
-#include "pico/time.h"
+#include "platform/time.h"
 
 #include "lib/fusion/approx.h"
 #include "lib/fusion/calibration.h"
@@ -24,7 +23,7 @@ It is STRONGLY RECOMMENDED that the casual developer NOT TOUCH THIS FILE. */
 #include "lib/fusion/matrix.h"
 #include "lib/fusion/orient.h"
 
-#include "lib/fusion/fmath.h"
+#include "fmath.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // intialization functions for the sensor fusion algorithms
@@ -83,9 +82,9 @@ void fFuseSensors(struct SV_1DOF_P_BASIC *pthisSV_1DOF_P_BASIC,
 #if F_1DOF_P_BASIC
     if (pthisSV_1DOF_P_BASIC)
     {
-        absolute_time_t t = get_absolute_time();
+        Timestamp t = timestamp_now();
         fRun_1DOF_P_BASIC(pthisSV_1DOF_P_BASIC, pthisPressure);
-        pthisSV_1DOF_P_BASIC->systick = (uint64_t)absolute_time_diff_us(t, get_absolute_time());
+        pthisSV_1DOF_P_BASIC->systick = time_since_us(&t);
     }
 #endif
 
@@ -93,9 +92,9 @@ void fFuseSensors(struct SV_1DOF_P_BASIC *pthisSV_1DOF_P_BASIC,
 #if F_3DOF_G_BASIC
     if (pthisSV_3DOF_G_BASIC)
     {
-        absolute_time_t t = get_absolute_time();
+        Timestamp t = timestamp_now();
         fRun_3DOF_G_BASIC(pthisSV_3DOF_G_BASIC, pthisAccel);
-        pthisSV_3DOF_G_BASIC->systick = (uint64_t)absolute_time_diff_us(t, get_absolute_time());
+        pthisSV_3DOF_G_BASIC->systick = time_since_us(&t);
     }
 #endif
 
@@ -103,9 +102,9 @@ void fFuseSensors(struct SV_1DOF_P_BASIC *pthisSV_1DOF_P_BASIC,
 #if F_3DOF_B_BASIC
     if (pthisSV_3DOF_B_BASIC)
     {
-        absolute_time_t t = get_absolute_time();
+        Timestamp t = timestamp_now();
         fRun_3DOF_B_BASIC(pthisSV_3DOF_B_BASIC, pthisMag);
-        pthisSV_3DOF_B_BASIC->systick = (uint64_t)absolute_time_diff_us(t, get_absolute_time());
+        pthisSV_3DOF_B_BASIC->systick = time_since_us(&t);
     }
 #endif
 
@@ -113,9 +112,9 @@ void fFuseSensors(struct SV_1DOF_P_BASIC *pthisSV_1DOF_P_BASIC,
 #if F_3DOF_Y_BASIC
     if (pthisSV_3DOF_Y_BASIC)
     {
-        absolute_time_t t = get_absolute_time();
+        Timestamp t = timestamp_now();
         fRun_3DOF_Y_BASIC(pthisSV_3DOF_Y_BASIC, pthisGyro);
-        pthisSV_3DOF_Y_BASIC->systick = (uint64_t)absolute_time_diff_us(t, get_absolute_time());
+        pthisSV_3DOF_Y_BASIC->systick = time_since_us(&t);
     }
 #endif
 
@@ -123,9 +122,9 @@ void fFuseSensors(struct SV_1DOF_P_BASIC *pthisSV_1DOF_P_BASIC,
 #if F_6DOF_GB_BASIC
     if (pthisSV_6DOF_GB_BASIC)
     {
-        absolute_time_t t = get_absolute_time();
+        Timestamp t = timestamp_now();
         fRun_6DOF_GB_BASIC(pthisSV_6DOF_GB_BASIC, pthisMag, pthisAccel);
-        pthisSV_6DOF_GB_BASIC->systick = (uint64_t)absolute_time_diff_us(t, get_absolute_time());
+        pthisSV_6DOF_GB_BASIC->systick = time_since_us(&t);
     }
 #endif
 
@@ -133,9 +132,9 @@ void fFuseSensors(struct SV_1DOF_P_BASIC *pthisSV_1DOF_P_BASIC,
 #if F_6DOF_GY_KALMAN
     if (pthisSV_6DOF_GY_KALMAN)
     {
-        absolute_time_t t = get_absolute_time();
+        Timestamp t = timestamp_now();
         fRun_6DOF_GY_KALMAN(pthisSV_6DOF_GY_KALMAN, pthisAccel, pthisGyro);
-        pthisSV_6DOF_GY_KALMAN->systick = (uint64_t)absolute_time_diff_us(t, get_absolute_time());
+        pthisSV_6DOF_GY_KALMAN->systick = time_since_us(&t);
     }
 #endif
 
@@ -143,10 +142,10 @@ void fFuseSensors(struct SV_1DOF_P_BASIC *pthisSV_1DOF_P_BASIC,
 #if F_9DOF_GBY_KALMAN
     if (pthisSV_9DOF_GBY_KALMAN)
     {
-        absolute_time_t t = get_absolute_time();
+        Timestamp t = timestamp_now();
         fRun_9DOF_GBY_KALMAN(pthisSV_9DOF_GBY_KALMAN, pthisAccel, pthisMag,
                              pthisGyro, pthisMagCal);
-        pthisSV_9DOF_GBY_KALMAN->systick = (uint64_t)absolute_time_diff_us(t, get_absolute_time());
+        pthisSV_9DOF_GBY_KALMAN->systick = time_since_us(&t);
     }
 #endif
     return;
@@ -284,7 +283,7 @@ void fInit_6DOF_GY_KALMAN(struct SV_6DOF_GY_KALMAN *pthisSV,
                           struct AccelSensor *pthisAccel,
                           struct GyroSensor *pthisGyro)
 {
-    int8_t    i;          // loop counter
+    i8    i;          // loop counter
 
     // compute and store useful product terms to save floating point calculations later
     pthisSV->fdeltat = 1.0F / (float) FUSION_HZ;
@@ -346,7 +345,7 @@ void fInit_9DOF_GBY_KALMAN(struct SV_9DOF_GBY_KALMAN *pthisSV, struct AccelSenso
     struct GyroSensor *pthisGyro, struct MagCalibration *pthisMagCal)
 {
     float ftmp;// scratch
-    int8_t i;// loop counter
+    i8 i;// loop counter
 
     // compute and store useful product terms to save floating point calculations later
     pthisSV->fdeltat = 1.0F / (float) FUSION_HZ;
@@ -532,7 +531,7 @@ void fRun_3DOF_Y_BASIC(struct SV_3DOF_Y_BASIC *pthisSV,
                        struct GyroSensor *pthisGyro)
 {
     Quaternion  ftmpq;  // scratch quaternion
-    int8_t        i;      // loop counter
+    i8        i;      // loop counter
 
     // if requested, do a reset and return
     if (pthisSV->resetflag)
@@ -644,16 +643,16 @@ void fRun_6DOF_GY_KALMAN(struct SV_6DOF_GY_KALMAN *pthisSV,
     Quaternion  fqMi;               // a priori orientation quaternion
     Quaternion  ftmpq;              // scratch quaternion
     float       ftmp;               // scratch float
-    int8_t        ierror;             // matrix inversion error flag
-    int8_t        i,
+    i8        ierror;             // matrix inversion error flag
+    i8        i,
                 j,
                 k;                  // loop counters
 
     // working arrays for 3x3 matrix inversion
     float       *pfRows[3];
-    int8_t        iColInd[3];
-    int8_t        iRowInd[3];
-    int8_t        iPivot[3];
+    i8        iColInd[3];
+    i8        iRowInd[3];
+    i8        iPivot[3];
 
     // if requested, do a reset initialization with no further processing
     if (pthisSV->resetflag)
@@ -1042,16 +1041,16 @@ void fRun_9DOF_GBY_KALMAN(struct SV_9DOF_GBY_KALMAN *pthisSV,
     float       fmodGc;    // modulus of calibrated accelerometer measurement (g)
     float       fmodBc;    // modulus of calibrated magnetometer measurement (uT)
     float       ftmp;               // scratch float
-    int8_t        ierror;             // matrix inversion error flag
-    int8_t        i,
+    i8        ierror;             // matrix inversion error flag
+    i8        i,
                 j,
                 k;                  // loop counters
 
     // working arrays for 6x6 matrix inversion
     float       *pfRows[6];
-    int8_t       iColInd[6];
-    int8_t        iRowInd[6];
-    int8_t        iPivot[6];
+    i8       iColInd[6];
+    i8        iRowInd[6];
+    i8        iPivot[6];
 
     // if requested, do a reset initialization with no further processing
     if (pthisSV->resetflag) {

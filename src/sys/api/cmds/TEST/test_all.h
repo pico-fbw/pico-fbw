@@ -1,6 +1,5 @@
-#ifndef __TEST_ALL_H
-#define __TEST_ALL_H
+#pragma once
 
-int api_test_all(const char *cmd, const char *args);
+#include "platform/int.h"
 
-#endif // __TEST_ALL_H
+i32 api_test_all(const char *cmd, const char *args);

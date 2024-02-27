@@ -1,6 +1,5 @@
-#ifndef __TEST_PWM_H
-#define __TEST_PWM_H
+#pragma once
 
-int api_test_pwm(const char *cmd, const char *args);
+#include "platform/int.h"
 
-#endif // __TEST_PWM_H
+i32 api_test_pwm(const char *cmd, const char *args);

@@ -1,5 +1,4 @@
-#ifndef __FLIGHT_H
-#define __FLIGHT_H
+#pragma once
 
 /**
  * Initializes the flight system (axis PIDs).
@@ -24,5 +23,3 @@ void flight_init();
  * If override is set to false and roll is below the deadband, a "dynamic damper" will be applied instead (uses PID to achieve the correct yaw angle).
 */
 void flight_update(double roll, double pitch, double yaw, bool override);
-
-#endif // __FLIGHT_H

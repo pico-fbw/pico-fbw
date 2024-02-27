@@ -12,95 +12,49 @@
  * Licensed under the GNU AGPL-3.0
 */
 
-#include <stdio.h>
-#include <string.h>
+#include "hardware/i2c.h" // temp
 
-#include "pico/types.h"
-
-#include "hardware/gpio.h"
-
-#include "io/flash.h"
+#include "platform/i2c.h"
 
 #include "lib/fusion/fconfig.h"
 
-#include "lib/fusion/drivers/drivers.h"
+#include "sys/configuration.h"
+#include "sys/print.h"
+
+#include "drivers.h"
 
 /**
- * Reads a byte to from addr at reg and stores it in dest.
- * @param addr The I2C address of the device
- * @param reg The register to read from
- * @param dest The destination buffer
- * @return True if the read was successful
+ * Reads `len` bytes from `addr` at `reg` and stores them in `dest`.
+ * @param addr the I2C address of the device
+ * @param reg the register to read from
+ * @param dest the destination buffer
+ * @param len the number of bytes to read
+ * @return true if the read was successful
 */
-static bool i2cReadByte(uint8_t addr, uint8_t reg, uint8_t *dest) {
-    int timeout = i2c_write_timeout_us(DRIVER_I2C, addr, &reg, sizeof(reg), true, DRIVER_TIMEOUT_US);
-    if (timeout != sizeof(reg)) return false;
-    timeout = i2c_read_timeout_us(DRIVER_I2C, addr, dest, sizeof(*dest), false, DRIVER_TIMEOUT_US);
-    return timeout == sizeof(*dest);
+static bool i2cReadBytes(byte addr, byte reg, byte *dest, size_t len) {
+    return i2c_read((u32)config.pins[PINS_AAHRS_SDA], (u32)config.pins[PINS_AAHRS_SCL], addr, reg, dest, len);
 }
 
 /**
- * Reads len bytes from addr at reg and stores them in dest.
- * @param addr The I2C address of the device
- * @param reg The register to read from
- * @param dest The destination buffer
- * @param len The number of bytes to read
- * @return True if the read was successful
+ * Writes `val` to `addr` at `reg`.
+ * @param addr the I2C address of the device
+ * @param reg the register to write to
+ * @param val the value to write
+ * @return true if the write was successful
 */
-static bool i2cReadBytes(uint8_t addr, uint8_t reg, uint8_t *dest, size_t len) {
-    int timeout = i2c_write_timeout_us(DRIVER_I2C, addr, &reg, sizeof(reg), true, DRIVER_TIMEOUT_US);
-    if (timeout != sizeof(reg)) return false;
-    timeout = i2c_read_timeout_us(DRIVER_I2C, addr, dest, len, false, DRIVER_TIMEOUT_US);
-    return timeout == len;
-}
-
-/**
- * Writes val to addr at reg.
- * @param addr The I2C address of the device
- * @param reg The register to write to
- * @param val The value to write
- * @return True if the write was successful
-*/
-static bool i2cWriteByte(uint8_t addr, uint8_t reg, uint8_t val) {
-    uint8_t c[] = {reg, val};
-    int timeout = i2c_write_timeout_us(DRIVER_I2C, addr, c, sizeof(c), true, DRIVER_TIMEOUT_US);
-    return timeout == sizeof(c);
-}
-
-/**
- * Writes val[len] to addr at reg.
- * @param addr The I2C address of the device
- * @param reg The register to write to
- * @param val The values to write
- * @param len The length of the value
- * @return True if the write was successful
-*/
-static bool i2cWriteBytes(uint8_t addr, uint8_t reg, const uint8_t *val, size_t len) {
-    uint8_t c[len + 1];
-    c[0] = reg;
-    memcpy(&c[1], val, len);
-    int timeout = i2c_write_timeout_us(DRIVER_I2C, addr, c, len + 1, true, DRIVER_TIMEOUT_US);
-    return timeout == (len + 1);
+static bool i2cWriteByte(byte addr, byte reg, byte val) {
+    byte buf[] = {val};
+    return i2c_write((u32)config.pins[PINS_AAHRS_SDA], (u32)config.pins[PINS_AAHRS_SCL], addr, reg, buf, 1);
 }
 
 void driver_init() {
-    if (print.fbw) printf("[AAHRS] initializing ");
-    if (DRIVER_I2C == i2c0) {
-        if (print.fbw) printf("i2c0 ");
-    } else if (DRIVER_I2C == i2c1) {
-        if (print.fbw) printf("i2c1 ");
-    }
-    if (print.fbw) printf("at %d kHz, on pins %d (SDA) and %d (SCL)\n", DRIVER_FREQ_KHZ,
-                          (uint)flash.pins[PINS_AAHRS_SDA], (uint)flash.pins[PINS_AAHRS_SCL]);
-    gpio_set_function((uint)flash.pins[PINS_AAHRS_SDA], GPIO_FUNC_I2C);
-    gpio_set_function((uint)flash.pins[PINS_AAHRS_SCL], GPIO_FUNC_I2C);
-    gpio_pull_up((uint)flash.pins[PINS_AAHRS_SDA]);
-    gpio_pull_up((uint)flash.pins[PINS_AAHRS_SCL]);
-    i2c_init(DRIVER_I2C, DRIVER_FREQ_KHZ * 1000);
+    printfbw(aahrs, "initializing i2c0 at %d kHz, on pins %d (SDA) and %d (SCL)", DRIVER_FREQ_KHZ,
+                          (u32)config.pins[PINS_AAHRS_SDA], (u32)config.pins[PINS_AAHRS_SCL]);
+    i2c_setup((u32)config.pins[PINS_AAHRS_SDA], (u32)config.pins[PINS_AAHRS_SCL], DRIVER_FREQ_KHZ * 1000);
 }
 
-int32_t driver_read(registerDeviceInfo_t *devInfo, uint16_t peripheralAddress, const registerReadList_t *pReadList, uint8_t *pOutBuf) {
-    uint8_t *pBuf;
+i32 driver_read(registerDeviceInfo_t *devInfo, u16 peripheralAddress, const registerReadList_t *pReadList, byte *pOutBuf) {
+    byte *pBuf;
 
     // Validate handle
     if (!pReadList || !pOutBuf) {
@@ -110,7 +64,7 @@ int32_t driver_read(registerDeviceInfo_t *devInfo, uint16_t peripheralAddress, c
 
     // Traverse the read list and read the registers one by one unless the register read list numBytes is zero
     for (pBuf = pOutBuf; pCmd->numBytes != 0; pCmd++) {
-        if (!i2cReadBytes((uint8_t)peripheralAddress, (uint8_t)pCmd->readFrom, pBuf, pCmd->numBytes)) {
+        if (!i2cReadBytes((byte)peripheralAddress, (byte)pCmd->readFrom, pBuf, pCmd->numBytes)) {
             return SENSOR_ERROR_READ;
         }
         pBuf += pCmd->numBytes;
@@ -118,15 +72,15 @@ int32_t driver_read(registerDeviceInfo_t *devInfo, uint16_t peripheralAddress, c
     return SENSOR_ERROR_NONE;
 }
 
-int32_t driver_read_register(registerDeviceInfo_t *devInfo, uint16_t peripheralAddress, uint8_t offset, uint8_t len, uint8_t *pOutBuf) {
-    if (i2cReadBytes((uint8_t)peripheralAddress, offset, pOutBuf, len)) {
+i32 driver_read_register(registerDeviceInfo_t *devInfo, u16 peripheralAddress, byte offset, byte len, byte *pOutBuf) {
+    if (i2cReadBytes((byte)peripheralAddress, offset, pOutBuf, len)) {
         return SENSOR_ERROR_NONE;
     } else {
         return SENSOR_ERROR_READ;
     }
 }
 
-int8_t driver_write_list(registerDeviceInfo_t *devInfo, uint16_t peripheralAddress, const registerWriteList_t *pRegWriteList) {
+i8 driver_write_list(registerDeviceInfo_t *devInfo, u16 peripheralAddress, const registerWriteList_t *pRegWriteList) {
     // Validate handle
     if (!pRegWriteList) {
         return SENSOR_ERROR_BAD_ADDRESS;
@@ -136,7 +90,7 @@ int8_t driver_write_list(registerDeviceInfo_t *devInfo, uint16_t peripheralAddre
     // Update register values based on register write list until the next cmd is the list terminator.
     while (pCmd->writeTo != 0xFFFF) {
         // Set the register based on the values in the register value pair
-        if (!i2cWriteByte((uint8_t)peripheralAddress, (uint8_t)pCmd->writeTo, pCmd->value)) {
+        if (!i2cWriteByte((byte)peripheralAddress, (byte)pCmd->writeTo, pCmd->value)) {
             return SENSOR_ERROR_WRITE;
         }
         ++pCmd;

@@ -6,14 +6,11 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
-#include "pico/platform.h"
-#include "pico/types.h"
-
-#include "io/flash.h"
 
 #include "sys/configuration.h"
+#include "sys/print.h"
 
-#include "sys/api/cmds/GET/get_config.h"
+#include "get_config.h"
 
 /**
  * @param section The section to get the memory offset of
@@ -22,23 +19,21 @@
 static float *getSectionMem(ConfigSection section) {
     switch (section) {
         case CONFIG_GENERAL:
-            return flash.general;
+            return config.general;
         case CONFIG_CONTROL:
-            return flash.control;
+            return config.control;
         case CONFIG_PINS:
-            return flash.pins;
+            return config.pins;
         case CONFIG_SENSORS:
-            return flash.sensors;
+            return config.sensors;
         case CONFIG_SYSTEM:
-            return flash.system;
-        case CONFIG_PID:
-            return flash.pid;
+            return config.system;
         default:
             return NULL;
     }
 }
 
-int api_get_config(const char *cmd, const char *args) {
+i32 api_get_config(const char *cmd, const char *args) {
     if (args) {
         char section[64];
         char key[64];
@@ -48,36 +43,36 @@ int api_get_config(const char *cmd, const char *args) {
         if (!value) return 400;
         switch (type) {
             case SECTION_TYPE_FLOAT:
-                printf("{\"key\":%f}\n", *(float*)value);
+                printraw("{\"key\":%f}\n", *(float*)value);
                 break;
             case SECTION_TYPE_STRING:
-                printf("{\"key\":\"%s\"}\n", (char*)value);
+                printraw("{\"key\":\"%s\"}\n", (char*)value);
                 break;
             default:
                 return 400;
         }
     } else {
         // No args, gather all data
-        printf("{\"sections\":[");
+        printraw("{\"sections\":[");
         for (ConfigSection s = 0; s < NUM_CONFIG_SECTIONS; s++) {
             // Section header, based on name
             const char *sectionStr;
             ConfigSectionType type = config_sectionToString(s, &sectionStr);
-            printf("{\"name\":\"%s\",\"keys\":[", sectionStr);
+            printraw("{\"name\":\"%s\",\"keys\":[", sectionStr);
             switch (type) {
                 case SECTION_TYPE_FLOAT: {
                     float *section = getSectionMem(s);
                     if (!section) return 400;
-                    for (uint v = 0; v < FLOAT_SECTOR_SIZE; v++) {
+                    for (u32 v = 0; v < CONFIG_SECTION_SIZE; v++) {
                         // Read values, up until we hit the end of the data (signified by FLAG_END) or end of the sector
-                        if (section[v + 1] != FLAG_END && v < FLOAT_SECTOR_SIZE - 1) {
+                        if (section[v + 1] != CONFIG_END_MAGIC && v < CONFIG_SECTION_SIZE - 1) {
                             // For float sectors we need to check for finite values and change them to null because json is dumb
-                            isfinite(section[v]) ? printf("%f,", section[v]) : printf("null,");
+                            isfinite(section[v]) ? printraw("%f,", section[v]) : printraw("null,");
                         } else {
                             if (s < NUM_CONFIG_SECTIONS - 1) {
-                                isfinite(section[v]) ? printf("%f]},", section[v]) : printf("null]},");
+                                isfinite(section[v]) ? printraw("%f]},", section[v]) : printraw("null]},");
                             } else {
-                                isfinite(section[v]) ? printf("%f]}]}\n", section[v]) : printf("null]}]}\n");
+                                isfinite(section[v]) ? printraw("%f]}]}\n", section[v]) : printraw("null]}]}\n");
                             }
                             break;
                         }
@@ -89,13 +84,17 @@ int api_get_config(const char *cmd, const char *args) {
                     switch (s) {
                         case CONFIG_WIFLY:
                             if (s < NUM_CONFIG_SECTIONS - 1) {
-                                printf("\"%s\",\"%s\"]},", flash.wifly_ssid, flash.wifly_pass);
+                                printraw("\"%s\",\"%s\"]},", config.ssid, config.pass);
                             } else {
-                                printf("\"%s\",\"%s\"]}]}\n", flash.wifly_ssid, flash.wifly_pass);
+                                printraw("\"%s\",\"%s\"]}]}\n", config.ssid, config.pass);
                             }
                         default:
                             break;
                     }
+                    break;
+                }
+                default: {
+                    return 500;
                 }
             }
         }

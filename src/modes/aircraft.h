@@ -1,5 +1,4 @@
-#ifndef __AIRCRAFT_H
-#define __AIRCRAFT_H
+#pragma once
 
 #include <stdbool.h>
 
@@ -42,5 +41,3 @@ typedef struct Aircraft {
 } Aircraft;
 
 extern Aircraft aircraft;
-
-#endif // __AIRCRAFT_H

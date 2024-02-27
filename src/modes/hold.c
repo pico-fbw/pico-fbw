@@ -3,35 +3,58 @@
  * Licensed under the GNU AGPL-3.0
 */
 
-#include <stdbool.h>
-#include <stdint.h>
 #include <math.h>
-#include "pico/time.h"
+#include "platform/int.h"
+#include "platform/time.h"
 
-#include "io/flash.h"
+#include "io/gps.h"
 
 #include "lib/pid.h"
 
+#include "sys/configuration.h"
 #include "sys/log.h"
 #include "sys/throttle.h"
 
 #include "modes/auto.h"
 #include "modes/flight.h"
 
-#include "modes/hold.h"
+#include "hold.h"
 
-static uint8_t turnStatus = HOLD_TURN_UNSCHEDULED;
+// The amount of time (in seconds) that the aircraft will fly straight for in the holding pattern, before turning back around 180 degrees.
+#define HOLD_TIME_PER_LEG_S 30
+
+// The bank angle to turn at when making a 180 in the holding pattern--needs to be positive!
+#define HOLD_TURN_BANK_ANGLE 25
+// The bank angle to turn at the end of the turn when we are about to intercept the heading--also needs to be positive!
+#define HOLD_TURN_SLOW_BANK_ANGLE 5
+
+// The value (in degrees) within which the bank angle will begin to be decreased.
+#define HOLD_HEADING_DECREASE_WITHIN 10
+
+// The value (in degrees) within which the heading will be considered intercepted.
+#define HOLD_HEADING_INTERCEPT_WITHIN 2
+
+typedef enum HoldStatus {
+    HOLD_AWAITING_TURN,
+    HOLD_TURN_BEGUN,
+    HOLD_TURN_INPROGRESS,
+    HOLD_TURN_ENDING,
+    HOLD_TURN_STABILIZING,
+    HOLD_TURN_UNSCHEDULED
+} HoldStatus;
+
+static HoldStatus turnStatus = HOLD_TURN_UNSCHEDULED;
 
 static float oldTrack;
 static float targetTrack;
-static int targetAlt;
+static i32 targetAlt;
 
 static double rollSet;
 
 static PIDController vertGuid;
 
-// Callback for when a turnaround should be completed in a holding pattern.
-static int64_t turnAround(alarm_id_t id, void *data) {
+// Callback for when a turnaround should be completed in a holding pattern
+static i32 turnAround(u32 id) {
     // Get current track (beginning of the turn)
     oldTrack = gps.track;
     // Set our target heading based on this (with wrap protection)
@@ -70,7 +93,7 @@ void hold_update() {
         case HOLD_TURN_BEGUN:
             // Slowly ease into the turn
             if (rollSet <= HOLD_TURN_BANK_ANGLE) {
-                rollSet += (HOLD_TURN_BANK_ANGLE * flash.control[CONTROL_RUDDER_SENSITIVITY]);
+                rollSet += (HOLD_TURN_BANK_ANGLE * config.control[CONTROL_RUDDER_SENSITIVITY]);
             } else {
                 // We've reached the desired angle, now we need to wait for the turn to complete
                 turnStatus = HOLD_TURN_INPROGRESS;
@@ -85,7 +108,7 @@ void hold_update() {
         case HOLD_TURN_ENDING:
             // Slowly decrease the turn
             if (rollSet >= HOLD_TURN_SLOW_BANK_ANGLE) {
-                rollSet -= (HOLD_TURN_BANK_ANGLE * flash.control[CONTROL_RUDDER_SENSITIVITY]);
+                rollSet -= (HOLD_TURN_BANK_ANGLE * config.control[CONTROL_RUDDER_SENSITIVITY]);
             }
             // Move on to stabilization once we've intercepted the target heading
             if (fabsf(targetTrack - gps.track) <= HOLD_HEADING_INTERCEPT_WITHIN) {
@@ -95,11 +118,11 @@ void hold_update() {
         case HOLD_TURN_STABILIZING:
             // Stabilize the turn back to 0 degrees of bank, then mark it as completed (unscheduled)
             if (rollSet >= 0) {
-                rollSet -= (HOLD_TURN_BANK_ANGLE * flash.control[CONTROL_RUDDER_SENSITIVITY]);
+                rollSet -= (HOLD_TURN_BANK_ANGLE * config.control[CONTROL_RUDDER_SENSITIVITY]);
             }
             break;
         case HOLD_TURN_UNSCHEDULED:
-            if (add_alarm_in_ms((HOLD_TIME_PER_LEG_S * 1000), turnAround, NULL, true) >= 0) {
+            if (callback_in_ms((HOLD_TIME_PER_LEG_S * 1000), turnAround) >= 0) {
                 turnStatus = HOLD_AWAITING_TURN;
             }
             break;

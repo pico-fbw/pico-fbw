@@ -3,13 +3,13 @@
  * Licensed under the GNU AGPL-3.0
 */
 
-#include <stdio.h>
-
 #include "modes/aircraft.h"
 
-#include "sys/api/cmds/GET/get_mode.h"
+#include "sys/print.h"
 
-int api_get_mode(const char *cmd, const char *args) {
-    printf("{\"mode\":%d}\n", aircraft.mode);
+#include "get_mode.h"
+
+i32 api_get_mode(const char *cmd, const char *args) {
+    printraw("{\"mode\":%d}\n", aircraft.mode);
     return -1;
 }

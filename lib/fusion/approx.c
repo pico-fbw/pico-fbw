@@ -12,10 +12,10 @@
 */
 
 #include <math.h>
-#include <stdint.h>
+#include "platform/int.h"
 #include <stdlib.h>
 
-#include "lib/fusion/approx.h"
+#include "approx.h"
 
 // function returns an approximation to angle(deg)=asin(x) for x in the range -1 <= x <= 1
 // and returns -90 <= angle <= 90 deg
@@ -55,9 +55,9 @@ float facos_deg(float x)
 float fatan_deg(float x)
 {
     float   fangledeg;                  // compute computed (deg)
-    int8_t    ixisnegative;             // argument x is negative
-    int8_t    ixexceeds1;               // argument x is greater than 1.0
-    int8_t    ixmapped;                 // argument in range tan(15 deg) to tan(45 deg)=1.0
+    i8    ixisnegative;             // argument x is negative
+    i8    ixexceeds1;               // argument x is greater than 1.0
+    i8    ixmapped;                 // argument in range tan(15 deg) to tan(45 deg)=1.0
 #define TAN15DEG    0.26794919243F      // tan(15 deg) = 2 - sqrt(3)
 #define TAN30DEG    0.57735026919F      // tan(30 deg) = 1/sqrt(3)
     // reset all flags

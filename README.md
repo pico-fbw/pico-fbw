@@ -48,7 +48,7 @@ This binary is pre-built so you can drag and drop it onto your Pico as-is, but b
 
 ## Setup
 
-The Pico stands in the middle, between your radio reciever and output devices. Instead of your servos, ESC, and such being wired up directly to your reciever, instead, your reciever is wired up to the Pico so it can recieve and compute those inputs, and your output devices are also wired up to the Pico so it can control them.
+The Pico stands in the middle, between your radio receiver and output devices. Instead of your servos, ESC, and such being wired up directly to your receiver, instead, your receiver is wired up to the Pico so it can recieve and compute those inputs, and your output devices are also wired up to the Pico so it can control them.
 
 It may seem daunting to to modify your existing setup to incorporate this, but rest assured, it is relatively simple and will not take you long. I've created a guide for you to check out [here](https://github.com/MylesAndMore/pico-fbw/wiki/_Setup) that outlines exactly how to wire things up and get going with the project!
 
@@ -61,5 +61,6 @@ You can find all of the information about building and configuring the project o
 If you experience any issues, have any ideas for new features, or just any general feedback about the project in general, don't hesitate to reach out! You can submit an issue on our [issues page](https://github.com/MylesAndMore/pico-fbw/issues/new)--just please be sure to label your issure accordingly. And if you are a developer looking to suggest or improve on our code, feel free to leave me an issue or [pull request](https://github.com/MylesAndMore/pico-fbw/compare)!
 
 TODO: update/restucture, more technical info, summary at top etc
+TODO: check license info before release, ensure all files referenced exist and are true
 
 ## Technical Overview

@@ -3,22 +3,18 @@
  * Licensed under the GNU AGPL-3.0
 */
 
-#include <stdio.h>
-#include <string.h>
-#include "pico/time.h"
+#include "platform/sys.h"
 
-#include "hardware/watchdog.h"
+#include "sys/configuration.h"
+#include "sys/print.h"
+#include "sys/runtime.h"
 
-#include "io/flash.h"
-#include "io/serial.h"
-#include "io/platform.h"
-
-#include "sys/api/cmds/MISC/reset.h"
+#include "reset.h"
 
 void api_reset(const char *cmd, const char *args) {
-    printf("This will erase ALL user data stored on the device!\nReset will occur in 10 seconds...power off the device to cancel.\n");
-    platform_sleep_ms(10000, false);
-    flash_erase();
-    printf("Reset complete. Shutting down...\n");
-    platform_shutdown();
+    printraw("This will erase ALL user data stored on the device!\nReset will occur in 10 seconds...power off the device to cancel.\n");
+    runtime_sleep_ms(10000, false);
+    config_reset();
+    printraw("Reset complete. Shutting down...\n");
+    sys_shutdown();
 }

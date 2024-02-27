@@ -1,5 +1,6 @@
-#ifndef __NORMAL_H
-#define __NORMAL_H
+#pragma once
+
+#include <stdbool.h>
 
 /**
  * Initializes normal mode.
@@ -26,5 +27,3 @@ void normal_deinit();
  * @return true if the setpoints were adjusted, false if it was prevented by the user (already manually inputting).
 */
 bool normal_set(float roll, float pitch, float yaw, float throttle, bool useThrottle);
-
-#endif // __NORMAL_H

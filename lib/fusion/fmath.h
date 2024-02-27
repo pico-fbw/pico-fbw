@@ -1,5 +1,4 @@
-#ifndef __FMATH_H
-#define __FMATH_H
+#pragma once
 
 #include "fusion.h"
 
@@ -72,5 +71,3 @@ void fRun_6DOF_GB_BASIC(struct SV_6DOF_GB_BASIC *pthisSV, struct MagSensor *pthi
 void fRun_6DOF_GY_KALMAN(struct SV_6DOF_GY_KALMAN *pthisSV, struct AccelSensor *pthisAccel, struct GyroSensor *pthisGyro);
 void fRun_9DOF_GBY_KALMAN(struct SV_9DOF_GBY_KALMAN *pthisSV, struct AccelSensor *pthisAccel, struct MagSensor *pthisMag, struct GyroSensor *pthisGyro, struct MagCalibration *pthisMagCal);
 ///@}
-
-#endif   // #ifndef __FMATH_H

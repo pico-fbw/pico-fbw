@@ -1,6 +1,5 @@
-#ifndef __GET_LOGS_H
-#define __GET_LOGS_H
+#pragma once
 
-int api_get_logs(const char *cmd, const char *args);
+#include "platform/int.h"
 
-#endif // __GET_LOGS_H
+i32 api_get_logs(const char *cmd, const char *args);

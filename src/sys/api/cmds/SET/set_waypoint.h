@@ -1,6 +1,5 @@
-#ifndef __SET_WAYPOINT_H
-#define __SET_WAYPOINT_H
+#pragma once
 
-int api_set_waypoint(const char *cmd, const char *args);
+#include "platform/int.h"
 
-#endif // __SET_WAYPOINT_H
+i32 api_set_waypoint(const char *cmd, const char *args);

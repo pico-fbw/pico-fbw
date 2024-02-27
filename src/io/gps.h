@@ -1,8 +1,7 @@
-#ifndef __GPS_H
-#define __GPS_H
+#pragma once
 
 #include <stdbool.h>
-#include "pico/types.h"
+#include "platform/int.h"
 
 #define GPS_COMMAND_TYPE_MIN GPS_COMMAND_TYPE_NONE
 typedef enum GPSCommandType {
@@ -27,29 +26,24 @@ typedef enum GPSCommandType {
 #define M_TO_FT 3.28084f // Meters to feet conversion constant
 
 typedef bool (*gps_init_t)();
-typedef void (*gps_deinit_t)();
 typedef void (*gps_update_t)();
-typedef int (*gps_calibrateAltOffset_t)(uint);
-typedef bool (*gps_isSupported_t)();
+typedef i32 (*gps_calibrate_alt_offset_t)(u32);
+typedef bool (*gps_is_supported_t)();
 
 typedef struct GPS {
     long double lat; // -90 to 90 deg. (Read-only)
     long double lng; // -180 to 180 deg. (Read-only)
-    int alt; // MSL, ft. (Read-only)
+    i32 alt; // MSL, ft. (Read-only)
     float speed; // Groundspeed, kts. (Read-only)
     float track; // True (NOT magnetic) heading, 0 to 360 deg. (Read-only)
     float pdop, hdop, vdop; // GPS DOP (dilution of precision) measurements for position, horizontal, and vertical (Read-only)
-    int altOffset; // This is a positive value (basically where the GPS is MSL) or possibly zero if no calibration has been performed. (Read-only)
-    bool altOffset_calibrated; // (Read-only)
+    i32 altOffset; // This is a positive value (basically where the GPS is MSL) or possibly zero if no calibration has been performed. (Read-only)
+    bool altOffsetCalibrated; // (Read-only)
     /**
      * Initializes the GPS module.
      * @return true if successful, false if not.
     */
     gps_init_t init;
-    /**
-     * Deinitializes the GPS module.
-    */
-    gps_deinit_t deinit;
     /**
      * Obtains updated data from the GPS module and stores it in this GPS struct.
     */
@@ -57,15 +51,13 @@ typedef struct GPS {
     /**
      * Calibrates the altitude offset from the GPS.
      * @param num_samples the number of samples to take.
-     * @return 0 if successful, PICO_ERROR_TIMEOUT if a timeout occured, or PICO_ERROR_GENERIC otherwise.
+     * @return 0 if successful, -1 if a timeout occured, or -2 otherwise.
     */
-    gps_calibrateAltOffset_t calibrateAltOffset;
+    gps_calibrate_alt_offset_t calibrate_alt_offset;
     /**
      * @return whether or not the GPS sensor is supported in the current system configuration.
     */
-    gps_isSupported_t isSupported;
+    gps_is_supported_t is_supported;
 } GPS;
 
 extern GPS gps;
-
-#endif // __GPS_H

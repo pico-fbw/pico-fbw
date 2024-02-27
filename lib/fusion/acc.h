@@ -1,7 +1,6 @@
-#ifndef __ACC_H
-#define __ACC_H
+#pragma once
 
-#include <stdint.h>
+#include "platform/int.h"
 
 // https://www.nxp.com/docs/en/application-note/AN5286.pdf
 // https://www.nxp.com/docs/en/application-note/AN4399.pdf
@@ -15,9 +14,9 @@ typedef struct
 {
 	float fGsStored[MAX_ACCEL_CAL_ORIENTATIONS][3];	///< uncalibrated accelerometer measurements (g)
 	float fSumGs[3];				///< averaging sum for current storage location
-	int16_t iStoreCounter;				///< number of remaining iterations at FUSION_HZ to average measurement
-	int16_t iStoreLocation;				///< -1 for none, 0 to 11 for the 12 storage locations
-	int16_t iStoreFlags;				///< denotes which measurements are present
+	i16 iStoreCounter;				///< number of remaining iterations at FUSION_HZ to average measurement
+	i16 iStoreLocation;				///< -1 for none, 0 to 11 for the 12 storage locations
+	i16 iStoreFlags;				///< denotes which measurements are present
 } AccelBuffer;
 
 /// precision accelerometer calibration structure
@@ -79,5 +78,3 @@ void fComputeAccelCalibration10(
     AccelCalibration *pthisAccelCal,             ///< Accelerometer calibration parameter structure
     struct AccelSensor* pthisAccel                      ///< Pointer to the accelerometer input/state structure
 );
-
-#endif // __ACC_H 

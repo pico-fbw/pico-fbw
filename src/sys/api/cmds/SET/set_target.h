@@ -1,6 +1,5 @@
-#ifndef __SET_TARGET_H
-#define __SET_TARGET_H
+#pragma once
 
-int api_set_target(const char *cmd, const char *args);
+#include "platform/int.h"
 
-#endif // __SET_TARGET_H
+i32 api_set_target(const char *cmd, const char *args);

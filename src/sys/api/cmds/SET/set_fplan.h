@@ -1,6 +1,5 @@
-#ifndef __SET_FPLAN_H
-#define __SET_FPLAN_H
+#pragma once
 
-int api_set_fplan(const char *cmd, const char *args);
+#include "platform/int.h"
 
-#endif // __SET_FPLAN_H
+i32 api_set_fplan(const char *cmd, const char *args);

@@ -5,6 +5,23 @@
 ; Huge thanks to 'GitJer' on GitHub for writing this PIO and most of the PWM input code!
 ; Check them out here: https://github.com/GitJer/Some_RPI-Pico_stuff/tree/main/PwmIn/PwmIn_4pins
 
+/**
+ * loop:
+ *     reset y, the 'timer' for the pulsewidth (high period)
+ *     reset x, the 'timer' for the low period. (high + low = period)
+ *     wait for a 0, then wait for a 1: this is the rising edge
+ *     loop:
+ *         decrement y timer
+ *         test for falling edge
+ *     y timer value is the pulse width (actually, (0xFFFFFFFF - y)*2/125MHz is the pulse width)
+ *     loop:
+ *         test for rising edge
+ *         decrement x timer
+ *     x timer is the low period (actually, (0xFFFFFFFF - x)*2/125MHz is the low period)
+ *     push y and x to Rx FIFO
+ *     notify via IRQ
+*/
+
 .program pwm
 .wrap_target
 start:
@@ -28,21 +45,3 @@ timerstop:
     push noblock        ; push the ISR into the Rx FIFO
     irq 0 rel           ; notify the c-program via IRQ
 .wrap
-
-/**
- * Pseudo-code:
- * loop:
- *     reset y, the 'timer' for the pulsewidth (high period)
- *     reset x, the 'timer' for the low period. (high + low = period)
- *     wait for a 0, then wait for a 1: this is the rising edge
- *     loop:
- *         decrement y timer
- *         test for falling edge
- *     y timer value is the pulse width (actually, (0xFFFFFFFF - y)*2/125MHz is the pulse width)
- *     loop:
- *         test for rising edge
- *         decrement x timer
- *     x timer is the low period (actually, (0xFFFFFFFF - x)*2/125MHz is the low period)
- *     push y and x to Rx FIFO
- *     notify via IRQ
-*/

@@ -1,7 +1,7 @@
-#ifndef __AAHRS_H
-#define __AAHRS_H
+#pragma once
 
 #include <stdbool.h>
+#include "platform/int.h"
 
 // The number of samples to average when calculating the gyroscope offset
 #define GYRO_AVG_SAMPLES 100
@@ -23,13 +23,13 @@ typedef enum IMUAxis {
     IMU_AXIS_NONE,
     IMU_AXIS_ROLL,
     IMU_AXIS_PITCH,
-    IMU_AXIS_YAW
+    IMU_AXIS_YAW,
 } IMUAxis;
 
 #define BARO_MODEL_MIN BARO_MODEL_NONE // No barometer is a valid configuration
 typedef enum BaroModel {
     BARO_MODEL_NONE,
-    BARO_MODEL_DPS310
+    BARO_MODEL_DPS310,
 } BaroModel;
 #define BARO_MODEL_MAX BARO_MODEL_DPS310
 
@@ -76,25 +76,3 @@ extern AAHRS aahrs;
 // Obtains the difference between two angles in degrees.
 #define ANGLE_DIFFERENCE(a1, a2) \
     ((a2 - a1 + 180) % 360 - 180) < -180 ? ((a2 - a1 + 180) % 360 - 180) + 360 : ((a2 - a1 + 180) % 360 - 180)
-
-// Prints a vector (1-dimensional array)
-#define PRINT_VECTOR(vector) \
-    do { \
-        for (uint i = 0; i < count_of(vector); i++) { \
-            printf("%f ", vector[i]); \
-        } \
-        printf("\n"); \
-    } while (0)
-
-// Prints a matrix (2-dimensional array)
-#define PRINT_MATRIX(matrix) \
-do { \
-    for (uint i = 0; i < count_of(matrix); i++) { \
-        for (uint j = 0; j < count_of(matrix[0]); j++) { \
-            printf("%f ", matrix[i][j]); \
-        } \
-        printf("\n"); \
-    } \
-} while (0)
-
-#endif // __AAHRS_H

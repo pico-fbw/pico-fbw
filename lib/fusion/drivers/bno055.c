@@ -13,16 +13,13 @@
  * Licensed under the GNU AGPL-3.0
 */
 
-#include <stdio.h>
-#include "pico/platform.h"
-#include "pico/types.h"
+#include "platform/time.h"
 
-#include "io/flash.h"
-#include "io/platform.h"
-
+#include "sys/boot.h"
 #include "sys/log.h"
+#include "sys/print.h"
 
-#include "lib/fusion/drivers/bno055.h"
+#include "bno055.h"
 
 /* 
    BNO055 
@@ -68,34 +65,32 @@ const registerWriteList_t BNO055_CONFIGURE[] = {
 
 #define BNO055_COUNTS_PER_DPS 16 // (datasheet pg. 35)
 
-int8_t BNO055_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
-    int32_t status;
-    uint8_t reg;
-    if (platform_boot_type() == BOOT_WATCHDOG) {
-        return SENSOR_ERROR_INIT; // Don't halt the system as it may be in flight, but do not initialize the sensor further
-    } else if (platform_boot_type() != BOOT_COLD) {
-        // The BNO055 has a bug in where it can't be soft-reset with an I2C command, it must either be hard-reset with the RESET pin
+i8 BNO055_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
+    i32 status;
+    byte reg;
+    if (boot_type() != BOOT_COLD) {
+        // The BNO055 has a bug where it can't be soft-reset with an I2C command, it must either be hard-reset with the RESET pin
         // (which we don't have access to) or simply power cycled, so we must force the user to power-cycle the device
-        // because it's likely still running from this previous soft-reboot
+        // because it's likely still running from a previous soft-reboot
         log_message(FATAL, "Please reboot.", 1000, 0, true);
         return SENSOR_ERROR_INIT;
     }
     // Wait if BNO055 isn't ready yet (takes 850ms)
-    while (time_us_64() < (850 * 1000)) tight_loop_contents();
+    while (time_us() < (850 * 1000));
     // Check that the sensor comms are okay and that it's a BNO055
-    if (print.aahrs) printf("[BNO055] initializing...");
-    for (uint i = 0; i < DRIVER_INIT_ATTEMPTS; i++) {
-        if (print.aahrs) printf("attempt %d ", i);
+    printfbw(aahrs, "[BNO055] initializing...");
+    for (u32 i = 0; i < DRIVER_INIT_ATTEMPTS; i++) {
+        if (shouldPrint.aahrs) printraw("attempt %d ", i);
         status = driver_read_register(&sensor->deviceInfo, sensor->addr, BNO055_CHIP_ID_READ[0].readFrom, BNO055_CHIP_ID_READ[0].numBytes, &reg);
         if (status == SENSOR_ERROR_NONE && reg == BNO055_CHIP_ID_EXPECTED) break;
     }
-    if (print.aahrs) printf("\n");
+    if (shouldPrint.aahrs) printraw("\n");
     if (status != SENSOR_ERROR_NONE) {
-        if (print.fbw) printf("[BNO055] ERROR: address not acknowledged! (no/wrong device present?)\n");
+        printfbw(aahrs, "[BNO055] ERROR: address not acknowledged! (no/wrong device present?)");
         return status;
     }
     if (reg != BNO055_CHIP_ID_EXPECTED) {
-        if (print.fbw) printf("[BNO055] ERROR: could not verify chip!\n");
+        printfbw(aahrs, "[BNO055] ERROR: could not verify chip!");
         return SENSOR_ERROR_INIT;
     }
     // Set up sensor data for fusion algorithms later
@@ -118,14 +113,14 @@ int8_t BNO055_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
     #endif
 
     // Configure sensor
-    if (print.aahrs) printf("[BNO055] configuring...\n");
+    printfbw(aahrs, "[BNO055] configuring...");
     status = driver_write_list(&sensor->deviceInfo, sensor->addr, BNO055_CONFIGURE);
-    sleep_ms(200);
+    sleep_ms_blocking(200);
     // Read back mode change
-    uint8_t mode;
+    byte mode;
     driver_read_register(&sensor->deviceInfo, sensor->addr, BNO055_OPR_MODE, 1, &mode);
     if (mode != BNO055_OPERATION_MODE_AMG) {
-        if (print.aahrs) printf("[BNO055] ERROR: could not configure sensor mode %02X (still %02X)!\n", BNO055_OPERATION_MODE_AMG, mode);
+        printfbw(aahrs, "[BNO055] ERROR: could not configure sensor mode %02X (still %02X)!", BNO055_OPERATION_MODE_AMG, mode);
         return SENSOR_ERROR_INIT;
     }
     #if F_USING_ACCEL
@@ -137,20 +132,20 @@ int8_t BNO055_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
     #if F_USING_GYRO
         sfg->Gyro.isEnabled = true;
     #endif
-    if (print.aahrs) printf("[BNO055] sensor ready!\n");
+    printfbw(aahrs, "[BNO055] sensor ready!");
     sensor->isInitialized = F_USING_ACCEL | F_USING_MAG | F_USING_GYRO;
     return status;
 }
 
 #if F_USING_ACCEL
-int8_t BNO055_read_accel(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
+i8 BNO055_read_accel(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
     if (!(sensor->isInitialized & F_USING_ACCEL)) return SENSOR_ERROR_INIT;
-    uint8_t buf[6];
-    int32_t status = driver_read(&sensor->deviceInfo, sensor->addr, BNO055_ACCEL_DATA_READ, buf);
+    byte buf[6];
+    i32 status = driver_read(&sensor->deviceInfo, sensor->addr, BNO055_ACCEL_DATA_READ, buf);
     if (status == SENSOR_ERROR_NONE) {
-        int16_t sample[3];
+        i16 sample[3];
         // Shift LSB and MSB together
-        for (uint i = 0; i < count_of(sample); i++) {
+        for (u32 i = 0; i < count_of(sample); i++) {
             sample[i] = (buf[i * 2 + 1] << 8) | buf[i * 2]; // Casting breaks things here for some reason?
         }
         // Normalize data and add to FIFO
@@ -162,13 +157,13 @@ int8_t BNO055_read_accel(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg
 #endif
 
 #if F_USING_MAG
-int8_t BNO055_read_mag(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
+i8 BNO055_read_mag(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
     if (!(sensor->isInitialized & F_USING_MAG)) return SENSOR_ERROR_INIT;
-    uint8_t buf[6];
-    int32_t status = driver_read(&sensor->deviceInfo, sensor->addr, BNO055_MAG_DATA_READ, buf);
+    byte buf[6];
+    i32 status = driver_read(&sensor->deviceInfo, sensor->addr, BNO055_MAG_DATA_READ, buf);
     if (status == SENSOR_ERROR_NONE) {
-        int16_t sample[3];
-        for (uint i = 0; i < count_of(sample); i++) {
+        i16 sample[3];
+        for (u32 i = 0; i < count_of(sample); i++) {
             sample[i] = (buf[i * 2 + 1] << 8) | buf[i * 2];
         }
         conditionSample(sample);
@@ -179,13 +174,13 @@ int8_t BNO055_read_mag(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) 
 #endif
 
 #if F_USING_GYRO
-int8_t BNO055_read_gyro(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
+i8 BNO055_read_gyro(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
     if (!(sensor->isInitialized & F_USING_GYRO)) return SENSOR_ERROR_INIT;
-    uint8_t buf[6];
-    int32_t status = driver_read(&sensor->deviceInfo, sensor->addr, BNO055_GYRO_DATA_READ, buf);
+    byte buf[6];
+    i32 status = driver_read(&sensor->deviceInfo, sensor->addr, BNO055_GYRO_DATA_READ, buf);
     if (status == SENSOR_ERROR_NONE) {
-        int16_t sample[3];
-        for (uint i = 0; i < count_of(sample); i++) {
+        i16 sample[3];
+        for (u32 i = 0; i < count_of(sample); i++) {
             sample[i] = (buf[i * 2 + 1] << 8) | buf[i * 2];
         }
         conditionSample(sample);
@@ -195,8 +190,8 @@ int8_t BNO055_read_gyro(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg)
 }
 #endif
 
-int8_t BNO055_read(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
-    int8_t status_accel = 0, status_mag = 0, status_gyro = 0;
+i8 BNO055_read(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
+    i8 status_accel = 0, status_mag = 0, status_gyro = 0;
     #if F_USING_ACCEL
         status_accel = BNO055_read_accel(sensor, sfg);
     #endif

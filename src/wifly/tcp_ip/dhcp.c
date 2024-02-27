@@ -13,15 +13,15 @@
 //  https://www.ietf.org/rfc/rfc2131.txt
 //  https://tools.ietf.org/html/rfc2132 -- DHCP Options and BOOTP Vendor Extensions
 
-#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include "platform/int.h"
 
 #include "cyw43_config.h"
 #include "lwip/udp.h"
 
-#include "io/flash.h"
+#include "sys/print.h"
 
 #include "wifly/wifly.h"
 
@@ -60,24 +60,24 @@
 #define MAKE_IP4(a, b, c, d) ((a) << 24 | (b) << 16 | (c) << 8 | (d))
 
 typedef struct {
-    uint8_t op; // message opcode
-    uint8_t htype; // hardware address type
-    uint8_t hlen; // hardware address length
-    uint8_t hops;
-    uint32_t xid; // transaction id, chosen by client
-    uint16_t secs; // client seconds elapsed
-    uint16_t flags;
-    uint8_t ciaddr[4]; // client IP address
-    uint8_t yiaddr[4]; // your IP address
-    uint8_t siaddr[4]; // next server IP address
-    uint8_t giaddr[4]; // relay agent IP address
-    uint8_t chaddr[16]; // client hardware address
-    uint8_t sname[64]; // server host name
-    uint8_t file[128]; // boot file name
-    uint8_t options[312]; // optional parameters, variable, starts with magic
+    u8 op; // message opcode
+    u8 htype; // hardware address type
+    u8 hlen; // hardware address length
+    u8 hops;
+    u32 xid; // transaction id, chosen by client
+    u16 secs; // client seconds elapsed
+    u16 flags;
+    u8 ciaddr[4]; // client IP address
+    u8 yiaddr[4]; // your IP address
+    u8 siaddr[4]; // next server IP address
+    u8 giaddr[4]; // relay agent IP address
+    u8 chaddr[16]; // client hardware address
+    u8 sname[64]; // server host name
+    u8 file[128]; // boot file name
+    u8 options[312]; // optional parameters, variable, starts with magic
 } dhcp_msg_t;
 
-static int dhcp_socket_new_dgram(struct udp_pcb **udp, void *cb_data, udp_recv_fn cb_udp_recv) {
+static i32 dhcp_socket_new_dgram(struct udp_pcb **udp, void *cb_data, udp_recv_fn cb_udp_recv) {
     // family is AF_INET
     // type is SOCK_DGRAM
 
@@ -99,11 +99,11 @@ static void dhcp_socket_free(struct udp_pcb **udp) {
     }
 }
 
-static int dhcp_socket_bind(struct udp_pcb **udp, uint16_t port) {
+static i32 dhcp_socket_bind(struct udp_pcb **udp, u16 port) {
     return udp_bind(*udp, IP_ANY_TYPE, port);
 }
 
-static int dhcp_socket_sendto(struct udp_pcb **udp, const void *buf, size_t len, uint32_t ip, uint16_t port) {
+static i32 dhcp_socket_sendto(struct udp_pcb **udp, const void *buf, size_t len, u32 ip, u16 port) {
     if (len > 0xffff) {
         len = 0xffff;
     }
@@ -128,8 +128,8 @@ static int dhcp_socket_sendto(struct udp_pcb **udp, const void *buf, size_t len,
     return len;
 }
 
-static uint8_t *opt_find(uint8_t *opt, uint8_t cmd) {
-    for (int i = 0; i < 308 && opt[i] != DHCP_OPT_END;) {
+static u8 *opt_find(u8 *opt, u8 cmd) {
+    for (i32 i = 0; i < 308 && opt[i] != DHCP_OPT_END;) {
         if (opt[i] == cmd) {
             return &opt[i];
         }
@@ -138,24 +138,24 @@ static uint8_t *opt_find(uint8_t *opt, uint8_t cmd) {
     return NULL;
 }
 
-static void opt_write_n(uint8_t **opt, uint8_t cmd, size_t n, const void *data) {
-    uint8_t *o = *opt;
+static void opt_write_n(u8 **opt, u8 cmd, size_t n, const void *data) {
+    u8 *o = *opt;
     *o++ = cmd;
     *o++ = n;
     memcpy(o, data, n);
     *opt = o + n;
 }
 
-static void opt_write_u8(uint8_t **opt, uint8_t cmd, uint8_t val) {
-    uint8_t *o = *opt;
+static void opt_write_u8(u8 **opt, u8 cmd, u8 val) {
+    u8 *o = *opt;
     *o++ = cmd;
     *o++ = 1;
     *o++ = val;
     *opt = o;
 }
 
-static void opt_write_u32(uint8_t **opt, uint8_t cmd, uint32_t val) {
-    uint8_t *o = *opt;
+static void opt_write_u32(u8 **opt, u8 cmd, u32 val) {
+    u8 *o = *opt;
     *o++ = cmd;
     *o++ = 4;
     *o++ = val >> 24;
@@ -187,10 +187,10 @@ static void dhcp_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p,
     dhcp_msg.op = DHCPOFFER;
     memcpy(&dhcp_msg.yiaddr, &ip4_addr_get_u32(ip_2_ip4(&d->ip)), 4);
 
-    uint8_t *opt = (uint8_t *)&dhcp_msg.options;
+    u8 *opt = (u8 *)&dhcp_msg.options;
     opt += 4; // assume magic cookie: 99, 130, 83, 99
 
-    uint8_t *msgtype = opt_find(opt, DHCP_OPT_MSG_TYPE);
+    u8 *msgtype = opt_find(opt, DHCP_OPT_MSG_TYPE);
     if (msgtype == NULL) {
         // A DHCP package without MSG_TYPE?
         goto ignore_request;
@@ -198,8 +198,8 @@ static void dhcp_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p,
 
     switch (msgtype[2]) {
         case DHCPDISCOVER: {
-            int yi = DHCPS_MAX_IP;
-            for (int i = 0; i < DHCPS_MAX_IP; ++i) {
+            i32 yi = DHCPS_MAX_IP;
+            for (i32 i = 0; i < DHCPS_MAX_IP; ++i) {
                 if (memcmp(d->lease[i].mac, dhcp_msg.chaddr, MAC_LEN) == 0) {
                     // MAC match, use this IP address
                     yi = i;
@@ -211,8 +211,8 @@ static void dhcp_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p,
                         // IP available
                         yi = i;
                     }
-                    uint32_t expiry = d->lease[i].expiry << 16 | 0xffff;
-                    if ((int32_t)(expiry - cyw43_hal_ticks_ms()) < 0) {
+                    u32 expiry = d->lease[i].expiry << 16 | 0xffff;
+                    if ((i32)(expiry - cyw43_hal_ticks_ms()) < 0) {
                         // IP expired, reuse it
                         memset(d->lease[i].mac, 0, MAC_LEN);
                         yi = i;
@@ -229,7 +229,7 @@ static void dhcp_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p,
         }
 
         case DHCPREQUEST: {
-            uint8_t *o = opt_find(opt, DHCP_OPT_REQUESTED_IP);
+            u8 *o = opt_find(opt, DHCP_OPT_REQUESTED_IP);
             if (o == NULL) {
                 // Should be NACK
                 goto ignore_request;
@@ -238,7 +238,7 @@ static void dhcp_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p,
                 // Should be NACK
                 goto ignore_request;
             }
-            uint8_t yi = o[5] - DHCPS_BASE_IP;
+            u8 yi = o[5] - DHCPS_BASE_IP;
             if (yi >= DHCPS_MAX_IP) {
                 // Should be NACK
                 goto ignore_request;
@@ -256,7 +256,7 @@ static void dhcp_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p,
             d->lease[yi].expiry = (cyw43_hal_ticks_ms() + DEFAULT_LEASE_TIME_S * 1000) >> 16;
             dhcp_msg.yiaddr[3] = DHCPS_BASE_IP + yi;
             opt_write_u8(&opt, DHCP_OPT_MSG_TYPE, DHCPACK);
-            if (print.network) printf("[dhcp] client connected: MAC=%02x:%02x:%02x:%02x:%02x:%02x IP=%u.%u.%u.%u\n",
+            printfbw(network, "[dhcp] client connected: MAC=%02x:%02x:%02x:%02x:%02x:%02x IP=%u.%u.%u.%u\n",
                 dhcp_msg.chaddr[0], dhcp_msg.chaddr[1], dhcp_msg.chaddr[2], dhcp_msg.chaddr[3], dhcp_msg.chaddr[4], dhcp_msg.chaddr[5],
                 dhcp_msg.yiaddr[0], dhcp_msg.yiaddr[1], dhcp_msg.yiaddr[2], dhcp_msg.yiaddr[3]);
             break;
@@ -272,7 +272,7 @@ static void dhcp_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p,
     opt_write_n(&opt, DHCP_OPT_DNS, 4, &ip4_addr_get_u32(ip_2_ip4(&d->ip))); // this server is the dns
     opt_write_u32(&opt, DHCP_OPT_IP_LEASE_TIME, DEFAULT_LEASE_TIME_S);
     *opt++ = DHCP_OPT_END;
-    dhcp_socket_sendto(&d->udp, &dhcp_msg, opt - (uint8_t *)&dhcp_msg, 0xffffffff, PORT_DHCP_CLIENT);
+    dhcp_socket_sendto(&d->udp, &dhcp_msg, opt - (u8 *)&dhcp_msg, 0xffffffff, PORT_DHCP_CLIENT);
 
 ignore_request:
     pbuf_free(p);

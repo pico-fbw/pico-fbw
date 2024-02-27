@@ -1,5 +1,6 @@
-#ifndef __TUNE_H
-#define __TUNE_H
+#pragma once
+
+#include <stdbool.h>
 
 /**
  * Executes one cycle of tune mode.
@@ -8,8 +9,6 @@ void tune_update();
 
 /**
  * Checks if the tuning mode has been run before.
- * @return true if calibration has been run previously, false if not.
+ * @return true if tuning has been run previously.
 */
-bool tune_isCalibrated();
-
-#endif // __TUNE_H
+bool tune_is_tuned();

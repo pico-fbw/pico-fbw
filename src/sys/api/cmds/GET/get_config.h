@@ -1,6 +1,5 @@
-#ifndef __GET_CONFIG_H
-#define __GET_CONFIG_H
+#pragma once
 
-int api_get_config(const char *cmd, const char *args);
+#include "platform/int.h"
 
-#endif // __GET_CONFIG_H
+i32 api_get_config(const char *cmd, const char *args);

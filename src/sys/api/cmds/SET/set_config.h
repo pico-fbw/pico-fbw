@@ -1,6 +1,5 @@
-#ifndef __SET_CONFIG_H
-#define __SET_CONFIG_H
+#pragma once
 
-int api_set_config(const char *cmd, const char *args);
+#include "platform/int.h"
 
-#endif // __SET_CONFIG_H
+i32 api_set_config(const char *cmd, const char *args);

@@ -6,13 +6,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "io/flash.h"
-
 #include "sys/configuration.h"
 
-#include "sys/api/cmds/SET/set_config.h"
+#include "set_config.h"
 
-int api_set_config(const char *cmd, const char *args) {
+i32 api_set_config(const char *cmd, const char *args) {
     if (args) {
         char section[64];
         char key[64];
@@ -21,9 +19,8 @@ int api_set_config(const char *cmd, const char *args) {
         if (sscanf(args, "%63s %63s %63s %15s", section, key, value, params) < 3) return 400;
         if (!config_set(section, key, value)) return 400;
         // Save to flash immediately if requested
-        if (strncasecmp(params, "-S", 2) == 0) {
+        if (strncasecmp(params, "-S", 2) == 0)
             goto save;
-        }
     } else {
         goto save; // No args, trigger a save to flash
     }
@@ -31,6 +28,6 @@ int api_set_config(const char *cmd, const char *args) {
 
     save:
         if (!config_validate()) return 400;
-        flash_save();
+        config_save();
         return 200;
 }

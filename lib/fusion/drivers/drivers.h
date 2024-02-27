@@ -1,14 +1,9 @@
-#ifndef __DRIVERS_H
-#define __DRIVERS_H
+#pragma once
 
-#include <stdint.h>
+#include "platform/int.h"
 
-#include "hardware/i2c.h"
-
-#define DRIVER_I2C i2c0 // The I2C bus to use for communicating with sensors
 #define DRIVER_FREQ_KHZ 400  // The frequency of the I2C bus in kHz
-#define DRIVER_TIMEOUT_US 50E3 // The maximum time in microseconds that the driver will wait for a response from the sensor
-#define DRIVER_INIT_ATTEMPTS 3 // The maximum number of attempts that the driver will make to initialize the sensor
+#define DRIVER_INIT_ATTEMPTS 5 // The maximum number of attempts that the driver will make to initialize the sensor
 
 /*******************************************************************************
  * Definitions
@@ -61,9 +56,9 @@ enum ESensorErrors
  */
 typedef struct
 {
-    uint16_t writeTo; /* Address where the value is writes to.*/
-    uint8_t value;    /* value. Note that value should be shifted based on the bit position.*/
-    uint8_t mask;     /* mask of the field to be set with given value.*/
+    u16 writeTo; /* Address where the value is writes to.*/
+    u8 value;    /* value. Note that value should be shifted based on the bit position.*/
+    u8 mask;     /* mask of the field to be set with given value.*/
 } registerWriteList_t;
 
 /*!
@@ -71,8 +66,8 @@ typedef struct
  */
 typedef struct
 {
-    uint16_t readFrom; /* Address where the value is read from .*/
-    uint8_t numBytes;  /* Number of bytes to read.*/
+    u16 readFrom; /* Address where the value is read from .*/
+    u8 numBytes;  /* Number of bytes to read.*/
 } registerReadList_t;
 
 /*!
@@ -87,12 +82,10 @@ typedef struct
 {
     registeridlefunction_t idleFunction;
     void *functionParam;
-    uint8_t deviceInstance;
+    u8 deviceInstance;
 } registerDeviceInfo_t;
 
 void driver_init();
-int32_t driver_read(registerDeviceInfo_t *devInfo, uint16_t peripheralAddress, const registerReadList_t *pReadList, uint8_t *pOutBuf);
-int32_t driver_read_register(registerDeviceInfo_t *devInfo, uint16_t peripheralAddress, uint8_t offset, uint8_t len, uint8_t *pOutBuf);
-int8_t driver_write_list(registerDeviceInfo_t *devInfo, uint16_t peripheralAddress, const registerWriteList_t *pRegWriteList);
-
-#endif //__DRIVERS_H
+i32 driver_read(registerDeviceInfo_t *devInfo, u16 peripheralAddress, const registerReadList_t *pReadList, u8 *pOutBuf);
+i32 driver_read_register(registerDeviceInfo_t *devInfo, u16 peripheralAddress, u8 offset, u8 len, u8 *pOutBuf);
+i8 driver_write_list(registerDeviceInfo_t *devInfo, u16 peripheralAddress, const registerWriteList_t *pRegWriteList);

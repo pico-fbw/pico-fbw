@@ -5,32 +5,27 @@
 
 #include <math.h>
 #include <stdlib.h>
-#include <stdint.h>
-#include <stdio.h>
 #include <string.h>
-#include "pico/time.h"
-
-#include "hardware/gpio.h"
-#include "hardware/uart.h"
+#include "platform/time.h"
+#include "platform/uart.h"
 
 #include "lib/minmea.h"
 
 #include "modes/flight.h"
 #include "modes/aircraft.h"
 
+#include "sys/configuration.h"
 #include "sys/log.h"
+#include "sys/print.h"
 
-#include "io/flash.h"
-#include "io/serial.h"
-
-#include "io/gps.h"
+#include "gps.h"
 
 static inline bool pos_valid(float lat, float lng) {
     return lat <= 90 && lat >= -90 && lng <= 180 && lng >= -180 &&
            isfinite(lat) && isfinite(lng);
 }
 
-static inline bool alt_valid(int alt) {
+static inline bool alt_valid(i32 alt) {
     return alt >= 0;
 }
 
@@ -48,57 +43,38 @@ static inline bool dop_valid(float pdop, float hdop, float vdop) {
            vdop < GPS_SAFE_VDOP_THRESHOLD;
 }
 
-static inline bool data_valid(float lat, float lng, int alt, float speed, float track, float pdop, float hdop, float vdop) {
+static inline bool data_valid(float lat, float lng, i32 alt, float speed, float track, float pdop, float hdop, float vdop) {
     return pos_valid(lat, lng) && alt_valid(alt) && speed_valid(speed) && track_valid(track) && dop_valid(pdop, hdop, vdop);
 }
 
 bool gps_init() {
-    if (print.fbw) printf("[gps] initializing ");
-    if (GPS_UART == uart0) {
-        if (print.fbw) printf("uart0 ");
-    } else if (GPS_UART == uart1) {
-        if (print.fbw) printf("uart1 ");
-    }
-    if (print.fbw) printf("at baudrate %d, on pins %d (tx) and %d (rx)\n", (uint)flash.sensors[SENSORS_GPS_BAUDRATE],
-                          (uint)flash.pins[PINS_GPS_TX], (uint)flash.pins[PINS_GPS_RX]);
-    uart_init(GPS_UART, (uint)flash.sensors[SENSORS_GPS_BAUDRATE]);
-    uart_set_fifo_enabled(GPS_UART, false); // Disable FIFO for setting up query schedule
-    uart_set_format(GPS_UART, 8, 1, UART_PARITY_NONE); // NMEA-0183 format
-    gpio_set_function((uint)flash.pins[PINS_GPS_TX], GPIO_FUNC_UART);
-    gpio_set_function((uint)flash.pins[PINS_GPS_RX], GPIO_FUNC_UART);
-    gpio_pull_up((uint)flash.pins[PINS_GPS_TX]);
-    gpio_pull_up((uint)flash.pins[PINS_GPS_RX]);
-    if (print.fbw) printf("[gps] configuring...\n");
-    // Clear FIFO and re-enable
-    irq_set_enabled(GPS_UART_IRQ, true);
-    uart_set_fifo_enabled(GPS_UART, true);
+    printfbw(gps, "initializing uart at baudrate %d, on pins %d (tx) and %d (rx)", (u32)config.sensors[SENSORS_GPS_BAUDRATE],
+                          (u32)config.pins[PINS_GPS_TX], (u32)config.pins[PINS_GPS_RX]);
+    uart_setup((u32)config.pins[PINS_GPS_TX], (u32)config.pins[PINS_GPS_RX], (u32)config.sensors[SENSORS_GPS_BAUDRATE]);
+    printfbw(gps, "configuring...");
     // Send a command and wait until UART is ready to read, then read back the command response
     // Useful tool for calculating command checksums: https://nmeachecksum.eqth.net/
-    if (print.gps) printf("[gps] setting up query schedule\n");
-    switch ((GPSCommandType)flash.sensors[SENSORS_GPS_COMMAND_TYPE]) {
+    printfbw(gps, "setting up query schedule");
+    switch ((GPSCommandType)config.sensors[SENSORS_GPS_COMMAND_TYPE]) {
         case GPS_COMMAND_TYPE_PMTK:
             // PMTK manual: https://cdn.sparkfun.com/assets/parts/1/2/2/8/0/PMTK_Packet_User_Manual.pdf
             // Enable the correct sentences
-            sleep_ms(1800); // Acknowledgement is a hit or miss without a delay
+            sleep_ms_blocking(1800); // Acknowledgement is a hit or miss without a delay
             // VTG enabled 5x per fix (for fast track updates), GGA, GSA enabled once per fix
-            uart_write_blocking(GPS_UART, (const uint8_t*)"$PMTK314,0,0,5,1,1,0,0,0,0,0,0,0,0,0,0,0,0*2D\r\n", 49);
-            // Check up to 30 sentences for the acknowledgement
-            uint8_t lines = 0;
-            while (lines < 30) {
-                char *line = NULL;
-                if (uart_is_readable_within_us(GPS_UART, GPS_COMMAND_TIMEOUT_MS * 1000)) {
-                    line = uart_read_line(GPS_UART);
-                    if (print.gps) printf("[gps] response %d: %s\n", lines, line);
-                    bool result = (strncmp(line, "$PMTK001,314,3*36", 17) == 0); // Acknowledged and successful execution of the command
-                    free(line);
-                    if (result) return true;
-                    lines++;
-                } else {
-                    if (print.fbw) printf("[gps] ERROR: timed out whilst awaiting a response!\n");
-                    return false;
-                }
+            uart_write((u32)config.pins[PINS_GPS_TX], (u32)config.pins[PINS_GPS_RX], "$PMTK314,0,0,5,1,1,0,0,0,0,0,0,0,0,0,0,0,0*2D\r\n");
+            // Check up to 30 sentences or up to 3 seconds for the acknowledgement
+            u8 lines = 0;
+            Timestamp timeout = timestamp_in_ms(3000);
+            while (lines < 30 && !timestamp_reached(&timeout)) {
+                char *line = uart_read((u32)config.pins[PINS_GPS_TX], (u32)config.pins[PINS_GPS_RX]);
+                printfbw(gps, "response %d: %s", lines, line);
+                bool result = (strncmp(line, "$PMTK001,314,3*36", 17) == 0); // Acknowledged and successful execution of the command
+                free(line);
+                if (result) return true;
+                lines++;
             }
-            if (print.fbw) printf("[gps] ERROR: %d responses were checked but none were valid!\n", lines);
+            if (timestamp_reached(&timeout)) printfbw(gps, "ERROR: communication with GPS timed out!");
+            printfbw(gps, "ERROR: %d responses were checked but none were valid!", lines);
             return false;
             break;
         default:
@@ -106,11 +82,9 @@ bool gps_init() {
     }
 }
 
-void gps_deinit() { uart_deinit(GPS_UART); }
-
 void gps_update() {
     // Read line(s) from the GPS and parse them until there are none remaining
-    char *line = uart_read_line(GPS_UART);
+    char *line = uart_read((u32)config.pins[PINS_GPS_TX], (u32)config.pins[PINS_GPS_RX]);
     while (line) {
         switch (minmea_sentence_id(line, false)) {
             case MINMEA_SENTENCE_GGA: {
@@ -119,14 +93,14 @@ void gps_update() {
                     gps.lat = minmea_tocoord(&gga.latitude);
                     gps.lng = minmea_tocoord(&gga.longitude);
                     if (strncmp(&gga.altitude_units, "M", 1) == 0) {
-                        gps.alt = (int)(minmea_tofloat(&gga.altitude) * M_TO_FT);
+                        gps.alt = (i32)(minmea_tofloat(&gga.altitude) * M_TO_FT);
                     } else {
                         aircraft.setGPSSafe(false);
-                        if (print.fbw) printf("[gps] ERROR: incorrect altitude units!\n");
+                        printfbw(gps, "ERROR: incorrect altitude units!");
                         return;
                     }
                 } else {
-                    if (print.gps) printf("[gps] ERROR: failed parsing $xxGGA sentence\n");
+                    printfbw(gps, "ERROR: failed parsing $xxGGA sentence");
                 }
                 break;
             }
@@ -137,7 +111,7 @@ void gps_update() {
                     gps.hdop = minmea_tofloat(&gsa.hdop);
                     gps.vdop = minmea_tofloat(&gsa.vdop);
                 } else {
-                    if (print.gps) printf("[gps] ERROR: failed parsing $xxGSA sentence\n");
+                    printfbw(gps, "ERROR: failed parsing $xxGSA sentence");
                 }
                 break;
             }
@@ -147,7 +121,7 @@ void gps_update() {
                     gps.speed = minmea_tofloat(&vtg.speed_knots);
                     gps.track = minmea_tofloat(&vtg.true_track_degrees);
                 } else {
-                    if (print.gps) printf("[gps] ERROR: failed parsing $xxVTG sentence\n");
+                    printfbw(gps, "ERROR: failed parsing $xxVTG sentence");
                 }
                 break;
             }
@@ -160,35 +134,34 @@ void gps_update() {
         }
         // Clear the line and attempt to read in a new one
         free(line);
-        line = uart_read_line(GPS_UART);
+        line = uart_read((u32)config.pins[PINS_GPS_TX], (u32)config.pins[PINS_GPS_RX]);
     }
     aircraft.setGPSSafe(data_valid(gps.lat, gps.lng, gps.alt, gps.speed, gps.track, gps.pdop, gps.hdop, gps.vdop));
 }
 
-int gps_calibrateAltOffset(uint num_samples) {
+i32 gps_calibrate_alt_offset(u32 num_samples) {
     log_message(INFO, "Calibrating altitude", 1000, 100, false);
     // GPS updates should be at 1Hz (give or take 2s) so if the calibration takes longer we cut it short
-    absolute_time_t calibrationTimeout = make_timeout_time_ms((num_samples * 1000) + 2000);
-    uint samples = 0;
-    int64_t alts = 0;
-    while (samples < num_samples && !time_reached(calibrationTimeout)) {
-        // printf("time reached: %d\n", time_reached(calibrationTimeout));
-        char *line = uart_read_line(GPS_UART);
+    Timestamp calibrationTimeout = timestamp_in_ms((num_samples * 1000) + 2000);
+    u32 samples = 0;
+    i64 alts = 0;
+    while (samples < num_samples && !timestamp_reached(&calibrationTimeout)) {
+        char *line = uart_read((u32)config.pins[PINS_GPS_TX], (u32)config.pins[PINS_GPS_RX]);
         if (line) {
             switch (minmea_sentence_id(line, false)) {
                 case MINMEA_SENTENCE_GGA: {
                     minmea_sentence_gga gga;
                     if (minmea_parse_gga(&gga, line)) {
                         if (strncmp(&gga.altitude_units, "M", 1) == 0) {
-                            int calt = (int)(minmea_tofloat(&gga.altitude) * 3.28084f);
+                            i32 calt = (i32)(minmea_tofloat(&gga.altitude) * 3.28084f);
                             alts += calt;
-                            if (print.gps) printf("[gps] altitude: %d (%d of %d)\n", calt, samples + 1, num_samples);
+                            printfbw(gps, "altitude: %d (%d of %d)", calt, samples + 1, num_samples);
                         } else {
-                            if (print.fbw) printf("[gps] ERROR: invalid altitude units during calibration\n");
-                            return PICO_ERROR_GENERIC;
+                            printfbw(gps, "ERROR: invalid altitude units during calibration");
+                            return -2;
                         }
                     } else {
-                        if (print.gps) printf("[gps] ERROR: failed parsing $xxGGA sentence during calibration\n");
+                        printfbw(gps, "ERROR: failed parsing $xxGGA sentence during calibration");
                     }
                     samples++;
                 }
@@ -200,18 +173,18 @@ int gps_calibrateAltOffset(uint num_samples) {
         }
     }
     log_clear(INFO);
-    if (time_reached(calibrationTimeout)) {
-        if (print.fbw) printf("[gps] ERROR: altitude calibration timed out\n");
-        return PICO_ERROR_TIMEOUT;
+    if (timestamp_reached(&calibrationTimeout)) {
+        printfbw(gps, "ERROR: altitude calibration timed out");
+        return -1;
     } else {
-        gps.altOffset = (int)(alts / samples);
-        if (print.fbw) printf("[gps] altitude offset calculated as: %d\n", gps.altOffset);
-        gps.altOffset_calibrated = true;
+        gps.altOffset = (i32)(alts / samples);
+        printfbw(gps, "altitude offset calculated as: %d", gps.altOffset);
+        gps.altOffsetCalibrated = true;
         return 0;
     }
 }
 
-bool gps_isSupported() { return ((GPSCommandType)flash.sensors[SENSORS_GPS_COMMAND_TYPE] != GPS_COMMAND_TYPE_NONE); }
+bool gps_is_supported() { return ((GPSCommandType)config.sensors[SENSORS_GPS_COMMAND_TYPE] != GPS_COMMAND_TYPE_NONE); }
 
 GPS gps = {
     .lat = -200.0,
@@ -223,10 +196,9 @@ GPS gps = {
     .hdop = -1.0f,
     .vdop = -1.0f,
     .altOffset = 0,
-    .altOffset_calibrated = false,
+    .altOffsetCalibrated = false,
     .init = gps_init,
-    .deinit = gps_deinit,
     .update = gps_update,
-    .calibrateAltOffset = gps_calibrateAltOffset,
-    .isSupported = gps_isSupported
+    .calibrate_alt_offset = gps_calibrate_alt_offset,
+    .is_supported = gps_is_supported
 };

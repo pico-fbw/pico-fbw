@@ -10,15 +10,15 @@
 */
 
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
+#include "platform/int.h"
 
 #include "lwip/udp.h"
 
-#include "io/flash.h"
+#include "sys/print.h"
 
 #include "wifly/wifly.h"
 
@@ -27,17 +27,17 @@
 #define PORT_DNS_SERVER 53
 
 typedef struct dns_header_t_ {
-    uint16_t id;
-    uint16_t flags;
-    uint16_t question_count;
-    uint16_t answer_record_count;
-    uint16_t authority_record_count;
-    uint16_t additional_record_count;
+    u16 id;
+    u16 flags;
+    u16 question_count;
+    u16 answer_record_count;
+    u16 authority_record_count;
+    u16 additional_record_count;
 } dns_header_t;
 
 #define MAX_DNS_MSG_SIZE 300
 
-static int dns_socket_new_dgram(struct udp_pcb **udp, void *cb_data, udp_recv_fn cb_udp_recv) {
+static i32 dns_socket_new_dgram(struct udp_pcb **udp, void *cb_data, udp_recv_fn cb_udp_recv) {
     *udp = udp_new();
     if (*udp == NULL) {
         return -ENOMEM;
@@ -53,39 +53,39 @@ static void dns_socket_free(struct udp_pcb **udp) {
     }
 }
 
-static int dns_socket_bind(struct udp_pcb **udp, uint32_t ip, uint16_t port) {
+static i32 dns_socket_bind(struct udp_pcb **udp, u32 ip, u16 port) {
     ip_addr_t addr;
     IP4_ADDR(&addr, ip >> 24 & 0xff, ip >> 16 & 0xff, ip >> 8 & 0xff, ip & 0xff);
     err_t err = udp_bind(*udp, &addr, port);
     if (err != ERR_OK) {
-        if (print.fbw) printf("[dns] ERROR: failed to bind to port %u: %d", port, err);
+        printfbw(network, "[dns] ERROR: failed to bind to port %u: %d", port, err);
         assert(false);
     }
     return err;
 }
 
-static void dump_bytes(const uint8_t *bptr, uint32_t len) {
-    unsigned int i = 0;
+static void dump_bytes(const u8 *bptr, u32 len) {
+    unsigned i32 i = 0;
 
     for (i = 0; i < len;) {
         if ((i & 0x0f) == 0) {
-            printf("\n");
+            printraw("\n");
         } else if ((i & 0x07) == 0) {
-            printf(" ");
+            printraw(" ");
         }
-        printf("%02x ", bptr[i++]);
+        printraw("%02x ", bptr[i++]);
     }
-    printf("\n");
+    printraw("\n");
 }
 
-static int dns_socket_sendto(struct udp_pcb **udp, const void *buf, size_t len, const ip_addr_t *dest, uint16_t port) {
+static i32 dns_socket_sendto(struct udp_pcb **udp, const void *buf, size_t len, const ip_addr_t *dest, u16 port) {
     if (len > 0xffff) {
         len = 0xffff;
     }
 
     struct pbuf *p = pbuf_alloc(PBUF_TRANSPORT, len, PBUF_RAM);
     if (p == NULL) {
-        if (print.fbw) printf("[dns] ERROR: failed to allocate memory\n");
+        printfbw(network, "[dns] ERROR: failed to allocate memory!");
         return -ENOMEM;
     }
 
@@ -95,20 +95,20 @@ static int dns_socket_sendto(struct udp_pcb **udp, const void *buf, size_t len, 
     pbuf_free(p);
 
     if (err != ERR_OK) {
-        if (print.fbw) printf("[dns] ERROR: failed to send message %d\n", err);
+        printfbw(network, "[dns] ERROR: failed to send message %d", err);
         return err;
     }
 
-    if (print.dumpNetwork) dump_bytes(buf, len);
+    if (debug.dumpNetwork) dump_bytes(buf, len);
 
     return len;
 }
 
 static void dns_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p, const ip_addr_t *src_addr, u16_t src_port) {
     dns_server_t *d = arg;
-    if (print.network) printf("[dns] server processing %u\n", p->tot_len);
+    printfbw(network, "[dns] server processing %u", p->tot_len);
 
-    uint8_t dns_msg[MAX_DNS_MSG_SIZE];
+    u8 dns_msg[MAX_DNS_MSG_SIZE];
     dns_header_t *dns_hdr = (dns_header_t*)dns_msg;
 
     size_t msg_len = pbuf_copy_partial(p, dns_msg, sizeof(dns_msg), 0);
@@ -116,14 +116,14 @@ static void dns_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p, 
         goto ignore_request;
     }
 
-    if (print.dumpNetwork) dump_bytes(dns_msg, msg_len);
+    if (shouldPrint.network) dump_bytes(dns_msg, msg_len);
 
-    uint16_t flags = lwip_ntohs(dns_hdr->flags);
-    uint16_t question_count = lwip_ntohs(dns_hdr->question_count);
+    u16 flags = lwip_ntohs(dns_hdr->flags);
+    u16 question_count = lwip_ntohs(dns_hdr->question_count);
 
-    if (print.network) printf("[dns] len %d\n", msg_len);
-    if (print.network) printf("[dns] flags 0x%x\n", flags);
-    if (print.network) printf("[dns] question count 0x%x\n", question_count);
+    printfbw(network, "[dns] len %d", msg_len);
+    printfbw(network, "[dns] flags 0x%x", flags);
+    printfbw(network, "[dns] question count 0x%x", question_count);
 
     // flags from rfc1035
     // +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
@@ -132,49 +132,49 @@ static void dns_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p, 
 
     // Check QR indicates a query
     if (((flags >> 15) & 0x1) != 0) {
-        if (print.fbw) printf("[dns] WARNING: ignoring non-query\n");
+        printfbw(network, "[dns] WARNING: ignoring non-query");
         goto ignore_request;
     }
 
     // Check for standard query
     if (((flags >> 11) & 0xf) != 0) {
-        if (print.fbw) printf("[dns] WARNING: ignoring non-standard query\n");
+        printfbw(network, "[dns] WARNING: ignoring non-standard query");
         goto ignore_request;
     }
 
     // Check question count
     if (question_count < 1) {
-        if (print.fbw) printf("[dns] WARNING: invalid question count\n");
+        printfbw(network, "[dns] WARNING: invalid question count");
         goto ignore_request;
     }
 
     // Print the question
-    if (print.network) printf("[dns] question: ");
-    const uint8_t *question_ptr_start = dns_msg + sizeof(dns_header_t);
-    const uint8_t *question_ptr_end = dns_msg + msg_len;
-    const uint8_t *question_ptr = question_ptr_start;
+    if (shouldPrint.network) printraw("[dns] question: ");
+    const u8 *question_ptr_start = dns_msg + sizeof(dns_header_t);
+    const u8 *question_ptr_end = dns_msg + msg_len;
+    const u8 *question_ptr = question_ptr_start;
     while(question_ptr < question_ptr_end) {
         if (*question_ptr == 0) {
             question_ptr++;
             break;
         } else {
             if (question_ptr > question_ptr_start) {
-                if (print.network) printf(".");
+                if (shouldPrint.network) printraw(".");
             }
-            int label_len = *question_ptr++;
+            i32 label_len = *question_ptr++;
             if (label_len > 63) {
-                if (print.network) printf("invalid label\n");
+                if (shouldPrint.network) printraw("invalid label\n");
                 goto ignore_request;
             }
-            if (print.network) printf("%.*s", label_len, question_ptr);
+            if (shouldPrint.network) printraw("%.*s", label_len, question_ptr);
             question_ptr += label_len;
         }
     }
-    if (print.network) printf("\n");
+    if (shouldPrint.network) printraw("\n");
 
     // Check question length
     if (question_ptr - question_ptr_start > 255) {
-        if (print.fbw) printf("[dns] WARNING: invalid question length\n");
+        printfbw(network, "[dns] WARNING: invalid question length");
         goto ignore_request;
     }
 
@@ -182,7 +182,7 @@ static void dns_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p, 
     question_ptr += 4;
 
     // Generate answer
-    uint8_t *answer_ptr = dns_msg + (question_ptr - dns_msg);
+    u8 *answer_ptr = dns_msg + (question_ptr - dns_msg);
     *answer_ptr++ = 0xc0; // pointer
     *answer_ptr++ = question_ptr_start - dns_msg; // pointer to question
     
@@ -212,7 +212,7 @@ static void dns_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p, 
     dns_hdr->additional_record_count = 0;
 
     // Send the reply
-    if (print.network) printf("[dns] sending %d byte reply to %s:%d\n", answer_ptr - dns_msg, ipaddr_ntoa(src_addr), src_port);
+    printfbw(network, "[dns] sending %d byte reply to %s:%d", answer_ptr - dns_msg, ipaddr_ntoa(src_addr), src_port);
     dns_socket_sendto(&d->udp, &dns_msg, answer_ptr - dns_msg, src_addr, src_port);
 
 ignore_request:
@@ -221,15 +221,15 @@ ignore_request:
 
 void dns_server_init(dns_server_t *d, ip_addr_t *ip) {
     if (dns_socket_new_dgram(&d->udp, d, dns_server_process) != ERR_OK) {
-        if (print.fbw) printf("[dns] ERROR: server failed to start\n");
+        printfbw(network, "[dns] ERROR: server failed to start");
         return;
     }
     if (dns_socket_bind(&d->udp, 0, PORT_DNS_SERVER) != ERR_OK) {
-        if (print.fbw) printf("[dns] ERROR: server failed to bind\n");
+        printfbw(network, "[dns] ERROR: server failed to bind");
         return;
     }
     ip_addr_copy(d->ip, *ip);
-    if (print.network) printf("[dns] server listening on port %d\n", PORT_DNS_SERVER);
+    printfbw(network, "[dns] server listening on port %d", PORT_DNS_SERVER);
 }
 
 void dns_server_deinit(dns_server_t *d) {

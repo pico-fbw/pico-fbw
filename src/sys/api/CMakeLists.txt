@@ -2,7 +2,6 @@ add_library(fbw_api
     api.c
     cmds/cmds.c
     cmds/GET/get_config.c
-    cmds/GET/get_flash.c
     cmds/GET/get_fplan.c
     cmds/GET/get_info.c
     cmds/GET/get_input.c
@@ -30,16 +29,9 @@ add_library(fbw_api
 
 target_link_libraries(fbw_api
     fbw_io
-    fbw_lib
     fbw_modes
+    fbw_sys
     fbw_wifly
-    hardware_gpio
-    hardware_watchdog
-    pico_base
-    pico_platform
-    pico_rand
-    pico_runtime
-    pico_time
 )
 
 target_include_directories(fbw_api PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/src)

@@ -1,14 +1,13 @@
-#ifndef __AK09916_H
-#define __AK09916_H
+#pragma once
 
-#include <stdint.h>
+#include "platform/int.h"
 
 #include "lib/fusion/fusion.h"
 
 #include "drivers.h"
 
-int8_t AK09916_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
-int8_t AK09916_read(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
+i8 AK09916_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
+i8 AK09916_read(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
 
 /* I2C Addresses*/
 #define AK09916_I2C_ADDR                (0x0C)
@@ -32,5 +31,3 @@ int8_t AK09916_read(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
 #define AK09916_STATUS_2                (0x18)
 #define AK09916_CONTROL_2               (0x31)
 #define AK09916_CONTROL_3               (0x32)
-
-#endif // __AK09916_H

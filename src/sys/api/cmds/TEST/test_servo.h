@@ -1,6 +1,5 @@
-#ifndef __TEST_SERVO_H
-#define __TEST_SERVO_H
+#pragma once
 
-int api_test_servo(const char *cmd, const char *args);
+#include "platform/int.h"
 
-#endif // __TEST_SERVO_H
+i32 api_test_servo(const char *cmd, const char *args);

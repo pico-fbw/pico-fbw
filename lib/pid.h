@@ -1,5 +1,4 @@
-#ifndef __PID_H
-#define __PID_H
+#pragma once
 
 typedef struct PIDController {
 
@@ -47,5 +46,3 @@ void pid_init(PIDController *pid);
  * @param measurement The measured value.
 */
 void pid_update(PIDController *pid, double setpoint, double measurement);
-
-#endif // __PID_H

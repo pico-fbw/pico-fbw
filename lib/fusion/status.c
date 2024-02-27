@@ -18,7 +18,7 @@
 #include "lib/fusion/drivers/drivers.h"
 #include "lib/fusion/fconfig.h"
 
-#include "lib/fusion/status.h"
+#include "status.h"
 
 // Do an immediate status update
 void ssSetStatusNow(StatusSubsystem *pStatus, fusion_status_t status)

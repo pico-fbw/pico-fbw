@@ -4,21 +4,15 @@
 */
 
 #include <string.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include "pico/time.h"
-
-#include "hardware/gpio.h"
-
-#include "io/flash.h"
-#include "io/serial.h"
 
 #include "sys/api/cmds/cmds.h"
+#include "sys/print.h"
 
-#include "sys/api/api.h"
+#include "api.h"
 
-int api_poll() {
-    char *line = stdin_read_line();
+i32 api_poll() {
+    char *line = stdin_read();
     if (line) {
         if (strlen(line) < 1) {
             free(line);
@@ -29,13 +23,13 @@ int api_poll() {
         char *args = strtok(NULL, "");
         if (!cmd) {
             // Out of memory?
-            printf("pico-fbw 500\n");
+            print("pico-fbw 500");
             free(line);
             return 500;
         }
 
         // Command handler
-        int status;
+        i32 status;
         if (strncasecmp(cmd, "GET_", 4) == 0) {
             status = api_handle_get(cmd, args);
         } else if (strncasecmp(cmd, "SET_", 4) == 0) {
@@ -46,7 +40,7 @@ int api_poll() {
             status = api_handle_misc(cmd, args);
         }
         if (status != -1) {
-            printf("pico-fbw %d\n", status);
+            print("pico-fbw %ld", status);
         }
         free(line);
         return status;

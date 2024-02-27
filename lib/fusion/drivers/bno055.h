@@ -1,14 +1,13 @@
-#ifndef __BNO055_H
-#define __BNO055_H
+#pragma once
 
-#include <stdint.h>
+#include "platform/int.h"
 
 #include "lib/fusion/fusion.h"
 
 #include "drivers.h"
 
-int8_t BNO055_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
-int8_t BNO055_read(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
+i8 BNO055_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
+i8 BNO055_read(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
 
 /* I2C Addresses*/
 #define BNO055_I2C_ADDR_LOW            (0x28)
@@ -178,7 +177,7 @@ int8_t BNO055_read(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
 
 /* Interrupt registers*/
 #define BNO055_INT_MASK                (0X0F)
-#define BNO055_INT                     (0X10)
+#define BNO055_i32                     (0X10)
 #define BNO055_ACCEL_ANY_MOTION_THRES  (0X11)
 #define BNO055_ACCEL_INTR_SETTINGS     (0X12)
 #define BNO055_ACCEL_HIGH_G_DURN       (0X13)
@@ -247,7 +246,7 @@ int8_t BNO055_read(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
 #define BNO055_TEMP_DIV_CELSIUS                    (1.0)
 
 #define BNO055_MODE_SWITCHING_DELAY                (600)
-#define BNO055_CONFIG_MODE_SWITCHING_DELAY         ((uint8_t)20)
+#define BNO055_CONFIG_MODE_SWITCHING_DELAY         ((byte)20)
 
 /* Operation mode settings*/
 #define BNO055_OPERATION_MODE_CONFIG               (0X00)
@@ -340,5 +339,3 @@ int8_t BNO055_read(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
 #define BNO055_GYRO_POWER_MODE_DEEPSUSPEND         (0X02)
 #define BNO055_GYRO_POWER_MODE_SUSPEND             (0X03)
 #define BNO055_GYRO_POWER_MODE_ADVANCE_POWERSAVE   (0X04)
-
-#endif // __BNO055_H

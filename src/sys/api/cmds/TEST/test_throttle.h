@@ -1,6 +1,5 @@
-#ifndef __TEST_THROTTLE_H
-#define __TEST_THROTTLE_H
+#pragma once
 
-int api_test_throttle(const char *cmd, const char *args);
+#include "platform/int.h"
 
-#endif // __TEST_THROTTLE_H
+i32 api_test_throttle(const char *cmd, const char *args);

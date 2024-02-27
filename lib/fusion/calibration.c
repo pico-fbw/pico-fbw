@@ -13,12 +13,11 @@
 
 // https://github.com/BjarneBitscrambler/OrientationSensorFusion-ESP/wiki/Calibration#calibration
 
-#include <stdio.h>
 #include <string.h>
 
-#include "io/flash.h"
+#include "sys/configuration.h"
 
-#include "lib/fusion/calibration.h"
+#include "calibration.h"
 
 #define CALIBRATION_BUF_MAGNETIC_START 0
 #define CALIBRATION_BUF_MAGNETIC_HEADER_SIZE 1
@@ -41,13 +40,9 @@
 #define CALIBRATION_BUF_ACCEL_VAL_SIZE_BYTES (CALIBRATION_BUF_ACCEL_VAL_SIZE * sizeof(float))
 #define CALIBRATION_BUF_ACCEL_TOT_SIZE (CALIBRATION_BUF_ACCEL_HEADER_SIZE + CALIBRATION_BUF_ACCEL_VAL_SIZE)
 
-#if FUSION_CALIBRATION_STORAGE_SIZE < (CALIBRATION_BUF_MAGNETIC_TOT_SIZE + CALIBRATION_BUF_GYRO_TOT_SIZE + CALIBRATION_BUF_ACCEL_TOT_SIZE)
-	#error Insufficient space allocated for AAHRS calibration buffer
-#endif
-
-float *calibration_mag = &flash.aahrs[CALIBRATION_BUF_MAGNETIC_START];
-float *calibration_gyro = &flash.aahrs[CALIBRATION_BUF_GYRO_START];
-float *calibration_accel = &flash.aahrs[CALIBRATION_BUF_ACCEL_START];
+float *calibration_mag = &calibration.aahrs[CALIBRATION_BUF_MAGNETIC_START];
+float *calibration_gyro = &calibration.aahrs[CALIBRATION_BUF_GYRO_START];
+float *calibration_accel = &calibration.aahrs[CALIBRATION_BUF_ACCEL_START];
 
 bool GetMagCalibrationFromFlash(float *cal_values) {
     #if F_USING_MAG
@@ -92,7 +87,7 @@ void SaveMagCalibrationToFlash(SensorFusionGlobals *sfg) {
         memcpy(&calibration_mag[CALIBRATION_BUF_MAGNETIC_HEADER_SIZE], &(sfg->MagCal), CALIBRATION_BUF_MAGNETIC_VAL_SIZE_BYTES);
         // Write flag to indicate complete calibration and save
         calibration_mag[0] = CALIBRATION_BUF_MAGNETIC_HEADER_MAGIC;
-        flash_save();
+        config_save();
     #else
         return;
     #endif
@@ -109,7 +104,7 @@ void SaveGyroCalibrationToFlash(SensorFusionGlobals *sfg) {
         #endif
         memcpy(&calibration_gyro[CALIBRATION_BUF_GYRO_HEADER_SIZE], src, CALIBRATION_BUF_GYRO_VAL_SIZE_BYTES);
         calibration_gyro[0] = CALIBRATION_BUF_GYRO_HEADER_MAGIC;
-        flash_save();
+        config_save();
     #else
         return;
     #endif
@@ -119,7 +114,7 @@ void SaveAccelCalibrationToFlash(SensorFusionGlobals *sfg) {
     #if F_USING_ACCEL
         memcpy(&calibration_accel[CALIBRATION_BUF_ACCEL_HEADER_SIZE], &(sfg->AccelCal), CALIBRATION_BUF_ACCEL_VAL_SIZE_BYTES);
         calibration_accel[0] = CALIBRATION_BUF_ACCEL_HEADER_MAGIC;
-        flash_save();
+        config_save();
     #else
         return;
     #endif
@@ -136,7 +131,7 @@ void EraseFusionCalibration() {
     #if F_USING_ACCEL
         calibration_accel[0] = 0;
     #endif
-    flash_save();
+    config_save();
 }
 
 bool MagCalibrationExists() {

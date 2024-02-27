@@ -1,5 +1,4 @@
-#ifndef __ORIENT_H
-#define __ORIENT_H
+#pragma once
 
 // https://www.nxp.com/docs/en/application-note/AN5017.pdf
 // https://www.nxp.com/docs/en/application-note/AN5021.pdf
@@ -164,5 +163,3 @@ void fveqconjgquq(
   float fu[], 
   float fv[]
 );
-
-#endif   // #ifndef __ORIENT_H

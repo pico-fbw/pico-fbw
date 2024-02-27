@@ -12,15 +12,11 @@
  * Licensed under the GNU AGPL-3.0
 */
 
-#include <stdio.h>
-#include "pico/time.h"
+#include "platform/time.h"
 
-#include "io/flash.h"
-
-#include "lib/pid.h"
+#include "pid.h"
 
 void pid_init(PIDController *pid) {
-	if (print.fbw) printf("[pid] initializing a PID controller\n");
 	// Clear controller variables
 	pid->integrator = 0.0f;
 	pid->prevError  = 0.0f;
@@ -31,7 +27,7 @@ void pid_init(PIDController *pid) {
 
 void pid_update(PIDController *pid, double setpoint, double measurement) {
 	// Time
-	pid->T = time_us_64() / 1E6 - pid->prevT;
+	pid->T = time_us() / 1E6 - pid->prevT;
 
 	// Error signal
 	double error = setpoint - measurement;
@@ -63,5 +59,5 @@ void pid_update(PIDController *pid, double setpoint, double measurement) {
 	// Store error, measurement, and time for later use
 	pid->prevError       = error;
 	pid->prevMeasurement = measurement;
-	pid->prevT = time_us_64() / 1E6;
+	pid->prevT = time_us() / 1E6;
 }

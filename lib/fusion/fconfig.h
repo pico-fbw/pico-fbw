@@ -11,8 +11,7 @@
  * Licensed under the GNU AGPL-3.0
 */
 
-#ifndef __FCONFIG_H
-#define __FCONFIG_H
+#pragma once
 
 // sensor hardware details
 #define GYRO_FIFO_SIZE  32	///< FXAX21000, FXAS21002 have 32 element FIFO
@@ -80,5 +79,3 @@
 #define ACCEL_ODR_HZ    200 ///< (int) requested accelerometer ODR Hz (overrides MAG_ODR_HZ for FXOS8700)
 #define MAG_ODR_HZ      200 ///< (int) requested magnetometer ODR Hz (overridden by ACCEL_ODR_HZ for FXOS8700)
 #define FUSION_HZ       40  ///< (int) rate of fusion algorithm execution
-
-#endif // __FCONFIG_H

@@ -3,15 +3,15 @@
  * Licensed under the GNU AGPL-3.0
 */
 
-#include <stdio.h>
+#include "sys/print.h"
 
 #include "wifly/wifly.h"
 
-#include "sys/api/cmds/GET/get_fplan.h"
+#include "get_fplan.h"
 
-int api_get_fplan(const char *cmd, const char *args) {
+i32 api_get_fplan(const char *cmd, const char *args) {
     if (wifly_fplanExists()) {
-        printf("%s\n", wifly_getFplanJson());
+        printraw("%s\n", wifly_getFplanJson());
         return -1;
     } else {
         return 403;

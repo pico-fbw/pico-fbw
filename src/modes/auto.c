@@ -3,16 +3,15 @@
  * Licensed under the GNU AGPL-3.0
 */
 
-#include "pico/time.h"
-#include "pico/types.h"
+#include "platform/time.h"
 
-#include "io/flash.h"
 #include "io/gps.h"
 #include "io/servo.h"
 
 #include "lib/pid.h"
 #include "lib/nav.h"
 
+#include "sys/configuration.h"
 #include "sys/log.h"
 #include "sys/throttle.h"
 
@@ -21,11 +20,16 @@
 #include "modes/tune.h"
 #include "modes/flight.h"
 
-#include "modes/auto.h"
+#include "wifly/wifly.h"
+
+#include "auto.h"
+
+#define INTERCEPT_RADIUS 25 // The radius at which to consider a Waypoint "incercepted" in meters
+// TODO: do I need to change this for different speeds? idk if it will make too much of a difference, remember what aviation simmer said
 
 typedef enum GuidanceSource {
     FPLAN,
-    EXTERNAL
+    EXTERNAL,
 } GuidanceSource;
 
 static bool autoComplete = false;
@@ -33,27 +37,27 @@ static bool autoComplete = false;
 static GuidanceSource guidanceSource = FPLAN;
 
 static Waypoint *fplan = NULL;
-static uint currentWaypoint = 0;
+static u32 currentWaypoint = 0;
 
 static Waypoint externWpt;
 static void (*captureCallback)(void);
 
 static double distance;
 static double bearing;
-static int alt;
+static i32 alt;
 
 static PIDController latGuid;
 static PIDController vertGuid;
 
 // Callback for when the bay needs to be closed after a user-specified delay (within the flightplan)
-static inline int64_t dropCallback(alarm_id_t id, void *data) {
+static inline i32 dropCallback(u32 id) {
     auto_setBayPosition(CLOSED);
     return 0;
 }
 
 static inline void loadWaypoint(Waypoint *wpt) {
     // Load the next altitude, if it is -5 (default) just discard it (by setting it to our current alt; no change)
-    if (gps.altOffset_calibrated) {
+    if (gps.altOffsetCalibrated) {
         // Factor in the altitude offset calculated earlier
         alt = (wpt->alt <= -5) ? gps.alt : (wpt->alt + gps.altOffset);
     } else {
@@ -66,7 +70,7 @@ static inline void loadWaypoint(Waypoint *wpt) {
         auto_setBayPosition(OPEN);
         if (wpt->drop > 0) {
             // Schedule a callback if the bay needs to close after some time
-            add_alarm_in_ms(wpt->drop * 1000, dropCallback, NULL, true);
+            callback_in_ms(wpt->drop * 1000, dropCallback);
         }
     }
 }
@@ -91,7 +95,7 @@ bool auto_init() {
     vertGuid = (PIDController){vertGuid_kP, vertGuid_kI, vertGuid_kD, vertGuid_tau, vertGuid_loLim, vertGuid_upLim, vertGuid_integMin, vertGuid_integMax, vertGuid_kT};
     pid_init(&latGuid);
     pid_init(&vertGuid);
-    // Load the first waypoint from the flightplan (subsequent waypoints will be loaded on waypoint interception)
+    // Load the first Waypoint from the flightplan (subsequent waypoints will be loaded on waypoint interception)
     loadWaypoint(&fplan[currentWaypoint]);
     return true;
 }
@@ -106,12 +110,12 @@ void auto_update() {
     // Calculate the bearing and distance...
     switch (guidanceSource) {
         case FPLAN:
-            // ...to the current waypoint in the flightplan
+            // ...to the current Waypoint in the flightplan
             bearing = calculateBearing(gps.lat, gps.lng, fplan[currentWaypoint].lat, fplan[currentWaypoint].lng);
             distance = calculateDistance(gps.lat, gps.lng, fplan[currentWaypoint].lat, fplan[currentWaypoint].lng);
             break;
         case EXTERNAL:
-            // ...to the current waypoint (temporarily set)
+            // ...to the current Waypoint (temporarily set)
             bearing = calculateBearing(gps.lat, gps.lng, externWpt.lat, externWpt.lng);
             distance = calculateDistance(gps.lat, gps.lng, externWpt.lat, externWpt.lng);
             break;
@@ -159,11 +163,11 @@ void auto_set(Waypoint wpt, void (*callback)(void)) {
 void auto_setBayPosition(BayPosition pos) {
     switch (pos) {
         case OPEN:
-            servo_set(flash.pins[PINS_SERVO_BAY], flash.control[CONTROL_DROP_DETENT_OPEN]);
+            servo_set(config.pins[PINS_SERVO_BAY], config.control[CONTROL_DROP_DETENT_OPEN]);
             break;
         case CLOSED:
         default:
-            servo_set(flash.pins[PINS_SERVO_BAY], flash.control[CONTROL_DROP_DETENT_CLOSED]);
+            servo_set(config.pins[PINS_SERVO_BAY], config.control[CONTROL_DROP_DETENT_CLOSED]);
             break;
     }
 }

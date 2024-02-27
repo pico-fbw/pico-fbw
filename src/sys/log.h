@@ -1,8 +1,7 @@
-#ifndef __LOG_H
-#define __LOG_H
+#pragma once
 
-#include <stdint.h>
-#include "pico/types.h"
+#include <stdbool.h>
+#include "platform/int.h"
 
 typedef enum LogType {
     NONE,
@@ -16,9 +15,9 @@ typedef enum LogType {
 typedef struct LogEntry {
     LogType type;
     char msg[64];
-    int code;
-    uint32_t pulse;
-    uint64_t timestamp;
+    i32 code;
+    u32 pulse;
+    u64 timestamp;
 } LogEntry;
 
 #define MSG_INFO "INFO:"
@@ -47,7 +46,7 @@ void log_init();
  * @param pulse_ms The pulse duration in milliseconds--only applicable for the onboard LED. (0 for no pulse)
  * @param force Whether to force the error; if left as false, errors of lower codes will take precedence.
 */
-void log_message(LogType type, char msg[64], int code, uint pulse_ms, bool force);
+void log_message(LogType type, char msg[64], i32 code, u32 pulse_ms, bool force);
 
 /**
  * Clears all logs of the specified type.
@@ -58,16 +57,14 @@ void log_clear(LogType type);
 /**
  * @return The current number of log entries.
 */
-uint8_t log_count();
+u8 log_count();
 
 /**
  * @return The current number of log entries with severity higher than WARNING (WARNING, ERROR, and FATAL).
 */
-uint8_t log_countErrs();
+u8 log_count_errs();
 
 /**
  * @return The log entry at the given index.
 */
-LogEntry *log_get(uint index);
-
-#endif // __LOG_H
+LogEntry *log_get(u32 index);

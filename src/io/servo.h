@@ -1,35 +1,24 @@
-#ifndef __SERVO_H
-#define __SERVO_H
+#pragma once
+
+#include "platform/int.h"
 
 #define DEFAULT_SERVO_TEST {110, 70, 90} // Default degree amounts to move the servos to during the POST
 #define NUM_DEFAULT_SERVO_TEST 3
 #define DEFAULT_SERVO_TEST_PAUSE_MS 250 // Default pause between servo moves in milliseconds
 
 /**
- * Set the frequency, making "top" as large as possible for maximum resolution.
- * Maximum "top" is set at 65534 to be able to achieve 100% duty with 65535.
+ * Enables servo control on a list of pins.
+ * @param pins the array of servo GPIO pins
+ * @param num_pins the number of pins
 */
-#define PWM_TOP_MAX 65534
-
-/**
- * Enables servo control on a certain pin.
- * @param gpio_pin the GPIO pin the servo is attached to
- * @return 0 if the operation was successful, 1 if the frequency was too small, and 2 if the frequency was too large.
-*/
-uint servo_enable(uint gpio_pin);
+void servo_enable(u32 pins[], u32 num_pins);
 
 /**
  * Sets the position of the servo using the the duty cycle of the PWM signal.
  * @param gpio_pin the GPIO pin the servo is attached to
- * @param degree the position in degrees, a value within 0-180
+ * @param degree the position in degrees, within 0-180
 */
-void servo_set(uint gpio_pin, uint16_t degree);
-
-/**
- * Disables servo control on a certain pin.
- * @param gpio_pin the GPIO pin the servo is attached to
-*/
-void servo_disable(uint gpio_pin);
+void servo_set(u32 pin, u16 degree);
 
 /**
  * "Tests" a list of servos by moving them to a list of degree positions.
@@ -41,13 +30,11 @@ void servo_disable(uint gpio_pin);
  * @note If num_servos = 0, the servos from the config will be tested.
  * You also may want to add 90 at the end of the list to ensure that the servos return to a neutral position.
 */
-void servo_test(uint servos[], uint num_servos, const uint16_t degrees[], const uint num_degrees, const uint pause_between_moves_ms);
+void servo_test(u32 servos[], u32 num_servos, const u16 degrees[], const u32 num_degrees, const u32 pause_between_moves_ms);
 
 /**
  * Gets the GPIO pins and number of pins designated as servos in the config.
  * @param pins array of at least 3 elements to fill with pins
  * @param num_pins pointer to the number of pins
 */
-void servo_getPins(uint *servos, uint *num_servos);
-
-#endif // __SERVO_H
+void servo_getPins(u32 *servos, u32 *num_servos);

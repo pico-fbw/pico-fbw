@@ -3,25 +3,22 @@
  * Licensed under the GNU AGPL-3.0
 */
 
-#include <stdio.h>
-#include "pico/time.h"
-#include "pico/types.h"
-
 #include "sys/log.h"
+#include "sys/print.h"
 
-#include "sys/api/cmds/GET/get_logs.h"
+#include "get_logs.h"
 
-int api_get_logs(const char *cmd, const char *args) {
-    uint logCount = log_count();
+i32 api_get_logs(const char *cmd, const char *args) {
+    u32 logCount = log_count();
     if (logCount > 0) {
-        printf("{\"logs\":[");
-        for (uint i = 0; i < logCount; i++) {
+        printraw("{\"logs\":[");
+        for (u32 i = 0; i < logCount; i++) {
             LogEntry *entry = log_get(i);
-            printf("{\"type\":%d,\"msg\":\"%s\",\"code\":%d,\"timestamp\":%llu}",
+            printraw("{\"type\":%d,\"msg\":\"%s\",\"code\":%d,\"timestamp\":%llu}",
                    entry->type, entry->msg, entry->code, entry->timestamp);
-            if (logCount > 1 && i != logCount - 1) printf(",");
+            if (logCount > 1 && i != logCount - 1) printraw(",");
         }
-        printf("]}\n");
+        printraw("]}\n");
         return -1;
     }
     return 204;

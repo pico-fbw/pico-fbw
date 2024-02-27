@@ -1,6 +1,5 @@
-#ifndef __SET_BAY_H
-#define __SET_BAY_H
+#pragma once
 
-int api_set_bay(const char *cmd, const char *args);
+#include "platform/int.h"
 
-#endif // __SET_BAY_H
+i32 api_set_bay(const char *cmd, const char *args);

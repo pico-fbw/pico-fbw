@@ -1,6 +1,5 @@
-#ifndef __TEST_AAHRS_H
-#define __TEST_AAHRS_H
+#pragma once
 
-int api_test_aahrs(const char *cmd, const char *args);
+#include "platform/int.h"
 
-#endif // __TEST_AAHRS_H
+i32 api_test_aahrs(const char *cmd, const char *args);

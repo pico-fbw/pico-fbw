@@ -3,53 +3,54 @@
  * Licensed under the GNU AGPL-3.0
 */
 
-#include <stdio.h>
 #include <stdlib.h>
 
 #include "io/aahrs.h"
-#include "io/flash.h"
 #include "io/gps.h"
 
 #include "modes/aircraft.h"
 
-#include "sys/api/cmds/GET/get_sensor.h"
+#include "sys/configuration.h"
+#include "sys/print.h"
 
-int api_get_sensor(const char *cmd, const char *args) {
+#include "get_sensor.h"
+
+i32 api_get_sensor(const char *cmd, const char *args) {
     // Prepare the JSON output based on sensor type
     switch (atoi(args)) {
         case 1: // IMU only
             if (aircraft.AAHRSSafe) {
-                printf("{\"imu\":[{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f}]}\n", aahrs.roll, aahrs.pitch, aahrs.yaw);
+                printraw("{\"imu\":[{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f}]}\n", aahrs.roll, aahrs.pitch, aahrs.yaw);
             } else {
-                printf("{\"imu\":[{\"roll\":null,\"pitch\":null,\"yaw\":null}]}\n");
+                printraw("{\"imu\":[{\"roll\":null,\"pitch\":null,\"yaw\":null}]}\n");
             }
             break;
         case 2: // GPS only
-            if ((GPSCommandType)flash.sensors[SENSORS_GPS_COMMAND_TYPE] == GPS_COMMAND_TYPE_NONE) return 403;
+            if ((GPSCommandType)config.sensors[SENSORS_GPS_COMMAND_TYPE] == GPS_COMMAND_TYPE_NONE) return 403;
             if (aircraft.GPSSafe) {
-                printf("{\"gps\":[{\"lat\":%.10f,\"lng\":%.10f,\"alt\":%d,\"speed\":%.4f,\"track\":%.4f}]}\n",
+                printraw("{\"gps\":[{\"lat\":%.10f,\"lng\":%.10f,\"alt\":%d,\"speed\":%.4f,\"track\":%.4f}]}\n",
                         gps.lat, gps.lng, gps.alt, gps.speed, gps.track);
             } else {
-                printf("{\"gps\":[{\"lat\":null,\"lng\":null,\"alt\":null,\"speed\":null,\"track\":null}]}\n");
+                printraw("{\"gps\":[{\"lat\":null,\"lng\":null,\"alt\":null,\"speed\":null,\"track\":null}]}\n");
             }
             break;
         case 0: // All sensors
         default:
-            if ((GPSCommandType)flash.sensors[SENSORS_GPS_COMMAND_TYPE] == GPS_COMMAND_TYPE_NONE) return 403;
+            if ((GPSCommandType)config.sensors[SENSORS_GPS_COMMAND_TYPE] == GPS_COMMAND_TYPE_NONE) return 403;
             if (aircraft.AAHRSSafe && aircraft.GPSSafe) {
-                printf("{\"imu\":[{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f}],"
+                printraw("{\"imu\":[{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f}],"
                        "\"gps\":[{\"lat\":%.10f,\"lng\":%.10f,\"alt\":%d,\"speed\":%.4f,\"track\":%.4f}]}\n",
                        aahrs.roll, aahrs.pitch, aahrs.yaw, gps.lat, gps.lng, gps.alt, gps.speed, gps.track);
             } else if (aircraft.AAHRSSafe) {
-                printf("{\"imu\":[{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f}],"
+                printraw("{\"imu\":[{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f}],"
                        "\"gps\":[{\"lat\":null,\"lng\":null,\"alt\":null,\"speed\":null,\"track\":null}]}\n",
                        aahrs.roll, aahrs.pitch, aahrs.yaw);
             } else if (aircraft.GPSSafe) {
-                printf("{\"imu\":[{\"roll\":null,\"pitch\":null,\"yaw\":null}],"
+                printraw("{\"imu\":[{\"roll\":null,\"pitch\":null,\"yaw\":null}],"
                        "\"gps\":[{\"lat\":%.10f,\"lng\":%.10f,\"alt\":%d,\"speed\":%.4f,\"track\":%.4f}]}\n",
                        gps.lat, gps.lng, gps.alt, gps.speed, gps.track);
             } else {
-                printf("{\"imu\":[{\"roll\":null,\"pitch\":null,\"yaw\":null}],"
+                printraw("{\"imu\":[{\"roll\":null,\"pitch\":null,\"yaw\":null}],"
                        "\"gps\":[{\"lat\":null,\"lng\":null,\"alt\":null,\"speed\":null,\"track\":null}]}\n");
             }
             break;

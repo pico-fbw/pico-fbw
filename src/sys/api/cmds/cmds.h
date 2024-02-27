@@ -1,5 +1,6 @@
-#ifndef __CMDS_H
-#define __CMDS_H
+#pragma once
+
+#include "platform/int.h"
 
 /**
  * Handles API GET commands.
@@ -7,7 +8,7 @@
  * @param args the command arguments
  * @return the status code.
 */
-int api_handle_get(const char *cmd, const char *args);
+i32 api_handle_get(const char *cmd, const char *args);
 
 /**
  * Handles API SET commands.
@@ -15,7 +16,7 @@ int api_handle_get(const char *cmd, const char *args);
  * @param args the command arguments
  * @return the status code.
 */
-int api_handle_set(const char *cmd, const char *args);
+i32 api_handle_set(const char *cmd, const char *args);
 
 /**
  * Handles API TEST commands.
@@ -23,7 +24,7 @@ int api_handle_set(const char *cmd, const char *args);
  * @param args the command arguments
  * @return the status code.
 */
-int api_handle_test(const char *cmd, const char *args);
+i32 api_handle_test(const char *cmd, const char *args);
 
 /**
  * Handles API MISC (no prefix) commands.
@@ -31,6 +32,4 @@ int api_handle_test(const char *cmd, const char *args);
  * @param args the command arguments
  * @return either status code 404, or -1 if the command was successful (MISC commands don't have return codes).
 */
-int api_handle_misc(const char *cmd, const char *args);
-
-#endif // __CMDS_H
+i32 api_handle_misc(const char *cmd, const char *args);

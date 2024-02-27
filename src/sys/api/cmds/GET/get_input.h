@@ -1,6 +1,5 @@
-#ifndef __GET_INPUT_H
-#define __GET_INPUT_H
+#pragma once
 
-int api_get_input(const char *cmd, const char *args);
+#include "platform/int.h"
 
-#endif // __GET_INPUT_H
+i32 api_get_input(const char *cmd, const char *args);

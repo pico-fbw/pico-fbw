@@ -1,14 +1,13 @@
-#ifndef __ICM20948_H
-#define __ICM20948_H
+#pragma once
 
-#include <stdint.h>
+#include "platform/int.h"
 
 #include "lib/fusion/fusion.h"
 
 #include "drivers.h"
 
-int8_t ICM20948_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
-int8_t ICM20948_read(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
+i8 ICM20948_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
+i8 ICM20948_read(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
 
 /* I2C Addresses*/
 #define ICM20948_I2C_ADDR_LOW            (0x68)
@@ -140,5 +139,3 @@ int8_t ICM20948_read(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg);
 #define ICM20948_MOD_CTRL_USR            (0x54)
 
 /* BANK2 REGISTERS DEFINITION END*/
-
-#endif // __ICM20948_H

@@ -12,14 +12,9 @@
  * Licensed under the GNU AGPL-3.0
 */
 
-#include <stdio.h>
-#include "pico/platform.h"
-#include "pico/types.h"
+#include "sys/print.h"
 
-#include "io/aahrs.h"
-#include "io/flash.h"
-
-#include "lib/fusion/drivers/ak09916.h"
+#include "ak09916.h"
 
 /* 
    AK09916
@@ -49,49 +44,49 @@ const registerWriteList_t AK09916_CONFIGURE[] = {
 #define AK09916_COUNTS_PER_UT 6.666667f // 0.15μT/LSB (datasheet pg. 6), so that works out to 6.66... LSB/uT
 #define AK09916_UT_PER_COUNT 0.15f
 
-int8_t AK09916_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
-    int32_t status;
-    uint8_t reg;
-    if (print.aahrs) printf("[AK09916] initializing...");
-    for (uint i = 0; i < DRIVER_INIT_ATTEMPTS; i++) {
-        if (print.aahrs) printf("attempt %d ", i);
+i8 AK09916_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
+    i32 status;
+    byte reg;
+    printfbw(aahrs, "[AK09916] initializing...");
+    for (u32 i = 0; i < DRIVER_INIT_ATTEMPTS; i++) {
+        if (shouldPrint.aahrs) printraw("attempt %d ", i);
         status = driver_read_register(&sensor->deviceInfo, sensor->addr, AK09916_DEVICE_ID_READ[0].readFrom, AK09916_DEVICE_ID_READ[0].numBytes, &reg);
         if (status == SENSOR_ERROR_NONE && reg == AK09916_DEVICE_ID_EXPECTED) break;
     }
-    if (print.aahrs) printf("\n");
+    if (shouldPrint.aahrs) printraw("\n");
     if (status != SENSOR_ERROR_NONE) {
-        if (print.fbw) printf("[AK09916] ERROR: address not acknowledged! (no/wrong device present?)\n");
+        printfbw(aahrs, "[AK09916] ERROR: address not acknowledged! (no/wrong device present?)");
         return status;
     }
     if (reg != AK09916_DEVICE_ID_EXPECTED) {
-        if (print.fbw) printf("[AK09916] ERROR: could not verify chip!\n");
+        printfbw(aahrs, "[AK09916] ERROR: could not verify chip!");
         return SENSOR_ERROR_INIT;
     }
     #if F_USING_MAG
         sfg->Mag.iWhoAmI = reg;
-        sfg->Mag.iCountsPeruT = (int16_t)(AK09916_COUNTS_PER_UT + 0.5f);
+        sfg->Mag.iCountsPeruT = (i16)(AK09916_COUNTS_PER_UT + 0.5f);
         sfg->Mag.fCountsPeruT = AK09916_COUNTS_PER_UT;
         sfg->Mag.fuTPerCount = AK09916_UT_PER_COUNT; // Since counts per μT is imprecisely derived from μT per count, we use the real value here
     #endif
 
-    if (print.aahrs) printf("[AK09916] configuring...\n");
+    printfbw(aahrs, "[AK09916] configuring...");
     status = driver_write_list(&sensor->deviceInfo, sensor->addr, AK09916_CONFIGURE);
     #if F_USING_MAG
         sfg->Mag.isEnabled = true;
     #endif
-    if (print.aahrs) printf("[AK09916] sensor ready!\n");
+    printfbw(aahrs, "[AK09916] sensor ready!");
     sensor->isInitialized = F_USING_MAG;
     return status;
 }
 
 #if F_USING_MAG
-int8_t AK09916_read_mag(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
+i8 AK09916_read_mag(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
     if (!(sensor->isInitialized & F_USING_MAG)) return SENSOR_ERROR_INIT;
-    uint8_t buf[6];
-    int32_t status = driver_read(&sensor->deviceInfo, sensor->addr, AK09916_MAG_DATA_READ, buf);
+    byte buf[6];
+    i32 status = driver_read(&sensor->deviceInfo, sensor->addr, AK09916_MAG_DATA_READ, buf);
     if (status == SENSOR_ERROR_NONE) {
-        int16_t sample[3];
-        for (uint i = 0; i < count_of(sample); i++) {
+        i16 sample[3];
+        for (u32 i = 0; i < count_of(sample); i++) {
             sample[i] = (buf[i * 2 + 1] << 8) | buf[i * 2];
         }
         conditionSample(sample);
@@ -101,7 +96,7 @@ int8_t AK09916_read_mag(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg)
 }
 #endif
 
-int8_t AK09916_read(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
+i8 AK09916_read(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
     #if F_USING_MAG
         return AK09916_read_mag(sensor, sfg);
     #else

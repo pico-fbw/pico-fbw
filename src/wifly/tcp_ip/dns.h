@@ -1,5 +1,4 @@
-#ifndef __DNS_H
-#define __DNS_H
+#pragma once
 
 #include "lwip/ip_addr.h"
 
@@ -20,5 +19,3 @@ void dns_server_init(dns_server_t *d, ip_addr_t *ip);
  * @param dns_server_t the DNS server to deinitialize
 */
 void dns_server_deinit(dns_server_t *d);
-
-#endif // __DNS_H

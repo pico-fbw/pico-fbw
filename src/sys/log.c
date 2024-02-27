@@ -3,86 +3,58 @@
  * Licensed under the GNU AGPL-3.0
 */
 
-#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include "pico/config.h"
-#include "pico/time.h"
-
-#include "hardware/watchdog.h"
+#include "platform/defs.h"
+#include "platform/gpio.h"
+#include "platform/sys.h"
+#include "platform/time.h"
 
 #include "io/display.h"
-#include "io/platform.h"
 
+#include "sys/boot.h"
 #include "sys/configuration.h"
+#include "sys/print.h"
+#include "sys/runtime.h"
 
-#include "sys/log.h"
+#include "log.h"
 
-#if defined(RASPBERRYPI_PICO)
-    #include "hardware/gpio.h"
-    #define LED_PIN PICO_DEFAULT_LED_PIN
-#elif defined(RASPBERRYPI_PICO_W)
-    #include "pico/cyw43_arch.h"
-    #define LED_PIN CYW43_WL_GPIO_LED_PIN
-    char buf[1];
-#else
-    #undef LED_PIN
-#endif
+// TODO: refactor logging to use malloc and just...be cleaner
 
 static LogEntry logEntries[MAX_LOG_ENTRIES];
-static uint logCount = 0;
+static u32 logCount = 0;
 static LogEntry lastLogEntry;
 
 /* --- LED --- */
 
 static LogEntry lastDisplayedEntry;
-static struct repeating_timer timer;
-static alarm_id_t timer_pulse = -1;
-static uint32_t gb_pulse_ms = 0;
-
-static inline void led_toggle() {
-    #ifdef LED_PIN
-        #if defined(RASPBERRYPI_PICO)
-            gpio_xor_mask(1u << LED_PIN);
-        #elif defined(RASPBERRYPI_PICO_W)
-            cyw43_arch_gpio_put(LED_PIN, !cyw43_arch_gpio_get(LED_PIN));
-            snprintf(buf, sizeof(buf), 0); // LED acts weird without this?!
-        #endif
-    #endif
-}
-
-static inline void led_set(bool on) {
-    #ifdef LED_PIN
-        #if defined(RASPBERRYPI_PICO)
-            gpio_put(LED_PIN, on);
-        #elif defined(RASPBERRYPI_PICO_W)
-            cyw43_arch_gpio_put(LED_PIN, on);
-            snprintf(buf, sizeof(buf), 0);
-        #endif
-    #endif
-}
+static u32 pulseCallback;
+static u32 pulseMs = 0;
+static u32 toggleCallback;
+static u32 toggleMs = 0;
 
 static inline void led_reset() {
-    cancel_repeating_timer(&timer);
-    if (timer_pulse > 0) {
-        cancel_alarm(timer_pulse);
-    }
-    gb_pulse_ms = 0;
-    led_set(1);
+    cancel_callback(pulseCallback);
+    cancel_callback(toggleCallback);
+    pulseMs = 0;
+    gpio_set(PIN_LED, 1);
 }
 
-static inline int64_t led_pulse_callback(alarm_id_t id, void *data) {
-    led_toggle();
+static inline i32 led_pulse_callback(u32 id) {
+    gpio_toggle(PIN_LED);
     return 0; // Don't reschedule
+    (void)id; // Suppress unused parameter warning (required for callback functions, but not used here)
 }
 
-static inline bool led_callback(struct repeating_timer *t) {
-    // Toggle LED immediately, then schedule an additional pulse toggle if applicable (non-zero)
-    led_toggle();
-    if (gb_pulse_ms != 0) {
-        timer_pulse = add_alarm_in_ms(gb_pulse_ms, led_pulse_callback, NULL, false);
+static inline i32 led_callback(u32 id) {
+    // Toggle LED immediately...
+    gpio_toggle(PIN_LED);
+    // then, if we need to pulse, schedule an additional toggle (to turn off the LED)
+    if (pulseMs != 0) {
+        pulseCallback = callback_in_ms(pulseMs, led_pulse_callback);
     }
-    return true;
+    return toggleMs;
+    (void)id;
 }
 
 /* --- Logging --- */
@@ -103,7 +75,7 @@ static LogEntry queuedEntry;
  * @param entry The entry to display.
 */
 static void log_displayEntry(LogEntry *entry) {
-    if (platform_is_fbw()) {
+    if (runtime_is_fbw()) {
         char typeMsg[DISPLAY_MAX_LINE_LEN];
         switch (entry->type) {
             case WARNING:
@@ -119,7 +91,7 @@ static void log_displayEntry(LogEntry *entry) {
                 break;
         }
         char codeStr[DISPLAY_MAX_LINE_LEN];
-        sprintf(codeStr, "%d", entry->code);
+        sprintf(codeStr, "%ld", entry->code);
         if (strlen(entry->msg) < DISPLAY_MAX_LINE_LEN + 1) {
             if (entry->type != INFO) {
                 display_lines(typeMsg, entry->msg, DISP_LOG_CONCAT, codeStr, true);
@@ -156,19 +128,20 @@ static void log_displayEntry(LogEntry *entry) {
         led_reset();
         // If pulse has been enabled, turn the LED off now so it pulses to the on state, not the off state (looks better)
         if (entry->pulse != 0) {
-            led_set(0);
-            gb_pulse_ms = entry->pulse;
+            gpio_set(PIN_LED, 0);
+            pulseMs = entry->pulse;
         }
         // Display on Pico built-in LED
-        add_repeating_timer_ms((int32_t)entry->code, led_callback, NULL, &timer);
+        toggleCallback = callback_in_ms((u32)entry->code, led_callback);
     }
     lastDisplayedEntry = *entry;
 }
 
-static inline int64_t logProcessQueue(alarm_id_t id, void *data) {
-    if (!platform_is_booted()) return (500 * 1000);
+static inline i32 logProcessQueue(u32 id) {
+    if (!boot_is_booted()) return 500;
     log_displayEntry(&queuedEntry);
     return 0;
+    (void)id;
 }
 
 void log_init() {
@@ -178,12 +151,12 @@ void log_init() {
             gpio_set_dir(LED_PIN, GPIO_OUT);
         #endif
     #endif
-    if (!platform_is_fbw()) led_set(1);
+    if (!runtime_is_fbw()) gpio_set(PIN_LED, 1);
     logCount = 0;
     log_resetLast();
 }
 
-void log_message(LogType type, char msg[64], int code, uint pulse_ms, bool force) {
+void log_message(LogType type, char msg[64], i32 code, u32 pulse_ms, bool force) {
     if (logCount < MAX_LOG_ENTRIES) {
         LogEntry entry;
         entry.type = type;
@@ -191,20 +164,20 @@ void log_message(LogType type, char msg[64], int code, uint pulse_ms, bool force
         entry.msg[sizeof(entry.msg) - 1] = '\0';
         entry.code = code;
         entry.pulse = pulse_ms;
-        entry.timestamp = time_us_64();
+        entry.timestamp = time_us();
         logEntries[logCount++] = entry;
 
         // Display the entry if the error is more severe than the last,
         // there was a code given, the type is severe enough, it was forced, or of the same type (but newer)
         if (type > LOG && code > -1) {
             if ((type >= lastLogEntry.type && code <= lastLogEntry.code) || force) {
-                if (platform_is_booted() || type == FATAL || type == INFO) {
+                if (boot_is_booted() || type == FATAL || type == INFO) {
                     log_displayEntry(&entry);
                 } else {
                     // The system isn't booted and the type isn't severe enough to warrant displaying it at the moment,
                     // so we'll check every 500ms if the system is booted and display it if it is
                     queuedEntry = entry;
-                    add_alarm_in_ms(500, logProcessQueue, NULL, true);
+                    callback_in_ms(500, logProcessQueue);
                 }
             }
         }
@@ -230,21 +203,19 @@ void log_message(LogType type, char msg[64], int code, uint pulse_ms, bool force
         }
         if (typeMsg) {
             if (code > -1) {
-                printf("%s (FBW-%d) %s\n", typeMsg, code, msg);
+                print("%s (FBW-%ld) %s", typeMsg, code, msg);
             } else {
-                printf("%s %s\n", typeMsg, msg);
+                print("%s %s", typeMsg, msg);
             }
         } else {
-            printf("%s\n", msg);
+            print("%s", msg);
         }
 
         if (type == FATAL) {
             // Halt execution for fatal errors
-            printf("\nFatal error encountered, halting pico-fbw!");
-            while (true) {
-                watchdog_update();
-                tight_loop_contents();
-            }
+            print("\nFatal error encountered, halting pico-fbw!");
+            while (true)
+                sys_periodic();
         }
     }
 }
@@ -252,8 +223,8 @@ void log_message(LogType type, char msg[64], int code, uint pulse_ms, bool force
 void log_clear(LogType type) {
     // Create a temporary array to hold all log entries, and find any log entries of the specified type
     LogEntry tempEntries[MAX_LOG_ENTRIES];
-    uint tempEntriesCount = 0;
-    for (uint i = 0; i < logCount; i++) {
+    u32 tempEntriesCount = 0;
+    for (u32 i = 0; i < logCount; i++) {
         if (logEntries[i].type != type) {
             // Only copy entries that are not of the specified type, thus deleting them from the temporary array
             tempEntries[tempEntriesCount++] = logEntries[i];
@@ -269,7 +240,7 @@ void log_clear(LogType type) {
         // Go through all log types in reverse order to find the most fatal error (if it exists), and display it instead
         bool hadError = false;
         for (LogType type = FATAL; type >= INFO; type--) {
-            for (uint i = 0; i < logCount; i++) {
+            for (u32 i = 0; i < logCount; i++) {
                 if (logEntries[i].type == type) {
                     log_displayEntry(&logEntries[i]);
                     hadError = true;
@@ -280,7 +251,7 @@ void log_clear(LogType type) {
         }
         // If there was no error, reset the display
         if (!hadError) {
-            if (platform_is_fbw()) {
+            if (runtime_is_fbw()) {
                 display_powerSave();
             } else {
                 led_reset();
@@ -289,16 +260,17 @@ void log_clear(LogType type) {
     }
 }
 
-uint8_t log_count() { return logCount; }
-uint8_t log_countErrs() {
-    uint count = 0;
-    for (uint i = 0; i < logCount; i++) {
+u8 log_count() { return logCount; }
+
+u8 log_count_errs() {
+    u32 count = 0;
+    for (u32 i = 0; i < logCount; i++) {
         if (logEntries[i].type == WARNING || logEntries[i].type == ERROR || logEntries[i].type == FATAL) count++;
     }
     return count;
 }
 
-LogEntry *log_get(uint index) {
+LogEntry *log_get(u32 index) {
     if (index < logCount) {
         return &logEntries[index];
     }

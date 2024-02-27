@@ -1,5 +1,4 @@
-#ifndef __DHCP_H
-#define __DHCP_H
+#pragma once
 
 #ifndef MICROPY_INCLUDED_LIB_NETUTILS_DHCPSERVER_H
     #define MICROPY_INCLUDED_LIB_NETUTILS_DHCPSERVER_H
@@ -10,8 +9,8 @@
     #define DHCPS_MAX_IP (8)
 
     typedef struct _dhcp_server_lease_t {
-        uint8_t mac[6];
-        uint16_t expiry;
+        u8 mac[6];
+        u16 expiry;
     } dhcp_server_lease_t;
 
     typedef struct _dhcp_server_t {
@@ -36,5 +35,3 @@
     void dhcp_server_deinit(dhcp_server_t *d);
 
 #endif // MICROPY_INCLUDED_LIB_NETUTILS_DHCPSERVER_H
-
-#endif // __DHCP_H

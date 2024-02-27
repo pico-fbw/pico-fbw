@@ -3,12 +3,12 @@
  * Licensed under the GNU AGPL-3.0
 */
 
-#include <stdio.h>
+#include "sys/print.h"
 
-#include "sys/api/cmds/MISC/ping.h"
+#include "ping.h"
 
-// I know, this file is crazy, thank me later :)
+// I know, this file is crazy, you can thank me later :)
 
 void api_ping(const char *cmd, const char *args) {
-    printf("PONG\n");
+    printraw("PONG\n");
 }

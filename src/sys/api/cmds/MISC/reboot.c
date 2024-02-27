@@ -3,19 +3,17 @@
  * Licensed under the GNU AGPL-3.0
 */
 
-#include <stdio.h>
 #include <stdlib.h>
+#include "platform/sys.h"
 
-#include "io/platform.h"
-
-#include "sys/api/cmds/MISC/reboot.h"
+#include "reboot.h"
 
 void api_reboot(const char *cmd, const char *args) {
     switch (atoi(args)) {
         case 1:
-            platform_reboot(REBOOT_BOOTLOADER);
+            sys_reboot(true);
         case 0:
         default:
-            platform_reboot(REBOOT_FAST);
+            sys_reboot(false);
     }
 }

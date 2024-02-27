@@ -5,7 +5,7 @@
 
 #include <math.h>
 
-#include "lib/nav.h"
+#include "nav.h"
 
 static inline long double toRadians(long double degrees) {
     return degrees * M_PI / 180.0;

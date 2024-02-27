@@ -1,8 +1,7 @@
-#ifndef __AUTO_H
-#define __AUTO_H
+#pragma once
 
 #include <stdbool.h>
-#include "wifly/wifly.h"
+#include "platform/int.h"
 
 /* PID constants for the autopilot's lateral guidance. */
 #define latGuid_kP 0.005
@@ -25,17 +24,22 @@
 #define vertGuid_integMax 50.0
 #define vertGuid_kT 0.01
 
-#define INTERCEPT_RADIUS 25 // The radius at which to consider a waypoint "incercepted" in meters
-// TODO: do I need to change this for different speeds? idk if it will make too much of a difference, remember what aviation simmer said
+typedef struct Waypoint {
+    long double lat, lng;
+    i32 alt;
+    float speed;
+    i32 drop;
+} Waypoint;
+#define WAYPOINT_NUM_FIELDS 5
 
 typedef enum BayPosition {
     CLOSED,
-    OPEN
+    OPEN,
 } BayPosition;
 
 /**
  * Initializes auto mode.
- * @return true if initialization was successful, false if not
+ * @return true if initialization was successful
 */
 bool auto_init();
 
@@ -46,15 +50,13 @@ void auto_update();
 
 /**
  * Manually sets a temporary Waypoint target.
- * @param wpt The Waypoint to target
- * @param callback Callback function to call when the target is reached
+ * @param wpt the Waypoint to target
+ * @param callback callback function to call when the target is reached
 */
 void auto_set(Waypoint wpt, void (*callback)(void));
 
 /**
  * Sets the position of the drop bay (servo) mechanism.
- * @param pos The position to set the drop bay mechanism to
+ * @param pos the position to set the drop bay mechanism to
 */
 void auto_setBayPosition(BayPosition pos);
-
-#endif // __AUTO_H

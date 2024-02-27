@@ -1,5 +1,4 @@
-#ifndef __TCP_H
-#define __TCP_H
+#pragma once
 
 #include "wifly/wifly.h"
 
@@ -11,12 +10,12 @@ typedef struct TCP_SERVER_T_ {
 
 typedef struct TCP_CONNECT_STATE_T_ {
     struct tcp_pcb *pcb;
-    int sent_len;
+    i32 sent_len;
     char headers[TCP_HEADER_SIZE];
     char *accHeaders;
     char result[TCP_RESULT_SIZE];
-    int header_len;
-    int result_len;
+    i32 header_len;
+    i32 result_len;
     ip_addr_t *gw;
 } TCP_CONNECT_STATE_T;
 
@@ -31,5 +30,3 @@ bool tcp_server_open(void *arg);
  * @param state The state object to close
 */
 void tcp_server_close(TCP_SERVER_T *state);
-
-#endif // __TCP_H

@@ -12,6 +12,8 @@ add_library(fbw_lib
     fusion/drivers/ak09916.c
     fusion/drivers/bno055.c
     fusion/drivers/icm20948.c
+    lfs.c
+    lfs_util.c
     minmea.c
     nav.c
     pid.c
@@ -19,12 +21,7 @@ add_library(fbw_lib
 )
 
 target_link_libraries(fbw_lib
-    fbw_io
     fbw_sys
-    hardware_i2c
-    hardware_gpio
-    pico_base
-    pico_time
 )
 
 target_include_directories(fbw_lib PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/src)

@@ -1,7 +1,6 @@
-#ifndef __STATUS_H
-#define __STATUS_H
+#pragma once
 
-#include <stdint.h>
+#include "platform/int.h"
 
 #include "fusion.h"
 
@@ -17,7 +16,7 @@ typedef struct StatusSubsystem {
 	ssSetStatus_t           *queue;         ///< queue status change for next regular interval
 	ssUpdateStatus_t        *update;        ///< make pending status active/visible
 	// application-specific internal variables
-	uint8_t toggle;                      ///< This implementation can change LED color and have either solid/toggle
+	u8 toggle;                      ///< This implementation can change LED color and have either solid/toggle
 } StatusSubsystem ;
 
 /// initializeStatusSubsystem() should be called once at startup to initialize the
@@ -25,5 +24,3 @@ typedef struct StatusSubsystem {
 void initializeStatusSubsystem (
   StatusSubsystem *pStatus                      ///< pointer to the status subsystem
 );
-
-#endif /* __STATUS_H */

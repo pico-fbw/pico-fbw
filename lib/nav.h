@@ -1,5 +1,4 @@
-#ifndef __NAV_H
-#define __NAV_H
+#pragma once
 
 #define EARTH_RADIUS_KM 6371  // Earth's radius in kilometers
 #define EARTH_RADIUS_M (EARTH_RADIUS_KM * 1000) // Earth's radius in meters
@@ -23,5 +22,3 @@ double calculateBearing(long double latA, long double lonA, long double latB, lo
  * @return Distance in meters.
 */
 double calculateDistance(long double latA, long double lonA, long double latB, long double lonB);
-
-#endif // __NAV_H

@@ -12,13 +12,9 @@
  * Licensed under the GNU AGPL-3.0
 */
 
-#include <stdio.h>
-#include "pico/platform.h"
-#include "pico/types.h"
+#include "sys/print.h"
 
-#include "io/flash.h"
-
-#include "lib/fusion/drivers/icm20948.h"
+#include "icm20948.h"
 
 /* 
    ICM20948
@@ -59,22 +55,22 @@ const registerWriteList_t ICM20948_CONFIGURE[] = {
 
 #define ICM20948_COUNTS_PER_DPS 32.8 // (datasheet pg. 11, we use 1000 deg/s so GYRO_FS_SEL=2)
 
-int8_t ICM20948_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
-    int32_t status;
-    uint8_t reg;
-    if (print.aahrs) printf("[ICM20948] initializing...");
-    for (uint i = 0; i < DRIVER_INIT_ATTEMPTS; i++) {
-        if (print.aahrs) printf("attempt %d ", i);
+i8 ICM20948_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
+    i32 status;
+    byte reg;
+    printfbw(aahrs, "[ICM20948] initializing...");
+    for (u32 i = 0; i < DRIVER_INIT_ATTEMPTS; i++) {
+        if (shouldPrint.aahrs) printraw("attempt %d ", i);
         status = driver_read_register(&sensor->deviceInfo, sensor->addr, ICM20948_WHO_AM_I_READ[0].readFrom, ICM20948_WHO_AM_I_READ[0].numBytes, &reg);
         if (status == SENSOR_ERROR_NONE && reg == ICM20948_WHO_AM_I_EXPECTED) break;
     }
-    if (print.aahrs) printf("\n");
+    if (shouldPrint.aahrs) printraw("\n");
     if (status != SENSOR_ERROR_NONE) {
-        if (print.fbw) printf("[ICM20948] ERROR: address not acknowledged! (no/wrong device present?)\n");
+        printfbw(aahrs, "[ICM20948] ERROR: address not acknowledged! (no/wrong device present?)");
         return status;
     }
     if (reg != ICM20948_WHO_AM_I_EXPECTED) {
-        if (print.fbw) printf("[ICM20948] ERROR: could not verify chip!\n");
+        printfbw(aahrs, "[ICM20948] ERROR: could not verify chip!");
         return SENSOR_ERROR_INIT;
     }
     #if F_USING_ACCEL
@@ -85,11 +81,11 @@ int8_t ICM20948_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
     #endif
     #if F_USING_GYRO
         sfg->Gyro.iWhoAmI = reg;
-        sfg->Gyro.iCountsPerDegPerSec = (int16_t)ICM20948_COUNTS_PER_DPS;
+        sfg->Gyro.iCountsPerDegPerSec = (i16)ICM20948_COUNTS_PER_DPS;
         sfg->Gyro.fDegPerSecPerCount = 1.0f/ICM20948_COUNTS_PER_DPS;
     #endif
 
-    if (print.aahrs) printf("[ICM20948] configuring...\n");
+    printfbw(aahrs, "[ICM20948] configuring...");
     status = driver_write_list(&sensor->deviceInfo, sensor->addr, ICM20948_CONFIGURE);
     #if F_USING_ACCEL
         sfg->Accel.isEnabled = true;
@@ -97,19 +93,19 @@ int8_t ICM20948_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
     #if F_USING_GYRO
         sfg->Gyro.isEnabled = true;
     #endif
-    if (print.aahrs) printf("[ICM20948] sensor ready!\n");
+    printfbw(aahrs, "[ICM20948] sensor ready!");
     sensor->isInitialized = F_USING_ACCEL | F_USING_GYRO;
     return status;
 }
 
 #if F_USING_ACCEL
-int8_t ICM20948_read_accel(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
+i8 ICM20948_read_accel(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
     if (!(sensor->isInitialized & F_USING_ACCEL)) return SENSOR_ERROR_INIT;
-    uint8_t buf[6];
-    int32_t status = driver_read(&sensor->deviceInfo, sensor->addr, ICM20948_ACCEL_DATA_READ, buf);
+    byte buf[6];
+    i32 status = driver_read(&sensor->deviceInfo, sensor->addr, ICM20948_ACCEL_DATA_READ, buf);
     if (status == SENSOR_ERROR_NONE) {
-        int16_t sample[3];
-        for (uint i = 0; i < count_of(sample); i++) {
+        i16 sample[3];
+        for (u32 i = 0; i < count_of(sample); i++) {
             // ICM20948 has high byte first so the shifting is slightly different (from BNO055)
             sample[i] = (buf[i * 2] << 8) | buf[i * 2 + 1];
         }
@@ -121,13 +117,13 @@ int8_t ICM20948_read_accel(struct PhysicalSensor *sensor, SensorFusionGlobals *s
 #endif
 
 #if F_USING_GYRO
-int8_t ICM20948_read_gyro(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
+i8 ICM20948_read_gyro(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
     if (!(sensor->isInitialized & F_USING_GYRO)) return SENSOR_ERROR_INIT;
-    uint8_t buf[6];
-    int32_t status = driver_read(&sensor->deviceInfo, sensor->addr, ICM20948_GYRO_DATA_READ, buf);
+    byte buf[6];
+    i32 status = driver_read(&sensor->deviceInfo, sensor->addr, ICM20948_GYRO_DATA_READ, buf);
     if (status == SENSOR_ERROR_NONE) {
-        int16_t sample[3];
-        for (uint i = 0; i < count_of(sample); i++) {
+        i16 sample[3];
+        for (u32 i = 0; i < count_of(sample); i++) {
             sample[i] = (buf[i * 2] << 8) | buf[i * 2 + 1];
         }
         conditionSample(sample);
@@ -137,8 +133,8 @@ int8_t ICM20948_read_gyro(struct PhysicalSensor *sensor, SensorFusionGlobals *sf
 }
 #endif
 
-int8_t ICM20948_read(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
-    int8_t status_accel = 0, status_gyro = 0;
+i8 ICM20948_read(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
+    i8 status_accel = 0, status_gyro = 0;
     #if F_USING_ACCEL
         status_accel = ICM20948_read_accel(sensor, sfg);
     #endif

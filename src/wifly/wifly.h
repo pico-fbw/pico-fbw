@@ -1,8 +1,10 @@
-#ifndef __WIFLY_H
-#define __WIFLY_H
+#pragma once
 
 #include <stdbool.h>
 #include <stddef.h>
+#include "platform/int.h"
+
+#include "modes/auto.h"
 
 typedef enum WiflyStatus {
     WIFLY_STATUS_AWAITING,
@@ -35,14 +37,6 @@ typedef enum WiflyEnableStatus {
 #define TCP_RESULT_SIZE 3760 // The result buffer size should be large enough to hold the entire HTTP response and page
 // Keep in mind that if the content is made larger then both the result size and possibly LWIP's memory size need to be increased
 
-typedef struct Waypoint {
-    long double lat, lng;
-    int alt;
-    float speed;
-    int drop;
-} Waypoint;
-#define WAYPOINT_NUM_FIELDS 5
-
 #ifdef RASPBERRYPI_PICO_W
 
     /**
@@ -62,7 +56,7 @@ typedef struct Waypoint {
  * @param result Pointer to the result buffer.
  * @param max_result_len The maximum length of the result buffer.
 */
-int wifly_genPageContent(char *result, size_t max_result_len);
+i32 wifly_genPageContent(char *result, size_t max_result_len);
 
 /**
  * Parses the Wi-Fly flightplan.
@@ -91,12 +85,10 @@ const char *wifly_getFplanJson();
 /**
  * @return the number of waypoints in the current flightplan (0 if a flightplan has not yet been parsed).
 */
-uint wifly_getWaypointCount();
+u32 wifly_getWaypointCount();
 
 /**
  * @return the number of GPS samples that must be collected.
  * @note that this will be -1 if a flightplan has not yet been parsed and typically anywhere from 0-100 if it has been.
 */
-int wifly_getNumAltSamples();
-
-#endif // __WIFLY_H
+i32 wifly_getNumAltSamples();

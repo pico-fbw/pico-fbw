@@ -15,17 +15,12 @@ MIT License
 
 The following files (and their corresponding Header [.h] files, when applicable) of this project utilize code that is licensed under the MIT License:
 
-- dhcp.c
-- dmp.c
-- esc.c
-- imu.c
-- jsmn.h
-- pid.c
-- platform.c
-- pwm.c
-- pwm.pio
-- semver.c
-- servo.c
+- lib/jsmn.h
+- lib/pid.c
+- lib/semver.c
+- platform/pico/pwm.c
+- platform/pico/pwm.pio
+- wifly/tcp_ip/dhcp.c
 
 You can find a copy of the License at the following URL:
 <https://opensource.org/licenses/MIT>
@@ -36,23 +31,28 @@ BSD 3-Clause License
 
 The following files (and their corresponding Header [.h] files, when applicable) of this project utilize code that is licensed under the BSD 3-Clause License:
 
-- aahrs.c
-- acc.c
-- approx.c
-- bno055.c
-- calibration.c
-- data.c
-- dns.c
-- drivers.c
-- fmath.c
-- fusion.c
-- icm20948.c
-- mag.c
-- matrix.c
-- orient.c
-- status.c
-- tcp.c
-- wifly.c
+- lib/lfs_util.c
+- lib/lfs.c
+- lib/fusion/acc.c
+- lib/fusion/approx.c
+- lib/fusion/calibration.c
+- lib/fusion/fconfig.h
+- lib/fusion/fmath.c
+- lib/fusion/fusion.c
+- lib/fusion/mag.c
+- lib/fusion/matrix.c
+- lib/fusion/orient.c
+- lib/fusion/status.c
+- lib/fusion/drivers/ak09916.c
+- lib/fusion/drivers/bno055.c
+- lib/fusion/drivers/drivers.c
+- lib/fusion/drivers/icm20948.c
+- platform/pico/flash.c
+- io/aahrs.c
+- io/display.c
+- wifly/wifly.c
+- wifly/tcp_ip/dns.c
+- wifly/tcp_ip/tcp.c
 
 You can find a copy of the License at the following URL:
 <https://opensource.org/licenses/BSD-3-Clause>

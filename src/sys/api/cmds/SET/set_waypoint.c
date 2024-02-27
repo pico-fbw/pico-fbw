@@ -8,18 +8,20 @@
 #include "modes/aircraft.h"
 #include "modes/auto.h"
 
+#include "sys/print.h"
+
 #include "wifly/wifly.h"
 
-#include "sys/api/cmds/SET/set_waypoint.h"
+#include "set_waypoint.h"
 
 void interceptCallback() {
-    printf("pico-fbw 200 [WPTINTC]\n");
+    printraw("pico-fbw 200 [WPTINTC]\n");
 }
 
-int api_set_waypoint(const char *cmd, const char *args) {
+i32 api_set_waypoint(const char *cmd, const char *args) {
     if (aircraft.mode == MODE_AUTO) {
         Waypoint wpt;
-        int numArgs = sscanf(args, "%f %f %d %f %d", &wpt.lat, &wpt.lng, &wpt.alt, &wpt.speed, &wpt.drop);
+        i32 numArgs = sscanf(args, "%f %f %d %f %d", &wpt.lat, &wpt.lng, &wpt.alt, &wpt.speed, &wpt.drop);
         switch (numArgs) {
             case 2:
                 wpt.alt = -5;

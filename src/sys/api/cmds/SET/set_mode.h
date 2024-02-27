@@ -1,6 +1,5 @@
-#ifndef __SET_MODE_H
-#define __SET_MODE_H
+#pragma once
 
-int api_set_mode(const char *cmd, const char *args);
+#include "platform/int.h"
 
-#endif // __SET_MODE_H
+i32 api_set_mode(const char *cmd, const char *args);
