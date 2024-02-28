@@ -15,7 +15,7 @@ typedef int16_t i16;
 typedef int32_t i32;
 typedef int64_t i64;
 
-#define count_of(a) (sizeof(a)/sizeof((a)[0]))
+#define count_of(a) (sizeof(a) / sizeof((a)[0]))
 
 // Clamps a value `f` between `min` and `max`.
 inline float clampf(float f, float min, float max) {

@@ -19,7 +19,7 @@
 #define vertGuid_kD 0.001
 #define vertGuid_tau 0.001
 #define vertGuid_loLim -15 // The minimum pitch angle the autopilot can command
-#define vertGuid_upLim 25 // The maximum pitch angle the autopilot can command
+#define vertGuid_upLim 25  // The maximum pitch angle the autopilot can command
 #define vertGuid_integMin -50.0
 #define vertGuid_integMax 50.0
 #define vertGuid_kT 0.01
@@ -40,23 +40,23 @@ typedef enum BayPosition {
 /**
  * Initializes auto mode.
  * @return true if initialization was successful
-*/
+ */
 bool auto_init();
 
 /**
  * Executes one cycle of auto mode.
-*/
+ */
 void auto_update();
 
 /**
  * Manually sets a temporary Waypoint target.
  * @param wpt the Waypoint to target
  * @param callback callback function to call when the target is reached
-*/
+ */
 void auto_set(Waypoint wpt, void (*callback)(void));
 
 /**
  * Sets the position of the drop bay (servo) mechanism.
  * @param pos the position to set the drop bay mechanism to
-*/
+ */
 void auto_setBayPosition(BayPosition pos);

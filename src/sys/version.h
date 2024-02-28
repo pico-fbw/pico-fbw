@@ -5,9 +5,9 @@
 
 #define PICO_FBW_VERSION "1.0.0-alpha.3"
 #ifdef NDEBUG
-    #define DEBUG_BUILD false
+#define DEBUG_BUILD false
 #else
-    #define DEBUG_BUILD true
+#define DEBUG_BUILD true
 #endif
 
 #define PICO_FBW_API_VERSION "1.0"
@@ -23,11 +23,11 @@
  * -3 if there was a parse error,
  * or -4 if there was a filesystem error.
  * @note If no `vstr` is specified, the version read from flash will be copied into `vstr`.
-*/
+ */
 i32 version_check(char vstr[]);
 
 /**
  * Saves the current version of pico-fbw (this binary) to flash.
  * @return Whether the version was saved successfully.
-*/
+ */
 bool version_save();

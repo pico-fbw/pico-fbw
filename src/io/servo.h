@@ -2,7 +2,8 @@
 
 #include "platform/int.h"
 
-#define DEFAULT_SERVO_TEST {110, 70, 90} // Default degree amounts to move the servos to during the POST
+#define DEFAULT_SERVO_TEST                                                                                                     \
+    { 110, 70, 90 } // Default degree amounts to move the servos to during the POST
 #define NUM_DEFAULT_SERVO_TEST 3
 #define DEFAULT_SERVO_TEST_PAUSE_MS 250 // Default pause between servo moves in milliseconds
 
@@ -10,14 +11,14 @@
  * Enables servo control on a list of pins.
  * @param pins the array of servo GPIO pins
  * @param num_pins the number of pins
-*/
+ */
 void servo_enable(u32 pins[], u32 num_pins);
 
 /**
  * Sets the position of the servo using the the duty cycle of the PWM signal.
  * @param gpio_pin the GPIO pin the servo is attached to
  * @param degree the position in degrees, within 0-180
-*/
+ */
 void servo_set(u32 pin, u16 degree);
 
 /**
@@ -29,12 +30,12 @@ void servo_set(u32 pin, u16 degree);
  * @param pause_between_moves_ms the pause between servo moves in milliseconds
  * @note If num_servos = 0, the servos from the config will be tested.
  * You also may want to add 90 at the end of the list to ensure that the servos return to a neutral position.
-*/
+ */
 void servo_test(u32 servos[], u32 num_servos, const u16 degrees[], const u32 num_degrees, const u32 pause_between_moves_ms);
 
 /**
  * Gets the GPIO pins and number of pins designated as servos in the config.
  * @param pins array of at least 3 elements to fill with pins
  * @param num_pins pointer to the number of pins
-*/
+ */
 void servo_getPins(u32 *servos, u32 *num_servos);

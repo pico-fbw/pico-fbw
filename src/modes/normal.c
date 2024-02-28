@@ -1,7 +1,7 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU AGPL-3.0
-*/
+ */
 
 #include <math.h>
 #include "platform/int.h"
@@ -39,10 +39,9 @@ void normal_update() {
     throttleSet = receiver_get((u32)config.pins[PINS_INPUT_THROTTLE], RECEIVER_MODE_ESC);
     // This comment is a tribute to the world's stupidest bug where the above code was set to READ from the SERVOS
     // and it took me much longer than I'm willing to admit to find (cue the facepalms, I know ._.)
-    
+
     // Check for manual overrides of externally set (by API) setpoints
-    if (fabsf(rollInput) > config.control[CONTROL_DEADBAND] ||
-        fabsf(pitchInput) > config.control[CONTROL_DEADBAND] ||
+    if (fabsf(rollInput) > config.control[CONTROL_DEADBAND] || fabsf(pitchInput) > config.control[CONTROL_DEADBAND] ||
         fabsf(yawInput) > config.control[CONTROL_DEADBAND]) {
         overrideSetpoints = false;
     }
@@ -62,7 +61,8 @@ void normal_update() {
         // Make sure the PID setpoints aren't set to unsafe values so we don't get weird outputs from PID,
         // this is also where our bank/pitch protections come in.
         if (fabsf(rollSet) > config.control[CONTROL_ROLL_LIMIT]) {
-            // If the roll values are unsafe, we do allow setting up to to the hold limit but constant input is required, so check for that
+            // If the roll values are unsafe, we do allow setting up to to the hold limit but constant input is required, so
+            // check for that
             if (fabsf(rollInput) < fabsf(rollSet)) {
                 if (rollSet > 0) {
                     rollSet -= 0.05f;
@@ -107,14 +107,14 @@ void normal_deinit() {
 
 bool normal_set(float roll, float pitch, float yaw, float throttle, bool useThrottle) {
     // Ensure there are no manual control inputs before we allow setpoints to be externally set
-    if (fabsf(rollInput) > config.control[CONTROL_DEADBAND] ||
-        fabsf(pitchInput) > config.control[CONTROL_DEADBAND] ||
+    if (fabsf(rollInput) > config.control[CONTROL_DEADBAND] || fabsf(pitchInput) > config.control[CONTROL_DEADBAND] ||
         fabsf(yawInput) > config.control[CONTROL_DEADBAND])
         return false;
     rollSet = roll;
     pitchSet = pitch;
     yawInput = yaw;
-    if (useThrottle) throttleSet = throttle;
+    if (useThrottle)
+        throttleSet = throttle;
     overrideSetpoints = true;
     return true;
 }

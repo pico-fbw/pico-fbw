@@ -3,12 +3,12 @@
  * All rights reserved.
  *
  * This file utilizes code under the BSD-3-Clause License. See "LICENSE" for details.
-*/
+ */
 
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU AGPL-3.0
-*/
+ */
 
 #include <math.h>
 #include <stdio.h>
@@ -24,9 +24,9 @@
 #include "lib/fusion/mag.h"
 #include "lib/fusion/status.h"
 
-#include "lib/fusion/drivers/drivers.h"
 #include "lib/fusion/drivers/ak09916.h"
 #include "lib/fusion/drivers/bno055.h"
+#include "lib/fusion/drivers/drivers.h"
 #include "lib/fusion/drivers/icm20948.h"
 
 #include "modes/aircraft.h"
@@ -39,37 +39,38 @@
 #include "aahrs.h"
 
 // Prints a vector (array)
-#define PRINT_VECTOR(vector) \
-    do { \
-        for (u32 i = 0; i < count_of(vector); i++) { \
-            printraw("%f ", vector[i]); \
-        } \
-        printraw("\n"); \
+#define PRINT_VECTOR(vector)                                                                                                   \
+    do {                                                                                                                       \
+        for (u32 i = 0; i < count_of(vector); i++) {                                                                           \
+            printraw("%f ", vector[i]);                                                                                        \
+        }                                                                                                                      \
+        printraw("\n");                                                                                                        \
     } while (0)
 
 // Prints a matrix (2-dimensional array)
-#define PRINT_MATRIX(matrix) \
-do { \
-    for (u32 i = 0; i < count_of(matrix); i++) { \
-        for (u32 j = 0; j < count_of(matrix[0]); j++) { \
-            printraw("%f ", matrix[i][j]); \
-        } \
-        printraw("\n"); \
-    } \
-} while (0)
+#define PRINT_MATRIX(matrix)                                                                                                   \
+    do {                                                                                                                       \
+        for (u32 i = 0; i < count_of(matrix); i++) {                                                                           \
+            for (u32 j = 0; j < count_of(matrix[0]); j++) {                                                                    \
+                printraw("%f ", matrix[i][j]);                                                                                 \
+            }                                                                                                                  \
+            printraw("\n");                                                                                                    \
+        }                                                                                                                      \
+    } while (0)
 
 static SensorFusionGlobals fusion;
 static StatusSubsystem status;
 struct PhysicalSensor *sensors;
 static u32 numSensors = 0;
-static u32 rateDelay = 0; // Delay between fusion algorithm runs in microseconds
+static u32 rateDelay = 0;   // Delay between fusion algorithm runs in microseconds
 static Timestamp ranFusion; // Time of the last fusion algorithm run
 
 bool aahrs_init() {
     // Check the state of any previous calibration
     aahrs.isCalibrated = (bool)calibration.aahrs[AAHRS_CALIBRATED];
-    if (aahrs.isCalibrated && ((IMUModel)calibration.aahrs[AAHRS_IMU_MODEL] != (IMUModel)config.sensors[SENSORS_IMU_MODEL] ||
-                               (BaroModel)calibration.aahrs[AAHRS_BARO_MODEL] != (BaroModel)config.sensors[SENSORS_BARO_MODEL])) {
+    if (aahrs.isCalibrated &&
+        ((IMUModel)calibration.aahrs[AAHRS_IMU_MODEL] != (IMUModel)config.sensors[SENSORS_IMU_MODEL] ||
+         (BaroModel)calibration.aahrs[AAHRS_BARO_MODEL] != (BaroModel)config.sensors[SENSORS_BARO_MODEL])) {
         printfbw(aahrs, "calibration was performed on different models, recalibration is necessary!");
         // This ensures the system won't load any bad calibration into the fusion algorithms
         EraseFusionCalibration();
@@ -80,54 +81,64 @@ bool aahrs_init() {
     initSensorFusionGlobals(&fusion, &status);
     printfbw(aahrs, "initialized fusion memory defaults");
     // Install the sensors defined in the config
-    if (shouldPrint.aahrs) printraw("[aahrs] installing ");
+    if (shouldPrint.aahrs)
+        printraw("[aahrs] installing ");
     switch ((IMUModel)config.sensors[SENSORS_IMU_MODEL]) {
-        case IMU_MODEL_BNO055:
-            // Allocate memory for the sensor and install it
-            if (shouldPrint.aahrs) printraw("BNO055 ");
-            numSensors++;
-            sensors = reallocarray(sensors, numSensors, sizeof(struct PhysicalSensor));
-            if (!sensors) return false;
-            fusion.installSensor(&fusion, &sensors[numSensors - 1], BNO055_I2C_ADDR_LOW, 1, NULL, BNO055_init, BNO055_read);
-            break;
-        case IMU_MODEL_ICM20948:
-            // The ICM20948 actually has an AK09916 inside it, but it has a different i2c address so we see it as a seperate device
-            // FIXME: AK09916 is broken now for some reason?
-            if (shouldPrint.aahrs) printraw("AK09916 ");
-            numSensors++;
-            sensors = reallocarray(sensors, numSensors, sizeof(struct PhysicalSensor));
-            if (!sensors) return false;
-            fusion.installSensor(&fusion, &sensors[numSensors - 1], AK09916_I2C_ADDR, 1, NULL, AK09916_init, AK09916_read);
-            if (shouldPrint.aahrs) printraw(", ICM20948 ");
-            numSensors++;
-            sensors = reallocarray(sensors, numSensors, sizeof(struct PhysicalSensor));
-            if (!sensors) return false;
-            fusion.installSensor(&fusion, &sensors[numSensors - 1], ICM20948_I2C_ADDR_HIGH, 1, NULL, ICM20948_init, ICM20948_read);
-            break;
-        default:
-            printfbw(aahrs, "ERROR: unknown IMU model!");
+    case IMU_MODEL_BNO055:
+        // Allocate memory for the sensor and install it
+        if (shouldPrint.aahrs)
+            printraw("BNO055 ");
+        numSensors++;
+        sensors = reallocarray(sensors, numSensors, sizeof(struct PhysicalSensor));
+        if (!sensors)
             return false;
+        fusion.installSensor(&fusion, &sensors[numSensors - 1], BNO055_I2C_ADDR_LOW, 1, NULL, BNO055_init, BNO055_read);
+        break;
+    case IMU_MODEL_ICM20948:
+        // The ICM20948 actually has an AK09916 inside it, but it has a different i2c address so we see it as a seperate device
+        // FIXME: AK09916 is broken now for some reason?
+        if (shouldPrint.aahrs)
+            printraw("AK09916 ");
+        numSensors++;
+        sensors = reallocarray(sensors, numSensors, sizeof(struct PhysicalSensor));
+        if (!sensors)
+            return false;
+        fusion.installSensor(&fusion, &sensors[numSensors - 1], AK09916_I2C_ADDR, 1, NULL, AK09916_init, AK09916_read);
+        if (shouldPrint.aahrs)
+            printraw(", ICM20948 ");
+        numSensors++;
+        sensors = reallocarray(sensors, numSensors, sizeof(struct PhysicalSensor));
+        if (!sensors)
+            return false;
+        fusion.installSensor(&fusion, &sensors[numSensors - 1], ICM20948_I2C_ADDR_HIGH, 1, NULL, ICM20948_init, ICM20948_read);
+        break;
+    default:
+        printfbw(aahrs, "ERROR: unknown IMU model!");
+        return false;
     }
     switch ((BaroModel)config.sensors[SENSORS_BARO_MODEL]) {
-        case BARO_MODEL_NONE:
-            break;
-        case BARO_MODEL_DPS310:
-            if (shouldPrint.aahrs) printraw(", DPS310 ");
-            // Code incomplete
-            break;
-        default:
-            printfbw(aahrs, "ERROR: unknown baro model!");
-            return false;
+    case BARO_MODEL_NONE:
+        break;
+    case BARO_MODEL_DPS310:
+        if (shouldPrint.aahrs)
+            printraw(", DPS310 ");
+        // Code incomplete
+        break;
+    default:
+        printfbw(aahrs, "ERROR: unknown baro model!");
+        return false;
     }
-    if (shouldPrint.aahrs) printraw("\n");
+    if (shouldPrint.aahrs)
+        printraw("\n");
     printfbw(aahrs, "initializing core fusion engine");
     fusion.initializeFusionEngine(&fusion);
     // Ensure initialization has been good so far
-    if (fusion.getStatus(&fusion) != NORMAL) return false;
-    // Calculate the delay needed between fusion updates to obtain FUSION_HZ
-    #if F_9DOF_GBY_KALMAN
-        rateDelay = (u32)((1.0f / FUSION_HZ) * 1E6f - (F_9DOF_GBY_KALMAN_SYSTICK + F_CONDITION_SENSOR_READINGS_SYSTICK));
-    #endif
+    if (fusion.getStatus(&fusion) != NORMAL)
+        return false;
+// Calculate the delay needed between fusion updates to obtain FUSION_HZ
+#if F_9DOF_GBY_KALMAN
+    rateDelay = (u32)((1.0f / FUSION_HZ) * 1E6f - (F_9DOF_GBY_KALMAN_SYSTICK + F_CONDITION_SENSOR_READINGS_SYSTICK));
+#endif
     printfbw(aahrs, "[AAHRS] to obtain update rate of %dHz, using delay of %luus\n", FUSION_HZ, rateDelay);
     return true;
 }
@@ -148,9 +159,9 @@ void aahrs_update() {
         fusion.runFusion(&fusion);
         // Use a common pointer that will be usable no matter which fusion mode is running
         SV_ptr common;
-        #if F_9DOF_GBY_KALMAN
-            common = (SV_ptr)&fusion.SV_9DOF_GBY_KALMAN;
-        #endif
+#if F_9DOF_GBY_KALMAN
+        common = (SV_ptr)&fusion.SV_9DOF_GBY_KALMAN;
+#endif
         aahrs.roll = common->fPhi;
         aahrs.roll_rate = common->fOmega[CHX];
         aahrs.pitch = common->fThe;
@@ -166,62 +177,64 @@ bool aahrs_calibrate() {
     Timestamp wait;
     bool hasMoved = false;
 
-    // GYRO: Wait for gyro to stabilize, calculate its offsets a number of times, then average them and save
-    #if F_USING_GYRO && (F_9DOF_GBY_KALMAN || F_6DOF_GY_KALMAN)
-        log_message(INFO, "Please hold still!", 1000, 200, true);
+// GYRO: Wait for gyro to stabilize, calculate its offsets a number of times, then average them and save
+#if F_USING_GYRO && (F_9DOF_GBY_KALMAN || F_6DOF_GY_KALMAN)
+    log_message(INFO, "Please hold still!", 1000, 200, true);
+    if (runtime_is_fbw())
+        display_string("Please hold still!", 0);
+    // Wait for gyro (and user) to stabilize
+    wait = timestamp_in_ms(5000);
+    while (!timestamp_reached(&wait))
+        aahrs.update();
+    // Take GYRO_AVG_SAMPLES offsets
+    float offsets[3];
+    for (u32 i = 0; i < GYRO_AVG_SAMPLES; i++) {
         if (runtime_is_fbw())
-            display_string("Please hold still!", 0);
-        // Wait for gyro (and user) to stabilize
-        wait = timestamp_in_ms(5000);
-        while (!timestamp_reached(&wait)) aahrs.update();
-        // Take GYRO_AVG_SAMPLES offsets
-        float offsets[3];
-        for (u32 i = 0; i < GYRO_AVG_SAMPLES; i++) {
-            if (runtime_is_fbw())
-                display_string("Please hold still!", (i + 1) * (33.0f / GYRO_AVG_SAMPLES));
-            // Reqest a reset from the algorithm so that the gyro offsets get calculated
-            #if F_9DOF_GBY_KALMAN
-                fusion.SV_9DOF_GBY_KALMAN.resetflag = true;
-            #elif F_6DOF_GY_KALMAN
-                fusion.SV_6DOF_GY_KALMAN.resetflag = true;
-            #endif
-            // Wait for the calculation and save
-            wait = timestamp_in_ms(rateDelay);
-            while (!timestamp_reached(&wait)) aahrs.update();
-            #if F_9DOF_GBY_KALMAN
-                for (u32 j = 0; j < count_of(offsets); j++)
-                    offsets[j] += fusion.SV_9DOF_GBY_KALMAN.fbPl[j];
-            #elif F_6DOF_GY_KALMAN
-                for (u32 j = 0; j < count_of(offsets); j++)
-                    offsets[j] += fusion.SV_6DOF_GY_KALMAN.fbPl[j];
-            #endif
-        }
-        // Average the offsets and save
-        for (u32 i = 0; i < count_of(offsets); i++) {
-            #if F_9DOF_GBY_KALMAN
-                fusion.SV_9DOF_GBY_KALMAN.fbPl[i] = offsets[i] / GYRO_AVG_SAMPLES;
-            #elif F_6DOF_GY_KALMAN
-                fusion.SV_6DOF_GY_KALMAN.fbPl[i] = offsets[i] / GYRO_AVG_SAMPLES;
-            #endif
-        }
-        printfbw(aahrs, "saving gyro calibration");
-        if (shouldPrint.aahrs) {
-            printraw("\noffset vector:");
-            #if F_9DOF_GBY_KALMAN
-                PRINT_VECTOR(fusion.SV_9DOF_GBY_KALMAN.fbPl);
-            #elif F_6DOF_GY_KALMAN
-                PRINT_VECTOR(fusion.SV_6DOF_GY_KALMAN.fbPl);
-            #endif
-            printraw("\noffset error vector:");
-            #if F_9DOF_GBY_KALMAN
-                PRINT_VECTOR(fusion.SV_9DOF_GBY_KALMAN.fbErrPl);
-            #elif F_6DOF_GY_KALMAN
-                PRINT_VECTOR(fusion.SV_6DOF_GY_KALMAN.fbErrPl);
-            #endif
-            printraw("\n");
-        }
-        SaveGyroCalibrationToFlash(&fusion);
-    #endif
+            display_string("Please hold still!", (i + 1) * (33.0f / GYRO_AVG_SAMPLES));
+// Reqest a reset from the algorithm so that the gyro offsets get calculated
+#if F_9DOF_GBY_KALMAN
+        fusion.SV_9DOF_GBY_KALMAN.resetflag = true;
+#elif F_6DOF_GY_KALMAN
+        fusion.SV_6DOF_GY_KALMAN.resetflag = true;
+#endif
+        // Wait for the calculation and save
+        wait = timestamp_in_ms(rateDelay);
+        while (!timestamp_reached(&wait))
+            aahrs.update();
+#if F_9DOF_GBY_KALMAN
+        for (u32 j = 0; j < count_of(offsets); j++)
+            offsets[j] += fusion.SV_9DOF_GBY_KALMAN.fbPl[j];
+#elif F_6DOF_GY_KALMAN
+        for (u32 j = 0; j < count_of(offsets); j++)
+            offsets[j] += fusion.SV_6DOF_GY_KALMAN.fbPl[j];
+#endif
+    }
+    // Average the offsets and save
+    for (u32 i = 0; i < count_of(offsets); i++) {
+#if F_9DOF_GBY_KALMAN
+        fusion.SV_9DOF_GBY_KALMAN.fbPl[i] = offsets[i] / GYRO_AVG_SAMPLES;
+#elif F_6DOF_GY_KALMAN
+        fusion.SV_6DOF_GY_KALMAN.fbPl[i] = offsets[i] / GYRO_AVG_SAMPLES;
+#endif
+    }
+    printfbw(aahrs, "saving gyro calibration");
+    if (shouldPrint.aahrs) {
+        printraw("\noffset vector:");
+#if F_9DOF_GBY_KALMAN
+        PRINT_VECTOR(fusion.SV_9DOF_GBY_KALMAN.fbPl);
+#elif F_6DOF_GY_KALMAN
+        PRINT_VECTOR(fusion.SV_6DOF_GY_KALMAN.fbPl);
+#endif
+        printraw("\noffset error vector:");
+#if F_9DOF_GBY_KALMAN
+        PRINT_VECTOR(fusion.SV_9DOF_GBY_KALMAN.fbErrPl);
+#elif F_6DOF_GY_KALMAN
+        PRINT_VECTOR(fusion.SV_6DOF_GY_KALMAN.fbErrPl);
+#endif
+        printraw("\n");
+    }
+    SaveGyroCalibrationToFlash(&fusion);
+#endif
 
     // TODO: axis remap here
     // also code a HAL remap for each driver--it will normalize everything to XYZ and correct signs, this will be a
@@ -235,26 +248,30 @@ bool aahrs_calibrate() {
         sprintf(msg, "Calibration: please move to position #%lu/%d", i + 1, MAX_ACCEL_CAL_ORIENTATIONS);
         log_message(INFO, msg, 500, 200, true);
         if (runtime_is_fbw()) {
-            char orientMsg[60] = { [0 ... 59] = ' '};
+            char orientMsg[60] = {[0 ... 59] = ' '};
             sprintf(orientMsg, "Please move to position #%lu/%d", i + 1, MAX_ACCEL_CAL_ORIENTATIONS);
             display_string(orientMsg, (i + 1) * (33.0f / MAX_ACCEL_CAL_ORIENTATIONS) + 33);
         }
         // Wait for the sensor to move...
         while (!hasMoved) {
             aahrs.update();
-            hasMoved = aahrs.roll_rate > GYRO_STILL_VELOCITY || aahrs.pitch_rate > GYRO_STILL_VELOCITY || aahrs.yaw_rate > GYRO_STILL_VELOCITY;
+            hasMoved = aahrs.roll_rate > GYRO_STILL_VELOCITY || aahrs.pitch_rate > GYRO_STILL_VELOCITY ||
+                       aahrs.yaw_rate > GYRO_STILL_VELOCITY;
         }
         // ...and then for it to be still for 0.5s
         while (true) {
             aahrs.update();
-            hasMoved = aahrs.roll_rate > GYRO_STILL_VELOCITY || aahrs.pitch_rate > GYRO_STILL_VELOCITY || aahrs.yaw_rate > GYRO_STILL_VELOCITY;
+            hasMoved = aahrs.roll_rate > GYRO_STILL_VELOCITY || aahrs.pitch_rate > GYRO_STILL_VELOCITY ||
+                       aahrs.yaw_rate > GYRO_STILL_VELOCITY;
             if (!hasMoved) {
                 wait = timestamp_in_ms(500);
                 while (!hasMoved && !timestamp_reached(&wait)) {
                     aahrs.update();
-                    hasMoved = aahrs.roll_rate > GYRO_STILL_VELOCITY || aahrs.pitch_rate > GYRO_STILL_VELOCITY || aahrs.yaw_rate > GYRO_STILL_VELOCITY;
+                    hasMoved = aahrs.roll_rate > GYRO_STILL_VELOCITY || aahrs.pitch_rate > GYRO_STILL_VELOCITY ||
+                               aahrs.yaw_rate > GYRO_STILL_VELOCITY;
                 }
-                if (timestamp_reached(&wait)) break;
+                if (timestamp_reached(&wait))
+                    break;
             }
         }
         // Blink signify a position is being recorded
@@ -263,9 +280,11 @@ bool aahrs_calibrate() {
             display_string("Recording position...", (i + 1) * (33.0f / MAX_ACCEL_CAL_ORIENTATIONS) + 33);
         // Set the current physical location of the sensor
         fusion.AccelBuffer.iStoreLocation = i;
-        // Set the counter to the number of seconds to average over, and wait for the measurements to be taken (as well as for the delay)
+        // Set the counter to the number of seconds to average over, and wait for the measurements to be taken (as well as for
+        // the delay)
         fusion.AccelBuffer.iStoreCounter = (ACCEL_CAL_AVERAGING_SECS * FUSION_HZ);
-        while (fusion.AccelBuffer.iStoreCounter > 0) aahrs.update();
+        while (fusion.AccelBuffer.iStoreCounter > 0)
+            aahrs.update();
     }
     printfbw(aahrs, "saving accelerometer calibration");
     if (shouldPrint.aahrs) {
@@ -286,7 +305,7 @@ bool aahrs_calibrate() {
         while (!fusion.MagCal.iCalInProgress) {
             printfbw(aahrs, "%d/%d measurements taken", fusion.MagBuffer.iMagBufferCount, MINMEASUREMENTS10CAL);
             if (runtime_is_fbw()) {
-                char measureMsg[60] = { [0 ... 59] = ' '};
+                char measureMsg[60] = {[0 ... 59] = ' '};
                 sprintf(measureMsg, "%d/%d measurements taken", fusion.MagBuffer.iMagBufferCount, MINMEASUREMENTS10CAL);
                 display_string(measureMsg, fusion.MagBuffer.iMagBufferCount * (33.0f / MAXMEASUREMENTS) + 66);
             }
@@ -295,11 +314,14 @@ bool aahrs_calibrate() {
         // Calibration is being calculated, wait for it to finish
         printfbw(aahrs, "calibration in progress, please wait...");
         if (runtime_is_fbw())
-            display_string("Calibration in progress, please wait", fusion.MagBuffer.iMagBufferCount * (33.0f / MAXMEASUREMENTS) + 66);
-        while (fusion.MagCal.iCalInProgress) aahrs.update();
+            display_string("Calibration in progress, please wait",
+                           fusion.MagBuffer.iMagBufferCount * (33.0f / MAXMEASUREMENTS) + 66);
+        while (fusion.MagCal.iCalInProgress)
+            aahrs.update();
         printfbw(aahrs, "fit error was %f (attempt %lu/%d)", fusion.MagCal.ftrFitErrorpc, i + 1, MAX_MAG_ATTEMPTS);
         // The optimal solver is the 10 element, so we're done if it was used for the most recent valid calibration
-        if (fusion.MagCal.iValidMagCal >= 10) break;
+        if (fusion.MagCal.iValidMagCal >= 10)
+            break;
     }
     if (fusion.MagCal.iValidMagCal < 10) {
         log_message(WARNING, "Mag calibration not optimal!", 1000, 0, false);

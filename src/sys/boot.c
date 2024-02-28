@@ -1,7 +1,7 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU AGPL-3.0
-*/
+ */
 
 #include "platform/defs.h"
 #include "platform/gpio.h"
@@ -21,11 +21,11 @@ bool isBooted = false;
 void boot_begin() {
     sys_boot_begin();
     isBooted = false;
-    #ifdef PIN_FBW
-        gpio_pull(PIN_FBW, DOWN);
-        if (runtime_is_fbw())
-            display_init();
-    #endif
+#ifdef PIN_FBW
+    gpio_pull(PIN_FBW, DOWN);
+    if (runtime_is_fbw())
+        display_init();
+#endif
     sleep_ms_blocking(BOOT_WAIT_MS); // Wait for peripherals to power up
 }
 

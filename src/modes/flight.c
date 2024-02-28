@@ -1,7 +1,7 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU AGPL-3.0
-*/
+ */
 
 #include <math.h>
 #include <stdbool.h>
@@ -34,33 +34,51 @@ void flight_init() {
     float rollLimit;
     float pitchLimit;
     switch ((ControlMode)config.general[GENERAL_CONTROL_MODE]) {
-        case CTRLMODE_3AXIS_ATHR:
-        case CTRLMODE_2AXIS_ATHR:
-        case CTRLMODE_3AXIS:
-        case CTRLMODE_2AXIS:
-            rollLimit = config.control[CONTROL_MAX_AIL_DEFLECTION];
-            pitchLimit = config.control[CONTROL_MAX_ELEV_DEFLECTION];
-            break;
-        case CTRLMODE_FLYINGWING_ATHR:
-        case CTRLMODE_FLYINGWING:
-            rollLimit = config.control[CONTROL_MAX_ELEVON_DEFLECTION];
-            pitchLimit = config.control[CONTROL_MAX_ELEVON_DEFLECTION];
-            break;
-        default:
-            print("[flight] ERROR: unknown control mode!");
-            aircraft.changeTo(MODE_DIRECT);
-            return;
+    case CTRLMODE_3AXIS_ATHR:
+    case CTRLMODE_2AXIS_ATHR:
+    case CTRLMODE_3AXIS:
+    case CTRLMODE_2AXIS:
+        rollLimit = config.control[CONTROL_MAX_AIL_DEFLECTION];
+        pitchLimit = config.control[CONTROL_MAX_ELEV_DEFLECTION];
+        break;
+    case CTRLMODE_FLYINGWING_ATHR:
+    case CTRLMODE_FLYINGWING:
+        rollLimit = config.control[CONTROL_MAX_ELEVON_DEFLECTION];
+        pitchLimit = config.control[CONTROL_MAX_ELEVON_DEFLECTION];
+        break;
+    default:
+        print("[flight] ERROR: unknown control mode!");
+        aircraft.changeTo(MODE_DIRECT);
+        return;
     }
     // Create PID controllers for the roll and pitch axes and initialize (also clear) them
-    roll_c = (PIDController){calibration.pid[PID_ROLL_KP], calibration.pid[PID_ROLL_KI], calibration.pid[PID_ROLL_KD], calibration.pid[PID_ROLL_TAU],
-                            -rollLimit, rollLimit, calibration.pid[PID_ROLL_INTEGMIN], calibration.pid[PID_ROLL_INTEGMAX]};
-    pitch_c = (PIDController){calibration.pid[PID_PITCH_KP], calibration.pid[PID_PITCH_KI], calibration.pid[PID_PITCH_KD], calibration.pid[PID_PITCH_TAU],
-                             -pitchLimit, pitchLimit, calibration.pid[PID_PITCH_INTEGMIN], calibration.pid[PID_PITCH_INTEGMAX]};
+    roll_c = (PIDController){calibration.pid[PID_ROLL_KP],
+                             calibration.pid[PID_ROLL_KI],
+                             calibration.pid[PID_ROLL_KD],
+                             calibration.pid[PID_ROLL_TAU],
+                             -rollLimit,
+                             rollLimit,
+                             calibration.pid[PID_ROLL_INTEGMIN],
+                             calibration.pid[PID_ROLL_INTEGMAX]};
+    pitch_c = (PIDController){calibration.pid[PID_PITCH_KP],
+                              calibration.pid[PID_PITCH_KI],
+                              calibration.pid[PID_PITCH_KD],
+                              calibration.pid[PID_PITCH_TAU],
+                              -pitchLimit,
+                              pitchLimit,
+                              calibration.pid[PID_PITCH_INTEGMIN],
+                              calibration.pid[PID_PITCH_INTEGMAX]};
     pid_init(&roll_c);
     pid_init(&pitch_c);
     if (receiver_has_rud()) {
-        yaw_c = (PIDController){calibration.pid[PID_YAW_KP], calibration.pid[PID_YAW_KI], calibration.pid[PID_YAW_KD], calibration.pid[PID_YAW_TAU], -config.control[CONTROL_MAX_RUD_DEFLECTION],
-                                config.control[CONTROL_MAX_RUD_DEFLECTION], calibration.pid[PID_YAW_INTEGMIN], calibration.pid[PID_YAW_INTEGMAX]};
+        yaw_c = (PIDController){calibration.pid[PID_YAW_KP],
+                                calibration.pid[PID_YAW_KI],
+                                calibration.pid[PID_YAW_KD],
+                                calibration.pid[PID_YAW_TAU],
+                                -config.control[CONTROL_MAX_RUD_DEFLECTION],
+                                config.control[CONTROL_MAX_RUD_DEFLECTION],
+                                calibration.pid[PID_YAW_INTEGMIN],
+                                calibration.pid[PID_YAW_INTEGMAX]};
         pid_init(&yaw_c);
     }
 }
@@ -68,8 +86,7 @@ void flight_init() {
 void flight_update(double roll, double pitch, double yaw, bool override) {
     // Check flight envelope for hard-coded irregularities
     if (fabsf(aahrs.roll) > 72 || aahrs.pitch > 35 || aahrs.pitch < -20) {
-        print("[flight] WARNING: flight envelope exceeded! (roll: %f, pitch: %f, yaw: %f)",
-                              aahrs.roll, aahrs.pitch, aahrs.yaw);
+        print("[flight] WARNING: flight envelope exceeded! (roll: %f, pitch: %f, yaw: %f)", aahrs.roll, aahrs.pitch, aahrs.yaw);
         aircraft.setAAHRSSafe(false);
     }
 
@@ -81,63 +98,67 @@ void flight_update(double roll, double pitch, double yaw, bool override) {
     elevOut = (u16)(((bool)config.pins[PINS_REVERSE_PITCH] ? -1 : 1) * (int)pitch_c.out + 90);
     // Now things get specific to each mode
     switch ((ControlMode)config.general[GENERAL_CONTROL_MODE]) {
-        // Compute yaw damper output for 3axis (rudder-enabled) control modes
-        case CTRLMODE_3AXIS_ATHR:
-        case CTRLMODE_3AXIS: {
-            if (override) {
-                // Yaw override (raw)
-                yawOutput = (float)yaw;
-                yawDamperOn = false;
-            } else if (fabs(roll) > config.control[CONTROL_DEADBAND]) {
-                // Yaw damper disabled (passthrough)
-                yawOutput = (float)(roll_c.out * config.control[CONTROL_RUDDER_SENSITIVITY]);
-                yawDamperOn = false;
-            } else {
-                // Yaw damper enabled
-                if (!yawDamperOn) {
-                    flightYawSetpoint = aahrs.yaw; // Yaw damper was just enabled, create our setpoint
-                }
-                pid_update(&yaw_c, flightYawSetpoint, aahrs.yaw);
-                yawOutput = (float)yaw_c.out;
-                yawDamperOn = true;
+    // Compute yaw damper output for 3axis (rudder-enabled) control modes
+    case CTRLMODE_3AXIS_ATHR:
+    case CTRLMODE_3AXIS: {
+        if (override) {
+            // Yaw override (raw)
+            yawOutput = (float)yaw;
+            yawDamperOn = false;
+        } else if (fabs(roll) > config.control[CONTROL_DEADBAND]) {
+            // Yaw damper disabled (passthrough)
+            yawOutput = (float)(roll_c.out * config.control[CONTROL_RUDDER_SENSITIVITY]);
+            yawDamperOn = false;
+        } else {
+            // Yaw damper enabled
+            if (!yawDamperOn) {
+                flightYawSetpoint = aahrs.yaw; // Yaw damper was just enabled, create our setpoint
             }
-
-            rudOut = (u16)(((bool)config.pins[PINS_REVERSE_YAW] ? -1 : 1) * (int)yawOutput + 90);
-            servo_set((u32)config.pins[PINS_SERVO_RUD], rudOut);
+            pid_update(&yaw_c, flightYawSetpoint, aahrs.yaw);
+            yawOutput = (float)yaw_c.out;
+            yawDamperOn = true;
         }
-        /* fall through */
-        case CTRLMODE_2AXIS_ATHR:
-        case CTRLMODE_2AXIS:
-            // Send outputs to servos
-            servo_set((u32)config.pins[PINS_SERVO_AIL], ailOut);
-            servo_set((u32)config.pins[PINS_SERVO_ELE], elevOut);
-            break;
-        // Flying wing control modes must mix elevator and aileron outputs to create elevon outputs
-        case CTRLMODE_FLYINGWING_ATHR:
-        case CTRLMODE_FLYINGWING: {
-            lElevonOut = (((bool)config.pins[PINS_REVERSE_ROLL] ? -1 : 1) * roll_c.out * config.control[CONTROL_AIL_MIXING_BIAS] +
-                            ((bool)config.pins[PINS_REVERSE_PITCH] ? -1 : 1) * pitch_c.out * config.control[CONTROL_ELEV_MIXING_BIAS]) *
-                            config.control[CONTROL_ELEVON_MIXING_GAIN];
-            rElevonOut = (((bool)config.pins[PINS_REVERSE_ROLL] ? -1 : 1) * roll_c.out * config.control[CONTROL_AIL_MIXING_BIAS] -
-                            ((bool)config.pins[PINS_REVERSE_PITCH] ? -1 : 1) * pitch_c.out * config.control[CONTROL_ELEV_MIXING_BIAS]) *
-                            config.control[CONTROL_ELEVON_MIXING_GAIN];
 
-            // Limit elevon outputs
-            if (abs(lElevonOut) > config.control[CONTROL_MAX_ELEVON_DEFLECTION]) {
-                lElevonOut = (lElevonOut > 0) ? config.control[CONTROL_MAX_ELEVON_DEFLECTION] : -config.control[CONTROL_MAX_ELEVON_DEFLECTION];
-            }
-            if (abs(rElevonOut) > config.control[CONTROL_MAX_ELEVON_DEFLECTION]) {
-                rElevonOut = (rElevonOut > 0) ? config.control[CONTROL_MAX_ELEVON_DEFLECTION] : -config.control[CONTROL_MAX_ELEVON_DEFLECTION];
-            }
+        rudOut = (u16)(((bool)config.pins[PINS_REVERSE_YAW] ? -1 : 1) * (int)yawOutput + 90);
+        servo_set((u32)config.pins[PINS_SERVO_RUD], rudOut);
+    }
+    /* fall through */
+    case CTRLMODE_2AXIS_ATHR:
+    case CTRLMODE_2AXIS:
+        // Send outputs to servos
+        servo_set((u32)config.pins[PINS_SERVO_AIL], ailOut);
+        servo_set((u32)config.pins[PINS_SERVO_ELE], elevOut);
+        break;
+    // Flying wing control modes must mix elevator and aileron outputs to create elevon outputs
+    case CTRLMODE_FLYINGWING_ATHR:
+    case CTRLMODE_FLYINGWING: {
+        lElevonOut =
+            (((bool)config.pins[PINS_REVERSE_ROLL] ? -1 : 1) * roll_c.out * config.control[CONTROL_AIL_MIXING_BIAS] +
+             ((bool)config.pins[PINS_REVERSE_PITCH] ? -1 : 1) * pitch_c.out * config.control[CONTROL_ELEV_MIXING_BIAS]) *
+            config.control[CONTROL_ELEVON_MIXING_GAIN];
+        rElevonOut =
+            (((bool)config.pins[PINS_REVERSE_ROLL] ? -1 : 1) * roll_c.out * config.control[CONTROL_AIL_MIXING_BIAS] -
+             ((bool)config.pins[PINS_REVERSE_PITCH] ? -1 : 1) * pitch_c.out * config.control[CONTROL_ELEV_MIXING_BIAS]) *
+            config.control[CONTROL_ELEVON_MIXING_GAIN];
 
-            servo_set((u32)config.pins[PINS_SERVO_AIL], lElevonOut + 90);
-            servo_set((u32)config.pins[PINS_SERVO_ELE], rElevonOut + 90);
-            break;
+        // Limit elevon outputs
+        if (abs(lElevonOut) > config.control[CONTROL_MAX_ELEVON_DEFLECTION]) {
+            lElevonOut = (lElevonOut > 0) ? config.control[CONTROL_MAX_ELEVON_DEFLECTION]
+                                          : -config.control[CONTROL_MAX_ELEVON_DEFLECTION];
         }
-        default: {
-            print("[flight] ERROR: unknown control mode!");
-            aircraft.changeTo(MODE_DIRECT);
-            return;
+        if (abs(rElevonOut) > config.control[CONTROL_MAX_ELEVON_DEFLECTION]) {
+            rElevonOut = (rElevonOut > 0) ? config.control[CONTROL_MAX_ELEVON_DEFLECTION]
+                                          : -config.control[CONTROL_MAX_ELEVON_DEFLECTION];
         }
+
+        servo_set((u32)config.pins[PINS_SERVO_AIL], lElevonOut + 90);
+        servo_set((u32)config.pins[PINS_SERVO_ELE], rElevonOut + 90);
+        break;
+    }
+    default: {
+        print("[flight] ERROR: unknown control mode!");
+        aircraft.changeTo(MODE_DIRECT);
+        return;
+    }
     }
 }

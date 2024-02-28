@@ -4,17 +4,17 @@
 
 /**
  * Initializes normal mode.
-*/
+ */
 void normal_init();
 
 /**
  * Executes one cycle of normal mode.
-*/
+ */
 void normal_update();
 
 /**
  * Fully de-initializes normal mode.
-*/
+ */
 void normal_deinit();
 
 /**
@@ -25,5 +25,5 @@ void normal_deinit();
  * @param throttle the throttle setpoint
  * @param useThrottle whether or not to use the throttle setpoint
  * @return true if the setpoints were adjusted, false if it was prevented by the user (already manually inputting).
-*/
+ */
 bool normal_set(float roll, float pitch, float yaw, float throttle, bool useThrottle);

@@ -11,7 +11,7 @@
  * @return true if the setup was successful
  * @note Many platforms have limitations on which pins and frequencies can be used for I2C.
  * Check the documentation of the platform you are using to ensure you are using valid pins and frequencies.
-*/
+ */
 bool i2c_setup(u32 sda, u32 scl, u32 freq);
 
 /**
@@ -24,7 +24,7 @@ bool i2c_setup(u32 sda, u32 scl, u32 freq);
  * @param len the number of bytes to read
  * @return true if the read was successful
  * @note `dest[]` must be large enough to hold `len` bytes of data
-*/
+ */
 bool i2c_read(u32 sda, u32 scl, byte addr, byte reg, byte dest[], size_t len);
 
 /**
@@ -37,5 +37,5 @@ bool i2c_read(u32 sda, u32 scl, byte addr, byte reg, byte dest[], size_t len);
  * @param len the number of bytes to write
  * @return true if the write was successful
  * @note `src[]` must contain at least `len` bytes of data
-*/
+ */
 bool i2c_write(u32 sda, u32 scl, byte addr, byte reg, byte src[], size_t len);

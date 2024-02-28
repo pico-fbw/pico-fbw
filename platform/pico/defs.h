@@ -24,7 +24,7 @@
 
 // Status LED
 #ifdef RASPBERRYPI_PICO
-    #define PIN_LED PICO_DEFAULT_LED_PIN
+#define PIN_LED PICO_DEFAULT_LED_PIN
 #endif
 
 // Platform features
@@ -33,16 +33,16 @@
 #define PLATFORM_HAL_VERSION "1.0.0"
 
 #ifdef RASPBERRYPI_PICO_W
-    #define CYW43_GPIO_OFFSET 30
-    #undef PIN_LED
-    #define PIN_LED (CYW43_WL_GPIO_LED_PIN + CYW43_GPIO_OFFSET) // See gpio.c for why this is done
-    
-    #undef PLATFORM_SUPPORTS_WIFI
-    #define PLATFORM_SUPPORTS_WIFI 1
-    #undef PLATFORM_NAME
-    #define PLATFORM_NAME "Raspberry Pi Pico W"
-    #undef PLATFORM_HAL_VERSION
-    #define PLATFORM_HAL_VERSION "1.0.0"
+#define CYW43_GPIO_OFFSET 30
+#undef PIN_LED
+#define PIN_LED (CYW43_WL_GPIO_LED_PIN + CYW43_GPIO_OFFSET) // See gpio.c for why this is done
+
+#undef PLATFORM_SUPPORTS_WIFI
+#define PLATFORM_SUPPORTS_WIFI 1
+#undef PLATFORM_NAME
+#define PLATFORM_NAME "Raspberry Pi Pico W"
+#undef PLATFORM_HAL_VERSION
+#define PLATFORM_HAL_VERSION "1.0.0"
 #endif
 
 #define PIN_FBW 22

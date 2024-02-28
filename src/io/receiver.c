@@ -1,7 +1,7 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU AGPL-3.0
-*/
+ */
 
 #include <math.h>
 #include "platform/pwm.h"
@@ -25,7 +25,7 @@
  * @return the calibration value from PWM calibration.
  * Be aware that this value may not be cohesive;
  * this function does not check to see whether or not a calibration has been done, so it is able to return random data.
-*/
+ */
 static inline float pwmOffsetOf(u32 pin) {
     // Look up the correct value to fetch based on the pin
     u32 val;
@@ -46,7 +46,8 @@ static inline float pwmOffsetOf(u32 pin) {
 
 static inline float readRaw(u32 pin, ReceiverMode mode) {
     i32 pulsewidth = pwm_read_raw(pin);
-    if (pulsewidth < 0) return INFINITY; // Invalid pin
+    if (pulsewidth < 0)
+        return INFINITY; // Invalid pin
     return ((mode == RECEIVER_MODE_DEG ? 180E3f : 100E3f) * ((float)pulsewidth * 1.6E-8f - 1E-3f));
 }
 
@@ -56,11 +57,10 @@ void receiver_enable(u32 pins[], u32 num_pins) {
         log_message(FATAL, "Failed to enable PWM input!", 500, 0, true);
 }
 
-float receiver_get(u32 pin, ReceiverMode mode) {
-    return readRaw(pin, mode) + pwmOffsetOf(pin);
-}
+float receiver_get(u32 pin, ReceiverMode mode) { return readRaw(pin, mode) + pwmOffsetOf(pin); }
 
-bool receiver_calibrate(const u32 pins[], u32 num_pins, const float deviations[], u32 num_samples, u32 sample_delay_ms, u32 run_times) {
+bool receiver_calibrate(const u32 pins[], u32 num_pins, const float deviations[], u32 num_samples, u32 sample_delay_ms,
+                        u32 run_times) {
     log_message(INFO, "Calibrating PWM", 100, 0, false);
     sleep_ms_blocking(2000); // Wait a few moments for tx/rx to set itself up
     for (u32 i = 0; i < num_pins; i++) {
@@ -75,7 +75,8 @@ bool receiver_calibrate(const u32 pins[], u32 num_pins, const float deviations[]
             print("[pwm] running trial %lu out of %lu", t + 1, run_times);
             float total_difference = 0.0f;
             for (u32 s = 0; s < num_samples; s++) {
-                total_difference += (deviation - (isThrottle ? readRaw(pin, RECEIVER_MODE_ESC) : readRaw(pin, RECEIVER_MODE_DEG)));
+                total_difference +=
+                    (deviation - (isThrottle ? readRaw(pin, RECEIVER_MODE_ESC) : readRaw(pin, RECEIVER_MODE_DEG)));
                 sleep_ms_blocking(sample_delay_ms);
             }
             // Check to see if the deviation is 270 (this value occurs with a pulsewidth of 0 or 1, aka not connected)
@@ -108,13 +109,16 @@ bool receiver_calibrate(const u32 pins[], u32 num_pins, const float deviations[]
         // Check to ensure the value is within limits before adding it to be written
         if (!WITHIN_MAX_CALIBRATION_OFFSET((final_difference / run_times), config.general[GENERAL_MAX_CALIBRATION_OFFSET])) {
             if (pin == (u32)config.pins[PINS_INPUT_SWITCH]) {
-                // The switch pin is a little special; it can have high offsets but only if they are negative, otherwise modes won't register properly
-                if ((final_difference / (float)run_times) < -200.0f || (final_difference / (float)run_times) > config.general[GENERAL_MAX_CALIBRATION_OFFSET])
+                // The switch pin is a little special; it can have high offsets but only if they are negative, otherwise modes
+                // won't register properly
+                if ((final_difference / (float)run_times) < -200.0f ||
+                    (final_difference / (float)run_times) > config.general[GENERAL_MAX_CALIBRATION_OFFSET])
                     goto error;
-            } else goto error;
-            error:
-                print("[pwm] ERROR: [FBW-500] pin %lu's calibration value is too high!", pin);
-                return false;
+            } else
+                goto error;
+        error:
+            print("[pwm] ERROR: [FBW-500] pin %lu's calibration value is too high!", pin);
+            return false;
         }
         calibration.pwm[loc] = final_difference / (float)run_times;
     }
@@ -147,53 +151,53 @@ void receiver_get_pins(u32 *pins, u32 *num_pins, float *deviations) {
     deviations[1] = 90.0f;
     // Control mode specific pins
     switch ((ControlMode)config.general[GENERAL_CONTROL_MODE]) {
-        case CTRLMODE_3AXIS_ATHR:
-            pins[2] = (u32)config.pins[PINS_INPUT_RUD];
-            pins[3] = (u32)config.pins[PINS_INPUT_SWITCH];
-            pins[4] = (u32)config.pins[PINS_INPUT_THROTTLE];
-            deviations[2] = 90.0f; // We expect all controls to be centered except switch and throttle
-            deviations[3] = 0.0f;
-            deviations[4] = 0.0f;
-            *num_pins = 5;
-            break;
-        case CTRLMODE_3AXIS:
-            pins[2] = (u32)config.pins[PINS_INPUT_RUD];
-            pins[3] = (u32)config.pins[PINS_INPUT_SWITCH];
-            deviations[2] = 90.0f;
-            deviations[3] = 0.0f;
-            *num_pins = 4;
-            break;
-        case CTRLMODE_2AXIS_ATHR:
-            pins[2] = (u32)config.pins[PINS_INPUT_SWITCH];
-            pins[3] = (u32)config.pins[PINS_INPUT_THROTTLE];
-            deviations[2] = 0.0f;
-            deviations[3] = 0.0f;
-            *num_pins = 4;
-            break;
-        case CTRLMODE_2AXIS:
-            pins[2] = (u32)config.pins[PINS_INPUT_SWITCH];
-            deviations[2] = 0.0f;
-            *num_pins = 3;
-            break;
-        case CTRLMODE_FLYINGWING_ATHR:
-            pins[2] = (u32)config.pins[PINS_INPUT_SWITCH];
-            pins[3] = (u32)config.pins[PINS_INPUT_THROTTLE];
-            deviations[2] = 0.0f;
-            deviations[3] = 0.0f;
-            *num_pins = 4;
-            break;
-        case CTRLMODE_FLYINGWING:
-            pins[2] = (u32)config.pins[PINS_INPUT_SWITCH];
-            deviations[2] = 0.0f;
-            *num_pins = 3;
-            break;
+    case CTRLMODE_3AXIS_ATHR:
+        pins[2] = (u32)config.pins[PINS_INPUT_RUD];
+        pins[3] = (u32)config.pins[PINS_INPUT_SWITCH];
+        pins[4] = (u32)config.pins[PINS_INPUT_THROTTLE];
+        deviations[2] = 90.0f; // We expect all controls to be centered except switch and throttle
+        deviations[3] = 0.0f;
+        deviations[4] = 0.0f;
+        *num_pins = 5;
+        break;
+    case CTRLMODE_3AXIS:
+        pins[2] = (u32)config.pins[PINS_INPUT_RUD];
+        pins[3] = (u32)config.pins[PINS_INPUT_SWITCH];
+        deviations[2] = 90.0f;
+        deviations[3] = 0.0f;
+        *num_pins = 4;
+        break;
+    case CTRLMODE_2AXIS_ATHR:
+        pins[2] = (u32)config.pins[PINS_INPUT_SWITCH];
+        pins[3] = (u32)config.pins[PINS_INPUT_THROTTLE];
+        deviations[2] = 0.0f;
+        deviations[3] = 0.0f;
+        *num_pins = 4;
+        break;
+    case CTRLMODE_2AXIS:
+        pins[2] = (u32)config.pins[PINS_INPUT_SWITCH];
+        deviations[2] = 0.0f;
+        *num_pins = 3;
+        break;
+    case CTRLMODE_FLYINGWING_ATHR:
+        pins[2] = (u32)config.pins[PINS_INPUT_SWITCH];
+        pins[3] = (u32)config.pins[PINS_INPUT_THROTTLE];
+        deviations[2] = 0.0f;
+        deviations[3] = 0.0f;
+        *num_pins = 4;
+        break;
+    case CTRLMODE_FLYINGWING:
+        pins[2] = (u32)config.pins[PINS_INPUT_SWITCH];
+        deviations[2] = 0.0f;
+        *num_pins = 3;
+        break;
     }
 }
 
 bool receiver_has_athr() {
     return (ControlMode)config.general[GENERAL_CONTROL_MODE] == CTRLMODE_3AXIS_ATHR ||
-    (ControlMode)config.general[GENERAL_CONTROL_MODE] == CTRLMODE_2AXIS_ATHR ||
-    (ControlMode)config.general[GENERAL_CONTROL_MODE] == CTRLMODE_FLYINGWING_ATHR;
+           (ControlMode)config.general[GENERAL_CONTROL_MODE] == CTRLMODE_2AXIS_ATHR ||
+           (ControlMode)config.general[GENERAL_CONTROL_MODE] == CTRLMODE_FLYINGWING_ATHR;
 }
 
 bool receiver_has_rud() {

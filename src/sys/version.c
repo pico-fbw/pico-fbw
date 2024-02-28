@@ -1,7 +1,7 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU AGPL-3.0
-*/
+ */
 
 #include <string.h>
 #include "platform/flash.h"
@@ -49,18 +49,19 @@ i32 version_check(char vstr[]) {
         return -3;
     }
     switch (semver_compare(binary, flash)) {
-        case 0:
-            return 0; // Equal
-        case 1:
-            // In most cases this will be a prerelease version but it could also be a user upgrading to a release from prerelease so check that case
-            if (binary.prerelease[0] == '\0') {
-                return -1; // Lower
-            } else {
-                print("[version] thanks for testing %s :)", binary.prerelease);
-                return 1; // Higher
-            }
-        case -1:
-            return -1;
+    case 0:
+        return 0; // Equal
+    case 1:
+        // In most cases this will be a prerelease version but it could also be a user upgrading to a release from prerelease so
+        // check that case
+        if (binary.prerelease[0] == '\0') {
+            return -1; // Lower
+        } else {
+            print("[version] thanks for testing %s :)", binary.prerelease);
+            return 1; // Higher
+        }
+    case -1:
+        return -1;
     }
     return -2;
 }

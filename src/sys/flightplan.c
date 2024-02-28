@@ -1,7 +1,7 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU AGPL-3.0
-*/
+ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -136,13 +136,16 @@ FlightplanError flightplan_parse(const char *json) {
                                     char waypoint_field_name[5];
                                     strncpy(waypoint_field_name, json + tokens[waypoint_field_token_index].start,
                                             tokens[waypoint_field_token_index].end - tokens[waypoint_field_token_index].start);
-                                    waypoint_field_name[tokens[waypoint_field_token_index].end - tokens[waypoint_field_token_index].start] = '\0';
-                                    
+                                    waypoint_field_name[tokens[waypoint_field_token_index].end -
+                                                        tokens[waypoint_field_token_index].start] = '\0';
+
                                     if (strcmp(waypoint_field_name, "lat") == 0) {
                                         char lat[25];
                                         strncpy(lat, json + tokens[waypoint_field_token_index + 1].start,
-                                                tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start);
-                                        lat[tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start] = '\0';
+                                                tokens[waypoint_field_token_index + 1].end -
+                                                    tokens[waypoint_field_token_index + 1].start);
+                                        lat[tokens[waypoint_field_token_index + 1].end -
+                                            tokens[waypoint_field_token_index + 1].start] = '\0';
 
                                         // Store the latitude value into a Waypoint
                                         waypoint.lat = strtold(lat, NULL);
@@ -150,33 +153,41 @@ FlightplanError flightplan_parse(const char *json) {
                                     } else if (strcmp(waypoint_field_name, "lng") == 0) {
                                         char lng[25];
                                         strncpy(lng, json + tokens[waypoint_field_token_index + 1].start,
-                                                tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start);
-                                        lng[tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start] = '\0';
-                                        
+                                                tokens[waypoint_field_token_index + 1].end -
+                                                    tokens[waypoint_field_token_index + 1].start);
+                                        lng[tokens[waypoint_field_token_index + 1].end -
+                                            tokens[waypoint_field_token_index + 1].start] = '\0';
+
                                         waypoint.lng = strtold(lng, NULL);
                                         print("Longitude: %s", lng);
                                     } else if (strcmp(waypoint_field_name, "alt") == 0) {
                                         char alt[4];
                                         strncpy(alt, json + tokens[waypoint_field_token_index + 1].start,
-                                                tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start);
-                                        alt[tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start] = '\0';
-                                        
+                                                tokens[waypoint_field_token_index + 1].end -
+                                                    tokens[waypoint_field_token_index + 1].start);
+                                        alt[tokens[waypoint_field_token_index + 1].end -
+                                            tokens[waypoint_field_token_index + 1].start] = '\0';
+
                                         waypoint.alt = atoi(alt);
                                         print("Altitude: %s", alt);
                                     } else if (strcmp(waypoint_field_name, "spd") == 0) {
                                         char spd[25];
                                         strncpy(spd, json + tokens[waypoint_field_token_index + 1].start,
-                                                tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start);
-                                        spd[tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start] = '\0';
+                                                tokens[waypoint_field_token_index + 1].end -
+                                                    tokens[waypoint_field_token_index + 1].start);
+                                        spd[tokens[waypoint_field_token_index + 1].end -
+                                            tokens[waypoint_field_token_index + 1].start] = '\0';
 
                                         waypoint.speed = strtof(spd, NULL);
                                         print("Speed: %s", spd);
                                     } else if (strcmp(waypoint_field_name, "drp") == 0) {
                                         char drp[4];
                                         strncpy(drp, json + tokens[waypoint_field_token_index + 1].start,
-                                                tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start);
-                                        drp[tokens[waypoint_field_token_index + 1].end - tokens[waypoint_field_token_index + 1].start] = '\0';
-                                        
+                                                tokens[waypoint_field_token_index + 1].end -
+                                                    tokens[waypoint_field_token_index + 1].start);
+                                        drp[tokens[waypoint_field_token_index + 1].end -
+                                            tokens[waypoint_field_token_index + 1].start] = '\0';
+
                                         waypoint.drop = atoi(drp);
                                         print("Drop: %s", drp);
                                     } else {
@@ -189,7 +200,8 @@ FlightplanError flightplan_parse(const char *json) {
                                 }
                             }
                             // Check if the Waypoint data is valid (aka that we got everything we expect and need)
-                            if (waypoint.lat == INFINITY || waypoint.lng == INFINITY || waypoint.alt == INT16_MIN || waypoint.speed == INFINITY) {
+                            if (waypoint.lat == INFINITY || waypoint.lng == INFINITY || waypoint.alt == INT16_MIN ||
+                                waypoint.speed == INFINITY) {
                                 print("[fplan] ERROR: Waypoint data is invalid!");
                                 state = FPLAN_ERR_PARSE;
                                 return state;
@@ -217,12 +229,12 @@ FlightplanError flightplan_parse(const char *json) {
         state = FPLAN_ERR_PARSE;
         return state;
     }
-    
+
     print("[fplan] Waypoint data:");
     for (i32 i = 0; i < flightplan.waypoint_count; i++) {
-        print("Waypoint #%d: lat=%.10f, lng=%.10f, alt=%d, speed=%f, drop=%d",
-              i + 1, flightplan.waypoints[i].lat, flightplan.waypoints[i].lng, flightplan.waypoints[i].alt,
-              flightplan.waypoints[i].speed, flightplan.waypoints[i].drop);
+        print("Waypoint #%d: lat=%.10f, lng=%.10f, alt=%d, speed=%f, drop=%d", i + 1, flightplan.waypoints[i].lat,
+              flightplan.waypoints[i].lng, flightplan.waypoints[i].alt, flightplan.waypoints[i].speed,
+              flightplan.waypoints[i].drop);
     }
     // Save the flightplan JSON string
     flightplan.json = malloc(strlen(json) + 1);
@@ -238,7 +250,9 @@ FlightplanError flightplan_parse(const char *json) {
     return state;
 }
 
-bool flightplan_was_parsed() { return state == FPLAN_STATUS_OK || state == FPLAN_STATUS_GPS_OFFSET || state == FPLAN_WARN_FW_VERSION; }
+bool flightplan_was_parsed() {
+    return state == FPLAN_STATUS_OK || state == FPLAN_STATUS_GPS_OFFSET || state == FPLAN_WARN_FW_VERSION;
+}
 
 Flightplan *flightplan_get() {
     if (flightplan_was_parsed())

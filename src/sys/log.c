@@ -1,7 +1,7 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU AGPL-3.0
-*/
+ */
 
 #include <stdio.h>
 #include <string.h>
@@ -62,7 +62,7 @@ static inline i32 led_callback(u32 id) {
 /**
  * Reset the last log entry to default values.
  * @note This makes it so that the next entry will be logged no mater what.
-*/
+ */
 static void log_resetLast() {
     lastLogEntry.type = NONE;
     lastLogEntry.code = UINT16_MAX;
@@ -73,22 +73,22 @@ static LogEntry queuedEntry;
 /**
  * Visually displays a log entry.
  * @param entry The entry to display.
-*/
+ */
 static void log_displayEntry(LogEntry *entry) {
     if (runtime_is_fbw()) {
         char typeMsg[DISPLAY_MAX_LINE_LEN];
         switch (entry->type) {
-            case WARNING:
-                strcpy(typeMsg, MSG_WARN);
-                break;
-            case ERROR:
-                strcpy(typeMsg, MSG_ERROR);
-                break;
-            case FATAL:
-                strcpy(typeMsg, MSG_FATAL);
-                break;
-            default:
-                break;
+        case WARNING:
+            strcpy(typeMsg, MSG_WARN);
+            break;
+        case ERROR:
+            strcpy(typeMsg, MSG_ERROR);
+            break;
+        case FATAL:
+            strcpy(typeMsg, MSG_FATAL);
+            break;
+        default:
+            break;
         }
         char codeStr[DISPLAY_MAX_LINE_LEN];
         sprintf(codeStr, "%ld", entry->code);
@@ -101,8 +101,8 @@ static void log_displayEntry(LogEntry *entry) {
             }
         } else if (strlen(entry->msg) < DISPLAY_MAX_LINE_LEN * 2) {
             // Get a substring of the first and last DISPLAY_MAX_LINE_LEN chars to display across two lines
-            char line1[DISPLAY_MAX_LINE_LEN + 1] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
-            char line2[DISPLAY_MAX_LINE_LEN + 1] = { [0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
+            char line1[DISPLAY_MAX_LINE_LEN + 1] = {[0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
+            char line2[DISPLAY_MAX_LINE_LEN + 1] = {[0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
             if (entry->msg[DISPLAY_MAX_LINE_LEN] != ' ') {
                 strncpy(line1, entry->msg, DISPLAY_MAX_LINE_LEN - 1);
                 line1[DISPLAY_MAX_LINE_LEN - 1] = '-';
@@ -138,20 +138,22 @@ static void log_displayEntry(LogEntry *entry) {
 }
 
 static inline i32 logProcessQueue(u32 id) {
-    if (!boot_is_booted()) return 500;
+    if (!boot_is_booted())
+        return 500;
     log_displayEntry(&queuedEntry);
     return 0;
     (void)id;
 }
 
 void log_init() {
-    #ifdef LED_PIN
-        #if defined(RASPBERRYPI_PICO)
-            gpio_init(LED_PIN);
-            gpio_set_dir(LED_PIN, GPIO_OUT);
-        #endif
-    #endif
-    if (!runtime_is_fbw()) gpio_set(PIN_LED, 1);
+#ifdef LED_PIN
+#if defined(RASPBERRYPI_PICO)
+    gpio_init(LED_PIN);
+    gpio_set_dir(LED_PIN, GPIO_OUT);
+#endif
+#endif
+    if (!runtime_is_fbw())
+        gpio_set(PIN_LED, 1);
     logCount = 0;
     log_resetLast();
 }
@@ -186,20 +188,20 @@ void log_message(LogType type, char msg[64], i32 code, u32 pulse_ms, bool force)
         // Format an error string to be printed
         const char *typeMsg = NULL;
         switch (type) {
-            case INFO:
-                typeMsg = MSG_INFO;
-                break;
-            case WARNING:
-                typeMsg = MSG_WARN;
-                break;
-            case ERROR:
-                typeMsg = MSG_ERROR;
-                break;
-            case FATAL:
-                typeMsg = MSG_FATAL;
-                break;
-            default:
-                break;
+        case INFO:
+            typeMsg = MSG_INFO;
+            break;
+        case WARNING:
+            typeMsg = MSG_WARN;
+            break;
+        case ERROR:
+            typeMsg = MSG_ERROR;
+            break;
+        case FATAL:
+            typeMsg = MSG_FATAL;
+            break;
+        default:
+            break;
         }
         if (typeMsg) {
             if (code > -1) {
@@ -234,7 +236,8 @@ void log_clear(LogType type) {
     memcpy(logEntries, tempEntries, sizeof(tempEntries));
     logCount = tempEntriesCount;
     // If the last entry is of the specified type to clear, reset it so the next entry is properly logged
-    if (lastLogEntry.type == type) log_resetLast();
+    if (lastLogEntry.type == type)
+        log_resetLast();
     // Reset the error display if the current displayed error is of this type
     if (lastDisplayedEntry.type == type) {
         // Go through all log types in reverse order to find the most fatal error (if it exists), and display it instead
@@ -247,7 +250,8 @@ void log_clear(LogType type) {
                     break;
                 }
             }
-            if (hadError) break;
+            if (hadError)
+                break;
         }
         // If there was no error, reset the display
         if (!hadError) {
@@ -265,7 +269,8 @@ u8 log_count() { return logCount; }
 u8 log_count_errs() {
     u32 count = 0;
     for (u32 i = 0; i < logCount; i++) {
-        if (logEntries[i].type == WARNING || logEntries[i].type == ERROR || logEntries[i].type == FATAL) count++;
+        if (logEntries[i].type == WARNING || logEntries[i].type == ERROR || logEntries[i].type == FATAL)
+            count++;
     }
     return count;
 }

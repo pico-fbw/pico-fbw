@@ -1,7 +1,7 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU AGPL-3.0
-*/
+ */
 
 #include "io/aahrs.h"
 #include "io/gps.h"
@@ -21,21 +21,21 @@
 
 void update() {
     switch (aircraft.mode) {
-        case MODE_DIRECT:
-            direct_update();
-            break;   
-        case MODE_NORMAL:
-            normal_update();
-            break; 
-        case MODE_AUTO:
-            auto_update();
-            break;
-        case MODE_TUNE:
-            tune_update();
-            break;
-        case MODE_HOLD:
-            hold_update();
-            break;
+    case MODE_DIRECT:
+        direct_update();
+        break;
+    case MODE_NORMAL:
+        normal_update();
+        break;
+    case MODE_AUTO:
+        auto_update();
+        break;
+    case MODE_TUNE:
+        tune_update();
+        break;
+    case MODE_HOLD:
+        hold_update();
+        break;
     }
 }
 
@@ -44,70 +44,76 @@ void update() {
 void changeTo(Mode newMode) {
     // Run deinit code for aircraft.mode and then run init code for newMode
     switch (aircraft.mode) {
-        case MODE_DIRECT:
-            printfbw(modes, "exiting direct mode");
-            break;
-        case MODE_NORMAL:
-            printfbw(modes, "exiting normal mode");
-            normal_deinit();
-            break;
-        case MODE_AUTO:
-            printfbw(modes, "exiting auto mode");
-            break;
-        case MODE_TUNE:
-            printfbw(modes, "exiting tune mode");
-            break;
-        case MODE_HOLD:
-            printfbw(modes, "exiting hold mode");
-            break;
+    case MODE_DIRECT:
+        printfbw(modes, "exiting direct mode");
+        break;
+    case MODE_NORMAL:
+        printfbw(modes, "exiting normal mode");
+        normal_deinit();
+        break;
+    case MODE_AUTO:
+        printfbw(modes, "exiting auto mode");
+        break;
+    case MODE_TUNE:
+        printfbw(modes, "exiting tune mode");
+        break;
+    case MODE_HOLD:
+        printfbw(modes, "exiting hold mode");
+        break;
     }
     if (aircraft.AAHRSSafe) {
         switch (newMode) {
-            DIRECT:
-            case MODE_DIRECT:
-                printfbw(modes, "entering direct mode");
-                aircraft.mode = MODE_DIRECT;
-                break;
-            NORMAL:
-            case MODE_NORMAL:
-                printfbw(modes, "entering normal mode");
-                normal_init();
-                aircraft.mode = MODE_NORMAL;
-                break;
-            AUTO:
-            case MODE_AUTO:
-                // Automatically enter tune mode if necessary
-                if (!tune_is_tuned())
-                    goto TUNE;
-                // TODO: have a way for auto mode to re-engage if the gps becomes safe again; this is usually due to bad DOP which fixes itself over time
-                if (gps.is_supported() && aircraft.GPSSafe) {
-                    // Check to see if we should calibrate the altitude offset
-                    if (flightplan_was_parsed()) {
-                        if (flightplan_get()->alt_samples > 0)
-                            gps.calibrate_alt_offset(flightplan_get()->alt_samples);
-                    }
-                    printfbw(modes, "entering auto mode");
-                    if (auto_init()) {
-                        aircraft.mode = MODE_AUTO;
-                    } else goto NORMAL;
-                } else goto NORMAL; // GPS is required to be safe for auto and hold modes, fallback to normal mode
-                break;
-            TUNE:
-            case MODE_TUNE:
-                if (!tune_is_tuned()) {
-                    printfbw(modes, "entering tune mode");
-                    aircraft.mode = MODE_TUNE;
-                } else goto NORMAL;
-                break;
-            HOLD:
-            case MODE_HOLD:
-                if (gps.is_supported() && aircraft.GPSSafe) {
-                    printfbw(modes, "entering hold mode");
-                    if (hold_init()) {
-                        aircraft.mode = MODE_HOLD;
-                    } else goto NORMAL;
-                } else goto NORMAL;
-                break;
+        DIRECT:
+        case MODE_DIRECT:
+            printfbw(modes, "entering direct mode");
+            aircraft.mode = MODE_DIRECT;
+            break;
+        NORMAL:
+        case MODE_NORMAL:
+            printfbw(modes, "entering normal mode");
+            normal_init();
+            aircraft.mode = MODE_NORMAL;
+            break;
+        AUTO:
+        case MODE_AUTO:
+            // Automatically enter tune mode if necessary
+            if (!tune_is_tuned())
+                goto TUNE;
+            // TODO: have a way for auto mode to re-engage if the gps becomes safe again; this is usually due to bad DOP which
+            // fixes itself over time
+            if (gps.is_supported() && aircraft.GPSSafe) {
+                // Check to see if we should calibrate the altitude offset
+                if (flightplan_was_parsed()) {
+                    if (flightplan_get()->alt_samples > 0)
+                        gps.calibrate_alt_offset(flightplan_get()->alt_samples);
+                }
+                printfbw(modes, "entering auto mode");
+                if (auto_init()) {
+                    aircraft.mode = MODE_AUTO;
+                } else
+                    goto NORMAL;
+            } else
+                goto NORMAL; // GPS is required to be safe for auto and hold modes, fallback to normal mode
+            break;
+        TUNE:
+        case MODE_TUNE:
+            if (!tune_is_tuned()) {
+                printfbw(modes, "entering tune mode");
+                aircraft.mode = MODE_TUNE;
+            } else
+                goto NORMAL;
+            break;
+        HOLD:
+        case MODE_HOLD:
+            if (gps.is_supported() && aircraft.GPSSafe) {
+                printfbw(modes, "entering hold mode");
+                if (hold_init()) {
+                    aircraft.mode = MODE_HOLD;
+                } else
+                    goto NORMAL;
+            } else
+                goto NORMAL;
+            break;
         }
     } else {
         printfbw(modes, "AAHRS has failed, entering direct mode!");
@@ -145,12 +151,10 @@ void setGPSSafe(bool state) {
     }
 }
 
-Aircraft aircraft = {
-    .mode = MODE_DIRECT,
-    .AAHRSSafe = false,
-    .GPSSafe = false,
-    .update = update,
-    .changeTo = changeTo,
-    .setAAHRSSafe = setAAHRSSafe,
-    .setGPSSafe = setGPSSafe
-};
+Aircraft aircraft = {.mode = MODE_DIRECT,
+                     .AAHRSSafe = false,
+                     .GPSSafe = false,
+                     .update = update,
+                     .changeTo = changeTo,
+                     .setAAHRSSafe = setAAHRSSafe,
+                     .setGPSSafe = setGPSSafe};

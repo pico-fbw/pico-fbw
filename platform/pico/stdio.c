@@ -1,7 +1,7 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU AGPL-3.0
-*/
+ */
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -24,20 +24,22 @@ char *stdin_read() {
         } else {
             // Recieved a valid character, resize the buffer and store it
             buf = tryRealloc(buf, (i + 1) * sizeof(char));
-            if (!buf) return NULL;
+            if (!buf)
+                return NULL;
             buf[i++] = c;
         }
     }
     // Done reading, null-terminate the buffer if we read a line
     if (i != 0) {
         buf = tryRealloc(buf, (i + 1) * sizeof(char));
-        if (!buf) return NULL; // Nothing was read
+        if (!buf)
+            return NULL; // Nothing was read
         buf[i] = '\0';
     }
     return buf;
 }
 
-int __printflike(1, 2) wrap_printf(const char* fmt, ...) {
+int __printflike(1, 2) wrap_printf(const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
     int ret = vprintf(fmt, args);

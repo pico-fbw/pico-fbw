@@ -11,7 +11,7 @@
  * @return true if the setup was successful
  * @note Many platforms have limitations on which pins and baudrates can be used for UART.
  * Check the documentation of the platform you are using to ensure you are using valid pins and baudrates.
-*/
+ */
 bool uart_setup(u32 tx, u32 rx, u32 baud);
 
 /**
@@ -21,7 +21,7 @@ bool uart_setup(u32 tx, u32 rx, u32 baud);
  * @return A pointer to the line read if there was one (automatically null-terminated),
  *        or NULL if there was no input available.
  * @note This function does not free the memory allocated for the line if read, ensure to free() it after use.
-*/
+ */
 char *uart_read(u32 tx, u32 rx);
 
 /**
@@ -30,5 +30,5 @@ char *uart_read(u32 tx, u32 rx);
  * @param rx the recieve pin to use
  * @param str the string to write
  * @return true if the write was successful
-*/
+ */
 bool uart_write(u32 tx, u32 rx, const char *str);

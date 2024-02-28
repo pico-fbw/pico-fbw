@@ -1,7 +1,7 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU AGPL-3.0
-*/
+ */
 
 #include "platform/int.h"
 #include "platform/time.h"
@@ -15,12 +15,7 @@
 
 #include "throttle.h"
 
-typedef enum ThrottleState {
-    THRSTATE_NORMAL,
-    THRSTATE_MCT_EXCEEDED,
-    THRSTATE_MCT_LOCK,
-    THRSTATE_MCT_COOLDOWN
-} ThrottleState;
+typedef enum ThrottleState { THRSTATE_NORMAL, THRSTATE_MCT_EXCEEDED, THRSTATE_MCT_LOCK, THRSTATE_MCT_COOLDOWN } ThrottleState;
 
 static PIDController athr_c;
 
@@ -28,9 +23,10 @@ void throttle_init() {
     // GPS is required for speed mode, as we need to know the aircraft's current speed
     throttle.supportedMode = gps.is_supported() ? THRMODE_SPEED : THRMODE_THRUST;
     if (throttle.supportedMode == THRMODE_SPEED) {
-        athr_c = (PIDController){calibration.pid[PID_THROTTLE_KP], calibration.pid[PID_THROTTLE_KI], calibration.pid[PID_THROTTLE_KD],
-                                 calibration.pid[PID_THROTTLE_TAU], calibration.esc[ESC_DETENT_IDLE], calibration.esc[ESC_DETENT_MAX],
-                                 calibration.pid[PID_THROTTLE_INTEGMIN], calibration.pid[PID_THROTTLE_INTEGMAX], 0};
+        athr_c = (PIDController){
+            calibration.pid[PID_THROTTLE_KP],       calibration.pid[PID_THROTTLE_KI],       calibration.pid[PID_THROTTLE_KD],
+            calibration.pid[PID_THROTTLE_TAU],      calibration.esc[ESC_DETENT_IDLE],       calibration.esc[ESC_DETENT_MAX],
+            calibration.pid[PID_THROTTLE_INTEGMIN], calibration.pid[PID_THROTTLE_INTEGMAX], 0};
         pid_init(&athr_c);
     }
 }
@@ -40,13 +36,13 @@ void throttle_update() {
     static ThrottleState state = THRSTATE_NORMAL;
     static u64 stateChangeAt = 0;
     switch (throttle.mode) {
-        case THRMODE_THRUST:
-            escTarget = throttle.target;
-            break;
-        case THRMODE_SPEED:
-            pid_update(&athr_c, (double)throttle.target, (double)gps.speed);
-            escTarget = (float)athr_c.out;
-            break;
+    case THRMODE_THRUST:
+        escTarget = throttle.target;
+        break;
+    case THRMODE_SPEED:
+        pid_update(&athr_c, (double)throttle.target, (double)gps.speed);
+        escTarget = (float)athr_c.out;
+        break;
     }
     // Validate against performance limits
     // Below idle is valid--in THRUST mode this can be used to simply stop the electric motor,
@@ -59,21 +55,20 @@ void throttle_update() {
         }
         // MCT is still being exceeded (within this if block), what to do here depends on the specific state
         switch (state) {
-            case THRSTATE_MCT_EXCEEDED:
-                if ((time_us() - stateChangeAt) > (u64)(config.control[CONTROL_THROTTLE_MAX_TIME] * 1E6f)) {
-                    // MCT has been exceeded for too long, lock
-                    state = THRSTATE_MCT_LOCK;
-                }
-                break;
-            case THRSTATE_MCT_LOCK:
-            case THRSTATE_MCT_COOLDOWN:
-                // Lock back to MCT if being exceeded (for both lock and cooldown states)
-                escTarget = calibration.esc[ESC_DETENT_MCT];
-                break;
-            default:
-                break;
+        case THRSTATE_MCT_EXCEEDED:
+            if ((time_us() - stateChangeAt) > (u64)(config.control[CONTROL_THROTTLE_MAX_TIME] * 1E6f)) {
+                // MCT has been exceeded for too long, lock
+                state = THRSTATE_MCT_LOCK;
+            }
+            break;
+        case THRSTATE_MCT_LOCK:
+        case THRSTATE_MCT_COOLDOWN:
+            // Lock back to MCT if being exceeded (for both lock and cooldown states)
+            escTarget = calibration.esc[ESC_DETENT_MCT];
+            break;
+        default:
+            break;
         }
-        
     }
     if (state == THRSTATE_MCT_LOCK && escTarget <= calibration.esc[ESC_DETENT_MCT]) {
         // Thrust has just been reduced back from exceeding MCT
@@ -91,9 +86,4 @@ void throttle_update() {
 }
 
 Throttle throttle = {
-    .mode = THRMODE_THRUST,
-    .supportedMode = THRMODE_THRUST,
-    .target = 0.0f,
-    .init = throttle_init,
-    .update = throttle_update
-};
+    .mode = THRMODE_THRUST, .supportedMode = THRMODE_THRUST, .target = 0.0f, .init = throttle_init, .update = throttle_update};

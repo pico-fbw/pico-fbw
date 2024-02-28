@@ -1,7 +1,7 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU AGPL-3.0
-*/
+ */
 
 #include <stdbool.h>
 #include <string.h>
@@ -31,9 +31,10 @@
 
 int main() {
     boot_begin();
-    print("\nhello and welcome to pico-fbw v%s!\nrunning on \"%s\" HAL v%s", PICO_FBW_VERSION, PLATFORM_NAME, PLATFORM_HAL_VERSION);
+    print("\nhello and welcome to pico-fbw v%s!\nrunning on \"%s\" HAL v%s", PICO_FBW_VERSION, PLATFORM_NAME,
+          PLATFORM_HAL_VERSION);
     log_init();
-    
+
     // Mount filesystem and load config
     boot_set_progress(0, "Mounting filesystem");
     if (lfs_mount(&lfs, &lfs_cfg) != LFS_ERR_OK) {
@@ -53,7 +54,8 @@ int main() {
         if (versionCheck < -2) {
             log_message(FATAL, "Failed to run update checker!", 250, 0, true);
         } else {
-            print("[update] performing a system update from v%s to v%s, please wait...", (strcmp(version, "") == 0) ? "0.0.0" : version, PICO_FBW_VERSION);
+            print("[update] performing a system update from v%s to v%s, please wait...",
+                  (strcmp(version, "") == 0) ? "0.0.0" : version, PICO_FBW_VERSION);
             // << Insert system update code here, if applicable >>
             // Update flash with new version
             version_save();
@@ -74,21 +76,21 @@ int main() {
         print("[boot] validating PWM calibration");
         ReceiverCalibrationStatus status = receiver_is_calibrated();
         switch (status) {
-            case RECEIVERCALIBRATION_OK:
-                break;
-            case RECEIVERCALIBRATION_INVALID:
-                print("[boot] PWM calibration was completed for a different control mode!");
-                /* fall through */
-            default:
-            case RECEIVERCALIBRATION_INCOMPLETE:
-                print("[boot] PWM calibration not found!");
-                print("[boot] calibrating now...do not touch the transmitter!");
-                if (!receiver_calibrate(pins, num_pins, deviations, 2000, 2, 3) || receiver_is_calibrated() != 0) {
-                    log_message(FATAL, "PWM calibration failed!", 500, 0, true);
-                } else {
-                    print("[boot] calibration successful!");
-                }
-                break;
+        case RECEIVERCALIBRATION_OK:
+            break;
+        case RECEIVERCALIBRATION_INVALID:
+            print("[boot] PWM calibration was completed for a different control mode!");
+            /* fall through */
+        default:
+        case RECEIVERCALIBRATION_INCOMPLETE:
+            print("[boot] PWM calibration not found!");
+            print("[boot] calibrating now...do not touch the transmitter!");
+            if (!receiver_calibrate(pins, num_pins, deviations, 2000, 2, 3) || receiver_is_calibrated() != 0) {
+                log_message(FATAL, "PWM calibration failed!", 500, 0, true);
+            } else {
+                print("[boot] calibration successful!");
+            }
+            break;
         }
     } else {
         log_message(WARNING, "PWM calibration skipped!", 500, 0, false);
@@ -121,13 +123,14 @@ int main() {
             log_message(WARNING, "Throttle detent calibration skipped!", 800, 0, false);
         }
     }
-    
+
     // Check for watchdog reboot
     if (boot_type() == BOOT_WATCHDOG) {
         log_message(ERROR, "Watchdog rebooted!", 500, 150, true);
         print("\nPlease report this error! Only direct mode is available until the next reboot.\n");
         // Lock into direct mode for safety reasons
-        // This is done now because minimum peripherals have been initialized, but not more complex ones that could be causing the watchdog reboots
+        // This is done now because minimum peripherals have been initialized, but not more complex ones that could be causing
+        // the watchdog reboots
         boot_complete();
         aircraft.changeTo(MODE_DIRECT);
         while (true)
@@ -138,7 +141,8 @@ int main() {
     boot_set_progress(45, "Initializing AAHRS");
     if (!aahrs.init()) {
         // If AAHRS is calibrated only throw an error as we could be in flight and we want to finish the boot,
-        // but if it's not calibrated we shouldn't be in flight, thus we should throw a fatal error so calibration does not commence
+        // but if it's not calibrated we shouldn't be in flight, thus we should throw a fatal error so calibration does not
+        // commence
         log_message(aahrs.isCalibrated ? ERROR : FATAL, "AAHRS initialization failed!", 1000, 0, false);
     }
     if (!(bool)config.general[GENERAL_SKIP_CALIBRATION]) {
@@ -157,23 +161,25 @@ int main() {
 
     // GPS
     if (gps.is_supported()) {
-        while (time_us() < (1000 * 1000));
+        while (time_us() < (1000 * 1000))
+            ;
         boot_set_progress(65, "Initializing GPS");
         if (gps.init()) {
             print("[boot] GPS ok");
-            // We don't set the GPS safe just yet, communications have been established but we are still unsure if the data is okay
+            // We don't set the GPS safe just yet, communications have been established but we are still unsure if the data is
+            // okay
             log_message(LOG, "GPS has no signal.", 2000, 0, false);
         } else {
             log_message(ERROR, "GPS not found!", 2000, 0, false);
         }
     }
 
-    #if PLATFORM_SUPPORTS_WIFI
-        // TODO: redo network stuff but in HAL and more features
-        // maybe allow config editing through the interface, can maybe use server stuff from arduino
-        // alao don't forget to update the license when files are moved & update config settnig
-        // and also maybe do a vethernet for the normal pico like (https://github.com/OpenStickCommunity/GP2040-CE)
-    #endif
+#if PLATFORM_SUPPORTS_WIFI
+    // TODO: redo network stuff but in HAL and more features
+    // maybe allow config editing through the interface, can maybe use server stuff from arduino
+    // alao don't forget to update the license when files are moved & update config settnig
+    // and also maybe do a vethernet for the normal pico like (https://github.com/OpenStickCommunity/GP2040-CE)
+#endif
 
     boot_set_progress(90, "Finishing up");
     boot_complete();

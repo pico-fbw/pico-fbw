@@ -1,7 +1,7 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU AGPL-3.0
-*/
+ */
 
 #include <stdlib.h>
 
@@ -15,5 +15,6 @@ i32 api_set_mode(const char *cmd, const char *args) {
     if (mode >= MODE_MIN && mode <= MODE_MAX) {
         aircraft.changeTo(mode);
         return 200;
-    } else return 400;
+    } else
+        return 400;
 }

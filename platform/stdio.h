@@ -9,7 +9,7 @@
  * @return A pointer to the line read if there was one (automatically null-terminated),
  *         or NULL if there was no input available.
  * @note This function does not free the memory allocated for the line if read, ensure to free() it after use.
-*/
+ */
 char *stdin_read();
 
 /**
@@ -17,17 +17,17 @@ char *stdin_read();
  * @param fmt the format string
  * @param ... the arguments to be formatted
  * @return the number of characters printed
-*/
-int __printflike(1, 2) wrap_printf(const char* fmt, ...);
+ */
+int __printflike(1, 2) wrap_printf(const char *fmt, ...);
 
 /**
  * Attemps to reallocate a buffer.
  * @param buf the buffer to reallocate
  * @param size the new size of the buffer
  * @return a pointer to the new buffer if successful, or NULL if the reallocation failed
-*/
+ */
 inline char *tryRealloc(char *buf, size_t size) {
-    char *nbuf = (char*)realloc(buf, size);
+    char *nbuf = (char *)realloc(buf, size);
     if (!nbuf)
         free(buf);
     return nbuf;

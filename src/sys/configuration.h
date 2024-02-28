@@ -18,18 +18,18 @@ This option is compiled in, as the config is not yet loaded when this value is n
 
 typedef struct Config {
     float general[CONFIG_SECTION_SIZE];
-    #define CONFIG_GENERAL_STR "General"
+#define CONFIG_GENERAL_STR "General"
     float control[CONFIG_SECTION_SIZE];
-    #define CONFIG_CONTROL_STR "Control"
+#define CONFIG_CONTROL_STR "Control"
     float pins[CONFIG_SECTION_SIZE];
-    #define CONFIG_PINS_STR "Pins"
+#define CONFIG_PINS_STR "Pins"
     float sensors[CONFIG_SECTION_SIZE];
-    #define CONFIG_SENSORS_STR "Sensors"
+#define CONFIG_SENSORS_STR "Sensors"
     float system[CONFIG_SECTION_SIZE];
-    #define CONFIG_SYSTEM_STR "System"
+#define CONFIG_SYSTEM_STR "System"
     char ssid[CONFIG_STR_SIZE];
     char pass[CONFIG_STR_SIZE];
-    #define CONFIG_WIFI_STR "Wifi"
+#define CONFIG_WIFI_STR "Wifi"
 } Config;
 
 // -- Config section indices --
@@ -90,7 +90,7 @@ typedef enum ConfigPins {
     PINS_AAHRS_SCL,
     PINS_GPS_TX,
     PINS_GPS_RX,
-    // Servo reverse flags 
+    // Servo reverse flags
     PINS_REVERSE_ROLL,
     PINS_REVERSE_PITCH,
     PINS_REVERSE_YAW,
@@ -119,13 +119,13 @@ typedef enum ConfigSystem {
 
 typedef struct Calibration {
     float pwm[CONFIG_SECTION_SIZE];
-    #define CONFIG_PWM_STR "PWM"
+#define CONFIG_PWM_STR "PWM"
     float esc[CONFIG_SECTION_SIZE];
-    #define CONFIG_ESC_STR "ESC"
+#define CONFIG_ESC_STR "ESC"
     float aahrs[CONFIG_SECTION_SIZE * 2];
-    #define CONFIG_AAHRS_STR "AAHRS"
+#define CONFIG_AAHRS_STR "AAHRS"
     float pid[CONFIG_SECTION_SIZE];
-    #define CONFIG_PID_STR "PID"
+#define CONFIG_PID_STR "PID"
 } Calibration;
 
 typedef enum CalibrationPWM {
@@ -203,24 +203,24 @@ typedef enum ConfigSection {
 /**
  * Loads the config from flash memory into the config struct.
  * If the config is invalid/nonexistant, it will be reset to default values.
-*/
+ */
 void config_load();
 
 /**
  * Saves the current config to flash memory.
-*/
+ */
 void config_save();
 
 /**
  * Resets the config to default values.
  * @note This function simply erases the config file from flash memory, as such,
  * a reboot is required to load the "new" default config.
-*/
+ */
 void config_reset();
 
 /**
  * @return Whether the current config is valid.
-*/
+ */
 bool config_validate();
 
 /**
@@ -230,7 +230,7 @@ bool config_validate();
  * @param value The pointer to the value to store the result in
  * The pointer will point to either a float or a char depending on the...
  * @return type of the value stored.
-*/
+ */
 ConfigSectionType config_get(const char *section, const char *key, void **value);
 
 /**
@@ -240,7 +240,7 @@ ConfigSectionType config_get(const char *section, const char *key, void **value)
  * @param value The pointer to the value to store
  * The pointer will point to either a float or a char depending on the section type/user input.
  * @return Whether the value was successfully set.
-*/
+ */
 bool config_set(const char *section, const char *key, const char *value);
 
 /**
@@ -248,7 +248,7 @@ bool config_set(const char *section, const char *key, const char *value);
  * @param section The (enum) index of the section
  * @param str The pointer to the string to store the result in
  * @return The type of the section
-*/
+ */
 ConfigSectionType config_sectionToString(ConfigSection section, const char **str);
 
 extern Config config;

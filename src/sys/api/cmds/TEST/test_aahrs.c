@@ -1,7 +1,7 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU AGPL-3.0
-*/
+ */
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -21,7 +21,7 @@
  * @param breakpoint The breakpoint to wait for
  * @param timeout_ms The timeout in milliseconds
  * @return true if the axis that moved was equal to axis and its difference was positive, false if not.
-*/ 
+ */
 static bool waitForAxis(IMUAxis axis, u32 breakpoint, u32 timeout_ms) {
     AAHRS original = aahrs; // Take a snapshot of the current position
     Timestamp timeout = timestamp_in_ms(timeout_ms);
@@ -63,15 +63,18 @@ static bool waitForAxis(IMUAxis axis, u32 breakpoint, u32 timeout_ms) {
 
 i32 api_test_aahrs(const char *cmd, const char *args) {
     printraw("[test] awaiting right roll...\n");
-    if (!waitForAxis(IMU_AXIS_ROLL, 20, 10000)) return 500;
+    if (!waitForAxis(IMU_AXIS_ROLL, 20, 10000))
+        return 500;
     printraw("[test] return to center.\n");
     runtime_sleep_ms(1500, false);
     printraw("[test] awaiting pitch up...\n");
-    if (!waitForAxis(IMU_AXIS_PITCH, 20, 10000)) return 500;
+    if (!waitForAxis(IMU_AXIS_PITCH, 20, 10000))
+        return 500;
     printraw("[test] return to center.\n");
     runtime_sleep_ms(1500, false);
     printraw("[test] awaiting right yaw...\n");
-    if (!waitForAxis(IMU_AXIS_YAW, 20, 10000)) return 500;
+    if (!waitForAxis(IMU_AXIS_YAW, 20, 10000))
+        return 500;
     return 200;
     // TODO: test baro when done implementing baro fusion
     (void)cmd; // Suppress unused parameter warnings

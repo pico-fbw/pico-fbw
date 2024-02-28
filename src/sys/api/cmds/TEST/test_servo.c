@@ -1,7 +1,7 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU AGPL-3.0
-*/
+ */
 
 #include <stdlib.h>
 
@@ -26,6 +26,7 @@ i32 api_test_servo(const char *cmd, const char *args) {
             servo_getPins(servos, &num_servos);
             servo_test(servos, num_servos, degrees, NUM_DEFAULT_SERVO_TEST, DEFAULT_SERVO_TEST_PAUSE_MS);
         }
-    } else return 403;
+    } else
+        return 403;
     return 200;
 }

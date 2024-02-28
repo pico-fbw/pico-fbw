@@ -1,24 +1,23 @@
 /**
  * This file utilizes code under the MIT License. See "LICENSE" for details.
-*/
+ */
 
 /**
- * The PWM input code is a modification of code provided by `GitJer`: https://github.com/GitJer/Some_RPI-Pico_stuff/tree/main/PwmIn/PwmIn_4pins
- * Thanks so much for that!
- * The PWM output code is a modification of the pico-servo library by 'markushi': https://github.com/markushi/pico-servo
- * Thanks again!
-*/
+ * The PWM input code is a modification of code provided by `GitJer`:
+ * https://github.com/GitJer/Some_RPI-Pico_stuff/tree/main/PwmIn/PwmIn_4pins Thanks so much for that! The PWM output code is a
+ * modification of the pico-servo library by 'markushi': https://github.com/markushi/pico-servo Thanks again!
+ */
 
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU AGPL-3.0
-*/
+ */
 
+#include "hardware/pwm.h"
 #include "hardware/clocks.h"
 #include "hardware/gpio.h"
 #include "hardware/irq.h"
 #include "hardware/pio.h"
-#include "hardware/pwm.h"
 #include "pwm.pio.h"
 
 #include "platform/pwm.h"
@@ -40,10 +39,10 @@ static void pio0Handler() {
     for (u32 i = 0; i < 4; i++) {
         // Check if the IRQ has been raised for this state machine
         if (pio0_hw->irq & 1 << i) {
-            pio0_hw->irq = 1 << i; // Clear interrupt
+            pio0_hw->irq = 1 << i;                      // Clear interrupt
             states[i].pulsewidth = pio_sm_get(pio0, i); // Read pulsewidth from FIFO
-            states[i].period = pio_sm_get(pio0, i); // Read low period from the FIFO
-            pio0_hw->irq = 1 << i; // Clear interrupt
+            states[i].period = pio_sm_get(pio0, i);     // Read low period from the FIFO
+            pio0_hw->irq = 1 << i;                      // Clear interrupt
         }
     }
 }
@@ -70,14 +69,15 @@ this keeps compatability between models. */
  * @param offset The PIO program offset to use
  * @param pin The pin to use
  * @return true if the state machine was set up successfully, false if no state machines were available
-*/
+ */
 static bool setup_sm(const PIO pio, const u32 offset, u32 pin) {
     gpio_set_function(pin, (pio == pio0) ? GPIO_FUNC_PIO0 : GPIO_FUNC_PIO1);
     // Find a usable state machine for this pin
     i32 sm = pio_claim_unused_sm(pio, false);
     if (sm >= 0) {
         // Initialize the state machine's PWMState
-        states[(pio == pio0) ? sm : sm + 4].pulsewidth = 0; // Positions 0-3 are for PIO0 0-3 and positions 4-7 are for PIO1 0-3, hence the +4 offset
+        states[(pio == pio0) ? sm : sm + 4].pulsewidth =
+            0; // Positions 0-3 are for PIO0 0-3 and positions 4-7 are for PIO1 0-3, hence the +4 offset
         states[(pio == pio0) ? sm : sm + 4].period = 0;
         states[(pio == pio0) ? sm : sm + 4].pin = pin;
         // Configure the physical pin (pull down as per PWM standard, give PIO access)
@@ -93,7 +93,8 @@ static bool setup_sm(const PIO pio, const u32 offset, u32 pin) {
         pio_sm_init(pio, sm, offset, &cfg);
         pio_sm_set_enabled(pio, sm, true);
     } else {
-        // A state machine was not available, this is fatal because PWM manages the mode switch and control surfaces...maybe important
+        // A state machine was not available, this is fatal because PWM manages the mode switch and control surfaces...maybe
+        // important
         return false;
     }
     return true;
@@ -104,24 +105,28 @@ bool pwm_setup_read(u32 pins[], u32 num_pins) {
     if (pio_can_add_program(pio0, &pwm_program)) {
         u32 offset = pio_add_program(pio0, &pwm_program);
         for (u32 i = 0; i < (num_pins > 4 ? 4 : num_pins); i++) {
-            if (!setup_sm(pio0, offset, pins[i])) return false;
+            if (!setup_sm(pio0, offset, pins[i]))
+                return false;
         }
         // Set up the interrupt handler
         irq_set_exclusive_handler(PIO0_IRQ_0, pio0Handler);
         irq_set_enabled(PIO0_IRQ_0, true);
         pio0_hw->inte0 = PIO_IRQ0_INTE_SM0_BITS | PIO_IRQ0_INTE_SM1_BITS | PIO_IRQ0_INTE_SM2_BITS | PIO_IRQ0_INTE_SM3_BITS;
-    } else return false; // Failed to load into PIO0
+    } else
+        return false; // Failed to load into PIO0
     // If there are more than 4 pins, PIO1 must also be used
     if (num_pins > 4) {
         if (pio_can_add_program(pio1, &pwm_program)) {
             u32 offset = pio_add_program(pio1, &pwm_program);
             for (u32 i = 4; i < num_pins; i++) {
-                if (!setup_sm(pio1, offset, pins[i])) return false;
+                if (!setup_sm(pio1, offset, pins[i]))
+                    return false;
             }
             irq_set_exclusive_handler(PIO1_IRQ_0, pio1Handler);
             irq_set_enabled(PIO1_IRQ_0, true);
             pio1_hw->inte0 = PIO_IRQ0_INTE_SM0_BITS | PIO_IRQ0_INTE_SM1_BITS | PIO_IRQ0_INTE_SM2_BITS | PIO_IRQ0_INTE_SM3_BITS;
-        } else return false;
+        } else
+            return false;
     }
     return true;
 }
@@ -149,6 +154,4 @@ i32 pwm_read_raw(u32 pin) {
     return -1; // Pin not found
 }
 
-void pwm_write_raw(u32 pin, u16 duty) {
-    pwm_set_gpio_level(pin, (duty * wrap) / 255);
-}
+void pwm_write_raw(u32 pin, u16 duty) { pwm_set_gpio_level(pin, (duty * wrap) / 255); }

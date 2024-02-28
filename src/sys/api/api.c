@@ -1,10 +1,10 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU AGPL-3.0
-*/
+ */
 
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "sys/api/cmds/cmds.h"
 #include "sys/print.h"

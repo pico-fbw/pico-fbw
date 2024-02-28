@@ -1,7 +1,7 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU AGPL-3.0
-*/
+ */
 
 #include "platform/pwm.h"
 #include "platform/time.h"
@@ -46,22 +46,22 @@ void servo_test(u32 servos[], u32 num_servos, const u16 degrees[], const u32 num
 
 void servo_getPins(u32 *servos, u32 *num_servos) {
     switch ((ControlMode)config.general[GENERAL_CONTROL_MODE]) {
-        case CTRLMODE_3AXIS_ATHR:
-        case CTRLMODE_3AXIS:
-            servos[0] = (u32)config.pins[PINS_SERVO_AIL];
-            servos[1] = (u32)config.pins[PINS_SERVO_ELE];
-            servos[2] = (u32)config.pins[PINS_SERVO_RUD];
-            servos[3] = (u32)config.pins[PINS_SERVO_BAY];
-            *num_servos = 4;
-            break;
-        case CTRLMODE_2AXIS_ATHR:
-        case CTRLMODE_2AXIS:
-        case CTRLMODE_FLYINGWING_ATHR:
-        case CTRLMODE_FLYINGWING:
-            servos[0] = (u32)config.pins[PINS_SERVO_AIL];
-            servos[1] = (u32)config.pins[PINS_SERVO_ELE];
-            servos[2] = (u32)config.pins[PINS_SERVO_BAY];
-            *num_servos = 3;
-            break;
+    case CTRLMODE_3AXIS_ATHR:
+    case CTRLMODE_3AXIS:
+        servos[0] = (u32)config.pins[PINS_SERVO_AIL];
+        servos[1] = (u32)config.pins[PINS_SERVO_ELE];
+        servos[2] = (u32)config.pins[PINS_SERVO_RUD];
+        servos[3] = (u32)config.pins[PINS_SERVO_BAY];
+        *num_servos = 4;
+        break;
+    case CTRLMODE_2AXIS_ATHR:
+    case CTRLMODE_2AXIS:
+    case CTRLMODE_FLYINGWING_ATHR:
+    case CTRLMODE_FLYINGWING:
+        servos[0] = (u32)config.pins[PINS_SERVO_AIL];
+        servos[1] = (u32)config.pins[PINS_SERVO_ELE];
+        servos[2] = (u32)config.pins[PINS_SERVO_BAY];
+        *num_servos = 3;
+        break;
     }
 }

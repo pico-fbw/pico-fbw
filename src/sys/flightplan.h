@@ -11,7 +11,7 @@ typedef struct Flightplan {
     i32 alt_samples;
     Waypoint *waypoints;
     u32 waypoint_count;
-    
+
     const char *json;
 } Flightplan;
 
@@ -30,20 +30,20 @@ typedef enum FlightplanError {
  * @param json the JSON string to parse
  * @return the result of the parse attempt, if successful,
  * the parsed Flightplan can be retrieved with `flightplan_get()`
-*/
+ */
 FlightplanError flightplan_parse(const char *json);
 
 /**
  * @return true if a Flightplan has previously been parsed
-*/
+ */
 bool flightplan_was_parsed();
 
 /**
  * @return the parsed Flightplan, or NULL if no Flightplan has been parsed
-*/
+ */
 Flightplan *flightplan_get();
 
 /**
  * @return the current state of the Flightplan
-*/
+ */
 FlightplanError flightplan_state();

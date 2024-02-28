@@ -1,6 +1,7 @@
 name: Build
 
 # TODO: seperate workflow for main that will build for release and auto upload artifacts
+# and also run FBW_FORMAT for clang-tidy
 
 on:
   push:
@@ -11,6 +12,7 @@ on:
 env:
   # Debug build will enable more warnings
   BUILD_TYPE: Debug
+  PICO_SDK_PATH: ${{github.workspace}}/pico-sdk
 
 jobs:
   build:

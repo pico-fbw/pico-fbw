@@ -1,7 +1,7 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU AGPL-3.0
-*/
+ */
 
 #include <string.h>
 
@@ -21,8 +21,8 @@
 #include "SET/set_target.h"
 #include "SET/set_waypoint.h"
 
-#include "TEST/test_all.h"
 #include "TEST/test_aahrs.h"
+#include "TEST/test_all.h"
 #include "TEST/test_gps.h"
 #include "TEST/test_pwm.h"
 #include "TEST/test_servo.h"
@@ -51,7 +51,8 @@ i32 api_handle_get(const char *cmd, const char *args) {
         return api_get_mode(cmd, args);
     } else if (strcasecmp(cmd, "GET_SENSOR") == 0) {
         return api_get_sensor(cmd, args);
-    } else return 404;
+    } else
+        return 404;
 }
 
 i32 api_handle_set(const char *cmd, const char *args) {
@@ -67,7 +68,8 @@ i32 api_handle_set(const char *cmd, const char *args) {
         return api_set_target(cmd, args);
     } else if (strcasecmp(cmd, "SET_WAYPOINT") == 0) {
         return api_set_waypoint(cmd, args);
-    } else return 404;
+    } else
+        return 404;
 }
 
 i32 api_handle_test(const char *cmd, const char *args) {
@@ -83,7 +85,8 @@ i32 api_handle_test(const char *cmd, const char *args) {
         return api_test_servo(cmd, args);
     } else if (strcasecmp(cmd, "TEST_THROTTLE") == 0) {
         return api_test_throttle(cmd, args);
-    } else return 404;
+    } else
+        return 404;
 }
 
 i32 api_handle_misc(const char *cmd, const char *args) {
@@ -97,6 +100,7 @@ i32 api_handle_misc(const char *cmd, const char *args) {
         api_reboot(cmd, args);
     } else if (strcasecmp(cmd, "RESET") == 0) {
         api_reset(cmd, args);
-    } else return 404;
+    } else
+        return 404;
     return -1;
 }
