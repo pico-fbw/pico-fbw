@@ -16,3 +16,7 @@ endif ()
 include($ENV{IDF_PATH}/tools/cmake/idf.cmake)
 
 # TODO: finish esp32 implementation
+# https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-guides/build-system.html#using-esp-idf-in-custom-cmake-projects
+
+# have to run export.sh (maybe add a check for this in cmake?)
+# cmake -B build -DFBW_PLATFORM=esp32 -DCMAKE_TOOLCHAIN_FILE=$IDF_PATH/tools/cmake/toolchain-esp32.cmake -GNinja

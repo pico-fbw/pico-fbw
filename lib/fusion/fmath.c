@@ -283,7 +283,7 @@ void fInit_6DOF_GY_KALMAN(struct SV_6DOF_GY_KALMAN *pthisSV,
                           struct AccelSensor *pthisAccel,
                           struct GyroSensor *pthisGyro)
 {
-    i8    i;          // loop counter
+    int8_t    i;          // loop counter
 
     // compute and store useful product terms to save floating point calculations later
     pthisSV->fdeltat = 1.0F / (float) FUSION_HZ;
@@ -345,7 +345,7 @@ void fInit_9DOF_GBY_KALMAN(struct SV_9DOF_GBY_KALMAN *pthisSV, struct AccelSenso
     struct GyroSensor *pthisGyro, struct MagCalibration *pthisMagCal)
 {
     float ftmp;// scratch
-    i8 i;// loop counter
+    int8_t i;// loop counter
 
     // compute and store useful product terms to save floating point calculations later
     pthisSV->fdeltat = 1.0F / (float) FUSION_HZ;
@@ -531,7 +531,7 @@ void fRun_3DOF_Y_BASIC(struct SV_3DOF_Y_BASIC *pthisSV,
                        struct GyroSensor *pthisGyro)
 {
     Quaternion  ftmpq;  // scratch quaternion
-    i8        i;      // loop counter
+    int8_t        i;      // loop counter
 
     // if requested, do a reset and return
     if (pthisSV->resetflag)
@@ -643,16 +643,16 @@ void fRun_6DOF_GY_KALMAN(struct SV_6DOF_GY_KALMAN *pthisSV,
     Quaternion  fqMi;               // a priori orientation quaternion
     Quaternion  ftmpq;              // scratch quaternion
     float       ftmp;               // scratch float
-    i8        ierror;             // matrix inversion error flag
-    i8        i,
+    int8_t        ierror;             // matrix inversion error flag
+    int8_t        i,
                 j,
                 k;                  // loop counters
 
     // working arrays for 3x3 matrix inversion
     float       *pfRows[3];
-    i8        iColInd[3];
-    i8        iRowInd[3];
-    i8        iPivot[3];
+    int8_t        iColInd[3];
+    int8_t        iRowInd[3];
+    int8_t        iPivot[3];
 
     // if requested, do a reset initialization with no further processing
     if (pthisSV->resetflag)
@@ -1041,16 +1041,16 @@ void fRun_9DOF_GBY_KALMAN(struct SV_9DOF_GBY_KALMAN *pthisSV,
     float       fmodGc;    // modulus of calibrated accelerometer measurement (g)
     float       fmodBc;    // modulus of calibrated magnetometer measurement (uT)
     float       ftmp;               // scratch float
-    i8        ierror;             // matrix inversion error flag
-    i8        i,
+    int8_t        ierror;             // matrix inversion error flag
+    int8_t        i,
                 j,
                 k;                  // loop counters
 
     // working arrays for 6x6 matrix inversion
     float       *pfRows[6];
-    i8       iColInd[6];
-    i8        iRowInd[6];
-    i8        iPivot[6];
+    int8_t       iColInd[6];
+    int8_t        iRowInd[6];
+    int8_t        iPivot[6];
 
     // if requested, do a reset initialization with no further processing
     if (pthisSV->resetflag) {

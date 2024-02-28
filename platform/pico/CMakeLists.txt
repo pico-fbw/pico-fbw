@@ -1,5 +1,5 @@
 set(CMAKE_SYSTEM_PROCESSOR arm)
-set(CMAKE_OSX_ARCHITECTURES "") # Fix a build issue on M-series Macs
+set(CMAKE_OSX_ARCHITECTURES "")
 
 # Both USB and UART (pins moved) are enabled by default (either can be disabled by setting to 0, if needed)
 # These are compiled into stdio, so using printf() will output to whatever is enabled
@@ -29,6 +29,7 @@ target_link_libraries(platform_pico
     pico_base
     pico_bootrom
     pico_platform
+    pico_runtime # For libc
     pico_stdio
     pico_time
     hardware_clocks
@@ -45,7 +46,7 @@ target_link_libraries(platform_pico
     hardware_watchdog
 )
 # Additionally, link to the cyw43 driver if the pico_w board is being used
-if ("$CACHE{PICO_BOARD}" STREQUAL "pico_w")
+if (FBW_PLATFORM STREQUAL "pico_w")
     # target_link_libraries(platform_pico pico_cyw43_arch_lwip_threadsafe_background)
     target_link_libraries(platform_pico pico_cyw43_arch_none)
 endif ()

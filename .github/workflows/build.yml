@@ -1,4 +1,6 @@
-name: CMake
+name: Build
+
+# TODO: seperate workflow for main that will build for release and auto upload artifacts
 
 on:
   push:
@@ -7,28 +9,48 @@ on:
     branches: [ "main", "beta", "alpha" ]
 
 env:
+  # Debug build will enable more warnings
   BUILD_TYPE: Debug
-  PICO_SDK_PATH: /usr/share/pico-sdk
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        PLATFORM: [ pico, pico_w ]
+
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout pico-fbw
+      uses: actions/checkout@v4.1.1
+      with:
+        submodules: 'recursive'
 
-    - name: Install packages
-      run: sudo apt update && sudo apt install -y git python3
-    
-    - name: Install pico-sdk
-      run: sudo apt install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential &&
-        sudo git clone --depth 1 --branch 1.5.1 https://github.com/raspberrypi/pico-sdk ${{env.PICO_SDK_PATH}} &&
-        cd ${{env.PICO_SDK_PATH}} && sudo git submodule update --init
+    - name: Set up Ninja
+      uses: ashutoshvarma/setup-ninja@master
+      with:
+        version: 1.11.1
 
-    - name: Build - pico
-      run: sudo -E cmake -B ${{github.workspace}}/build_pico -DFBW_PLATFORM=pico -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} &&
-        sudo -E cmake --build ${{github.workspace}}/build_pico --config ${{env.BUILD_TYPE}}
+    - name: Prepare (rp2040)
+      uses: Fortinbra/RaspberryPiPicoBuild@v3
+      if: matrix.PLATFORM == 'pico' || matrix.PLATFORM == 'pico_w'
 
-    - name: Build - pico_w
-      run: sudo -E cmake -B ${{github.workspace}}/build_pico_w -DFBW_PLATFORM=pico_w -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} &&
-        sudo -E cmake --build ${{github.workspace}}/build_pico_w --config ${{env.BUILD_TYPE}}
+    - name: Prepare (espressif)
+      uses: espressif/esp-idf-ci-action@v1.1.0
+      with:
+        esp_idf_version: v5.2
+        target: esp32
+        command: ''
+      if: matrix.PLATFORM == 'esp32'
+
+    - name: Get core count
+      id: core_count
+      run : cat /proc/cpuinfo | grep processor | wc -l
+
+    - name: Configure CMake
+      shell: bash
+      run: cmake -B ${{github.workspace}}/build -DFBW_PLATFORM=${{matrix.PLATFORM}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -GNinja
+
+    - name: Build
+      shell: bash
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel ${{steps.core_count.outputs.output}}

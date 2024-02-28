@@ -16,8 +16,7 @@
 
 #include "sys/api/api.h"
 #include "sys/configuration.h"
-
-#include "wifly/wifly.h"
+#include "sys/flightplan.h"
 
 #include "runtime.h"
 
@@ -62,11 +61,10 @@ static void switch_update() {
                 switch ((SwitchType)config.general[GENERAL_SWITCH_TYPE]) {
                     case SWITCH_TYPE_2_POS:
                         // For 2-position switches, auto-select auto or normal mode based on if a flight plan is present or not
-                        if (wifly_fplanExists()) {
+                        if (flightplan_was_parsed())
                             aircraft.changeTo(MODE_AUTO);
-                        } else {
+                        else
                             aircraft.changeTo(MODE_NORMAL);
-                        }
                         break;
                     case SWITCH_TYPE_3_POS:
                         aircraft.changeTo(MODE_AUTO);

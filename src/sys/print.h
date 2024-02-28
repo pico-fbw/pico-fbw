@@ -7,7 +7,7 @@
 #include "platform/stdio.h"
 
 typedef struct PrintDefs {
-    bool fbw, aahrs, gps, modes, network, wifly;
+    bool fbw, aahrs, gps, modes, network;
 } PrintDefs;
 
 /**

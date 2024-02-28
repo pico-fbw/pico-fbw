@@ -11,16 +11,15 @@
 #include "lib/pid.h"
 #include "lib/nav.h"
 
-#include "sys/configuration.h"
-#include "sys/log.h"
-#include "sys/throttle.h"
-
 #include "modes/aircraft.h"
 #include "modes/normal.h"
 #include "modes/tune.h"
 #include "modes/flight.h"
 
-#include "wifly/wifly.h"
+#include "sys/configuration.h"
+#include "sys/flightplan.h"
+#include "sys/log.h"
+#include "sys/throttle.h"
 
 #include "auto.h"
 
@@ -34,20 +33,18 @@ typedef enum GuidanceSource {
 
 static bool autoComplete = false;
 
-static GuidanceSource guidanceSource = FPLAN;
-
-static Waypoint *fplan = NULL;
+// Details of the current Waypoint we're tracking to
 static u32 currentWaypoint = 0;
-
-static Waypoint externWpt;
-static void (*captureCallback)(void);
-
 static double distance;
 static double bearing;
 static i32 alt;
-
 static PIDController latGuid;
 static PIDController vertGuid;
+
+// Allows auto mode to be externally controlled (by API setting a custom Waypoint and callback)
+static GuidanceSource guidanceSource = FPLAN;
+static Waypoint externWpt;
+static void (*captureCallback)(void);
 
 // Callback for when the bay needs to be closed after a user-specified delay (within the flightplan)
 static inline i32 dropCallback(u32 id) {
@@ -56,7 +53,7 @@ static inline i32 dropCallback(u32 id) {
 }
 
 static inline void loadWaypoint(Waypoint *wpt) {
-    // Load the next altitude, if it is -5 (default) just discard it (by setting it to our current alt; no change)
+    // Load the next altitude, if it is -5 (the default) just discard it (by setting it to our current alt; no change)
     if (gps.altOffsetCalibrated) {
         // Factor in the altitude offset calculated earlier
         alt = (wpt->alt <= -5) ? gps.alt : (wpt->alt + gps.altOffset);
@@ -76,10 +73,11 @@ static inline void loadWaypoint(Waypoint *wpt) {
 }
 
 bool auto_init() {
-    // Import the flightplan data from Wi-Fly
-    if (!wifly_fplanExists())
+    // Import flightplan data
+    if (!flightplan_was_parsed()) {
+        log_message(ERROR, "No flightplan parsed!", 2000, 0, false);
         return false;
-    fplan = wifly_getFplan();
+    }
     guidanceSource = FPLAN;
     currentWaypoint = 0;
     flight_init();
@@ -96,7 +94,7 @@ bool auto_init() {
     pid_init(&latGuid);
     pid_init(&vertGuid);
     // Load the first Waypoint from the flightplan (subsequent waypoints will be loaded on waypoint interception)
-    loadWaypoint(&fplan[currentWaypoint]);
+    loadWaypoint(&flightplan_get()->waypoints[currentWaypoint]);
     return true;
 }
 
@@ -111,8 +109,8 @@ void auto_update() {
     switch (guidanceSource) {
         case FPLAN:
             // ...to the current Waypoint in the flightplan
-            bearing = calculateBearing(gps.lat, gps.lng, fplan[currentWaypoint].lat, fplan[currentWaypoint].lng);
-            distance = calculateDistance(gps.lat, gps.lng, fplan[currentWaypoint].lat, fplan[currentWaypoint].lng);
+            bearing = calculateBearing(gps.lat, gps.lng, flightplan_get()->waypoints[currentWaypoint].lat, flightplan_get()->waypoints[currentWaypoint].lng);
+            distance = calculateDistance(gps.lat, gps.lng, flightplan_get()->waypoints[currentWaypoint].lat, flightplan_get()->waypoints[currentWaypoint].lng);
             break;
         case EXTERNAL:
             // ...to the current Waypoint (temporarily set)
@@ -134,13 +132,13 @@ void auto_update() {
                 // then advance to the next one
                 currentWaypoint++;
                 // Check if the flightplan is over
-                if (currentWaypoint > wifly_getWaypointCount()) {
+                if (currentWaypoint > flightplan_get()->waypoint_count) {
                     // Auto mode ends here, we enter a holding pattern
                     autoComplete = true;
                     aircraft.changeTo(MODE_HOLD);
                 } else {
                     // Load the next altitude
-                    loadWaypoint(&fplan[currentWaypoint]);
+                    loadWaypoint(&flightplan_get()->waypoints[currentWaypoint]);
                 }
                 break;
             case EXTERNAL:

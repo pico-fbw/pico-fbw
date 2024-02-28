@@ -1,6 +1,6 @@
 #pragma once
 
-#include "platform/int.h"
+#include <stdint.h>
 
 #include "fusion.h"
 
@@ -16,7 +16,7 @@ typedef struct StatusSubsystem {
 	ssSetStatus_t           *queue;         ///< queue status change for next regular interval
 	ssUpdateStatus_t        *update;        ///< make pending status active/visible
 	// application-specific internal variables
-	u8 toggle;                      ///< This implementation can change LED color and have either solid/toggle
+	uint8_t toggle;                      ///< This implementation can change LED color and have either solid/toggle
 } StatusSubsystem ;
 
 /// initializeStatusSubsystem() should be called once at startup to initialize the

@@ -7,8 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "platform/int.h"
-
 #include "semver.h"
 
 #define SLICE_SIZE   50
@@ -21,7 +19,7 @@
 #define VALID_CHARS  NUMBERS ALPHA DELIMITERS
 
 static const size_t MAX_SIZE     = sizeof(char) * 255;
-static const i32 MAX_SAFE_INT = (unsigned int) -1 >> 1;
+static const int MAX_SAFE_INT = (unsigned int) -1 >> 1;
 
 /**
  * Define comparison operators, storing the
@@ -44,21 +42,21 @@ enum operators {
  * Remove [begin:len-begin] from str by moving len data from begin+len to begin.
  * If len is negative cut out to the end of the string.
  */
-static i32
-strcut (char *str, i32 begin, i32 len) {
+static int
+strcut (char *str, int begin, int len) {
   size_t l;
   l = strlen(str);
 
-  if((i32)l < 0 || (i32)l > MAX_SAFE_INT) return -1;
+  if((int)l < 0 || (int)l > MAX_SAFE_INT) return -1;
 
   if (len < 0) len = l - begin + 1;
-  if (begin + len > (i32)l) len = l - begin;
+  if (begin + len > (int)l) len = l - begin;
   memmove(str + begin, str + begin + len, l - len + 1 - begin);
 
   return len;
 }
 
-static i32
+static int
 contains (const char c, const char *matrix, size_t len) {
   size_t x;
   for (x = 0; x < len; x++)
@@ -66,7 +64,7 @@ contains (const char c, const char *matrix, size_t len) {
   return 0;
 }
 
-static i32
+static int
 has_valid_chars (const char *str, const char *matrix) {
   size_t i, len, mlen;
   len = strlen(str);
@@ -79,16 +77,16 @@ has_valid_chars (const char *str, const char *matrix) {
   return 1;
 }
 
-static i32
-binary_comparison (i32 x, i32 y) {
+static int
+binary_comparison (int x, int y) {
   if (x == y) return 0;
   if (x > y) return 1;
   return -1;
 }
 
-static i32
+static int
 parse_int (const char *s) {
-  i32 valid, num;
+  int valid, num;
   valid = has_valid_chars(s, NUMBERS);
   if (valid == 0) return -1;
 
@@ -105,7 +103,7 @@ parse_int (const char *s) {
 static char *
 parse_slice (char *buf, char sep) {
   char *pr, *part;
-  i32 plen;
+  int plen;
 
   /* Find separator in buf */
   pr = strchr(buf, sep);
@@ -135,9 +133,9 @@ parse_slice (char *buf, char sep) {
  * `-1` - In case of error
  */
 
-i32
+int
 semver_parse (const char *str, semver_t *ver) {
-  i32 valid, res;
+  int valid, res;
   size_t len;
   char *buf;
   valid = semver_is_valid(str);
@@ -168,10 +166,10 @@ semver_parse (const char *str, semver_t *ver) {
  * `-1` - Parse error or invalid
  */
 
-i32
+int
 semver_parse_version (const char *str, semver_t *ver) {
   size_t len;
-  i32 index, value;
+  int index, value;
   char *slice, *next, *endptr;
   slice = (char *) str;
   index = 0;
@@ -204,11 +202,11 @@ semver_parse_version (const char *str, semver_t *ver) {
   return 0;
 }
 
-static i32
+static int
 compare_prerelease (char *x, char *y) {
   char *lastx, *lasty, *xptr, *yptr, *endptr;
-  i32 xlen, ylen, xisnum, yisnum, xnum, ynum;
-  i32 xn, yn, min, res;
+  int xlen, ylen, xisnum, yisnum, xnum, ynum;
+  int xn, yn, min, res;
   if (x == NULL && y == NULL) return 0;
   if (y == NULL && x) return -1;
   if (x == NULL && y) return 1;
@@ -254,7 +252,7 @@ compare_prerelease (char *x, char *y) {
   return 0;
 }
 
-i32
+int
 semver_compare_prerelease (semver_t x, semver_t y) {
   return compare_prerelease(x.prerelease, y.prerelease);
 }
@@ -270,9 +268,9 @@ semver_compare_prerelease (semver_t x, semver_t y) {
  * `-1` - If x is lower than y
  */
 
-i32
+int
 semver_compare_version (semver_t x, semver_t y) {
-  i32 res;
+  int res;
 
   if ((res = binary_comparison(x.major, y.major)) == 0) {
     if ((res = binary_comparison(x.minor, y.minor)) == 0) {
@@ -292,9 +290,9 @@ semver_compare_version (semver_t x, semver_t y) {
  * - `-1` if x is lower than y
  */
 
-i32
+int
 semver_compare (semver_t x, semver_t y) {
-  i32 res;
+  int res;
 
   if ((res = semver_compare_version(x, y)) == 0) {
     return semver_compare_prerelease(x, y);
@@ -307,7 +305,7 @@ semver_compare (semver_t x, semver_t y) {
  * Performs a `greater than` comparison
  */
 
-i32
+int
 semver_gt (semver_t x, semver_t y) {
   return semver_compare(x, y) == 1;
 }
@@ -316,7 +314,7 @@ semver_gt (semver_t x, semver_t y) {
  * Performs a `lower than` comparison
  */
 
-i32
+int
 semver_lt (semver_t x, semver_t y) {
   return semver_compare(x, y) == -1;
 }
@@ -325,7 +323,7 @@ semver_lt (semver_t x, semver_t y) {
  * Performs a `equality` comparison
  */
 
-i32
+int
 semver_eq (semver_t x, semver_t y) {
   return semver_compare(x, y) == 0;
 }
@@ -334,7 +332,7 @@ semver_eq (semver_t x, semver_t y) {
  * Performs a `non equal to` comparison
  */
 
-i32
+int
 semver_neq (semver_t x, semver_t y) {
   return semver_compare(x, y) != 0;
 }
@@ -343,7 +341,7 @@ semver_neq (semver_t x, semver_t y) {
  * Performs a `greater than or equal` comparison
  */
 
-i32
+int
 semver_gte (semver_t x, semver_t y) {
   return semver_compare(x, y) >= 0;
 }
@@ -352,7 +350,7 @@ semver_gte (semver_t x, semver_t y) {
  * Performs a `lower than or equal` comparison
  */
 
-i32
+int
 semver_lte (semver_t x, semver_t y) {
   return semver_compare(x, y) <= 0;
 }
@@ -369,7 +367,7 @@ semver_lte (semver_t x, semver_t y) {
  * `0` - Cannot be satisfied
  */
 
-i32
+int
 semver_satisfies_caret (semver_t x, semver_t y) {
   /* Major versions must always match. */
   if (x.major == y.major) {
@@ -413,7 +411,7 @@ semver_satisfies_caret (semver_t x, semver_t y) {
  * `0` - Cannot be satisfied
  */
 
-i32
+int
 semver_satisfies_patch (semver_t x, semver_t y) {
   return x.major == y.major
       && x.minor == y.minor;
@@ -439,9 +437,9 @@ semver_satisfies_patch (semver_t x, semver_t y) {
  * `0` - Cannot be satisfied
  */
 
-i32
+int
 semver_satisfies (semver_t x, semver_t y, const char *op) {
-  i32 first, second;
+  int first, second;
   /* Extract the comparison operator */
   first = op[0];
   second = op[1];
@@ -500,7 +498,7 @@ semver_free (semver_t *x) {
  */
 
 static void
-concat_num (char * str, i32 x, char * sep) {
+concat_num (char * str, int x, char * sep) {
   char buf[SLICE_SIZE] = {0};
   if (sep == NULL) sprintf(buf, "%d", x);
   else sprintf(buf, "%s%d", sep, x);
@@ -550,7 +548,7 @@ semver_bump_patch (semver_t *x) {
  * Helpers
  */
 
-static i32
+static int
 has_valid_length (const char *s) {
   return strlen(s) <= MAX_SIZE;
 }
@@ -564,7 +562,7 @@ has_valid_length (const char *s) {
  * `0` - Invalid
  */
 
-i32
+int
 semver_is_valid (const char *s) {
   return has_valid_length(s)
       && has_valid_chars(s, VALID_CHARS);
@@ -579,10 +577,10 @@ semver_is_valid (const char *s) {
  * `-1` - Invalid input
  */
 
-i32
+int
 semver_clean (char *s) {
   size_t i, len, mlen;
-  i32 res;
+  int res;
   if (has_valid_length(s) == 0) return -1;
 
   len = strlen(s);
@@ -599,9 +597,9 @@ semver_clean (char *s) {
   return 0;
 }
 
-static i32
+static int
 char_to_int (const char * str) {
-  i32 buf;
+  int buf;
   size_t i,len, mlen;
   buf = 0;
   len = strlen(str);
@@ -609,7 +607,7 @@ char_to_int (const char * str) {
 
   for (i = 0; i < len; i++)
     if (contains(str[i], VALID_CHARS, mlen))
-      buf += (i32) str[i];
+      buf += (int) str[i];
 
   return buf;
 }
@@ -619,9 +617,9 @@ char_to_int (const char * str) {
  * Useful for ordering and filtering.
  */
 
-i32
+int
 semver_numeric (semver_t *x) {
-  i32 num;
+  int num;
   char buf[SLICE_SIZE * 3];
   memset(&buf, 0, SLICE_SIZE * 3);
 

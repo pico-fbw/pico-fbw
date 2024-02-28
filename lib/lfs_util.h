@@ -24,7 +24,6 @@
 #include <stdbool.h>
 #include <string.h>
 #include <inttypes.h>
-#include "platform/int.h"
 
 #ifndef LFS_NO_MALLOC
 #include <stdlib.h>
@@ -47,7 +46,7 @@ extern "C"
 
 // Macros, may be replaced by system specific wrappers. Arguments to these
 // macros must not have side-effects as the macros can be removed for a smaller
-// code footpri32
+// code footprint
 
 // Logging functions
 #ifndef LFS_TRACE
@@ -101,34 +100,34 @@ extern "C"
 
 
 // Builtin functions, these may be replaced by more efficient
-// toolchain-specific implementations. LFS_NO_i32RINSICS falls back to a more
+// toolchain-specific implementations. LFS_NO_INTRINSICS falls back to a more
 // expensive basic C implementation for debugging purposes
 
 // Min/max functions for unsigned 32-bit numbers
-static inline u32 lfs_max(u32 a, u32 b) {
+static inline uint32_t lfs_max(uint32_t a, uint32_t b) {
     return (a > b) ? a : b;
 }
 
-static inline u32 lfs_min(u32 a, u32 b) {
+static inline uint32_t lfs_min(uint32_t a, uint32_t b) {
     return (a < b) ? a : b;
 }
 
 // Align to nearest multiple of a size
-static inline u32 lfs_aligndown(u32 a, u32 alignment) {
+static inline uint32_t lfs_aligndown(uint32_t a, uint32_t alignment) {
     return a - (a % alignment);
 }
 
-static inline u32 lfs_alignup(u32 a, u32 alignment) {
+static inline uint32_t lfs_alignup(uint32_t a, uint32_t alignment) {
     return lfs_aligndown(a + alignment-1, alignment);
 }
 
 // Find the smallest power of 2 greater than or equal to a
-static inline u32 lfs_npw2(u32 a) {
-#if !defined(LFS_NO_i32RINSICS) && (defined(__GNUC__) || defined(__CC_ARM))
+static inline uint32_t lfs_npw2(uint32_t a) {
+#if !defined(LFS_NO_INTRINSICS) && (defined(__GNUC__) || defined(__CC_ARM))
     return 32 - __builtin_clz(a-1);
 #else
-    u32 r = 0;
-    u32 s;
+    uint32_t r = 0;
+    uint32_t s;
     a -= 1;
     s = (a > 0xffff) << 4; a >>= s; r |= s;
     s = (a > 0xff  ) << 3; a >>= s; r |= s;
@@ -140,8 +139,8 @@ static inline u32 lfs_npw2(u32 a) {
 
 // Count the number of trailing binary zeros in a
 // lfs_ctz(0) may be undefined
-static inline u32 lfs_ctz(u32 a) {
-#if !defined(LFS_NO_i32RINSICS) && defined(__GNUC__)
+static inline uint32_t lfs_ctz(uint32_t a) {
+#if !defined(LFS_NO_INTRINSICS) && defined(__GNUC__)
     return __builtin_ctz(a);
 #else
     return lfs_npw2((a & -a) + 1) - 1;
@@ -149,8 +148,8 @@ static inline u32 lfs_ctz(u32 a) {
 }
 
 // Count the number of binary ones in a
-static inline u32 lfs_popc(u32 a) {
-#if !defined(LFS_NO_i32RINSICS) && (defined(__GNUC__) || defined(__CC_ARM))
+static inline uint32_t lfs_popc(uint32_t a) {
+#if !defined(LFS_NO_INTRINSICS) && (defined(__GNUC__) || defined(__CC_ARM))
     return __builtin_popcount(a);
 #else
     a = a - ((a >> 1) & 0x55555555);
@@ -161,36 +160,36 @@ static inline u32 lfs_popc(u32 a) {
 
 // Find the sequence comparison of a and b, this is the distance
 // between a and b ignoring overflow
-static inline i32 lfs_scmp(u32 a, u32 b) {
-    return (i32)(unsigned)(a - b);
+static inline int lfs_scmp(uint32_t a, uint32_t b) {
+    return (int)(unsigned)(a - b);
 }
 
 // Convert between 32-bit little-endian and native order
-static inline u32 lfs_fromle32(u32 a) {
+static inline uint32_t lfs_fromle32(uint32_t a) {
 #if (defined(  BYTE_ORDER  ) && defined(  ORDER_LITTLE_ENDIAN  ) &&   BYTE_ORDER   ==   ORDER_LITTLE_ENDIAN  ) || \
     (defined(__BYTE_ORDER  ) && defined(__ORDER_LITTLE_ENDIAN  ) && __BYTE_ORDER   == __ORDER_LITTLE_ENDIAN  ) || \
     (defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
     return a;
-#elif !defined(LFS_NO_i32RINSICS) && ( \
+#elif !defined(LFS_NO_INTRINSICS) && ( \
     (defined(  BYTE_ORDER  ) && defined(  ORDER_BIG_ENDIAN  ) &&   BYTE_ORDER   ==   ORDER_BIG_ENDIAN  ) || \
     (defined(__BYTE_ORDER  ) && defined(__ORDER_BIG_ENDIAN  ) && __BYTE_ORDER   == __ORDER_BIG_ENDIAN  ) || \
     (defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__))
     return __builtin_bswap32(a);
 #else
-    return (((u8*)&a)[0] <<  0) |
-           (((u8*)&a)[1] <<  8) |
-           (((u8*)&a)[2] << 16) |
-           (((u8*)&a)[3] << 24);
+    return (((uint8_t*)&a)[0] <<  0) |
+           (((uint8_t*)&a)[1] <<  8) |
+           (((uint8_t*)&a)[2] << 16) |
+           (((uint8_t*)&a)[3] << 24);
 #endif
 }
 
-static inline u32 lfs_tole32(u32 a) {
+static inline uint32_t lfs_tole32(uint32_t a) {
     return lfs_fromle32(a);
 }
 
 // Convert between 32-bit big-endian and native order
-static inline u32 lfs_frombe32(u32 a) {
-#if !defined(LFS_NO_i32RINSICS) && ( \
+static inline uint32_t lfs_frombe32(uint32_t a) {
+#if !defined(LFS_NO_INTRINSICS) && ( \
     (defined(  BYTE_ORDER  ) && defined(  ORDER_LITTLE_ENDIAN  ) &&   BYTE_ORDER   ==   ORDER_LITTLE_ENDIAN  ) || \
     (defined(__BYTE_ORDER  ) && defined(__ORDER_LITTLE_ENDIAN  ) && __BYTE_ORDER   == __ORDER_LITTLE_ENDIAN  ) || \
     (defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__))
@@ -200,24 +199,24 @@ static inline u32 lfs_frombe32(u32 a) {
     (defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
     return a;
 #else
-    return (((u8*)&a)[0] << 24) |
-           (((u8*)&a)[1] << 16) |
-           (((u8*)&a)[2] <<  8) |
-           (((u8*)&a)[3] <<  0);
+    return (((uint8_t*)&a)[0] << 24) |
+           (((uint8_t*)&a)[1] << 16) |
+           (((uint8_t*)&a)[2] <<  8) |
+           (((uint8_t*)&a)[3] <<  0);
 #endif
 }
 
-static inline u32 lfs_tobe32(u32 a) {
+static inline uint32_t lfs_tobe32(uint32_t a) {
     return lfs_frombe32(a);
 }
 
 // Calculate CRC-32 with polynomial = 0x04c11db7
 #ifdef LFS_CRC
-u32 lfs_crc(u32 crc, const void *buffer, size_t size) {
+uint32_t lfs_crc(uint32_t crc, const void *buffer, size_t size) {
     return LFS_CRC(crc, buffer, size)
 }
 #else
-u32 lfs_crc(u32 crc, const void *buffer, size_t size);
+uint32_t lfs_crc(uint32_t crc, const void *buffer, size_t size);
 #endif
 
 // Allocate memory, only used if buffers are not provided to littlefs

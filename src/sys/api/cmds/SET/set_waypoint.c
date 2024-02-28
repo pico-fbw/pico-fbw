@@ -10,8 +10,6 @@
 
 #include "sys/print.h"
 
-#include "wifly/wifly.h"
-
 #include "set_waypoint.h"
 
 void interceptCallback() {

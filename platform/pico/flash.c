@@ -34,7 +34,7 @@ static const byte* FS_BASE = (byte*)(PICO_FLASH_SIZE_BYTES - FS_SIZE); // File s
 
 lfs_t lfs;
 
-static i32 flash_read(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, void* buffer, lfs_size_t size) {
+static int flash_read(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, void* buffer, lfs_size_t size) {
     assert(block < c->block_count);
     assert(off + size <= c->block_size);
     // Find addres in flash to read from and copy into buffer
@@ -42,7 +42,7 @@ static i32 flash_read(const struct lfs_config *c, lfs_block_t block, lfs_off_t o
     return LFS_ERR_OK;
 }
 
-static i32 flash_prog(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, const void* buffer, lfs_size_t size) {
+static int flash_prog(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, const void* buffer, lfs_size_t size) {
     assert(block < c->block_count);
     u32 sector = (u32)FS_BASE + (block * c->block_size) + off;
     // Interrupt save and restore is necessary to prevent corruption of flash
@@ -52,7 +52,7 @@ static i32 flash_prog(const struct lfs_config *c, lfs_block_t block, lfs_off_t o
     return LFS_ERR_OK;
 }
 
-static i32 flash_erase(const struct lfs_config *c, lfs_block_t block) {
+static int flash_erase(const struct lfs_config *c, lfs_block_t block) {
     assert(block < c->block_count);
     u32 sector = (u32)FS_BASE + block * c->block_size;
     u32 ints = save_and_disable_interrupts();
@@ -61,7 +61,7 @@ static i32 flash_erase(const struct lfs_config *c, lfs_block_t block) {
     return LFS_ERR_OK;
 }
 
-static i32 flash_sync(const struct lfs_config *c) {
+static int flash_sync(const struct lfs_config *c) {
     // Cache is automatically flushed in flash_range_program() so nothing to do here
     return LFS_ERR_OK;
     (void)c; // Supress unused parameter warning; the config struct is required by littlefs but not used here

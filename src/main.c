@@ -26,8 +26,6 @@
 #include "sys/runtime.h"
 #include "sys/version.h"
 
-#include "wifly/wifly.h"
-
 // TODO: switch to snake case for function names
 // TODO: set up clang-format/clang-tidy/clangd or whatever for styling and whatnot
 
@@ -171,10 +169,10 @@ int main() {
     }
 
     #if PLATFORM_SUPPORTS_WIFI
-        if ((WiflyEnableStatus)config.general[GENERAL_WIFLY_STATUS] != WIFLY_DISABLED) {
-            boot_set_progress(80, "Initializing Wi-Fly");
-            wifly_init();  
-        }
+        // TODO: redo network stuff but in HAL and more features
+        // maybe allow config editing through the interface, can maybe use server stuff from arduino
+        // alao don't forget to update the license when files are moved & update config settnig
+        // and also maybe do a vethernet for the normal pico like (https://github.com/OpenStickCommunity/GP2040-CE)
     #endif
 
     boot_set_progress(90, "Finishing up");

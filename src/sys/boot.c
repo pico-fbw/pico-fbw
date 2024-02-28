@@ -3,7 +3,6 @@
  * Licensed under the GNU AGPL-3.0
 */
 
-#include <stdio.h>
 #include "platform/defs.h"
 #include "platform/gpio.h"
 #include "platform/time.h"

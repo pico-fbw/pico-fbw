@@ -1,20 +1,18 @@
 /*
  * Copyright © 2014 Kosma Moczek <kosma@cloudyourcar.com>
- * This program is free software. It comes without any warranty, to the extent
- * permitted by applicable law. You can redistribute it and/or modify it under
- * the terms of the Do What The F*** You Want To Public License, Version 2, as
- * published by Sam Hocevar.
+ * 
+ * This file utilizes code under the MIT License. See "LICENSE" for details.
  */
+
+#include "minmea.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
 
-#include "minmea.h"
-
 #define boolstr(s) ((s) ? "true" : "false")
 
-static i32 hex2int(char c)
+static int hex2int(char c)
 {
     if (c >= '0' && c <= '9')
         return c - '0';
@@ -25,13 +23,13 @@ static i32 hex2int(char c)
     return -1;
 }
 
-u8 minmea_checksum(const char *sentence)
+uint8_t minmea_checksum(const char *sentence)
 {
     // Support senteces with or without the starting dollar sign.
     if (*sentence == '$')
         sentence++;
 
-    u8 checksum = 0x00;
+    uint8_t checksum = 0x00;
 
     // The optional checksum is an XOR of all bytes between "$" and "*".
     while (*sentence && *sentence != '*')
@@ -42,7 +40,7 @@ u8 minmea_checksum(const char *sentence)
 
 bool minmea_check(const char *sentence, bool strict)
 {
-    u8 checksum = 0x00;
+    uint8_t checksum = 0x00;
 
     // A valid sentence starts with "$".
     if (*sentence++ != '$')
@@ -56,13 +54,13 @@ bool minmea_check(const char *sentence, bool strict)
     if (*sentence == '*') {
         // Extract checksum.
         sentence++;
-        i32 upper = hex2int(*sentence++);
+        int upper = hex2int(*sentence++);
         if (upper == -1)
             return false;
-        i32 lower = hex2int(*sentence++);
+        int lower = hex2int(*sentence++);
         if (lower == -1)
             return false;
-        i32 expected = upper << 4 | lower;
+        int expected = upper << 4 | lower;
 
         // Check for checksum mismatch.
         if (checksum != expected)
@@ -135,7 +133,7 @@ bool minmea_scan(const char *sentence, const char *format, ...)
             } break;
 
             case 'd': { // Single character direction field (int).
-                i32 value = 0;
+                int value = 0;
 
                 if (field && minmea_isfield(*field)) {
                     switch (*field) {
@@ -152,11 +150,11 @@ bool minmea_scan(const char *sentence, const char *format, ...)
                     }
                 }
 
-                *va_arg(ap, i32 *) = value;
+                *va_arg(ap, int *) = value;
             } break;
 
             case 'f': { // Fractional value with scale (struct minmea_float).
-                i32 sign = 0;
+                int sign = 0;
                 int_least32_t value = -1;
                 int_least32_t scale = 0;
 
@@ -167,7 +165,7 @@ bool minmea_scan(const char *sentence, const char *format, ...)
                         } else if (*field == '-' && !sign && value == -1) {
                             sign = -1;
                         } else if (isdigit((unsigned char) *field)) {
-                            i32 digit = *field - '0';
+                            int digit = *field - '0';
                             if (value == -1)
                                 value = 0;
                             if (value > (INT_LEAST32_MAX-digit) / 10) {
@@ -215,7 +213,7 @@ bool minmea_scan(const char *sentence, const char *format, ...)
             } break;
 
             case 'i': { // Integer value, default 0 (int).
-                i32 value = 0;
+                int value = 0;
 
                 if (field) {
                     char *endptr;
@@ -224,7 +222,7 @@ bool minmea_scan(const char *sentence, const char *format, ...)
                         goto parse_error;
                 }
 
-                *va_arg(ap, i32 *) = value;
+                *va_arg(ap, int *) = value;
             } break;
 
             case 's': { // String value (char *).
@@ -245,7 +243,7 @@ bool minmea_scan(const char *sentence, const char *format, ...)
 
                 if (field[0] != '$')
                     goto parse_error;
-                for (i32 f=0; f<5; f++)
+                for (int f=0; f<5; f++)
                     if (!minmea_isfield(field[1+f]))
                         goto parse_error;
 
@@ -257,11 +255,11 @@ bool minmea_scan(const char *sentence, const char *format, ...)
             case 'D': { // Date (int, int, int), -1 if empty.
                 struct minmea_date *date = va_arg(ap, struct minmea_date *);
 
-                i32 d = -1, m = -1, y = -1;
+                int d = -1, m = -1, y = -1;
 
                 if (field && minmea_isfield(*field)) {
                     // Always six digits.
-                    for (i32 f=0; f<6; f++)
+                    for (int f=0; f<6; f++)
                         if (!isdigit((unsigned char) field[f]))
                             goto parse_error;
 
@@ -281,11 +279,11 @@ bool minmea_scan(const char *sentence, const char *format, ...)
             case 'T': { // Time (int, int, int, int), -1 if empty.
                 struct minmea_time *time_ = va_arg(ap, struct minmea_time *);
 
-                i32 h = -1, i = -1, s = -1, u = -1;
+                int h = -1, i = -1, s = -1, u = -1;
 
                 if (field && minmea_isfield(*field)) {
                     // Minimum required: integer time.
-                    for (i32 f=0; f<6; f++)
+                    for (int f=0; f<6; f++)
                         if (!isdigit((unsigned char) field[f]))
                             goto parse_error;
 
@@ -299,8 +297,8 @@ bool minmea_scan(const char *sentence, const char *format, ...)
 
                     // Extra: fractional time. Saved as microseconds.
                     if (*field++ == '.') {
-                        u32 value = 0;
-                        u32 scale = 1000000LU;
+                        uint32_t value = 0;
+                        uint32_t scale = 1000000LU;
                         while (isdigit((unsigned char) *field) && scale > 1) {
                             value = (value * 10) + (*field++ - '0');
                             scale /= 10;
@@ -406,9 +404,9 @@ bool minmea_parse_rmc(struct minmea_sentence_rmc *frame, const char *sentence)
     // $GPRMC,081836,A,3751.65,S,14507.36,E,000.0,360.0,130998,011.3,E*62
     char type[6];
     char validity;
-    i32 latitude_direction;
-    i32 longitude_direction;
-    i32 variation_direction;
+    int latitude_direction;
+    int longitude_direction;
+    int variation_direction;
     if (!minmea_scan(sentence, "tTcfdfdffDfd",
             type,
             &frame->time,
@@ -435,8 +433,8 @@ bool minmea_parse_gga(struct minmea_sentence_gga *frame, const char *sentence)
 {
     // $GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47
     char type[6];
-    i32 latitude_direction;
-    i32 longitude_direction;
+    int latitude_direction;
+    int longitude_direction;
 
     if (!minmea_scan(sentence, "tTfdfdiiffcfcf_",
             type,
@@ -494,8 +492,8 @@ bool minmea_parse_gll(struct minmea_sentence_gll *frame, const char *sentence)
 {
     // $GPGLL,3723.2475,N,12158.3416,W,161229.487,A,A*41$;
     char type[6];
-    i32 latitude_direction;
-    i32 longitude_direction;
+    int latitude_direction;
+    int longitude_direction;
 
     if (!minmea_scan(sentence, "tfdfdTc;c",
             type,
@@ -638,7 +636,7 @@ bool minmea_parse_zda(struct minmea_sentence_zda *frame, const char *sentence)
   return true;
 }
 
-i32 minmea_getdatetime(struct tm *tm, const struct minmea_date *date, const struct minmea_time *time_)
+int minmea_getdatetime(struct tm *tm, const struct minmea_date *date, const struct minmea_time *time_)
 {
     if (date->year == -1 || time_->hours == -1)
         return -1;
@@ -660,14 +658,14 @@ i32 minmea_getdatetime(struct tm *tm, const struct minmea_date *date, const stru
     return 0;
 }
 
-i32 minmea_gettime(struct timespec *ts, const struct minmea_date *date, const struct minmea_time *time_)
-{
+int minmea_gettime(struct timespec *ts, const struct minmea_date *date, const struct minmea_time *time_)
+{   
     /*
     struct tm tm;
     if (minmea_getdatetime(&tm, date, time_))
         return -1;
 
-    time_t timestamp = timegm(&tm);
+    time_t timestamp = timegm(&tm); // See README.md if your system lacks timegm().
     if (timestamp != (time_t)-1) {
         ts->tv_sec = timestamp;
         ts->tv_nsec = time_->microseconds * 1000;

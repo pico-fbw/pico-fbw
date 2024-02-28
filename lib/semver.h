@@ -13,9 +13,9 @@ extern "C" {
  */
 
 typedef struct semver_version_s {
-  i32 major;
-  i32 minor;
-  i32 patch;
+  int major;
+  int minor;
+  int patch;
   char * metadata;
   char * prerelease;
 } semver_t;
@@ -24,52 +24,52 @@ typedef struct semver_version_s {
  * Set prototypes
  */
 
-i32
+int
 semver_satisfies (semver_t x, semver_t y, const char *op);
 
-i32
+int
 semver_satisfies_caret (semver_t x, semver_t y);
 
-i32
+int
 semver_satisfies_patch (semver_t x, semver_t y);
 
-i32
+int
 semver_compare (semver_t x, semver_t y);
 
-i32
+int
 semver_compare_version (semver_t x, semver_t y);
 
-i32
+int
 semver_compare_prerelease (semver_t x, semver_t y);
 
-i32
+int
 semver_gt (semver_t x, semver_t y);
 
-i32
+int
 semver_gte (semver_t x, semver_t y);
 
-i32
+int
 semver_lt (semver_t x, semver_t y);
 
-i32
+int
 semver_lte (semver_t x, semver_t y);
 
-i32
+int
 semver_eq (semver_t x, semver_t y);
 
-i32
+int
 semver_neq (semver_t x, semver_t y);
 
-i32
+int
 semver_parse (const char *str, semver_t *ver);
 
-i32
+int
 semver_parse_version (const char *str, semver_t *ver);
 
 void
 semver_render (semver_t *x, char *dest);
 
-i32
+int
 semver_numeric (semver_t *x);
 
 void
@@ -84,10 +84,10 @@ semver_bump_patch (semver_t *x);
 void
 semver_free (semver_t *x);
 
-i32
+int
 semver_is_valid (const char *s);
 
-i32
+int
 semver_clean (char *s);
 
 #ifdef __cplusplus

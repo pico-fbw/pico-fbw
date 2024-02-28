@@ -20,7 +20,7 @@
 void fInitializeAccelCalibration(AccelCalibration *pthisAccelCal,
                                  AccelBuffer *pthisAccelBuffer)
 {
-    i8  i,
+    int8_t  i,
             j;          // loop counters
 
     // set flags to false to denote no precision accelerometer measurements
@@ -65,7 +65,7 @@ void fUpdateAccelBuffer( AccelCalibration *pthisAccelCal,
                          AccelBuffer *pthisAccelBuffer,
                         struct AccelSensor *pthisAccel)
 {
-    i16 i;          // loop counter
+    int16_t i;          // loop counter
 
     // iStoreCounter > 0: precision measurements are still on-going
     // iStoreCounter = 0: the precision measurement has just finished
@@ -115,7 +115,7 @@ void fInvertAccelCal(struct AccelSensor *pthisAccel,
 {
     // local variables
     float   ftmp[3];    // temporary array
-    i8  i;          // loop counter
+    int8_t  i;          // loop counter
 
     //subtract the offset vector fV (g): ftmp[]=fGs[]-V[]
     for (i = CHX; i <= CHZ; i++)
@@ -142,7 +142,7 @@ void fInvertAccelCal(struct AccelSensor *pthisAccel,
             ftmp[CHY] +
             pthisAccelCal->fR0[CHZ][i] *
             ftmp[CHZ];
-        pthisAccel->iGc[i] = (i16) (pthisAccel->fGc[i] * pthisAccel->iCountsPerg);
+        pthisAccel->iGc[i] = (int16_t) (pthisAccel->fGc[i] * pthisAccel->iCountsPerg);
     }
 
     return;
@@ -154,8 +154,8 @@ void fRunAccelCalibration(AccelCalibration *pthisAccelCal,
                           struct AccelSensor *pthisAccel)
 {
     float   fGc0[3];        // calibrated but not de-rotated measurement 0
-    u8 iMeasurements;  // number of stored measurements
-    i8  i;              // loop counters
+    uint8_t iMeasurements;  // number of stored measurements
+    int8_t  i;              // loop counters
 
     // calculate how many measurements are present in the accelerometer measurement buffer
     iMeasurements = 0;
@@ -211,16 +211,16 @@ void fComputeAccelCalibration4(AccelBuffer *pthisAccelBuffer,
                                AccelCalibration *pthisAccelCal,
                                struct AccelSensor *pthisAccel)
 {
-    i32   i,
+    int32_t   i,
             j;      // loop counters
     float   ftmp;   // scratch
-    i8  ierror; // flag from matrix inversion
+    int8_t  ierror; // flag from matrix inversion
 
     // working arrays for 4x4 matrix inversion
     float   *pfRows[4];
-    i8  iColInd[4];
-    i8  iRowInd[4];
-    i8  iPivot[4];
+    int8_t  iColInd[4];
+    int8_t  iRowInd[4];
+    int8_t  iPivot[4];
 
     // zero the 4x4 matrix XTX (in upper left of fmatA) and 4x1 vector XTY (in upper fvecA)
     for (i = 0; i < 4; i++)
@@ -326,7 +326,7 @@ void fComputeAccelCalibration7(AccelBuffer *pthisAccelBuffer,
                                AccelCalibration *pthisAccelCal,
                                struct AccelSensor *pthisAccel)
 {
-    i32   i,
+    int32_t   i,
             j,
             m,
             n;      // loop counters
@@ -420,7 +420,7 @@ void fComputeAccelCalibration10(AccelBuffer *pthisAccelBuffer,
                                 AccelCalibration *pthisAccelCal,
                                 struct AccelSensor *pthisAccel)
 {
-    i32   i,
+    int   i,
             j,
             k,
             l,

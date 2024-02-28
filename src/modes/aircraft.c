@@ -13,10 +13,9 @@
 #include "modes/normal.h"
 #include "modes/tune.h"
 
+#include "sys/flightplan.h"
 #include "sys/log.h"
 #include "sys/print.h"
-
-#include "wifly/wifly.h"
 
 #include "aircraft.h"
 
@@ -82,9 +81,10 @@ void changeTo(Mode newMode) {
                     goto TUNE;
                 // TODO: have a way for auto mode to re-engage if the gps becomes safe again; this is usually due to bad DOP which fixes itself over time
                 if (gps.is_supported() && aircraft.GPSSafe) {
-                    // Check to see if we have to calibrate the altitude offset
-                    if (wifly_getNumAltSamples() > 0) {
-                        gps.calibrate_alt_offset(wifly_getNumAltSamples());
+                    // Check to see if we should calibrate the altitude offset
+                    if (flightplan_was_parsed()) {
+                        if (flightplan_get()->alt_samples > 0)
+                            gps.calibrate_alt_offset(flightplan_get()->alt_samples);
                     }
                     printfbw(modes, "entering auto mode");
                     if (auto_init()) {

@@ -11,20 +11,6 @@ typedef enum GPSCommandType {
 } GPSCommandType;
 #define GPS_COMMAND_TYPE_MAX GPS_COMMAND_TYPE_PMTK
 
-#define GPS_UART uart1
-#define GPS_UART_IRQ UART1_IRQ
-
-// Maximum timeout between waiting for a response after a command is sent (in milleseconds)
-// This actually needs to be quite long because the GPS may wait to send a response until its update rate comes around which is a bit slow
-#define GPS_COMMAND_TIMEOUT_MS 1300
-
-// These are the DOP thresholds to accept for safe flying, if any of the DOPs are larger than this the GPS will be considered unsafe
-#define GPS_SAFE_PDOP_THRESHOLD 4
-#define GPS_SAFE_HDOP_THRESHOLD 5
-#define GPS_SAFE_VDOP_THRESHOLD 3
-
-#define M_TO_FT 3.28084f // Meters to feet conversion constant
-
 typedef bool (*gps_init_t)();
 typedef void (*gps_update_t)();
 typedef i32 (*gps_calibrate_alt_offset_t)(u32);

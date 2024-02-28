@@ -30,10 +30,10 @@
 /// The contents of this buffer are updated on a continuing basis.
 struct MagBuffer
 {
-	i16 iBs[3][MAGBUFFSIZEX][MAGBUFFSIZEY];		///< uncalibrated magnetometer readings
-	i32 index[MAGBUFFSIZEX][MAGBUFFSIZEY];		///< array of time indices
-	i16 tanarray[MAGBUFFSIZEX - 1];			///< array of tangents of (100 * angle)
-	i16 iMagBufferCount;				///< number of magnetometer readings
+	int16_t iBs[3][MAGBUFFSIZEX][MAGBUFFSIZEY];		///< uncalibrated magnetometer readings
+	int32_t index[MAGBUFFSIZEX][MAGBUFFSIZEY];		///< array of time indices
+	int16_t tanarray[MAGBUFFSIZEX - 1];			///< array of tangents of (100 * angle)
+	int16_t iMagBufferCount;				///< number of magnetometer readings
 };
 
 /// Magnetic Calibration Structure
@@ -45,7 +45,7 @@ struct MagCalibration
 	float fB;					///< current geomagnetic field magnitude (uT)
 	float fBSq;					///< square of fB (uT^2)
 	float fFitErrorpc;				///< current fit error %
-	i32 iValidMagCal;				///< solver used: 0 (no calibration) or 4, 7, 10 element
+	int32_t iValidMagCal;				///< solver used: 0 (no calibration) or 4, 7, 10 element
 	// end of elements stored to flash memory
 	// start of working elements not stored to flash memory
 	float ftrV[3];					///< trial value of hard iron offset z, y, z (uT)
@@ -59,16 +59,16 @@ struct MagCalibration
 	float fvecA[10];				///< scratch 10x1 vector used by calibration algorithms
 	float fvecB[4];					///< scratch 4x1 vector used by calibration algorithms
 	float fYTY;					///< Y^T.Y for 4 element calibration = (iB^2)^2
-	i32 iSumBs[3];				///< sum of measurements in buffer (counts)
-	i32 iMeanBs[3];				///< average magnetic measurement (counts)
-	i32 itimeslice;				///< counter for tine slicing magnetic calibration calculations
-	i8 iCalInProgress;			        ///< flag denoting that a calibration is in progress
-	i8 iNewCalibrationAvailable;	        ///< flag denoting that a new calibration has been computed
-	i8 iInitiateMagCal;			        ///< flag to start a new magnetic calibration
-	i8 iMagBufferReadOnly;		        ///< flag to denote that the magnetic measurement buffer is temporarily read only
-	i8 i4ElementSolverTried;		        ///< flag to denote at least one attempt made with 4 element calibration
-	i8 i7ElementSolverTried;		        ///< flag to denote at least one attempt made with 7 element calibration
-	i8 i10ElementSolverTried;		        ///< flag to denote at least one attempt made with 10 element calibration
+	int iSumBs[3];				///< sum of measurements in buffer (counts)
+	int iMeanBs[3];				///< average magnetic measurement (counts)
+	int itimeslice;				///< counter for tine slicing magnetic calibration calculations
+	int8_t iCalInProgress;			        ///< flag denoting that a calibration is in progress
+	int8_t iNewCalibrationAvailable;	        ///< flag denoting that a new calibration has been computed
+	int8_t iInitiateMagCal;			        ///< flag to start a new magnetic calibration
+	int8_t iMagBufferReadOnly;		        ///< flag to denote that the magnetic measurement buffer is temporarily read only
+	int8_t i4ElementSolverTried;		        ///< flag to denote at least one attempt made with 4 element calibration
+	int8_t i7ElementSolverTried;		        ///< flag to denote at least one attempt made with 7 element calibration
+	int8_t i10ElementSolverTried;		        ///< flag to denote at least one attempt made with 10 element calibration
 };
 
 
@@ -80,9 +80,9 @@ struct MagSensor;  // actual typedef is located in sensor_fusion_types.h
 /// as details are provided in sensor_fusion.h.
 ///@{
 void fInitializeMagCalibration(struct MagCalibration *pthisMagCal, struct MagBuffer *pthisMagBuffer);
-void iUpdateMagBuffer(struct MagBuffer *pthisMagBuffer, struct MagSensor *pthisMag, i32 loopcounter);
+void iUpdateMagBuffer(struct MagBuffer *pthisMagBuffer, struct MagSensor *pthisMag, int loopcounter);
 void fInvertMagCal(struct MagSensor *pthisMag, struct MagCalibration *pthisMagCal);
-void fRunMagCalibration(struct MagCalibration *pthisMagCal, struct MagBuffer *pthisMagBuffer, struct MagSensor* pthisMag, i32 loopcounter);
+void fRunMagCalibration(struct MagCalibration *pthisMagCal, struct MagBuffer *pthisMagBuffer, struct MagSensor* pthisMag, int loopcounter);
 void fUpdateMagCalibration4(struct MagCalibration *pthisMagCal, struct MagBuffer *pthisMagBuffer, struct MagSensor *pthisMag);
 void fUpdateMagCalibration7(struct MagCalibration *pthisMagCal, struct MagBuffer *pthisMagBuffer, struct MagSensor *pthisMag);
 void fUpdateMagCalibration10(struct MagCalibration *pthisMagCal, struct MagBuffer *pthisMagBuffer, struct MagSensor *pthisMag);

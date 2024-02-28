@@ -3,17 +3,14 @@
  * Licensed under the GNU AGPL-3.0
 */
 
+#include "sys/flightplan.h"
 #include "sys/print.h"
-
-#include "wifly/wifly.h"
 
 #include "get_fplan.h"
 
 i32 api_get_fplan(const char *cmd, const char *args) {
-    if (wifly_fplanExists()) {
-        printraw("%s\n", wifly_getFplanJson());
+    if (flightplan_was_parsed()) {
+        printraw("%s\n", flightplan_get()->json);
         return -1;
-    } else {
-        return 403;
-    }
+    } else return 403;
 }

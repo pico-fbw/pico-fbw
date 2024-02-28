@@ -5,7 +5,7 @@
 
 #include <math.h>
 #include <stdbool.h>
-#include "platform/int.h"
+#include <stdint.h>
 
 #include "drivers/drivers.h"
 #include "acc.h"
@@ -86,13 +86,13 @@ typedef i8 (readSensor_t) (
 ) ;
 typedef i8 (readSensors_t) (
     struct SensorFusionGlobals *sfg,
-    u8 read_loop_counter
+    uint8_t read_loop_counter
 ) ;
 typedef i8 (installSensor_t) (
     struct SensorFusionGlobals *sfg,    ///< Global data structure pointer
     struct PhysicalSensor *sensor,      ///< SF Structure to store sensor configuration
-    u16 addr,                      ///< I2C address or SPI_ADDR
-    u16 schedule,                  ///< Specifies sampling interval
+    uint16_t addr,                      ///< I2C address or SPI_ADDR
+    uint16_t schedule,                  ///< Specifies sampling interval
     registerDeviceInfo_t *busInfo,      ///< information required for bus power management
     initializeSensor_t *initialize,     ///< SF Sensor Initialization Function pointer
     readSensor_t *read                  ///< SF Sensor Read Function pointer
@@ -116,10 +116,10 @@ typedef void   (ssUpdateStatus_t) 		(struct StatusSubsystem *pStatus);
 struct PhysicalSensor {
         registerDeviceInfo_t deviceInfo;        ///< I2C device context
         registerDeviceInfo_t *busInfo;          ///< information required for bus power management
-	u16 addr;  			///< I2C address if applicable
-        u16 isInitialized;                 ///< Bitfields to indicate sensor is active (use SensorBitFields from build.h)
+	uint16_t addr;  			///< I2C address if applicable
+        uint16_t isInitialized;                 ///< Bitfields to indicate sensor is active (use SensorBitFields from build.h)
 	struct PhysicalSensor *next;		///< pointer to next sensor in this linked list
-        u8 schedule;                      ///< Parameter to control sensor sampling rate
+        uint8_t schedule;                      ///< Parameter to control sensor sampling rate
 	initializeSensor_t *initialize;  	///< pointer to function to initialize sensor using the supplied drivers
 	readSensor_t *read;			///< pointer to function to read sensor using the supplied drivers
 };
@@ -134,13 +134,13 @@ struct PressureSensor
 {
 	byte iWhoAmI;		        ///< sensor whoami
   bool  isEnabled;            ///< true if the device is sampling
-	i32 iH;				///< most recent unaveraged height (counts)
-	i32 iP;				///< most recent unaveraged pressure (counts)
+	int iH;				///< most recent unaveraged height (counts)
+	int iP;				///< most recent unaveraged pressure (counts)
 	float fH;				///< most recent unaveraged height (m)
 	float fT;				///< most recent unaveraged temperature (C)
 	float fmPerCount;		        ///< meters per count
 	float fCPerCount;		        ///< degrees Celsius per count
-	i16 iT;				///< most recent unaveraged temperature (counts)
+	int16_t iT;				///< most recent unaveraged temperature (counts)
 };
 
 /// \brief The AccelSensor structure stores raw and processed measurements for a 3-axis accelerometer.
@@ -152,17 +152,17 @@ struct AccelSensor
 {
 	byte iWhoAmI;			///< sensor whoami
 	bool  isEnabled;                        ///< true if the device is sampling
-	u8 iFIFOCount;			///< number of measurements read from FIFO
-    u16 iFIFOExceeded;                 ///< Number of samples received in excess of software FIFO size
-	i16 iGsFIFO[ACCEL_FIFO_SIZE][3];	///< FIFO measurements (counts)
+	uint8_t iFIFOCount;			///< number of measurements read from FIFO
+    uint16_t iFIFOExceeded;                 ///< Number of samples received in excess of software FIFO size
+	int16_t iGsFIFO[ACCEL_FIFO_SIZE][3];	///< FIFO measurements (counts)
         // End of common fields which can be referenced via FifoSensor union type
 	float fGs[3];			        ///< averaged measurement (g)
 	float fGc[3];				///< averaged precision calibrated measurement (g)
 	float fgPerCount;			///< g per count
 	float fCountsPerg;			///< counts per g
-	i16 iGs[3];				///< averaged measurement (counts)
-	i16 iGc[3];				///< averaged precision calibrated measurement (counts)
-	i16 iCountsPerg;			///< counts per g
+	int16_t iGs[3];				///< averaged measurement (counts)
+	int16_t iGc[3];				///< averaged precision calibrated measurement (counts)
+	int16_t iCountsPerg;			///< counts per g
 };
 
 /// \brief The MagSensor structure stores raw and processed measurements for a 3-axis magnetic sensor.
@@ -174,17 +174,17 @@ struct MagSensor
 {
 	byte iWhoAmI;			///< sensor whoami
         bool  isEnabled;                        ///< true if the device is sampling
-	u8 iFIFOCount;			///< number of measurements read from FIFO
-        u16 iFIFOExceeded;                 ///< Number of samples received in excess of software FIFO size
-	i16 iBsFIFO[MAG_FIFO_SIZE][3];	///< FIFO measurements (counts)
+	uint8_t iFIFOCount;			///< number of measurements read from FIFO
+        uint16_t iFIFOExceeded;                 ///< Number of samples received in excess of software FIFO size
+	int16_t iBsFIFO[MAG_FIFO_SIZE][3];	///< FIFO measurements (counts)
         // End of common fields which can be referenced via FifoSensor union type
 	float fBs[3];				///< averaged un-calibrated measurement (uT)
 	float fBc[3];				///< averaged calibrated measurement (uT)
 	float fuTPerCount;			///< uT per count
 	float fCountsPeruT;			///< counts per uT
-	i16 iBs[3];				///< averaged uncalibrated measurement (counts)
-	i16 iBc[3];				///< averaged calibrated measurement (counts)
-	i16 iCountsPeruT;			///< counts per uT
+	int16_t iBs[3];				///< averaged uncalibrated measurement (counts)
+	int16_t iBc[3];				///< averaged calibrated measurement (counts)
+	int16_t iCountsPeruT;			///< counts per uT
 };
 
 /// \brief The TempSensor structure stores raw temperature readings
@@ -204,14 +204,14 @@ struct GyroSensor
 {
 	byte iWhoAmI;			///< sensor whoami
         bool  isEnabled;                        ///< true if the device is sampling
-	u8 iFIFOCount;			///< number of measurements read from FIFO
-        u16 iFIFOExceeded;                 ///< Number of samples received in excess of software FIFO size
-	i16 iYsFIFO[GYRO_FIFO_SIZE][3];	///< FIFO measurements (counts)
+	uint8_t iFIFOCount;			///< number of measurements read from FIFO
+        uint16_t iFIFOExceeded;                 ///< Number of samples received in excess of software FIFO size
+	int16_t iYsFIFO[GYRO_FIFO_SIZE][3];	///< FIFO measurements (counts)
         // End of common fields which can be referenced via FifoSensor union type
 	float fYs[3];				///< averaged measurement (deg/s)
 	float fDegPerSecPerCount;		///< deg/s per count
-	i16 iCountsPerDegPerSec;		///< counts per deg/s
-	i16 iYs[3];				///< average measurement (counts)
+	int16_t iCountsPerDegPerSec;		///< counts per deg/s
+	int16_t iYs[3];				///< average measurement (counts)
 };
 
 /// \brief The FifoSensor union allows us to use common pointers for Accel, Mag & Gyro logical sensor structures.
@@ -230,7 +230,7 @@ struct SV_1DOF_P_BASIC
 	float fLPT;				///< low pass filtered temperature (C)
 	float fdeltat;				///< fusion time interval (s)
 	float flpf;				///< low pass filter coefficient
-	u64 systick;			///< systick timer
+	uint64_t systick;			///< systick timer
 	i8 resetflag;			///< flag to request re-initialization on next pass
 };
 
@@ -247,7 +247,7 @@ struct SV_3DOF_G_BASIC
 	Quaternion fLPq;			///< low pass filtered orientation quaternion
 	float fLPRVec[3];			///< rotation vector
 	float fOmega[3];			///< angular velocity (deg/s)
-	u64 systick;			///< systick timer
+	uint64_t systick;			///< systick timer
 	// end: elements common to all motion state vectors
 	float fR[3][3];				///< unfiltered orientation matrix
 	Quaternion fq;				///< unfiltered orientation quaternion
@@ -269,7 +269,7 @@ struct SV_3DOF_B_BASIC
 	Quaternion fLPq;			///< low pass filtered orientation quaternion
 	float fLPRVec[3];			///< rotation vector
 	float fOmega[3];			///< angular velocity (deg/s)
-	u64 systick;			///< systick timer
+	uint64_t systick;			///< systick timer
 	// end: elements common to all motion state vectors
 	float fR[3][3];				///< unfiltered orientation matrix
 	Quaternion fq;				///< unfiltered orientation quaternion
@@ -291,7 +291,7 @@ struct SV_3DOF_Y_BASIC
 	Quaternion fq;				///< unfiltered orientation quaternion
 	float fRVec[3];				///< rotation vector
 	float fOmega[3];			///< angular velocity (deg/s)
-	u64 systick;			///< systick timer
+	uint64_t systick;			///< systick timer
 	// end: elements common to all motion state vectors
 	float fdeltat;				///< fusion filter sampling interval (s)
 	i8 resetflag;			///< flag to request re-initialization on next pass
@@ -310,7 +310,7 @@ struct SV_6DOF_GB_BASIC
 	Quaternion fLPq;			///< low pass filtered orientation quaternion
 	float fLPRVec[3];			///< rotation vector
 	float fOmega[3];			///< virtual gyro angular velocity (deg/s)
-	u64 systick;			///< systick timer
+	uint64_t systick;			///< systick timer
 	// end: elements common to all motion state vectors
 	float fR[3][3];				///< unfiltered orientation matrix
 	Quaternion fq;				///< unfiltered orientation quaternion
@@ -334,7 +334,7 @@ struct SV_6DOF_GY_KALMAN
 	Quaternion fqPl;			///< a posteriori orientation quaternion
 	float fRVecPl[3];			///< rotation vector
 	float fOmega[3];			///< average angular velocity (deg/s)
-	u64 systick;			///< systick timer;
+	uint64_t systick;			///< systick timer;
 	// end: elements common to all motion state vectors
 	float fQw6x6[6][6];			///< covariance matrix Qw
 	float fK6x3[6][3];			///< kalman filter gain matrix K
@@ -368,7 +368,7 @@ struct SV_9DOF_GBY_KALMAN
 	Quaternion fqPl;			///< a posteriori orientation quaternion
 	float fRVecPl[3];			///< rotation vector
 	float fOmega[3];			///< average angular velocity (deg/s)
-	u64 systick;			///< systick timer;
+	uint64_t systick;			///< systick timer;
 	// end: elements common to all motion state vectors
 	float fQw9x9[9][9];			///< covariance matrix Qw
 	float fK9x6[9][6];			///< kalman filter gain matrix K
@@ -409,7 +409,7 @@ struct SV_COMMON {
 	Quaternion fq;			        ///< orientation quaternion
 	float fRVec[3];			        ///< rotation vector
 	float fOmega[3];			///< average angular velocity (deg/s)
-	u64 systick;			///< systick timer;
+	uint64_t systick;			///< systick timer;
 };
 
 typedef struct SV_COMMON *SV_ptr;
@@ -431,13 +431,13 @@ typedef struct SensorFusionGlobals
         ///@}
         ///@{
         /// @name MiscFields
-        u32 iFlags;                        ///< a bit-field of sensors and algorithms used
+        uint32_t iFlags;                        ///< a bit-field of sensors and algorithms used
 	struct PhysicalSensor *pSensors;    	        ///< a linked list of physical sensors
-	volatile u8 iPerturbation;	        ///< test perturbation to be applied
+	volatile uint8_t iPerturbation;	        ///< test perturbation to be applied
 	// Book-keeping variables
-	u64 loopcounter;			///< counter incrementing each iteration of sensor fusion (typically 25Hz)
-	i32 systick_I2C;			///< systick counter to benchmark I2C reads
-	i32 systick_Spare;			///< systick counter for counts spare waiting for timing interrupt
+	uint64_t loopcounter;			///< counter incrementing each iteration of sensor fusion (typically 25Hz)
+	int32_t systick_I2C;			///< systick counter to benchmark I2C reads
+	int32_t systick_Spare;			///< systick counter for counts spare waiting for timing interrupt
         ///@}
         ///@{
         /// @name SensorRelatedStructures
@@ -527,9 +527,9 @@ readSensors_t readSensors;
 void zeroArray(
     struct StatusSubsystem *pStatus,                    ///< Status subsystem pointer
     void* data,                                         ///< pointer to array to be zeroed
-    u16 size,                                      ///< data type size = 8, 16 or 32
-    u16 numElements,                               ///< number of elements to zero out
-    u8 check                                       ///< true if you would like to verify writes, false otherwise
+    uint16_t size,                                      ///< data type size = 8, 16 or 32
+    uint16_t numElements,                               ///< number of elements to zero out
+    uint8_t check                                       ///< true if you would like to verify writes, false otherwise
 );
 /// \brief conditionSample ensures that we never encounter the maximum negative two's complement
 /// value for a 16-bit variable (-32768).
@@ -539,7 +539,7 @@ void zeroArray(
 /// positive value is +32767.  We need the ability to negate to gaurantee that subsequent
 /// HAL operations can be run successfully.
 void conditionSample(
-    i16 sample[3]                                   ///< 16-bit register value from triaxial sensor read
+    int16_t sample[3]                                   ///< 16-bit register value from triaxial sensor read
 );
 
 /// \brief addToFifo is called from within sensor driver read functions
@@ -551,8 +551,8 @@ void conditionSample(
 /// example usage: if (status==SENSOR_ERROR_NONE) addToFifo((FifoSensor*) &(sfg->Mag), MAG_FIFO_SIZE, sample);
 void addToFifo(
     union FifoSensor *sensor,                                 ///< pointer to structure of type AccelSensor, MagSensor or GyroSensor
-    u16 maxFifoSize,                               ///< the size of the software (not hardware) FIFO
-    i16 sample[3]                                   ///< the sample to add
+    uint16_t maxFifoSize,                               ///< the size of the software (not hardware) FIFO
+    int16_t sample[3]                                   ///< the sample to add
 );
 
 // The following functions are defined in hal_axis_remap.c

@@ -11,7 +11,7 @@
 #endif
 
 #define PICO_FBW_API_VERSION "1.0"
-#define WIFLY_VERSION "1.0"
+#define FPLAN_VERSION "1.0"
 
 /**
  * Checks the version of pico-fbw (this binary) against the current one (stored in flash).

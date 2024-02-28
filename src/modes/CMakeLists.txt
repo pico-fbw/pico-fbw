@@ -12,7 +12,6 @@ target_link_libraries(fbw_modes
     fbw_io
     fbw_lib
     fbw_sys
-    fbw_wifly
 )
 
 target_include_directories(fbw_modes PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/src)

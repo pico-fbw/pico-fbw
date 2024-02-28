@@ -3,24 +3,22 @@
  * Licensed under the GNU AGPL-3.0
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "wifly/wifly.h"
+#include "sys/flightplan.h"
 
 #include "set_fplan.h"
 
 i32 api_set_fplan(const char *cmd, const char *args) {
-    char *fplan = malloc(strlen(args) + strlen(FPLAN_PARAM_CONCAT) + 1);
-    if (fplan != NULL) {
-        // Format as an HTTP request for the parser
-        sprintf(fplan, FPLAN_PARAM_CONCAT, args);
-        bool status = wifly_parseFplan(fplan);
-        free(fplan);
-        if (status)
+    if (!args) return 400;
+    FlightplanError err = flightplan_parse(args);
+    switch (err) {
+        case FPLAN_STATUS_OK:
+        case FPLAN_STATUS_GPS_OFFSET:
+        case FPLAN_WARN_FW_VERSION:
             return 200;
-        else
+        case FPLAN_ERR_PARSE:
+        case FPLAN_ERR_VERSION:
+            return 400;
+        default:
             return 500;
-    } else return 500;
+    }
 }

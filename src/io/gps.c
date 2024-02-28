@@ -20,6 +20,13 @@
 
 #include "gps.h"
 
+// These are the DOP thresholds to accept for safe flying, if any of the DOPs are larger than this the GPS will be considered unsafe
+#define GPS_SAFE_PDOP_THRESHOLD 4
+#define GPS_SAFE_HDOP_THRESHOLD 5
+#define GPS_SAFE_VDOP_THRESHOLD 3
+
+#define M_TO_FT 3.28084f // Meters to feet conversion constant
+
 static inline bool pos_valid(float lat, float lng) {
     return lat <= 90 && lat >= -90 && lng <= 180 && lng >= -180 &&
            isfinite(lat) && isfinite(lng);
@@ -88,7 +95,7 @@ void gps_update() {
     while (line) {
         switch (minmea_sentence_id(line, false)) {
             case MINMEA_SENTENCE_GGA: {
-                minmea_sentence_gga gga;
+                struct minmea_sentence_gga gga;
                 if (minmea_parse_gga(&gga, line)) {
                     gps.lat = minmea_tocoord(&gga.latitude);
                     gps.lng = minmea_tocoord(&gga.longitude);
@@ -105,7 +112,7 @@ void gps_update() {
                 break;
             }
             case MINMEA_SENTENCE_GSA: {
-                minmea_sentence_gsa gsa;
+                struct minmea_sentence_gsa gsa;
                 if (minmea_parse_gsa(&gsa, line)) {
                     gps.pdop = minmea_tofloat(&gsa.pdop);
                     gps.hdop = minmea_tofloat(&gsa.hdop);
@@ -116,7 +123,7 @@ void gps_update() {
                 break;
             }
             case MINMEA_SENTENCE_VTG: {
-                minmea_sentence_vtg vtg;
+                struct minmea_sentence_vtg vtg;
                 if (minmea_parse_vtg(&vtg, line)) {
                     gps.speed = minmea_tofloat(&vtg.speed_knots);
                     gps.track = minmea_tofloat(&vtg.true_track_degrees);
@@ -150,7 +157,7 @@ i32 gps_calibrate_alt_offset(u32 num_samples) {
         if (line) {
             switch (minmea_sentence_id(line, false)) {
                 case MINMEA_SENTENCE_GGA: {
-                    minmea_sentence_gga gga;
+                    struct minmea_sentence_gga gga;
                     if (minmea_parse_gga(&gga, line)) {
                         if (strncmp(&gga.altitude_units, "M", 1) == 0) {
                             i32 calt = (i32)(minmea_tofloat(&gga.altitude) * 3.28084f);

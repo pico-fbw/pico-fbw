@@ -82,7 +82,7 @@ i32 api_get_config(const char *cmd, const char *args) {
                 case SECTION_TYPE_STRING: {
                     // I didn't feel like figuring out how to loop this, plus there's not much anyway so it's probably smaller ._.
                     switch (s) {
-                        case CONFIG_WIFLY:
+                        case CONFIG_WIFI:
                             if (s < NUM_CONFIG_SECTIONS - 1) {
                                 printraw("\"%s\",\"%s\"]},", config.ssid, config.pass);
                             } else {

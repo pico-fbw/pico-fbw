@@ -29,7 +29,7 @@ typedef struct Config {
     #define CONFIG_SYSTEM_STR "System"
     char ssid[CONFIG_STR_SIZE];
     char pass[CONFIG_STR_SIZE];
-    #define CONFIG_WIFLY_STR "WiFly"
+    #define CONFIG_WIFI_STR "Wifi"
 } Config;
 
 // -- Config section indices --
@@ -41,7 +41,7 @@ typedef enum ConfigGeneral {
     GENERAL_SERVO_HZ,
     GENERAL_ESC_HZ,
     GENERAL_API_ENABLED,
-    GENERAL_WIFLY_STATUS,
+    GENERAL_WIFI_ENABLED,
     GENERAL_SKIP_CALIBRATION,
 } ConfigGeneral;
 
@@ -112,11 +112,8 @@ typedef enum ConfigSystem {
     SYSTEM_PRINT_GPS,
     SYSTEM_PRINT_MODES,
     SYSTEM_PRINT_NETWORK,
-    SYSTEM_PRINT_WIFLY,
     SYSTEM_WATCHDOG_TIMEOUT,
 } ConfigSystem;
-#define S_PRINT_MIN SYSTEM_PRINT_FBW
-#define S_PRINT_MAX SYSTEM_PRINT_WIFLY
 
 // -- Calibration struct definition and indices --
 
@@ -200,7 +197,7 @@ typedef enum ConfigSection {
     CONFIG_PINS,
     CONFIG_SENSORS,
     CONFIG_SYSTEM,
-    CONFIG_WIFLY,
+    CONFIG_WIFI,
 } ConfigSection;
 
 /**

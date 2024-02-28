@@ -20,12 +20,11 @@
 #include "sys/runtime.h"
 #include "sys/version.h"
 
-#include "wifly/wifly.h"
-
 #include "configuration.h"
 
 Config config = {
-    .general = {CTRLMODE_2AXIS_ATHR, SWITCH_TYPE_3_POS, 20, 50, 50, true, WIFLY_ENABLED_PASS, false, CONFIG_END_MAGIC},
+    // FIXME: index 7 (false) is the wifi config flag, replace this with an enum when the wifi HAL is done and has one
+    .general = {CTRLMODE_2AXIS_ATHR, SWITCH_TYPE_3_POS, 20, 50, 50, true, false, false, CONFIG_END_MAGIC},
     .control = {0.0025f, 1.5f, 5, // Control handling preferences
                 10, 30, 0.015f, // Autothrottle configuration
                 180, 0, // Drop bay detent settings
@@ -42,14 +41,14 @@ Config config = {
                true, false, false, false, false, false, // Default print settings, also found in PrintDefs below
                2000, CONFIG_END_MAGIC},
     .ssid = "pico-fbw",
-    .pass = "wiflyfbw"
+    .pass = "picodashfbw"
 };
 
 Calibration calibration = {
     .esc = {false, 10, 75, 90} // Only throttle detents have default values
 };
 
-PrintDefs shouldPrint = {true, false, false, false, false, false}; // Default print settings
+PrintDefs shouldPrint = {true, false, false, false, false}; // Default print settings
 
 /**
  * Loads the contents of a file into a struct, creating the file based on the curent struct state if it doesn't exist.
@@ -104,7 +103,6 @@ void config_load() {
     shouldPrint.gps = config.system[SYSTEM_PRINT_GPS];
     shouldPrint.modes = config.system[SYSTEM_PRINT_MODES];
     shouldPrint.network = config.system[SYSTEM_PRINT_NETWORK];
-    shouldPrint.wifly = config.system[SYSTEM_PRINT_WIFLY];
     config.system[SYSTEM_DEBUG] = DEBUG_BUILD;
 }
 
@@ -133,8 +131,8 @@ static void getFromGeneral(const char *key, float **value) {
         *value = &config.general[GENERAL_ESC_HZ];
     } else if (strcasecmp(key, "apiEnabled") == 0) {
         *value = &config.general[GENERAL_API_ENABLED];
-    } else if (strcasecmp(key, "wiflyStatus") == 0) {
-        *value = &config.general[GENERAL_WIFLY_STATUS];
+    } else if (strcasecmp(key, "wifiEnabled") == 0) {
+        *value = &config.general[GENERAL_WIFI_ENABLED];
     } else if (strcasecmp(key, "skipCalibration") == 0) {
         *value = &config.general[GENERAL_SKIP_CALIBRATION];
     } else {
@@ -155,8 +153,8 @@ static bool setToGeneral(const char *key, float value) {
         config.general[GENERAL_ESC_HZ] = value;
     } else if (strcasecmp(key, "apiEnabled") == 0) {
         config.general[GENERAL_API_ENABLED] = value;
-    } else if (strcasecmp(key, "wiflyStatus") == 0) {
-        config.general[GENERAL_WIFLY_STATUS] = value;
+    } else if (strcasecmp(key, "wifiEnabled") == 0) {
+        config.general[GENERAL_WIFI_ENABLED] = value;
     } else if (strcasecmp(key, "skipCalibration") == 0) {
         config.general[GENERAL_SKIP_CALIBRATION] = value;
     } else return false;
@@ -369,8 +367,6 @@ static void getFromSystem(const char *key, float **value) {
         *value = &config.system[SYSTEM_PRINT_MODES];
     } else if (strcasecmp(key, "printNetwork") == 0) {
         *value = &config.system[SYSTEM_PRINT_NETWORK];
-    } else if (strcasecmp(key, "printWiFly") == 0) {
-        *value = &config.system[SYSTEM_PRINT_WIFLY];
     } else if (strcasecmp(key, "watchdogTimeout") == 0) {
         *value = &config.system[SYSTEM_WATCHDOG_TIMEOUT];
     } else {
@@ -389,15 +385,13 @@ static bool setToSystem(const char *key, float value) {
         config.system[SYSTEM_PRINT_MODES] = value;
     } else if (strcasecmp(key, "printNetwork") == 0) {
         config.system[SYSTEM_PRINT_NETWORK] = value;
-    } else if (strcasecmp(key, "printWiFly") == 0) {
-        config.system[SYSTEM_PRINT_WIFLY] = value;
     } else if (strcasecmp(key, "watchdogTimeout") == 0) {
         config.system[SYSTEM_WATCHDOG_TIMEOUT] = value;
     } else return false;
     return true;
 }
 
-static void getFromWifly(const char *key, char **value) {
+static void getFromWifi(const char *key, char **value) {
     if (strcasecmp(key, "ssid") == 0) {
         *value = config.ssid;
     } else if (strcasecmp(key, "pass") == 0) {
@@ -407,7 +401,7 @@ static void getFromWifly(const char *key, char **value) {
     }
 }
 
-static bool setToWifly(const char *key, const char *value) {
+static bool setToWifi(const char *key, const char *value) {
     if (strcasecmp(key, "ssid") == 0) {
         strcpy(config.ssid, value);
     } else if (strcasecmp(key, "pass") == 0) {
@@ -574,9 +568,9 @@ ConfigSectionType config_get(const char *section, const char *key, void **value)
         getFromSensors(key, &v);
         *value = v;
         return SECTION_TYPE_FLOAT;
-    } else if (strcasecmp(section, CONFIG_WIFLY_STR) == 0) {
+    } else if (strcasecmp(section, CONFIG_WIFI_STR) == 0) {
         char *v;
-        getFromWifly(key, &v);
+        getFromWifi(key, &v);
         *value = v;
         return SECTION_TYPE_STRING;
     } else if (strcasecmp(section, CONFIG_SYSTEM_STR) == 0) {
@@ -598,8 +592,8 @@ bool config_set(const char *section, const char *key, const char *value) {
         if (!setToPins(key, atoff(value))) return false;
     } else if (strcasecmp(section, CONFIG_SENSORS_STR) == 0) {
         if (!setToSensors(key, atoff(value))) return false;
-    } else if (strcasecmp(section, CONFIG_WIFLY_STR) == 0) {
-        if (!setToWifly(key, value)) return false;
+    } else if (strcasecmp(section, CONFIG_WIFI_STR) == 0) {
+        if (!setToWifi(key, value)) return false;
     } else if (strcasecmp(section, CONFIG_SYSTEM_STR) == 0) {
         if (!setToSystem(key, atoff(value))) return false;
     } else return false;
@@ -620,8 +614,8 @@ ConfigSectionType config_sectionToString(ConfigSection section, const char **str
         case CONFIG_SENSORS:
             *str = CONFIG_SENSORS_STR;
             return SECTION_TYPE_FLOAT;
-        case CONFIG_WIFLY:
-            *str = CONFIG_WIFLY_STR;
+        case CONFIG_WIFI:
+            *str = CONFIG_WIFI_STR;
             return SECTION_TYPE_STRING;
         case CONFIG_SYSTEM:
             *str = CONFIG_SYSTEM_STR;

@@ -32,7 +32,7 @@ void f3DOFTiltNED(float fR[][3], float fGc[])
 	// the NED self-consistency twist occurs at 90 deg pitch
 
 	// local variables
-	i16 i;				// counter
+	int16_t i;				// counter
 	float fmodGxyz;			// modulus of the x, y, z accelerometer readings
 	float fmodGyz;			// modulus of the y, z accelerometer readings
 	float frecipmodGxyz;	// reciprocal of modulus
@@ -261,7 +261,7 @@ void feCompassNED(float fR[][3], float *pfDelta, float *pfsinDelta, float *pfcos
 	float fmod[3];					// column moduli
 	float fGcdotBc;					// dot product of vectors G.Bc
 	float ftmp;						// scratch variable
-	i8 i, j;						// loop counters
+	int8_t i, j;						// loop counters
 
 	// set the inclination angle to zero in case it is not computed later
 	*pfDelta = *pfsinDelta = 0.0F;

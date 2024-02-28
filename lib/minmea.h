@@ -5,10 +5,10 @@ extern "C" {
 #endif
 
 #include <ctype.h>
+#include <stdint.h>
 #include <stdbool.h>
 #include <time.h>
 #include <math.h>
-#include "platform/int.h"
 #ifdef MINMEA_INCLUDE_COMPAT
 #include <minmea_compat.h>
 #endif
@@ -37,30 +37,30 @@ struct minmea_float {
 };
 
 struct minmea_date {
-    i32 day;
-    i32 month;
-    i32 year;
+    int day;
+    int month;
+    int year;
 };
 
 struct minmea_time {
-    i32 hours;
-    i32 minutes;
-    i32 seconds;
-    i32 microseconds;
+    int hours;
+    int minutes;
+    int seconds;
+    int microseconds;
 };
 
-typedef struct minmea_sentence_gbs {
+struct minmea_sentence_gbs {
     struct minmea_time time;
     struct minmea_float err_latitude;
     struct minmea_float err_longitude;
     struct minmea_float err_altitude;
-    i32 svid;
+    int svid;
     struct minmea_float prob;
     struct minmea_float bias;
     struct minmea_float stddev;
-} minmea_sentence_gbs;
+};
 
-typedef struct minmea_sentence_rmc {
+struct minmea_sentence_rmc {
     struct minmea_time time;
     bool valid;
     struct minmea_float latitude;
@@ -69,19 +69,19 @@ typedef struct minmea_sentence_rmc {
     struct minmea_float course;
     struct minmea_date date;
     struct minmea_float variation;
-} minmea_sentence_rmc;
+};
 
-typedef struct minmea_sentence_gga {
+struct minmea_sentence_gga {
     struct minmea_time time;
     struct minmea_float latitude;
     struct minmea_float longitude;
-    i32 fix_quality;
-    i32 satellites_tracked;
+    int fix_quality;
+    int satellites_tracked;
     struct minmea_float hdop;
     struct minmea_float altitude; char altitude_units;
     struct minmea_float height; char height_units;
     struct minmea_float dgps_age;
-} minmea_sentence_gga;
+};
 
 enum minmea_gll_status {
     MINMEA_GLL_STATUS_DATA_VALID = 'A',
@@ -99,15 +99,15 @@ enum minmea_faa_mode {
     MINMEA_FAA_MODE_PRECISE = 'P',
 };
 
-typedef struct minmea_sentence_gll {
+struct minmea_sentence_gll {
     struct minmea_float latitude;
     struct minmea_float longitude;
     struct minmea_time time;
     char status;
     char mode;
-} minmea_sentence_gll;
+};
 
-typedef struct minmea_sentence_gst {
+struct minmea_sentence_gst {
     struct minmea_time time;
     struct minmea_float rms_deviation;
     struct minmea_float semi_major_deviation;
@@ -116,7 +116,7 @@ typedef struct minmea_sentence_gst {
     struct minmea_float latitude_error_deviation;
     struct minmea_float longitude_error_deviation;
     struct minmea_float altitude_error_deviation;
-} minmea_sentence_gst;
+};
 
 enum minmea_gsa_mode {
     MINMEA_GPGSA_MODE_AUTO = 'A',
@@ -129,48 +129,48 @@ enum minmea_gsa_fix_type {
     MINMEA_GPGSA_FIX_3D = 3,
 };
 
-typedef struct minmea_sentence_gsa {
+struct minmea_sentence_gsa {
     char mode;
-    i32 fix_type;
-    i32 sats[12];
+    int fix_type;
+    int sats[12];
     struct minmea_float pdop;
     struct minmea_float hdop;
     struct minmea_float vdop;
-} minmea_sentence_gsa;
-
-struct minmea_sat_info {
-    i32 nr;
-    i32 elevation;
-    i32 azimuth;
-    i32 snr;
 };
 
-typedef struct minmea_sentence_gsv {
-    i32 total_msgs;
-    i32 msg_nr;
-    i32 total_sats;
-    struct minmea_sat_info sats[4];
-} minmea_sentence_gsv;
+struct minmea_sat_info {
+    int nr;
+    int elevation;
+    int azimuth;
+    int snr;
+};
 
-typedef struct minmea_sentence_vtg {
+struct minmea_sentence_gsv {
+    int total_msgs;
+    int msg_nr;
+    int total_sats;
+    struct minmea_sat_info sats[4];
+};
+
+struct minmea_sentence_vtg {
     struct minmea_float true_track_degrees;
     struct minmea_float magnetic_track_degrees;
     struct minmea_float speed_knots;
     struct minmea_float speed_kph;
     enum minmea_faa_mode faa_mode;
-} minmea_sentence_vtg;
+};
 
-typedef struct minmea_sentence_zda {
+struct minmea_sentence_zda {
     struct minmea_time time;
     struct minmea_date date;
-    i32 hour_offset;
-    i32 minute_offset;
-} minmea_sentence_zda;
+    int hour_offset;
+    int minute_offset;
+};
 
 /**
  * Calculate raw sentence checksum. Does not check sentence integrity.
  */
-u8 minmea_checksum(const char *sentence);
+uint8_t minmea_checksum(const char *sentence);
 
 /**
  * Check sentence validity and checksum. Returns true for valid sentences.
@@ -190,9 +190,9 @@ enum minmea_sentence_id minmea_sentence_id(const char *sentence, bool strict);
 /**
  * Scanf-like processor for NMEA sentences. Supports the following formats:
  * c - single character (char *)
- * d - direction, returned as 1/-1, default 0 (i32 *)
+ * d - direction, returned as 1/-1, default 0 (int *)
  * f - fractional, returned as value + scale (struct minmea_float *)
- * i - decimal, default zero (i32 *)
+ * i - decimal, default zero (int *)
  * s - string (char *)
  * t - talker identifier and type (char *)
  * D - date (struct minmea_date *)
@@ -219,13 +219,12 @@ bool minmea_parse_zda(struct minmea_sentence_zda *frame, const char *sentence);
 /**
  * Convert GPS UTC date/time representation to a UNIX calendar time.
  */
-i32 minmea_getdatetime(struct tm *tm, const struct minmea_date *date, const struct minmea_time *time_);
+int minmea_getdatetime(struct tm *tm, const struct minmea_date *date, const struct minmea_time *time_);
 
 /**
- * @deprecated CURRENTLY DEPRECATED FOR PICO DUE TO ABSENCE OF timegm()
- * @brief Convert GPS UTC date/time representation to a UNIX timestamp.
+ * Convert GPS UTC date/time representation to a UNIX timestamp.
  */
-i32 minmea_gettime(struct timespec *ts, const struct minmea_date *date, const struct minmea_time *time_);
+int minmea_gettime(struct timespec *ts, const struct minmea_date *date, const struct minmea_time *time_);
 
 /**
  * Rescale a fixed-point value to a different scale. Rounds towards zero.
