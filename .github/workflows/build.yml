@@ -17,12 +17,17 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install dependencies
-      run: sudo apt update && sudo apt install -y git python3 && sudo apt install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential && \
-        git clone --depth 1 --branch 1.5.1 https://github.com/raspberrypi/pico-sdk ${{env.PICO_SDK_PATH}} && cd ${{env.PICO_SDK_PATH}} && git submodule update --init
+    - name: Install packages
+      run: sudo apt update && sudo apt install -y git python3 && sudo apt install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential
+    
+    - name: Install pico-sdk
+      run: sudo git clone --depth 1 --branch 1.5.1 https://github.com/raspberrypi/pico-sdk ${{env.PICO_SDK_PATH}} &&
+        cd ${{env.PICO_SDK_PATH}} && sudo git submodule update --init
 
     - name: Build - pico
-      run: cmake -B ${{github.workspace}}/build_pico -DFBW_PLATFORM=pico -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} && cmake --build_pico ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      run: sudo cmake -B ${{github.workspace}}/build_pico -DFBW_PLATFORM=pico -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} &&
+        sudo cmake --build_pico ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
     - name: Build - pico_w
-      run: cmake -B ${{github.workspace}}/build_pico_w -DFBW_PLATFORM=pico_w -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} && cmake --build_pico_w ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      run: sudo cmake -B ${{github.workspace}}/build_pico_w -DFBW_PLATFORM=pico_w -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} &&
+        sudo cmake --build_pico_w ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
