@@ -27,8 +27,8 @@ jobs:
 
     - name: Build - pico
       run: sudo -E cmake -B ${{github.workspace}}/build_pico -DFBW_PLATFORM=pico -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} &&
-        sudo -E cmake --build_pico ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+        sudo -E cmake --build ${{github.workspace}}/build_pico --config ${{env.BUILD_TYPE}}
 
     - name: Build - pico_w
       run: sudo -E cmake -B ${{github.workspace}}/build_pico_w -DFBW_PLATFORM=pico_w -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} &&
-        sudo -E cmake --build_pico_w ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+        sudo -E cmake --build ${{github.workspace}}/build_pico_w --config ${{env.BUILD_TYPE}}
