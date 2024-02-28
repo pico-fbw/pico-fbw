@@ -3,6 +3,7 @@
  * Licensed under the GNU AGPL-3.0
  */
 
+#include <stdlib.h>
 #include <string.h>
 
 #include "platform/stdio.h"
@@ -80,14 +81,18 @@ char *uart_read(u32 tx, u32 rx) {
             if (c == '\r' || c == '\n') {
                 break;
             }
-            buf = tryRealloc(buf, (i + 1) * sizeof(char));
-            if (!buf)
+            buf = realloc(buf, (i + 1) * sizeof(char));
+            if (!buf) {
+                free(buf);
                 return NULL;
+            }
             buf[i++] = c;
         }
-        buf = tryRealloc(buf, (i + 1) * sizeof(char));
-        if (!buf)
+        buf = realloc(buf, (i + 1) * sizeof(char));
+        if (!buf) {
+            free(buf);
             return NULL;
+        }
         buf[i] = '\0';
     }
     return buf;

@@ -19,16 +19,3 @@ char *stdin_read();
  * @return the number of characters printed
  */
 int __printflike(1, 2) wrap_printf(const char *fmt, ...);
-
-/**
- * Attemps to reallocate a buffer.
- * @param buf the buffer to reallocate
- * @param size the new size of the buffer
- * @return a pointer to the new buffer if successful, or NULL if the reallocation failed
- */
-inline char *tryRealloc(char *buf, size_t size) {
-    char *nbuf = (char *)realloc(buf, size);
-    if (!nbuf)
-        free(buf);
-    return nbuf;
-}

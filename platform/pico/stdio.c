@@ -5,6 +5,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "pico/stdio.h"
 
 #include "platform/stdio.h"
@@ -23,17 +24,21 @@ char *stdin_read() {
             break;
         } else {
             // Recieved a valid character, resize the buffer and store it
-            buf = tryRealloc(buf, (i + 1) * sizeof(char));
-            if (!buf)
+            buf = realloc(buf, (i + 1) * sizeof(char));
+            if (!buf) {
+                free(buf);
                 return NULL;
+            }
             buf[i++] = c;
         }
     }
     // Done reading, null-terminate the buffer if we read a line
     if (i != 0) {
-        buf = tryRealloc(buf, (i + 1) * sizeof(char));
-        if (!buf)
+        buf = realloc(buf, (i + 1) * sizeof(char));
+        if (!buf) {
+            free(buf);
             return NULL; // Nothing was read
+        }
         buf[i] = '\0';
     }
     return buf;
