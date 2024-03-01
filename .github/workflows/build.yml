@@ -39,7 +39,7 @@ jobs:
       with:
         version: 1.11.1
 
-    - name: Check cache
+    - name: Check cache (esp)
       if: matrix.PLATFORM == 'esp32'
       id: esp-idf-cache
       uses: actions/cache@v3
@@ -63,8 +63,6 @@ jobs:
             echo "Cache hit - skipping dependency installation"
           else
             sh ${{github.workspace}}/.github/workflows/esp-idf_install.sh ${{env.ESP_IDF_VERSION}}
-            source ~/esp/esp-idf/export.sh
-            cd ${{github.workspace}}
           fi
 
     - name: Get core count
@@ -72,9 +70,23 @@ jobs:
       run : cat /proc/cpuinfo | grep processor | wc -l
 
     - name: Configure CMake
+      if: matrix.PLATFORM != 'esp32'
       shell: bash
       run: cmake -B ${{github.workspace}}/build -DFBW_PLATFORM=${{matrix.PLATFORM}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -GNinja
+    
+    - name: Configure CMake (esp)
+      if: matrix.PLATFORM == 'esp32'
+      shell: bash
+      run: source ~/esp/esp-idf/export.sh && 
+        cmake -B ${{github.workspace}}/build -DFBW_PLATFORM=${{matrix.PLATFORM}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -GNinja
 
     - name: Build
+      if: matrix.PLATFORM != 'esp32'
       shell: bash
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel ${{steps.core_count.outputs.output}}
+
+    - name: Build (esp)
+      if: matrix.PLATFORM == 'esp32'
+      shell: bash
+      run: source ~/esp/esp-idf/export.sh && 
+        cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel ${{steps.core_count.outputs.output}}
