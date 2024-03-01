@@ -17,6 +17,7 @@ env:
   # Debug build will enable more warnings
   BUILD_TYPE: Debug
   PICO_SDK_PATH: ${{github.workspace}}/pico-sdk
+  IDF_PATH: ${{github.workspace}}/esp/esp-idf
   ESP_IDF_VERSION: v5.2
 
 jobs:
