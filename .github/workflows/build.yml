@@ -1,18 +1,23 @@
+# This file utilizes code under the MIT License. See "LICENSE" for details.
+# ESP-IDF installation setps sourced from: https://github.com/rmshub/esp-idf-action
+
 name: Build
 
 # TODO: seperate workflow for main that will build for release and auto upload artifacts
-# and also run FBW_FORMAT for clang-tidy
+# and also run FBW_FORMAT for clang-tidy (on tag push)
 
 on:
   push:
     branches: [ "main", "beta", "alpha" ]
   pull_request:
     branches: [ "main", "beta", "alpha" ]
+  workflow_dispatch:
 
 env:
   # Debug build will enable more warnings
   BUILD_TYPE: Debug
   PICO_SDK_PATH: ${{github.workspace}}/pico-sdk
+  ESP_IDF_VERSION: v5.2
 
 jobs:
   build:
@@ -20,7 +25,7 @@ jobs:
 
     strategy:
       matrix:
-        PLATFORM: [ pico, pico_w ]
+        PLATFORM: [ pico, pico_w, esp32 ]
 
     steps:
     - name: Checkout pico-fbw
@@ -33,17 +38,31 @@ jobs:
       with:
         version: 1.11.1
 
-    - name: Prepare (rp2040)
-      uses: Fortinbra/RaspberryPiPicoBuild@v3
-      if: matrix.PLATFORM == 'pico' || matrix.PLATFORM == 'pico_w'
-
-    - name: Prepare (espressif)
-      uses: espressif/esp-idf-ci-action@v1.1.0
-      with:
-        esp_idf_version: v5.2
-        target: esp32
-        command: ''
+    - name: Check cache
       if: matrix.PLATFORM == 'esp32'
+      id: esp-idf-cache
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/esp/esp-idf
+          ~/.espressif
+        key: ${{runner.os}}-esp-idf-${{hashFiles('esp-idf_install.sh')}}-${{env.ESP_IDF_VERSION}}
+
+    - name: Prepare (pico)
+      if: matrix.PLATFORM == 'pico' || matrix.PLATFORM == 'pico_w'
+      uses: Fortinbra/RaspberryPiPicoBuild@v3
+    
+    - name: Prepare (esp)
+      if: matrix.PLATFORM == 'esp32'
+      shell: bash
+      run: |
+          set -e
+          if echo ${{ steps.esp-idf-cache.outputs.cache-hit }} | grep -c "true"
+          then 
+            echo "Cache hit - skipping dependency installation"
+          else
+            sh ${{github.workspace}}/esp-idf_install.sh ${{env.ESP_IDF_VERSION}}
+          fi
 
     - name: Get core count
       id: core_count

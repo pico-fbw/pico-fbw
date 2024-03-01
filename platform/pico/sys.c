@@ -19,7 +19,6 @@
 #define WATCHDOG_FORCE_MAGIC 0xC0DE3298
 
 void sys_boot_begin() {
-    stdio_init_all(); // The stdio types that are initializes here depend on what gets defined in platform/pico/CMakeLists.txt
 #ifdef RASPBERRYPI_PICO_W
     cyw43_arch_init();
 #endif

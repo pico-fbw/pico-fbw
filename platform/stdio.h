@@ -5,6 +5,11 @@
 #include "platform/int.h"
 
 /**
+ * Sets up all relavent stdio sources.
+ */
+void stdio_setup();
+
+/**
  * Reads a line from the stdin, if available.
  * @return A pointer to the line read if there was one (automatically null-terminated),
  *         or NULL if there was no input available.

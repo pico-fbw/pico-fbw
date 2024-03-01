@@ -5,6 +5,7 @@
 
 #include "platform/defs.h"
 #include "platform/gpio.h"
+#include "platform/stdio.h"
 #include "platform/time.h"
 
 #include "io/display.h"
@@ -20,9 +21,10 @@ bool isBooted = false;
 
 void boot_begin() {
     sys_boot_begin();
+    stdio_setup();
     isBooted = false;
 #ifdef PIN_FBW
-    gpio_pull(PIN_FBW, DOWN);
+    gpio_setup(PIN_FBW, INPUT_PULLDOWN);
     if (runtime_is_fbw())
         display_init();
 #endif

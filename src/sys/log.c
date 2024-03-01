@@ -37,7 +37,7 @@ static inline void led_reset() {
     cancel_callback(pulseCallback);
     cancel_callback(toggleCallback);
     pulseMs = 0;
-    gpio_set(PIN_LED, 1);
+    gpio_set(PIN_LED, HIGH);
 }
 
 static inline i32 led_pulse_callback(u32 id) {
@@ -128,7 +128,7 @@ static void log_displayEntry(LogEntry *entry) {
         led_reset();
         // If pulse has been enabled, turn the LED off now so it pulses to the on state, not the off state (looks better)
         if (entry->pulse != 0) {
-            gpio_set(PIN_LED, 0);
+            gpio_set(PIN_LED, LOW);
             pulseMs = entry->pulse;
         }
         // Display on Pico built-in LED
@@ -146,14 +146,9 @@ static inline i32 logProcessQueue(u32 id) {
 }
 
 void log_init() {
-#ifdef LED_PIN
-#if defined(RASPBERRYPI_PICO)
-    gpio_init(LED_PIN);
-    gpio_set_dir(LED_PIN, GPIO_OUT);
-#endif
-#endif
+    gpio_setup(PIN_LED, OUTPUT);
     if (!runtime_is_fbw())
-        gpio_set(PIN_LED, 1);
+        gpio_set(PIN_LED, HIGH);
     logCount = 0;
     log_resetLast();
 }

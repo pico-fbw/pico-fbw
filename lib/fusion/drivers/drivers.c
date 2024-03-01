@@ -5,14 +5,12 @@
  * All rights reserved.
  *
  * This file utilizes code under the BSD-3-Clause License. See "LICENSE" for details.
-*/
+ */
 
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU AGPL-3.0
-*/
-
-#include "hardware/i2c.h" // temp
+ */
 
 #include "platform/i2c.h"
 
@@ -30,7 +28,7 @@
  * @param dest the destination buffer
  * @param len the number of bytes to read
  * @return true if the read was successful
-*/
+ */
 static bool i2cReadBytes(byte addr, byte reg, byte *dest, size_t len) {
     return i2c_read((u32)config.pins[PINS_AAHRS_SDA], (u32)config.pins[PINS_AAHRS_SCL], addr, reg, dest, len);
 }
@@ -41,7 +39,7 @@ static bool i2cReadBytes(byte addr, byte reg, byte *dest, size_t len) {
  * @param reg the register to write to
  * @param val the value to write
  * @return true if the write was successful
-*/
+ */
 static bool i2cWriteByte(byte addr, byte reg, byte val) {
     byte buf[] = {val};
     return i2c_write((u32)config.pins[PINS_AAHRS_SDA], (u32)config.pins[PINS_AAHRS_SCL], addr, reg, buf, 1);
@@ -49,7 +47,7 @@ static bool i2cWriteByte(byte addr, byte reg, byte val) {
 
 void driver_init() {
     printfbw(aahrs, "initializing i2c0 at %d kHz, on pins %d (SDA) and %d (SCL)", DRIVER_FREQ_KHZ,
-                          (u32)config.pins[PINS_AAHRS_SDA], (u32)config.pins[PINS_AAHRS_SCL]);
+             (u32)config.pins[PINS_AAHRS_SDA], (u32)config.pins[PINS_AAHRS_SCL]);
     i2c_setup((u32)config.pins[PINS_AAHRS_SDA], (u32)config.pins[PINS_AAHRS_SCL], DRIVER_FREQ_KHZ * 1000);
 }
 

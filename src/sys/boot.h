@@ -30,4 +30,4 @@ bool boot_is_booted();
  * @return the type of boot that just occurred
  * @note Must be called between `boot_begin()` and `boot_complete()`.
  */
-inline BootType boot_type() { return sys_boot_type(); }
+static inline BootType boot_type() { return sys_boot_type(); }

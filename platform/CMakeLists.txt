@@ -8,13 +8,8 @@ function(configure_libraries target_library)
     target_link_libraries(fbw_sys ${target_library})
 endfunction()
 
-# Add the platform specific subdirectory to compile based on the platform variable
-if (FBW_PLATFORM STREQUAL "pico" OR FBW_PLATFORM STREQUAL "pico_w")
-    add_subdirectory(pico)
-    configure_libraries(platform_pico)
-elseif (FBW_PLATFORM STREQUAL "esp32")
-    # idf_build_process(esp)
-    configure_libraries(platform_esp)
-endif()
+add_subdirectory(${PLATFORM_DIR})
+message("Target platform library is: platform_${PLATFORM_DIR}")
+configure_libraries(platform_${PLATFORM_DIR})
 
 # TODO: add "example" platform folder with comments explaining what people have to implement for each function

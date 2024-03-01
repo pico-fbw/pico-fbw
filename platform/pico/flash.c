@@ -32,8 +32,6 @@
 #define FS_SIZE (256 * 1024)                                            // 256K
 static const byte *FS_BASE = (byte *)(PICO_FLASH_SIZE_BYTES - FS_SIZE); // File system offset in system memory space
 
-lfs_t lfs;
-
 static int flash_read(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, void *buffer, lfs_size_t size) {
     assert(block < c->block_count);
     assert(off + size <= c->block_size);
@@ -79,3 +77,5 @@ struct lfs_config lfs_cfg = {
     .cache_size = FLASH_SECTOR_SIZE / 4,        // Must be a multiple of the block size (1024 bytes)
     .lookahead_size = 32,
     .block_cycles = 500};
+
+lfs_t lfs;

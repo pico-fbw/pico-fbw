@@ -20,13 +20,13 @@ typedef int64_t i64;
 #endif
 
 // Clamps a value `f` between `min` and `max`.
-inline float clampf(float f, float min, float max) {
+static inline float clampf(float f, float min, float max) {
     const float t = f < min ? min : f;
     return t > max ? max : t;
 }
 
 // Clamps a value `i` between `min` and `max`.
-inline int clamp(int i, int min, int max) {
+static inline int clamp(int i, int min, int max) {
     const int t = i < min ? min : i;
     return t > max ? max : t;
 }

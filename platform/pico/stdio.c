@@ -13,6 +13,10 @@
 // Timeout between waiting for characters in the stdio read function (in microseconds)
 #define STDIO_TIMEOUT_US 1000
 
+void stdio_setup() {
+    stdio_init_all(); // The stdio types that are initializes here depend on what gets defined in platform/pico/CMakeLists.txt
+}
+
 char *stdin_read() {
     char *buf = NULL;
     u32 i = 0;

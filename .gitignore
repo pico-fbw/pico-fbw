@@ -69,8 +69,10 @@ _deps
 
 ### Build process ###
 build/
-build_pfc/
 cmake-build-debug/
+
+### ESP-IDF ###
+sdkconfig
 
 ### IDEs ###
 .vscode/

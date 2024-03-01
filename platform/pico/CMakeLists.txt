@@ -1,6 +1,3 @@
-set(CMAKE_SYSTEM_PROCESSOR arm)
-set(CMAKE_OSX_ARCHITECTURES "")
-
 # Both USB and UART (pins moved) are enabled by default (either can be disabled by setting to 0, if needed)
 # These are compiled into stdio, so using printf() will output to whatever is enabled
 pico_enable_stdio_usb(${PROJECT_NAME} 1)
