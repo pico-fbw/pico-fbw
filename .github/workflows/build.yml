@@ -17,7 +17,7 @@ env:
   # Debug build will enable more warnings
   BUILD_TYPE: Debug
   PICO_SDK_PATH: ${{github.workspace}}/pico-sdk
-  IDF_PATH: ${{github.workspace}}/esp/esp-idf
+  IDF_PATH: ~/esp/esp-idf
   ESP_IDF_VERSION: v5.2
 
 jobs:
@@ -63,6 +63,7 @@ jobs:
             echo "Cache hit - skipping dependency installation"
           else
             sh ${{github.workspace}}/.github/workflows/esp-idf_install.sh ${{env.ESP_IDF_VERSION}}
+            source ~/esp/esp-idf/export.sh
             cd ${{github.workspace}}
           fi
 

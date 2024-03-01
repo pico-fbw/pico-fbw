@@ -48,8 +48,3 @@ echo "## Install esp-idf tools"
 
 # Install required tools
 ./install.sh
-
-# Export tools
-echo "## Export esp-idf tools"
-
-. ./export.sh
