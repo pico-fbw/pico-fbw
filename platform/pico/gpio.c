@@ -5,6 +5,8 @@
 
 #include "pico/config.h"
 
+#include "platform/defs.h"
+
 #if defined(RASPBERRYPI_PICO)
 #include "hardware/gpio.h"
 #elif defined(RASPBERRYPI_PICO_W)
@@ -16,8 +18,6 @@ char buf[1];
 #endif
 
 #include "platform/gpio.h"
-
-#define CYW43_GPIO_OFFSET 30
 
 void gpio_setup(u32 pin, PinMode mode) {
     gpio_init(pin);

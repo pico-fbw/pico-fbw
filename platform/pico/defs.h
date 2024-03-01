@@ -33,6 +33,7 @@
 #define PLATFORM_HAL_VERSION "1.0.0"
 
 #ifdef RASPBERRYPI_PICO_W
+#define CYW43_GPIO_OFFSET 30
 #undef PIN_LED
 #define PIN_LED (CYW43_WL_GPIO_LED_PIN + CYW43_GPIO_OFFSET) // See gpio.c for why this is done
 
