@@ -46,7 +46,7 @@ jobs:
         path: |
           ~/esp/esp-idf
           ~/.espressif
-        key: ${{runner.os}}-esp-idf-${{hashFiles('esp-idf_install.sh')}}-${{env.ESP_IDF_VERSION}}
+        key: ${{runner.os}}-esp-idf-${{hashFiles('.github/workflows/esp-idf_install.sh')}}-${{env.ESP_IDF_VERSION}}
 
     - name: Prepare (pico)
       if: matrix.PLATFORM == 'pico' || matrix.PLATFORM == 'pico_w'
@@ -61,7 +61,8 @@ jobs:
           then 
             echo "Cache hit - skipping dependency installation"
           else
-            sh ${{github.workspace}}/esp-idf_install.sh ${{env.ESP_IDF_VERSION}}
+            sh ${{github.workspace}}/.github/workflows/esp-idf_install.sh ${{env.ESP_IDF_VERSION}}
+            cd ${{github.workspace}}
           fi
 
     - name: Get core count
