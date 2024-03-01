@@ -11,7 +11,7 @@ echo "## Install prerequisites"
 
 export DEBIAN_FRONTEND=noninteractive
 
-sudo apt install -y git wget flex bison gperf python3 python3-pip python3-setuptools ccache libffi-dev libssl-dev dfu-util
+sudo apt-get install -y git wget flex bison gperf python3 python3-pip python3-setuptools cmake ninja-build ccache libffi-dev libssl-dev dfu-util
 
 # Making Python 3 the default interpreter
 sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 10
