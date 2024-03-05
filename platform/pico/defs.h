@@ -1,8 +1,9 @@
 #pragma once
 
 #include "pico/config.h" // For platform-specific defines (e.g. RASPBERRYPI_PICO_W)
+#include "pico/time.h"
 
-// TODO: add these to default config struct
+typedef alarm_id_t CallbackID;
 
 // Flight control I/O pins
 #define PIN_INPUT_AIL 1
@@ -24,25 +25,24 @@
 
 // Status LED
 #ifdef RASPBERRYPI_PICO
-#define PIN_LED PICO_DEFAULT_LED_PIN
+    #define PIN_LED PICO_DEFAULT_LED_PIN
 #endif
 
 // Platform features
 #define PLATFORM_SUPPORTS_WIFI 0
 #define PLATFORM_NAME "Raspberry Pi Pico"
-#define PLATFORM_HAL_VERSION "1.0.0"
+#define PLATFORM_VERSION ("1.0.0 (pico-sdk " PICO_SDK_VERSION_STRING ")")
 
 #ifdef RASPBERRYPI_PICO_W
-#define CYW43_GPIO_OFFSET 30
-#undef PIN_LED
-#define PIN_LED (CYW43_WL_GPIO_LED_PIN + CYW43_GPIO_OFFSET) // See gpio.c for why this is done
+    #define CYW43_GPIO_OFFSET                                                                                                  \
+        30 // To access GPIO on the CYW43 chip, add CYW43_GPIO_OFFSET to the GPIO number and use the typical GPIO functions
+    #undef PIN_LED
+    #define PIN_LED (CYW43_WL_GPIO_LED_PIN + CYW43_GPIO_OFFSET) // See gpio.c for why this is done
 
-#undef PLATFORM_SUPPORTS_WIFI
-#define PLATFORM_SUPPORTS_WIFI 1
-#undef PLATFORM_NAME
-#define PLATFORM_NAME "Raspberry Pi Pico W"
-#undef PLATFORM_HAL_VERSION
-#define PLATFORM_HAL_VERSION "1.0.0"
+    #undef PLATFORM_SUPPORTS_WIFI
+    #define PLATFORM_SUPPORTS_WIFI 1
+    #undef PLATFORM_NAME
+    #define PLATFORM_NAME "Raspberry Pi Pico W"
 #endif
 
 #define PIN_FBW 22

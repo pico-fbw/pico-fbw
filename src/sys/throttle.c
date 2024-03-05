@@ -36,13 +36,13 @@ void throttle_update() {
     static ThrottleState state = THRSTATE_NORMAL;
     static u64 stateChangeAt = 0;
     switch (throttle.mode) {
-    case THRMODE_THRUST:
-        escTarget = throttle.target;
-        break;
-    case THRMODE_SPEED:
-        pid_update(&athr_c, (double)throttle.target, (double)gps.speed);
-        escTarget = (float)athr_c.out;
-        break;
+        case THRMODE_THRUST:
+            escTarget = throttle.target;
+            break;
+        case THRMODE_SPEED:
+            pid_update(&athr_c, (double)throttle.target, (double)gps.speed);
+            escTarget = (float)athr_c.out;
+            break;
     }
     // Validate against performance limits
     // Below idle is valid--in THRUST mode this can be used to simply stop the electric motor,
@@ -55,19 +55,19 @@ void throttle_update() {
         }
         // MCT is still being exceeded (within this if block), what to do here depends on the specific state
         switch (state) {
-        case THRSTATE_MCT_EXCEEDED:
-            if ((time_us() - stateChangeAt) > (u64)(config.control[CONTROL_THROTTLE_MAX_TIME] * 1E6f)) {
-                // MCT has been exceeded for too long, lock
-                state = THRSTATE_MCT_LOCK;
-            }
-            break;
-        case THRSTATE_MCT_LOCK:
-        case THRSTATE_MCT_COOLDOWN:
-            // Lock back to MCT if being exceeded (for both lock and cooldown states)
-            escTarget = calibration.esc[ESC_DETENT_MCT];
-            break;
-        default:
-            break;
+            case THRSTATE_MCT_EXCEEDED:
+                if ((time_us() - stateChangeAt) > (u64)(config.control[CONTROL_THROTTLE_MAX_TIME] * 1E6f)) {
+                    // MCT has been exceeded for too long, lock
+                    state = THRSTATE_MCT_LOCK;
+                }
+                break;
+            case THRSTATE_MCT_LOCK:
+            case THRSTATE_MCT_COOLDOWN:
+                // Lock back to MCT if being exceeded (for both lock and cooldown states)
+                escTarget = calibration.esc[ESC_DETENT_MCT];
+                break;
+            default:
+                break;
         }
     }
     if (state == THRSTATE_MCT_LOCK && escTarget <= calibration.esc[ESC_DETENT_MCT]) {

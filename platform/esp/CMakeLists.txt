@@ -13,6 +13,11 @@ add_library(platform_esp
 # Link the platform library to the pico-sdk libraries
 target_link_libraries(platform_esp
     idf::driver
+    idf::esp_hw_support
+    idf::esp_partition
+    idf::esp_system
+    idf::esp_timer
+    idf::freertos
 )
 
 target_include_directories(platform_esp PRIVATE ${CMAKE_SOURCE_DIR})

@@ -10,7 +10,7 @@
 
 #include "platform/i2c.h"
 
-#define I2C_TIMEOUT_US 100E3 // The timeout for i2c operations in microseconds
+#define I2C_TIMEOUT_US 50E3 // The timeout for i2c operations in microseconds
 
 /**
  * @param sda the pin number of the SDA pin
@@ -19,44 +19,44 @@
  */
 static inline i2c_inst_t *i2c_inst_from_pins(u32 sda, u32 scl) {
     switch (sda) {
-    case 0:
-    case 4:
-    case 8:
-    case 12:
-    case 16:
-    case 20:
-        switch (scl) {
-        case 1:
-        case 5:
-        case 9:
-        case 13:
-        case 17:
-        case 21:
-            return i2c0;
+        case 0:
+        case 4:
+        case 8:
+        case 12:
+        case 16:
+        case 20:
+            switch (scl) {
+                case 1:
+                case 5:
+                case 9:
+                case 13:
+                case 17:
+                case 21:
+                    return i2c0;
+                default:
+                    return NULL;
+            }
+            break;
+        case 2:
+        case 6:
+        case 10:
+        case 14:
+        case 18:
+        case 26:
+            switch (scl) {
+                case 3:
+                case 7:
+                case 11:
+                case 15:
+                case 19:
+                case 27:
+                    return i2c1;
+                default:
+                    return NULL;
+            }
+            break;
         default:
             return NULL;
-        }
-        break;
-    case 2:
-    case 6:
-    case 10:
-    case 14:
-    case 18:
-    case 26:
-        switch (scl) {
-        case 3:
-        case 7:
-        case 11:
-        case 15:
-        case 19:
-        case 27:
-            return i2c1;
-        default:
-            return NULL;
-        }
-        break;
-    default:
-        return NULL;
     }
 }
 

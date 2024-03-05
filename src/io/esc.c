@@ -58,14 +58,15 @@ static bool waitForDetent(u32 pin, float *detent, u32 timeout_ms, u32 duration_m
 void esc_enable(u32 pin) {
     print("[ESC] setting up ESC on pin %lu", pin);
     u32 pins[] = {pin};
-    pwm_setup_write(pins, 1, 50);
+    if (!pwm_setup_write(pins, 1, config.general[GENERAL_ESC_HZ]))
+        log_message(FATAL, "Failed to enable PWM output!", 500, 0, true);
     esc_set(pin, 0); // Set initial position to 0 to be safe
 }
 
 void esc_set(u32 pin, float speed) {
-    // Ensure speed is within range 0-100% and convert from percentage to duty cycle (0-255)
+    // Ensure speed is within range 0-100% and convert from percentage to duty cycle (0-2^16)
     speed = clampf(speed, 0, 100);
-    pwm_write_raw(pin, (u16)((speed / 100.f) * 255.f));
+    pwm_write_raw(pin, (u16)((speed / 100.f) * UINT16_MAX));
 }
 
 bool esc_calibrate(u32 pin) {
@@ -91,4 +92,6 @@ bool esc_calibrate(u32 pin) {
     return true;
 }
 
-bool esc_isCalibrated() { return (bool)calibration.esc[ESC_CALIBRATED]; }
+bool esc_isCalibrated() {
+    return (bool)calibration.esc[ESC_CALIBRATED];
+}

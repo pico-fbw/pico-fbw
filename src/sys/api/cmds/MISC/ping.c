@@ -9,4 +9,6 @@
 
 // I know, this file is crazy, you can thank me later :)
 
-void api_ping(const char *cmd, const char *args) { printraw("PONG\n"); }
+void api_ping(const char *cmd, const char *args) {
+    printraw("PONG\n");
+}

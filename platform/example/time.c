@@ -5,10 +5,14 @@
 
 #include "platform/time.h"
 
-u64 time_us() {}
+u64 time_us() {
+}
 
-i32 callback_in_ms(u32 ms, Callback callback) {}
+CallbackID *callback_in_ms(u32 ms, Callback callback) {
+}
 
-bool cancel_callback(u32 id) {}
+void cancel_callback(CallbackID *id) {
+}
 
-void sleep_us_blocking(u64 us) {}
+void sleep_us_blocking(u64 us) {
+}

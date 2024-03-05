@@ -22,21 +22,21 @@
 
 void direct_update() {
     switch ((ControlMode)config.general[GENERAL_CONTROL_MODE]) {
-    case CTRLMODE_3AXIS_ATHR:
-    case CTRLMODE_3AXIS:
-        servo_set((u32)config.pins[PINS_SERVO_RUD], (u16)receiver_get((u32)config.pins[PINS_INPUT_RUD], RECEIVER_MODE_DEG));
-        /* fall through */
-    case CTRLMODE_2AXIS_ATHR:
-    case CTRLMODE_2AXIS:
-        servo_set((u32)config.pins[PINS_SERVO_AIL], (u16)receiver_get((u32)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEG));
-        servo_set((u32)config.pins[PINS_SERVO_ELE], (u16)receiver_get((u32)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEG));
-        break;
-    case CTRLMODE_FLYINGWING_ATHR:
-    case CTRLMODE_FLYINGWING:
-        // TODO: flying wing mixing here
-        servo_set((u32)config.pins[PINS_SERVO_AIL], (u16)receiver_get((u32)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEG));
-        servo_set((u32)config.pins[PINS_SERVO_ELE], (u16)receiver_get((u32)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEG));
-        break;
+        case CTRLMODE_3AXIS_ATHR:
+        case CTRLMODE_3AXIS:
+            servo_set((u32)config.pins[PINS_SERVO_RUD], (u16)receiver_get((u32)config.pins[PINS_INPUT_RUD], RECEIVER_MODE_DEG));
+            /* fall through */
+        case CTRLMODE_2AXIS_ATHR:
+        case CTRLMODE_2AXIS:
+            servo_set((u32)config.pins[PINS_SERVO_AIL], (u16)receiver_get((u32)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEG));
+            servo_set((u32)config.pins[PINS_SERVO_ELE], (u16)receiver_get((u32)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEG));
+            break;
+        case CTRLMODE_FLYINGWING_ATHR:
+        case CTRLMODE_FLYINGWING:
+            // TODO: flying wing mixing here
+            servo_set((u32)config.pins[PINS_SERVO_AIL], (u16)receiver_get((u32)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEG));
+            servo_set((u32)config.pins[PINS_SERVO_ELE], (u16)receiver_get((u32)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEG));
+            break;
     }
     if (receiver_has_athr())
         esc_set((u32)config.pins[PINS_ESC_THROTTLE],

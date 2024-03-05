@@ -1796,18 +1796,18 @@ void display_string(const char *str, i32 progress) {
     split: {
         u32 numLines = (strlen(str) + (DISPLAY_MAX_LINE_LEN - 1)) / DISPLAY_MAX_LINE_LEN;
         switch (numLines) {
-        default:
-            strncpy(line4, str + (DISPLAY_MAX_LINE_LEN * 3), DISPLAY_MAX_LINE_LEN);
-            /* fall through */
-        case 3:
-            strncpy(line3, str + (DISPLAY_MAX_LINE_LEN * 2), DISPLAY_MAX_LINE_LEN);
-            /* fall through */
-        case 2:
-            strncpy(line2, str + DISPLAY_MAX_LINE_LEN, DISPLAY_MAX_LINE_LEN);
-            /* fall through */
-        case 1:
-            strncpy(line1, str, DISPLAY_MAX_LINE_LEN);
-            break;
+            default:
+                strncpy(line4, str + (DISPLAY_MAX_LINE_LEN * 3), DISPLAY_MAX_LINE_LEN);
+                /* fall through */
+            case 3:
+                strncpy(line3, str + (DISPLAY_MAX_LINE_LEN * 2), DISPLAY_MAX_LINE_LEN);
+                /* fall through */
+            case 2:
+                strncpy(line2, str + DISPLAY_MAX_LINE_LEN, DISPLAY_MAX_LINE_LEN);
+                /* fall through */
+            case 1:
+                strncpy(line1, str, DISPLAY_MAX_LINE_LEN);
+                break;
         }
     }
     }

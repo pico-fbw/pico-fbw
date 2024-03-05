@@ -5,13 +5,20 @@
 
 #include "platform/flash.h"
 
-static int flash_read(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, void *buffer, lfs_size_t size) {}
+static int flash_read(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, void *buffer, lfs_size_t size) {
+}
 
-static int flash_prog(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size) {}
+static int flash_prog(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size) {
+}
 
-static int flash_erase(const struct lfs_config *c, lfs_block_t block) {}
+static int flash_erase(const struct lfs_config *c, lfs_block_t block) {
+}
 
-static int flash_sync(const struct lfs_config *c) {}
+static int flash_sync(const struct lfs_config *c) {
+}
+
+bool flash_setup() {
+}
 
 struct lfs_config lfs_cfg = {.read = flash_read,
                              .prog = flash_prog,

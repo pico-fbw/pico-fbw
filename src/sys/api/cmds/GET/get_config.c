@@ -18,18 +18,18 @@
  */
 static float *getSectionMem(ConfigSection section) {
     switch (section) {
-    case CONFIG_GENERAL:
-        return config.general;
-    case CONFIG_CONTROL:
-        return config.control;
-    case CONFIG_PINS:
-        return config.pins;
-    case CONFIG_SENSORS:
-        return config.sensors;
-    case CONFIG_SYSTEM:
-        return config.system;
-    default:
-        return NULL;
+        case CONFIG_GENERAL:
+            return config.general;
+        case CONFIG_CONTROL:
+            return config.control;
+        case CONFIG_PINS:
+            return config.pins;
+        case CONFIG_SENSORS:
+            return config.sensors;
+        case CONFIG_SYSTEM:
+            return config.system;
+        default:
+            return NULL;
     }
 }
 
@@ -44,14 +44,14 @@ i32 api_get_config(const char *cmd, const char *args) {
         if (!value)
             return 400;
         switch (type) {
-        case SECTION_TYPE_FLOAT:
-            printraw("{\"key\":%f}\n", *(float *)value);
-            break;
-        case SECTION_TYPE_STRING:
-            printraw("{\"key\":\"%s\"}\n", (char *)value);
-            break;
-        default:
-            return 400;
+            case SECTION_TYPE_FLOAT:
+                printraw("{\"key\":%f}\n", *(float *)value);
+                break;
+            case SECTION_TYPE_STRING:
+                printraw("{\"key\":\"%s\"}\n", (char *)value);
+                break;
+            default:
+                return 400;
         }
     } else {
         // No args, gather all data
@@ -62,43 +62,44 @@ i32 api_get_config(const char *cmd, const char *args) {
             ConfigSectionType type = config_sectionToString(s, &sectionStr);
             printraw("{\"name\":\"%s\",\"keys\":[", sectionStr);
             switch (type) {
-            case SECTION_TYPE_FLOAT: {
-                float *section = getSectionMem(s);
-                if (!section)
-                    return 400;
-                for (u32 v = 0; v < CONFIG_SECTION_SIZE; v++) {
-                    // Read values, up until we hit the end of the data (signified by FLAG_END) or end of the sector
-                    if (section[v + 1] != CONFIG_END_MAGIC && v < CONFIG_SECTION_SIZE - 1) {
-                        // For float sectors we need to check for finite values and change them to null because json is dumb
-                        isfinite(section[v]) ? printraw("%f,", section[v]) : printraw("null,");
-                    } else {
-                        if (s < NUM_CONFIG_SECTIONS - 1) {
-                            isfinite(section[v]) ? printraw("%f]},", section[v]) : printraw("null]},");
+                case SECTION_TYPE_FLOAT: {
+                    float *section = getSectionMem(s);
+                    if (!section)
+                        return 400;
+                    for (u32 v = 0; v < CONFIG_SECTION_SIZE; v++) {
+                        // Read values, up until we hit the end of the data (signified by FLAG_END) or end of the sector
+                        if (section[v + 1] != CONFIG_END_MAGIC && v < CONFIG_SECTION_SIZE - 1) {
+                            // For float sectors we need to check for finite values and change them to null because json is dumb
+                            isfinite(section[v]) ? printraw("%f,", section[v]) : printraw("null,");
                         } else {
-                            isfinite(section[v]) ? printraw("%f]}]}\n", section[v]) : printraw("null]}]}\n");
+                            if (s < NUM_CONFIG_SECTIONS - 1) {
+                                isfinite(section[v]) ? printraw("%f]},", section[v]) : printraw("null]},");
+                            } else {
+                                isfinite(section[v]) ? printraw("%f]}]}\n", section[v]) : printraw("null]}]}\n");
+                            }
+                            break;
                         }
-                        break;
                     }
-                }
-                break;
-            }
-            case SECTION_TYPE_STRING: {
-                // I didn't feel like figuring out how to loop this, plus there's not much anyway so it's probably smaller ._.
-                switch (s) {
-                case CONFIG_WIFI:
-                    if (s < NUM_CONFIG_SECTIONS - 1) {
-                        printraw("\"%s\",\"%s\"]},", config.ssid, config.pass);
-                    } else {
-                        printraw("\"%s\",\"%s\"]}]}\n", config.ssid, config.pass);
-                    }
-                default:
                     break;
                 }
-                break;
-            }
-            default: {
-                return 500;
-            }
+                case SECTION_TYPE_STRING: {
+                    // I didn't feel like figuring out how to loop this, plus there's not much anyway so it's probably smaller
+                    // ._.
+                    switch (s) {
+                        case CONFIG_WIFI:
+                            if (s < NUM_CONFIG_SECTIONS - 1) {
+                                printraw("\"%s\",\"%s\"]},", config.ssid, config.pass);
+                            } else {
+                                printraw("\"%s\",\"%s\"]}]}\n", config.ssid, config.pass);
+                            }
+                        default:
+                            break;
+                    }
+                    break;
+                }
+                default: {
+                    return 500;
+                }
             }
         }
     }

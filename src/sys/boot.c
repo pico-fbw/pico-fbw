@@ -4,6 +4,7 @@
  */
 
 #include "platform/defs.h"
+#include "platform/flash.h"
 #include "platform/gpio.h"
 #include "platform/stdio.h"
 #include "platform/time.h"
@@ -22,6 +23,8 @@ bool isBooted = false;
 void boot_begin() {
     sys_boot_begin();
     stdio_setup();
+    flash_setup();
+    log_init();
     isBooted = false;
 #ifdef PIN_FBW
     gpio_setup(PIN_FBW, INPUT_PULLDOWN);
@@ -45,4 +48,6 @@ void boot_complete() {
     isBooted = true;
 }
 
-bool boot_is_booted() { return isBooted; }
+bool boot_is_booted() {
+    return isBooted;
+}

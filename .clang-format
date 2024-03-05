@@ -2,13 +2,18 @@
 Language:        Cpp
 BasedOnStyle:    LLVM
 ColumnLimit:     128
+AllowShortBlocksOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortFunctionsOnASingleLine: None
+BreakBeforeBraces: Attach
 IncludeCategories:
   - Regex:    '^<'
     Priority: -1
   - Regex:    '.*'
     Priority: 1
+IndentPPDirectives: BeforeHash
+IndentCaseLabels: true
 IndentWidth:     4
 TabWidth:        4
 # UseTab:          AlignWithSpaces
 ...
-

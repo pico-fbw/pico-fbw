@@ -3,40 +3,111 @@
  * Licensed under the GNU AGPL-3.0
  */
 
+/**
+ * Thanks a lot to the contributors of the `esp_littlefs` library for the implementation of littlefs for the ESP32,
+ * check it out here: https://github.com/joltwallet/esp_littlefs
+ */
+
+#include <assert.h>
+#include "esp_partition.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
+
 #include "platform/flash.h"
 
-static int flash_read(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, void *buffer, lfs_size_t size) {}
+// FS configuration, littlefs documentation explains these settings in detail (see lib/lfs.h)
+#define READ_SIZE 128
+#define WRITE_SIZE 128
+#define BLOCK_SIZE 4096
+#define CACHE_SIZE 512
+#define LOOKAHEAD_SIZE 128
+#define BLOCK_CYCLES 512
 
-static int flash_prog(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size) {}
+#define FS_PARTITION_LABEL "fs" // Name of the littlefs partition defined in platform/esp/resources/partitions.csv
 
-static int flash_erase(const struct lfs_config *c, lfs_block_t block) {}
+static const esp_partition_t *partition;
+static SemaphoreHandle_t lfs_lock = NULL;
 
-static int flash_sync(const struct lfs_config *c) {}
+static int flash_read(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, void *buffer, lfs_size_t size) {
+    assert(partition);
+    assert(block < c->block_count);
+    assert(off + size <= c->block_size);
+    if (esp_partition_read(partition, (block * c->block_size) + off, buffer, size) != ESP_OK)
+        return LFS_ERR_IO;
+    return LFS_ERR_OK;
+}
 
-// struct lfs_config lfs_cfg = {
-//     .read = flash_read,
-//     .prog = flash_prog,
-//     .erase = flash_erase,
-//     .sync = flash_sync,
-//     .read_size = 1,
-//     .prog_size = FLASH_PAGE_SIZE,               // Minimum write size (256 bytes)
-//     .block_size = FLASH_SECTOR_SIZE,            // Block size must be a multiple of the sector size (4096 bytes)
-//     .block_count = FS_SIZE / FLASH_SECTOR_SIZE, // Number of blocks in the filesystem (64 blocks make up 256K FS_SIZE)
-//     .cache_size = FLASH_SECTOR_SIZE / 4,        // Must be a multiple of the block size (1024 bytes)
-//     .lookahead_size = 32,
-//     .block_cycles = 500};
+static int flash_prog(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size) {
+    assert(partition);
+    assert(block < c->block_count);
+    if (esp_partition_write(partition, (block * c->block_size) + off, buffer, size) != ESP_OK)
+        return LFS_ERR_IO;
+    return LFS_ERR_OK;
+}
 
-struct lfs_config lfs_cfg = {.read = flash_read,
-                             .prog = flash_prog,
-                             .erase = flash_erase,
-                             .sync = flash_sync,
-                             .read_size = 1,
-                             .prog_size = 1u << 8,   // Minimum write size (256 bytes)
-                             .block_size = 1u << 12, // Block size must be a multiple of the sector size (4096 bytes)
-                             .block_count = (256 * 1024) /
-                                            (1u << 12), // Number of blocks in the filesystem (64 blocks make up 256K FS_SIZE)
-                             .cache_size = (1u << 12) / 4, // Must be a multiple of the block size (1024 bytes)
-                             .lookahead_size = 32,
-                             .block_cycles = 500};
+static int flash_erase(const struct lfs_config *c, lfs_block_t block) {
+    assert(partition);
+    assert(block < c->block_count);
+    if (esp_partition_erase_range(partition, block * c->block_size, c->block_size) != ESP_OK)
+        return LFS_ERR_IO;
+    return LFS_ERR_OK;
+}
+
+static int flash_sync(const struct lfs_config *c) {
+    // No sync required with ESP-IDF
+    return LFS_ERR_OK;
+    (void)c; // Supress unused parameter warning
+}
+
+static int flash_lock(const struct lfs_config *c) {
+    if (lfs_lock == NULL) {
+        static portMUX_TYPE lfs_lock_mux = portMUX_INITIALIZER_UNLOCKED;
+        portENTER_CRITICAL(&lfs_lock_mux);
+        if (lfs_lock == NULL)
+            lfs_lock = xSemaphoreCreateMutex();
+        portEXIT_CRITICAL(&lfs_lock_mux);
+    }
+    if (xSemaphoreTake(lfs_lock, portMAX_DELAY) == pdTRUE)
+        return LFS_ERR_OK;
+    else
+        return LFS_ERR_IO;
+    (void)c;
+}
+
+static int flash_unlock(const struct lfs_config *c) {
+    if (xSemaphoreGive(lfs_lock) == pdTRUE)
+        return LFS_ERR_OK;
+    else
+        return LFS_ERR_IO;
+    (void)c;
+}
+
+bool flash_setup() {
+    // Set partition to the littlefs partition defined in partitions.csv
+    partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_LITTLEFS, FS_PARTITION_LABEL);
+    if (partition == NULL)
+        return false;
+    // Auto-detect block count based on partition size
+    lfs_cfg.block_count = partition->size / lfs_cfg.block_size;
+    if (lfs_cfg.block_count == 0)
+        return false;
+    return true;
+}
+
+struct lfs_config lfs_cfg = {
+    .read = flash_read,
+    .prog = flash_prog,
+    .erase = flash_erase,
+    .sync = flash_sync,
+    .lock = flash_lock,
+    .unlock = flash_unlock,
+    .read_size = READ_SIZE,
+    .prog_size = WRITE_SIZE,
+    .block_size = BLOCK_SIZE,
+    .block_count = 0, // Will be automatically set based on the partition size in flash_setup()
+    .cache_size = CACHE_SIZE,
+    .lookahead_size = LOOKAHEAD_SIZE,
+    .block_cycles = BLOCK_CYCLES,
+};
 
 lfs_t lfs;

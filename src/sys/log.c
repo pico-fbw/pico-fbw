@@ -28,33 +28,31 @@ static LogEntry lastLogEntry;
 /* --- LED --- */
 
 static LogEntry lastDisplayedEntry;
-static u32 pulseCallback;
+static CallbackID *pulseCallback;
 static u32 pulseMs = 0;
-static u32 toggleCallback;
+static CallbackID *toggleCallback;
 static u32 toggleMs = 0;
 
-static inline void led_reset() {
-    cancel_callback(pulseCallback);
+static void led_reset() {
     cancel_callback(toggleCallback);
+    toggleMs = 0;
+    cancel_callback(pulseCallback);
     pulseMs = 0;
     gpio_set(PIN_LED, HIGH);
 }
 
-static inline i32 led_pulse_callback(u32 id) {
+i32 led_pulse_callback() {
     gpio_toggle(PIN_LED);
     return 0; // Don't reschedule
-    (void)id; // Suppress unused parameter warning (required for callback functions, but not used here)
 }
 
-static inline i32 led_callback(u32 id) {
+i32 led_callback() {
     // Toggle LED immediately...
     gpio_toggle(PIN_LED);
     // then, if we need to pulse, schedule an additional toggle (to turn off the LED)
-    if (pulseMs != 0) {
+    if (pulseMs != 0)
         pulseCallback = callback_in_ms(pulseMs, led_pulse_callback);
-    }
     return toggleMs;
-    (void)id;
 }
 
 /* --- Logging --- */
@@ -78,17 +76,17 @@ static void log_displayEntry(LogEntry *entry) {
     if (runtime_is_fbw()) {
         char typeMsg[DISPLAY_MAX_LINE_LEN];
         switch (entry->type) {
-        case WARNING:
-            strcpy(typeMsg, MSG_WARN);
-            break;
-        case ERROR:
-            strcpy(typeMsg, MSG_ERROR);
-            break;
-        case FATAL:
-            strcpy(typeMsg, MSG_FATAL);
-            break;
-        default:
-            break;
+            case WARNING:
+                strcpy(typeMsg, MSG_WARN);
+                break;
+            case ERROR:
+                strcpy(typeMsg, MSG_ERROR);
+                break;
+            case FATAL:
+                strcpy(typeMsg, MSG_FATAL);
+                break;
+            default:
+                break;
         }
         char codeStr[DISPLAY_MAX_LINE_LEN];
         sprintf(codeStr, "%ld", entry->code);
@@ -131,18 +129,18 @@ static void log_displayEntry(LogEntry *entry) {
             gpio_set(PIN_LED, LOW);
             pulseMs = entry->pulse;
         }
-        // Display on Pico built-in LED
-        toggleCallback = callback_in_ms((u32)entry->code, led_callback);
+        // Display on built-in LED
+        toggleMs = entry->code;
+        toggleCallback = callback_in_ms(toggleMs, led_callback);
     }
     lastDisplayedEntry = *entry;
 }
 
-static inline i32 logProcessQueue(u32 id) {
+i32 logProcessQueue() {
     if (!boot_is_booted())
         return 500;
     log_displayEntry(&queuedEntry);
     return 0;
-    (void)id;
 }
 
 void log_init() {
@@ -153,11 +151,11 @@ void log_init() {
     log_resetLast();
 }
 
-void log_message(LogType type, char msg[64], i32 code, u32 pulse_ms, bool force) {
+void log_message(LogType type, char msg[], i32 code, u32 pulse_ms, bool force) {
     if (logCount < MAX_LOG_ENTRIES) {
         LogEntry entry;
         entry.type = type;
-        strncpy(entry.msg, msg, sizeof(entry.msg));
+        strcpy(entry.msg, msg);
         entry.msg[sizeof(entry.msg) - 1] = '\0';
         entry.code = code;
         entry.pulse = pulse_ms;
@@ -172,7 +170,7 @@ void log_message(LogType type, char msg[64], i32 code, u32 pulse_ms, bool force)
                     log_displayEntry(&entry);
                 } else {
                     // The system isn't booted and the type isn't severe enough to warrant displaying it at the moment,
-                    // so we'll check every 500ms if the system is booted and display it if it is
+                    // so we'll check back every 500ms if the system is booted and display if it is
                     queuedEntry = entry;
                     callback_in_ms(500, logProcessQueue);
                 }
@@ -183,20 +181,20 @@ void log_message(LogType type, char msg[64], i32 code, u32 pulse_ms, bool force)
         // Format an error string to be printed
         const char *typeMsg = NULL;
         switch (type) {
-        case INFO:
-            typeMsg = MSG_INFO;
-            break;
-        case WARNING:
-            typeMsg = MSG_WARN;
-            break;
-        case ERROR:
-            typeMsg = MSG_ERROR;
-            break;
-        case FATAL:
-            typeMsg = MSG_FATAL;
-            break;
-        default:
-            break;
+            case INFO:
+                typeMsg = MSG_INFO;
+                break;
+            case WARNING:
+                typeMsg = MSG_WARN;
+                break;
+            case ERROR:
+                typeMsg = MSG_ERROR;
+                break;
+            case FATAL:
+                typeMsg = MSG_FATAL;
+                break;
+            default:
+                break;
         }
         if (typeMsg) {
             if (code > -1) {
@@ -212,6 +210,7 @@ void log_message(LogType type, char msg[64], i32 code, u32 pulse_ms, bool force)
             // Halt execution for fatal errors
             print("\nFatal error encountered, halting pico-fbw!");
             while (true)
+                // Keep the system running but hang (callbacks still run for LED)
                 sys_periodic();
         }
     }
@@ -259,7 +258,9 @@ void log_clear(LogType type) {
     }
 }
 
-u8 log_count() { return logCount; }
+u8 log_count() {
+    return logCount;
+}
 
 u8 log_count_errs() {
     u32 count = 0;

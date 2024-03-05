@@ -20,7 +20,7 @@ endif ()
 
 # For ESP-IDF builds to work, the `export` command (as part of ESP-IDF) must have been run in the current shell
 # Check the PATH for the ESP-IDF tools (xtensa-esp32-elf-gcc compiler) and generate a warning to push the user in the right direction
-find_program(TOOLS_IN_PATH xtensa-esp32-elf-gcc PATH ENV{PATH})
+find_program(TOOLS_IN_PATH xtensa-esp-elf-gcc PATH ENV{PATH})
 if (NOT TOOLS_IN_PATH)
     message(WARNING "ESP-IDF tools were not found in your PATH. Proceed with caution.")
     message(STATUS "You probably didn't run `export.sh` (Mac/Linux) or `export.bat` (Windows) from the ESP-IDF directory.

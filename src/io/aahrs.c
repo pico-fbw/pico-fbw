@@ -84,49 +84,53 @@ bool aahrs_init() {
     if (shouldPrint.aahrs)
         printraw("[aahrs] installing ");
     switch ((IMUModel)config.sensors[SENSORS_IMU_MODEL]) {
-    case IMU_MODEL_BNO055:
-        // Allocate memory for the sensor and install it
-        if (shouldPrint.aahrs)
-            printraw("BNO055 ");
-        numSensors++;
-        sensors = reallocarray(sensors, numSensors, sizeof(struct PhysicalSensor));
-        if (!sensors)
+        case IMU_MODEL_BNO055:
+            // Allocate memory for the sensor and install it
+            if (shouldPrint.aahrs)
+                printraw("BNO055 ");
+            numSensors++;
+            sensors = reallocarray(sensors, numSensors, sizeof(struct PhysicalSensor));
+            if (!sensors)
+                return false;
+            fusion.installSensor(&fusion, &sensors[numSensors - 1], BNO055_I2C_ADDR_LOW, 1, NULL, BNO055_init, BNO055_read);
+            break;
+        case IMU_MODEL_ICM20948:
+            // The ICM20948 actually has an AK09916 inside it, but it has a different i2c address so we see it as a seperate
+            // device
+            // FIXME: AK09916 is broken after hal update for some reason?
+            /*
+            if (shouldPrint.aahrs)
+                printraw("AK09916 ");
+            numSensors++;
+            sensors = reallocarray(sensors, numSensors, sizeof(struct PhysicalSensor));
+            if (!sensors)
+                return false;
+            fusion.installSensor(&fusion, &sensors[numSensors - 1], AK09916_I2C_ADDR, 1, NULL, AK09916_init, AK09916_read);
+            */
+            if (shouldPrint.aahrs)
+                printraw(", ICM20948 ");
+            numSensors++;
+            sensors = reallocarray(sensors, numSensors, sizeof(struct PhysicalSensor));
+            if (!sensors)
+                return false;
+            fusion.installSensor(&fusion, &sensors[numSensors - 1], ICM20948_I2C_ADDR_HIGH, 1, NULL, ICM20948_init,
+                                 ICM20948_read);
+            break;
+        default:
+            printfbw(aahrs, "ERROR: unknown IMU model!");
             return false;
-        fusion.installSensor(&fusion, &sensors[numSensors - 1], BNO055_I2C_ADDR_LOW, 1, NULL, BNO055_init, BNO055_read);
-        break;
-    case IMU_MODEL_ICM20948:
-        // The ICM20948 actually has an AK09916 inside it, but it has a different i2c address so we see it as a seperate device
-        // FIXME: AK09916 is broken now for some reason?
-        if (shouldPrint.aahrs)
-            printraw("AK09916 ");
-        numSensors++;
-        sensors = reallocarray(sensors, numSensors, sizeof(struct PhysicalSensor));
-        if (!sensors)
-            return false;
-        fusion.installSensor(&fusion, &sensors[numSensors - 1], AK09916_I2C_ADDR, 1, NULL, AK09916_init, AK09916_read);
-        if (shouldPrint.aahrs)
-            printraw(", ICM20948 ");
-        numSensors++;
-        sensors = reallocarray(sensors, numSensors, sizeof(struct PhysicalSensor));
-        if (!sensors)
-            return false;
-        fusion.installSensor(&fusion, &sensors[numSensors - 1], ICM20948_I2C_ADDR_HIGH, 1, NULL, ICM20948_init, ICM20948_read);
-        break;
-    default:
-        printfbw(aahrs, "ERROR: unknown IMU model!");
-        return false;
     }
     switch ((BaroModel)config.sensors[SENSORS_BARO_MODEL]) {
-    case BARO_MODEL_NONE:
-        break;
-    case BARO_MODEL_DPS310:
-        if (shouldPrint.aahrs)
-            printraw(", DPS310 ");
-        // Code incomplete
-        break;
-    default:
-        printfbw(aahrs, "ERROR: unknown baro model!");
-        return false;
+        case BARO_MODEL_NONE:
+            break;
+        case BARO_MODEL_DPS310:
+            if (shouldPrint.aahrs)
+                printraw(", DPS310 ");
+            // Code incomplete
+            break;
+        default:
+            printfbw(aahrs, "ERROR: unknown baro model!");
+            return false;
     }
     if (shouldPrint.aahrs)
         printraw("\n");
@@ -139,7 +143,7 @@ bool aahrs_init() {
 #if F_9DOF_GBY_KALMAN
     rateDelay = (u32)((1.0f / FUSION_HZ) * 1E6f - (F_9DOF_GBY_KALMAN_SYSTICK + F_CONDITION_SENSOR_READINGS_SYSTICK));
 #endif
-    printfbw(aahrs, "[AAHRS] to obtain update rate of %dHz, using delay of %luus\n", FUSION_HZ, rateDelay);
+    printfbw(aahrs, "[AAHRS] to obtain update rate of %dHz, using delay of %luus", FUSION_HZ, rateDelay);
     return true;
 }
 
@@ -191,46 +195,46 @@ bool aahrs_calibrate() {
     for (u32 i = 0; i < GYRO_AVG_SAMPLES; i++) {
         if (runtime_is_fbw())
             display_string("Please hold still!", (i + 1) * (33.0f / GYRO_AVG_SAMPLES));
-// Reqest a reset from the algorithm so that the gyro offsets get calculated
-#if F_9DOF_GBY_KALMAN
+    // Reqest a reset from the algorithm so that the gyro offsets get calculated
+    #if F_9DOF_GBY_KALMAN
         fusion.SV_9DOF_GBY_KALMAN.resetflag = true;
-#elif F_6DOF_GY_KALMAN
+    #elif F_6DOF_GY_KALMAN
         fusion.SV_6DOF_GY_KALMAN.resetflag = true;
-#endif
+    #endif
         // Wait for the calculation and save
         wait = timestamp_in_ms(rateDelay);
         while (!timestamp_reached(&wait))
             aahrs.update();
-#if F_9DOF_GBY_KALMAN
+    #if F_9DOF_GBY_KALMAN
         for (u32 j = 0; j < count_of(offsets); j++)
             offsets[j] += fusion.SV_9DOF_GBY_KALMAN.fbPl[j];
-#elif F_6DOF_GY_KALMAN
+    #elif F_6DOF_GY_KALMAN
         for (u32 j = 0; j < count_of(offsets); j++)
             offsets[j] += fusion.SV_6DOF_GY_KALMAN.fbPl[j];
-#endif
+    #endif
     }
     // Average the offsets and save
     for (u32 i = 0; i < count_of(offsets); i++) {
-#if F_9DOF_GBY_KALMAN
+    #if F_9DOF_GBY_KALMAN
         fusion.SV_9DOF_GBY_KALMAN.fbPl[i] = offsets[i] / GYRO_AVG_SAMPLES;
-#elif F_6DOF_GY_KALMAN
+    #elif F_6DOF_GY_KALMAN
         fusion.SV_6DOF_GY_KALMAN.fbPl[i] = offsets[i] / GYRO_AVG_SAMPLES;
-#endif
+    #endif
     }
     printfbw(aahrs, "saving gyro calibration");
     if (shouldPrint.aahrs) {
         printraw("\noffset vector:");
-#if F_9DOF_GBY_KALMAN
+    #if F_9DOF_GBY_KALMAN
         PRINT_VECTOR(fusion.SV_9DOF_GBY_KALMAN.fbPl);
-#elif F_6DOF_GY_KALMAN
+    #elif F_6DOF_GY_KALMAN
         PRINT_VECTOR(fusion.SV_6DOF_GY_KALMAN.fbPl);
-#endif
+    #endif
         printraw("\noffset error vector:");
-#if F_9DOF_GBY_KALMAN
+    #if F_9DOF_GBY_KALMAN
         PRINT_VECTOR(fusion.SV_9DOF_GBY_KALMAN.fbErrPl);
-#elif F_6DOF_GY_KALMAN
+    #elif F_6DOF_GY_KALMAN
         PRINT_VECTOR(fusion.SV_6DOF_GY_KALMAN.fbErrPl);
-#endif
+    #endif
         printraw("\n");
     }
     SaveGyroCalibrationToFlash(&fusion);

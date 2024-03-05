@@ -45,10 +45,11 @@ static inline float pwmOffsetOf(u32 pin) {
 }
 
 static inline float readRaw(u32 pin, ReceiverMode mode) {
-    i32 pulsewidth = pwm_read_raw(pin);
-    if (pulsewidth < 0)
+    i32 duty = pwm_read_raw(pin);
+    if (duty < 0)
         return INFINITY; // Invalid pin
-    return ((mode == RECEIVER_MODE_DEG ? 180E3f : 100E3f) * ((float)pulsewidth * 1.6E-8f - 1E-3f));
+    // Map duty cycle (from 0-2^16) to either 0-180.f or 0-100.f based on mode
+    return (mode == RECEIVER_MODE_DEG) ? (180.0f * duty) / UINT16_MAX : (100.0f * duty) / UINT16_MAX;
 }
 
 void receiver_enable(u32 pins[], u32 num_pins) {
@@ -57,15 +58,17 @@ void receiver_enable(u32 pins[], u32 num_pins) {
         log_message(FATAL, "Failed to enable PWM input!", 500, 0, true);
 }
 
-float receiver_get(u32 pin, ReceiverMode mode) { return readRaw(pin, mode) + pwmOffsetOf(pin); }
+// TODO: err handling for invalid pin/error reading
+float receiver_get(u32 pin, ReceiverMode mode) {
+    return readRaw(pin, mode) + pwmOffsetOf(pin);
+}
 
-bool receiver_calibrate(const u32 pins[], u32 num_pins, const float deviations[], u32 num_samples, u32 sample_delay_ms,
-                        u32 run_times) {
+bool receiver_calibrate(u32 pins[], u32 num_pins, float deviations[], u32 num_samples, u32 sample_delay_ms, u32 run_times) {
     log_message(INFO, "Calibrating PWM", 100, 0, false);
     sleep_ms_blocking(2000); // Wait a few moments for tx/rx to set itself up
     for (u32 i = 0; i < num_pins; i++) {
         u32 pin = pins[i];
-        print("[pwm] calibrating pin %lu (%lu/%lu)\n", pin, i + 1, num_pins);
+        print("[pwm] calibrating pin %lu (%lu/%lu)", pin, i + 1, num_pins);
         if (runtime_is_fbw())
             display_string("Please do not touch the transmitter!", ((i + 1) * 100) / num_pins);
         float deviation = deviations[i];
@@ -151,46 +154,46 @@ void receiver_get_pins(u32 *pins, u32 *num_pins, float *deviations) {
     deviations[1] = 90.0f;
     // Control mode specific pins
     switch ((ControlMode)config.general[GENERAL_CONTROL_MODE]) {
-    case CTRLMODE_3AXIS_ATHR:
-        pins[2] = (u32)config.pins[PINS_INPUT_RUD];
-        pins[3] = (u32)config.pins[PINS_INPUT_SWITCH];
-        pins[4] = (u32)config.pins[PINS_INPUT_THROTTLE];
-        deviations[2] = 90.0f; // We expect all controls to be centered except switch and throttle
-        deviations[3] = 0.0f;
-        deviations[4] = 0.0f;
-        *num_pins = 5;
-        break;
-    case CTRLMODE_3AXIS:
-        pins[2] = (u32)config.pins[PINS_INPUT_RUD];
-        pins[3] = (u32)config.pins[PINS_INPUT_SWITCH];
-        deviations[2] = 90.0f;
-        deviations[3] = 0.0f;
-        *num_pins = 4;
-        break;
-    case CTRLMODE_2AXIS_ATHR:
-        pins[2] = (u32)config.pins[PINS_INPUT_SWITCH];
-        pins[3] = (u32)config.pins[PINS_INPUT_THROTTLE];
-        deviations[2] = 0.0f;
-        deviations[3] = 0.0f;
-        *num_pins = 4;
-        break;
-    case CTRLMODE_2AXIS:
-        pins[2] = (u32)config.pins[PINS_INPUT_SWITCH];
-        deviations[2] = 0.0f;
-        *num_pins = 3;
-        break;
-    case CTRLMODE_FLYINGWING_ATHR:
-        pins[2] = (u32)config.pins[PINS_INPUT_SWITCH];
-        pins[3] = (u32)config.pins[PINS_INPUT_THROTTLE];
-        deviations[2] = 0.0f;
-        deviations[3] = 0.0f;
-        *num_pins = 4;
-        break;
-    case CTRLMODE_FLYINGWING:
-        pins[2] = (u32)config.pins[PINS_INPUT_SWITCH];
-        deviations[2] = 0.0f;
-        *num_pins = 3;
-        break;
+        case CTRLMODE_3AXIS_ATHR:
+            pins[2] = (u32)config.pins[PINS_INPUT_RUD];
+            pins[3] = (u32)config.pins[PINS_INPUT_SWITCH];
+            pins[4] = (u32)config.pins[PINS_INPUT_THROTTLE];
+            deviations[2] = 90.0f; // We expect all controls to be centered except switch and throttle
+            deviations[3] = 0.0f;
+            deviations[4] = 0.0f;
+            *num_pins = 5;
+            break;
+        case CTRLMODE_3AXIS:
+            pins[2] = (u32)config.pins[PINS_INPUT_RUD];
+            pins[3] = (u32)config.pins[PINS_INPUT_SWITCH];
+            deviations[2] = 90.0f;
+            deviations[3] = 0.0f;
+            *num_pins = 4;
+            break;
+        case CTRLMODE_2AXIS_ATHR:
+            pins[2] = (u32)config.pins[PINS_INPUT_SWITCH];
+            pins[3] = (u32)config.pins[PINS_INPUT_THROTTLE];
+            deviations[2] = 0.0f;
+            deviations[3] = 0.0f;
+            *num_pins = 4;
+            break;
+        case CTRLMODE_2AXIS:
+            pins[2] = (u32)config.pins[PINS_INPUT_SWITCH];
+            deviations[2] = 0.0f;
+            *num_pins = 3;
+            break;
+        case CTRLMODE_FLYINGWING_ATHR:
+            pins[2] = (u32)config.pins[PINS_INPUT_SWITCH];
+            pins[3] = (u32)config.pins[PINS_INPUT_THROTTLE];
+            deviations[2] = 0.0f;
+            deviations[3] = 0.0f;
+            *num_pins = 4;
+            break;
+        case CTRLMODE_FLYINGWING:
+            pins[2] = (u32)config.pins[PINS_INPUT_SWITCH];
+            deviations[2] = 0.0f;
+            *num_pins = 3;
+            break;
     }
 }
 

@@ -5,7 +5,6 @@
 
 #include <stdarg.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include "pico/stdio.h"
 
 #include "platform/stdio.h"
@@ -29,6 +28,7 @@ char *stdin_read() {
         } else {
             // Recieved a valid character, resize the buffer and store it
             buf = realloc(buf, (i + 1) * sizeof(char));
+            // TODO: reimpl tryrealloc
             if (!buf) {
                 free(buf);
                 return NULL;

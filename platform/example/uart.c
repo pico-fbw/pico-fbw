@@ -5,8 +5,11 @@
 
 #include "platform/uart.h"
 
-bool uart_setup(u32 tx, u32 rx, u32 baud) {}
+bool uart_setup(u32 tx, u32 rx, u32 baud) {
+}
 
-char *uart_read(u32 tx, u32 rx) {}
+char *uart_read(u32 tx, u32 rx) {
+}
 
-bool uart_write(u32 tx, u32 rx, const char *str) {}
+bool uart_write(u32 tx, u32 rx, const char *str) {
+}

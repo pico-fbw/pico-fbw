@@ -7,8 +7,16 @@
 
 // https://docs.espressif.com/projects/esp-idf/en/v4.2.1/esp32/api-reference/peripherals/uart.html
 
-bool uart_setup(u32 tx, u32 rx, u32 baud) {}
+// TODO: implement uart funcs
 
-char *uart_read(u32 tx, u32 rx) {}
+bool uart_setup(u32 tx, u32 rx, u32 baud) {
+    return true;
+}
 
-bool uart_write(u32 tx, u32 rx, const char *str) {}
+char *uart_read(u32 tx, u32 rx) {
+    return NULL;
+}
+
+bool uart_write(u32 tx, u32 rx, const char *str) {
+    return true;
+}

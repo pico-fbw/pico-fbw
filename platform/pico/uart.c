@@ -24,30 +24,30 @@
  */
 static inline uart_inst_t *uart_inst_from_pins(u32 tx, u32 rx) {
     switch (tx) {
-    case 0:
-    case 12:
-    case 16:
-        switch (rx) {
-        case 1:
-        case 13:
-        case 17:
-            return uart0;
+        case 0:
+        case 12:
+        case 16:
+            switch (rx) {
+                case 1:
+                case 13:
+                case 17:
+                    return uart0;
+                default:
+                    return NULL;
+            }
+        case 4:
+        case 8:
+        case 20:
+            switch (rx) {
+                case 5:
+                case 9:
+                case 21:
+                    return uart1;
+                default:
+                    return NULL;
+            }
         default:
             return NULL;
-        }
-    case 4:
-    case 8:
-    case 20:
-        switch (rx) {
-        case 5:
-        case 9:
-        case 21:
-            return uart1;
-        default:
-            return NULL;
-        }
-    default:
-        return NULL;
     }
 }
 
@@ -81,6 +81,7 @@ char *uart_read(u32 tx, u32 rx) {
             if (c == '\r' || c == '\n') {
                 break;
             }
+            // TODO: reimpl tryrealloc
             buf = realloc(buf, (i + 1) * sizeof(char));
             if (!buf) {
                 free(buf);

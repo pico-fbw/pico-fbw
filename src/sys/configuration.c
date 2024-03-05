@@ -22,38 +22,30 @@
 
 #include "configuration.h"
 
+// clang-format off
 Config config = {
-    // FIXME: index 7 (false) is the wifi config flag, replace this with an enum when the wifi HAL is done and has one
+    // FIXME: index 7 (false) of general is the wifi config flag, replace this with an enum when the wifi HAL is done and has one
     .general = {CTRLMODE_2AXIS_ATHR, SWITCH_TYPE_3_POS, 20, 50, 50, true, false, false, CONFIG_END_MAGIC},
-    .control = {0.0025f,
-                1.5f,
-                5, // Control handling preferences
-                10,
-                30,
-                0.015f, // Autothrottle configuration
-                180,
-                0, // Drop bay detent settings
-                33,
-                67,
-                -15,
-                30, // Control limits
-                25,
-                15,
-                20, // Physical control surface limits
-                20,
-                0.5f,
-                1,
-                1, // Flying wing configuration
+    .control = {0.0025f, 1.5f, 5, // Control handling preferences
+                10, 30, 0.015f, // Autothrottle configuration
+                180, 0, // Drop bay detent settings
+                33, 67, -15, 30, // Control limits
+                25, 15, 20, // Physical control surface limits
+                20, 0.5f, 1, 1, // Flying wing configuration
                 CONFIG_END_MAGIC},
-    .pins = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, // Control IO pins
-             16, 17, 21, 20,                // Sensor communications pins
-             false, false, false,           // Servo reverse flags
+    .pins = {PIN_INPUT_AIL, PIN_SERVO_AIL, PIN_INPUT_ELE, PIN_SERVO_ELE, PIN_INPUT_RUD,
+             PIN_SERVO_RUD, PIN_INPUT_THR, PIN_ESC_THR, PIN_INPUT_SWITCH, PIN_SERVO_BAY, // Control IO pins
+             PIN_AAHRS_SDA, PIN_AAHRS_SCL, PIN_GPS_TX, PIN_GPS_RX, // Sensor communications pins
+             false, false, false, // Servo reverse flags
              CONFIG_END_MAGIC},
     .sensors = {IMU_MODEL_BNO055, BARO_MODEL_NONE, GPS_COMMAND_TYPE_PMTK, 9600, CONFIG_END_MAGIC},
-    .system = {false, true, false, false, false, false, false, // Default print settings, also found in PrintDefs below
+    .system = {false,
+               true, false, false, false, false, false, // Default print settings, also found in PrintDefs below
                2000, CONFIG_END_MAGIC},
     .ssid = "pico-fbw",
-    .pass = "picodashfbw"};
+    .pass = "picodashfbw"
+};
+// clang-format on
 
 Calibration calibration = {
     .esc = {false, 10, 75, 90} // Only throttle detents have default values
@@ -382,8 +374,6 @@ static void getFromSystem(const char *key, float **value) {
         *value = &config.system[SYSTEM_PRINT_MODES];
     } else if (strcasecmp(key, "printNetwork") == 0) {
         *value = &config.system[SYSTEM_PRINT_NETWORK];
-    } else if (strcasecmp(key, "watchdogTimeout") == 0) {
-        *value = &config.system[SYSTEM_WATCHDOG_TIMEOUT];
     } else {
         *value = NULL;
     }
@@ -400,8 +390,6 @@ static bool setToSystem(const char *key, float value) {
         config.system[SYSTEM_PRINT_MODES] = value;
     } else if (strcasecmp(key, "printNetwork") == 0) {
         config.system[SYSTEM_PRINT_NETWORK] = value;
-    } else if (strcasecmp(key, "watchdogTimeout") == 0) {
-        config.system[SYSTEM_WATCHDOG_TIMEOUT] = value;
     } else
         return false;
     return true;
@@ -431,42 +419,42 @@ bool config_validate() {
     // Unique pin validation
     i32 lastPin = -1;
     switch ((ControlMode)config.general[GENERAL_CONTROL_MODE]) {
-    case CTRLMODE_3AXIS_ATHR:
-        for (u32 i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
-            if ((i32)config.pins[i] == lastPin)
-                goto invalid;
-        }
-        break;
-    case CTRLMODE_3AXIS:
-        for (u32 i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
-            // Skip pins that aren't utilized in this mode
-            if (i == PINS_INPUT_THROTTLE || i == PINS_ESC_THROTTLE)
-                break;
-            if ((i32)config.pins[i] == lastPin)
-                goto invalid;
-        }
-        break;
-    case CTRLMODE_2AXIS_ATHR:
-    case CTRLMODE_FLYINGWING_ATHR:
-        for (u32 i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
-            if (i == PINS_INPUT_RUD)
-                break;
-            if ((i32)config.pins[i] == lastPin)
-                goto invalid;
-        }
-        break;
-    case CTRLMODE_2AXIS:
-    case CTRLMODE_FLYINGWING:
-        for (u32 i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
-            if (i == PINS_INPUT_RUD || i == PINS_INPUT_THROTTLE || i == PINS_ESC_THROTTLE)
-                break;
-            if ((i32)config.pins[i] == lastPin)
-                goto invalid;
-        }
-        break;
-    invalid:
-        print("ERROR: A pin may only be used once.");
-        return false;
+        case CTRLMODE_3AXIS_ATHR:
+            for (u32 i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
+                if ((i32)config.pins[i] == lastPin)
+                    goto invalid;
+            }
+            break;
+        case CTRLMODE_3AXIS:
+            for (u32 i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
+                // Skip pins that aren't utilized in this mode
+                if (i == PINS_INPUT_THROTTLE || i == PINS_ESC_THROTTLE)
+                    break;
+                if ((i32)config.pins[i] == lastPin)
+                    goto invalid;
+            }
+            break;
+        case CTRLMODE_2AXIS_ATHR:
+        case CTRLMODE_FLYINGWING_ATHR:
+            for (u32 i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
+                if (i == PINS_INPUT_RUD)
+                    break;
+                if ((i32)config.pins[i] == lastPin)
+                    goto invalid;
+            }
+            break;
+        case CTRLMODE_2AXIS:
+        case CTRLMODE_FLYINGWING:
+            for (u32 i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
+                if (i == PINS_INPUT_RUD || i == PINS_INPUT_THROTTLE || i == PINS_ESC_THROTTLE)
+                    break;
+                if ((i32)config.pins[i] == lastPin)
+                    goto invalid;
+            }
+            break;
+        invalid:
+            print("ERROR: A pin may only be used once.");
+            return false;
     }
     // Sensor pin validation
     // AAHRS_SDA can be on pins 0, 4, 8, 12, 16, 20, 28
@@ -541,35 +529,30 @@ bool config_validate() {
     }
     // Control limit validation
     switch ((ControlMode)config.general[GENERAL_CONTROL_MODE]) {
-    case CTRLMODE_3AXIS_ATHR:
-    case CTRLMODE_3AXIS:
-    case CTRLMODE_2AXIS_ATHR:
-    case CTRLMODE_2AXIS:
-        if (config.control[CONTROL_MAX_AIL_DEFLECTION] > 90 || config.control[CONTROL_MAX_AIL_DEFLECTION] < 0) {
-            print("ERROR: Max aileron deflection must be between 0 and 90 degrees.");
-            return false;
-        }
-        if (config.control[CONTROL_MAX_ELEV_DEFLECTION] > 90 || config.control[CONTROL_MAX_ELEV_DEFLECTION] < 0) {
-            print("ERROR: Max elevator deflection must be between 0 and 90 degrees.");
-            return false;
-        }
-        if (config.control[CONTROL_MAX_RUD_DEFLECTION] > 90 || config.control[CONTROL_MAX_RUD_DEFLECTION] < 0) {
-            print("ERROR: Max rudder deflection must be between 0 and 90 degrees.");
-            return false;
-        }
-        break;
-    case CTRLMODE_FLYINGWING_ATHR:
-    case CTRLMODE_FLYINGWING:
-        if (config.control[CONTROL_MAX_ELEVON_DEFLECTION] > 90 || config.control[CONTROL_MAX_ELEVON_DEFLECTION] < 0) {
-            print("ERROR: Max elevon deflection must be between 0 and 90 degrees.");
-            return false;
-        }
-        break;
-    }
-    // Watchdog timeout validation
-    if ((u32)config.system[SYSTEM_WATCHDOG_TIMEOUT] < 1000 && (u32)config.system[SYSTEM_WATCHDOG_TIMEOUT] > 0) {
-        print("ERROR: Watchdog timeout must be at least 1 second.");
-        return false;
+        case CTRLMODE_3AXIS_ATHR:
+        case CTRLMODE_3AXIS:
+        case CTRLMODE_2AXIS_ATHR:
+        case CTRLMODE_2AXIS:
+            if (config.control[CONTROL_MAX_AIL_DEFLECTION] > 90 || config.control[CONTROL_MAX_AIL_DEFLECTION] < 0) {
+                print("ERROR: Max aileron deflection must be between 0 and 90 degrees.");
+                return false;
+            }
+            if (config.control[CONTROL_MAX_ELEV_DEFLECTION] > 90 || config.control[CONTROL_MAX_ELEV_DEFLECTION] < 0) {
+                print("ERROR: Max elevator deflection must be between 0 and 90 degrees.");
+                return false;
+            }
+            if (config.control[CONTROL_MAX_RUD_DEFLECTION] > 90 || config.control[CONTROL_MAX_RUD_DEFLECTION] < 0) {
+                print("ERROR: Max rudder deflection must be between 0 and 90 degrees.");
+                return false;
+            }
+            break;
+        case CTRLMODE_FLYINGWING_ATHR:
+        case CTRLMODE_FLYINGWING:
+            if (config.control[CONTROL_MAX_ELEVON_DEFLECTION] > 90 || config.control[CONTROL_MAX_ELEVON_DEFLECTION] < 0) {
+                print("ERROR: Max elevon deflection must be between 0 and 90 degrees.");
+                return false;
+            }
+            break;
     }
     return true;
 }
@@ -636,24 +619,24 @@ bool config_set(const char *section, const char *key, const char *value) {
 
 ConfigSectionType config_sectionToString(ConfigSection section, const char **str) {
     switch (section) {
-    case CONFIG_GENERAL:
-        *str = CONFIG_GENERAL_STR;
-        return SECTION_TYPE_FLOAT;
-    case CONFIG_CONTROL:
-        *str = CONFIG_CONTROL_STR;
-        return SECTION_TYPE_FLOAT;
-    case CONFIG_PINS:
-        *str = CONFIG_PINS_STR;
-        return SECTION_TYPE_FLOAT;
-    case CONFIG_SENSORS:
-        *str = CONFIG_SENSORS_STR;
-        return SECTION_TYPE_FLOAT;
-    case CONFIG_WIFI:
-        *str = CONFIG_WIFI_STR;
-        return SECTION_TYPE_STRING;
-    case CONFIG_SYSTEM:
-        *str = CONFIG_SYSTEM_STR;
-        return SECTION_TYPE_FLOAT;
+        case CONFIG_GENERAL:
+            *str = CONFIG_GENERAL_STR;
+            return SECTION_TYPE_FLOAT;
+        case CONFIG_CONTROL:
+            *str = CONFIG_CONTROL_STR;
+            return SECTION_TYPE_FLOAT;
+        case CONFIG_PINS:
+            *str = CONFIG_PINS_STR;
+            return SECTION_TYPE_FLOAT;
+        case CONFIG_SENSORS:
+            *str = CONFIG_SENSORS_STR;
+            return SECTION_TYPE_FLOAT;
+        case CONFIG_WIFI:
+            *str = CONFIG_WIFI_STR;
+            return SECTION_TYPE_STRING;
+        case CONFIG_SYSTEM:
+            *str = CONFIG_SYSTEM_STR;
+            return SECTION_TYPE_FLOAT;
     }
     *str = NULL;
     return SECTION_TYPE_NONE;

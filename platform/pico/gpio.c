@@ -8,13 +8,13 @@
 #include "platform/defs.h"
 
 #if defined(RASPBERRYPI_PICO)
-#include "hardware/gpio.h"
+    #include "hardware/gpio.h"
 #elif defined(RASPBERRYPI_PICO_W)
-#include <stdio.h>
-#include "pico/cyw43_arch.h"
+    #include <stdio.h>
+    #include "pico/cyw43_arch.h"
 char buf[1];
 #else
-#error "Unsupported Pico variant"
+    #error "Unsupported Pico variant"
 #endif
 
 #include "platform/gpio.h"
@@ -22,18 +22,19 @@ char buf[1];
 void gpio_setup(u32 pin, PinMode mode) {
     gpio_init(pin);
     switch (mode) {
-    case INPUT_PULLDOWN:
-        gpio_pull_down(pin);
-        gpio_set_dir(pin, GPIO_IN);
-        break;
-    case INPUT_PULLUP:
-        gpio_pull_up(pin);
-    /* fall through */
-    case INPUT:
-        gpio_set_dir(pin, GPIO_IN);
-        break;
-    case OUTPUT:
-        gpio_set_dir(pin, GPIO_OUT);
+        case INPUT_PULLDOWN:
+            gpio_pull_down(pin);
+            gpio_set_dir(pin, GPIO_IN);
+            break;
+        case INPUT_PULLUP:
+            gpio_pull_up(pin);
+        /* fall through */
+        case INPUT:
+            gpio_set_dir(pin, GPIO_IN);
+            break;
+        case OUTPUT:
+            // TODO: should this be both in and out?
+            gpio_set_dir(pin, GPIO_OUT);
     }
 }
 

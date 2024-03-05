@@ -9,24 +9,26 @@
 #include "io/receiver.h"
 
 #include "sys/configuration.h"
+#include "sys/log.h"
 #include "sys/print.h"
 
 #include "servo.h"
 
 void servo_enable(u32 pins[], u32 num_pins) {
     print("[servo] setting up %lu servos", num_pins);
-    pwm_setup_write(pins, num_pins, 50);
+    if (!pwm_setup_write(pins, num_pins, config.general[GENERAL_SERVO_HZ]))
+        log_message(FATAL, "Failed to enable PWM output!", 500, 0, true);
     for (u32 i = 0; i < num_pins; i++)
         servo_set(pins[i], 90); // Set initial position to 90 degrees
 }
 
 void servo_set(u32 pin, u16 degree) {
-    // Ensure speed is within range 0-180deg and convert to duty cycle (0-255)
+    // Ensure speed is within range 0-180deg and convert to duty cycle (0-2**16)
     degree = clamp(degree, 0, 180);
-    pwm_write_raw(pin, (u16)((degree / 180) * 255));
+    pwm_write_raw(pin, (u16)((degree / 180.f) * UINT16_MAX));
 }
 
-void servo_test(u32 servos[], u32 num_servos, const u16 degrees[], const u32 num_degrees, const u32 pause_between_moves_ms) {
+void servo_test(u32 servos[], u32 num_servos, u16 degrees[], u32 num_degrees, u32 pause_between_moves_ms) {
     for (u32 d = 0; d < num_degrees; d++) {
         for (u32 s = 0; s < num_servos; s++) {
             if (servos[s] == (u32)config.pins[PINS_SERVO_BAY]) {
@@ -46,22 +48,22 @@ void servo_test(u32 servos[], u32 num_servos, const u16 degrees[], const u32 num
 
 void servo_getPins(u32 *servos, u32 *num_servos) {
     switch ((ControlMode)config.general[GENERAL_CONTROL_MODE]) {
-    case CTRLMODE_3AXIS_ATHR:
-    case CTRLMODE_3AXIS:
-        servos[0] = (u32)config.pins[PINS_SERVO_AIL];
-        servos[1] = (u32)config.pins[PINS_SERVO_ELE];
-        servos[2] = (u32)config.pins[PINS_SERVO_RUD];
-        servos[3] = (u32)config.pins[PINS_SERVO_BAY];
-        *num_servos = 4;
-        break;
-    case CTRLMODE_2AXIS_ATHR:
-    case CTRLMODE_2AXIS:
-    case CTRLMODE_FLYINGWING_ATHR:
-    case CTRLMODE_FLYINGWING:
-        servos[0] = (u32)config.pins[PINS_SERVO_AIL];
-        servos[1] = (u32)config.pins[PINS_SERVO_ELE];
-        servos[2] = (u32)config.pins[PINS_SERVO_BAY];
-        *num_servos = 3;
-        break;
+        case CTRLMODE_3AXIS_ATHR:
+        case CTRLMODE_3AXIS:
+            servos[0] = (u32)config.pins[PINS_SERVO_AIL];
+            servos[1] = (u32)config.pins[PINS_SERVO_ELE];
+            servos[2] = (u32)config.pins[PINS_SERVO_RUD];
+            servos[3] = (u32)config.pins[PINS_SERVO_BAY];
+            *num_servos = 4;
+            break;
+        case CTRLMODE_2AXIS_ATHR:
+        case CTRLMODE_2AXIS:
+        case CTRLMODE_FLYINGWING_ATHR:
+        case CTRLMODE_FLYINGWING:
+            servos[0] = (u32)config.pins[PINS_SERVO_AIL];
+            servos[1] = (u32)config.pins[PINS_SERVO_ELE];
+            servos[2] = (u32)config.pins[PINS_SERVO_BAY];
+            *num_servos = 3;
+            break;
     }
 }

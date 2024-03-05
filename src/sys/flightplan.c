@@ -260,4 +260,6 @@ Flightplan *flightplan_get() {
     return NULL;
 }
 
-FlightplanError flightplan_state() { return state; }
+FlightplanError flightplan_state() {
+    return state;
+}

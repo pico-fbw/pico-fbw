@@ -9,7 +9,7 @@
 #include "pico/platform.h"
 #include "pico/stdio.h"
 #ifdef RASPBERRYPI_PICO_W
-#include "pico/cyw43_arch.h"
+    #include "pico/cyw43_arch.h"
 #endif
 
 #include "platform/sys.h"
@@ -30,7 +30,9 @@ void sys_boot_end() {
     watchdog_hw->scratch[0] = WATCHDOG_TIMEOUT_MAGIC;
 }
 
-void sys_periodic() { watchdog_update(); }
+void sys_periodic() {
+    watchdog_update();
+}
 
 void __attribute__((noreturn)) sys_shutdown() {
     reset_usb_boot(0, 1); // Reboot into bootloader but don't mount mass storage
@@ -65,3 +67,5 @@ BootType sys_boot_type() {
     } else
         return BOOT_COLD; // No watchdog reboot, so a cold boot
 }
+
+// TODO: sys_info() function to return a string with system information that can be printed in api, also add to other platforms?

@@ -21,21 +21,21 @@
 
 void update() {
     switch (aircraft.mode) {
-    case MODE_DIRECT:
-        direct_update();
-        break;
-    case MODE_NORMAL:
-        normal_update();
-        break;
-    case MODE_AUTO:
-        auto_update();
-        break;
-    case MODE_TUNE:
-        tune_update();
-        break;
-    case MODE_HOLD:
-        hold_update();
-        break;
+        case MODE_DIRECT:
+            direct_update();
+            break;
+        case MODE_NORMAL:
+            normal_update();
+            break;
+        case MODE_AUTO:
+            auto_update();
+            break;
+        case MODE_TUNE:
+            tune_update();
+            break;
+        case MODE_HOLD:
+            hold_update();
+            break;
     }
 }
 
@@ -44,22 +44,22 @@ void update() {
 void changeTo(Mode newMode) {
     // Run deinit code for aircraft.mode and then run init code for newMode
     switch (aircraft.mode) {
-    case MODE_DIRECT:
-        printfbw(modes, "exiting direct mode");
-        break;
-    case MODE_NORMAL:
-        printfbw(modes, "exiting normal mode");
-        normal_deinit();
-        break;
-    case MODE_AUTO:
-        printfbw(modes, "exiting auto mode");
-        break;
-    case MODE_TUNE:
-        printfbw(modes, "exiting tune mode");
-        break;
-    case MODE_HOLD:
-        printfbw(modes, "exiting hold mode");
-        break;
+        case MODE_DIRECT:
+            printfbw(modes, "exiting direct mode");
+            break;
+        case MODE_NORMAL:
+            printfbw(modes, "exiting normal mode");
+            normal_deinit();
+            break;
+        case MODE_AUTO:
+            printfbw(modes, "exiting auto mode");
+            break;
+        case MODE_TUNE:
+            printfbw(modes, "exiting tune mode");
+            break;
+        case MODE_HOLD:
+            printfbw(modes, "exiting hold mode");
+            break;
     }
     if (aircraft.AAHRSSafe) {
         switch (newMode) {

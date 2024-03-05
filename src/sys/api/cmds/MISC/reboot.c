@@ -10,10 +10,10 @@
 
 void api_reboot(const char *cmd, const char *args) {
     switch (atoi(args)) {
-    case 1:
-        sys_reboot(true);
-    case 0:
-    default:
-        sys_reboot(false);
+        case 1:
+            sys_reboot(true);
+        case 0:
+        default:
+            sys_reboot(false);
     }
 }

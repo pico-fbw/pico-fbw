@@ -8,6 +8,9 @@ set(CMAKE_SYSTEM_PROCESSOR arm)
 set(CMAKE_OSX_ARCHITECTURES "")
 # Forward the user-set platform (normal Pico or W) to the pico-sdk
 set(PICO_BOARD ${FBW_PLATFORM})
+# The pico-sdk does require some assembly and C++ features so we need to add them to the project
+project(${PROJECT_NAME} LANGUAGES ASM CXX)
+set(CMAKE_CXX_STANDARD 17)
 
 # The below functions will be called by the main CMakeLists.txt file later, to further to set up the project for buulding
 

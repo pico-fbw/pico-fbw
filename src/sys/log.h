@@ -46,7 +46,7 @@ void log_init();
  * @param pulse_ms The pulse duration in milliseconds--only applicable for the onboard LED. (0 for no pulse)
  * @param force Whether to force the error; if left as false, errors of lower codes will take precedence.
  */
-void log_message(LogType type, char msg[64], i32 code, u32 pulse_ms, bool force);
+void log_message(LogType type, char msg[], i32 code, u32 pulse_ms, bool force);
 
 /**
  * Clears all logs of the specified type.

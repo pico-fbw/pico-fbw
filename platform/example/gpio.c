@@ -5,10 +5,14 @@
 
 #include "platform/gpio.h"
 
-void gpio_setup(u32 pin, PinMode mode) {}
+void gpio_setup(u32 pin, PinMode mode) {
+}
 
-PinState gpio_state(u32 pin) {}
+PinState gpio_state(u32 pin) {
+}
 
-void gpio_set(u32 pin, PinState state) {}
+void gpio_set(u32 pin, PinState state) {
+}
 
-void gpio_toggle(u32 pin) {}
+void gpio_toggle(u32 pin) {
+}

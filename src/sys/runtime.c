@@ -26,19 +26,19 @@ static SwitchPosition lastPos;
 
 static SwitchPosition deg_to_pos(float deg) {
     switch ((SwitchType)config.general[GENERAL_SWITCH_TYPE]) {
-    case SWITCH_TYPE_2_POS:
-        if (deg < 90)
-            return SWITCH_POSITION_LOW;
-        else
-            return SWITCH_POSITION_HIGH;
-    default:
-    case SWITCH_TYPE_3_POS:
-        if (deg < 45)
-            return SWITCH_POSITION_LOW;
-        else if (deg > 135)
-            return SWITCH_POSITION_HIGH;
-        else
-            return SWITCH_POSITION_MID;
+        case SWITCH_TYPE_2_POS:
+            if (deg < 90)
+                return SWITCH_POSITION_LOW;
+            else
+                return SWITCH_POSITION_HIGH;
+        default:
+        case SWITCH_TYPE_3_POS:
+            if (deg < 45)
+                return SWITCH_POSITION_LOW;
+            else if (deg > 135)
+                return SWITCH_POSITION_HIGH;
+            else
+                return SWITCH_POSITION_MID;
     }
 }
 
@@ -48,26 +48,26 @@ static void switch_update() {
     // be overrided by the switch
     if (lastPos != pos) {
         switch (pos) {
-        case SWITCH_POSITION_LOW:
-            aircraft.changeTo(MODE_DIRECT);
-            break;
-        case SWITCH_POSITION_MID:
-            aircraft.changeTo(MODE_NORMAL);
-            break;
-        case SWITCH_POSITION_HIGH:
-            switch ((SwitchType)config.general[GENERAL_SWITCH_TYPE]) {
-            case SWITCH_TYPE_2_POS:
-                // For 2-position switches, auto-select auto or normal mode based on if a flight plan is present or not
-                if (flightplan_was_parsed())
-                    aircraft.changeTo(MODE_AUTO);
-                else
-                    aircraft.changeTo(MODE_NORMAL);
+            case SWITCH_POSITION_LOW:
+                aircraft.changeTo(MODE_DIRECT);
                 break;
-            case SWITCH_TYPE_3_POS:
-                aircraft.changeTo(MODE_AUTO);
+            case SWITCH_POSITION_MID:
+                aircraft.changeTo(MODE_NORMAL);
                 break;
-            }
-            break;
+            case SWITCH_POSITION_HIGH:
+                switch ((SwitchType)config.general[GENERAL_SWITCH_TYPE]) {
+                    case SWITCH_TYPE_2_POS:
+                        // For 2-position switches, auto-select auto or normal mode based on if a flight plan is present or not
+                        if (flightplan_was_parsed())
+                            aircraft.changeTo(MODE_AUTO);
+                        else
+                            aircraft.changeTo(MODE_NORMAL);
+                        break;
+                    case SWITCH_TYPE_3_POS:
+                        aircraft.changeTo(MODE_AUTO);
+                        break;
+                }
+                break;
         }
         lastPos = pos;
     }

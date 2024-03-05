@@ -3,11 +3,13 @@
 #include <stdbool.h>
 #include "platform/int.h"
 
-#define PICO_FBW_VERSION "1.0.0-alpha.3"
+#ifndef PICO_FBW_VERSION // Should be defined in the root CMakeLists.txt
+    #define PICO_FBW_VERSION "Unknown"
+#endif
 #ifdef NDEBUG
-#define DEBUG_BUILD false
+    #define DEBUG_BUILD false
 #else
-#define DEBUG_BUILD true
+    #define DEBUG_BUILD true
 #endif
 
 #define PICO_FBW_API_VERSION "1.0"

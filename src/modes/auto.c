@@ -48,7 +48,7 @@ static Waypoint externWpt;
 static void (*captureCallback)(void);
 
 // Callback for when the bay needs to be closed after a user-specified delay (within the flightplan)
-static inline i32 dropCallback(u32 id) {
+i32 dropCallback() {
     auto_setBayPosition(CLOSED);
     return 0;
 }
@@ -110,18 +110,18 @@ void auto_update() {
 
     // Calculate the bearing and distance...
     switch (guidanceSource) {
-    case FPLAN:
-        // ...to the current Waypoint in the flightplan
-        bearing = calculateBearing(gps.lat, gps.lng, flightplan_get()->waypoints[currentWaypoint].lat,
-                                   flightplan_get()->waypoints[currentWaypoint].lng);
-        distance = calculateDistance(gps.lat, gps.lng, flightplan_get()->waypoints[currentWaypoint].lat,
-                                     flightplan_get()->waypoints[currentWaypoint].lng);
-        break;
-    case EXTERNAL:
-        // ...to the current Waypoint (temporarily set)
-        bearing = calculateBearing(gps.lat, gps.lng, externWpt.lat, externWpt.lng);
-        distance = calculateDistance(gps.lat, gps.lng, externWpt.lat, externWpt.lng);
-        break;
+        case FPLAN:
+            // ...to the current Waypoint in the flightplan
+            bearing = calculateBearing(gps.lat, gps.lng, flightplan_get()->waypoints[currentWaypoint].lat,
+                                       flightplan_get()->waypoints[currentWaypoint].lng);
+            distance = calculateDistance(gps.lat, gps.lng, flightplan_get()->waypoints[currentWaypoint].lat,
+                                         flightplan_get()->waypoints[currentWaypoint].lng);
+            break;
+        case EXTERNAL:
+            // ...to the current Waypoint (temporarily set)
+            bearing = calculateBearing(gps.lat, gps.lng, externWpt.lat, externWpt.lng);
+            distance = calculateDistance(gps.lat, gps.lng, externWpt.lat, externWpt.lng);
+            break;
     }
 
     // Nested PIDs; latGuid and vertGuid use gps data to command bank/pitch angles which the flight PIDs then use to actuate
@@ -135,25 +135,25 @@ void auto_update() {
     // If we've "intercepted" the waypoint,
     if (distance <= INTERCEPT_RADIUS) {
         switch (guidanceSource) {
-        case FPLAN:
-            // then advance to the next one
-            currentWaypoint++;
-            // Check if the flightplan is over
-            if (currentWaypoint > flightplan_get()->waypoint_count) {
-                // Auto mode ends here, we enter a holding pattern
-                autoComplete = true;
+            case FPLAN:
+                // then advance to the next one
+                currentWaypoint++;
+                // Check if the flightplan is over
+                if (currentWaypoint > flightplan_get()->waypoint_count) {
+                    // Auto mode ends here, we enter a holding pattern
+                    autoComplete = true;
+                    aircraft.changeTo(MODE_HOLD);
+                } else {
+                    // Load the next altitude
+                    loadWaypoint(&flightplan_get()->waypoints[currentWaypoint]);
+                }
+                break;
+            case EXTERNAL:
+                // then execute the callback function and enter a holding pattern
+                (captureCallback)();
+                guidanceSource = FPLAN;
                 aircraft.changeTo(MODE_HOLD);
-            } else {
-                // Load the next altitude
-                loadWaypoint(&flightplan_get()->waypoints[currentWaypoint]);
-            }
-            break;
-        case EXTERNAL:
-            // then execute the callback function and enter a holding pattern
-            (captureCallback)();
-            guidanceSource = FPLAN;
-            aircraft.changeTo(MODE_HOLD);
-            break;
+                break;
         }
     }
 }
@@ -167,12 +167,12 @@ void auto_set(Waypoint wpt, void (*callback)(void)) {
 
 void auto_setBayPosition(BayPosition pos) {
     switch (pos) {
-    case OPEN:
-        servo_set(config.pins[PINS_SERVO_BAY], config.control[CONTROL_DROP_DETENT_OPEN]);
-        break;
-    case CLOSED:
-    default:
-        servo_set(config.pins[PINS_SERVO_BAY], config.control[CONTROL_DROP_DETENT_CLOSED]);
-        break;
+        case OPEN:
+            servo_set(config.pins[PINS_SERVO_BAY], config.control[CONTROL_DROP_DETENT_OPEN]);
+            break;
+        case CLOSED:
+        default:
+            servo_set(config.pins[PINS_SERVO_BAY], config.control[CONTROL_DROP_DETENT_CLOSED]);
+            break;
     }
 }

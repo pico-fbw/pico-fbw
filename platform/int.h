@@ -16,7 +16,7 @@ typedef int32_t i32;
 typedef int64_t i64;
 
 #ifndef count_of
-#define count_of(a) (sizeof(a) / sizeof((a)[0]))
+    #define count_of(a) (sizeof(a) / sizeof((a)[0]))
 #endif
 
 // Clamps a value `f` between `min` and `max`.
@@ -33,5 +33,5 @@ static inline int clamp(int i, int min, int max) {
 
 // Linearly interpolates between `a` and `b` by `t`.
 #ifndef lerp
-#define lerp(a, b, t) (a + t * (b - a))
+    #define lerp(a, b, t) (a + t * (b - a))
 #endif

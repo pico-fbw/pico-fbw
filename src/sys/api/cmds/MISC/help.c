@@ -47,6 +47,6 @@ void api_help(const char *cmd, const char *args) {
         "403 Forbidden - Request not allowed in the current state\n"
         "404 Unknown Command - Command not found\n"
         "500 Internal Error - Internal error executing the requested command\n\n"
-        "More information can be found at https://pico-fbw.org/wiki/docs/API",
+        "More information can be found at https://pico-fbw.org/wiki/docs/API\n",
         PICO_FBW_API_VERSION);
 }

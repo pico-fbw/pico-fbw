@@ -112,7 +112,6 @@ typedef enum ConfigSystem {
     SYSTEM_PRINT_GPS,
     SYSTEM_PRINT_MODES,
     SYSTEM_PRINT_NETWORK,
-    SYSTEM_WATCHDOG_TIMEOUT,
 } ConfigSystem;
 
 // -- Calibration struct definition and indices --

@@ -27,13 +27,10 @@
 #include "sys/version.h"
 
 // TODO: switch to snake case for function names
-// TODO: set up clang-format/clang-tidy/clangd or whatever for styling and whatnot
 
 int main() {
     boot_begin();
-    print("\nhello and welcome to pico-fbw v%s!\nrunning on \"%s\" HAL v%s", PICO_FBW_VERSION, PLATFORM_NAME,
-          PLATFORM_HAL_VERSION);
-    log_init();
+    print("\nhello and welcome to pico-fbw v%s!\nrunning on \"%s\" v%s", PICO_FBW_VERSION, PLATFORM_NAME, PLATFORM_VERSION);
 
     // Mount filesystem and load config
     boot_set_progress(0, "Mounting filesystem");
@@ -71,26 +68,27 @@ int main() {
     float deviations[num_pins];
     receiver_get_pins(pins, &num_pins, deviations);
     boot_set_progress(15, "Enabling PWM");
+    pins[0] = config.pins[PINS_INPUT_SWITCH];
     receiver_enable(pins, num_pins);
     if (!(bool)config.general[GENERAL_SKIP_CALIBRATION]) {
         print("[boot] validating PWM calibration");
         ReceiverCalibrationStatus status = receiver_is_calibrated();
         switch (status) {
-        case RECEIVERCALIBRATION_OK:
-            break;
-        case RECEIVERCALIBRATION_INVALID:
-            print("[boot] PWM calibration was completed for a different control mode!");
-            /* fall through */
-        default:
-        case RECEIVERCALIBRATION_INCOMPLETE:
-            print("[boot] PWM calibration not found!");
-            print("[boot] calibrating now...do not touch the transmitter!");
-            if (!receiver_calibrate(pins, num_pins, deviations, 2000, 2, 3) || receiver_is_calibrated() != 0) {
-                log_message(FATAL, "PWM calibration failed!", 500, 0, true);
-            } else {
-                print("[boot] calibration successful!");
-            }
-            break;
+            case RECEIVERCALIBRATION_OK:
+                break;
+            case RECEIVERCALIBRATION_INVALID:
+                print("[boot] PWM calibration was completed for a different control mode!");
+                /* fall through */
+            default:
+            case RECEIVERCALIBRATION_INCOMPLETE:
+                print("[boot] PWM calibration not found!");
+                print("[boot] calibrating now...do not touch the transmitter!");
+                if (!receiver_calibrate(pins, num_pins, deviations, 2000, 2, 3) || receiver_is_calibrated() != 0) {
+                    log_message(FATAL, "PWM calibration failed!", 500, 0, true);
+                } else {
+                    print("[boot] calibration successful!");
+                }
+                break;
         }
     } else {
         log_message(WARNING, "PWM calibration skipped!", 500, 0, false);
@@ -102,7 +100,7 @@ int main() {
     u32 servos[num_servos];
     servo_getPins(servos, &num_servos);
     servo_enable(servos, num_servos);
-    const u16 degrees[] = DEFAULT_SERVO_TEST;
+    u16 degrees[] = DEFAULT_SERVO_TEST;
     servo_test(servos, num_servos, degrees, NUM_DEFAULT_SERVO_TEST, DEFAULT_SERVO_TEST_PAUSE_MS);
 
     // ESC
@@ -140,9 +138,8 @@ int main() {
     // AAHRS
     boot_set_progress(45, "Initializing AAHRS");
     if (!aahrs.init()) {
-        // If AAHRS is calibrated only throw an error as we could be in flight and we want to finish the boot,
-        // but if it's not calibrated we shouldn't be in flight, thus we should throw a fatal error so calibration does not
-        // commence
+        // If AAHRS is calibrated: severity level is only an error as we could be in flight and we want to finish the boot,
+        // If AAHRS is not calibrated: severity level is a fatal error to help point the user in the right direction
         log_message(aahrs.isCalibrated ? ERROR : FATAL, "AAHRS initialization failed!", 1000, 0, false);
     }
     if (!(bool)config.general[GENERAL_SKIP_CALIBRATION]) {
@@ -166,8 +163,7 @@ int main() {
         boot_set_progress(65, "Initializing GPS");
         if (gps.init()) {
             print("[boot] GPS ok");
-            // We don't set the GPS safe just yet, communications have been established but we are still unsure if the data is
-            // okay
+            // We don't set the GPS safe just yet, comms are good but we are still unsure if the data is good
             log_message(LOG, "GPS has no signal.", 2000, 0, false);
         } else {
             log_message(ERROR, "GPS not found!", 2000, 0, false);

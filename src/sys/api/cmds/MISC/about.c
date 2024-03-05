@@ -12,7 +12,7 @@
 
 void api_about(const char *cmd, const char *args) {
     printraw("pico-fbw v%s, API v%s, Wi-Fly Unsupported, \"%s\" HAL v%s\n\n", PICO_FBW_VERSION, PICO_FBW_API_VERSION,
-             PLATFORM_NAME, PLATFORM_HAL_VERSION);
+             PLATFORM_NAME, PLATFORM_VERSION);
     printraw("Copyright (C) 2023-2024 pico-fbw\n\n"
              "This program is free software: you can redistribute it and/or modify "
              "it under the terms of the GNU Affero General Public License as published by "

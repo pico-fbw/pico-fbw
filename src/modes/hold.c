@@ -55,7 +55,7 @@ static double rollSet;
 static PIDController vertGuid;
 
 // Callback for when a turnaround should be completed in a holding pattern
-static i32 turnAround(u32 id) {
+static i32 turnAround(CallbackID id) {
     // Get current track (beginning of the turn)
     oldTrack = gps.track;
     // Set our target heading based on this (with wrap protection)
@@ -64,7 +64,7 @@ static i32 turnAround(u32 id) {
         targetTrack -= 360;
     }
     turnStatus = HOLD_TURN_INPROGRESS;
-    return 0; // Tells Pico to not reschedule alarm, we will wait until the turn is complete to do that
+    return 0; // Don't reschedule alarm, we will wait until the turn is complete to do that
 }
 
 bool hold_init() {
@@ -92,43 +92,42 @@ void hold_update() {
     throttle.update();
 
     switch (turnStatus) {
-    case HOLD_TURN_BEGUN:
-        // Slowly ease into the turn
-        if (rollSet <= HOLD_TURN_BANK_ANGLE) {
-            rollSet += (HOLD_TURN_BANK_ANGLE * config.control[CONTROL_RUDDER_SENSITIVITY]);
-        } else {
-            // We've reached the desired angle, now we need to wait for the turn to complete
-            turnStatus = HOLD_TURN_INPROGRESS;
-        }
-        break;
-    case HOLD_TURN_INPROGRESS:
-        // Wait until it is time to decrease the turn
-        if (fabsf(targetTrack - gps.track) <= HOLD_HEADING_DECREASE_WITHIN) {
-            turnStatus = HOLD_TURN_ENDING;
-        }
-        break;
-    case HOLD_TURN_ENDING:
-        // Slowly decrease the turn
-        if (rollSet >= HOLD_TURN_SLOW_BANK_ANGLE) {
-            rollSet -= (HOLD_TURN_BANK_ANGLE * config.control[CONTROL_RUDDER_SENSITIVITY]);
-        }
-        // Move on to stabilization once we've intercepted the target heading
-        if (fabsf(targetTrack - gps.track) <= HOLD_HEADING_INTERCEPT_WITHIN) {
-            turnStatus = HOLD_TURN_STABILIZING;
-        }
-        break;
-    case HOLD_TURN_STABILIZING:
-        // Stabilize the turn back to 0 degrees of bank, then mark it as completed (unscheduled)
-        if (rollSet >= 0) {
-            rollSet -= (HOLD_TURN_BANK_ANGLE * config.control[CONTROL_RUDDER_SENSITIVITY]);
-        }
-        break;
-    case HOLD_TURN_UNSCHEDULED:
-        if (callback_in_ms((HOLD_TIME_PER_LEG_S * 1000), turnAround) >= 0) {
+        case HOLD_TURN_BEGUN:
+            // Slowly ease into the turn
+            if (rollSet <= HOLD_TURN_BANK_ANGLE) {
+                rollSet += (HOLD_TURN_BANK_ANGLE * config.control[CONTROL_RUDDER_SENSITIVITY]);
+            } else {
+                // We've reached the desired angle, now we need to wait for the turn to complete
+                turnStatus = HOLD_TURN_INPROGRESS;
+            }
+            break;
+        case HOLD_TURN_INPROGRESS:
+            // Wait until it is time to decrease the turn
+            if (fabsf(targetTrack - gps.track) <= HOLD_HEADING_DECREASE_WITHIN) {
+                turnStatus = HOLD_TURN_ENDING;
+            }
+            break;
+        case HOLD_TURN_ENDING:
+            // Slowly decrease the turn
+            if (rollSet >= HOLD_TURN_SLOW_BANK_ANGLE) {
+                rollSet -= (HOLD_TURN_BANK_ANGLE * config.control[CONTROL_RUDDER_SENSITIVITY]);
+            }
+            // Move on to stabilization once we've intercepted the target heading
+            if (fabsf(targetTrack - gps.track) <= HOLD_HEADING_INTERCEPT_WITHIN) {
+                turnStatus = HOLD_TURN_STABILIZING;
+            }
+            break;
+        case HOLD_TURN_STABILIZING:
+            // Stabilize the turn back to 0 degrees of bank, then mark it as completed (unscheduled)
+            if (rollSet >= 0) {
+                rollSet -= (HOLD_TURN_BANK_ANGLE * config.control[CONTROL_RUDDER_SENSITIVITY]);
+            }
+            break;
+        case HOLD_TURN_UNSCHEDULED:
+            callback_in_ms((HOLD_TIME_PER_LEG_S * 1000), turnAround);
             turnStatus = HOLD_AWAITING_TURN;
-        }
-        break;
-    default:
-        break;
+            break;
+        default:
+            break;
     }
 }

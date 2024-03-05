@@ -131,7 +131,7 @@ bool pwm_setup_read(u32 pins[], u32 num_pins) {
     return true;
 }
 
-void pwm_setup_write(u32 pins[], u32 num_pins, u32 freq) {
+bool pwm_setup_write(u32 pins[], u32 num_pins, u32 freq) {
     for (u32 i = 0; i < num_pins; i++) {
         gpio_set_function(pins[i], GPIO_FUNC_PWM);
         // PWM clock is system clock / 16
@@ -142,16 +142,20 @@ void pwm_setup_write(u32 pins[], u32 num_pins, u32 freq) {
         pwm_config_set_wrap(&config, wrap);
         pwm_init(pwm_gpio_to_slice_num(pins[i]), &config, true);
     }
+    return true;
 }
 
 i32 pwm_read_raw(u32 pin) {
     // Find the pin's state machine
     for (u32 i = 0; i < count_of(states); i++) {
         if (states[i].pin == pin) {
-            return states[i].pulsewidth;
+            return (u16)((states[i].pulsewidth * UINT16_MAX) / states[i].period);
         }
     }
     return -1; // Pin not found
 }
 
-void pwm_write_raw(u32 pin, u16 duty) { pwm_set_gpio_level(pin, (duty * wrap) / 255); }
+// TODO: the write func has been updated, does this still work?
+void pwm_write_raw(u32 pin, u16 duty) {
+    pwm_set_gpio_level(pin, (duty * wrap) / UINT16_MAX);
+}

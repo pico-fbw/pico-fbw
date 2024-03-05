@@ -8,7 +8,6 @@
  * @param pins array of pins to setup for reading PWM signals
  * @param num_pins number of pins in `pins[]`
  * @return true if all pins were successfully set up
- * @note This is a low-level platform function, you are probably looking to use `receiver_enable()` instead.
  */
 bool pwm_setup_read(u32 pins[], u32 num_pins);
 
@@ -17,27 +16,23 @@ bool pwm_setup_read(u32 pins[], u32 num_pins);
  * @param pins array of pins to setup for writing PWM signals
  * @param num_pins number of pins in `pins[]`
  * @param freq frequency of PWM signal in hz, typically 50
- * @note This is a low-level platform function, you are probably looking to use something like `servo_enable()` or
- * `esc_enable()` instead.
+ * @return true if all pins were successfully set up
  */
-void pwm_setup_write(u32 pins[], u32 num_pins, u32 freq);
+bool pwm_setup_write(u32 pins[], u32 num_pins, u32 freq);
 
 /**
  * Reads the PWM signal on `pin`.
  * @param pin pin to read PWM signal from
- * @return the pulsewidth of the PWM signal in ___, or -1 if the pin is invalid
+ * @return the duty cycle of the PWM signal (0-2^16), or -1 if the pin is invalid
+ * @note The duty cycle is actually returned as a `u16` but is cast to `i32` to allow for the -1 return value
  * @note `pin` must have been previously set up to read PWM signals using `pwm_setup_read()`
- * @note This is a low-level platform function, you are probably looking to use `receiver_get()` instead.
  */
 i32 pwm_read_raw(u32 pin);
-
-// TODO: what is the pulsweidth measured in? ^
 
 /**
  * Writes a PWM signal to `pin`.
  * @param pin pin to write PWM signal to
- * @param value the value to write to the PWM signal (0-255)
+ * @param value the duty cycle to write to the PWM signal (0-2^16)
  * @note `pin` must have been previously set up to write PWM signals using `pwm_setup_write()`
- * @note This is a low-level platform function, you are probably looking to use `servo_set()` or `esc_set()` instead.
  */
 void pwm_write_raw(u32 pin, u16 duty);

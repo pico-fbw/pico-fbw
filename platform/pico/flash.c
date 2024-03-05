@@ -62,8 +62,12 @@ static int flash_erase(const struct lfs_config *c, lfs_block_t block) {
 static int flash_sync(const struct lfs_config *c) {
     // Cache is automatically flushed in flash_range_program() so nothing to do here
     return LFS_ERR_OK;
-    (void)c; // Supress unused parameter warning; the config struct is required by littlefs but not used here
+    (void)c; // Supress unused parameter warning
 }
+
+bool flash_setup() {
+    return true;
+} // Nothing to do here
 
 struct lfs_config lfs_cfg = {
     .read = flash_read,
@@ -76,6 +80,7 @@ struct lfs_config lfs_cfg = {
     .block_count = FS_SIZE / FLASH_SECTOR_SIZE, // Number of blocks in the filesystem (64 blocks make up 256K FS_SIZE)
     .cache_size = FLASH_SECTOR_SIZE / 4,        // Must be a multiple of the block size (1024 bytes)
     .lookahead_size = 32,
-    .block_cycles = 500};
+    .block_cycles = 500,
+};
 
 lfs_t lfs;

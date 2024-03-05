@@ -5,8 +5,11 @@
 
 #include "platform/stdio.h"
 
-void stdio_setup() {}
+void stdio_setup() {
+}
 
-char *stdin_read() {}
+char *stdin_read() {
+}
 
-int __printflike(1, 2) wrap_printf(const char *fmt, ...) {}
+int __printflike(1, 2) wrap_printf(const char *fmt, ...) {
+}
