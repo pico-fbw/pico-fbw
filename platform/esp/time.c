@@ -11,15 +11,12 @@
 
 #include "platform/time.h"
 
-typedef struct CallbackData {
-    Callback callback;
-    CallbackID id;
-} CallbackData;
-
 // Wrapper function to convert the callback signature from `i32 (*)()` to `esp_timer_cb_t` and handle reschedule logic
 static void callback_to_esp_timer_cb_t(void *arg) {
     // Derive the original callback function and its id from the data (passed in when creating the timer)
     CallbackData *data = (CallbackData *)arg;
+    if (!data)
+        return;
     // Run the specified callback function which should return either zero or a number of milliseconds to reschedule the
     // callback
     i32 reschedule = data->callback();
@@ -27,8 +24,6 @@ static void callback_to_esp_timer_cb_t(void *arg) {
         esp_timer_start_once(data->id, reschedule * 1000);
     } else {
         esp_timer_delete(data->id);
-        // Since the underlying timer has been deleted, the id is no longer valid
-        data->id = NULL;
         free(data);
     }
 }
@@ -37,7 +32,7 @@ u64 time_us() {
     return esp_timer_get_time();
 }
 
-CallbackID *callback_in_ms(u32 ms, Callback callback) {
+CallbackData *callback_in_ms(u32 ms, Callback callback) {
     // Create a new CallbackData to store the callback with its corresponding id (so it can be used later to reschedule/cancel
     // the callback)
     CallbackData *data = malloc(sizeof(CallbackData));
@@ -62,14 +57,15 @@ CallbackID *callback_in_ms(u32 ms, Callback callback) {
         return NULL;
     }
     data->id = handle;
-    return &data->id;
+    return data;
 }
 
-void cancel_callback(CallbackID *id) {
-    // Check if the id is valid (it is possible that the callback has been automatically deleted); this prevents a double free
-    if (id) {
-        esp_timer_stop(*id);
-        esp_timer_delete(*id);
+void cancel_callback(CallbackData *data) {
+    // Check if the data is valid (it is possible that the callback has been automatically deleted); this prevents a double free
+    if (data) {
+        esp_timer_stop(data->id);
+        esp_timer_delete(data->id);
+        free(data);
     }
 }
 

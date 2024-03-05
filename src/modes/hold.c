@@ -55,7 +55,7 @@ static double rollSet;
 static PIDController vertGuid;
 
 // Callback for when a turnaround should be completed in a holding pattern
-static i32 turnAround(CallbackID id) {
+static i32 turnAround() {
     // Get current track (beginning of the turn)
     oldTrack = gps.track;
     // Set our target heading based on this (with wrap protection)

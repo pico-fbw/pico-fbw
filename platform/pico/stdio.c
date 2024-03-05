@@ -27,22 +27,17 @@ char *stdin_read() {
             break;
         } else {
             // Recieved a valid character, resize the buffer and store it
-            buf = realloc(buf, (i + 1) * sizeof(char));
-            // TODO: reimpl tryrealloc
-            if (!buf) {
-                free(buf);
+            buf = try_realloc(buf, (i + 1) * sizeof(char));
+            if (!buf)
                 return NULL;
-            }
             buf[i++] = c;
         }
     }
     // Done reading, null-terminate the buffer if we read a line
     if (i != 0) {
-        buf = realloc(buf, (i + 1) * sizeof(char));
-        if (!buf) {
-            free(buf);
+        buf = try_realloc(buf, (i + 1) * sizeof(char));
+        if (!buf)
             return NULL; // Nothing was read
-        }
         buf[i] = '\0';
     }
     return buf;

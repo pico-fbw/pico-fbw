@@ -33,10 +33,9 @@ jobs:
       with:
         submodules: 'recursive'
 
-    - name: Set up Ninja
-      uses: ashutoshvarma/setup-ninja@master
-      with:
-        version: 1.11.1
+    - name: Set up build environment
+      shell: bash
+      run: sudo apt-get install ccache cmake ninja-build
 
     - name: Check cache (esp)
       if: matrix.PLATFORM == 'esp32'

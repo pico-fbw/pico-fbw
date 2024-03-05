@@ -10,8 +10,6 @@
 
 #include "platform/stdio.h"
 
-// this might be done for us?
-
 void stdio_setup() {
     // TODO: are both usb and uart initialized as stdout sources automatically (see esp_vfs_console_register,
     // esp_vfs_dev_uart_use_driver) ?
@@ -27,23 +25,17 @@ char *stdin_read() {
             break;
         } else {
             // Recieved a valid character, resize the buffer and store it
-            // TODO: use try_realloc
-            buf = realloc(buf, (i + 1) * sizeof(char));
-            if (!buf) {
-                free(buf);
+            buf = try_realloc(buf, (i + 1) * sizeof(char));
+            if (!buf)
                 return NULL;
-            }
             buf[i++] = c;
-            // TODO: maybe delay a small amount to allow for more characters to be read
         }
     }
     // Done reading, null-terminate the buffer if we read a line
     if (i != 0) {
-        buf = realloc(buf, (i + 1) * sizeof(char));
-        if (!buf) {
-            free(buf);
+        buf = try_realloc(buf, (i + 1) * sizeof(char));
+        if (!buf)
             return NULL; // Nothing was read
-        }
         buf[i] = '\0';
     }
     return buf;

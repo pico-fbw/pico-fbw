@@ -4,11 +4,16 @@
 #include "platform/defs.h"
 #include "platform/int.h"
 
+typedef i32 (*Callback)();
+
+typedef struct CallbackData {
+    Callback callback;
+    CallbackID id;
+} CallbackData;
+
 typedef struct Timestamp {
     u64 us;
 } Timestamp;
-
-typedef i32 (*Callback)();
 
 /**
  * @return the current 64-bit time since the system powered on, in microseconds
@@ -19,18 +24,18 @@ u64 time_us();
  * Schedules a callback to be called in `ms` milliseconds.
  * @param ms the number of milliseconds to wait before calling the callback
  * @param callback the callback to call
- * @return the ID of the callback, which can be used to cancel the callback, or NULL if the callback could not be scheduled
+ * @return some `CallbackData` that can be used to cancel the callback, or NULL if the callback could not be scheduled
  * @note The Callback function must have the signature `i32 (*)()`, aka it must return an `i32` and be a function.
  * Within the function, returning a positive value will reschedule the callback in that many milliseconds, and returning 0 will
  * not reschedule the callback.
  */
-CallbackID *callback_in_ms(u32 ms, Callback callback);
+CallbackData *callback_in_ms(u32 ms, Callback callback);
 
 /**
  * Cancels a callback with the given ID.
  * @param id the ID of the callback to cancel
  */
-void cancel_callback(CallbackID *id);
+void cancel_callback(CallbackData *data);
 
 /**
  * Sleeps for `us` microseconds, blocking the current thread.

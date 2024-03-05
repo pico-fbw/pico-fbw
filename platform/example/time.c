@@ -8,10 +8,10 @@
 u64 time_us() {
 }
 
-CallbackID *callback_in_ms(u32 ms, Callback callback) {
+CallbackData *callback_in_ms(u32 ms, Callback callback) {
 }
 
-void cancel_callback(CallbackID *id) {
+void cancel_callback(CallbackData *data) {
 }
 
 void sleep_us_blocking(u64 us) {

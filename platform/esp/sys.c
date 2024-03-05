@@ -14,8 +14,8 @@
 #define THREAD_DELAY_MS 50 // The amount of time to allow for other RTOS tasks to run
 
 void sys_boot_begin() {
-    return;
-} // Nothing to do here
+    return; // Nothing to do here
+}
 
 void sys_boot_end() {
     // Watchdog is automatically initialized by bootloader, so we just need to subscribed to it

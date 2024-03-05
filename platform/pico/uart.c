@@ -78,22 +78,16 @@ char *uart_read(u32 tx, u32 rx) {
         u32 i = 0;
         while (uart_is_readable_within_us(uart, UART_TIMEOUT_US)) {
             char c = uart_getc(uart);
-            if (c == '\r' || c == '\n') {
+            if (c == '\r' || c == '\n')
                 break;
-            }
-            // TODO: reimpl tryrealloc
-            buf = realloc(buf, (i + 1) * sizeof(char));
-            if (!buf) {
-                free(buf);
+            buf = try_realloc(buf, (i + 1) * sizeof(char));
+            if (!buf)
                 return NULL;
-            }
             buf[i++] = c;
         }
-        buf = realloc(buf, (i + 1) * sizeof(char));
-        if (!buf) {
-            free(buf);
+        buf = try_realloc(buf, (i + 1) * sizeof(char));
+        if (!buf)
             return NULL;
-        }
         buf[i] = '\0';
     }
     return buf;
