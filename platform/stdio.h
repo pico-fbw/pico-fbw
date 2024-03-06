@@ -31,7 +31,7 @@ int __printflike(1, 2) wrap_printf(const char *fmt, ...);
  * @param size the new size of the buffer
  * @return a pointer to the new buffer if successful, or NULL if the reallocation failed
  */
-inline char *try_realloc(char *buf, size_t size) {
+static inline char *try_realloc(char *buf, size_t size) {
     char *nbuf = (char *)realloc(buf, size);
     if (!nbuf)
         free(buf);

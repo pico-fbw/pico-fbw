@@ -10,6 +10,8 @@
 
 #include "get_input.h"
 
+// FIXME: this command should account for the current control mode (and not simply try and read from uninitialized pins)
+
 i32 api_get_input(const char *cmd, const char *args) {
     printraw("{\"ail\":%f,\"elev\":%f,\"rud\":%f,\"thr\":%f,\"switch\":%f}\n",
              receiver_get(config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEG),

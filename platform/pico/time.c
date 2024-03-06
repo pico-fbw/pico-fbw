@@ -3,6 +3,8 @@
  * Licensed under the GNU AGPL-3.0
  */
 
+#include <stdio.h>
+
 #include <stdlib.h>
 #include "pico/time.h"
 
@@ -16,7 +18,7 @@ static i64 callback_to_sdk(alarm_id_t id, void *udata) {
     i32 reschedule = data->callback();
     if (reschedule == 0)
         free(data); // Free the data if the callback is not rescheduled
-    return (i64)reschedule;
+    return (i64)(reschedule * 1000); // Convert to microseconds
     (void)id; // Unused
 }
 

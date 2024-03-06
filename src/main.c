@@ -51,24 +51,23 @@ int main() {
         if (versionCheck < -2) {
             log_message(FATAL, "Failed to run update checker!", 250, 0, true);
         } else {
-            print("[update] performing a system update from v%s to v%s, please wait...",
+            print("[boot] performing a system update from v%s to v%s, please wait...",
                   (strcmp(version, "") == 0) ? "0.0.0" : version, PICO_FBW_VERSION);
             // << Insert system update code here, if applicable >>
             // Update flash with new version
             version_save();
-            print("[update] done!");
+            print("[bot] update done!");
         }
     } else {
-        print("[update] no updates required");
+        print("[boot] no updates required");
     }
 
-    // PWM (in)
+    // Receiver
     u32 num_pins = 5; // Maximum amount is 5 pins, may be overridden
     u32 pins[num_pins];
     float deviations[num_pins];
     receiver_get_pins(pins, &num_pins, deviations);
     boot_set_progress(15, "Enabling PWM");
-    pins[0] = config.pins[PINS_INPUT_SWITCH];
     receiver_enable(pins, num_pins);
     if (!(bool)config.general[GENERAL_SKIP_CALIBRATION]) {
         print("[boot] validating PWM calibration");

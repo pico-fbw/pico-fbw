@@ -28,9 +28,9 @@ static LogEntry lastLogEntry;
 /* --- LED --- */
 
 static LogEntry lastDisplayedEntry;
-static CallbackID *pulseCallback;
+static CallbackData *pulseCallback;
 static u32 pulseMs = 0;
-static CallbackID *toggleCallback;
+static CallbackData *toggleCallback;
 static u32 toggleMs = 0;
 
 static void led_reset() {

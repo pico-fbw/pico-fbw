@@ -32,7 +32,7 @@ i32 api_test_pwm(const char *cmd, const char *args) {
                 return 400;
             numBridges = numArgs / 2;
         }
-        const u16 testDegrees[] = {0, 45, 90, 135, 180};
+        const u16 testDegrees[] = {23, 67, 82, 153, 169};
         // For every bridge, set the degree value from the predefined set and compare the read value
         for (u32 i = 0; i < numBridges; i++) {
             printraw("[test] testing pin combo %d:%d\n", in[i], out[i]);
