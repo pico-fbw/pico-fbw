@@ -7,9 +7,10 @@ set(CMAKE_TOOLCHAIN_FILE ${IDF_PATH}/tools/cmake/toolchain-${FBW_PLATFORM}.cmake
 set(CMAKE_EXECUTABLE_SUFFIX .elf)
 
 function(setup_before_subdirs)
-    if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    if (CMAKE_BUILD_TYPE STREQUAL "Release")
         set(SDKCONFIG_DEFAULTS_PATH ${CMAKE_SOURCE_DIR}/platform/esp/resources/sdkconfig.defaults)
     else()
+        # For non-release builds we use a different set of defaults (namely just with more logging enabled)
         set(SDKCONFIG_DEFAULTS_PATH ${CMAKE_SOURCE_DIR}/platform/esp/resources/sdkconfig.defaults.debug)
     endif()
     idf_build_process(${FBW_PLATFORM}

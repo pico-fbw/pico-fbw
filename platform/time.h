@@ -8,7 +8,7 @@ typedef i32 (*Callback)();
 
 typedef struct CallbackData {
     Callback callback;
-    CallbackID id;
+    __callback_id_t id;
 } CallbackData;
 
 typedef struct Timestamp {

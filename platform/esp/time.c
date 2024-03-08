@@ -3,7 +3,6 @@
  * Licensed under the GNU AGPL-3.0
  */
 
-#include <stdlib.h>
 #include "esp_sleep.h" // https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32/api-reference/system/sleep_modes.html
 #include "esp_timer.h" // https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32/api-reference/system/esp_timer.html
 #include "freertos/FreeRTOS.h"

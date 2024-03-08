@@ -3,7 +3,7 @@
 #include "esp_timer.h"
 #include "sdkconfig.h"
 
-typedef esp_timer_handle_t CallbackID;
+typedef esp_timer_handle_t __callback_id_t;
 
 // Flight control I/O pins
 #define PIN_INPUT_AIL 15

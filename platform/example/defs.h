@@ -1,6 +1,6 @@
 #pragma once
 
-typedef x CallbackID;
+typedef x __callback_id_t;
 
 // TODO: add more example defs (whatever is min required, and explain what more can be added)
 

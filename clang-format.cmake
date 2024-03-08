@@ -11,9 +11,11 @@ if (CLANG_FORMAT_EXE)
         ${ALL_SOURCE_FILES}
         COMMENT "Running clang-format on all source files"
     )
+    set(FBW_FORMAT CACHE BOOL OFF)
     if (FBW_FORMAT)
+        message("Code will be formatted on build.")
         add_dependencies(${PROJECT_NAME} clang-format)
     endif()
 else()
-    message(WARNING "clang-format not found. Code will not be formatted.")
+    message("clang-format not found. Code will not be formatted.")
 endif()

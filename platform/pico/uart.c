@@ -3,7 +3,6 @@
  * Licensed under the GNU AGPL-3.0
  */
 
-#include <stdlib.h>
 #include <string.h>
 
 #include "platform/stdio.h"

@@ -1,5 +1,3 @@
-include(clang-format.cmake)
-
 add_library(fbw_lib
     fusion/acc.c
     fusion/approx.c

@@ -21,6 +21,7 @@ endif()
 message("Building for platform: ${FBW_PLATFORM}")
 message("Using platform directory: platform/${PLATFORM_DIR}")
 include(platform/${PLATFORM_DIR}/resources/${PLATFORM_DIR}.cmake)
+include(clang-format.cmake)
 
 # Define the project, the languages it uses, and the version
 project(pico-fbw LANGUAGES C)

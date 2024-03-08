@@ -3,7 +3,7 @@
 #include "pico/config.h" // For platform-specific defines (e.g. RASPBERRYPI_PICO_W)
 #include "pico/time.h"
 
-typedef alarm_id_t CallbackID;
+typedef alarm_id_t __callback_id_t;
 
 // Flight control I/O pins
 #define PIN_INPUT_AIL 1
