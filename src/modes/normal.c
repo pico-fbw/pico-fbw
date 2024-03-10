@@ -31,12 +31,11 @@ void normal_init() {
 
 void normal_update() {
     // Refresh input data from rx
-    rollInput = receiver_get((u32)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEG) - 90;
-    pitchInput = receiver_get((u32)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEG) - 90;
-    if (receiver_has_rud()) {
-        yawInput = receiver_get((u32)config.pins[PINS_INPUT_RUD], RECEIVER_MODE_DEG) - 90;
-    }
-    throttleSet = receiver_get((u32)config.pins[PINS_INPUT_THROTTLE], RECEIVER_MODE_ESC);
+    rollInput = receiver_get((u32)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE) - 90;
+    pitchInput = receiver_get((u32)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEGREE) - 90;
+    if (receiver_has_rud())
+        yawInput = receiver_get((u32)config.pins[PINS_INPUT_RUD], RECEIVER_MODE_DEGREE) - 90;
+    throttleSet = receiver_get((u32)config.pins[PINS_INPUT_THROTTLE], RECEIVER_MODE_PERCENT);
     // This comment is a tribute to the world's stupidest bug where the above code was set to READ from the SERVOS
     // and it took me much longer than I'm willing to admit to find (cue the facepalms, I know ._.)
 

@@ -45,11 +45,12 @@ static inline float pwmOffsetOf(u32 pin) {
 }
 
 static inline float readRaw(u32 pin, ReceiverMode mode) {
-    i32 duty = pwm_read_raw(pin);
-    if (duty < 0)
+    float pulsewidth = pwm_read_raw(pin);
+    if (pulsewidth < 0)
         return INFINITY; // Invalid pin
-    // Map duty cycle (from 0-2^16) to either 0-180.f or 0-100.f based on mode
-    return (mode == RECEIVER_MODE_DEG) ? (180.0f * duty) / UINT16_MAX : (100.0f * duty) / UINT16_MAX;
+    // Map pulsewidth to either 0-180.f (degree) or 0-100.f (percent)
+    // Pulsewidths should be between 1000-2000μs for servos
+    return mode == RECEIVER_MODE_DEGREE ? (pulsewidth - 1000.0f) * 0.18f : (pulsewidth - 1000.0f) * 0.10f;
 }
 
 void receiver_enable(u32 pins[], u32 num_pins) {
@@ -60,7 +61,10 @@ void receiver_enable(u32 pins[], u32 num_pins) {
 
 // TODO: err handling for invalid pin/error reading
 float receiver_get(u32 pin, ReceiverMode mode) {
-    return readRaw(pin, mode) + pwmOffsetOf(pin);
+    float raw = readRaw(pin, mode);
+    if (raw == INFINITY)
+        return INFINITY;
+    return raw + pwmOffsetOf(pin);
 }
 
 bool receiver_calibrate(u32 pins[], u32 num_pins, float deviations[], u32 num_samples, u32 sample_delay_ms, u32 run_times) {
@@ -78,8 +82,12 @@ bool receiver_calibrate(u32 pins[], u32 num_pins, float deviations[], u32 num_sa
             print("[pwm] running trial %lu out of %lu", t + 1, run_times);
             float total_difference = 0.0f;
             for (u32 s = 0; s < num_samples; s++) {
-                total_difference +=
-                    (deviation - (isThrottle ? readRaw(pin, RECEIVER_MODE_ESC) : readRaw(pin, RECEIVER_MODE_DEG)));
+                float read = isThrottle ? readRaw(pin, RECEIVER_MODE_PERCENT) : readRaw(pin, RECEIVER_MODE_DEGREE);
+                if (read == INFINITY) {
+                    print("[pwm] ERROR: [FBW-500] pin %lu is not a valid pin to calibrate!", pin);
+                    return false;
+                }
+                total_difference += deviation - read;
                 sleep_ms_blocking(sample_delay_ms);
             }
             // Check to see if the deviation is 270 (this value occurs with a pulsewidth of 0 or 1, aka not connected)

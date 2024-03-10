@@ -4,17 +4,17 @@
 */
 
 #include <math.h>
+#include "platform/int.h"
 
 #include "nav.h"
 
-static inline long double toRadians(long double degrees) {
-    return degrees * M_PI / 180.0;
-}
+#define EARTH_RADIUS_KM 6371  // Earth's radius in kilometers
+#define EARTH_RADIUS_M (EARTH_RADIUS_KM * 1000) // Earth's radius in meters
 
 double calculateBearing(long double latA, long double lonA, long double latB, long double lonB) {
-    long double thetaA = toRadians(latA);
-    long double thetaB = toRadians(latB);
-    long double deltaL = toRadians(lonB - lonA);
+    long double thetaA = radians(latA);
+    long double thetaB = radians(latB);
+    long double deltaL = radians(lonB - lonA);
 
     double X = cos((double)thetaB) * sin((double)deltaL);
     double Y = cos((double)thetaA) * sin((double)thetaB) - sin((double)thetaA) * cos((double)thetaB) * cos((double)deltaL);
@@ -28,10 +28,10 @@ double calculateBearing(long double latA, long double lonA, long double latB, lo
 }
 
 double calculateDistance(long double latA, long double lonA, long double latB, long double lonB) {
-    long double thetaA = toRadians(latA);
-    long double thetaB = toRadians(latB);
-    long double deltaT = toRadians(latB - latA);
-    long double deltaL = toRadians(lonB - lonA);
+    long double thetaA = radians(latA);
+    long double thetaB = radians(latB);
+    long double deltaT = radians(latB - latA);
+    long double deltaL = radians(lonB - lonA);
 
     double a = sin((double)deltaT / 2) * sin((double)deltaT / 2) +
                cos((double)thetaA) * cos((double)thetaB) *

@@ -23,8 +23,8 @@
 #include "flight.h"
 
 static PIDController roll_c, pitch_c, yaw_c;
-static u16 ailOut, elevOut, rudOut;
-static i16 lElevonOut, rElevonOut;
+static float ailOut, elevOut, rudOut;
+static float lElevonOut, rElevonOut;
 
 static float yawOutput;
 static float flightYawSetpoint;
@@ -94,8 +94,8 @@ void flight_update(double roll, double pitch, double yaw, bool override) {
     pid_update(&roll_c, roll, (double)aahrs.roll);
     pid_update(&pitch_c, pitch, (double)aahrs.pitch);
     // All control modes require the roll/pitch PIDs to be mapped to a servo output (0-180)
-    ailOut = (u16)(((bool)config.pins[PINS_REVERSE_ROLL] ? -1 : 1) * (int)roll_c.out + 90);
-    elevOut = (u16)(((bool)config.pins[PINS_REVERSE_PITCH] ? -1 : 1) * (int)pitch_c.out + 90);
+    ailOut = (((bool)config.pins[PINS_REVERSE_ROLL] ? -1 : 1) * (float)roll_c.out + 90.f);
+    elevOut = (((bool)config.pins[PINS_REVERSE_PITCH] ? -1 : 1) * (float)pitch_c.out + 90.f);
     // Now things get specific to each mode
     switch ((ControlMode)config.general[GENERAL_CONTROL_MODE]) {
         // Compute yaw damper output for 3axis (rudder-enabled) control modes
@@ -111,15 +111,14 @@ void flight_update(double roll, double pitch, double yaw, bool override) {
                 yawDamperOn = false;
             } else {
                 // Yaw damper enabled
-                if (!yawDamperOn) {
+                if (!yawDamperOn)
                     flightYawSetpoint = aahrs.yaw; // Yaw damper was just enabled, create our setpoint
-                }
                 pid_update(&yaw_c, flightYawSetpoint, aahrs.yaw);
                 yawOutput = (float)yaw_c.out;
                 yawDamperOn = true;
             }
 
-            rudOut = (u16)(((bool)config.pins[PINS_REVERSE_YAW] ? -1 : 1) * (int)yawOutput + 90);
+            rudOut = (((bool)config.pins[PINS_REVERSE_YAW] ? -1 : 1) * (float)yawOutput + 90.f);
             servo_set((u32)config.pins[PINS_SERVO_RUD], rudOut);
         }
         /* fall through */
@@ -142,17 +141,17 @@ void flight_update(double roll, double pitch, double yaw, bool override) {
                 config.control[CONTROL_ELEVON_MIXING_GAIN];
 
             // Limit elevon outputs
-            if (abs(lElevonOut) > config.control[CONTROL_MAX_ELEVON_DEFLECTION]) {
+            if (fabsf(lElevonOut) > config.control[CONTROL_MAX_ELEVON_DEFLECTION]) {
                 lElevonOut = (lElevonOut > 0) ? config.control[CONTROL_MAX_ELEVON_DEFLECTION]
                                               : -config.control[CONTROL_MAX_ELEVON_DEFLECTION];
             }
-            if (abs(rElevonOut) > config.control[CONTROL_MAX_ELEVON_DEFLECTION]) {
+            if (fabsf(rElevonOut) > config.control[CONTROL_MAX_ELEVON_DEFLECTION]) {
                 rElevonOut = (rElevonOut > 0) ? config.control[CONTROL_MAX_ELEVON_DEFLECTION]
                                               : -config.control[CONTROL_MAX_ELEVON_DEFLECTION];
             }
 
-            servo_set((u32)config.pins[PINS_SERVO_AIL], lElevonOut + 90);
-            servo_set((u32)config.pins[PINS_SERVO_ELE], rElevonOut + 90);
+            servo_set((u32)config.pins[PINS_SERVO_AIL], lElevonOut + 90.f);
+            servo_set((u32)config.pins[PINS_SERVO_ELE], rElevonOut + 90.f);
             break;
         }
         default: {

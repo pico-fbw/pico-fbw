@@ -1633,7 +1633,7 @@ static void buf_writeString(byte *buf, i16 x, i16 y, char *str) {
  * @return The centered string.
  * @note This function allocates memory for the centered string, ensure to free() it after use.
  */
-static char *centerString(char line[], u32 len_max) {
+static char *centerString(const char line[], u32 len_max) {
     u32 len = strlen(line);
     if (len > 0 && line[len - 1] == '\0')
         len--; // Remove trailing null as it can throw off centering
@@ -1646,9 +1646,8 @@ static char *centerString(char line[], u32 len_max) {
         // Calculate padding needed
         u32 padding = (len_max - len) / 2;
         // Add text back between padding
-        for (u32 i = padding; i < len_max - padding; i++) {
+        for (u32 i = padding; i < len_max - padding; i++)
             centered[i] = line[i - padding];
-        }
         return centered;
     }
     return strdup(line); // No centering needed
@@ -1678,7 +1677,6 @@ static void createProgBar(char bar[], u32 progress) {
 
 bool display_init() {
     i2c_setup(DISPLAY_SDA, DISPLAY_SCL, DISPLAY_FREQ_KHZ * 1000);
-
     byte initCmds[] = {
         DISPLAY_SET_DISP, // Display off
         /* Memory mapping */
@@ -1727,20 +1725,21 @@ bool display_init() {
     return true;
 }
 
-void display_lines(char l1[], char l2[], char l3[], char l4[], bool center) {
+void display_lines(const char l1[], const char l2[], const char l3[], const char l4[], bool center) {
     memset(buf, 0, DISPLAY_BUF_LEN); // Clear anything that may be in VRAM buffer
     char *text[4];
-    text[0] = center ? centerString(l1, DISPLAY_MAX_LINE_LEN) : l1;
-    text[1] = center ? centerString(l2, DISPLAY_MAX_LINE_LEN) : l2;
-    text[2] = center ? centerString(l3, DISPLAY_MAX_LINE_LEN) : l3;
-    text[3] = center ? centerString(l4, DISPLAY_MAX_LINE_LEN) : l4;
+    text[0] = center ? centerString(l1, DISPLAY_MAX_LINE_LEN) : (char *)l1;
+    text[1] = center ? centerString(l2, DISPLAY_MAX_LINE_LEN) : (char *)l2;
+    text[2] = center ? centerString(l3, DISPLAY_MAX_LINE_LEN) : (char *)l3;
+    text[3] = center ? centerString(l4, DISPLAY_MAX_LINE_LEN) : (char *)l4;
 
     i32 y = 0;
     for (u32 i = 0; i < count_of(text); i++) {
         if (!text[i])
             continue;
         buf_writeString(buf, 5, (i16)y, text[i]);
-        free(text[i]);
+        if (center)
+            free(text[i]); // Free only centered strings (other strings are constant)
         y += 8;
     }
     render(buf, &frame_area);
@@ -1748,10 +1747,10 @@ void display_lines(char l1[], char l2[], char l3[], char l4[], bool center) {
 
 void display_string(const char *str, i32 progress) {
     // Create the four individual lines of text, we will split the string over these lines
-    char line1[DISPLAY_MAX_LINE_LEN] = {[0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
-    char line2[DISPLAY_MAX_LINE_LEN] = {[0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
-    char line3[DISPLAY_MAX_LINE_LEN] = {[0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
-    char line4[DISPLAY_MAX_LINE_LEN] = {[0 ... DISPLAY_MAX_LINE_LEN - 1] = ' '};
+    char line1[DISPLAY_MAX_LINE_LEN + 1] = {[0 ... DISPLAY_MAX_LINE_LEN] = ' '};
+    char line2[DISPLAY_MAX_LINE_LEN + 1] = {[0 ... DISPLAY_MAX_LINE_LEN] = ' '};
+    char line3[DISPLAY_MAX_LINE_LEN + 1] = {[0 ... DISPLAY_MAX_LINE_LEN] = ' '};
+    char line4[DISPLAY_MAX_LINE_LEN + 1] = {[0 ... DISPLAY_MAX_LINE_LEN] = ' '};
     // First, count the number of words in the string
     u32 numWords = 1;
     for (u32 i = 0; str[i] != '\0'; i++) {

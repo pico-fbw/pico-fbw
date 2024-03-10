@@ -23,11 +23,10 @@ bool pwm_setup_write(u32 pins[], u32 num_pins, u32 freq);
 /**
  * Reads the PWM signal on `pin`.
  * @param pin pin to read PWM signal from
- * @return the duty cycle of the PWM signal (0-2^16), or -1 if the pin is invalid
- * @note The duty cycle is actually returned as a `u16` but is cast to `i32` to allow for the -1 return value
+ * @return the pulsewidth of the PWM signal in μs, or -1 if the pin is invalid
  * @note `pin` must have been previously set up to read PWM signals using `pwm_setup_read()`
  */
-i32 pwm_read_raw(u32 pin);
+float pwm_read_raw(u32 pin);
 
 /**
  * Writes a PWM signal to `pin`.

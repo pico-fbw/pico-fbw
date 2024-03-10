@@ -16,7 +16,13 @@ typedef int32_t i32;
 typedef int64_t i64;
 
 #ifndef count_of
+    // Returns the number of elements in an array.
     #define count_of(a) (sizeof(a) / sizeof((a)[0]))
+#endif
+
+#ifndef clamp
+    // Clamps a value `i` between `min` and `max`.
+    #define clamp(i, min, max) ((i) < (min) ? (min) : ((i) > (max) ? (max) : (i)))
 #endif
 
 // Clamps a value `f` between `min` and `max`.
@@ -25,13 +31,22 @@ static inline float clampf(float f, float min, float max) {
     return t > max ? max : t;
 }
 
-// Clamps a value `i` between `min` and `max`.
-static inline int clamp(int i, int min, int max) {
-    const int t = i < min ? min : i;
-    return t > max ? max : t;
+#ifndef map
+    // Maps a value from one range to another.
+    #define map(x, in_min, in_max, out_min, out_max) (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
+#endif
+
+// Maps a value from one range to another.
+static inline float mapf(float x, float in_min, float in_max, float out_min, float out_max) {
+    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
-// Linearly interpolates between `a` and `b` by `t`.
+#ifndef radians
+    // Converts degrees to radians.
+    #define radians(deg) ((deg) * M_PI / 180.0)
+#endif
+
 #ifndef lerp
+    // Linearly interpolates between `a` and `b` by `t`.
     #define lerp(a, b, t) (a + t * (b - a))
 #endif

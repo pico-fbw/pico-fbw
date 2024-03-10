@@ -14,10 +14,10 @@
 
 i32 api_get_input(const char *cmd, const char *args) {
     printraw("{\"ail\":%f,\"elev\":%f,\"rud\":%f,\"thr\":%f,\"switch\":%f}\n",
-             receiver_get(config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEG),
-             receiver_get(config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEG),
-             receiver_get(config.pins[PINS_INPUT_RUD], RECEIVER_MODE_DEG),
-             receiver_get(config.pins[PINS_INPUT_THROTTLE], RECEIVER_MODE_ESC),
-             receiver_get(config.pins[PINS_INPUT_SWITCH], RECEIVER_MODE_DEG));
+             receiver_get(config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE),
+             receiver_get(config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEGREE),
+             receiver_get(config.pins[PINS_INPUT_RUD], RECEIVER_MODE_DEGREE),
+             receiver_get(config.pins[PINS_INPUT_THROTTLE], RECEIVER_MODE_PERCENT),
+             receiver_get(config.pins[PINS_INPUT_SWITCH], RECEIVER_MODE_DEGREE));
     return -1;
 }

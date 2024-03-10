@@ -97,10 +97,10 @@ int main() {
     boot_set_progress(25, "Enabling servos");
     u32 num_servos = 4; // Maximum is 4 servos, may be overridden
     u32 servos[num_servos];
-    servo_getPins(servos, &num_servos);
+    servo_get_pins(servos, &num_servos);
     servo_enable(servos, num_servos);
-    u16 degrees[] = DEFAULT_SERVO_TEST;
-    servo_test(servos, num_servos, degrees, NUM_DEFAULT_SERVO_TEST, DEFAULT_SERVO_TEST_PAUSE_MS);
+    float degrees[] = DEFAULT_SERVO_TEST;
+    servo_test(servos, num_servos, degrees, count_of(degrees), DEFAULT_SERVO_TEST_PAUSE_MS);
 
     // ESC
     if (receiver_has_athr()) {

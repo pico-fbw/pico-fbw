@@ -27,10 +27,10 @@
  */
 static bool waitForDetent(u32 pin, float *detent, u32 timeout_ms, u32 duration_ms) {
     Timestamp wait = timestamp_in_ms(timeout_ms);
-    u16 lastReading = receiver_get(pin, RECEIVER_MODE_ESC);
-    bool hasMoved = (abs(((u16)receiver_get(pin, RECEIVER_MODE_ESC) - lastReading)) > config.control[CONTROL_DEADBAND]);
+    u16 lastReading = receiver_get(pin, RECEIVER_MODE_PERCENT);
+    bool hasMoved = (abs(((u16)receiver_get(pin, RECEIVER_MODE_PERCENT) - lastReading)) > config.control[CONTROL_DEADBAND]);
     while (!hasMoved && !timestamp_reached(&wait)) {
-        hasMoved = (abs(((u16)receiver_get(pin, RECEIVER_MODE_ESC) - lastReading)) > config.control[CONTROL_DEADBAND]);
+        hasMoved = (abs(((u16)receiver_get(pin, RECEIVER_MODE_PERCENT) - lastReading)) > config.control[CONTROL_DEADBAND]);
     }
     if (timestamp_reached(&wait)) {
         print("[ESC] ESC calibration timed out!");
@@ -38,17 +38,18 @@ static bool waitForDetent(u32 pin, float *detent, u32 timeout_ms, u32 duration_m
     }
 
     while (true) {
-        esc_set((u32)config.pins[PINS_ESC_THROTTLE], (u16)receiver_get(pin, RECEIVER_MODE_ESC));
-        hasMoved = (abs(((u16)receiver_get(pin, RECEIVER_MODE_ESC) - lastReading)) > config.control[CONTROL_DEADBAND]);
+        esc_set((u32)config.pins[PINS_ESC_THROTTLE], (u16)receiver_get(pin, RECEIVER_MODE_PERCENT));
+        hasMoved = (abs(((u16)receiver_get(pin, RECEIVER_MODE_PERCENT) - lastReading)) > config.control[CONTROL_DEADBAND]);
         if (!hasMoved) {
             wait = timestamp_in_ms(duration_ms);
             while (!hasMoved && !timestamp_reached(&wait)) {
-                hasMoved = (abs(((u16)receiver_get(pin, RECEIVER_MODE_ESC) - lastReading)) > config.control[CONTROL_DEADBAND]);
+                hasMoved =
+                    (abs(((u16)receiver_get(pin, RECEIVER_MODE_PERCENT) - lastReading)) > config.control[CONTROL_DEADBAND]);
             }
             if (timestamp_reached(&wait))
                 break;
         }
-        lastReading = receiver_get(pin, RECEIVER_MODE_ESC);
+        lastReading = receiver_get(pin, RECEIVER_MODE_PERCENT);
     }
     *detent = (float)lastReading;
     esc_set((u32)config.pins[PINS_ESC_THROTTLE], 0);
@@ -64,9 +65,13 @@ void esc_enable(u32 pin) {
 }
 
 void esc_set(u32 pin, float speed) {
-    // Ensure speed is within range 0-100% and convert from percentage to duty cycle (0-2^16)
+    // Ensure speed is within range 0-100% and convert from percentage to duty cycle
+    // See servo.c for more information on how the duty cycle is calculated
     speed = clampf(speed, 0, 100);
-    pwm_write_raw(pin, (u16)((speed / 100.f) * UINT16_MAX));
+    float pulsewidth = 1E3f + ((float)speed / 100.0f) * 1E3f;
+    float period = 1E6f / config.general[GENERAL_ESC_HZ];
+    u16 duty = (u16)((pulsewidth / period) * UINT16_MAX);
+    pwm_write_raw(pin, duty);
 }
 
 bool esc_calibrate(u32 pin) {

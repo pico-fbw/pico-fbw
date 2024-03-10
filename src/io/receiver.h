@@ -13,8 +13,8 @@ typedef enum ControlMode {
 } ControlMode;
 
 typedef enum ReceiverMode {
-    RECEIVER_MODE_DEG,
-    RECEIVER_MODE_ESC,
+    RECEIVER_MODE_DEGREE,
+    RECEIVER_MODE_PERCENT,
 } ReceiverMode;
 
 typedef enum ReceiverCalibrationStatus {

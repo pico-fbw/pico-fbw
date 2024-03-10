@@ -67,7 +67,7 @@ bool display_init();
  * @note The display supports 4 lines of text, with a maximum of ~15 characters per line.
  * Any more characters will be truncated.
  */
-void display_lines(char l1[], char l2[], char l3[], char l4[], bool center);
+void display_lines(const char l1[], const char l2[], const char l3[], const char l4[], bool center);
 
 /**
  * Renders a string on the display.

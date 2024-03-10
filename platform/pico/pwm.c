@@ -4,7 +4,9 @@
 
 /**
  * The PWM input code is a modification of code provided by `GitJer`:
- * https://github.com/GitJer/Some_RPI-Pico_stuff/tree/main/PwmIn/PwmIn_4pins Thanks so much for that! The PWM output code is a
+ * https://github.com/GitJer/Some_RPI-Pico_stuff/tree/main/PwmIn/PwmIn_4pins Thanks so much for that!
+ *
+ * The PWM output code is a
  * modification of the pico-servo library by 'markushi': https://github.com/markushi/pico-servo Thanks again!
  */
 
@@ -13,6 +15,7 @@
  * Licensed under the GNU AGPL-3.0
  */
 
+#include <assert.h>
 #include "hardware/pwm.h"
 #include "hardware/clocks.h"
 #include "hardware/gpio.h"
@@ -30,8 +33,9 @@ typedef struct PWMState {
 
 static PWMState states[8];
 
-// For PWM output: stores the wrap value for the PWM clock
-static u16 wrap;
+// For PWM output:
+
+#define SERVO_TOP_MAX (UINT16_MAX - 1) // Maximum "top" is set at 65534 to be able to achieve 100% duty with 65535.
 
 // Handles PWM input from state machines in PIO0.
 // Called when an interrupt is raised by a state machine, and will read the pulsewidth and period from the state machine.
@@ -39,10 +43,11 @@ static void pio0Handler() {
     for (u32 i = 0; i < 4; i++) {
         // Check if the IRQ has been raised for this state machine
         if (pio0_hw->irq & 1 << i) {
-            pio0_hw->irq = 1 << i;                      // Clear interrupt
-            states[i].pulsewidth = pio_sm_get(pio0, i); // Read pulsewidth from FIFO
-            states[i].period = pio_sm_get(pio0, i);     // Read low period from the FIFO
-            pio0_hw->irq = 1 << i;                      // Clear interrupt
+            pio0_hw->irq = 1 << i;                                         // Clear interrupt
+            states[i].pulsewidth = pio_sm_get(pio0, i);                    // Read pulsewidth from FIFO
+            states[i].period = pio_sm_get(pio0, i) + states[i].pulsewidth; // Read period from FIFO (PIO only stores low period
+                                                                           // so we add the pulsewidth to get the full period)
+            pio0_hw->irq = 1 << i;                                         // Clear interrupt
         }
     }
 }
@@ -53,7 +58,7 @@ static void pio1Handler() {
         if (pio1_hw->irq & 1 << i) {
             pio1_hw->irq = 1 << i;
             states[i + 4].pulsewidth = pio_sm_get(pio1, i);
-            states[i + 4].period = pio_sm_get(pio1, i);
+            states[i + 4].period = pio_sm_get(pio1, i) + states[i + 4].pulsewidth;
             pio1_hw->irq = 1 << i;
         }
     }
@@ -76,8 +81,8 @@ static bool setup_sm(const PIO pio, const u32 offset, u32 pin) {
     i32 sm = pio_claim_unused_sm(pio, false);
     if (sm >= 0) {
         // Initialize the state machine's PWMState
-        states[(pio == pio0) ? sm : sm + 4].pulsewidth =
-            0; // Positions 0-3 are for PIO0 0-3 and positions 4-7 are for PIO1 0-3, hence the +4 offset
+        // Positions 0-3 are for PIO0 0-3 and positions 4-7 are for PIO1 0-3, hence the +4 offset
+        states[(pio == pio0) ? sm : sm + 4].pulsewidth = 0;
         states[(pio == pio0) ? sm : sm + 4].period = 0;
         states[(pio == pio0) ? sm : sm + 4].pin = pin;
         // Configure the physical pin (pull down as per PWM standard, give PIO access)
@@ -93,9 +98,7 @@ static bool setup_sm(const PIO pio, const u32 offset, u32 pin) {
         pio_sm_init(pio, sm, offset, &cfg);
         pio_sm_set_enabled(pio, sm, true);
     } else {
-        // A state machine was not available, this is fatal because PWM manages the mode switch and control surfaces...maybe
-        // important
-        return false;
+        return false; // A state machine was not available
     }
     return true;
 }
@@ -105,6 +108,7 @@ bool pwm_setup_read(u32 pins[], u32 num_pins) {
     if (pio_can_add_program(pio0, &pwm_program)) {
         u32 offset = pio_add_program(pio0, &pwm_program);
         for (u32 i = 0; i < (num_pins > 4 ? 4 : num_pins); i++) {
+            assert(pwm_gpio_to_channel(pins[i]) == PWM_CHAN_B); // Only PWM channel B can be used for input
             if (!setup_sm(pio0, offset, pins[i]))
                 return false;
         }
@@ -119,6 +123,7 @@ bool pwm_setup_read(u32 pins[], u32 num_pins) {
         if (pio_can_add_program(pio1, &pwm_program)) {
             u32 offset = pio_add_program(pio1, &pwm_program);
             for (u32 i = 4; i < num_pins; i++) {
+                assert(pwm_gpio_to_channel(pins[i]) == PWM_CHAN_B);
                 if (!setup_sm(pio1, offset, pins[i]))
                     return false;
             }
@@ -133,29 +138,52 @@ bool pwm_setup_read(u32 pins[], u32 num_pins) {
 
 bool pwm_setup_write(u32 pins[], u32 num_pins, u32 freq) {
     for (u32 i = 0; i < num_pins; i++) {
+        assert(pwm_gpio_to_channel(pins[i]) == PWM_CHAN_A || pwm_gpio_to_channel(pins[i]) == PWM_CHAN_B);
         gpio_set_function(pins[i], GPIO_FUNC_PWM);
-        // PWM clock is system clock / 16
-        pwm_config config = pwm_get_default_config();
-        pwm_config_set_clkdiv(&config, 16.f);
-        // Wrap is roughly determined by the frequency (won't be super precise due to hardware limitations)
-        wrap = clock_get_hz(clk_sys) / (16.f * freq);
-        pwm_config_set_wrap(&config, wrap);
-        pwm_init(pwm_gpio_to_slice_num(pins[i]), &config, true);
+        // Approximate a clock divider and wrap value for the PWM clock to try and match the desired frequency
+        u8 slice = pwm_gpio_to_slice_num(pins[i]);
+        u32 div16_top = 16 * clock_get_hz(clk_sys) / freq;
+        u32 top = 1;
+        while (true) {
+            // Try a few small prime factors
+            if (div16_top >= 16 * 5 && div16_top % 5 == 0 && top * 5 <= SERVO_TOP_MAX) {
+                div16_top /= 5;
+                top *= 5;
+            } else if (div16_top >= 16 * 3 && div16_top % 3 == 0 && top * 3 <= SERVO_TOP_MAX) {
+                div16_top /= 3;
+                top *= 3;
+            } else if (div16_top >= 16 * 2 && top * 2 <= SERVO_TOP_MAX) {
+                div16_top /= 2;
+                top *= 2;
+            } else {
+                break;
+            }
+        }
+        if (div16_top < 16)
+            return false; // Too large
+        else if (div16_top >= 256 * 16)
+            return false; // Too small
+        pwm_hw->slice[slice].div = div16_top;
+        pwm_hw->slice[slice].top = top;
+        pwm_set_enabled(slice, true);
     }
     return true;
 }
 
-i32 pwm_read_raw(u32 pin) {
+float pwm_read_raw(u32 pin) {
     // Find the pin's state machine
     for (u32 i = 0; i < count_of(states); i++) {
         if (states[i].pin == pin) {
-            return (u16)((states[i].pulsewidth * UINT16_MAX) / states[i].period);
+            // Calculate the pulsewidth from the state machine's data:
+            // - Multiply by 2 because PWM measurements are taken with 2 clock cycles per timer tick
+            // - Divide by the system clock frequency to get the pulsewidth in seconds
+            // - Multiply by 1000 to convert to μs
+            return (float)states[i].pulsewidth * 2 / clock_get_hz(clk_sys) * 1E6f;
         }
     }
     return -1; // Pin not found
 }
 
-// TODO: the write func has been updated, does this still work?
 void pwm_write_raw(u32 pin, u16 duty) {
-    pwm_set_gpio_level(pin, (duty * wrap) / UINT16_MAX);
+    pwm_set_gpio_level(pin, duty);
 }

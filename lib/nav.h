@@ -1,8 +1,5 @@
 #pragma once
 
-#define EARTH_RADIUS_KM 6371  // Earth's radius in kilometers
-#define EARTH_RADIUS_M (EARTH_RADIUS_KM * 1000) // Earth's radius in meters
-
 /**
  * Calculates the bearing between two points.
  * @param latA Latitude of the first point.

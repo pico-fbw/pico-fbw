@@ -17,9 +17,9 @@ static i64 callback_to_sdk(alarm_id_t id, void *udata) {
         return 0;
     i32 reschedule = data->callback();
     if (reschedule == 0)
-        free(data); // Free the data if the callback is not rescheduled
+        free(data);                  // Free the data if the callback is not rescheduled
     return (i64)(reschedule * 1000); // Convert to microseconds
-    (void)id; // Unused
+    (void)id;                        // Unused
 }
 
 u64 time_us() {

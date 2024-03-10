@@ -37,7 +37,7 @@ static bool add_device(I2CBus *bus, byte addr) {
     // Allocate a new device onto the bus array
     bus->numDevices++;
     I2CDevice *new = reallocarray(bus->devices, bus->numDevices, sizeof(I2CDevice));
-    if (new == NULL) {
+    if (!new) {
         bus->numDevices--;
         free(bus->devices);
         return false;
@@ -73,7 +73,7 @@ static I2CDevice *i2c_device_from_details(u32 sda, u32 scl, byte addr) {
             break;
         }
     }
-    if (bus == NULL)
+    if (!bus)
         return NULL; // No bus found
     // Now, find the device that matches the given address
     I2CDevice *device = NULL;
@@ -83,7 +83,7 @@ static I2CDevice *i2c_device_from_details(u32 sda, u32 scl, byte addr) {
             break;
         }
     }
-    if (device == NULL) {
+    if (!device) {
         // Device has not yet been added to the bus, do that now
         if (!add_device(bus, addr))
             return NULL;
@@ -106,7 +106,7 @@ bool i2c_setup(u32 sda, u32 scl, u32 freq) {
         return false;
     // Add the initialized bus to the array
     for (size_t i = 0; i < count_of(buses); i++) {
-        if (buses[i].handle == NULL) {
+        if (!buses[i].handle) {
             buses[i].sda = sda;
             buses[i].scl = scl;
             buses[i].freq = freq;
@@ -119,7 +119,7 @@ bool i2c_setup(u32 sda, u32 scl, u32 freq) {
 
 bool i2c_read(u32 sda, u32 scl, byte addr, byte reg, byte dest[], size_t len) {
     I2CDevice *device = i2c_device_from_details(sda, scl, addr);
-    if (device == NULL)
+    if (!device)
         return false;
     // The ESP-IDF function subtracts 1 from the read length and I have no clue why...
     return (i2c_master_transmit_receive(device->handle, &reg, sizeof(reg), dest, len + 1, I2C_TIMEOUT_MS) == ESP_OK);
@@ -127,7 +127,7 @@ bool i2c_read(u32 sda, u32 scl, byte addr, byte reg, byte dest[], size_t len) {
 
 bool i2c_write(u32 sda, u32 scl, byte addr, byte reg, byte src[], size_t len) {
     I2CDevice *device = i2c_device_from_details(sda, scl, addr);
-    if (device == NULL)
+    if (!device)
         return false;
     // Prefix the register to the source data
     byte cmd[len + 1];

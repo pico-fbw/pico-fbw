@@ -19,25 +19,31 @@ void servo_enable(u32 pins[], u32 num_pins) {
     if (!pwm_setup_write(pins, num_pins, config.general[GENERAL_SERVO_HZ]))
         log_message(FATAL, "Failed to enable PWM output!", 500, 0, true);
     for (u32 i = 0; i < num_pins; i++)
-        servo_set(pins[i], 90); // Set initial position to 90 degrees
+        servo_set(pins[i], 90.f); // Set initial position to 90 degrees
 }
 
-void servo_set(u32 pin, u16 degree) {
-    // Ensure speed is within range 0-180deg and convert to duty cycle (0-2**16)
-    degree = clamp(degree, 0, 180);
-    pwm_write_raw(pin, (u16)((degree / 180.f) * UINT16_MAX));
+void servo_set(u32 pin, float degree) {
+    // Ensure speed is within range 0-180deg
+    degree = clampf(degree, 0.f, 180.f);
+    // Pulsewidth for a servo is always between 1 and 2ms, but pulse duration can change based on frequency
+    // For example: 50Hz = 20ms period, 1ms pulsewidth = 5% duty cycle, 2ms pulsewidth = 10% duty cycle
+    // 100Hz = 10ms period, 1ms pulsewidth = 10% duty cycle, 2ms pulsewidth = 20% duty cycle
+    // With that being said, calculate the duty cycle based on the frequency and the degree
+    float pulsewidth = 1E3f + ((float)degree / 180.0f) * 1E3f; // Pulsewidth = 1ms + (degree / 180) * 1ms (expressed in μs)
+    float period = 1E6f / config.general[GENERAL_SERVO_HZ];    // Period = 1 / frequency (expressed in μs)
+    u16 duty = (u16)((pulsewidth / period) * UINT16_MAX);      // Duty cycle = (pulsewidth / period) * 2^16
+    pwm_write_raw(pin, duty);
 }
 
-void servo_test(u32 servos[], u32 num_servos, u16 degrees[], u32 num_degrees, u32 pause_between_moves_ms) {
+void servo_test(u32 servos[], u32 num_servos, float degrees[], u32 num_degrees, u32 pause_between_moves_ms) {
     for (u32 d = 0; d < num_degrees; d++) {
         for (u32 s = 0; s < num_servos; s++) {
             if (servos[s] == (u32)config.pins[PINS_SERVO_BAY]) {
                 // The drop servo will be set to the configured detents so as not to possibly break it
-                if (d < (num_degrees / 2)) {
+                if (d < (num_degrees / 2))
                     servo_set(servos[s], config.control[CONTROL_DROP_DETENT_OPEN]);
-                } else {
+                else
                     servo_set(servos[s], config.control[CONTROL_DROP_DETENT_CLOSED]);
-                }
             } else {
                 servo_set(servos[s], degrees[d]);
             }
@@ -46,7 +52,7 @@ void servo_test(u32 servos[], u32 num_servos, u16 degrees[], u32 num_degrees, u3
     }
 }
 
-void servo_getPins(u32 *servos, u32 *num_servos) {
+void servo_get_pins(u32 *servos, u32 *num_servos) {
     switch ((ControlMode)config.general[GENERAL_CONTROL_MODE]) {
         case CTRLMODE_3AXIS_ATHR:
         case CTRLMODE_3AXIS:

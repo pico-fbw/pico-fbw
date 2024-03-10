@@ -60,10 +60,10 @@ static int flash_sync(const struct lfs_config *c) {
 }
 
 static int flash_lock(const struct lfs_config *c) {
-    if (lfs_lock == NULL) {
+    if (!lfs_lock) {
         static portMUX_TYPE lfs_lock_mux = portMUX_INITIALIZER_UNLOCKED;
         portENTER_CRITICAL(&lfs_lock_mux);
-        if (lfs_lock == NULL)
+        if (!lfs_lock)
             lfs_lock = xSemaphoreCreateMutex();
         portEXIT_CRITICAL(&lfs_lock_mux);
     }
@@ -85,7 +85,7 @@ static int flash_unlock(const struct lfs_config *c) {
 bool flash_setup() {
     // Set partition to the littlefs partition defined in partitions.csv
     partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_LITTLEFS, FS_PARTITION_LABEL);
-    if (partition == NULL)
+    if (!partition)
         return false;
     // Auto-detect block count based on partition size
     lfs_cfg.block_count = partition->size / lfs_cfg.block_size;

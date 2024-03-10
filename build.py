@@ -10,9 +10,10 @@ from pathlib import Path
 from urllib.request import urlretrieve
 import zipfile
 
+# TODO: test more on windows
+
 def install_esp_idf():
-    if os.sys.platform.lower() == "windows":
-        # TODO: test on windows
+    if os.sys.platform.lower() == "win32":
         os.system("install.bat")
     else:
         os.chmod("install.sh", os.stat("install.sh").st_mode | stat.S_IEXEC)
@@ -20,7 +21,10 @@ def install_esp_idf():
     os.chdir("..")
 
 def install_ninja():
-    os.chmod("ninja", os.stat("ninja").st_mode | stat.S_IEXEC)
+    ninja = "ninja"
+    if os.sys.platform.lower() == "win32":
+        ninja = "ninja.exe"
+    os.chmod(ninja, os.stat(ninja).st_mode | stat.S_IEXEC)
 
 def install_pico_sdk():
     os.chdir("pico-sdk")
@@ -32,7 +36,7 @@ dependencies = {
         'version': '10.3.1',
         'url': {
             'linux': 'https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2',
-            'windows': 'https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-win32.zip',
+            'win32': 'https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-win32.zip',
             'darwin': 'https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-mac.tar.bz2',
         }
     },
@@ -40,7 +44,7 @@ dependencies = {
         'version': '3.28.3',
         'url': {
             'linux': 'https://github.com/Kitware/CMake/releases/download/v3.28.3/cmake-3.28.3-linux-x86_64.tar.gz',
-            'windows': 'https://github.com/Kitware/CMake/releases/download/v3.28.3/cmake-3.28.3-windows-x86_64.zip',
+            'win32': 'https://github.com/Kitware/CMake/releases/download/v3.28.3/cmake-3.28.3-win32-x86_64.zip',
             'darwin': 'https://github.com/Kitware/CMake/releases/download/v3.28.3/cmake-3.28.3-macos-universal.tar.gz',
         },
     },
@@ -48,7 +52,7 @@ dependencies = {
         'version': '5.2.1',
         'url': {
             'linux': 'https://github.com/espressif/esp-idf/releases/download/v5.2.1/esp-idf-v5.2.1.zip',
-            'windows': 'https://github.com/espressif/esp-idf/releases/download/v5.2.1/esp-idf-v5.2.1.zip',
+            'win32': 'https://github.com/espressif/esp-idf/releases/download/v5.2.1/esp-idf-v5.2.1.zip',
             'darwin': 'https://github.com/espressif/esp-idf/releases/download/v5.2.1/esp-idf-v5.2.1.zip',
         },
         'install': install_esp_idf,
@@ -57,7 +61,7 @@ dependencies = {
         'version': '1.11.1',
         'url': {
             'linux': 'https://github.com/ninja-build/ninja/releases/download/v1.11.1/ninja-linux.zip',
-            'windows': 'https://github.com/ninja-build/ninja/releases/download/v1.11.1/ninja-win.zip',
+            'win32': 'https://github.com/ninja-build/ninja/releases/download/v1.11.1/ninja-win.zip',
             'darwin': 'https://github.com/ninja-build/ninja/releases/download/v1.11.1/ninja-mac.zip',
         },
         'install': install_ninja,
@@ -99,12 +103,14 @@ def download_and_extract(url: str, directory: Path):
     print()
     print('Extracting ' + directory.name)
     if '.tar.bz2' in url or '.tar.gz' in url or '.tar.xz' in url:
-        obj = tarfile.open(f)
+        with tarfile.open(f) as obj:
+            obj.extractall(path=str(extract_dir))
     else:
-        obj = zipfile.ZipFile(f, 'r')
-    obj.extractall(path=str(extract_dir))
+        with zipfile.ZipFile(f, 'r') as obj:
+            obj.extractall(path=str(extract_dir))
 
     subdir = find_single_subdir(extract_dir)
+    # FIXME: these don't work on windows?
     shutil.move(str(subdir), str(directory))
     shutil.rmtree(extract_dir, ignore_errors=True)
 
@@ -150,8 +156,12 @@ def find_dependency(program: str):
                 if program == "arm-none-eabi-gcc":
                     return path / "bin" # Return the entire bin directory to have access to all tools
                 elif program == "cmake":
+                    if os.sys.platform.lower() == "win32":
+                        return path / "bin" / "cmake.exe"
                     return path / "bin" / "cmake"
                 elif program == "ninja":
+                    if os.sys.platform.lower() == "win32":
+                        return path / "ninja.exe"
                     return path / "ninja"
                 return path
     except FileNotFoundError:

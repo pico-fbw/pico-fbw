@@ -35,7 +35,7 @@ CallbackData *callback_in_ms(u32 ms, Callback callback) {
     // Create a new CallbackData to store the callback with its corresponding id (so it can be used later to reschedule/cancel
     // the callback)
     CallbackData *data = malloc(sizeof(CallbackData));
-    if (data == NULL)
+    if (!data)
         return NULL;
     data->callback = callback;
     // Use esp_timer to schedule the callback and return its id

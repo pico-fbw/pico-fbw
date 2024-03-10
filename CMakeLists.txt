@@ -21,7 +21,6 @@ endif()
 message("Building for platform: ${FBW_PLATFORM}")
 message("Using platform directory: platform/${PLATFORM_DIR}")
 include(platform/${PLATFORM_DIR}/resources/${PLATFORM_DIR}.cmake)
-include(clang-format.cmake)
 
 # Define the project, the languages it uses, and the version
 project(pico-fbw LANGUAGES C)
@@ -44,7 +43,7 @@ message("Adding subdirectories")
 add_subdirectory(src)
 add_subdirectory(lib)
 add_subdirectory(platform)
+include(clang-format.cmake) # Also add the clang-format target, if applicable
 # Final setup tasks
 message("Finishing up setup for ${FBW_PLATFORM}")
 setup_after_subdirs()
-

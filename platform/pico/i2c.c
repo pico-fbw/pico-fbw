@@ -67,7 +67,7 @@ bool i2c_setup(u32 sda, u32 scl, u32 freq) {
     gpio_pull_up(scl);
     // Find the i2c instance (0 or 1) that the pins lie on
     i2c_inst_t *i2c = i2c_inst_from_pins(sda, scl);
-    if (i2c == NULL)
+    if (!i2c)
         return false;
     i2c_init(i2c, freq);
     return true;
@@ -75,7 +75,7 @@ bool i2c_setup(u32 sda, u32 scl, u32 freq) {
 
 bool i2c_read(u32 sda, u32 scl, byte addr, byte reg, byte dest[], size_t len) {
     i2c_inst_t *i2c = i2c_inst_from_pins(sda, scl);
-    if (i2c == NULL)
+    if (!i2c)
         return false;
     // First, write the register that we want to read from
     i32 timeout = i2c_write_timeout_us(i2c, addr, &reg, sizeof(reg), true, I2C_TIMEOUT_US);
@@ -89,7 +89,7 @@ bool i2c_read(u32 sda, u32 scl, byte addr, byte reg, byte dest[], size_t len) {
 
 bool i2c_write(u32 sda, u32 scl, byte addr, byte reg, byte src[], size_t len) {
     i2c_inst_t *i2c = i2c_inst_from_pins(sda, scl);
-    if (i2c == NULL)
+    if (!i2c)
         return false;
     // Create and write a command buffer that contains the register first, followed by the data to write
     byte cmd[len + 1];

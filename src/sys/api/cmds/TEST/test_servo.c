@@ -15,16 +15,16 @@ i32 api_test_servo(const char *cmd, const char *args) {
     if (aircraft.mode == MODE_DIRECT) {
         u32 num_servos = 3;
         u32 servos[num_servos];
-        const u16 degrees[] = DEFAULT_SERVO_TEST;
+        float degrees[] = DEFAULT_SERVO_TEST;
         if (args) {
             // Test the servo that was provided in the command
             servos[0] = atoi(args);
             num_servos = 1;
-            servo_test(servos, num_servos, degrees, NUM_DEFAULT_SERVO_TEST, DEFAULT_SERVO_TEST_PAUSE_MS);
+            servo_test(servos, num_servos, degrees, count_of(degrees), DEFAULT_SERVO_TEST_PAUSE_MS);
         } else {
             // No arguments given, test with config values
-            servo_getPins(servos, &num_servos);
-            servo_test(servos, num_servos, degrees, NUM_DEFAULT_SERVO_TEST, DEFAULT_SERVO_TEST_PAUSE_MS);
+            servo_get_pins(servos, &num_servos);
+            servo_test(servos, num_servos, degrees, count_of(degrees), DEFAULT_SERVO_TEST_PAUSE_MS);
         }
     } else
         return 403;

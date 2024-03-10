@@ -25,6 +25,7 @@
  * -3 if there was a parse error,
  * or -4 if there was a filesystem error.
  * @note If no `vstr` is specified, the version read from flash will be copied into `vstr`.
+ * `vstr` should be of at least length 64.
  */
 i32 version_check(char vstr[]);
 

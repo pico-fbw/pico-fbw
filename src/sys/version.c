@@ -14,7 +14,7 @@
 
 i32 version_check(char vstr[]) {
     char version[64];
-    if (vstr[0] == '\0' || vstr == NULL) {
+    if (!vstr || vstr[0] == '\0') {
         // No version given, grab from flash
         lfs_file_t file;
         if (lfs_file_open(&lfs, &file, "version", LFS_O_RDONLY | LFS_O_CREAT) != LFS_ERR_OK)

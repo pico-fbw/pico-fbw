@@ -6,13 +6,13 @@
 #include "modes/auto.h"
 
 typedef struct Flightplan {
-    const char *version;
-    const char *version_fw;
+    char *version;
+    char *version_fw;
     i32 alt_samples;
     Waypoint *waypoints;
     u32 waypoint_count;
 
-    const char *json;
+    char *json;
 } Flightplan;
 
 typedef enum FlightplanError {
