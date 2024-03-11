@@ -9,7 +9,8 @@
 
 #include "get_mode.h"
 
-i32 api_get_mode(const char *cmd, const char *args) {
+i32 api_get_mode(const char *args) {
     printraw("{\"mode\":%d}\n", aircraft.mode);
     return -1;
+    (void)args;
 }

@@ -46,7 +46,7 @@ static bool i2cWriteByte(byte addr, byte reg, byte val) {
 }
 
 void driver_init() {
-    printfbw(aahrs, "initializing i2c0 at %d kHz, on pins %d (SDA) and %d (SCL)", DRIVER_FREQ_KHZ,
+    printfbw(aahrs, "initializing i2c0 at %d kHz, on pins %lu (SDA) and %lu (SCL)", DRIVER_FREQ_KHZ,
              (u32)config.pins[PINS_AAHRS_SDA], (u32)config.pins[PINS_AAHRS_SCL]);
     i2c_setup((u32)config.pins[PINS_AAHRS_SDA], (u32)config.pins[PINS_AAHRS_SCL], DRIVER_FREQ_KHZ * 1000);
 }

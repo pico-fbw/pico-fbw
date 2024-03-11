@@ -25,6 +25,8 @@ function(setup_before_subdirs)
             esp_system
             esp_timer
             freertos
+            newlib
+            soc
         SDKCONFIG
             ${CMAKE_SOURCE_DIR}/platform/esp/resources/sdkconfig
         SDKCONFIG_DEFAULTS

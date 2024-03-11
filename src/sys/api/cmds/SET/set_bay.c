@@ -10,7 +10,7 @@
 
 #include "set_bay.h"
 
-i32 api_set_bay(const char *cmd, const char *args) {
+i32 api_set_bay(const char *args) {
     if (aircraft.mode == MODE_NORMAL) {
         BayPosition pos = atoi(args);
         if (pos == CLOSED || pos == OPEN) {

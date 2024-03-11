@@ -9,9 +9,7 @@
 #define latGuid_kD 0.002
 #define latGuid_tau 0.001
 #define latGuid_lim 33 // The maximum roll angle the autopilot can command
-#define latGuid_integMin -50.0
-#define latGuid_integMax 50.0
-#define latGuid_kT 0.01
+#define latGuid_integLim 50.0
 
 /* PID constants for the autopilot's vertical guidance. */
 #define vertGuid_kP 0.05
@@ -19,10 +17,8 @@
 #define vertGuid_kD 0.001
 #define vertGuid_tau 0.001
 #define vertGuid_loLim -15 // The minimum pitch angle the autopilot can command
-#define vertGuid_upLim 25  // The maximum pitch angle the autopilot can command
-#define vertGuid_integMin -50.0
-#define vertGuid_integMax 50.0
-#define vertGuid_kT 0.01
+#define vertGuid_hiLim 25  // The maximum pitch angle the autopilot can command
+#define vertGuid_integLim 50.0
 
 typedef struct Waypoint {
     long double lat, lng;

@@ -16,17 +16,20 @@ void interceptCallback() {
     printraw("pico-fbw 200 [WPTINTC]\n");
 }
 
-i32 api_set_waypoint(const char *cmd, const char *args) {
+i32 api_set_waypoint(const char *args) {
     if (aircraft.mode == MODE_AUTO) {
         Waypoint wpt;
-        i32 numArgs = sscanf(args, "%f %f %d %f %d", &wpt.lat, &wpt.lng, &wpt.alt, &wpt.speed, &wpt.drop);
+        i32 numArgs = sscanf(args, "%Lf %Lf %ld %f %ld", &wpt.lat, &wpt.lng, &wpt.alt, &wpt.speed, &wpt.drop);
         switch (numArgs) {
             case 2:
                 wpt.alt = -5;
+            /* fall through */
             case 3:
                 wpt.speed = -5;
+            /* fall through */
             case 4:
                 wpt.drop = 0;
+            /* fall through */
             case 5:
                 auto_set(wpt, interceptCallback);
                 return 202;

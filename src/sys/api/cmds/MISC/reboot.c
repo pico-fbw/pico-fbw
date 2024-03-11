@@ -8,7 +8,7 @@
 
 #include "reboot.h"
 
-void api_reboot(const char *cmd, const char *args) {
+void api_reboot(const char *args) {
     switch (atoi(args)) {
         case 1:
             sys_reboot(true);

@@ -79,8 +79,11 @@ bool hold_init() {
     throttle.target = gps.speed;
     // We use a vertical guidance PID here so that we can keep the aircraft level; 0deg pitch does not equal 0 altitude change
     // (sadly)
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
     vertGuid = (PIDController){vertGuid_kP,    vertGuid_kI,       vertGuid_kD,       vertGuid_tau, vertGuid_loLim,
-                               vertGuid_upLim, vertGuid_integMin, vertGuid_integMax, vertGuid_kT};
+                               vertGuid_hiLim, -vertGuid_integLim, vertGuid_integLim};
+    #pragma GCC diagnostic pop
     pid_init(&vertGuid);
     targetAlt = gps.alt; // targetAlt is just the current alt from whenever we enter the mode
     return true;

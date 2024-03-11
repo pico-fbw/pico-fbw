@@ -80,7 +80,7 @@ i8 BNO055_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
     // Check that the sensor comms are okay and that it's a BNO055
     printfbw(aahrs, "[BNO055] initializing...");
     for (u32 i = 0; i < DRIVER_INIT_ATTEMPTS; i++) {
-        if (shouldPrint.aahrs) printraw("attempt %d ", i);
+        if (shouldPrint.aahrs) printraw("attempt %lu ", i);
         status = driver_read_register(&sensor->deviceInfo, sensor->addr, BNO055_CHIP_ID_READ[0].readFrom, BNO055_CHIP_ID_READ[0].numBytes, &reg);
         if (status == SENSOR_ERROR_NONE && reg == BNO055_CHIP_ID_EXPECTED) break;
     }

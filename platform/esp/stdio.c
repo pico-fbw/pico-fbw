@@ -10,31 +10,29 @@
 #include "platform/stdio.h"
 
 void stdio_setup() {
-    // TODO: are both usb and uart initialized as stdout sources automatically (see esp_vfs_console_register,
-    // esp_vfs_dev_uart_use_driver) ?
+    return; // Nothing to do here, the bootloader already sets up stdio
+    // See https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32/api-guides/startup.html
 }
 
 char *stdin_read() {
+    // Very similar to stdin_read() in pico/stdio.c, take a look at that for documentation
     char *buf = NULL;
     u32 i = 0;
     while (true) {
         int c = getchar();
         if (c == '\n' || c == '\r' || c == 0 || c == EOF) {
-            // Either timed out or met the end of a line, end
             break;
         } else {
-            // Recieved a valid character, resize the buffer and store it
             buf = try_realloc(buf, (i + 1) * sizeof(char));
             if (!buf)
                 return NULL;
             buf[i++] = c;
         }
     }
-    // Done reading, null-terminate the buffer if we read a line
     if (i != 0) {
         buf = try_realloc(buf, (i + 1) * sizeof(char));
         if (!buf)
-            return NULL; // Nothing was read
+            return NULL;
         buf[i] = '\0';
     }
     return buf;

@@ -25,14 +25,8 @@ void servo_enable(u32 pins[], u32 num_pins) {
 void servo_set(u32 pin, float degree) {
     // Ensure speed is within range 0-180deg
     degree = clampf(degree, 0.f, 180.f);
-    // Pulsewidth for a servo is always between 1 and 2ms, but pulse duration can change based on frequency
-    // For example: 50Hz = 20ms period, 1ms pulsewidth = 5% duty cycle, 2ms pulsewidth = 10% duty cycle
-    // 100Hz = 10ms period, 1ms pulsewidth = 10% duty cycle, 2ms pulsewidth = 20% duty cycle
-    // With that being said, calculate the duty cycle based on the frequency and the degree
-    float pulsewidth = 1E3f + ((float)degree / 180.0f) * 1E3f; // Pulsewidth = 1ms + (degree / 180) * 1ms (expressed in μs)
-    float period = 1E6f / config.general[GENERAL_SERVO_HZ];    // Period = 1 / frequency (expressed in μs)
-    u16 duty = (u16)((pulsewidth / period) * UINT16_MAX);      // Duty cycle = (pulsewidth / period) * 2^16
-    pwm_write_raw(pin, duty);
+    // Almost all servos expect a pulsewidth of 500-2500μs (500μs is 0deg, 2500μs is 180deg)
+    pwm_write_raw(pin, mapf(degree, 0.f, 180.f, 500.f, 2500.f));
 }
 
 void servo_test(u32 servos[], u32 num_servos, float degrees[], u32 num_degrees, u32 pause_between_moves_ms) {

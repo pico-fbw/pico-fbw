@@ -18,12 +18,11 @@ bool pwm_setup_write(u32 pins[], u32 num_pins, u32 freq) {
 }
 
 float pwm_read_raw(u32 pin) {
-    // This function should return the pulsewidth cycle of the PWM signal on the given pin.
-    // The duty cycle should be returned in the form of a floating-point number, measured in μs (microseconds).
+    // This function should return the pulsewidth of the PWM signal on the given pin.
+    // The pulsewidth should be returned in the form of a floating-point number, measured in μs (microseconds).
     // If the pin is invalid or some sort of error occurs, return -1.
 }
 
-void pwm_write_raw(u32 pin, u16 duty) {
-    // This function should write the given duty cycle to the given pin.
-    // The duty cycle is an unsigned 16-bit integer, so it ranges from 0 to 2^16 [65535] (0 being off and 2^16 being on).
+void pwm_write_raw(u32 pin, float pulsewidth) {
+    // This function should write the given pulsewidth to the PWM signal on the given pin.
 }

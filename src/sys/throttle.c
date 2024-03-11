@@ -23,11 +23,14 @@ void throttle_init() {
     // GPS is required for speed mode, as we need to know the aircraft's current speed
     throttle.supportedMode = gps.is_supported() ? THRMODE_SPEED : THRMODE_THRUST;
     if (throttle.supportedMode == THRMODE_SPEED) {
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
         athr_c = (PIDController){
             calibration.pid[PID_THROTTLE_KP],       calibration.pid[PID_THROTTLE_KI],       calibration.pid[PID_THROTTLE_KD],
             calibration.pid[PID_THROTTLE_TAU],      calibration.esc[ESC_DETENT_IDLE],       calibration.esc[ESC_DETENT_MAX],
-            calibration.pid[PID_THROTTLE_INTEGMIN], calibration.pid[PID_THROTTLE_INTEGMAX], 0};
+            calibration.pid[PID_THROTTLE_INTEGMIN], calibration.pid[PID_THROTTLE_INTEGMAX]};
         pid_init(&athr_c);
+        #pragma GCC diagnostic pop
     }
 }
 

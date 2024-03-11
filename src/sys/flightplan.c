@@ -39,7 +39,7 @@ FlightplanError flightplan_parse(const char *json) {
     FlightplanError status = FPLAN_STATUS_OK;
     bool has_version = false, has_version_fw = false, has_alt_samples = false;
     // Process all tokens and extract any needed data; things here are mostly self-explanatory
-    for (u32 i = 0; i < tokenCount; i++) {
+    for (u32 i = 0; i < (u32)tokenCount; i++) {
         // Token field (name) iteration
         if (tokens[i].type == JSMN_STRING) {
             char field_name[25];
@@ -50,7 +50,7 @@ FlightplanError flightplan_parse(const char *json) {
                 strncpy(version, json + tokens[i + 1].start, tokens[i + 1].end - tokens[i + 1].start);
                 version[tokens[i + 1].end - tokens[i + 1].start] = '\0';
 
-                print("[fplan] Flightplan version: %s", version);
+                print("[fplan] flightplan version: %s", version);
                 if (strcmp(version, FPLAN_VERSION) != 0) {
                     print("[fplan] ERROR: flightplan version incompatable!");
                     state = FPLAN_ERR_VERSION;
@@ -69,7 +69,7 @@ FlightplanError flightplan_parse(const char *json) {
                 strncpy(versionFw, json + tokens[i + 1].start, tokens[i + 1].end - tokens[i + 1].start);
                 versionFw[tokens[i + 1].end - tokens[i + 1].start] = '\0';
 
-                print("[fplan] Firmware version: %s", versionFw);
+                print("[fplan] firmware version: %s", versionFw);
                 i32 versionCheck = version_check(versionFw);
                 if (versionCheck < 0) {
                     if (versionCheck < -1) {
@@ -77,7 +77,7 @@ FlightplanError flightplan_parse(const char *json) {
                         status = FPLAN_ERR_PARSE;
                         return status;
                     } else {
-                        print("[fplan] WARNING: a new pico-fbw firmware version is available, please download it!");
+                        print("[fplan] WARNING: a new version of pico-fbw is available, please download it!");
                         status = FPLAN_WARN_FW_VERSION;
                     }
                 }
@@ -97,7 +97,7 @@ FlightplanError flightplan_parse(const char *json) {
 
                 // We expect a value between zero and 100 (only calculate if non-zero)
                 if (flightplan.alt_samples <= 100 && flightplan.alt_samples >= 0) {
-                    print("[fplan] Num alt samples: %d", flightplan.alt_samples);
+                    print("[fplan] num alt samples: %ld", flightplan.alt_samples);
                     if (flightplan.alt_samples != 0 && status == FPLAN_STATUS_OK)
                         status = FPLAN_STATUS_GPS_OFFSET; // Only replace the status if it is still OK (no warnings yet)
                 } else {
@@ -108,7 +108,7 @@ FlightplanError flightplan_parse(const char *json) {
             } else if (strcmp(field_name, "waypoints") == 0) {
                 if (tokens[i + 1].type == JSMN_ARRAY) {
                     flightplan.waypoint_count = tokens[i + 1].size;
-                    print("[fplan] Flightplan contains %d waypoints", flightplan.waypoint_count);
+                    print("[fplan] flightplan contains %lu waypoints", flightplan.waypoint_count);
                     // Allocate memory for the waypoints array
                     flightplan.waypoints = calloc(flightplan.waypoint_count, sizeof(Waypoint));
                     if (!flightplan.waypoints) {
@@ -119,7 +119,7 @@ FlightplanError flightplan_parse(const char *json) {
                     u32 waypoint_token_index = i + 2; // Skip the array token
                     // Waypoint iteration
                     for (u32 w = 0; w < flightplan.waypoint_count; w++) {
-                        print("[fplan] Processing Waypoint %d:", w + 1);
+                        print("[fplan] processing Waypoint %lu:", w + 1);
                         if (tokens[waypoint_token_index].type == JSMN_OBJECT) {
                             u32 waypoint_tokenCount = tokens[waypoint_token_index].size;
                             u32 waypoint_field_token_index = waypoint_token_index + 1; // Skip the object token
@@ -231,8 +231,8 @@ FlightplanError flightplan_parse(const char *json) {
     }
 
     print("[fplan] Waypoint data:");
-    for (i32 i = 0; i < flightplan.waypoint_count; i++) {
-        print("Waypoint #%d: lat=%.10f, lng=%.10f, alt=%d, speed=%f, drop=%d", i + 1, flightplan.waypoints[i].lat,
+    for (u32 i = 0; i < flightplan.waypoint_count; i++) {
+        print("Waypoint #%lu: lat=%.10Lf, lng=%.10Lf, alt=%ld, speed=%f, drop=%ld", i + 1, flightplan.waypoints[i].lat,
               flightplan.waypoints[i].lng, flightplan.waypoints[i].alt, flightplan.waypoints[i].speed,
               flightplan.waypoints[i].drop);
     }

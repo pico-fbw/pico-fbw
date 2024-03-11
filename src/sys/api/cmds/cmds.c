@@ -38,68 +38,68 @@
 
 i32 api_handle_get(const char *cmd, const char *args) {
     if (strcasecmp(cmd, "GET_CONFIG") == 0) {
-        return api_get_config(cmd, args);
+        return api_get_config(args);
     } else if (strcasecmp(cmd, "GET_FPLAN") == 0) {
-        return api_get_fplan(cmd, args);
+        return api_get_fplan(args);
     } else if (strcasecmp(cmd, "GET_INFO") == 0) {
-        return api_get_info(cmd, args);
+        return api_get_info(args);
     } else if (strcasecmp(cmd, "GET_INPUT") == 0) {
-        return api_get_input(cmd, args);
+        return api_get_input(args);
     } else if (strcasecmp(cmd, "GET_LOGS") == 0) {
-        return api_get_logs(cmd, args);
+        return api_get_logs(args);
     } else if (strcasecmp(cmd, "GET_MODE") == 0) {
-        return api_get_mode(cmd, args);
+        return api_get_mode(args);
     } else if (strcasecmp(cmd, "GET_SENSOR") == 0) {
-        return api_get_sensor(cmd, args);
+        return api_get_sensor(args);
     } else
         return 404;
 }
 
 i32 api_handle_set(const char *cmd, const char *args) {
     if (strcasecmp(cmd, "SET_BAY") == 0) {
-        return api_set_bay(cmd, args);
+        return api_set_bay(args);
     } else if (strcasecmp(cmd, "SET_CONFIG") == 0) {
-        return api_set_config(cmd, args);
+        return api_set_config(args);
     } else if (strcasecmp(cmd, "SET_FPLAN") == 0) {
-        return api_set_fplan(cmd, args);
+        return api_set_fplan(args);
     } else if (strcasecmp(cmd, "SET_MODE") == 0) {
-        return api_set_mode(cmd, args);
+        return api_set_mode(args);
     } else if (strcasecmp(cmd, "SET_TARGET") == 0) {
-        return api_set_target(cmd, args);
+        return api_set_target(args);
     } else if (strcasecmp(cmd, "SET_WAYPOINT") == 0) {
-        return api_set_waypoint(cmd, args);
+        return api_set_waypoint(args);
     } else
         return 404;
 }
 
 i32 api_handle_test(const char *cmd, const char *args) {
     if (strcasecmp(cmd, "TEST_AAHRS") == 0) {
-        return api_test_aahrs(cmd, args);
+        return api_test_aahrs(args);
     } else if (strcasecmp(cmd, "TEST_ALL") == 0) {
-        return api_test_all(cmd, args);
+        return api_test_all(args);
     } else if (strcasecmp(cmd, "TEST_GPS") == 0) {
-        return api_test_gps(cmd, args);
+        return api_test_gps(args);
     } else if (strcasecmp(cmd, "TEST_PWM") == 0) {
-        return api_test_pwm(cmd, args);
+        return api_test_pwm(args);
     } else if (strcasecmp(cmd, "TEST_SERVO") == 0) {
-        return api_test_servo(cmd, args);
+        return api_test_servo(args);
     } else if (strcasecmp(cmd, "TEST_THROTTLE") == 0) {
-        return api_test_throttle(cmd, args);
+        return api_test_throttle(args);
     } else
         return 404;
 }
 
 i32 api_handle_misc(const char *cmd, const char *args) {
     if (strcasecmp(cmd, "ABOUT") == 0) {
-        api_about(cmd, args);
+        api_about(args);
     } else if (strcasecmp(cmd, "HELP") == 0) {
-        api_help(cmd, args);
+        api_help(args);
     } else if (strcasecmp(cmd, "PING") == 0) {
-        api_ping(cmd, args);
+        api_ping(args);
     } else if (strcasecmp(cmd, "REBOOT") == 0) {
-        api_reboot(cmd, args);
+        api_reboot(args);
     } else if (strcasecmp(cmd, "RESET") == 0) {
-        api_reset(cmd, args);
+        api_reset(args);
     } else
         return 404;
     return -1;

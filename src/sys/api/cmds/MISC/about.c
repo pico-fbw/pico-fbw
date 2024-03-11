@@ -10,8 +10,8 @@
 
 #include "about.h"
 
-void api_about(const char *cmd, const char *args) {
-    printraw("pico-fbw v%s, API v%s, Wi-Fly Unsupported, \"%s\" HAL v%s\n\n", PICO_FBW_VERSION, PICO_FBW_API_VERSION,
+void api_about(const char *args) {
+    printraw("pico-fbw v%s, API v%s, \"%s\" v%s\n\n", PICO_FBW_VERSION, PICO_FBW_API_VERSION,
              PLATFORM_NAME, PLATFORM_VERSION);
     printraw("Copyright (C) 2023-2024 pico-fbw\n\n"
              "This program is free software: you can redistribute it and/or modify "
@@ -26,4 +26,5 @@ void api_about(const char *cmd, const char *args) {
 
              "You should have received a copy of the GNU Affero General Public License "
              "along with this program. If not, see https://www.gnu.org/licenses/.\n");
+    (void)args;
 }

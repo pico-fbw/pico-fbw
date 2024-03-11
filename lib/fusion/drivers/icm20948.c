@@ -60,7 +60,7 @@ i8 ICM20948_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
     byte reg;
     printfbw(aahrs, "[ICM20948] initializing...");
     for (u32 i = 0; i < DRIVER_INIT_ATTEMPTS; i++) {
-        if (shouldPrint.aahrs) printraw("attempt %d ", i);
+        if (shouldPrint.aahrs) printraw("attempt %lu ", i);
         status = driver_read_register(&sensor->deviceInfo, sensor->addr, ICM20948_WHO_AM_I_READ[0].readFrom, ICM20948_WHO_AM_I_READ[0].numBytes, &reg);
         if (status == SENSOR_ERROR_NONE && reg == ICM20948_WHO_AM_I_EXPECTED) break;
     }

@@ -28,7 +28,7 @@ static void waitFor(u32 s) {
     }
 }
 
-i32 api_test_throttle(const char *cmd, const char *args) {
+i32 api_test_throttle(const char *args) {
     if (aircraft.mode == MODE_DIRECT) {
         float *idle = &calibration.esc[ESC_DETENT_IDLE];
         float *mct = &calibration.esc[ESC_DETENT_MCT];

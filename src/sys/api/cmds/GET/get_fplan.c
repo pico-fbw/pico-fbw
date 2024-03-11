@@ -8,10 +8,11 @@
 
 #include "get_fplan.h"
 
-i32 api_get_fplan(const char *cmd, const char *args) {
+i32 api_get_fplan(const char *args) {
     if (flightplan_was_parsed()) {
         printraw("%s\n", flightplan_get()->json);
         return -1;
     } else
         return 403;
+    (void)args;
 }

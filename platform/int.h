@@ -32,13 +32,13 @@ static inline float clampf(float f, float min, float max) {
 }
 
 #ifndef map
-    // Maps a value from one range to another.
+    // Maps a value `x` from the range `in_min` to `in_max` to the range `out_min` to `out_max`.
     #define map(x, in_min, in_max, out_min, out_max) (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 #endif
 
-// Maps a value from one range to another.
-static inline float mapf(float x, float in_min, float in_max, float out_min, float out_max) {
-    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+// Maps a value `f` from the range `in_min` to `in_max` to the range `out_min` to `out_max`.
+static inline float mapf(float f, float in_min, float in_max, float out_min, float out_max) {
+    return (f - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
 #ifndef radians

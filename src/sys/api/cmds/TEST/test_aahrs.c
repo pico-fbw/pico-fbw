@@ -61,7 +61,7 @@ static bool waitForAxis(IMUAxis axis, u32 breakpoint, u32 timeout_ms) {
     return moved == axis;
 }
 
-i32 api_test_aahrs(const char *cmd, const char *args) {
+i32 api_test_aahrs(const char *args) {
     printraw("[test] awaiting right roll...\n");
     if (!waitForAxis(IMU_AXIS_ROLL, 20, 10000))
         return 500;
@@ -77,6 +77,5 @@ i32 api_test_aahrs(const char *cmd, const char *args) {
         return 500;
     return 200;
     // TODO: test baro when done implementing baro fusion
-    (void)cmd; // Suppress unused parameter warnings
     (void)args;
 }

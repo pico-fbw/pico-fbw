@@ -8,13 +8,13 @@
 
 #include "get_logs.h"
 
-i32 api_get_logs(const char *cmd, const char *args) {
+i32 api_get_logs(const char *args) {
     u32 logCount = log_count();
     if (logCount > 0) {
         printraw("{\"logs\":[");
         for (u32 i = 0; i < logCount; i++) {
             LogEntry *entry = log_get(i);
-            printraw("{\"type\":%d,\"msg\":\"%s\",\"code\":%d,\"timestamp\":%llu}", entry->type, entry->msg, entry->code,
+            printraw("{\"type\":%d,\"msg\":\"%s\",\"code\":%ld,\"timestamp\":%llu}", entry->type, entry->msg, entry->code,
                      entry->timestamp);
             if (logCount > 1 && i != logCount - 1)
                 printraw(",");
@@ -23,4 +23,5 @@ i32 api_get_logs(const char *cmd, const char *args) {
         return -1;
     }
     return 204;
+    (void)args;
 }

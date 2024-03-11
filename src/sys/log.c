@@ -157,8 +157,10 @@ i32 process_queue() {
  * @note This makes it so that the next log entry will be displayed regardless.
  */
 void reset_last() {
-    lastEntry->type = NONE;
-    lastEntry->code = UINT16_MAX;
+    if (lastEntry) {
+        lastEntry->type = NONE;
+        lastEntry->code = UINT16_MAX;
+    }
 }
 
 void log_init() {
@@ -190,7 +192,7 @@ void log_message(LogType type, const char *msg, i32 code, u32 pulse_ms, bool for
     // Display the entry if: the error is more severe than the last,
     // there was a code given, the type is severe enough, it was forced, or of the same type (but newer)
     if (type > LOG && code > -1) {
-        if ((type >= lastEntry->type && code <= lastEntry->code) || force) {
+        if (force || (lastEntry && (type >= lastEntry->type && code <= lastEntry->code))) {
             if (boot_is_booted() || type == FATAL || type == INFO) {
                 display_log(entry);
             } else {

@@ -3,6 +3,7 @@
  * Licensed under the GNU AGPL-3.0
  */
 
+#include <assert.h>
 #include "esp_sleep.h"    // https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32/api-reference/system/sleep_modes.html
 #include "esp_system.h"   // https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32/api-reference/system/misc_system_api.html
 #include "esp_task_wdt.h" // https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32/api-reference/system/wdts.html
@@ -11,7 +12,7 @@
 
 #include "platform/sys.h"
 
-#define THREAD_DELAY_MS 50 // The amount of time to allow for other RTOS tasks to run
+#define THREAD_DELAY_MS 10 // The amount of time to allow for other RTOS tasks to run
 
 void sys_boot_begin() {
     return; // Nothing to do here
@@ -26,6 +27,7 @@ void sys_periodic() {
     if (esp_task_wdt_status(NULL) == ESP_OK)
         esp_task_wdt_reset();
     vTaskDelay(pdMS_TO_TICKS(THREAD_DELAY_MS)); // Allow other RTOS tasks to run
+    static_assert(pdMS_TO_TICKS(THREAD_DELAY_MS) > 0, "THREAD_DELAY_MS must be at least one tick");
 }
 
 void __attribute__((noreturn)) sys_shutdown() {

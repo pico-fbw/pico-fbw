@@ -54,7 +54,7 @@ static inline bool data_valid(float lat, float lng, i32 alt, float speed, float 
 }
 
 bool gps_init() {
-    printfbw(gps, "initializing uart at baudrate %d, on pins %d (tx) and %d (rx)", (u32)config.sensors[SENSORS_GPS_BAUDRATE],
+    printfbw(gps, "initializing uart at baudrate %lu, on pins %lu (tx) and %lu (rx)", (u32)config.sensors[SENSORS_GPS_BAUDRATE],
              (u32)config.pins[PINS_GPS_TX], (u32)config.pins[PINS_GPS_RX]);
     uart_setup((u32)config.pins[PINS_GPS_TX], (u32)config.pins[PINS_GPS_RX], (u32)config.sensors[SENSORS_GPS_BAUDRATE]);
     printfbw(gps, "configuring...");
@@ -75,7 +75,7 @@ bool gps_init() {
             while (lines < 30 && !timestamp_reached(&timeout)) {
                 char *line = uart_read((u32)config.pins[PINS_GPS_TX], (u32)config.pins[PINS_GPS_RX]);
                 if (!line)
-                    break;
+                    continue;
                 printfbw(gps, "response %d: %s", lines, line);
                 bool result =
                     (strncmp(line, "$PMTK001,314,3*36", 17) == 0); // Acknowledged and successful execution of the command
@@ -84,11 +84,11 @@ bool gps_init() {
                     return true;
                 lines++;
             }
-            if (timestamp_reached(&timeout))
+            if (timestamp_reached(&timeout)) {
                 printfbw(gps, "ERROR: communication with GPS timed out!");
-            printfbw(gps, "ERROR: %d responses were checked but none were valid!", lines);
+            } else
+                printfbw(gps, "ERROR: %d responses were checked but none were valid!", lines);
             return false;
-            break;
         default:
             return false;
     }
@@ -166,9 +166,9 @@ i32 gps_calibrate_alt_offset(u32 num_samples) {
                     struct minmea_sentence_gga gga;
                     if (minmea_parse_gga(&gga, line)) {
                         if (strncmp(&gga.altitude_units, "M", 1) == 0) {
-                            i32 calt = (i32)(minmea_tofloat(&gga.altitude) * 3.28084f);
-                            alts += calt;
-                            printfbw(gps, "altitude: %d (%d of %d)", calt, samples + 1, num_samples);
+                            i32 cAlt = (i32)(minmea_tofloat(&gga.altitude) * 3.28084f);
+                            alts += cAlt;
+                            printfbw(gps, "altitude: %ld (%lu of %lu)", cAlt, samples + 1, num_samples);
                         } else {
                             printfbw(gps, "ERROR: invalid altitude units during calibration");
                             return -2;
@@ -191,7 +191,7 @@ i32 gps_calibrate_alt_offset(u32 num_samples) {
         return -1;
     } else {
         gps.altOffset = (i32)(alts / samples);
-        printfbw(gps, "altitude offset calculated as: %d", gps.altOffset);
+        printfbw(gps, "altitude offset calculated as: %ld", gps.altOffset);
         gps.altOffsetCalibrated = true;
         return 0;
     }

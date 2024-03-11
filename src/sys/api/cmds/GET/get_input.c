@@ -12,7 +12,7 @@
 
 // FIXME: this command should account for the current control mode (and not simply try and read from uninitialized pins)
 
-i32 api_get_input(const char *cmd, const char *args) {
+i32 api_get_input(const char *args) {
     printraw("{\"ail\":%f,\"elev\":%f,\"rud\":%f,\"thr\":%f,\"switch\":%f}\n",
              receiver_get(config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE),
              receiver_get(config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEGREE),
@@ -20,4 +20,5 @@ i32 api_get_input(const char *cmd, const char *args) {
              receiver_get(config.pins[PINS_INPUT_THROTTLE], RECEIVER_MODE_PERCENT),
              receiver_get(config.pins[PINS_INPUT_SWITCH], RECEIVER_MODE_DEGREE));
     return -1;
+    (void)args;
 }

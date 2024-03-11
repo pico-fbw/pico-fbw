@@ -71,7 +71,7 @@ char *uart_read(u32 tx, u32 rx) {
     uart_inst_t *uart = uart_inst_from_pins(tx, rx);
     if (!uart)
         return NULL;
-    // Very similar to stdin_read() in stdio.c, take a look at that for documentation
+    // Very similar to stdin_read() in pico/stdio.c, take a look at that for documentation
     char *buf = NULL;
     if (uart_is_readable(uart)) {
         u32 i = 0;

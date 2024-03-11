@@ -43,6 +43,8 @@ int main() {
     boot_set_progress(5, "Loading configuration");
     config_load();
 
+    // config.general[GENERAL_SERVO_HZ] = 100;
+
     // Check version
     boot_set_progress(10, "Checking for updates");
     char version[64] = "\0";

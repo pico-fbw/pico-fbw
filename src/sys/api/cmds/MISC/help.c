@@ -8,12 +8,12 @@
 
 #include "help.h"
 
-void api_help(const char *cmd, const char *args) {
+void api_help(const char *args) {
     printraw(
         "\npico-fbw API v%s\n"
         "Commands:\n"
         "GET_CONFIG <section> <key> - Get configuration value (providing no arguments will list the entire config)\n"
-        "GET_FPLAN - Get flightplan JSON from Wi-Fly\n"
+        "GET_FPLAN - Get flightplan JSON\n"
         "GET_INFO - Get system information\n"
         "GET_INPUT - Get current control inputs\n"
         "GET_LOGS - Get system logs\n"
@@ -49,4 +49,5 @@ void api_help(const char *cmd, const char *args) {
         "500 Internal Error - Internal error executing the requested command\n\n"
         "More information can be found at https://pico-fbw.org/wiki/docs/API\n",
         PICO_FBW_API_VERSION);
+    (void)args;
 }

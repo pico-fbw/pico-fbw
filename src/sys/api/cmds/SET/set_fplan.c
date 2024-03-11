@@ -7,7 +7,7 @@
 
 #include "set_fplan.h"
 
-i32 api_set_fplan(const char *cmd, const char *args) {
+i32 api_set_fplan(const char *args) {
     if (!args)
         return 400;
     FlightplanError err = flightplan_parse(args);

@@ -18,6 +18,8 @@ target_link_libraries(platform_esp
     idf::esp_system
     idf::esp_timer
     idf::freertos
+    idf::newlib
+    idf::soc
 )
 
 target_include_directories(platform_esp PRIVATE ${CMAKE_SOURCE_DIR})

@@ -12,13 +12,13 @@
 
 #include "test_all.h"
 
-i32 api_test_all(const char *cmd, const char *args) {
+i32 api_test_all(const char *args) {
     u32 status[4];
     u32 passed = 0;
-    status[0] = api_test_aahrs(cmd, args);
-    status[1] = api_test_gps(cmd, args);
-    status[2] = api_test_pwm(cmd, args);
-    status[3] = api_test_servo(cmd, args);
+    status[0] = api_test_aahrs(args);
+    status[1] = api_test_gps(args);
+    status[2] = api_test_pwm(args);
+    status[3] = api_test_servo(args);
     // Omit throttle test as servo uses the same IO, which is what we care about here
     for (u32 i = 0; i < count_of(status); i++) {
         if (status[i] == 200)

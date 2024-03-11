@@ -31,7 +31,7 @@ float pwm_read_raw(u32 pin);
 /**
  * Writes a PWM signal to `pin`.
  * @param pin pin to write PWM signal to
- * @param value the duty cycle to write to the PWM signal (0-2^16)
+ * @param pulsewidth pulsewidth of the PWM signal in μs
  * @note `pin` must have been previously set up to write PWM signals using `pwm_setup_write()`
  */
-void pwm_write_raw(u32 pin, u16 duty);
+void pwm_write_raw(u32 pin, float pulsewidth);

@@ -63,7 +63,6 @@ void changeTo(Mode newMode) {
     }
     if (aircraft.AAHRSSafe) {
         switch (newMode) {
-        DIRECT:
         case MODE_DIRECT:
             printfbw(modes, "entering direct mode");
             aircraft.mode = MODE_DIRECT;
@@ -74,7 +73,6 @@ void changeTo(Mode newMode) {
             normal_init();
             aircraft.mode = MODE_NORMAL;
             break;
-        AUTO:
         case MODE_AUTO:
             // Automatically enter tune mode if necessary
             if (!tune_is_tuned())
@@ -103,7 +101,6 @@ void changeTo(Mode newMode) {
             } else
                 goto NORMAL;
             break;
-        HOLD:
         case MODE_HOLD:
             if (gps.is_supported() && aircraft.GPSSafe) {
                 printfbw(modes, "entering hold mode");

@@ -49,7 +49,7 @@ i8 AK09916_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
     byte reg;
     printfbw(aahrs, "[AK09916] initializing...");
     for (u32 i = 0; i < DRIVER_INIT_ATTEMPTS; i++) {
-        if (shouldPrint.aahrs) printraw("attempt %d ", i);
+        if (shouldPrint.aahrs) printraw("attempt %lu ", i);
         status = driver_read_register(&sensor->deviceInfo, sensor->addr, AK09916_DEVICE_ID_READ[0].readFrom, AK09916_DEVICE_ID_READ[0].numBytes, &reg);
         if (status == SENSOR_ERROR_NONE && reg == AK09916_DEVICE_ID_EXPECTED) break;
     }
