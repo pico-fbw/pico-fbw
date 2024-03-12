@@ -28,15 +28,15 @@ void ssSetStatusNow(StatusSubsystem *pStatus, fusion_status_t status)
     // If the status is severe enough, log it
     switch (status) {
         case NORMAL:
-            aircraft.setAAHRSSafe(true);
+            aircraft.set_aahrs_safe(true);
             break;
         case SOFT_FAULT:
             log_message(WARNING, "Fusion fault!", 1000, 0, false);
-            aircraft.setAAHRSSafe(false);
+            aircraft.set_aahrs_safe(false);
             break;
         case HARD_FAULT:
             log_message(ERROR, "Unrecoverable fusion fault!", 1000, 0, false);
-            aircraft.setAAHRSSafe(false);
+            aircraft.set_aahrs_safe(false);
             break;
         default:
             break;

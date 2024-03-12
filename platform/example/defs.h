@@ -23,7 +23,7 @@
 // Status LED
 // This is optional. Define if your platform has a built-in LED that can be used for status indication.
 // Otherwise, comment out the following line and all LED-related code will be omitted from the final build.
-#define PIN_LED 2
+#define PIN_LED x
 
 // Platform details
 // These are purely informational for the user and can be whatever you want.

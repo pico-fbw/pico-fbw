@@ -19,7 +19,7 @@ i32 api_get_sensor(const char *args) {
     // Prepare the JSON output based on sensor type
     switch (atoi(args)) {
         case 1: // IMU only
-            if (aircraft.AAHRSSafe) {
+            if (aircraft.aahrsSafe) {
                 printraw("{\"imu\":[{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f}]}\n", aahrs.roll, aahrs.pitch, aahrs.yaw);
             } else {
                 printraw("{\"imu\":[{\"roll\":null,\"pitch\":null,\"yaw\":null}]}\n");
@@ -28,7 +28,7 @@ i32 api_get_sensor(const char *args) {
         case 2: // GPS only
             if ((GPSCommandType)config.sensors[SENSORS_GPS_COMMAND_TYPE] == GPS_COMMAND_TYPE_NONE)
                 return 403;
-            if (aircraft.GPSSafe) {
+            if (aircraft.gpsSafe) {
                 printraw("{\"gps\":[{\"lat\":%.10Lf,\"lng\":%.10Lf,\"alt\":%ld,\"speed\":%.4f,\"track\":%.4f}]}\n", gps.lat,
                          gps.lng, gps.alt, gps.speed, gps.track);
             } else {
@@ -39,15 +39,15 @@ i32 api_get_sensor(const char *args) {
         default:
             if ((GPSCommandType)config.sensors[SENSORS_GPS_COMMAND_TYPE] == GPS_COMMAND_TYPE_NONE)
                 return 403;
-            if (aircraft.AAHRSSafe && aircraft.GPSSafe) {
+            if (aircraft.aahrsSafe && aircraft.gpsSafe) {
                 printraw("{\"imu\":[{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f}],"
                          "\"gps\":[{\"lat\":%.10Lf,\"lng\":%.10Lf,\"alt\":%ld,\"speed\":%.4f,\"track\":%.4f}]}\n",
                          aahrs.roll, aahrs.pitch, aahrs.yaw, gps.lat, gps.lng, gps.alt, gps.speed, gps.track);
-            } else if (aircraft.AAHRSSafe) {
+            } else if (aircraft.aahrsSafe) {
                 printraw("{\"imu\":[{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f}],"
                          "\"gps\":[{\"lat\":null,\"lng\":null,\"alt\":null,\"speed\":null,\"track\":null}]}\n",
                          aahrs.roll, aahrs.pitch, aahrs.yaw);
-            } else if (aircraft.GPSSafe) {
+            } else if (aircraft.gpsSafe) {
                 printraw("{\"imu\":[{\"roll\":null,\"pitch\":null,\"yaw\":null}],"
                          "\"gps\":[{\"lat\":%.10Lf,\"lng\":%.10Lf,\"alt\":%ld,\"speed\":%.4f,\"track\":%.4f}]}\n",
                          gps.lat, gps.lng, gps.alt, gps.speed, gps.track);

@@ -11,5 +11,3 @@ endfunction()
 add_subdirectory(${PLATFORM_DIR})
 message("Target platform library is: platform_${PLATFORM_DIR}")
 configure_libraries(platform_${PLATFORM_DIR})
-
-# TODO: add "example" platform folder with comments explaining what people have to implement for each function

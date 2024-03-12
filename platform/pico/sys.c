@@ -67,5 +67,3 @@ BootType sys_boot_type() {
     } else
         return BOOT_COLD; // No watchdog reboot, so a cold boot
 }
-
-// TODO: sys_info() function to return a string with system information that can be printed in api, also add to other platforms?

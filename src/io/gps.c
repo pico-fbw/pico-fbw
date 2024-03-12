@@ -107,7 +107,7 @@ void gps_update() {
                     if (strncmp(&gga.altitude_units, "M", 1) == 0) {
                         gps.alt = (i32)(minmea_tofloat(&gga.altitude) * M_TO_FT);
                     } else {
-                        aircraft.setGPSSafe(false);
+                        aircraft.set_gps_safe(false);
                         printfbw(gps, "ERROR: incorrect altitude units!");
                         return;
                     }
@@ -149,7 +149,7 @@ void gps_update() {
         free(line);
         line = uart_read((u32)config.pins[PINS_GPS_TX], (u32)config.pins[PINS_GPS_RX]);
     }
-    aircraft.setGPSSafe(data_valid(gps.lat, gps.lng, gps.alt, gps.speed, gps.track, gps.pdop, gps.hdop, gps.vdop));
+    aircraft.set_gps_safe(data_valid(gps.lat, gps.lng, gps.alt, gps.speed, gps.track, gps.pdop, gps.hdop, gps.vdop));
 }
 
 i32 gps_calibrate_alt_offset(u32 num_samples) {

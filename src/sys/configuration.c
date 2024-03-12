@@ -25,33 +25,51 @@
 // clang-format off
 Config config = {
     // FIXME: index 7 (false) of general is the wifi config flag, replace this with an enum when the wifi HAL is done and has one
-    .general = {CTRLMODE_2AXIS_ATHR, SWITCH_TYPE_3_POS, 20, 50, 50, true, false, false, CONFIG_END_MAGIC},
-    .control = {0.0025f, 1.5f, 5, // Control handling preferences
-                10, 30, 0.015f, // Autothrottle configuration
-                180, 0, // Drop bay detent settings
-                33, 67, -15, 30, // Control limits
-                25, 15, 20, // Physical control surface limits
-                20, 0.5f, 1, 1, // Flying wing configuration
-                CONFIG_END_MAGIC},
-    .pins = {PIN_INPUT_AIL, PIN_SERVO_AIL, PIN_INPUT_ELE, PIN_SERVO_ELE, PIN_INPUT_RUD,
-             PIN_SERVO_RUD, PIN_INPUT_THR, PIN_ESC_THR, PIN_INPUT_SWITCH, PIN_SERVO_BAY, // Control IO pins
-             PIN_AAHRS_SDA, PIN_AAHRS_SCL, PIN_GPS_TX, PIN_GPS_RX, // Sensor communications pins
-             false, false, false, // Servo reverse flags
-             CONFIG_END_MAGIC},
-    .sensors = {IMU_MODEL_BNO055, BARO_MODEL_NONE, GPS_COMMAND_TYPE_PMTK, 9600, CONFIG_END_MAGIC},
-    .system = {false,
-               true, false, false, false, false, false, // Default print settings, also found in PrintDefs below
-               2000, CONFIG_END_MAGIC},
+    .general = {
+        CTRLMODE_2AXIS_ATHR, SWITCH_TYPE_3_POS, 20, 50, 50, true, false, false, CONFIG_END_MAGIC,
+    },
+    .control = {
+        0.0025f, 1.5f, 5, // Control handling preferences
+        10, 30, 0.015f, // Autothrottle configuration
+        180, 0, // Drop bay detent settings
+        33, 67, -15, 30, // Control limits
+        25, 15, 20, // Physical control surface limits
+        20, 0.5f, 1, 1, // Flying wing configuration
+        CONFIG_END_MAGIC,
+    },
+    .pins = {
+        PIN_INPUT_AIL, PIN_SERVO_AIL, PIN_INPUT_ELE, PIN_SERVO_ELE, PIN_INPUT_RUD,
+        PIN_SERVO_RUD, PIN_INPUT_THR, PIN_ESC_THR, PIN_INPUT_SWITCH, PIN_SERVO_BAY, // Control IO pins
+        PIN_AAHRS_SDA, PIN_AAHRS_SCL, PIN_GPS_TX, PIN_GPS_RX, // Sensor communications pins
+        false, false, false, // Servo reverse flags
+        CONFIG_END_MAGIC,
+    },
+    .sensors = {
+        IMU_MODEL_BNO055, BARO_MODEL_NONE, GPS_COMMAND_TYPE_PMTK, 9600,
+        CONFIG_END_MAGIC,
+    },
+    .system = {
+        false,
+        true, false, false, false, false, false, // Default print settings, also found in PrintDefs below
+        2000,
+        CONFIG_END_MAGIC,
+    },
     .ssid = "pico-fbw",
     .pass = "picodashfbw"
 };
-// clang-format on
 
 Calibration calibration = {
-    .esc = {false, 10, 75, 90} // Only throttle detents have default values
+    // Only throttle detents have default values
+    .esc = {
+        false, 10, 75, 90
+    }
 };
 
-PrintDefs shouldPrint = {true, false, false, false, false}; // Default print settings
+PrintDefs shouldPrint = {
+    // Default print settings
+    true, false, false, false, false
+};
+// clang-format on
 
 /**
  * Loads the contents of a file into a struct, creating the file based on the curent struct state if it doesn't exist.
@@ -121,7 +139,7 @@ void config_reset() {
 
 // I'm so sorry (this is a C moment)
 
-static void getFromGeneral(const char *key, float **value) {
+static void get_from_general(const char *key, float **value) {
     if (strcasecmp(key, "controlMode") == 0) {
         *value = &config.general[GENERAL_CONTROL_MODE];
     } else if (strcasecmp(key, "switchType") == 0) {
@@ -143,7 +161,7 @@ static void getFromGeneral(const char *key, float **value) {
     }
 }
 
-static bool setToGeneral(const char *key, float value) {
+static bool set_to_general(const char *key, float value) {
     if (strcasecmp(key, "controlMode") == 0) {
         config.general[GENERAL_CONTROL_MODE] = value;
     } else if (strcasecmp(key, "switchType") == 0) {
@@ -165,7 +183,7 @@ static bool setToGeneral(const char *key, float value) {
     return true;
 }
 
-static void getFromControl(const char *key, float **value) {
+static void get_from_control(const char *key, float **value) {
     if (strcasecmp(key, "controlSensitivity") == 0) {
         *value = &config.control[CONTROL_SENSITIVITY];
     } else if (strcasecmp(key, "rudderSensitivity") == 0) {
@@ -209,7 +227,7 @@ static void getFromControl(const char *key, float **value) {
     }
 }
 
-static bool setToControl(const char *key, float value) {
+static bool set_to_control(const char *key, float value) {
     if (strcasecmp(key, "controlSensitivity") == 0) {
         config.control[CONTROL_SENSITIVITY] = value;
     } else if (strcasecmp(key, "rudderSensitivity") == 0) {
@@ -253,7 +271,7 @@ static bool setToControl(const char *key, float value) {
     return true;
 }
 
-static void getFromPins(const char *key, float **value) {
+static void get_from_pins(const char *key, float **value) {
     if (strcasecmp(key, "inputAil") == 0) {
         *value = &config.pins[PINS_INPUT_AIL];
     } else if (strcasecmp(key, "servoAil") == 0) {
@@ -293,7 +311,7 @@ static void getFromPins(const char *key, float **value) {
     }
 }
 
-static bool setToPins(const char *key, float value) {
+static bool set_to_pins(const char *key, float value) {
     if (strcasecmp(key, "inputAil") == 0) {
         config.pins[PINS_INPUT_AIL] = value;
     } else if (strcasecmp(key, "servoAil") == 0) {
@@ -333,7 +351,7 @@ static bool setToPins(const char *key, float value) {
     return true;
 }
 
-static void getFromSensors(const char *key, float **value) {
+static void get_from_sensors(const char *key, float **value) {
     if (strcasecmp(key, "imuModel") == 0) {
         *value = &config.sensors[SENSORS_IMU_MODEL];
     } else if (strcasecmp(key, "baroModel") == 0) {
@@ -347,7 +365,7 @@ static void getFromSensors(const char *key, float **value) {
     }
 }
 
-static bool setToSensors(const char *key, float value) {
+static bool set_to_sensors(const char *key, float value) {
     if (strcasecmp(key, "imuModel") == 0) {
         config.sensors[SENSORS_IMU_MODEL] = value;
     } else if (strcasecmp(key, "baroModel") == 0) {
@@ -361,7 +379,7 @@ static bool setToSensors(const char *key, float value) {
     return true;
 }
 
-static void getFromSystem(const char *key, float **value) {
+static void get_from_system(const char *key, float **value) {
     if (strcasecmp(key, "debug") == 0) {
         *value = &config.system[SYSTEM_DEBUG];
     } else if (strcasecmp(key, "printFBW") == 0) {
@@ -379,7 +397,7 @@ static void getFromSystem(const char *key, float **value) {
     }
 }
 
-static bool setToSystem(const char *key, float value) {
+static bool set_to_system(const char *key, float value) {
     if (strcasecmp(key, "printFBW") == 0) {
         config.system[SYSTEM_PRINT_FBW] = value;
     } else if (strcasecmp(key, "printAAHRS") == 0) {
@@ -395,7 +413,7 @@ static bool setToSystem(const char *key, float value) {
     return true;
 }
 
-static void getFromWifi(const char *key, char **value) {
+static void get_from_wifi(const char *key, char **value) {
     if (strcasecmp(key, "ssid") == 0) {
         *value = config.ssid;
     } else if (strcasecmp(key, "pass") == 0) {
@@ -405,7 +423,7 @@ static void getFromWifi(const char *key, char **value) {
     }
 }
 
-static bool setToWifi(const char *key, const char *value) {
+static bool set_to_wifi(const char *key, const char *value) {
     if (strcasecmp(key, "ssid") == 0) {
         strcpy(config.ssid, value);
     } else if (strcasecmp(key, "pass") == 0) {
@@ -500,17 +518,17 @@ bool config_validate() {
         return false;
     }
     // Sensor model validation
-    if (config.sensors[SENSORS_IMU_MODEL] < IMU_MODEL_MIN || config.sensors[SENSORS_IMU_MODEL] > IMU_MODEL_MAX) {
-        print("ERROR: IMU model must be between %d and %d.", IMU_MODEL_MIN, IMU_MODEL_MAX);
+    if (config.sensors[SENSORS_IMU_MODEL] < IMU_MODEL_MIN || config.sensors[SENSORS_IMU_MODEL] >= IMU_MODEL_MAX) {
+        print("ERROR: IMU model must be between %d and %d.", IMU_MODEL_MIN, IMU_MODEL_MAX - 1);
         return false;
     }
-    if (config.sensors[SENSORS_BARO_MODEL] < BARO_MODEL_MIN || config.sensors[SENSORS_BARO_MODEL] > BARO_MODEL_MAX) {
-        print("ERROR: Barometer model must be between %d and %d.", BARO_MODEL_MIN, BARO_MODEL_MAX);
+    if (config.sensors[SENSORS_BARO_MODEL] < BARO_MODEL_MIN || config.sensors[SENSORS_BARO_MODEL] >= BARO_MODEL_MAX) {
+        print("ERROR: Barometer model must be between %d and %d.", BARO_MODEL_MIN, BARO_MODEL_MAX - 1);
         return false;
     }
     if (config.sensors[SENSORS_GPS_COMMAND_TYPE] < GPS_COMMAND_TYPE_MIN ||
-        config.sensors[SENSORS_GPS_COMMAND_TYPE] > GPS_COMMAND_TYPE_MAX) {
-        print("ERROR: GPS command type must be between %d and %d.", GPS_COMMAND_TYPE_MIN, GPS_COMMAND_TYPE_MAX);
+        config.sensors[SENSORS_GPS_COMMAND_TYPE] >= GPS_COMMAND_TYPE_MAX) {
+        print("ERROR: GPS command type must be between %d and %d.", GPS_COMMAND_TYPE_MIN, GPS_COMMAND_TYPE_MAX - 1);
         return false;
     }
     // Throttle  configuration validation
@@ -560,32 +578,32 @@ bool config_validate() {
 ConfigSectionType config_get(const char *section, const char *key, void **value) {
     if (strcasecmp(section, CONFIG_GENERAL_STR) == 0) {
         float *v;
-        getFromGeneral(key, &v);
+        get_from_general(key, &v);
         *value = v;
         return SECTION_TYPE_FLOAT;
     } else if (strcasecmp(section, CONFIG_CONTROL_STR) == 0) {
         float *v;
-        getFromControl(key, &v);
+        get_from_control(key, &v);
         *value = v;
         return SECTION_TYPE_FLOAT;
     } else if (strcasecmp(section, CONFIG_PINS_STR) == 0) {
         float *v;
-        getFromPins(key, &v);
+        get_from_pins(key, &v);
         *value = v;
         return SECTION_TYPE_FLOAT;
     } else if (strcasecmp(section, CONFIG_SENSORS_STR) == 0) {
         float *v;
-        getFromSensors(key, &v);
+        get_from_sensors(key, &v);
         *value = v;
         return SECTION_TYPE_FLOAT;
     } else if (strcasecmp(section, CONFIG_WIFI_STR) == 0) {
         char *v;
-        getFromWifi(key, &v);
+        get_from_wifi(key, &v);
         *value = v;
         return SECTION_TYPE_STRING;
     } else if (strcasecmp(section, CONFIG_SYSTEM_STR) == 0) {
         float *v;
-        getFromSystem(key, &v);
+        get_from_system(key, &v);
         *value = v;
         return SECTION_TYPE_FLOAT;
     } else {
@@ -595,29 +613,29 @@ ConfigSectionType config_get(const char *section, const char *key, void **value)
 
 bool config_set(const char *section, const char *key, const char *value) {
     if (strcasecmp(section, CONFIG_GENERAL_STR) == 0) {
-        if (!setToGeneral(key, atoff(value)))
+        if (!set_to_general(key, atoff(value)))
             return false;
     } else if (strcasecmp(section, CONFIG_CONTROL_STR) == 0) {
-        if (!setToControl(key, atoff(value)))
+        if (!set_to_control(key, atoff(value)))
             return false;
     } else if (strcasecmp(section, CONFIG_PINS_STR) == 0) {
-        if (!setToPins(key, atoff(value)))
+        if (!set_to_pins(key, atoff(value)))
             return false;
     } else if (strcasecmp(section, CONFIG_SENSORS_STR) == 0) {
-        if (!setToSensors(key, atoff(value)))
+        if (!set_to_sensors(key, atoff(value)))
             return false;
     } else if (strcasecmp(section, CONFIG_WIFI_STR) == 0) {
-        if (!setToWifi(key, value))
+        if (!set_to_wifi(key, value))
             return false;
     } else if (strcasecmp(section, CONFIG_SYSTEM_STR) == 0) {
-        if (!setToSystem(key, atoff(value)))
+        if (!set_to_system(key, atoff(value)))
             return false;
     } else
         return false;
     return config_validate();
 }
 
-ConfigSectionType config_sectionToString(ConfigSection section, const char **str) {
+ConfigSectionType config_to_string(ConfigSection section, const char **str) {
     switch (section) {
         case CONFIG_GENERAL:
             *str = CONFIG_GENERAL_STR;

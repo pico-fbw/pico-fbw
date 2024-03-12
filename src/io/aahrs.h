@@ -3,18 +3,13 @@
 #include <stdbool.h>
 #include "platform/int.h"
 
-// The number of samples to average when calculating the gyroscope offset
-#define GYRO_AVG_SAMPLES 100
-// The maximum velocity (in deg/s) under which the gyroscope is considered to be stationary
-#define GYRO_STILL_VELOCITY 3
-// The maximum number of attempts to get a magnetometer calibration using the 10 element (best) solver
-// The best current calibration will be used if the magnetometer is not calibrated after this many attempts, and a warning will
-// be generated
-#define MAX_MAG_ATTEMPTS 15
-
 #define IMU_MODEL_MIN IMU_MODEL_BNO055
-typedef enum IMUModel { IMU_MODEL_NONE, IMU_MODEL_BNO055, IMU_MODEL_ICM20948 } IMUModel;
-#define IMU_MODEL_MAX IMU_MODEL_ICM20948
+typedef enum IMUModel {
+    IMU_MODEL_NONE,
+    IMU_MODEL_BNO055,
+    IMU_MODEL_ICM20948,
+    IMU_MODEL_MAX,
+} IMUModel;
 
 typedef enum IMUAxis {
     IMU_AXIS_NONE,
@@ -27,23 +22,22 @@ typedef enum IMUAxis {
 typedef enum BaroModel {
     BARO_MODEL_NONE,
     BARO_MODEL_DPS310,
+    BARO_MODEL_MAX,
 } BaroModel;
-#define BARO_MODEL_MAX BARO_MODEL_DPS310
 
 typedef bool (*aahrs_init_t)();
 typedef void (*aahrs_deinit_t)();
 typedef void (*aahrs_update_t)();
 typedef bool (*aahrs_calibrate_t)();
-typedef bool (*aahrs_isCalibrated_t)();
 
 // Altitude-Attitude Heading Reference System (AAHRS)
 typedef struct AAHRS {
     float roll;        // (Read-only)
-    float roll_rate;   // (Read-only)
+    float rollRate;    // (Read-only)
     float pitch;       // (Read-only)
-    float pitch_rate;  // (Read-only)
+    float pitchRate;   // (Read-only)
     float yaw;         // (Read-only)
-    float yaw_rate;    // (Read-only)
+    float yawRate;     // (Read-only)
     float alt;         // (Read-only)
     bool isCalibrated; // (Read-only)
     /**

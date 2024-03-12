@@ -44,11 +44,11 @@ static PIDController vertGuid;
 // Allows auto mode to be externally controlled (by API setting a custom Waypoint and callback)
 static GuidanceSource guidanceSource = FPLAN;
 static Waypoint externWpt;
-static void (*captureCallback)(void);
+static void (*captureCallback)(void) = NULL;
 
 // Callback for when the bay needs to be closed after a user-specified delay (within the flightplan)
 i32 dropCallback() {
-    auto_setBayPosition(CLOSED);
+    auto_set_bay_position(CLOSED);
     return 0;
 }
 
@@ -64,7 +64,7 @@ static inline void loadWaypoint(Waypoint *wpt) {
     throttle.target = (wpt->speed == -5) ? gps.speed : wpt->speed;
     // Initiate a drop if applicable
     if (wpt->drop != 0) {
-        auto_setBayPosition(OPEN);
+        auto_set_bay_position(OPEN);
         if (wpt->drop > 0) {
             // Schedule a callback if the bay needs to close after some time
             callback_in_ms(wpt->drop * 1000, dropCallback);
@@ -88,15 +88,15 @@ bool auto_init() {
         return false;
     }
     throttle.mode = THRMODE_SPEED;
-    // Initialize (clear) PIDs
-    // The PIDController struct contains some internal variables that we don't initialize, so we suppress the warning
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-    latGuid = (PIDController){latGuid_kP,  latGuid_kI,       latGuid_kD,       latGuid_tau, -latGuid_lim,
-                              latGuid_lim, -latGuid_integLim, latGuid_integLim};
-    vertGuid = (PIDController){vertGuid_kP,    vertGuid_kI,       vertGuid_kD,       vertGuid_tau, vertGuid_loLim,
-                               vertGuid_hiLim, -vertGuid_integLim, vertGuid_integLim};
-    #pragma GCC diagnostic pop
+// Initialize (clear) PIDs
+// The PIDController struct contains some internal variables that we don't initialize, so we suppress the warning
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+    latGuid = (PIDController){latGuid_kP,   latGuid_kI,  latGuid_kD,        latGuid_tau,
+                              -latGuid_lim, latGuid_lim, -latGuid_integLim, latGuid_integLim};
+    vertGuid = (PIDController){vertGuid_kP,    vertGuid_kI,    vertGuid_kD,        vertGuid_tau,
+                               vertGuid_loLim, vertGuid_hiLim, -vertGuid_integLim, vertGuid_integLim};
+#pragma GCC diagnostic pop
     pid_init(&latGuid);
     pid_init(&vertGuid);
     // Load the first Waypoint from the flightplan (subsequent waypoints will be loaded on waypoint interception)
@@ -153,7 +153,8 @@ void auto_update() {
                 break;
             case EXTERNAL:
                 // then execute the callback function and enter a holding pattern
-                (captureCallback)();
+                if (captureCallback)
+                    (captureCallback)();
                 guidanceSource = FPLAN;
                 aircraft.changeTo(MODE_HOLD);
                 break;
@@ -168,7 +169,7 @@ void auto_set(Waypoint wpt, void (*callback)(void)) {
     loadWaypoint(&externWpt);
 }
 
-void auto_setBayPosition(BayPosition pos) {
+void auto_set_bay_position(BayPosition pos) {
     switch (pos) {
         case OPEN:
             servo_set(config.pins[PINS_SERVO_BAY], config.control[CONTROL_DROP_DETENT_OPEN]);

@@ -5,8 +5,8 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "driver/gpio.h"
 #include "driver/uart.h" // https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32/api-reference/peripherals/uart.html
+#include "driver/gpio.h"
 
 #include "platform/stdio.h"
 
@@ -25,7 +25,7 @@ static UARTInstance instances[UART_NUM_MAX];
 
 /**
  * @return a pointer to the UART instance that uses the given pins, or NULL if no such instance exists
-*/
+ */
 static UARTInstance *uart_instance_from_pins(u32 tx, u32 rx) {
     for (uart_port_t port = UART_PORT_START; port < UART_NUM_MAX; port++) {
         if (instances[port].tx == tx && instances[port].rx == rx)
@@ -95,5 +95,5 @@ bool uart_write(u32 tx, u32 rx, const char *str) {
     UARTInstance *instance = uart_instance_from_pins(tx, rx);
     if (!instance)
         return false;
-    return uart_write_bytes(instance->port, (const void*)str, strlen(str)) == ESP_OK;
+    return uart_write_bytes(instance->port, (const void *)str, strlen(str)) == ESP_OK;
 }

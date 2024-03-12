@@ -248,7 +248,7 @@ bool config_set(const char *section, const char *key, const char *value);
  * @param str The pointer to the string to store the result in
  * @return The type of the section
  */
-ConfigSectionType config_sectionToString(ConfigSection section, const char **str);
+ConfigSectionType config_to_string(ConfigSection section, const char **str);
 
 extern Config config;
 extern Calibration calibration;

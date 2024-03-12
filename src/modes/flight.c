@@ -4,7 +4,6 @@
  */
 
 #include <math.h>
-#include <stdbool.h>
 #include <stdlib.h>
 #include "platform/int.h"
 
@@ -51,9 +50,9 @@ void flight_init() {
             aircraft.changeTo(MODE_DIRECT);
             return;
     }
-    // Create PID controllers for the roll and pitch axes and initialize (also clear) them
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+// Create PID controllers for the roll and pitch axes and initialize (also clear) them
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
     roll_c = (PIDController){calibration.pid[PID_ROLL_KP],
                              calibration.pid[PID_ROLL_KI],
                              calibration.pid[PID_ROLL_KD],
@@ -83,14 +82,15 @@ void flight_init() {
                                 calibration.pid[PID_YAW_INTEGMAX]};
         pid_init(&yaw_c);
     }
-    #pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
 }
 
 void flight_update(double roll, double pitch, double yaw, bool override) {
     // Check flight envelope for hard-coded irregularities
     if (fabsf(aahrs.roll) > 72 || aahrs.pitch > 35 || aahrs.pitch < -20) {
-        print("[flight] WARNING: flight envelope exceeded! (roll: %.0f, pitch: %.0f, yaw: %.0f)", aahrs.roll, aahrs.pitch, aahrs.yaw);
-        aircraft.setAAHRSSafe(false);
+        print("[flight] WARNING: flight envelope exceeded! (roll: %.0f, pitch: %.0f, yaw: %.0f)", aahrs.roll, aahrs.pitch,
+              aahrs.yaw);
+        aircraft.set_aahrs_safe(false);
     }
 
     // Update PID controllers

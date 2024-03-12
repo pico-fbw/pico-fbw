@@ -47,7 +47,7 @@ void auto_update();
 /**
  * Manually sets a temporary Waypoint target.
  * @param wpt the Waypoint to target
- * @param callback callback function to call when the target is reached
+ * @param callback callback function to call when the target is reached, or NULL if not needed
  */
 void auto_set(Waypoint wpt, void (*callback)(void));
 
@@ -55,4 +55,4 @@ void auto_set(Waypoint wpt, void (*callback)(void));
  * Sets the position of the drop bay (servo) mechanism.
  * @param pos the position to set the drop bay mechanism to
  */
-void auto_setBayPosition(BayPosition pos);
+void auto_set_bay_position(BayPosition pos);

@@ -20,7 +20,13 @@
 
 #include "runtime.h"
 
-typedef enum SwitchPosition { SWITCH_POSITION_LOW, SWITCH_POSITION_MID, SWITCH_POSITION_HIGH } SwitchPosition;
+// clang-format off
+typedef enum SwitchPosition {
+    SWITCH_POSITION_LOW,
+    SWITCH_POSITION_MID,
+    SWITCH_POSITION_HIGH,
+} SwitchPosition;
+// clang-format on
 
 static SwitchPosition lastPos;
 

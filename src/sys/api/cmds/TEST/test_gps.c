@@ -15,7 +15,7 @@
 i32 api_test_gps(const char *args) {
     if ((GPSCommandType)config.sensors[SENSORS_GPS_COMMAND_TYPE] == GPS_COMMAND_TYPE_NONE)
         return 403;
-    if (!aircraft.GPSSafe)
+    if (!aircraft.gpsSafe)
         return 500;
     printraw("[test] dumping GPS data, check for validity!\n"
              "==================================\n"

@@ -26,4 +26,4 @@ bool esc_calibrate(u32 pin);
 /**
  * @return the status of any previous ESC detent calibration.
  */
-bool esc_isCalibrated();
+bool esc_is_calibrated();

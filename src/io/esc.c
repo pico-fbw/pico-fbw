@@ -25,7 +25,7 @@
  * @param duration_ms the duration (after the throttle stops moving) in milliseconds
  * @return Whether a timeout occured.
  */
-static bool waitForDetent(u32 pin, float *detent, u32 timeout_ms, u32 duration_ms) {
+static bool wait_for_detent(u32 pin, float *detent, u32 timeout_ms, u32 duration_ms) {
     Timestamp wait = timestamp_in_ms(timeout_ms);
     u16 lastReading = receiver_get(pin, RECEIVER_MODE_PERCENT);
     bool hasMoved = (abs(((u16)receiver_get(pin, RECEIVER_MODE_PERCENT) - lastReading)) > config.control[CONTROL_DEADBAND]);
@@ -78,15 +78,15 @@ bool esc_calibrate(u32 pin) {
     log_message(INFO, "Calibrating ESC", 200, 0, false);
     if (runtime_is_fbw())
         display_string("Select idle thrust.", 0);
-    if (!waitForDetent(pin, &calibration.esc[ESC_DETENT_IDLE], (u32)20E3, 4000))
+    if (!wait_for_detent(pin, &calibration.esc[ESC_DETENT_IDLE], (u32)20E3, 4000))
         return false;
     if (runtime_is_fbw())
         display_string("Select max continuous thrust.", 33);
-    if (!waitForDetent(pin, &calibration.esc[ESC_DETENT_MCT], (u32)10E3, 2000))
+    if (!wait_for_detent(pin, &calibration.esc[ESC_DETENT_MCT], (u32)10E3, 2000))
         return false;
     if (runtime_is_fbw())
         display_string("Select max thrust.", 66);
-    if (!waitForDetent(pin, &calibration.esc[ESC_DETENT_MAX], (u32)10E3, 1000))
+    if (!wait_for_detent(pin, &calibration.esc[ESC_DETENT_MAX], (u32)10E3, 1000))
         return false;
     print("[ESC] final detents: %d, %d, %d", (u16)calibration.esc[ESC_DETENT_IDLE], (u16)calibration.esc[ESC_DETENT_MCT],
           (u16)calibration.esc[ESC_DETENT_MAX]);
@@ -97,6 +97,6 @@ bool esc_calibrate(u32 pin) {
     return true;
 }
 
-bool esc_isCalibrated() {
+bool esc_is_calibrated() {
     return (bool)calibration.esc[ESC_CALIBRATED];
 }

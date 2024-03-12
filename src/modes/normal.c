@@ -88,9 +88,8 @@ void normal_update() {
     // Yaw deadband calculation--if we detect any aileron input whatsoever, we wil override what PID wants with the user input
     if (yawInput > config.control[CONTROL_DEADBAND] || yawInput < -config.control[CONTROL_DEADBAND]) {
         overrideYaw = true;
-    } else {
+    } else
         overrideYaw = false;
-    }
 
     // Update the flight and throttle systems with calculated setpoints
     flight_update((double)rollSet, (double)pitchSet, (double)yawInput, overrideYaw);

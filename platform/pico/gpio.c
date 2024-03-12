@@ -33,7 +33,6 @@ void gpio_setup(u32 pin, PinMode mode) {
             gpio_set_dir(pin, GPIO_IN);
             break;
         case OUTPUT:
-            // TODO: should this be both in and out?
             gpio_set_dir(pin, GPIO_OUT);
     }
 }

@@ -26,8 +26,6 @@
 #include "sys/runtime.h"
 #include "sys/version.h"
 
-// TODO: switch to snake case for function names
-
 int main() {
     boot_begin();
     print("\nhello and welcome to pico-fbw v%s!\nrunning on \"%s\" v%s", PICO_FBW_VERSION, PLATFORM_NAME, PLATFORM_VERSION);
@@ -110,7 +108,7 @@ int main() {
         esc_enable((u32)config.pins[PINS_ESC_THROTTLE]);
         if (!(bool)config.general[GENERAL_SKIP_CALIBRATION]) {
             print("[boot] validating throttle detent calibration");
-            if (!esc_isCalibrated()) {
+            if (!esc_is_calibrated()) {
                 print("[boot] throttle detent calibration not found!");
                 if (!esc_calibrate((u32)config.pins[PINS_ESC_THROTTLE])) {
                     log_message(ERROR, "Throttle detent calibration failed!", 800, 0, false);

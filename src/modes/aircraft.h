@@ -3,18 +3,26 @@
 #include <stdbool.h>
 
 #define MODE_MIN MODE_DIRECT
-typedef enum Mode { MODE_DIRECT, MODE_NORMAL, MODE_AUTO, MODE_TUNE, MODE_HOLD } Mode;
-#define MODE_MAX MODE_HOLD
+// clang-format off
+typedef enum Mode {
+    MODE_DIRECT,
+    MODE_NORMAL,
+    MODE_AUTO,
+    MODE_TUNE,
+    MODE_HOLD,
+    MODE_MAX,
+} Mode;
+// clang-format on
 
 typedef void (*aircraft_update_t)();
 typedef void (*aircraft_changeTo_t)(Mode);
-typedef void (*aircraft_setAAHRSSafe_t)(bool);
-typedef void (*aircraft_setGPSSafe_t)(bool);
+typedef void (*aircraft_set_aahrs_safe_t)(bool);
+typedef void (*aircraft_set_gps_safe_t)(bool);
 
 typedef struct Aircraft {
     Mode mode;      // (Read-only)
-    bool AAHRSSafe; // (Read-only)
-    bool GPSSafe;   // (Read-only)
+    bool aahrsSafe; // (Read-only)
+    bool gpsSafe;   // (Read-only)
     /**
      * Runs the code of the system's currently selected mode.
      */
@@ -27,11 +35,11 @@ typedef struct Aircraft {
     /**
      * @param state Declares whether or not the AAHRS data is safe to use.
      */
-    aircraft_setAAHRSSafe_t setAAHRSSafe;
+    aircraft_set_aahrs_safe_t set_aahrs_safe;
     /**
      * @param state Declares whether or not the GPS data is safe to use.
      */
-    aircraft_setGPSSafe_t setGPSSafe;
+    aircraft_set_gps_safe_t set_gps_safe;
 } Aircraft;
 
 extern Aircraft aircraft;

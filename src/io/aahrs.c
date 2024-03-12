@@ -38,6 +38,15 @@
 
 #include "aahrs.h"
 
+// The number of samples to average when calculating the gyroscope offset
+#define GYRO_AVG_SAMPLES 100
+// The maximum velocity (in deg/s) under which the gyroscope is considered to be stationary
+#define GYRO_STILL_VELOCITY 3
+// The maximum number of attempts to get a magnetometer calibration using the 10 element (best) solver
+// The best current calibration will be used if the magnetometer is not calibrated after this many attempts, and a warning will
+// be generated
+#define MAX_MAG_ATTEMPTS 15
+
 // Prints a vector (array)
 #define PRINT_VECTOR(vector)                                                                                                   \
     do {                                                                                                                       \
@@ -167,11 +176,11 @@ void aahrs_update() {
         common = (SV_ptr)&fusion.SV_9DOF_GBY_KALMAN;
 #endif
         aahrs.roll = common->fPhi;
-        aahrs.roll_rate = common->fOmega[CHX];
+        aahrs.rollRate = common->fOmega[CHX];
         aahrs.pitch = common->fThe;
-        aahrs.pitch_rate = common->fOmega[CHY];
+        aahrs.pitchRate = common->fOmega[CHY];
         aahrs.yaw = common->fPsi;
-        aahrs.yaw_rate = common->fOmega[CHZ];
+        aahrs.yawRate = common->fOmega[CHZ];
         // Alt will go here, not done yet
         ranFusion = timestamp_now();
     }
@@ -259,20 +268,20 @@ bool aahrs_calibrate() {
         // Wait for the sensor to move...
         while (!hasMoved) {
             aahrs.update();
-            hasMoved = aahrs.roll_rate > GYRO_STILL_VELOCITY || aahrs.pitch_rate > GYRO_STILL_VELOCITY ||
-                       aahrs.yaw_rate > GYRO_STILL_VELOCITY;
+            hasMoved = aahrs.rollRate > GYRO_STILL_VELOCITY || aahrs.pitchRate > GYRO_STILL_VELOCITY ||
+                       aahrs.yawRate > GYRO_STILL_VELOCITY;
         }
         // ...and then for it to be still for 0.5s
         while (true) {
             aahrs.update();
-            hasMoved = aahrs.roll_rate > GYRO_STILL_VELOCITY || aahrs.pitch_rate > GYRO_STILL_VELOCITY ||
-                       aahrs.yaw_rate > GYRO_STILL_VELOCITY;
+            hasMoved = aahrs.rollRate > GYRO_STILL_VELOCITY || aahrs.pitchRate > GYRO_STILL_VELOCITY ||
+                       aahrs.yawRate > GYRO_STILL_VELOCITY;
             if (!hasMoved) {
                 wait = timestamp_in_ms(500);
                 while (!hasMoved && !timestamp_reached(&wait)) {
                     aahrs.update();
-                    hasMoved = aahrs.roll_rate > GYRO_STILL_VELOCITY || aahrs.pitch_rate > GYRO_STILL_VELOCITY ||
-                               aahrs.yaw_rate > GYRO_STILL_VELOCITY;
+                    hasMoved = aahrs.rollRate > GYRO_STILL_VELOCITY || aahrs.pitchRate > GYRO_STILL_VELOCITY ||
+                               aahrs.yawRate > GYRO_STILL_VELOCITY;
                 }
                 if (timestamp_reached(&wait))
                     break;

@@ -26,8 +26,8 @@ i32 api_test_pwm(const char *args) {
         u32 numBridges = 5;
         // Use bridges specified by command if any, if not the defaults will be kept
         if (args) {
-            i32 numArgs = sscanf(args, "%lu %lu %lu %lu %lu %lu %lu %lu %lu %lu", &in[0], &out[0], &in[1], &out[1], &in[2], &out[2],
-                                 &in[3], &out[3], &in[4], &out[4]);
+            i32 numArgs = sscanf(args, "%lu %lu %lu %lu %lu %lu %lu %lu %lu %lu", &in[0], &out[0], &in[1], &out[1], &in[2],
+                                 &out[2], &in[3], &out[3], &in[4], &out[4]);
             if (numArgs < 2 || numArgs % 2 != 0)
                 return 400;
             numBridges = numArgs / 2;

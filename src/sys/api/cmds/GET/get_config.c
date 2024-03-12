@@ -59,7 +59,7 @@ i32 api_get_config(const char *args) {
         for (ConfigSection s = 0; s < NUM_CONFIG_SECTIONS; s++) {
             // Section header, based on name
             const char *sectionStr;
-            ConfigSectionType type = config_sectionToString(s, &sectionStr);
+            ConfigSectionType type = config_to_string(s, &sectionStr);
             printraw("{\"name\":\"%s\",\"keys\":[", sectionStr);
             switch (type) {
                 case SECTION_TYPE_FLOAT: {

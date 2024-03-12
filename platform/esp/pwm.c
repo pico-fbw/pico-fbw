@@ -33,7 +33,7 @@ typedef struct PWMChannel {
 static PWMChannel channels[NUM_PWM_CHANNELS];
 
 static size_t numMCPWMCaptureChannels = 0; // Number of MCPWM capture channels in use
-static size_t numMCPWMOperators = 0; // Number of MCPWM operators in use
+static size_t numMCPWMOperators = 0;       // Number of MCPWM operators in use
 
 /**
  * @return a pointer to the first available PWM channel, or NULL if none are available
@@ -147,7 +147,7 @@ bool pwm_setup_write(u32 pins[], u32 num_pins, u32 freq) {
             if (mcpwm_new_timer(&config, &timer) != ESP_OK)
                 return false;
         }
-        
+
         PWMChannel *channel = get_available_channel();
         if (!channel)
             return false;
@@ -163,12 +163,12 @@ bool pwm_setup_write(u32 pins[], u32 num_pins, u32 freq) {
         numMCPWMOperators++;
         if (mcpwm_operator_connect_timer(operator, timer) != ESP_OK)
             return false;
-        
+
         mcpwm_cmpr_handle_t comparator;
         const mcpwm_comparator_config_t comparatorConfig = {
             .flags.update_cmp_on_tez = true,
         };
-        if (mcpwm_new_comparator(operator, &comparatorConfig, &comparator) != ESP_OK)
+        if (mcpwm_new_comparator(operator, & comparatorConfig, &comparator) != ESP_OK)
             return false;
         channel->out = comparator;
 
@@ -176,11 +176,13 @@ bool pwm_setup_write(u32 pins[], u32 num_pins, u32 freq) {
         const mcpwm_generator_config_t generatorConfig = {
             .gen_gpio_num = pins[i],
         };
-        if (mcpwm_new_generator(operator, &generatorConfig, &generator) != ESP_OK)
+        if (mcpwm_new_generator(operator, & generatorConfig, &generator) != ESP_OK)
             return false;
         // Tell the generator what actions to take on timer and compare events (this will produce the correct PWM waveform)
-        mcpwm_generator_set_action_on_timer_event(generator, MCPWM_GEN_TIMER_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_TIMER_EVENT_EMPTY, MCPWM_GEN_ACTION_HIGH));
-        mcpwm_generator_set_action_on_compare_event(generator, MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, comparator, MCPWM_GEN_ACTION_LOW));
+        mcpwm_generator_set_action_on_timer_event(
+            generator, MCPWM_GEN_TIMER_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_TIMER_EVENT_EMPTY, MCPWM_GEN_ACTION_HIGH));
+        mcpwm_generator_set_action_on_compare_event(
+            generator, MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, comparator, MCPWM_GEN_ACTION_LOW));
         // If we created a new timer, enable and start it
         if (newTimerNeeded) {
             if (mcpwm_timer_enable(timer) != ESP_OK)
