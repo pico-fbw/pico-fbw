@@ -67,6 +67,7 @@
 #define F_9DOF_GBY_KALMAN_SYSTICK \
     6742 // Measured average systick (us) on RP2040 running 9DOF_GBY_KALMAN
 ///@}
+// FIXME: measure systick for different algorithms (or calculate it on the fly?)
 
 // Measured average systick (us) on RP2040 running sfg->conditionSensorReadings
 // The systick is known to spike by a few hundred microseconds when complex computations are done, such as mag calibration re-evaluation

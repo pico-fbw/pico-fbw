@@ -5,6 +5,7 @@
 
 #include <math.h>
 #include "platform/int.h"
+#include "platform/time.h"
 
 #include "io/esc.h"
 #include "io/receiver.h"
@@ -13,6 +14,7 @@
 #include "modes/flight.h"
 
 #include "sys/configuration.h"
+#include "sys/control.h"
 #include "sys/throttle.h"
 
 #include "normal.h"
@@ -23,6 +25,18 @@ static float rollSet, pitchSet, throttleSet;
 static bool overrideYaw = false;
 static bool overrideSetpoints = false;
 
+static inline bool rolling() {
+    return fabsf(rollInput) > config.control[CONTROL_DEADBAND];
+}
+
+static inline bool pitching() {
+    return fabsf(pitchInput) > config.control[CONTROL_DEADBAND];
+}
+
+static inline bool yawing() {
+    return fabsf(yawInput) > config.control[CONTROL_DEADBAND];
+}
+
 void normal_init() {
     flight_init();
     throttle.init();
@@ -31,33 +45,27 @@ void normal_init() {
 
 void normal_update() {
     // Refresh input data from rx
-    rollInput = receiver_get((u32)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE) - 90;
-    pitchInput = receiver_get((u32)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEGREE) - 90;
+    rollInput = receiver_get((u32)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE) - 90.f;
+    pitchInput = receiver_get((u32)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEGREE) - 90.f;
     if (receiver_has_rud())
-        yawInput = receiver_get((u32)config.pins[PINS_INPUT_RUD], RECEIVER_MODE_DEGREE) - 90;
+        yawInput = receiver_get((u32)config.pins[PINS_INPUT_RUD], RECEIVER_MODE_DEGREE) - 90.f;
     throttleSet = receiver_get((u32)config.pins[PINS_INPUT_THROTTLE], RECEIVER_MODE_PERCENT);
     // This comment is a tribute to the world's stupidest bug where the above code was set to READ from the SERVOS
     // and it took me much longer than I'm willing to admit to find (cue the facepalms, I know ._.)
 
     // Check for manual overrides of externally set (by API) setpoints
-    if (fabsf(rollInput) > config.control[CONTROL_DEADBAND] || fabsf(pitchInput) > config.control[CONTROL_DEADBAND] ||
-        fabsf(yawInput) > config.control[CONTROL_DEADBAND]) {
+    if (rolling() || pitching() || yawing())
         overrideSetpoints = false;
-    }
-    if (!overrideSetpoints) {
-        // Use the rx inputs to set the setpoint control values
-        // Deadband calculations so we don't get crazy values due to PWM fluctuations
-        if (fabsf(rollInput) > config.control[CONTROL_DEADBAND]) {
-            // If the input is not within the deadband, add the smoothed input value on top of the current setpoint
-            // We must smooth the value because this calculation is done many times per second, so no smoothing would result
-            // in extremely (and I do really mean extreme) touchy controls.
-            rollSet += rollInput * config.control[CONTROL_SENSITIVITY];
-        }
-        if (fabsf(pitchInput) > config.control[CONTROL_DEADBAND]) {
-            pitchSet += pitchInput * config.control[CONTROL_SENSITIVITY];
-        }
 
-        // Make sure the PID setpoints aren't set to unsafe values so we don't get weird outputs from PID,
+    if (!overrideSetpoints) {
+        // Use the inputs from the receiver to calculate the setpoint values
+        // Take deadband into account so we don't get crazy setpoints due to PWM fluctuations
+        if (rolling())
+            rollSet += control_calc_adjust(ROLL, rollInput, pitchInput);
+        if (pitching())
+            pitchSet += control_calc_adjust(PITCH, rollInput, pitchInput);
+
+        // Make sure the setpoints aren't set to unsafe values so we don't get weird outputs from PID,
         // this is also where our bank/pitch protections come in.
         if (fabsf(rollSet) > config.control[CONTROL_ROLL_LIMIT]) {
             // If the roll values are unsafe, we do allow setting up to to the hold limit but constant input is required, so
@@ -105,8 +113,7 @@ void normal_deinit() {
 
 bool normal_set(float roll, float pitch, float yaw, float throttle, bool useThrottle) {
     // Ensure there are no manual control inputs before we allow setpoints to be externally set
-    if (fabsf(rollInput) > config.control[CONTROL_DEADBAND] || fabsf(pitchInput) > config.control[CONTROL_DEADBAND] ||
-        fabsf(yawInput) > config.control[CONTROL_DEADBAND])
+    if (rolling() || pitching() || yawing())
         return false;
     rollSet = roll;
     pitchSet = pitch;

@@ -6,7 +6,6 @@
 #include <string.h>
 
 #include "GET/get_config.h"
-// TODO: GET_FLASH was removed because of the flash rewrite->littlefs, maybe add back? like a fs dump command?
 #include "GET/get_fplan.h"
 #include "GET/get_info.h"
 #include "GET/get_input.h"

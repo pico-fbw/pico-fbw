@@ -15,7 +15,7 @@ typedef enum Mode {
 // clang-format on
 
 typedef void (*aircraft_update_t)();
-typedef void (*aircraft_changeTo_t)(Mode);
+typedef void (*aircraft_change_to_t)(Mode);
 typedef void (*aircraft_set_aahrs_safe_t)(bool);
 typedef void (*aircraft_set_gps_safe_t)(bool);
 
@@ -31,7 +31,7 @@ typedef struct Aircraft {
      * Transitions the aircraft to a specified mode.
      * @param mode The mode to transition to.
      */
-    aircraft_changeTo_t changeTo;
+    aircraft_change_to_t change_to;
     /**
      * @param state Declares whether or not the AAHRS data is safe to use.
      */

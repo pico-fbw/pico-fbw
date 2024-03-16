@@ -47,7 +47,7 @@ static inline float offset_of(u32 pin) {
 static inline float read_raw(u32 pin, ReceiverMode mode) {
     float pulsewidth = pwm_read_raw(pin);
     if (pulsewidth < 0)
-        return INFINITY; // Invalid pin
+        return -1.f; // Invalid pin
     // Map pulsewidth to either 0-180.f (degree) or 0-100.f (percent)
     // Pulsewidths should be between 1000-2000μs for servos
     return mode == RECEIVER_MODE_DEGREE ? (pulsewidth - 1000.0f) * 0.18f : (pulsewidth - 1000.0f) * 0.10f;
@@ -62,8 +62,8 @@ void receiver_enable(u32 pins[], u32 num_pins) {
 // TODO: err handling for invalid pin/error reading
 float receiver_get(u32 pin, ReceiverMode mode) {
     float raw = read_raw(pin, mode);
-    if (raw == INFINITY)
-        return INFINITY;
+    if (raw < 0)
+        return raw;
     return raw + offset_of(pin);
 }
 
@@ -179,17 +179,6 @@ void receiver_get_pins(u32 *pins, u32 *num_pins, float *deviations) {
             *num_pins = 4;
             break;
         case CTRLMODE_2AXIS_ATHR:
-            pins[2] = (u32)config.pins[PINS_INPUT_SWITCH];
-            pins[3] = (u32)config.pins[PINS_INPUT_THROTTLE];
-            deviations[2] = 0.0f;
-            deviations[3] = 0.0f;
-            *num_pins = 4;
-            break;
-        case CTRLMODE_2AXIS:
-            pins[2] = (u32)config.pins[PINS_INPUT_SWITCH];
-            deviations[2] = 0.0f;
-            *num_pins = 3;
-            break;
         case CTRLMODE_FLYINGWING_ATHR:
             pins[2] = (u32)config.pins[PINS_INPUT_SWITCH];
             pins[3] = (u32)config.pins[PINS_INPUT_THROTTLE];
@@ -197,6 +186,7 @@ void receiver_get_pins(u32 *pins, u32 *num_pins, float *deviations) {
             deviations[3] = 0.0f;
             *num_pins = 4;
             break;
+        case CTRLMODE_2AXIS:
         case CTRLMODE_FLYINGWING:
             pins[2] = (u32)config.pins[PINS_INPUT_SWITCH];
             deviations[2] = 0.0f;

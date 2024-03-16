@@ -10,15 +10,30 @@
 
 #include "get_input.h"
 
-// FIXME: this command should account for the current control mode (and not simply try and read from uninitialized pins)
-
 i32 api_get_input(const char *args) {
-    printraw("{\"ail\":%f,\"elev\":%f,\"rud\":%f,\"thr\":%f,\"switch\":%f}\n",
-             receiver_get(config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE),
-             receiver_get(config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEGREE),
-             receiver_get(config.pins[PINS_INPUT_RUD], RECEIVER_MODE_DEGREE),
-             receiver_get(config.pins[PINS_INPUT_THROTTLE], RECEIVER_MODE_PERCENT),
-             receiver_get(config.pins[PINS_INPUT_SWITCH], RECEIVER_MODE_DEGREE));
+    // Print only ail and ele first because they are guaranteed to be in all control modes
+    printraw("{\"ail\":%f,\"elev\":%f,", receiver_get(config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE),
+             receiver_get(config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEGREE));
+    switch ((ControlMode)config.general[GENERAL_CONTROL_MODE]) {
+        case CTRLMODE_3AXIS_ATHR:
+            printraw("\"rud\":%f,\"thr\":%f,\"switch\":%f}\n", receiver_get(config.pins[PINS_INPUT_RUD], RECEIVER_MODE_DEGREE),
+                     receiver_get(config.pins[PINS_INPUT_THROTTLE], RECEIVER_MODE_PERCENT),
+                     receiver_get(config.pins[PINS_INPUT_SWITCH], RECEIVER_MODE_DEGREE));
+            break;
+        case CTRLMODE_3AXIS:
+            printraw("\"rud\":%f,\"switch\":%f}\n", receiver_get(config.pins[PINS_INPUT_RUD], RECEIVER_MODE_DEGREE),
+                     receiver_get(config.pins[PINS_INPUT_SWITCH], RECEIVER_MODE_DEGREE));
+            break;
+        case CTRLMODE_2AXIS_ATHR:
+        case CTRLMODE_FLYINGWING_ATHR:
+            printraw("\"thr\":%f,\"switch\":%f}\n", receiver_get(config.pins[PINS_INPUT_THROTTLE], RECEIVER_MODE_PERCENT),
+                     receiver_get(config.pins[PINS_INPUT_SWITCH], RECEIVER_MODE_DEGREE));
+            break;
+        case CTRLMODE_2AXIS:
+        case CTRLMODE_FLYINGWING:
+            printraw("\"switch\":%f}\n", receiver_get(config.pins[PINS_INPUT_SWITCH], RECEIVER_MODE_DEGREE));
+            break;
+    }
     return -1;
     (void)args;
 }

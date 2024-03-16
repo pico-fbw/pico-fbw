@@ -55,22 +55,22 @@ static void switch_update() {
     if (lastPos != pos) {
         switch (pos) {
             case SWITCH_POSITION_LOW:
-                aircraft.changeTo(MODE_DIRECT);
+                aircraft.change_to(MODE_DIRECT);
                 break;
             case SWITCH_POSITION_MID:
-                aircraft.changeTo(MODE_NORMAL);
+                aircraft.change_to(MODE_NORMAL);
                 break;
             case SWITCH_POSITION_HIGH:
                 switch ((SwitchType)config.general[GENERAL_SWITCH_TYPE]) {
                     case SWITCH_TYPE_2_POS:
                         // For 2-position switches, auto-select auto or normal mode based on if a flight plan is present or not
                         if (flightplan_was_parsed())
-                            aircraft.changeTo(MODE_AUTO);
+                            aircraft.change_to(MODE_AUTO);
                         else
-                            aircraft.changeTo(MODE_NORMAL);
+                            aircraft.change_to(MODE_NORMAL);
                         break;
                     case SWITCH_TYPE_3_POS:
-                        aircraft.changeTo(MODE_AUTO);
+                        aircraft.change_to(MODE_AUTO);
                         break;
                 }
                 break;

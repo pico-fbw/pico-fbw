@@ -107,7 +107,7 @@ bool auto_init() {
 void auto_update() {
     // Don't allow re-entering auto mode after the user has exited hold mode and auto is complete
     if (autoComplete) {
-        aircraft.changeTo(MODE_NORMAL);
+        aircraft.change_to(MODE_NORMAL);
         return;
     }
 
@@ -145,7 +145,7 @@ void auto_update() {
                 if (currentWaypoint > flightplan_get()->waypoint_count) {
                     // Auto mode ends here, we enter a holding pattern
                     autoComplete = true;
-                    aircraft.changeTo(MODE_HOLD);
+                    aircraft.change_to(MODE_HOLD);
                 } else {
                     // Load the next altitude
                     loadWaypoint(&flightplan_get()->waypoints[currentWaypoint]);
@@ -156,7 +156,7 @@ void auto_update() {
                 if (captureCallback)
                     (captureCallback)();
                 guidanceSource = FPLAN;
-                aircraft.changeTo(MODE_HOLD);
+                aircraft.change_to(MODE_HOLD);
                 break;
         }
     }

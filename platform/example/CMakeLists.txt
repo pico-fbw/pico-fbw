@@ -1,3 +1,5 @@
+# Remember to change the name of the library to match your platform!
+
 add_library(platform_example
     flash.c
     gpio.c
@@ -10,7 +12,8 @@ add_library(platform_example
 )
 
 target_link_libraries(platform_example
-    
+    # Define any libraries that are required for your platform here
+    # (maybe SDK libraries, etc.)
 )
 
 target_include_directories(platform_example PRIVATE ${CMAKE_SOURCE_DIR})

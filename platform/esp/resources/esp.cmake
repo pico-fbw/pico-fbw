@@ -26,6 +26,7 @@ function(setup_before_subdirs)
             esp_timer
             freertos
             newlib
+            nvs_flash
             soc
         SDKCONFIG
             ${CMAKE_SOURCE_DIR}/platform/esp/resources/sdkconfig

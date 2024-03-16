@@ -19,6 +19,7 @@ target_link_libraries(platform_esp
     idf::esp_timer
     idf::freertos
     idf::newlib
+    idf::nvs_flash
     idf::soc
 )
 

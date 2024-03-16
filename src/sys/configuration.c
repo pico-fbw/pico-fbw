@@ -29,7 +29,7 @@ Config config = {
         CTRLMODE_2AXIS_ATHR, SWITCH_TYPE_3_POS, 20, 50, 50, true, false, false, CONFIG_END_MAGIC,
     },
     .control = {
-        0.0025f, 1.5f, 5, // Control handling preferences
+        25, 15, 1.5f, 5, // Control handling preferences
         10, 30, 0.015f, // Autothrottle configuration
         180, 0, // Drop bay detent settings
         33, 67, -15, 30, // Control limits
@@ -59,9 +59,19 @@ Config config = {
 };
 
 Calibration calibration = {
-    // Only throttle detents have default values
+    .pwm = {false},
     .esc = {
-        false, 10, 75, 90
+        false,
+        10, 75, 90, // Default throttle detents
+    },
+    .aahrs = {false},
+    .pid = {
+        false,
+        // TODO: find good defaults!
+        0.01f, 0, 0.01f, 0.001f, -50, 50, // Default roll PID parameters
+        0.01f, 0, 0.01f, 0.001f, -50, 50, // Default pitch PID parameters
+        0.01f, 0, 0.01f, 0.001f, -50, 50, // Default yaw PID parameters
+        0.01f, 0, 0.01f, 0.001f, -50, 50, // Default autothrottle PID parameters
     }
 };
 
@@ -184,8 +194,10 @@ static bool set_to_general(const char *key, float value) {
 }
 
 static void get_from_control(const char *key, float **value) {
-    if (strcasecmp(key, "controlSensitivity") == 0) {
-        *value = &config.control[CONTROL_SENSITIVITY];
+    if (strcasecmp(key, "maxRollRate") == 0) {
+        *value = &config.control[CONTROL_MAX_ROLL_RATE];
+    } else if (strcasecmp(key, "maxPitchRate") == 0) {
+        *value = &config.control[CONTROL_MAX_PITCH_RATE];
     } else if (strcasecmp(key, "rudderSensitivity") == 0) {
         *value = &config.control[CONTROL_RUDDER_SENSITIVITY];
     } else if (strcasecmp(key, "controlDeadband") == 0) {
@@ -210,8 +222,8 @@ static void get_from_control(const char *key, float **value) {
         *value = &config.control[CONTROL_PITCH_UPPER_LIMIT];
     } else if (strcasecmp(key, "maxAilDeflection") == 0) {
         *value = &config.control[CONTROL_MAX_AIL_DEFLECTION];
-    } else if (strcasecmp(key, "maxElevDeflection") == 0) {
-        *value = &config.control[CONTROL_MAX_ELEV_DEFLECTION];
+    } else if (strcasecmp(key, "maxEleDeflection") == 0) {
+        *value = &config.control[CONTROL_MAX_ELE_DEFLECTION];
     } else if (strcasecmp(key, "maxRudDeflection") == 0) {
         *value = &config.control[CONTROL_MAX_RUD_DEFLECTION];
     } else if (strcasecmp(key, "maxElevonDeflection") == 0) {
@@ -228,8 +240,10 @@ static void get_from_control(const char *key, float **value) {
 }
 
 static bool set_to_control(const char *key, float value) {
-    if (strcasecmp(key, "controlSensitivity") == 0) {
-        config.control[CONTROL_SENSITIVITY] = value;
+    if (strcasecmp(key, "maxRollRate") == 0) {
+        config.control[CONTROL_MAX_ROLL_RATE] = value;
+    } else if (strcasecmp(key, "maxPitchRate") == 0) {
+        config.control[CONTROL_MAX_PITCH_RATE] = value;
     } else if (strcasecmp(key, "rudderSensitivity") == 0) {
         config.control[CONTROL_RUDDER_SENSITIVITY] = value;
     } else if (strcasecmp(key, "controlDeadband") == 0) {
@@ -254,8 +268,8 @@ static bool set_to_control(const char *key, float value) {
         config.control[CONTROL_PITCH_UPPER_LIMIT] = value;
     } else if (strcasecmp(key, "maxAilDeflection") == 0) {
         config.control[CONTROL_MAX_AIL_DEFLECTION] = value;
-    } else if (strcasecmp(key, "maxElevDeflection") == 0) {
-        config.control[CONTROL_MAX_ELEV_DEFLECTION] = value;
+    } else if (strcasecmp(key, "maxEleDeflection") == 0) {
+        config.control[CONTROL_MAX_ELE_DEFLECTION] = value;
     } else if (strcasecmp(key, "maxRudDeflection") == 0) {
         config.control[CONTROL_MAX_RUD_DEFLECTION] = value;
     } else if (strcasecmp(key, "maxElevonDeflection") == 0) {
@@ -555,7 +569,7 @@ bool config_validate() {
                 print("ERROR: Max aileron deflection must be between 0 and 90 degrees.");
                 return false;
             }
-            if (config.control[CONTROL_MAX_ELEV_DEFLECTION] > 90 || config.control[CONTROL_MAX_ELEV_DEFLECTION] < 0) {
+            if (config.control[CONTROL_MAX_ELE_DEFLECTION] > 90 || config.control[CONTROL_MAX_ELE_DEFLECTION] < 0) {
                 print("ERROR: Max elevator deflection must be between 0 and 90 degrees.");
                 return false;
             }

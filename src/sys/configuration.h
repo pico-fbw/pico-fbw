@@ -47,7 +47,8 @@ typedef enum ConfigGeneral {
 
 typedef enum ConfigControl {
     // Control handling preferences
-    CONTROL_SENSITIVITY,
+    CONTROL_MAX_ROLL_RATE,
+    CONTROL_MAX_PITCH_RATE,
     CONTROL_RUDDER_SENSITIVITY,
     CONTROL_DEADBAND,
     // Throttle detent/autothrottle configuration
@@ -64,7 +65,7 @@ typedef enum ConfigControl {
     CONTROL_PITCH_UPPER_LIMIT,
     // Physical control surface limits
     CONTROL_MAX_AIL_DEFLECTION,
-    CONTROL_MAX_ELEV_DEFLECTION,
+    CONTROL_MAX_ELE_DEFLECTION,
     CONTROL_MAX_RUD_DEFLECTION,
     // Flying wing configuration
     CONTROL_MAX_ELEVON_DEFLECTION,

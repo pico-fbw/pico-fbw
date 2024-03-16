@@ -76,7 +76,7 @@ i8 BNO055_init(struct PhysicalSensor *sensor, SensorFusionGlobals *sfg) {
         return SENSOR_ERROR_INIT;
     }
     // Wait if BNO055 isn't ready yet (takes 850ms)
-    while (time_us() < (850 * 1000));
+    while (time_ms() < 850);
     // Check that the sensor comms are okay and that it's a BNO055
     printfbw(aahrs, "[BNO055] initializing...");
     for (u32 i = 0; i < DRIVER_INIT_ATTEMPTS; i++) {

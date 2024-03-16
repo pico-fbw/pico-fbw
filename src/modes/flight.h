@@ -2,6 +2,8 @@
 
 #include <stdbool.h>
 
+#include "sys/control.h"
+
 /**
  * Initializes the flight system (axis PIDs).
  */
@@ -26,3 +28,22 @@ void flight_init();
  * applied instead (uses PID to achieve the correct yaw angle).
  */
 void flight_update(double roll, double pitch, double yaw, bool override);
+
+/**
+ * Gets the current PID parameters for an axis.
+ * @param axis the axis to get the PID parameters for
+ * @param kP pointer to where to store the proportional gain, or NULL if not needed
+ * @param kI pointer to where to store the integral gain, or NULL if not needed
+ * @param kD pointer to where to store the derivative gain, or NULL if not needed
+ */
+void flight_params_get(Axis axis, double *kP, double *kI, double *kD);
+
+/**
+ * Updates an axis's PID parameters.
+ * @param axis the axis to update the PID parameters for
+ * @param kP the new proportional gain, or INFINITY to keep the current value
+ * @param kI the new integral gain, or INFINITY to keep the current value
+ * @param kD the new derivative gain, or INFINITY to keep the current value
+ * @param reset whether or not to reset the PID
+ */
+void flight_params_update(Axis axis, double kP, double kI, double kD, bool reset);

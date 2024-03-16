@@ -3,6 +3,7 @@ add_subdirectory(api)
 add_library(fbw_sys
     boot.c
     configuration.c
+    control.c
     flightplan.c
     log.c
     runtime.c

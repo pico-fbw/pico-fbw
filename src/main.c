@@ -41,8 +41,6 @@ int main() {
     boot_set_progress(5, "Loading configuration");
     config_load();
 
-    // config.general[GENERAL_SERVO_HZ] = 100;
-
     // Check version
     boot_set_progress(10, "Checking for updates");
     char version[64] = "\0";
@@ -129,7 +127,7 @@ int main() {
         // This is done now because minimum peripherals have been initialized, but not more complex ones that could be causing
         // the watchdog reboots
         boot_complete();
-        aircraft.changeTo(MODE_DIRECT);
+        aircraft.change_to(MODE_DIRECT);
         while (true)
             runtime_loop_minimal();
     }
@@ -157,7 +155,7 @@ int main() {
 
     // GPS
     if (gps.is_supported()) {
-        while (time_us() < (1000 * 1000))
+        while (time_ms() < 1000)
             ;
         boot_set_progress(65, "Initializing GPS");
         if (gps.init()) {
@@ -174,6 +172,7 @@ int main() {
     // maybe allow config editing through the interface, can maybe use server stuff from arduino
     // alao don't forget to update the license when files are moved & update config settnig
     // and also maybe do a vethernet for the normal pico like (https://github.com/OpenStickCommunity/GP2040-CE)
+    // also, wifi should be disabled when in flight to save power, it's pretty useless up there
 #endif
 
     boot_set_progress(90, "Finishing up");

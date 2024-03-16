@@ -27,7 +27,7 @@ void pid_init(PIDController *pid) {
 
 void pid_update(PIDController *pid, double setpoint, double measurement) {
 	// Time
-	pid->T = time_us() / 1E6 - pid->prevT;
+	pid->T = time_s() - pid->prevT;
 
 	// Error signal
 	double error = setpoint - measurement;
@@ -59,5 +59,5 @@ void pid_update(PIDController *pid, double setpoint, double measurement) {
 	// Store error, measurement, and time for later use
 	pid->prevError       = error;
 	pid->prevMeasurement = measurement;
-	pid->prevT = time_us() / 1E6;
+	pid->prevT = time_s();
 }

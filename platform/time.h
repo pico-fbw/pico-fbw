@@ -16,7 +16,7 @@ typedef struct Timestamp {
 } Timestamp;
 
 /**
- * @return the current 64-bit time since the system powered on, in microseconds
+ * @return the curren time since the system powered on, in microseconds
  */
 u64 time_us();
 
@@ -42,6 +42,20 @@ void cancel_callback(CallbackData *data);
  * @param us the number of microseconds to sleep
  */
 void sleep_us_blocking(u64 us);
+
+/**
+ * @return the current time since the system powered on, in milliseconds
+ */
+static inline u32 time_ms() {
+    return time_us() / 1E3;
+}
+
+/**
+ * @return the current time since the system powered on, in seconds
+ */
+static inline float time_s() {
+    return time_us() / 1E6;
+}
 
 /**
  * Sleeps for `ms` milliseconds, blocking the current thread.

@@ -9,13 +9,20 @@
 #include "esp_task_wdt.h" // https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32/api-reference/system/wdts.html
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "nvs_flash.h"
 
 #include "platform/sys.h"
 
 #define THREAD_DELAY_MS 10 // The amount of time to allow for other RTOS tasks to run
 
 void sys_boot_begin() {
-    return; // Nothing to do here
+    // Initialize NVS, used to store wifi data
+    esp_err_t init = nvs_flash_init();
+    if (init == ESP_ERR_NVS_NO_FREE_PAGES || init == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        assert(nvs_flash_erase() == ESP_OK);
+        init = nvs_flash_init();
+    }
+    assert(init == ESP_OK);
 }
 
 void sys_boot_end() {

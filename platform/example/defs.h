@@ -1,5 +1,8 @@
 #pragma once
 
+// Note: for these definitions to take effect, you must add your platform to the #if chain in platform/defs.h.
+// Another note: x is a used as placeholder for an actual value that you should define.
+
 // Flight control I/O pins
 // These are all required; their numbers depend on your platform and where it allows certain GPIO functions such as PWM.
 #define PIN_INPUT_AIL x

@@ -21,6 +21,7 @@
 
 void update() {
     switch (aircraft.mode) {
+        default:
         case MODE_DIRECT:
             direct_update();
             break;
@@ -41,9 +42,10 @@ void update() {
 
 // TODO: autolaunch(detect accel and fly away)->normal/auto mode?
 
-void changeTo(Mode newMode) {
+void change_to(Mode newMode) {
     // Run deinit code for aircraft.mode and then run init code for newMode
     switch (aircraft.mode) {
+        default:
         case MODE_DIRECT:
             printfbw(modes, "exiting direct mode");
             break;
@@ -55,6 +57,7 @@ void changeTo(Mode newMode) {
             printfbw(modes, "exiting auto mode");
             break;
         case MODE_TUNE:
+            tune_deinit();
             printfbw(modes, "exiting tune mode");
             break;
         case MODE_HOLD:
@@ -63,6 +66,7 @@ void changeTo(Mode newMode) {
     }
     if (aircraft.aahrsSafe) {
         switch (newMode) {
+            default:
             case MODE_DIRECT:
                 printfbw(modes, "entering direct mode");
                 aircraft.mode = MODE_DIRECT;
@@ -97,6 +101,7 @@ void changeTo(Mode newMode) {
             case MODE_TUNE:
                 if (!tune_is_tuned()) {
                     printfbw(modes, "entering tune mode");
+                    tune_init();
                     aircraft.mode = MODE_TUNE;
                 } else
                     goto NORMAL;
@@ -126,7 +131,7 @@ void set_aahrs_safe(bool state) {
             printfbw(modes, "AAHRS set as safe");
         } else {
             // Change to direct mode as it doesn't require AAHRS, and deinit
-            changeTo(MODE_DIRECT);
+            change_to(MODE_DIRECT);
             aahrs.deinit();
             printfbw(modes, "AAHRS set as unsafe");
         }
@@ -142,7 +147,7 @@ void set_gps_safe(bool state) {
         } else {
             printfbw(modes, "GPS set as unsafe");
             if (aircraft.mode == MODE_AUTO || aircraft.mode == MODE_HOLD) {
-                changeTo(MODE_NORMAL); // Return to normal mode if GPS is deemed unsafe in Auto or Hold modes (require GPS)
+                change_to(MODE_NORMAL); // Return to normal mode if GPS is deemed unsafe in Auto or Hold modes (require GPS)
             }
         }
     }
@@ -154,7 +159,7 @@ Aircraft aircraft = {
     .aahrsSafe = false,
     .gpsSafe = false,
     .update = update,
-    .changeTo = changeTo,
+    .change_to = change_to,
     .set_aahrs_safe = set_aahrs_safe,
     .set_gps_safe = set_gps_safe
 };
