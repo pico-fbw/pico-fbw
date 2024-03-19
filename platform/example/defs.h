@@ -36,7 +36,8 @@
 // These will be used to enable or disable certain features in the final build.
 // If your platform supports a feature, define it as 1, otherwise, define it as 0 (do not comment it out).
 // Keep in mind that you'll need to write platform-specific code for each feature you enable for them to actually work.
-#define PLATFORM_SUPPORTS_WIFI 1
+#define PLATFORM_SUPPORTS_DISPLAY 0
+#define PLATFORM_SUPPORTS_WIFI 0
 
 // See time.c for information on what this is and what you should define it as.
 typedef x __callback_id_t;

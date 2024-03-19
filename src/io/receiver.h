@@ -33,7 +33,7 @@ void receiver_enable(u32 pins[], u32 num_pins);
 /**
  * @param pin the GPIO pin to read (must have been already enabled with `receiver_enable()`)
  * @param mode the mode of the PWM (DEG or ESC)
- * @return the calculated degree value derived from the pulsewidth on that pin, or -1 if the pin was invalid.
+ * @return the calculated degree value derived from the pulsewidth on that pin
  * @note The mode simply changes how data is displayed and not how it is calculated (DEG from 0-180 and ESC from 0-100).
  */
 float receiver_get(u32 pin, ReceiverMode mode);

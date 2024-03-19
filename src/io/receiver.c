@@ -47,7 +47,7 @@ static inline float offset_of(u32 pin) {
 static inline float read_raw(u32 pin, ReceiverMode mode) {
     float pulsewidth = pwm_read_raw(pin);
     if (pulsewidth < 0)
-        return -1.f; // Invalid pin
+        return 0; // Invalid pin
     // Map pulsewidth to either 0-180.f (degree) or 0-100.f (percent)
     // Pulsewidths should be between 1000-2000μs for servos
     return mode == RECEIVER_MODE_DEGREE ? (pulsewidth - 1000.0f) * 0.18f : (pulsewidth - 1000.0f) * 0.10f;
@@ -59,7 +59,6 @@ void receiver_enable(u32 pins[], u32 num_pins) {
         log_message(FATAL, "Failed to enable PWM input!", 500, 0, true);
 }
 
-// TODO: err handling for invalid pin/error reading
 float receiver_get(u32 pin, ReceiverMode mode) {
     float raw = read_raw(pin, mode);
     if (raw < 0)
@@ -73,8 +72,7 @@ bool receiver_calibrate(u32 pins[], u32 num_pins, float deviations[], u32 num_sa
     for (u32 i = 0; i < num_pins; i++) {
         u32 pin = pins[i];
         print("[pwm] calibrating pin %lu (%lu/%lu)", pin, i + 1, num_pins);
-        if (runtime_is_fbw())
-            display_string("Please do not touch the transmitter!", ((i + 1) * 100) / num_pins);
+        display_string("Please do not touch the transmitter!", ((i + 1) * 100) / num_pins);
         float deviation = deviations[i];
         float finalDifference = 0.0f;
         bool isThrottle = pins[i] == (u32)config.pins[PINS_INPUT_THROTTLE];

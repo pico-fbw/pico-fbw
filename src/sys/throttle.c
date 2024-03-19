@@ -54,12 +54,12 @@ void throttle_update() {
         if (state == THRSTATE_NORMAL) {
             // We've just exceeded max continuous thrust, note the current time
             state = THRSTATE_MCT_EXCEEDED;
-            stateChangeAt = time_us();
+            stateChangeAt = time_s();
         }
         // MCT is still being exceeded (within this if block), what to do here depends on the specific state
         switch (state) {
             case THRSTATE_MCT_EXCEEDED:
-                if ((time_us() - stateChangeAt) > (u64)(config.control[CONTROL_THROTTLE_MAX_TIME] * 1E6f)) {
+                if ((time_s() - stateChangeAt) > (u64)(config.control[CONTROL_THROTTLE_MAX_TIME])) {
                     // MCT has been exceeded for too long, lock
                     state = THRSTATE_MCT_LOCK;
                 }
@@ -76,9 +76,9 @@ void throttle_update() {
     if (state == THRSTATE_MCT_LOCK && escTarget <= calibration.esc[ESC_DETENT_MCT]) {
         // Thrust has just been reduced back from exceeding MCT
         state = THRSTATE_MCT_COOLDOWN;
-        stateChangeAt = time_us();
+        stateChangeAt = time_s();
     }
-    if ((time_us() - stateChangeAt) > (u64)(config.control[CONTROL_THROTTLE_COOLDOWN_TIME] * 1E6f)) {
+    if ((time_s() - stateChangeAt) > (u64)(config.control[CONTROL_THROTTLE_COOLDOWN_TIME])) {
         state = THRSTATE_NORMAL; // Cooldown over
     }
     // Target is now within limits

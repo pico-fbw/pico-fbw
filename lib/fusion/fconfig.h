@@ -6,10 +6,7 @@
  * This file utilizes code under the BSD-3-Clause License. See "LICENSE" for details.
 */
 
-/**
- * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU AGPL-3.0
-*/
+// TODO: look through config and change any/make runtime if necessary, also find optimal FUSION_HZ?
 
 #pragma once
 
@@ -64,14 +61,7 @@
     0x0000 ///< 6DOF accel and gyro (Kalman) algorithm selector              - 0x2000 to include, 0x0000 otherwise
 #define F_9DOF_GBY_KALMAN \
     0x4000 ///< 9DOF accel, mag and gyro algorithm selector                  - 0x4000 to include, 0x0000 otherwise
-#define F_9DOF_GBY_KALMAN_SYSTICK \
-    6742 // Measured average systick (us) on RP2040 running 9DOF_GBY_KALMAN
 ///@}
-// FIXME: measure systick for different algorithms (or calculate it on the fly?)
-
-// Measured average systick (us) on RP2040 running sfg->conditionSensorReadings
-// The systick is known to spike by a few hundred microseconds when complex computations are done, such as mag calibration re-evaluation
-#define F_CONDITION_SENSOR_READINGS_SYSTICK 150
 
 /// @name SensorParameters
 // The Output Data Rates (ODR) are set by the calls to *_Init() for each physical sensor.

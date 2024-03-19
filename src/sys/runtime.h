@@ -28,5 +28,3 @@ void runtime_loop_minimal();
  * so it's useful if you need to sleep for long periods of time but still update sensors and such.
  */
 void runtime_sleep_ms(u32 ms, bool update_aircraft);
-
-bool runtime_is_fbw();

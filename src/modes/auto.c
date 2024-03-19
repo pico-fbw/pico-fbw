@@ -23,8 +23,9 @@
 
 #include "auto.h"
 
-#define INTERCEPT_RADIUS 25 // The radius at which to consider a Waypoint "incercepted" in meters
-// TODO: do I need to change this for different speeds? idk if it will make too much of a difference
+#define INTERCEPT_BASE_RADIUS 25 // The baseline radius at which to consider a Waypoint incercepted, in meters
+#define INTERCEPT_BASE_SPEED 50  // INTERCEPT_BASE_RADIUS will apply at this speed, kts
+#define MIN_RADIUS 5             // The minimum radius that is possible (after being calculated), in meters
 
 typedef enum GuidanceSource {
     FPLAN,
@@ -49,7 +50,7 @@ static void (*captureCallback)(void) = NULL;
 // Callback for when the bay needs to be closed after a user-specified delay (within the flightplan)
 i32 dropCallback() {
     auto_set_bay_position(CLOSED);
-    return 0;
+    return 0; // Don't repeat
 }
 
 static inline void loadWaypoint(Waypoint *wpt) {
@@ -57,18 +58,16 @@ static inline void loadWaypoint(Waypoint *wpt) {
     if (gps.altOffsetCalibrated) {
         // Factor in the altitude offset calculated earlier
         alt = (wpt->alt <= -5) ? gps.alt : (wpt->alt + gps.altOffset);
-    } else {
+    } else
         alt = (wpt->alt <= -5) ? gps.alt : wpt->alt;
-    }
     // Set the (possibly new) target speed
     throttle.target = (wpt->speed == -5) ? gps.speed : wpt->speed;
     // Initiate a drop if applicable
     if (wpt->drop != 0) {
         auto_set_bay_position(OPEN);
-        if (wpt->drop > 0) {
+        if (wpt->drop > 0)
             // Schedule a callback if the bay needs to close after some time
             callback_in_ms(wpt->drop * 1000, dropCallback);
-        }
     }
 }
 
@@ -115,15 +114,15 @@ void auto_update() {
     switch (guidanceSource) {
         case FPLAN:
             // ...to the current Waypoint in the flightplan
-            bearing = calculateBearing(gps.lat, gps.lng, flightplan_get()->waypoints[currentWaypoint].lat,
-                                       flightplan_get()->waypoints[currentWaypoint].lng);
-            distance = calculateDistance(gps.lat, gps.lng, flightplan_get()->waypoints[currentWaypoint].lat,
-                                         flightplan_get()->waypoints[currentWaypoint].lng);
+            bearing = calculate_bearing(gps.lat, gps.lng, flightplan_get()->waypoints[currentWaypoint].lat,
+                                        flightplan_get()->waypoints[currentWaypoint].lng);
+            distance = calculate_distance(gps.lat, gps.lng, flightplan_get()->waypoints[currentWaypoint].lat,
+                                          flightplan_get()->waypoints[currentWaypoint].lng);
             break;
         case EXTERNAL:
             // ...to the current Waypoint (temporarily set)
-            bearing = calculateBearing(gps.lat, gps.lng, externWpt.lat, externWpt.lng);
-            distance = calculateDistance(gps.lat, gps.lng, externWpt.lat, externWpt.lng);
+            bearing = calculate_bearing(gps.lat, gps.lng, externWpt.lat, externWpt.lng);
+            distance = calculate_distance(gps.lat, gps.lng, externWpt.lat, externWpt.lng);
             break;
     }
 
@@ -135,8 +134,12 @@ void auto_update() {
     flight_update(latGuid.out, vertGuid.out, 0, false);
     throttle.update();
 
-    // If we've "intercepted" the waypoint,
-    if (distance <= INTERCEPT_RADIUS) {
+    // Calculate the radius at which to consider the Waypoint intercepted
+    // This must be calculated every loop as we need to turn sooner if we're going faster to stay on course
+    double radius = INTERCEPT_BASE_RADIUS + (throttle.target - INTERCEPT_BASE_SPEED) * 5;
+    radius = (radius < MIN_RADIUS) ? MIN_RADIUS : radius;
+    // If we've intercepted the waypoint,
+    if (distance < radius) {
         switch (guidanceSource) {
             case FPLAN:
                 // then advance to the next one
@@ -146,10 +149,9 @@ void auto_update() {
                     // Auto mode ends here, we enter a holding pattern
                     autoComplete = true;
                     aircraft.change_to(MODE_HOLD);
-                } else {
-                    // Load the next altitude
+                } else
+                    // More waypoints to go, load the next one
                     loadWaypoint(&flightplan_get()->waypoints[currentWaypoint]);
-                }
                 break;
             case EXTERNAL:
                 // then execute the callback function and enter a holding pattern

@@ -38,6 +38,13 @@
 
 #include "aahrs.h"
 
+#if (F_9DOF_GBY_KALMAN != 0x4000)
+    #error "AAHRS is only configured to use the 9DOF_GBY_KALMAN fusion mode! Please update the configuration!"
+#endif
+
+// The number of samples to take when calculating the timing of the fusion algorithm
+#define FUSION_TIMING_SAMPLES 100
+
 // The number of samples to average when calculating the gyroscope offset
 #define GYRO_AVG_SAMPLES 100
 // The maximum velocity (in deg/s) under which the gyroscope is considered to be stationary
@@ -69,10 +76,27 @@
 
 static SensorFusionGlobals fusion;
 static StatusSubsystem status;
-struct PhysicalSensor *sensors;
-static u32 numSensors = 0;
-static u32 rateDelay = 0;   // Delay between fusion algorithm runs in microseconds
+static struct PhysicalSensor *sensors;
+static size_t numSensors = 0;
+static u32 fusionT = 0;     // How much time (in μs) the fusion algorithm takes to run
 static Timestamp ranFusion; // Time of the last fusion algorithm run
+
+/**
+ * Measures the time it takes to run the fusion algotihm.
+ * @param samples the number of times to run the algorithm to average over
+ * @return the average time it takes to run the algorithm once (in μs)
+ */
+static u32 measure_fusion_time(u32 samples) {
+    u32 sum = 0;
+    for (u32 i = 0; i < samples; i++) {
+        fusion.readSensors(&fusion, 0);
+        u32 start = time_us();
+        fusion.conditionSensorReadings(&fusion);
+        fusion.runFusion(&fusion);
+        sum += time_us() - start;
+    }
+    return sum / samples;
+}
 
 bool aahrs_init() {
     // Check the state of any previous calibration
@@ -148,11 +172,9 @@ bool aahrs_init() {
     // Ensure initialization has been good so far
     if (fusion.getStatus(&fusion) != NORMAL)
         return false;
-// Calculate the delay needed between fusion updates to obtain FUSION_HZ
-#if F_9DOF_GBY_KALMAN
-    rateDelay = (u32)((1.0f / FUSION_HZ) * 1E6f - (F_9DOF_GBY_KALMAN_SYSTICK + F_CONDITION_SENSOR_READINGS_SYSTICK));
-#endif
-    printfbw(aahrs, "[AAHRS] to obtain update rate of %dHz, using delay of %luus", FUSION_HZ, rateDelay);
+    printfbw(aahrs, "timing fusion algorithm, this may take a while...");
+    fusionT = measure_fusion_time(FUSION_TIMING_SAMPLES);
+    printfbw(aahrs, "done! fusion algorithm takes %luμs to run", fusionT);
     return true;
 }
 
@@ -165,9 +187,10 @@ void aahrs_deinit() {
 }
 
 void aahrs_update() {
+    // Read sensors every function call (as often as possible to obtain the best data for the algorithm)
     fusion.readSensors(&fusion, 0);
-    // Only run fusion when we've waited for the rateDelay (essentially throttles algorithm)
-    if (time_since_us(&ranFusion) >= rateDelay) {
+    // Throttle the actual processing of the data to the fusion rate
+    if (time_since_us(&ranFusion) >= fusionT) {
         fusion.conditionSensorReadings(&fusion);
         fusion.runFusion(&fusion);
         // Use a common pointer that will be usable no matter which fusion mode is running
@@ -181,7 +204,7 @@ void aahrs_update() {
         aahrs.pitchRate = common->fOmega[CHY];
         aahrs.yaw = common->fPsi;
         aahrs.yawRate = common->fOmega[CHZ];
-        // Alt will go here, not done yet
+        // Altitude will go here, not done yet...
         ranFusion = timestamp_now();
     }
 }
@@ -191,10 +214,11 @@ bool aahrs_calibrate() {
     bool hasMoved = false;
 
 // GYRO: Wait for gyro to stabilize, calculate its offsets a number of times, then average them and save
-#if F_USING_GYRO && (F_9DOF_GBY_KALMAN || F_6DOF_GY_KALMAN)
+#if F_USING_GYRO && F_9DOF_GBY_KALMAN
     log_message(INFO, "Please hold still!", 1000, 200, true);
-    if (runtime_is_fbw())
-        display_string("Please hold still!", 0);
+    // All display_string calls will send a message and progress bar to the display; this is just for extra info
+    // that the logging system won't show
+    display_string("Please hold still!", 0);
     // Wait for gyro (and user) to stabilize
     wait = timestamp_in_ms(5000);
     while (!timestamp_reached(&wait))
@@ -202,32 +226,24 @@ bool aahrs_calibrate() {
     // Take GYRO_AVG_SAMPLES offsets
     float offsets[3];
     for (u32 i = 0; i < GYRO_AVG_SAMPLES; i++) {
-        if (runtime_is_fbw())
-            display_string("Please hold still!", (i + 1) * (33.0f / GYRO_AVG_SAMPLES));
+        display_string("Please hold still!", (i + 1) * (33.0f / GYRO_AVG_SAMPLES));
     // Reqest a reset from the algorithm so that the gyro offsets get calculated
     #if F_9DOF_GBY_KALMAN
         fusion.SV_9DOF_GBY_KALMAN.resetflag = true;
-    #elif F_6DOF_GY_KALMAN
-        fusion.SV_6DOF_GY_KALMAN.resetflag = true;
     #endif
         // Wait for the calculation and save
-        wait = timestamp_in_ms(rateDelay);
+        wait = timestamp_in_ms(fusionT);
         while (!timestamp_reached(&wait))
             aahrs.update();
     #if F_9DOF_GBY_KALMAN
         for (u32 j = 0; j < count_of(offsets); j++)
             offsets[j] += fusion.SV_9DOF_GBY_KALMAN.fbPl[j];
-    #elif F_6DOF_GY_KALMAN
-        for (u32 j = 0; j < count_of(offsets); j++)
-            offsets[j] += fusion.SV_6DOF_GY_KALMAN.fbPl[j];
     #endif
     }
     // Average the offsets and save
     for (u32 i = 0; i < count_of(offsets); i++) {
     #if F_9DOF_GBY_KALMAN
         fusion.SV_9DOF_GBY_KALMAN.fbPl[i] = offsets[i] / GYRO_AVG_SAMPLES;
-    #elif F_6DOF_GY_KALMAN
-        fusion.SV_6DOF_GY_KALMAN.fbPl[i] = offsets[i] / GYRO_AVG_SAMPLES;
     #endif
     }
     printfbw(aahrs, "saving gyro calibration");
@@ -235,14 +251,10 @@ bool aahrs_calibrate() {
         printraw("\noffset vector:");
     #if F_9DOF_GBY_KALMAN
         PRINT_VECTOR(fusion.SV_9DOF_GBY_KALMAN.fbPl);
-    #elif F_6DOF_GY_KALMAN
-        PRINT_VECTOR(fusion.SV_6DOF_GY_KALMAN.fbPl);
     #endif
         printraw("\noffset error vector:");
     #if F_9DOF_GBY_KALMAN
         PRINT_VECTOR(fusion.SV_9DOF_GBY_KALMAN.fbErrPl);
-    #elif F_6DOF_GY_KALMAN
-        PRINT_VECTOR(fusion.SV_6DOF_GY_KALMAN.fbErrPl);
     #endif
         printraw("\n");
     }
@@ -260,11 +272,9 @@ bool aahrs_calibrate() {
         char msg[64];
         sprintf(msg, "Calibration: please move to position #%lu/%d", i + 1, MAX_ACCEL_CAL_ORIENTATIONS);
         log_message(INFO, msg, 500, 200, true);
-        if (runtime_is_fbw()) {
-            char orientMsg[60] = {[0 ... 59] = ' '};
-            sprintf(orientMsg, "Please move to position #%lu/%d", i + 1, MAX_ACCEL_CAL_ORIENTATIONS);
-            display_string(orientMsg, (i + 1) * (33.0f / MAX_ACCEL_CAL_ORIENTATIONS) + 33);
-        }
+        char orientMsg[60] = {[0 ... 59] = ' '};
+        sprintf(orientMsg, "Please move to position #%lu/%d", i + 1, MAX_ACCEL_CAL_ORIENTATIONS);
+        display_string(orientMsg, (i + 1) * (33.0f / MAX_ACCEL_CAL_ORIENTATIONS) + 33);
         // Wait for the sensor to move...
         while (!hasMoved) {
             aahrs.update();
@@ -289,8 +299,7 @@ bool aahrs_calibrate() {
         }
         // Blink signify a position is being recorded
         log_message(INFO, "Calibration: recording position...", 250, 100, true);
-        if (runtime_is_fbw())
-            display_string("Recording position...", (i + 1) * (33.0f / MAX_ACCEL_CAL_ORIENTATIONS) + 33);
+        display_string("Recording position...", (i + 1) * (33.0f / MAX_ACCEL_CAL_ORIENTATIONS) + 33);
         // Set the current physical location of the sensor
         fusion.AccelBuffer.iStoreLocation = i;
         // Set the counter to the number of seconds to average over, and wait for the measurements to be taken (as well as for
@@ -317,18 +326,15 @@ bool aahrs_calibrate() {
         // Wait until the algorithm begins a calibration, and take measurements
         while (!fusion.MagCal.iCalInProgress) {
             printfbw(aahrs, "%d/%d measurements taken", fusion.MagBuffer.iMagBufferCount, MINMEASUREMENTS10CAL);
-            if (runtime_is_fbw()) {
-                char measureMsg[60] = {[0 ... 59] = ' '};
-                sprintf(measureMsg, "%d/%d measurements taken", fusion.MagBuffer.iMagBufferCount, MINMEASUREMENTS10CAL);
-                display_string(measureMsg, fusion.MagBuffer.iMagBufferCount * (33.0f / MAXMEASUREMENTS) + 66);
-            }
+            char measureMsg[60] = {[0 ... 59] = ' '};
+            sprintf(measureMsg, "%d/%d measurements taken", fusion.MagBuffer.iMagBufferCount, MINMEASUREMENTS10CAL);
+            display_string(measureMsg, fusion.MagBuffer.iMagBufferCount * (33.0f / MAXMEASUREMENTS) + 66);
             runtime_sleep_ms(1000, false);
         }
         // Calibration is being calculated, wait for it to finish
         printfbw(aahrs, "calibration in progress, please wait...");
-        if (runtime_is_fbw())
-            display_string("Calibration in progress, please wait",
-                           fusion.MagBuffer.iMagBufferCount * (33.0f / MAXMEASUREMENTS) + 66);
+        display_string("Calibration in progress, please wait",
+                       fusion.MagBuffer.iMagBufferCount * (33.0f / MAXMEASUREMENTS) + 66);
         while (fusion.MagCal.iCalInProgress)
             aahrs.update();
         printfbw(aahrs, "fit error was %f (attempt %lu/%d)", fusion.MagCal.ftrFitErrorpc, i + 1, MAX_MAG_ATTEMPTS);
@@ -339,7 +345,7 @@ bool aahrs_calibrate() {
     if (fusion.MagCal.iValidMagCal < 10) {
         log_message(WARNING, "Mag calibration not optimal!", 1000, 0, false);
     }
-    printfbw(aahrs, "[AAHRS] saving magnetometer calibration\n");
+    printfbw(aahrs, "saving magnetometer calibration\n");
     if (shouldPrint.aahrs) {
         printraw("\nhard iron offset vector:");
         PRINT_VECTOR(fusion.MagCal.fV);

@@ -76,16 +76,13 @@ void esc_set(u32 pin, float speed) {
 
 bool esc_calibrate(u32 pin) {
     log_message(INFO, "Calibrating ESC", 200, 0, false);
-    if (runtime_is_fbw())
-        display_string("Select idle thrust.", 0);
+    display_string("Select idle thrust.", 0);
     if (!wait_for_detent(pin, &calibration.esc[ESC_DETENT_IDLE], (u32)20E3, 4000))
         return false;
-    if (runtime_is_fbw())
-        display_string("Select max continuous thrust.", 33);
+    display_string("Select max continuous thrust.", 33);
     if (!wait_for_detent(pin, &calibration.esc[ESC_DETENT_MCT], (u32)10E3, 2000))
         return false;
-    if (runtime_is_fbw())
-        display_string("Select max thrust.", 66);
+    display_string("Select max thrust.", 66);
     if (!wait_for_detent(pin, &calibration.esc[ESC_DETENT_MAX], (u32)10E3, 1000))
         return false;
     print("[ESC] final detents: %d, %d, %d", (u16)calibration.esc[ESC_DETENT_IDLE], (u16)calibration.esc[ESC_DETENT_MCT],

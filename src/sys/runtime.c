@@ -104,11 +104,3 @@ void runtime_sleep_ms(u32 ms, bool update_aircraft) {
     while (!timestamp_reached(&wakeup_time))
         runtime_loop(update_aircraft);
 }
-
-bool runtime_is_fbw() {
-#ifdef PIN_FBW
-    return gpio_state(PIN_FBW) == HIGH;
-#else
-    return false;
-#endif
-}

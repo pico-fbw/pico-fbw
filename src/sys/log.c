@@ -76,7 +76,8 @@ i32 led_callback() {
  * @param entry The entry to display.
  */
 static void display_log(LogEntry *entry) {
-    if (runtime_is_fbw()) {
+#if PLATFORM_SUPPORTS_DISPLAY
+    if ((bool)config.system[SYSTEM_USE_DISPLAY]) {
         // Display the entry on the built-in display on FBW
         // We don't want to use the builtin display_string() function because it might wrap text weirdly;
         // we want control over what goes on each line
@@ -129,6 +130,7 @@ static void display_log(LogEntry *entry) {
             display_lines(typeMsg, NULL, DISP_LOG_URL, codeStr, true);
         }
     } else {
+#endif
 #ifdef PIN_LED
         led_reset();
         // If pulse has been enabled, turn the LED off now so it pulses to the on state, not the off state (looks better)
@@ -140,7 +142,9 @@ static void display_log(LogEntry *entry) {
         toggleMs = entry->code;
         toggleCallback = callback_in_ms(toggleMs, led_callback);
 #endif
+#if PLATFORM_SUPPORTS_DISPLAY
     }
+#endif
     lastDisplayedEntry = entry;
 }
 
@@ -166,7 +170,7 @@ void reset_last() {
 void log_init() {
 #ifdef PIN_LED
     gpio_setup(PIN_LED, OUTPUT);
-    if (!runtime_is_fbw())
+    if (!(bool)config.system[SYSTEM_USE_DISPLAY])
         gpio_set(PIN_LED, HIGH);
 #endif
     logs = NULL;
@@ -277,8 +281,8 @@ void log_clear(LogType type) {
             }
             // If there was no error, reset the display
             if (!hadError) {
-                if (runtime_is_fbw())
-                    display_powerSave();
+                if ((bool)config.system[SYSTEM_USE_DISPLAY])
+                    display_power_save();
                 else
                     led_reset();
             }

@@ -113,6 +113,7 @@ typedef enum ConfigSystem {
     SYSTEM_PRINT_GPS,
     SYSTEM_PRINT_MODES,
     SYSTEM_PRINT_NETWORK,
+    SYSTEM_USE_DISPLAY,
 } ConfigSystem;
 
 // -- Calibration struct definition and indices --

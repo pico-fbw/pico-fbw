@@ -77,6 +77,9 @@ void tune_init() {
 
 void tune_update() {
     normal_update();
+    if (calibration.pid[PID_TUNED])
+        return;
+
     float rollInput = receiver_get((u32)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE) - 90.f;
     float pitchInput = receiver_get((u32)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEGREE) - 90.f;
     // Get the requested and actual roll and pitch rates
@@ -85,11 +88,8 @@ void tune_update() {
     float actRollRate = aahrs.rollRate;
     float actPitchRate = aahrs.pitchRate;
 
-    if (!calibration.pid[PID_TUNED]) {
-        update_gain(ROLL, reqRollRate, actRollRate);
-        update_gain(PITCH, reqPitchRate, actPitchRate);
-    } else
-        return;
+    update_gain(ROLL, reqRollRate, actRollRate);
+    update_gain(PITCH, reqPitchRate, actPitchRate);
 
     // Set the tuned flag if there haven't been any tune events for a while
     if (time_since_ms(&lastTuneEvent) > TUNED_THRESHOLD_MS) {

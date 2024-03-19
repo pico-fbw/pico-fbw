@@ -81,8 +81,6 @@ void change_to(Mode newMode) {
                 // Automatically enter tune mode if necessary
                 if (!tune_is_tuned())
                     goto TUNE;
-                // TODO: have a way for auto mode to re-engage if the gps becomes safe again; this is usually due to bad DOP
-                // which fixes itself over time
                 if (gps.is_supported() && aircraft.gpsSafe) {
                     // Check to see if we should calibrate the altitude offset
                     if (flightplan_was_parsed()) {

@@ -51,7 +51,10 @@ Config config = {
     .system = {
         false,
         true, false, false, false, false, false, // Default print settings, also found in PrintDefs below
-        2000,
+        true, // Default display use status
+        // This is true because the display is initialized before the config is loaded,
+        // so setting it to true means the display will always be initialized on boot (if possible),
+        // even though it may not be used later
         CONFIG_END_MAGIC,
     },
     .ssid = "pico-fbw",

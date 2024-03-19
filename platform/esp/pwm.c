@@ -199,7 +199,7 @@ float pwm_read_raw(u32 pin) {
     if (!channel)
         return -1.f;
     // Convert the pulsewidth from ticks to μs
-    return channel->tPulsewidth * (1000000.0 / esp_clk_apb_freq());
+    return channel->tPulsewidth * (1E6f / esp_clk_apb_freq());
 }
 
 void pwm_write_raw(u32 pin, float pulsewidth) {

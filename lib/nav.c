@@ -11,7 +11,7 @@
 #define EARTH_RADIUS_KM 6371  // Earth's radius in kilometers
 #define EARTH_RADIUS_M (EARTH_RADIUS_KM * 1000) // Earth's radius in meters
 
-double calculateBearing(long double latA, long double lonA, long double latB, long double lonB) {
+double calculate_bearing(long double latA, long double lonA, long double latB, long double lonB) {
     long double thetaA = radians(latA);
     long double thetaB = radians(latB);
     long double deltaL = radians(lonB - lonA);
@@ -27,7 +27,7 @@ double calculateBearing(long double latA, long double lonA, long double latB, lo
     return bearing;
 }
 
-double calculateDistance(long double latA, long double lonA, long double latB, long double lonB) {
+double calculate_distance(long double latA, long double lonA, long double latB, long double lonB) {
     long double thetaA = radians(latA);
     long double thetaB = radians(latB);
     long double deltaT = radians(latB - latA);

@@ -16,12 +16,52 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "platform/defs.h"
 #include "platform/i2c.h"
 #include "platform/time.h"
 
+#include "sys/configuration.h"
 #include "sys/runtime.h"
 
 #include "display.h"
+
+#if PLATFORM_SUPPORTS_DISPLAY
+
+    // Datasheet: https://cdn-shop.adafruit.com/datasheets/DISPLAY.pdf
+    // Commands:
+    #define DISPLAY_SET_MEM_MODE 0x20
+    #define DISPLAY_SET_COL_ADDR 0x21
+    #define DISPLAY_SET_PAGE_ADDR 0x22
+    #define DISPLAY_SET_HORIZ_SCROLL 0x26
+    #define DISPLAY_SET_SCROLL 0x2E
+
+    #define DISPLAY_SET_DISP_START_LINE 0x40
+
+    #define DISPLAY_SET_CONTRAST 0x81
+    #define DISPLAY_SET_CHARGE_PUMP 0x8D
+
+    #define DISPLAY_SET_SEG_REMAP 0xA0
+    #define DISPLAY_SET_ENTIRE_ON 0xA4
+    #define DISPLAY_SET_ALL_ON 0xA5
+    #define DISPLAY_SET_NORM_DISP 0xA6
+    #define DISPLAY_SET_INV_DISP 0xA7
+    #define DISPLAY_SET_MUX_RATIO 0xA8
+    #define DISPLAY_SET_DISP 0xAE
+    #define DISPLAY_SET_COM_OUT_DIR 0xC0
+    #define DISPLAY_SET_COM_OUT_DIR_FLIP 0xC0
+
+    #define DISPLAY_SET_DISP_OFFSET 0xD3
+    #define DISPLAY_SET_DISP_CLK_DIV 0xD5
+    #define DISPLAY_SET_PRECHARGE 0xD9
+    #define DISPLAY_SET_COM_PIN_CFG 0xDA
+    #define DISPLAY_SET_VCOM_DESEL 0xDB
+
+    #define DISPLAY_PAGE_HEIGHT 8
+    #define DISPLAY_NUM_PAGES (DISPLAY_HEIGHT / DISPLAY_PAGE_HEIGHT)
+    #define DISPLAY_BUF_LEN (DISPLAY_NUM_PAGES * DISPLAY_WIDTH)
+
+    #define DISPLAY_WRITE_MODE 0xFE
+    #define DISPLAY_READ_MODE 0xFF
 
 // I'm so sorry
 static byte font[] = {
@@ -1494,7 +1534,7 @@ typedef struct RenderArea {
 
 static byte buf[DISPLAY_BUF_LEN];
 
-static RenderArea frame_area = {
+static RenderArea frameArea = {
     .col_start = 0, .col_end = DISPLAY_WIDTH - 1, .page_start = 0, .page_end = DISPLAY_NUM_PAGES - 1};
 
 /**
@@ -1502,9 +1542,9 @@ static RenderArea frame_area = {
  * @param cmd The command to send
  * @return The return code of the i2c_write call.
  */
-static inline i32 sendCmd(byte cmd) {
+static inline i32 send_cmd(byte cmd) {
     byte buf[] = {cmd};
-    return i2c_write(DISPLAY_SDA, DISPLAY_SCL, (DISPLAY_ADDR & DISPLAY_WRITE_MODE), 0x80, buf, 1);
+    return i2c_write(PIN_DISPLAY_SDA, PIN_DISPLAY_SCL, (DISPLAY_ADDR & DISPLAY_WRITE_MODE), 0x80, buf, 1);
 }
 
 /**
@@ -1513,9 +1553,9 @@ static inline i32 sendCmd(byte cmd) {
  * @param num The number of commands to send
  * @return true if the commands were sent successfully, false otherwise.
  */
-static bool sendCmdList(byte *buf, u32 num) {
+static bool send_cmd_list(byte *buf, u32 num) {
     for (u32 i = 0; i < num; i++)
-        if (!sendCmd(buf[i]))
+        if (!send_cmd(buf[i]))
             return false;
     return true;
 }
@@ -1525,8 +1565,8 @@ static bool sendCmdList(byte *buf, u32 num) {
  * @param buf The buffer to send
  * @param buf_len The length of the buffer
  */
-static void sendBuf(byte buf[], i32 buf_len) {
-    i2c_write(DISPLAY_SDA, DISPLAY_SCL, (DISPLAY_ADDR & DISPLAY_WRITE_MODE), 0x40, buf, buf_len);
+static void send_buf(byte buf[], i32 buf_len) {
+    i2c_write(PIN_DISPLAY_SDA, PIN_DISPLAY_SCL, (DISPLAY_ADDR & DISPLAY_WRITE_MODE), 0x40, buf, buf_len);
 }
 
 /**
@@ -1536,7 +1576,7 @@ static void sendBuf(byte buf[], i32 buf_len) {
  * @note Scroll speed isn't actually linear, it's quite confusing--anyway 0 is the slowest and 7 is the fastest
  * but everything in between is just...weird.
  */
-void setScroll(bool on, u8 speed) {
+void set_scroll(bool on, u8 speed) {
     speed = speed > 7 ? 7 : speed; // Ensure speed is valid
     byte cmds[] = {
         DISPLAY_SET_HORIZ_SCROLL | 0x00,
@@ -1548,7 +1588,7 @@ void setScroll(bool on, u8 speed) {
         0xFF,                                // Dummy byte
         DISPLAY_SET_SCROLL | (on ? 0x01 : 0) // Start/stop scrolling
     };
-    sendCmdList(cmds, count_of(cmds));
+    send_cmd_list(cmds, count_of(cmds));
 }
 
 /**
@@ -1559,15 +1599,15 @@ void setScroll(bool on, u8 speed) {
 static void render(byte *buf, RenderArea *area) {
     byte cmds[] = {DISPLAY_SET_COL_ADDR,  area->col_start,  area->col_end,
                    DISPLAY_SET_PAGE_ADDR, area->page_start, area->page_end};
-    sendCmdList(cmds, count_of(cmds));
-    sendBuf(buf, area->buf_len);
+    send_cmd_list(cmds, count_of(cmds));
+    send_buf(buf, area->buf_len);
 }
 
 /**
  * Calculates the length of the flattened buffer for a render area.
  * @param area The render area to calculate the buffer length for
  */
-static void render_calcBuf(RenderArea *area) {
+static void calc_buf(RenderArea *area) {
     area->buf_len = (area->col_end - area->col_start + 1) * (area->page_end - area->page_start + 1);
 }
 
@@ -1575,7 +1615,7 @@ static void render_calcBuf(RenderArea *area) {
  * @param ch The character to get the index for
  * @return the index of a character in the display font.
  */
-static inline i32 GetFontIndex(byte ch) {
+static inline i32 get_char_from_font(byte ch) {
     if (ch >= ' ' && ch <= '~') {
         return ch - 32;
     } else if (ch == 254) {
@@ -1593,13 +1633,13 @@ static inline i32 GetFontIndex(byte ch) {
  * @param ch The character to write
  * @note Ensure to render() the display once all characters have been written.
  */
-static void buf_writeChar(byte *buf, i16 x, i16 y, byte ch) {
+static void write_char(byte *buf, i16 x, i16 y, byte ch) {
     if (x > DISPLAY_WIDTH - 8 || y > DISPLAY_HEIGHT - 8)
         return;
     y = (i16)(y / 8); // Only write on Y row boundaries (every 8 vertical pixels)
 
     ch = toupper(ch);
-    i32 idx = GetFontIndex(ch);
+    i32 idx = get_char_from_font(ch);
     i32 fb_idx = y * 128 + x;
 
     for (u32 i = 0; i < 8; i++) {
@@ -1615,13 +1655,13 @@ static void buf_writeChar(byte *buf, i16 x, i16 y, byte ch) {
  * @param str The string to write
  * @note Ensure to render() the display once all strings have been written.
  */
-static void buf_writeString(byte *buf, i16 x, i16 y, char *str) {
+static void write_string(byte *buf, i16 x, i16 y, char *str) {
     // Cull out any string off the screen
     if (x > DISPLAY_WIDTH - 8 || y > DISPLAY_HEIGHT - 8)
         return;
 
     while (*str) {
-        buf_writeChar(buf, x, y, *str++);
+        write_char(buf, x, y, *str++);
         x += 8;
     }
 }
@@ -1633,7 +1673,7 @@ static void buf_writeString(byte *buf, i16 x, i16 y, char *str) {
  * @return The centered string.
  * @note This function allocates memory for the centered string, ensure to free() it after use.
  */
-static char *centerString(const char line[], u32 len_max) {
+static char *center_str(const char line[], u32 len_max) {
     u32 len = strlen(line);
     if (len > 0 && line[len - 1] == '\0')
         len--; // Remove trailing null as it can throw off centering
@@ -1659,7 +1699,7 @@ static char *centerString(const char line[], u32 len_max) {
  * @param progress The progress to display (0-100)
  * @note The length of bar[] should be of DISPLAY_MAX_LINE_LEN
  */
-static void createProgBar(char bar[], u32 progress) {
+static void create_progress_bar(char bar[], u32 progress) {
     u32 barLen = progress / 10;
     char lenStr[3] = {[0 ... 2] = ' '};
     sprintf(lenStr, "%lu", progress);
@@ -1675,8 +1715,13 @@ static void createProgBar(char bar[], u32 progress) {
     }
 }
 
+#endif // PLATFORM_SUPPORTS_DISPLAY
+
 bool display_init() {
-    i2c_setup(DISPLAY_SDA, DISPLAY_SCL, DISPLAY_FREQ_KHZ * 1000);
+#if PLATFORM_SUPPORTS_DISPLAY
+    if (!(bool)config.system[SYSTEM_USE_DISPLAY])
+        return false;
+    i2c_setup(PIN_DISPLAY_SDA, PIN_DISPLAY_SCL, DISPLAY_FREQ_KHZ * 1000);
     byte initCmds[] = {
         DISPLAY_SET_DISP, // Display off
         /* Memory mapping */
@@ -1692,13 +1737,13 @@ bool display_init() {
         0x00,
         DISPLAY_SET_COM_PIN_CFG, // Set COM (common) pins hardware configuration. Board specific magic number.
                                  // 0x02 Works for 128x32, 0x12 Possibly works for 128x64. Other options 0x22, 0x32
-#if ((DISPLAY_WIDTH == 128) && (DISPLAY_HEIGHT == 32))
+    #if ((DISPLAY_WIDTH == 128) && (DISPLAY_HEIGHT == 32))
         0x02,
-#elif ((DISPLAY_WIDTH == 128) && (DISPLAY_HEIGHT == 64))
+    #elif ((DISPLAY_WIDTH == 128) && (DISPLAY_HEIGHT == 64))
         0x12,
-#else
+    #else
         0x02,
-#endif
+    #endif
         /* Timing and driving scheme */
         DISPLAY_SET_DISP_CLK_DIV, // Set display clock divide ratio
         0x80,                     // Div ratio of 1, standard freq
@@ -1716,36 +1761,52 @@ bool display_init() {
         DISPLAY_SET_SCROLL | 0x00, // Deactivate horizontal scrolling if set, memory writes will corrupt otherwise
         DISPLAY_SET_DISP | 0x01,   // Turn display on
     };
-    if (!sendCmdList(initCmds, count_of(initCmds)))
+    if (!send_cmd_list(initCmds, count_of(initCmds)))
         return false;
 
-    render_calcBuf(&frame_area);
-    render(logo, &frame_area);
+    calc_buf(&frameArea);
+    render(logo, &frameArea);
     memset(buf, 0, DISPLAY_BUF_LEN); // Zero display buffer for text rendering later
     return true;
+#else
+    return false;
+#endif
 }
 
 void display_lines(const char l1[], const char l2[], const char l3[], const char l4[], bool center) {
+#if PLATFORM_SUPPORTS_DISPLAY
+    if (!(bool)config.system[SYSTEM_USE_DISPLAY])
+        return;
     memset(buf, 0, DISPLAY_BUF_LEN); // Clear anything that may be in VRAM buffer
     char *text[4];
-    text[0] = center ? centerString(l1, DISPLAY_MAX_LINE_LEN) : (char *)l1;
-    text[1] = center ? centerString(l2, DISPLAY_MAX_LINE_LEN) : (char *)l2;
-    text[2] = center ? centerString(l3, DISPLAY_MAX_LINE_LEN) : (char *)l3;
-    text[3] = center ? centerString(l4, DISPLAY_MAX_LINE_LEN) : (char *)l4;
+    text[0] = center ? center_str(l1, DISPLAY_MAX_LINE_LEN) : (char *)l1;
+    text[1] = center ? center_str(l2, DISPLAY_MAX_LINE_LEN) : (char *)l2;
+    text[2] = center ? center_str(l3, DISPLAY_MAX_LINE_LEN) : (char *)l3;
+    text[3] = center ? center_str(l4, DISPLAY_MAX_LINE_LEN) : (char *)l4;
 
     i32 y = 0;
     for (u32 i = 0; i < count_of(text); i++) {
         if (!text[i])
             continue;
-        buf_writeString(buf, 5, (i16)y, text[i]);
+        write_string(buf, 5, (i16)y, text[i]);
         if (center)
             free(text[i]); // Free only centered strings (other strings are constant)
         y += 8;
     }
-    render(buf, &frame_area);
+    render(buf, &frameArea);
+#else
+    (void)l1;
+    (void)l2;
+    (void)l3;
+    (void)l4;
+    (void)center;
+#endif
 }
 
 void display_string(const char *str, i32 progress) {
+#if PLATFORM_SUPPORTS_DISPLAY
+    if (!(bool)config.system[SYSTEM_USE_DISPLAY])
+        return;
     // Create the four individual lines of text, we will split the string over these lines
     char line1[DISPLAY_MAX_LINE_LEN + 1] = {[0 ... DISPLAY_MAX_LINE_LEN] = ' '};
     char line2[DISPLAY_MAX_LINE_LEN + 1] = {[0 ... DISPLAY_MAX_LINE_LEN] = ' '};
@@ -1812,27 +1873,39 @@ void display_string(const char *str, i32 progress) {
     }
     // If we have a progress bar, create it now
     if (progress >= 0) {
-        createProgBar(line4, progress);
+        create_progress_bar(line4, progress);
     }
     display_lines(line1, line2, line3, line4, true);
+#else
+    (void)str;
+    (void)progress;
+#endif
 }
 
-void display_powerSave() {
+void display_power_save() {
+#if PLATFORM_SUPPORTS_DISPLAY
+    if (!(bool)config.system[SYSTEM_USE_DISPLAY])
+        return;
     display_lines("Entering", "power save", "mode", NULL, true);
     runtime_sleep_ms(2000, true);
     memset(buf, 0, sizeof(buf));
-    render(buf, &frame_area);
+    render(buf, &frameArea);
+#endif
 }
 
 void display_anim() {
+#if PLATFORM_SUPPORTS_DISPLAY
+    if (!(bool)config.system[SYSTEM_USE_DISPLAY])
+        return;
     memset(buf, 0, sizeof(buf));
-    render(buf, &frame_area);
+    render(buf, &frameArea);
     Timestamp wait = timestamp_in_ms(4000);
     while (!timestamp_reached(&wait)) {
         for (u32 i = 0; i < count_of(lightspeed); i++) {
-            render(lightspeed[i], &frame_area);
+            render(lightspeed[i], &frameArea);
             runtime_sleep_ms(2, true);
         }
     }
-    display_powerSave();
+    display_power_save();
+#endif
 }

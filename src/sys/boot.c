@@ -26,24 +26,19 @@ void boot_begin() {
     flash_setup();
     log_init();
     isBooted = false;
-#ifdef PIN_FBW
-    gpio_setup(PIN_FBW, INPUT_PULLDOWN);
-    if (runtime_is_fbw())
-        display_init();
-#endif
+    display_init();
     sleep_ms_blocking(BOOT_WAIT_MS); // Wait for peripherals to power up
 }
 
 void boot_set_progress(float progress, const char *message) {
     print("[boot] (%1.f%%) %s", progress, message);
-    if (runtime_is_fbw())
-        display_string(message, (i32)progress);
+    display_string(message, (i32)progress);
 }
 
 void boot_complete() {
     print("[boot] (100%%) Done!");
     sys_boot_end();
-    if (runtime_is_fbw() && log_count_errs() == 0)
+    if (log_count_errs() == 0)
         display_anim();
     isBooted = true;
 }
