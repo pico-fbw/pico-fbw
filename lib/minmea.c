@@ -676,4 +676,7 @@ int minmea_gettime(struct timespec *ts, const struct minmea_date *date, const st
     */
 
     return -1;
+    (void)ts;
+    (void)date;
+    (void)time_;
 }

@@ -3,6 +3,8 @@
  * Licensed under the GNU AGPL-3.0
  */
 
+#include "platform/defs.h"
+
 #include "sys/print.h"
 #include "sys/version.h"
 
@@ -12,13 +14,17 @@ void api_help(const char *args) {
     printraw(
         "\npico-fbw API v%s\n"
         "Commands:\n"
-        "GET_CONFIG <section> <key> - Get configuration value (providing no arguments will list the entire config)\n"
-        "GET_FPLAN - Get flightplan JSON\n"
+        "GET_CONFIG <section> <key> - Get configuration value (no arguments: list the entire config)\n"
+        "GET_FPLAN - Get raw flightplan data\n"
         "GET_INFO - Get system information\n"
         "GET_INPUT - Get current control inputs\n"
         "GET_LOGS - Get system logs\n"
         "GET_MODE - Get the current flight mode\n"
-        "GET_SENSOR <0/1/2> - Get sensor data <0=all, 1=AAHRS only, 2=GPS only>\n"
+#if PLATFORM_SUPPORTS_ADC
+        "GET_SENSOR <0/1/2/3> - Get sensor data <0/no arguments=all, 1=AAHRS, 2=GPS, 3=battery>\n"
+#else
+        "GET_SENSOR <0/1/2> - Get sensor data <0=all, 1=AAHRS, 2=GPS>\n"
+#endif
         "GET_THRUST - Get current thrust value\n"
         "SET_BAY <0/1> - Set the current position of the drop bay <0=closed, 1=open>\n"
         "SET_CONFIG <section> <key> <value> [-S] - Set configuration value (providing no arguments will save config to flash)\n"
@@ -32,12 +38,12 @@ void api_help(const char *args) {
         "TEST_GPS - Tests the GPS module (must be outside with good sky visibility)\n"
         "TEST_PWM [in_1] [out_1] [in_2] [out_2] [in_3] [out_3] [in_4] [out_4] [in_5] [out_5] - Tests the PWM system, the user "
         "must connect the specified pins\n"
-        "TEST_SERVO [servo] - Tests the servo on the specified pin (or all enabled servos if none are specified)\n"
+        "TEST_SERVO <servo> - Tests the servo on the specified pin (no arguments: all enabled servos)\n"
         "TEST_THROTTLE [time_idle] [time_mct] [time_max] - Tests the system's throttle in all three configured detents\n"
         "ABOUT - Display system information\n"
         "HELP - Display this help message\n"
         "PING - Pong!\n"
-        "REBOOT <0/1> - Reboot the system (0=normal, 1=bootloader)\n"
+        "REBOOT <0/1> - Reboot the system (0/no arguments=normal, 1=bootloader, if present)\n"
         "RESET - Reset pico-fbw to factory defaults\n\n"
         "Responses:\n"
         "200 OK - Request successful\n"

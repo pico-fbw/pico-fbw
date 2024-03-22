@@ -13,7 +13,7 @@
 #include "test_gps.h"
 
 i32 api_test_gps(const char *args) {
-    if ((GPSCommandType)config.sensors[SENSORS_GPS_COMMAND_TYPE] == GPS_COMMAND_TYPE_NONE)
+    if (!gps.is_supported())
         return 403;
     if (!aircraft.gpsSafe)
         return 500;

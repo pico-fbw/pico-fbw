@@ -43,7 +43,9 @@ message("Adding subdirectories")
 add_subdirectory(src)
 add_subdirectory(lib)
 add_subdirectory(platform)
-include(clang-format.cmake) # Also add the clang-format target, if applicable
+message("Adding extra targets")
+include(clang-format.cmake)
+include(www/www.cmake)
 # Final setup tasks
 message("Finishing up setup for ${FBW_PLATFORM}")
 setup_after_subdirs()

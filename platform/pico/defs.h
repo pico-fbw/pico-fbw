@@ -3,6 +3,8 @@
 #include "pico/config.h" // For platform-specific defines (e.g. RASPBERRYPI_PICO_W)
 #include "pico/time.h"
 
+#include "platform/int.h"
+
 typedef alarm_id_t __callback_id_t;
 
 // Flight control I/O pins
@@ -32,6 +34,19 @@ typedef alarm_id_t __callback_id_t;
 #define PLATFORM_NAME "Raspberry Pi Pico"
 #define PLATFORM_VERSION ("1.0.0 (pico-sdk " PICO_SDK_VERSION_STRING ")")
 // Platform features
+// ADC
+#define PLATFORM_SUPPORTS_ADC 1
+#if PLATFORM_SUPPORTS_ADC
+    // ADC information
+    #define ADC_NUM_CHANNELS 4
+    #define PIN_ADC_0 26
+    #define PIN_ADC_1 27
+    #define PIN_ADC_2 28
+    #define PIN_ADC_3 29
+static const u32 ADC_PINS[] = {PIN_ADC_0, PIN_ADC_1, PIN_ADC_2, PIN_ADC_3};
+#endif
+
+// Display
 #define PLATFORM_SUPPORTS_DISPLAY 1
 #if PLATFORM_SUPPORTS_DISPLAY
     // Display information
@@ -44,6 +59,8 @@ typedef alarm_id_t __callback_id_t;
     #define PIN_DISPLAY_SDA 18
     #define PIN_DISPLAY_SCL 19
 #endif
+
+// Wi-Fi
 #define PLATFORM_SUPPORTS_WIFI 0
 
 #ifdef RASPBERRYPI_PICO_W

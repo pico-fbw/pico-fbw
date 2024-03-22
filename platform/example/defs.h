@@ -3,6 +3,9 @@
 // Note: for these definitions to take effect, you must add your platform to the #if chain in platform/defs.h.
 // Another note: x is a used as placeholder for an actual value that you should define.
 
+// See time.c for information on what this is and what you should define it as.
+typedef x __callback_id_t;
+
 // Flight control I/O pins
 // These are all required; their numbers depend on your platform and where it allows certain GPIO functions such as PWM.
 #define PIN_INPUT_AIL x
@@ -38,9 +41,6 @@
 // Keep in mind that you'll need to write platform-specific code for each feature you enable for them to actually work.
 #define PLATFORM_SUPPORTS_DISPLAY 0
 #define PLATFORM_SUPPORTS_WIFI 0
-
-// See time.c for information on what this is and what you should define it as.
-typedef x __callback_id_t;
 
 // If your platform requires any more miscellaneous definitions, put them here.
 // Check the other platforms for examples of what you might need to define.

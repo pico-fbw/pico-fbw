@@ -25,6 +25,10 @@
 
 #include "display.h"
 
+#ifndef PLATFORM_SUPPORTS_DISPLAY
+    #warning "No display support configured, assuming no display"
+#endif
+
 #if PLATFORM_SUPPORTS_DISPLAY
 
     // Datasheet: https://cdn-shop.adafruit.com/datasheets/DISPLAY.pdf

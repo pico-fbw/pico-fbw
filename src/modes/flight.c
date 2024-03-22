@@ -175,7 +175,7 @@ void flight_update(double roll, double pitch, double yaw, bool override) {
 }
 
 void flight_params_get(Axis axis, double *kP, double *kI, double *kD) {
-    PIDController *axisC;
+    PIDController *axisC = NULL;
     switch (axis) {
         case ROLL:
             axisC = &rollC;
@@ -184,6 +184,8 @@ void flight_params_get(Axis axis, double *kP, double *kI, double *kD) {
             axisC = &pitchC;
             break;
     }
+    if (axisC == NULL)
+        return;
     if (kP != NULL)
         *kP = axisC->Kp;
     if (kI != NULL)

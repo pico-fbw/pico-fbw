@@ -9,6 +9,7 @@ add_library(platform_example
     sys.c
     time.c
     uart.c
+    # Feel free to add more files here as needed, for extra features or just if you prefer to split things up
 )
 
 target_link_libraries(platform_example

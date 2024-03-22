@@ -1,5 +1,6 @@
 # Define the platform library and its files
 add_library(platform_pico
+    adc.c
     flash.c
     gpio.c
     i2c.c
@@ -32,6 +33,7 @@ target_link_libraries(platform_pico
     pico_stdio_uart
     pico_stdio_usb
     pico_time
+    hardware_adc
     hardware_clocks
     hardware_flash
     hardware_gpio

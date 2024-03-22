@@ -33,9 +33,16 @@ jobs:
       with:
         submodules: 'recursive'
 
-    - name: Set up build environment
+    - name: Set up C build environment
       shell: bash
       run: sudo apt-get install ccache cmake ninja-build
+
+    - name: Set up web build environment
+      uses: actions/setup-node@v4.0.2
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        cache-dependency-path: www/yarn.lock
 
     - name: Check cache (esp)
       if: matrix.PLATFORM == 'esp32'

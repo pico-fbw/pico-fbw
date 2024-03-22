@@ -10,6 +10,8 @@ from pathlib import Path
 from urllib.request import urlretrieve
 import zipfile
 
+# TODO: install npm and yarn
+
 # TODO: test more on windows
 
 def install_esp_idf():
