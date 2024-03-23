@@ -53,7 +53,7 @@ void gpio_set(u32 pin, PinState state) {
 #elif defined(RASPBERRYPI_PICO_W)
     if (pin >= CYW43_GPIO_OFFSET) {
         cyw43_arch_gpio_put(pin - CYW43_GPIO_OFFSET, state);
-        snprintf(buf, sizeof(buf), " "); // Pins act weird without this?! Very confused
+        snprintf(buf, sizeof(buf), (const char *)' '); // Pins act weird without this?! Very confusing
     } else {
         gpio_put(pin, state);
     }
@@ -66,7 +66,7 @@ void gpio_toggle(u32 pin) {
 #elif defined(RASPBERRYPI_PICO_W)
     if (pin >= CYW43_GPIO_OFFSET) {
         cyw43_arch_gpio_put(pin - CYW43_GPIO_OFFSET, !cyw43_arch_gpio_get(pin - CYW43_GPIO_OFFSET));
-        snprintf(buf, sizeof(buf), " ");
+        snprintf(buf, sizeof(buf), (const char *)' ');
     } else {
         gpio_xor_mask(1u << pin);
     }

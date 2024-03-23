@@ -10,6 +10,9 @@
  * Licensed under the GNU AGPL-3.0
  */
 
+// TODO: modify fusion to have better integration with logging/rest of system
+// also make it so it doesn't spam display when trying to reconnect to a sensor, maybe only try every couple secs or so?
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -12,7 +12,7 @@ if (CLANG_FORMAT_EXE)
         COMMENT "Running clang-format on all source files"
     )
     set(FBW_FORMAT CACHE BOOL OFF)
-    if (FBW_FORMAT)
+    if ($CACHE{FBW_FORMAT})
         message("Code will be formatted (clang-format)")
         add_dependencies(${PROJECT_NAME} clang-format)
     else()

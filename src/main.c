@@ -10,6 +10,7 @@
 #include "platform/int.h"
 #include "platform/sys.h"
 #include "platform/time.h"
+#include "platform/wifi.h"
 
 #include "io/aahrs.h"
 #include "io/esc.h"
@@ -109,13 +110,13 @@ int main() {
             if (!esc_is_calibrated()) {
                 print("[boot] throttle detent calibration not found!");
                 if (!esc_calibrate((u32)config.pins[PINS_ESC_THROTTLE])) {
-                    log_message(ERROR, "Throttle detent calibration failed!", 800, 0, false);
+                    log_message(ERROR, "Throttle detent calibration failed!", 500, 0, false);
                 } else {
                     print("[boot] throttle detent calibration successful!");
                 }
             }
         } else {
-            log_message(WARNING, "Throttle detent calibration skipped!", 800, 0, false);
+            log_message(WARNING, "Throttle detent calibration skipped!", 500, 0, false);
         }
     }
 
@@ -161,18 +162,27 @@ int main() {
         if (gps.init()) {
             print("[boot] GPS ok");
             // We don't set the GPS safe just yet, comms are good but we are still unsure if the data is good
-            log_message(LOG, "GPS has no signal.", 2000, 0, false);
+            log_message(LOG, "GPS has no signal.", 5000, 150, false);
         } else {
-            log_message(ERROR, "GPS not found!", 2000, 0, false);
+            log_message(ERROR, "GPS not found!", 1000, 0, false);
         }
     }
 
 #if PLATFORM_SUPPORTS_WIFI
-    // TODO: redo network stuff but in HAL and more features
-    // maybe allow config editing through the interface, can maybe use server stuff from arduino
-    // alao don't forget to update the license when files are moved & update config settnig
-    // and also maybe do a vethernet for the normal pico like (https://github.com/OpenStickCommunity/GP2040-CE)
-    // also, wifi should be disabled when in flight to save power, it's pretty useless up there
+    boot_set_progress(85, "Initializing Wi-Fi");
+    bool setup = false;
+    switch ((WifiEnabled)config.general[GENERAL_WIFI_ENABLED]) {
+        case WIFI_ENABLED_OPEN:
+            setup = wifi_setup(config.wifi.ssid, NULL);
+            break;
+        case WIFI_ENABLED_PASS:
+            setup = wifi_setup(config.wifi.ssid, config.wifi.pass);
+        /* fall through */
+        default:
+            break;
+    }
+    if (!setup)
+        log_message(ERROR, "Wi-Fi setup failed!", 2000, 0, false);
 #endif
 
     boot_set_progress(90, "Finishing up");

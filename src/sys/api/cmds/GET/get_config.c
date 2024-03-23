@@ -88,9 +88,9 @@ i32 api_get_config(const char *args) {
                     switch (s) {
                         case CONFIG_WIFI:
                             if (s < NUM_CONFIG_SECTIONS - 1) {
-                                printraw("\"%s\",\"%s\"]},", config.ssid, config.pass);
+                                printraw("\"%s\",\"%s\"]},", config.wifi.ssid, config.wifi.pass);
                             } else {
-                                printraw("\"%s\",\"%s\"]}]}\n", config.ssid, config.pass);
+                                printraw("\"%s\",\"%s\"]}]}\n", config.wifi.ssid, config.wifi.pass);
                             }
                         default:
                             break;

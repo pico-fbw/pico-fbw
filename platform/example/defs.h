@@ -32,15 +32,50 @@ typedef x __callback_id_t;
 #define PIN_LED x
 
 // Platform details
-// These are purely informational for the user and can be whatever you want.
+// These are purely informational for the user, and can really be whatever you want.
 #define PLATFORM_NAME "Example Platform"
-#define PLATFORM_VERSION "1.0.0"
+#define PLATFORM_VERSION "1.0.0" // If you ever make any changes to the platform code, it's a nice courtesy to increment this.
 // Platform features
-// These will be used to enable or disable certain features in the final build.
-// If your platform supports a feature, define it as 1, otherwise, define it as 0 (do not comment it out).
-// Keep in mind that you'll need to write platform-specific code for each feature you enable for them to actually work.
+// These are extra features that while aren't required to run pico-fbw, can be useful to have.
+// If your platform supports them in hardware and you're willing to write extra code, pico-fbw will automatically use them.
+
+// Here are all of the possible features:
+
+// ADC
+#define PLATFORM_SUPPORTS_ADC 0
+#if PLATFORM_SUPPORTS_ADC
+    // The ADC requires writing an extra file 'adc.c', see a platform such as 'pico' for an example.
+    // Take a look at platform/adc.h to see the functions you'll need to implement.
+
+    // ADC information
+    #define ADC_NUM_CHANNELS x // Number of individual input channels your ADC supports
+    #define PIN_ADC_0 x        // First pin your ADC supports
+// Add more as needed...
+static const u32 ADC_PINS[] = {PIN_ADC_0}; // Array of all ADC pins you've defined
+#endif
+
+// Display
 #define PLATFORM_SUPPORTS_DISPLAY 0
+#if PLATFORM_SUPPORTS_DISPLAY
+                                           // Note that that this assumes an I2C display with a driver such as the SSD1306.
+    // This feature actually doesn't require any extra code; all you need to do is define these details.
+    // Display information
+    #define DISPLAY_WIDTH x  // Width of the display in pixels (typically 128)
+    #define DISPLAY_HEIGHT x // Height of the display in pixels (typically 32 or 64, pico-fbw currently only uses 32)
+    #define DISPLAY_MAX_LINE_LEN                                                                                               \
+        x                      // Maximum number of characters per line (typically 15 or 16, each character is 8x8 pixels)
+                               // Display i2c bus details
+    #define DISPLAY_FREQ_KHZ x // Frequency of I2C i2c bus in kHz (typically 100-400)
+    #define DISPLAY_ADDR 0xxx  // I2C address of the display
+    #define PIN_DISPLAY_SDA x  // SDA pin of the display
+    #define PIN_DISPLAY_SCL x  // SCL pin of the display
+#endif
+
+// Wi-Fi
 #define PLATFORM_SUPPORTS_WIFI 0
+// Wi-Fi requires writing an extra file 'wifi.c' (and probably some more as needed),
+// see platforms such as 'pico' and 'esp' for examples.
+// Take a look at platform/wifi.h to see the functions you'll need to implement.
 
 // If your platform requires any more miscellaneous definitions, put them here.
 // Check the other platforms for examples of what you might need to define.

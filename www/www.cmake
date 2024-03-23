@@ -1,5 +1,5 @@
 set(FBW_BUILD_WWW CACHE BOOL ON)
-if (NOT FBW_BUILD_WWW)
+if (NOT $CACHE{FBW_BUILD_WWW})
     message("Skipping web interface build")
     return()
 endif()

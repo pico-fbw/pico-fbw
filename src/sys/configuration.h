@@ -7,7 +7,7 @@
 This option is compiled in, as the config is not yet loaded when this value is needed. */
 #define BOOT_WAIT_MS 1000
 
-// -- Config struct details and definition --
+// -- Config struct details --
 
 #define CONFIG_SECTION_SIZE 32
 #define CONFIG_STR_SIZE 128
@@ -16,23 +16,7 @@ This option is compiled in, as the config is not yet loaded when this value is n
 #define NUM_CONFIG_SECTIONS (NUM_FLOAT_CONFIG_SECTIONS + NUM_STRING_CONFIG_SECTIONS)
 #define CONFIG_END_MAGIC (-30.54245f) // Denotes the end of a config section
 
-typedef struct Config {
-    float general[CONFIG_SECTION_SIZE];
-#define CONFIG_GENERAL_STR "General"
-    float control[CONFIG_SECTION_SIZE];
-#define CONFIG_CONTROL_STR "Control"
-    float pins[CONFIG_SECTION_SIZE];
-#define CONFIG_PINS_STR "Pins"
-    float sensors[CONFIG_SECTION_SIZE];
-#define CONFIG_SENSORS_STR "Sensors"
-    float system[CONFIG_SECTION_SIZE];
-#define CONFIG_SYSTEM_STR "System"
-    char ssid[CONFIG_STR_SIZE];
-    char pass[CONFIG_STR_SIZE];
-#define CONFIG_WIFI_STR "Wifi"
-} Config;
-
-// -- Config section indices --
+// -- Config section indices and definition --
 
 typedef enum ConfigGeneral {
     GENERAL_CONTROL_MODE,
@@ -116,18 +100,27 @@ typedef enum ConfigSystem {
     SYSTEM_USE_DISPLAY,
 } ConfigSystem;
 
-// -- Calibration struct definition and indices --
+typedef struct ConfigWifi {
+    char ssid[CONFIG_STR_SIZE];
+    char pass[CONFIG_STR_SIZE];
+} ConfigWifi;
 
-typedef struct Calibration {
-    float pwm[CONFIG_SECTION_SIZE];
-#define CONFIG_PWM_STR "PWM"
-    float esc[CONFIG_SECTION_SIZE];
-#define CONFIG_ESC_STR "ESC"
-    float aahrs[CONFIG_SECTION_SIZE * 2];
-#define CONFIG_AAHRS_STR "AAHRS"
-    float pid[CONFIG_SECTION_SIZE];
-#define CONFIG_PID_STR "PID"
-} Calibration;
+typedef struct Config {
+    float general[CONFIG_SECTION_SIZE];
+#define CONFIG_GENERAL_STR "General"
+    float control[CONFIG_SECTION_SIZE];
+#define CONFIG_CONTROL_STR "Control"
+    float pins[CONFIG_SECTION_SIZE];
+#define CONFIG_PINS_STR "Pins"
+    float sensors[CONFIG_SECTION_SIZE];
+#define CONFIG_SENSORS_STR "Sensors"
+    float system[CONFIG_SECTION_SIZE];
+#define CONFIG_SYSTEM_STR "System"
+    ConfigWifi wifi;
+#define CONFIG_WIFI_STR "Wifi"
+} Config;
+
+// -- Calibration struct indices and definition --
 
 typedef enum CalibrationPWM {
     PWM_CALIBRATED,
@@ -184,6 +177,17 @@ typedef enum CalibrationPID {
     PID_THROTTLE_INTEGMAX,
 } CalibrationPID;
 
+typedef struct Calibration {
+    float pwm[CONFIG_SECTION_SIZE];
+#define CONFIG_PWM_STR "PWM"
+    float esc[CONFIG_SECTION_SIZE];
+#define CONFIG_ESC_STR "ESC"
+    float aahrs[CONFIG_SECTION_SIZE * 2];
+#define CONFIG_AAHRS_STR "AAHRS"
+    float pid[CONFIG_SECTION_SIZE];
+#define CONFIG_PID_STR "PID"
+} Calibration;
+
 // -- Config section type and enum conversion functions (for lookup functions) --
 
 typedef enum ConfigSectionType {
@@ -200,6 +204,8 @@ typedef enum ConfigSection {
     CONFIG_SYSTEM,
     CONFIG_WIFI,
 } ConfigSection;
+
+// -- Config functions --
 
 /**
  * Loads the config from flash memory into the config struct.

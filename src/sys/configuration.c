@@ -9,8 +9,10 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include "platform/defs.h"
 #include "platform/flash.h"
 #include "platform/int.h"
+#include "platform/wifi.h"
 
 #include "io/aahrs.h"
 #include "io/gps.h"
@@ -24,9 +26,15 @@
 
 // clang-format off
 Config config = {
-    // FIXME: index 7 (false) of general is the wifi config flag, replace this with an enum when the wifi HAL is done and has one
     .general = {
-        CTRLMODE_2AXIS_ATHR, SWITCH_TYPE_3_POS, 20, 50, 50, true, false, false, CONFIG_END_MAGIC,
+        CTRLMODE_2AXIS_ATHR, SWITCH_TYPE_3_POS, 20, 50, 50, true,
+        // Wi-Fi should be enabled by default, but only if the platform supports it
+        #if PLATFORM_SUPPORTS_WIFI
+            WIFI_ENABLED_PASS,
+        #else
+            WIFI_DISABLED,
+        #endif
+        false, CONFIG_END_MAGIC,
     },
     .control = {
         25, 15, 1.5f, 5, // Control handling preferences
@@ -57,8 +65,10 @@ Config config = {
         // even though it may not be used later
         CONFIG_END_MAGIC,
     },
-    .ssid = "pico-fbw",
-    .pass = "picodashfbw"
+    .wifi = {
+        .ssid = "pico-fbw",
+        .pass = "picodashfbw",
+    },
 };
 
 Calibration calibration = {
@@ -432,9 +442,9 @@ static bool set_to_system(const char *key, float value) {
 
 static void get_from_wifi(const char *key, char **value) {
     if (strcasecmp(key, "ssid") == 0) {
-        *value = config.ssid;
+        *value = config.wifi.ssid;
     } else if (strcasecmp(key, "pass") == 0) {
-        *value = config.pass;
+        *value = config.wifi.pass;
     } else {
         *value = NULL;
     }
@@ -442,9 +452,9 @@ static void get_from_wifi(const char *key, char **value) {
 
 static bool set_to_wifi(const char *key, const char *value) {
     if (strcasecmp(key, "ssid") == 0) {
-        strcpy(config.ssid, value);
+        strcpy(config.wifi.ssid, value);
     } else if (strcasecmp(key, "pass") == 0) {
-        strcpy(config.pass, value);
+        strcpy(config.wifi.pass, value);
     } else
         return false;
     return true;

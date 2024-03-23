@@ -1659,7 +1659,7 @@ static void write_char(byte *buf, i16 x, i16 y, byte ch) {
  * @param str The string to write
  * @note Ensure to render() the display once all strings have been written.
  */
-static void write_string(byte *buf, i16 x, i16 y, char *str) {
+static void write_string(byte *buf, i16 x, i16 y, const char *str) {
     // Cull out any string off the screen
     if (x > DISPLAY_WIDTH - 8 || y > DISPLAY_HEIGHT - 8)
         return;

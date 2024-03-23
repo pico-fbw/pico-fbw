@@ -7,6 +7,7 @@
 #include "platform/gpio.h"
 #include "platform/sys.h"
 #include "platform/time.h"
+#include "platform/wifi.h"
 
 #include "io/aahrs.h"
 #include "io/gps.h"
@@ -80,8 +81,8 @@ static void switch_update() {
 }
 
 void runtime_loop(bool update_aircraft) {
-    // Update the mode switch's position, update sensors, run the current mode's code, respond to any new API calls, and update
-    // the watchdog
+    // Update the mode switch's position, update sensors, run the current mode's code, respond to any new API calls, and run
+    // Wi-Fi and platform-specific system tasks
     switch_update();
     aahrs.update();
     if (gps.is_supported())
@@ -90,6 +91,8 @@ void runtime_loop(bool update_aircraft) {
         aircraft.update();
     if ((bool)config.general[GENERAL_API_ENABLED])
         api_poll();
+    if ((WifiEnabled)config.general[GENERAL_WIFI_ENABLED] != WIFI_DISABLED)
+        wifi_periodic();
     sys_periodic();
 }
 
