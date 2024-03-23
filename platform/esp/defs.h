@@ -28,7 +28,7 @@ typedef esp_timer_handle_t __callback_id_t;
 
 // Platform details
 #define PLATFORM_NAME ("Espressif Systems " CONFIG_IDF_TARGET " (" CONFIG_IDF_TARGET_ARCH ")")
-#define PLATFORM_VERSION ("1.0.0 (ESP-IDF " CONFIG_IDF_INIT_VERSION ")")
+#define PLATFORM_VERSION ("1.0.0 (ESP-IDF v" CONFIG_IDF_INIT_VERSION ")")
 // Platform features
 #define PLATFORM_SUPPORTS_WIFI 1
 

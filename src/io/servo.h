@@ -11,7 +11,7 @@
  * @param pins the array of servo GPIO pins
  * @param num_pins the number of pins
  */
-void servo_enable(u32 pins[], u32 num_pins);
+void servo_enable(const u32 pins[], u32 num_pins);
 
 /**
  * Sets the position of the servo using the the duty cycle of the PWM signal.

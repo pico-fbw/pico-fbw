@@ -5,13 +5,13 @@
 
 #include "platform/pwm.h"
 
-bool pwm_setup_read(u32 pins[], u32 num_pins) {
+bool pwm_setup_read(const u32 pins[], u32 num_pins) {
     // This function will be called before executing any other PWM READ-related functions on a given pin.
     // It should run any prerequisite setup for reading PWM signals on the given pins.
     // It should return true if the setup was successful, false if not.
 }
 
-bool pwm_setup_write(u32 pins[], u32 num_pins, u32 freq) {
+bool pwm_setup_write(const u32 pins[], u32 num_pins, u32 freq) {
     // This function will be called before executing any other PWM WRITE-related functions on a given pin.
     // It should run any prerequisite setup for writing PWM signals on the given pins at the given frequency (in Hz).
     // It should return true if the setup was successful, false if not.

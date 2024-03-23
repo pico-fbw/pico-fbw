@@ -7,7 +7,7 @@
  * @param pins array of pins to setup for reading ADC signals
  * @param num_pins number of pins in `pins[]`
  */
-void adc_setup(u32 pins[], u32 num_pins);
+void adc_setup(const u32 pins[], u32 num_pins);
 
 /**
  * Reads the ADC signal on `pin`.

@@ -19,23 +19,21 @@
 
 #include "normal.h"
 
+// The rate at which the roll setpoint returns to its limit from the hold limit (in deg)
+// This is NOT in deg/s, think of it as someone holding the stick at the magnitude of this value
+#define CONTROL_ROLL_RETURN_DPS 45.f
+
+#define rolling() (fabsf(rollInput) > config.control[CONTROL_DEADBAND])
+
+#define pitching() (fabsf(pitchInput) > config.control[CONTROL_DEADBAND])
+
+#define yawing() (fabsf(yawInput) > config.control[CONTROL_DEADBAND])
+
 static float rollInput, pitchInput, yawInput;
 static float rollSet, pitchSet, throttleSet;
 
 static bool overrideYaw = false;
 static bool overrideSetpoints = false;
-
-static inline bool rolling() {
-    return fabsf(rollInput) > config.control[CONTROL_DEADBAND];
-}
-
-static inline bool pitching() {
-    return fabsf(pitchInput) > config.control[CONTROL_DEADBAND];
-}
-
-static inline bool yawing() {
-    return fabsf(yawInput) > config.control[CONTROL_DEADBAND];
-}
 
 void normal_init() {
     flight_init();
@@ -50,8 +48,15 @@ void normal_update() {
     if (receiver_has_rud())
         yawInput = receiver_get((u32)config.pins[PINS_INPUT_RUD], RECEIVER_MODE_DEGREE) - 90.f;
     throttleSet = receiver_get((u32)config.pins[PINS_INPUT_THROTTLE], RECEIVER_MODE_PERCENT);
-    // This comment is a tribute to the world's stupidest bug where the above code was set to READ from the SERVOS
-    // and it took me much longer than I'm willing to admit to find (cue the facepalms, I know ._.)
+
+    // If the roll value is above the limit, we do allow setting up to to the hold limit but constant input is required for
+    // that, so if we don't have it, bring it back to the hold limit at the specified rate
+    if (fabsf(rollSet) > config.control[CONTROL_ROLL_LIMIT] && fabsf(rollInput) < fabsf(rollSet))
+        // Override the input to bring it back in the opposite direction at the specified rate
+        rollInput = rollSet < 0 ? CONTROL_ROLL_RETURN_DPS : -CONTROL_ROLL_RETURN_DPS;
+    // Calculate control adjustments based on input
+    float rollAdj = control_calc_adjust(ROLL, rollInput, pitchInput);
+    float pitchAdj = control_calc_adjust(PITCH, rollInput, pitchInput);
 
     // Check for manual overrides of externally set (by API) setpoints
     if (rolling() || pitching() || yawing())
@@ -61,22 +66,13 @@ void normal_update() {
         // Use the inputs from the receiver to calculate the setpoint values
         // Take deadband into account so we don't get crazy setpoints due to PWM fluctuations
         if (rolling())
-            rollSet += control_calc_adjust(ROLL, rollInput, pitchInput);
+            rollSet += rollAdj;
         if (pitching())
-            pitchSet += control_calc_adjust(PITCH, rollInput, pitchInput);
+            pitchSet += pitchAdj;
 
         // Make sure the setpoints aren't set to unsafe values so we don't get weird outputs from PID,
         // this is also where our bank/pitch protections come in.
         if (fabsf(rollSet) > config.control[CONTROL_ROLL_LIMIT]) {
-            // If the roll values are unsafe, we do allow setting up to to the hold limit but constant input is required, so
-            // check for that
-            if (fabsf(rollInput) < fabsf(rollSet)) {
-                if (rollSet > 0) {
-                    rollSet -= 0.05f;
-                } else if (rollSet < 0) {
-                    rollSet += 0.05f;
-                }
-            }
             if (rollSet > config.control[CONTROL_ROLL_LIMIT_HOLD]) {
                 rollSet = config.control[CONTROL_ROLL_LIMIT_HOLD];
             } else if (rollSet < -config.control[CONTROL_ROLL_LIMIT_HOLD]) {
@@ -106,9 +102,10 @@ void normal_update() {
 }
 
 void normal_deinit() {
-    rollSet = 0.0f;
-    pitchSet = 0.0f;
+    rollSet = 0.f;
+    pitchSet = 0.f;
     overrideYaw = false;
+    control_reset();
 }
 
 bool normal_set(float roll, float pitch, float yaw, float throttle, bool useThrottle) {

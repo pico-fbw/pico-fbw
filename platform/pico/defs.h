@@ -32,7 +32,7 @@ typedef alarm_id_t __callback_id_t;
 
 // Platform details
 #define PLATFORM_NAME "Raspberry Pi Pico"
-#define PLATFORM_VERSION ("1.0.0 (pico-sdk " PICO_SDK_VERSION_STRING ")")
+#define PLATFORM_VERSION ("1.0.0 (pico-sdk v" PICO_SDK_VERSION_STRING ")")
 // Platform features
 // ADC
 #define PLATFORM_SUPPORTS_ADC 1

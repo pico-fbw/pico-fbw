@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 #include <string.h>
+#include "platform/adc.h"
 #include "platform/defs.h"
 #include "platform/flash.h"
 #include "platform/int.h"
@@ -55,7 +56,7 @@ int main() {
             // << Insert system update code here, if applicable >>
             // Update flash with new version
             version_save();
-            print("[bot] update done!");
+            print("[boot] update done!");
         }
     } else {
         print("[boot] no updates required");
@@ -66,30 +67,30 @@ int main() {
     u32 pins[num_pins];
     float deviations[num_pins];
     receiver_get_pins(pins, &num_pins, deviations);
-    boot_set_progress(15, "Enabling PWM");
+    boot_set_progress(15, "Enabling receiver");
     receiver_enable(pins, num_pins);
     if (!(bool)config.general[GENERAL_SKIP_CALIBRATION]) {
-        print("[boot] validating PWM calibration");
+        print("[boot] validating receiver calibration");
         ReceiverCalibrationStatus status = receiver_is_calibrated();
         switch (status) {
             case RECEIVERCALIBRATION_OK:
                 break;
             case RECEIVERCALIBRATION_INVALID:
-                print("[boot] PWM calibration was completed for a different control mode!");
+                print("[boot] receiver calibration was completed for a different control mode!");
                 /* fall through */
             default:
             case RECEIVERCALIBRATION_INCOMPLETE:
-                print("[boot] PWM calibration not found!");
+                print("[boot] receiver calibration not found!");
                 print("[boot] calibrating now...do not touch the transmitter!");
                 if (!receiver_calibrate(pins, num_pins, deviations, 2000, 2, 3) || receiver_is_calibrated() != 0) {
-                    log_message(FATAL, "PWM calibration failed!", 500, 0, true);
+                    log_message(FATAL, "Receiver calibration failed!", 500, 0, true);
                 } else {
                     print("[boot] calibration successful!");
                 }
                 break;
         }
     } else {
-        log_message(WARNING, "PWM calibration skipped!", 500, 0, false);
+        log_message(WARNING, "Receiver calibration skipped!", 500, 0, false);
     }
 
     // Servos
@@ -186,6 +187,11 @@ int main() {
 #endif
 
     boot_set_progress(90, "Finishing up");
+// ADC
+#if PLATFORM_SUPPORTS_ADC
+    adc_setup(ADC_PINS, ADC_NUM_CHANNELS);
+#endif
+    // Final platform-specific setup tasks
     boot_complete();
     // Main program loop
     while (true)

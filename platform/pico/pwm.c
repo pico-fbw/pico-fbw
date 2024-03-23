@@ -105,7 +105,7 @@ static bool setup_sm(const PIO pio, const u32 offset, u32 pin) {
     return true;
 }
 
-bool pwm_setup_read(u32 pins[], u32 num_pins) {
+bool pwm_setup_read(const u32 pins[], u32 num_pins) {
     // Load the PWM program into all 4 PIO0 state machines
     if (pio_can_add_program(pio0, &pwm_program)) {
         u32 offset = pio_add_program(pio0, &pwm_program);
@@ -138,7 +138,7 @@ bool pwm_setup_read(u32 pins[], u32 num_pins) {
     return true;
 }
 
-bool pwm_setup_write(u32 pins[], u32 num_pins, u32 freq) {
+bool pwm_setup_write(const u32 pins[], u32 num_pins, u32 freq) {
     for (u32 i = 0; i < num_pins; i++) {
         assert(pwm_gpio_to_channel(pins[i]) == PWM_CHAN_A || pwm_gpio_to_channel(pins[i]) == PWM_CHAN_B);
         gpio_set_function(pins[i], GPIO_FUNC_PWM);

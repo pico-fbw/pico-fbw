@@ -28,7 +28,7 @@ typedef enum ReceiverCalibrationStatus {
  * @param pins the list of pins to enable PWM input on
  * @param numPins the number of pins you are enabling PWM input on (1-7)
  */
-void receiver_enable(u32 pins[], u32 num_pins);
+void receiver_enable(const u32 pins[], u32 num_pins);
 
 /**
  * @param pin the GPIO pin to read (must have been already enabled with `receiver_enable()`)
@@ -49,7 +49,8 @@ float receiver_get(u32 pin, ReceiverMode mode);
  * @param run_times the amount of times to run a sampling function (num_samples), will be averaged at the end
  * @return true if the calibration was successful, false if not
  */
-bool receiver_calibrate(u32 pins[], u32 num_pins, float deviations[], u32 num_samples, u32 sample_delay_ms, u32 run_times);
+bool receiver_calibrate(const u32 pins[], u32 num_pins, float deviations[], u32 num_samples, u32 sample_delay_ms,
+                        u32 run_times);
 
 /**
  * @return the status of any previous receiver calibration.

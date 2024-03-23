@@ -20,6 +20,10 @@ char buf[1];
 #include "platform/gpio.h"
 
 void gpio_setup(u32 pin, PinMode mode) {
+#ifdef RASPBERRYPI_PICO_W
+    if (pin >= CYW43_GPIO_OFFSET)
+        return; // Don't setup pins that are mapped to CYW43
+#endif
     gpio_init(pin);
     switch (mode) {
         case INPUT_PULLDOWN:

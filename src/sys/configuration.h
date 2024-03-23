@@ -94,8 +94,8 @@ typedef enum ConfigSystem {
     SYSTEM_DEBUG,
     SYSTEM_PRINT_FBW,
     SYSTEM_PRINT_AAHRS,
+    SYSTEM_PRINT_AIRCRAFT,
     SYSTEM_PRINT_GPS,
-    SYSTEM_PRINT_MODES,
     SYSTEM_PRINT_NETWORK,
     SYSTEM_USE_DISPLAY,
 } ConfigSystem;
@@ -117,7 +117,7 @@ typedef struct Config {
     float system[CONFIG_SECTION_SIZE];
 #define CONFIG_SYSTEM_STR "System"
     ConfigWifi wifi;
-#define CONFIG_WIFI_STR "Wifi"
+#define CONFIG_WIFI_STR "WiFi"
 } Config;
 
 // -- Calibration struct indices and definition --

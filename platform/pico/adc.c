@@ -13,7 +13,7 @@
 
 static bool adcActive = false;
 
-void adc_setup(u32 pins[], u32 num_pins) {
+void adc_setup(const u32 pins[], u32 num_pins) {
     if (!adcActive) {
         adc_init();
         adcActive = true;

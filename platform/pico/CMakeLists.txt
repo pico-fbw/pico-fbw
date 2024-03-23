@@ -50,7 +50,8 @@ target_link_libraries(platform_pico
 )
 # Additionally, link to the cyw43 driver if the pico_w board is being used
 if (FBW_PLATFORM STREQUAL "pico_w")
-    target_link_libraries(platform_pico pico_cyw43_arch_lwip_poll)
+    # Link to the stdlib too, cyw43 driver uses it
+    target_link_libraries(platform_pico pico_stdlib pico_cyw43_arch_lwip_threadsafe_background)
     # Include the platform directory so the lwipopts.h file can be found by the driver
     target_include_directories(platform_pico PUBLIC ${CMAKE_SOURCE_DIR}/platform/pico)
 endif ()

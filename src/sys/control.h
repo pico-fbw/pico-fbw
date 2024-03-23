@@ -31,6 +31,13 @@ float control_get_dps(Axis axis, float roll, float pitch);
 float control_calc_adjust(Axis axis, float roll, float pitch);
 
 /**
+ * Resets the control calculations.
+ * @note This should be called when the control loop is reset or when the control mode changes;
+ * basically whenever calculations won't be run for a while.
+ */
+void control_reset();
+
+/**
  * Performs mixing calculations for an elevon (to be used in flying wing control modes).
  * @param elevon the elevon to calculate the mixing for
  * @param roll roll input from 0 to 180 degrees

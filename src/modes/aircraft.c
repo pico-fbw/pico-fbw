@@ -47,33 +47,33 @@ void change_to(Mode newMode) {
     switch (aircraft.mode) {
         default:
         case MODE_DIRECT:
-            printfbw(modes, "exiting direct mode");
+            printfbw(aircraft, "exiting direct mode");
             break;
         case MODE_NORMAL:
-            printfbw(modes, "exiting normal mode");
+            printfbw(aircraft, "exiting normal mode");
             normal_deinit();
             break;
         case MODE_AUTO:
-            printfbw(modes, "exiting auto mode");
+            printfbw(aircraft, "exiting auto mode");
             break;
         case MODE_TUNE:
             tune_deinit();
-            printfbw(modes, "exiting tune mode");
+            printfbw(aircraft, "exiting tune mode");
             break;
         case MODE_HOLD:
-            printfbw(modes, "exiting hold mode");
+            printfbw(aircraft, "exiting hold mode");
             break;
     }
     if (aircraft.aahrsSafe) {
         switch (newMode) {
             default:
             case MODE_DIRECT:
-                printfbw(modes, "entering direct mode");
+                printfbw(aircraft, "entering direct mode");
                 aircraft.mode = MODE_DIRECT;
                 break;
             NORMAL:
             case MODE_NORMAL:
-                printfbw(modes, "entering normal mode");
+                printfbw(aircraft, "entering normal mode");
                 normal_init();
                 aircraft.mode = MODE_NORMAL;
                 break;
@@ -87,7 +87,7 @@ void change_to(Mode newMode) {
                         if (flightplan_get()->alt_samples > 0)
                             gps.calibrate_alt_offset(flightplan_get()->alt_samples);
                     }
-                    printfbw(modes, "entering auto mode");
+                    printfbw(aircraft, "entering auto mode");
                     if (auto_init()) {
                         aircraft.mode = MODE_AUTO;
                     } else
@@ -98,7 +98,7 @@ void change_to(Mode newMode) {
             TUNE:
             case MODE_TUNE:
                 if (!tune_is_tuned()) {
-                    printfbw(modes, "entering tune mode");
+                    printfbw(aircraft, "entering tune mode");
                     tune_init();
                     aircraft.mode = MODE_TUNE;
                 } else
@@ -106,7 +106,7 @@ void change_to(Mode newMode) {
                 break;
             case MODE_HOLD:
                 if (gps.is_supported() && aircraft.gpsSafe) {
-                    printfbw(modes, "entering hold mode");
+                    printfbw(aircraft, "entering hold mode");
                     if (hold_init()) {
                         aircraft.mode = MODE_HOLD;
                     } else
@@ -116,7 +116,7 @@ void change_to(Mode newMode) {
                 break;
         }
     } else {
-        printfbw(modes, "AAHRS has failed, entering direct mode!");
+        printfbw(aircraft, "AAHRS has failed, entering direct mode!");
         log_message(ERROR, "AAHRS has failed!", 250, 0, true);
         aircraft.mode = MODE_DIRECT;
     }
@@ -126,12 +126,12 @@ void set_aahrs_safe(bool state) {
     if (state != aircraft.aahrsSafe) {
         aircraft.aahrsSafe = state;
         if (state) {
-            printfbw(modes, "AAHRS set as safe");
+            printfbw(aircraft, "AAHRS set as safe");
         } else {
             // Change to direct mode as it doesn't require AAHRS, and deinit
             change_to(MODE_DIRECT);
             aahrs.deinit();
-            printfbw(modes, "AAHRS set as unsafe");
+            printfbw(aircraft, "AAHRS set as unsafe");
         }
     }
 }
@@ -140,10 +140,10 @@ void set_gps_safe(bool state) {
     if (state != aircraft.gpsSafe) {
         aircraft.gpsSafe = state;
         if (state) {
-            printfbw(modes, "GPS set as safe");
+            printfbw(aircraft, "GPS set as safe");
             log_clear(INFO);
         } else {
-            printfbw(modes, "GPS set as unsafe");
+            printfbw(aircraft, "GPS set as unsafe");
             if (aircraft.mode == MODE_AUTO || aircraft.mode == MODE_HOLD) {
                 change_to(MODE_NORMAL); // Return to normal mode if GPS is deemed unsafe in Auto or Hold modes (require GPS)
             }

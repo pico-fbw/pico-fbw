@@ -16,7 +16,7 @@
 
 #include "platform/sys.h"
 
-#define WATCHDOG_TIMEOUT_MS 2000
+#define WATCHDOG_TIMEOUT_MS 1000
 #define WATCHDOG_TIMEOUT_MAGIC 0xAC0B3DED
 #define WATCHDOG_FORCE_MAGIC 0xC0DE3298
 
@@ -34,9 +34,6 @@ void sys_boot_end() {
 
 void sys_periodic() {
     watchdog_update();
-#ifdef RASPBERRYPI_PICO_W
-    cyw43_arch_poll();
-#endif
 }
 
 void __attribute__((noreturn)) sys_shutdown() {

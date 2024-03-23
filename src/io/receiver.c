@@ -22,7 +22,7 @@
 /**
  * Gets the calibration value for the specified pin.
  * @param pin the pin to get the calibration value of
- * @return the calibration value from PWM calibration.
+ * @return the calibration value from receiver calibration.
  * Be aware that this value may not be cohesive;
  * this function does not check to see whether or not a calibration has been done, so it is able to return random data.
  */
@@ -53,7 +53,7 @@ static inline float read_raw(u32 pin, ReceiverMode mode) {
     return mode == RECEIVER_MODE_DEGREE ? (pulsewidth - 1000.0f) * 0.18f : (pulsewidth - 1000.0f) * 0.10f;
 }
 
-void receiver_enable(u32 pins[], u32 num_pins) {
+void receiver_enable(const u32 pins[], u32 num_pins) {
     print("[pwm] enabling PWM input on %lu pins", num_pins);
     if (!pwm_setup_read(pins, num_pins))
         log_message(FATAL, "Failed to enable PWM input!", 500, 0, true);
@@ -66,8 +66,9 @@ float receiver_get(u32 pin, ReceiverMode mode) {
     return raw + offset_of(pin);
 }
 
-bool receiver_calibrate(u32 pins[], u32 num_pins, float deviations[], u32 num_samples, u32 sample_delay_ms, u32 run_times) {
-    log_message(INFO, "Calibrating PWM", 100, 0, false);
+bool receiver_calibrate(const u32 pins[], u32 num_pins, float deviations[], u32 num_samples, u32 sample_delay_ms,
+                        u32 run_times) {
+    log_message(INFO, "Calibrating receiver", 100, 0, true);
     sleep_ms_blocking(2000); // Wait a few moments for tx/rx to set itself up
     for (u32 i = 0; i < num_pins; i++) {
         u32 pin = pins[i];

@@ -37,7 +37,7 @@ Config config = {
         false, CONFIG_END_MAGIC,
     },
     .control = {
-        25, 15, 1.5f, 5, // Control handling preferences
+        25, 15, 1.5f, 2.f, // Control handling preferences
         10, 30, 0.015f, // Autothrottle configuration
         180, 0, // Drop bay detent settings
         33, 67, -15, 30, // Control limits
@@ -72,7 +72,10 @@ Config config = {
 };
 
 Calibration calibration = {
-    .pwm = {false},
+    .pwm = {false,
+        CTRLMODE_2AXIS_ATHR,
+        0, 0, 0, 0, 0 // Default PWM offsets
+    },
     .esc = {
         false,
         10, 75, 90, // Default throttle detents
@@ -144,8 +147,8 @@ void config_load() {
     // Load print settings and set debug flag
     shouldPrint.fbw = config.system[SYSTEM_PRINT_FBW];
     shouldPrint.aahrs = config.system[SYSTEM_PRINT_AAHRS];
+    shouldPrint.aircraft = config.system[SYSTEM_PRINT_AIRCRAFT];
     shouldPrint.gps = config.system[SYSTEM_PRINT_GPS];
-    shouldPrint.modes = config.system[SYSTEM_PRINT_MODES];
     shouldPrint.network = config.system[SYSTEM_PRINT_NETWORK];
     config.system[SYSTEM_DEBUG] = DEBUG_BUILD;
 }
@@ -413,10 +416,10 @@ static void get_from_system(const char *key, float **value) {
         *value = &config.system[SYSTEM_PRINT_FBW];
     } else if (strcasecmp(key, "printAAHRS") == 0) {
         *value = &config.system[SYSTEM_PRINT_AAHRS];
+    } else if (strcasecmp(key, "printAircraft") == 0) {
+        *value = &config.system[SYSTEM_PRINT_AIRCRAFT];
     } else if (strcasecmp(key, "printGPS") == 0) {
         *value = &config.system[SYSTEM_PRINT_GPS];
-    } else if (strcasecmp(key, "printModes") == 0) {
-        *value = &config.system[SYSTEM_PRINT_MODES];
     } else if (strcasecmp(key, "printNetwork") == 0) {
         *value = &config.system[SYSTEM_PRINT_NETWORK];
     } else {
@@ -429,10 +432,10 @@ static bool set_to_system(const char *key, float value) {
         config.system[SYSTEM_PRINT_FBW] = value;
     } else if (strcasecmp(key, "printAAHRS") == 0) {
         config.system[SYSTEM_PRINT_AAHRS] = value;
+    } else if (strcasecmp(key, "printAircraft") == 0) {
+        config.system[SYSTEM_PRINT_AIRCRAFT] = value;
     } else if (strcasecmp(key, "printGPS") == 0) {
         config.system[SYSTEM_PRINT_GPS] = value;
-    } else if (strcasecmp(key, "printModes") == 0) {
-        config.system[SYSTEM_PRINT_MODES] = value;
     } else if (strcasecmp(key, "printNetwork") == 0) {
         config.system[SYSTEM_PRINT_NETWORK] = value;
     } else

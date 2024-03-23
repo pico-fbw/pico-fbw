@@ -24,7 +24,7 @@ static inline void print_batt_data() {
     for (u32 i = 0; i < ADC_NUM_CHANNELS; i++) {
         if (i > 0)
             printraw(",");
-        printraw("%lu:%.6f", i, adc_read_raw(ADC_PINS[i]));
+        printraw("\"%lu\":%.6f", i, adc_read_raw(ADC_PINS[i]));
     }
 }
 #endif
@@ -32,7 +32,7 @@ static inline void print_batt_data() {
 static inline void print_batt() {
 #if PLATFORM_SUPPORTS_ADC
     printraw(",\"batt\":{");
-    print_batt();
+    print_batt_data();
     printraw("}");
 #endif
 }

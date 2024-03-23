@@ -10,6 +10,8 @@
 
 #include "control.h"
 
+static float lastRollUpdate = 0, lastPitchUpdate = 0;
+
 static float get_roll_dps(float roll) {
     return mapf(roll, -90.f, 90.f, -config.control[CONTROL_MAX_ROLL_RATE], config.control[CONTROL_MAX_ROLL_RATE]);
 }
@@ -19,16 +21,18 @@ static float get_pitch_dps(float pitch) {
 }
 
 static float calc_roll_adjust(float roll) {
-    static u64 lastUpdate = 0;                     // Static variable, so = 0 only on first call
-    float deltaT = (float)(time_s() - lastUpdate); // Time since last call to this function
-    lastUpdate = time_s();
+    if (lastRollUpdate == 0)
+        lastRollUpdate = time_s();            // Initialize lastUpdate to current time
+    float deltaT = time_s() - lastRollUpdate; // Time since last call to this function
+    lastRollUpdate = time_s();
     return get_roll_dps(roll) * deltaT;
 }
 
 static float calc_pitch_adjust(float pitch) {
-    static u64 lastUpdate = 0;
-    float deltaT = (float)(time_s() - lastUpdate);
-    lastUpdate = time_s();
+    if (lastPitchUpdate == 0)
+        lastPitchUpdate = time_s();
+    float deltaT = time_s() - lastPitchUpdate;
+    lastPitchUpdate = time_s();
     return get_pitch_dps(pitch) * deltaT;
 }
 
@@ -52,6 +56,11 @@ float control_calc_adjust(Axis axis, float roll, float pitch) {
         default:
             return 0.f;
     }
+}
+
+void control_reset() {
+    lastRollUpdate = 0;
+    lastPitchUpdate = 0;
 }
 
 float control_mix_elevon(Elevon elevon, double roll, double pitch) {

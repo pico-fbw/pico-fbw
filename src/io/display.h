@@ -37,6 +37,5 @@ void display_power_save();
 
 /**
  * Queues the display "bootup complete" animation to play.
- * @note The animation will only succeed if there are no errors at present.
  */
 void display_anim();

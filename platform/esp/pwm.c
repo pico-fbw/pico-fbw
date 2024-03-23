@@ -75,7 +75,7 @@ static bool pwm_read_callback(mcpwm_cap_channel_handle_t cap_channel, const mcpw
     (void)cap_channel; // Unused
 }
 
-bool pwm_setup_read(u32 pins[], u32 num_pins) {
+bool pwm_setup_read(const u32 pins[], u32 num_pins) {
     // Static variable; this means that the timer can be reused for multiple channels
     static mcpwm_cap_timer_handle_t timer;
     mcpwm_capture_timer_config_t config = {
@@ -128,7 +128,7 @@ bool pwm_setup_read(u32 pins[], u32 num_pins) {
     return true;
 }
 
-bool pwm_setup_write(u32 pins[], u32 num_pins, u32 freq) {
+bool pwm_setup_write(const u32 pins[], u32 num_pins, u32 freq) {
     static mcpwm_timer_handle_t timer;
     u32 period = 1000000 / freq; // Period in μs
     mcpwm_timer_config_t config = {
