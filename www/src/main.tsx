@@ -32,3 +32,10 @@ function NoMatch() {
 }
 
 render(<App />, document.getElementById('root'));
+
+// TODO: FEATURE LIST
+// - Check for (dual-band) internet connection, and if so allow flight planner to be used and data to be uploaded
+//   - If not, allow uploading externally generated plan (also allow this as an option for dual-band users)
+// - Allow setting config (make an api endpoint /api/v1 where any JSON posted will just be sent to the api)
+// - Info page with misc info like version, free heap, etc
+// - Allow downloading the entire config (as a littlefs blob?)

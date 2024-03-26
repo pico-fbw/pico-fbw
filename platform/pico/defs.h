@@ -74,3 +74,6 @@ static const u32 ADC_PINS[] = {PIN_ADC_0, PIN_ADC_1, PIN_ADC_2, PIN_ADC_3};
     #undef PLATFORM_NAME
     #define PLATFORM_NAME "Raspberry Pi Pico W"
 #endif
+
+// TODO: feature idea: ota extra bootloader (on pico w) so updates can be pushed from pico-fbw.org?
+// https://github.com/earlephilhower/arduino-pico/tree/master/ota

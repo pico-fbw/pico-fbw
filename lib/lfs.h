@@ -8,8 +8,6 @@
  */
 #pragma once
 
-#include "platform/defs.h" // Some platforms may define LFS_ config macros in their defs; this will make sure they're respected
-
 #include "lfs_util.h"
 
 #ifdef __cplusplus

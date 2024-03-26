@@ -91,13 +91,12 @@ typedef enum ConfigSensors {
 } ConfigSensors;
 
 typedef enum ConfigSystem {
-    SYSTEM_DEBUG,
+    SYSTEM_USE_DISPLAY,
     SYSTEM_PRINT_FBW,
     SYSTEM_PRINT_AAHRS,
     SYSTEM_PRINT_AIRCRAFT,
     SYSTEM_PRINT_GPS,
     SYSTEM_PRINT_NETWORK,
-    SYSTEM_USE_DISPLAY,
 } ConfigSystem;
 
 typedef struct ConfigWifi {

@@ -10,9 +10,9 @@ typedef enum Mode {
     MODE_AUTO,
     MODE_TUNE,
     MODE_HOLD,
-    MODE_MAX,
 } Mode;
 // clang-format on
+#define MODE_MAX MODE_HOLD
 
 typedef void (*aircraft_update_t)();
 typedef void (*aircraft_change_to_t)(Mode);

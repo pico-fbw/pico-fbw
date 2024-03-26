@@ -6,11 +6,6 @@
 #ifndef PICO_FBW_VERSION // Should be defined in the root CMakeLists.txt
     #define PICO_FBW_VERSION "Unknown"
 #endif
-#ifdef NDEBUG
-    #define DEBUG_BUILD false
-#else
-    #define DEBUG_BUILD true
-#endif
 
 #define PICO_FBW_API_VERSION "1.0"
 #define FPLAN_VERSION "1.0"

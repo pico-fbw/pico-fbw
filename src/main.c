@@ -36,6 +36,7 @@ int main() {
     boot_set_progress(0, "Mounting filesystem");
     if (lfs_mount(&lfs, &lfs_cfg) != LFS_ERR_OK) {
         // Failed to mount, try formatting
+        print("[boot] filesystem not found, attempting to format...");
         lfs_format(&lfs, &lfs_cfg);
         if (lfs_mount(&lfs, &lfs_cfg) != LFS_ERR_OK)
             log_message(FATAL, "Failed to mount filesystem!", 250, 0, true);

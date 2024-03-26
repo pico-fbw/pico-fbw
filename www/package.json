@@ -1,6 +1,7 @@
 {
     "private": true,
     "type": "module",
+	"license": "AGPL-3.0-only",
     "scripts": {
 		"dev": "vite",
 		"build": "tsc && vite build && compress-cra -c compress-cra.json",
@@ -10,6 +11,7 @@
 		"preview": "vite preview"
 	},
     "dependencies": {
+		"axios": "^1.6.8",
 		"preact": "^10.19.6",
 		"preact-iso": "^2.4.0"
 	},

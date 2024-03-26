@@ -7,9 +7,9 @@
 typedef enum GPSCommandType {
     GPS_COMMAND_TYPE_NONE,
     GPS_COMMAND_TYPE_PMTK,
-    GPS_COMMAND_TYPE_MAX,
     // What is the command type used for ublox modules?
 } GPSCommandType;
+#define GPS_COMMAND_TYPE_MAX GPS_COMMAND_TYPE_PMTK
 
 typedef bool (*gps_init_t)();
 typedef void (*gps_update_t)();

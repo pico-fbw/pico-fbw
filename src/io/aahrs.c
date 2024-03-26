@@ -101,6 +101,8 @@ static u32 measure_fusion_time(u32 samples) {
     return sum / samples;
 }
 
+// TODO: since all drivers are compiled in anyway, why not auto-detect if a sensor is present and install it if so?
+
 bool aahrs_init() {
     // Check the state of any previous calibration
     aahrs.isCalibrated = (bool)calibration.aahrs[AAHRS_CALIBRATED];

@@ -57,12 +57,11 @@ Config config = {
         CONFIG_END_MAGIC,
     },
     .system = {
-        false,
-        true, false, false, false, false, false, // Default print settings, also found in PrintDefs below
         true, // Default display use status
         // This is true because the display is initialized before the config is loaded,
         // so setting it to true means the display will always be initialized on boot (if possible),
-        // even though it may not be used later
+        // because this is the initial state of the config before it becomes overwritten by config_load()
+        true, false, false, false, false, false, // Default print settings, also found in PrintDefs below
         CONFIG_END_MAGIC,
     },
     .wifi = {
@@ -150,7 +149,6 @@ void config_load() {
     shouldPrint.aircraft = config.system[SYSTEM_PRINT_AIRCRAFT];
     shouldPrint.gps = config.system[SYSTEM_PRINT_GPS];
     shouldPrint.network = config.system[SYSTEM_PRINT_NETWORK];
-    config.system[SYSTEM_DEBUG] = DEBUG_BUILD;
 }
 
 void config_save() {
@@ -410,9 +408,7 @@ static bool set_to_sensors(const char *key, float value) {
 }
 
 static void get_from_system(const char *key, float **value) {
-    if (strcasecmp(key, "debug") == 0) {
-        *value = &config.system[SYSTEM_DEBUG];
-    } else if (strcasecmp(key, "printFBW") == 0) {
+    if (strcasecmp(key, "printFBW") == 0) {
         *value = &config.system[SYSTEM_PRINT_FBW];
     } else if (strcasecmp(key, "printAAHRS") == 0) {
         *value = &config.system[SYSTEM_PRINT_AAHRS];
@@ -464,6 +460,33 @@ static bool set_to_wifi(const char *key, const char *value) {
 }
 
 bool config_validate() {
+    // Enum limit validation
+    // Don't cast to the enum type, it will break the comparison
+    if (config.general[GENERAL_CONTROL_MODE] < CTRLMODE_MIN || config.general[GENERAL_CONTROL_MODE] > CTRLMODE_MAX) {
+        print("ERROR: Control mode must be between %d and %d.", CTRLMODE_MIN, CTRLMODE_MAX);
+        return false;
+    }
+    if (config.general[GENERAL_SWITCH_TYPE] < SWITCH_TYPE_MIN || config.general[GENERAL_SWITCH_TYPE] > SWITCH_TYPE_MAX) {
+        print("ERROR: Switch type must be between %d and %d.", SWITCH_TYPE_MIN, SWITCH_TYPE_MAX);
+        return false;
+    }
+    if (config.general[GENERAL_WIFI_ENABLED] < WIFI_ENABLED_MIN || config.general[GENERAL_WIFI_ENABLED] > WIFI_ENABLED_MAX) {
+        print("ERROR: Wi-Fi enable status must be between %d and %d.", WIFI_ENABLED_MIN, WIFI_ENABLED_MAX);
+        return false;
+    }
+    if (config.sensors[SENSORS_IMU_MODEL] < IMU_MODEL_MIN || config.sensors[SENSORS_IMU_MODEL] > IMU_MODEL_MAX) {
+        print("ERROR: IMU model must be between %d and %d.", IMU_MODEL_MIN, IMU_MODEL_MAX);
+        return false;
+    }
+    if (config.sensors[SENSORS_BARO_MODEL] < BARO_MODEL_MIN || config.sensors[SENSORS_BARO_MODEL] > BARO_MODEL_MAX) {
+        print("ERROR: Barometer model must be between %d and %d.", BARO_MODEL_MIN, BARO_MODEL_MAX);
+        return false;
+    }
+    if (config.sensors[SENSORS_GPS_COMMAND_TYPE] < GPS_COMMAND_TYPE_MIN ||
+        config.sensors[SENSORS_GPS_COMMAND_TYPE] > GPS_COMMAND_TYPE_MAX) {
+        print("ERROR: GPS command type must be between %d and %d.", GPS_COMMAND_TYPE_MIN, GPS_COMMAND_TYPE_MAX);
+        return false;
+    }
     // Unique pin validation
     i32 lastPin = -1;
     switch ((ControlMode)config.general[GENERAL_CONTROL_MODE]) {
@@ -504,33 +527,7 @@ bool config_validate() {
             print("ERROR: A pin may only be used once.");
             return false;
     }
-    // Sensor pin validation
-    // AAHRS_SDA can be on pins 0, 4, 8, 12, 16, 20, 28
-    if ((u32)config.pins[PINS_AAHRS_SDA] != 0 && (u32)config.pins[PINS_AAHRS_SDA] != 4 &&
-        (u32)config.pins[PINS_AAHRS_SDA] != 8 && (u32)config.pins[PINS_AAHRS_SDA] != 12 &&
-        (u32)config.pins[PINS_AAHRS_SDA] != 16 && (u32)config.pins[PINS_AAHRS_SDA] != 20 &&
-        (u32)config.pins[PINS_AAHRS_SDA] != 28) {
-        print("ERROR: IMU_SDA must be on the I2C0_SDA interface.");
-        return false;
-    }
-    // AAHRS_SCL can be on pins 1, 5, 9, 13, 17, 21
-    if ((u32)config.pins[PINS_AAHRS_SCL] != 1 && (u32)config.pins[PINS_AAHRS_SCL] != 5 &&
-        (u32)config.pins[PINS_AAHRS_SCL] != 9 && (u32)config.pins[PINS_AAHRS_SCL] != 13 &&
-        (u32)config.pins[PINS_AAHRS_SCL] != 17 && (u32)config.pins[PINS_AAHRS_SCL] != 21) {
-        print("ERROR: IMU_SCL must be on the I2C0_SCL interface.");
-        return false;
-    }
-    // GPS_RX can be on pins 4, 8, 20
-    if ((u32)config.pins[PINS_GPS_RX] != 4 && (u32)config.pins[PINS_GPS_RX] != 8 && (u32)config.pins[PINS_GPS_RX] != 20) {
-        print("ERROR: GPS_RX must be on the UART1_RX interface.");
-        return false;
-    }
-    // GPS_TX can be on pins 5, 9, 21
-    if ((u32)config.pins[PINS_GPS_TX] != 5 && (u32)config.pins[PINS_GPS_TX] != 9 && (u32)config.pins[PINS_GPS_TX] != 21) {
-        print("ERROR: GPS_TX must be on the UART1_TX interface.");
-        return false;
-    }
-    // Limits validation
+    // Limit validation
     if (config.control[CONTROL_ROLL_LIMIT] > 72 || config.control[CONTROL_ROLL_LIMIT] < 0) {
         print("ERROR: Roll limit must be between 0 and 72 degrees.");
         return false;
@@ -547,21 +544,7 @@ bool config_validate() {
         print("ERROR: Lower pitch limit must be between -20 and 0 degrees.");
         return false;
     }
-    // Sensor model validation
-    if (config.sensors[SENSORS_IMU_MODEL] < IMU_MODEL_MIN || config.sensors[SENSORS_IMU_MODEL] >= IMU_MODEL_MAX) {
-        print("ERROR: IMU model must be between %d and %d.", IMU_MODEL_MIN, IMU_MODEL_MAX - 1);
-        return false;
-    }
-    if (config.sensors[SENSORS_BARO_MODEL] < BARO_MODEL_MIN || config.sensors[SENSORS_BARO_MODEL] >= BARO_MODEL_MAX) {
-        print("ERROR: Barometer model must be between %d and %d.", BARO_MODEL_MIN, BARO_MODEL_MAX - 1);
-        return false;
-    }
-    if (config.sensors[SENSORS_GPS_COMMAND_TYPE] < GPS_COMMAND_TYPE_MIN ||
-        config.sensors[SENSORS_GPS_COMMAND_TYPE] >= GPS_COMMAND_TYPE_MAX) {
-        print("ERROR: GPS command type must be between %d and %d.", GPS_COMMAND_TYPE_MIN, GPS_COMMAND_TYPE_MAX - 1);
-        return false;
-    }
-    // Throttle  configuration validation
+    // Throttle configuration validation
     if (config.control[CONTROL_THROTTLE_SENSITIVITY] < 0.0f || config.control[CONTROL_THROTTLE_SENSITIVITY] > 1.0f) {
         print("ERROR: Throttle sensitivity must be between 0.0 and 1.0.");
         return false;
@@ -601,6 +584,15 @@ bool config_validate() {
                 return false;
             }
             break;
+    }
+    // Wi-Fi ssid/password validation
+    if (strlen(config.wifi.ssid) < WIFI_SSID_MIN_LEN || strlen(config.wifi.ssid) > WIFI_SSID_MAX_LEN) {
+        print("ERROR: Wi-Fi SSID must be between %d and %d characters.", WIFI_SSID_MIN_LEN, WIFI_SSID_MAX_LEN);
+        return false;
+    }
+    if (strlen(config.wifi.pass) < WIFI_PASS_MIN_LEN || strlen(config.wifi.pass) > WIFI_SSID_MAX_LEN) {
+        print("ERROR: Wi-Fi password must be between %d and %d characters.", WIFI_PASS_MIN_LEN, WIFI_PASS_MAX_LEN);
+        return false;
     }
     return true;
 }

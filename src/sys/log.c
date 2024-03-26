@@ -170,8 +170,7 @@ void reset_last() {
 void log_init() {
 #ifdef PIN_LED
     gpio_setup(PIN_LED, OUTPUT);
-    if (!(bool)config.system[SYSTEM_USE_DISPLAY])
-        gpio_set(PIN_LED, HIGH);
+    gpio_set(PIN_LED, HIGH);
 #endif
     logs = NULL;
     numLogs = 0;

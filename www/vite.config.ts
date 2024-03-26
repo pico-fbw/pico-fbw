@@ -6,6 +6,6 @@ export default defineConfig({
 	plugins: [preact()],
 	build: {
         emptyOutDir: true,
-        outDir: '../build/www',
+        outDir: '../build/www/www',
     },
 });

@@ -8,8 +8,8 @@ typedef enum IMUModel {
     IMU_MODEL_NONE,
     IMU_MODEL_BNO055,
     IMU_MODEL_ICM20948,
-    IMU_MODEL_MAX,
 } IMUModel;
+#define IMU_MODEL_MAX IMU_MODEL_ICM20948
 
 typedef enum IMUAxis {
     IMU_AXIS_NONE,
@@ -22,8 +22,8 @@ typedef enum IMUAxis {
 typedef enum BaroModel {
     BARO_MODEL_NONE,
     BARO_MODEL_DPS310,
-    BARO_MODEL_MAX,
 } BaroModel;
+#define BARO_MODEL_MAX BARO_MODEL_DPS310
 
 typedef bool (*aahrs_init_t)();
 typedef void (*aahrs_deinit_t)();

@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include "platform/int.h"
 
+#define CTRLMODE_MIN CTRLMODE_3AXIS_ATHR
 typedef enum ControlMode {
     CTRLMODE_3AXIS_ATHR,
     CTRLMODE_3AXIS,
@@ -11,6 +12,7 @@ typedef enum ControlMode {
     CTRLMODE_FLYINGWING_ATHR,
     CTRLMODE_FLYINGWING,
 } ControlMode;
+#define CTRLMODE_MAX CTRLMODE_FLYINGWING
 
 typedef enum ReceiverMode {
     RECEIVER_MODE_DEGREE,
