@@ -1,5 +1,5 @@
 import { render } from 'preact';
-import { LocationProvider, Router, Route } from 'preact-iso';
+import { Router, Route } from 'wouter-preact';
 
 import Index from './pages/Index';
 
@@ -7,14 +7,16 @@ import './style.css';
 
 export function App() {
     return (
-        <LocationProvider>
-            <main class={'w-full h-full'}>
-                <Router>
-                    <Route path="/" component={Index} />
-                    <Route default component={NoMatch} />
-                </Router>
-            </main>
-        </LocationProvider>
+        <main class={'w-full h-full'}>
+            <Router>
+                <Route path="/">
+                    {() => <Index />}
+                </Route>
+                <Route path=":rest*">
+                    {() => <NoMatch />}
+                </Route>
+            </Router>
+        </main>
     );
 }
 

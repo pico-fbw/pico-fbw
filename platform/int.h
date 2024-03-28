@@ -43,7 +43,7 @@ static inline float mapf(float f, float in_min, float in_max, float out_min, flo
 
 #ifndef radians
     // Converts degrees to radians.
-    #define radians(deg) ((deg)*M_PI / 180.0)
+    #define radians(deg) ((deg) * M_PI / 180.0)
 #endif
 
 #ifndef lerp

@@ -5,6 +5,9 @@ include(${CMAKE_CURRENT_LIST_DIR}/esp_idf_import.cmake)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_TOOLCHAIN_FILE ${IDF_PATH}/tools/cmake/toolchain-${FBW_PLATFORM}.cmake)
 set(CMAKE_EXECUTABLE_SUFFIX .elf)
+set(LFS_BLOCK_SIZE 4096)
+set(LFS_PROG_SIZE 128)
+set(LFS_IMG_SIZE 262144) # 256KB
 
 function(setup_before_subdirs)
     if (CMAKE_BUILD_TYPE STREQUAL "Release")

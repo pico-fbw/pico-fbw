@@ -29,8 +29,8 @@ The other (lfs) is not overwritten when being flashed, so data persists between 
 It's used to store, well, persistant data, such as config, calibration, logs, and more. */
 
 #if PLATFORM_SUPPORTS_WIFI
-    extern lfs_t wwwfs;
-    extern struct lfs_config wwwfs_cfg;
+extern lfs_t wwwfs;
+extern struct lfs_config wwwfs_cfg;
 #endif
 
 extern lfs_t lfs;

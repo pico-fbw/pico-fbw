@@ -15,6 +15,6 @@
         ".woff2"
     ],
     "algorithms": ["gz"],
-    "directory": "../build/www",
+    "directory": "../build/www/www",
     "retainUncompressedFiles": false
 }

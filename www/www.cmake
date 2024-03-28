@@ -29,6 +29,19 @@ if (NOT YARN_EXECUTABLE)
     endif()
 endif()
 
+# Make sure mklittlefs exists
+set(MKLITTLEFS_SRC ${CMAKE_SOURCE_DIR}/utils/mklittlefs)
+if (NOT EXISTS ${MKLITTLEFS_SRC})
+    # mklittlefs doesn't exist, try cloning submodules?
+    execute_process(COMMAND git submodule update --init --recursive
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+    if (NOT EXISTS ${MKLITTLEFS_SRC})
+        message(FATAL_ERROR "mklittlefs could not be downloaded!")
+    endif()
+endif()
+message("mklittlefs found at ${MKLITTLEFS_SRC}")
+include(ExternalProject) # Required to build mklittlefs
+
 # Define custom targets to build mklittlefs and the web interface
 
 if (WIN32)
@@ -36,13 +49,18 @@ if (WIN32)
 else()
     set(MKLITTLEFS_EXE_NAME mklittlefs)
 endif()
-set(MKLITTLEFS_EXE ${CMAKE_BINARY_DIR}/mklittlefs/${MKLITTLEFS_EXE_NAME})
-add_custom_target(mklittlefs
-    COMMAND make
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/${MKLITTLEFS_EXE_NAME}
-    COMMAND ${CMAKE_COMMAND} -E copy ${MKLITTLEFS_EXE_NAME} ${CMAKE_BINARY_DIR}/${MKLITTLEFS_EXE_NAME}
-    COMMAND ${CMAKE_COMMAND} -E remove ${MKLITTLEFS_EXE_NAME}
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/utils/mklittlefs
+set(MKLITTLEFS_BIN ${CMAKE_BINARY_DIR}/mklittlefs)
+set(MKLITTLEFS_EXE ${MKLITTLEFS_BIN}/${MKLITTLEFS_EXE_NAME})
+if (NOT EXISTS ${MKLITTLEFS_BIN})
+    message("${MKLITTLEFS_BIN} does not exist, creating it...")
+    file(MAKE_DIRECTORY ${MKLITTLEFS_BIN})
+else()
+    message("${MKLITTLEFS_BIN} already exists")
+endif()
+ExternalProject_Add(mklittlefs
+    SOURCE_DIR ${CMAKE_SOURCE_DIR}/utils # Not MKLITTLEFS_SRC because it doesn't have a CMakeLists.txt
+    BINARY_DIR ${CMAKE_BINARY_DIR}/mklittlefs
+    INSTALL_COMMAND ""
     COMMENT "Building mklittlefs"
 )
 
@@ -60,4 +78,4 @@ add_custom_target(wwwfs
 )
 
 add_dependencies(${PROJECT_NAME} wwwfs)
-add_dependencies(wwwfs www mklittlefs)
+add_dependencies(wwwfs www)

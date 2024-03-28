@@ -121,7 +121,7 @@ static int handle_post(const char *request, char **result) {
     }
 
 // No matching endpoint
-invalid : {
+invalid: {
     #define INVALID_RESPONSE "{\"status\":\"INVALID\"}"
     char *response = malloc(sizeof(INVALID_RESPONSE));
     if (response == NULL)

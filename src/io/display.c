@@ -1853,7 +1853,7 @@ void display_string(const char *str, i32 progress) {
         }
     } else {
     // Split words between lines irregularly; we can't fit each neatly on its own line
-    split : {
+    split: {
         u32 numLines = (strlen(str) + (DISPLAY_MAX_LINE_LEN - 1)) / DISPLAY_MAX_LINE_LEN;
         switch (numLines) {
             default:

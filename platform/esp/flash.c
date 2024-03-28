@@ -23,12 +23,14 @@
 #define LOOKAHEAD_SIZE 128
 #define BLOCK_CYCLES 512
 
-#define FS_PARTITION_LABEL "fs" // Name of the littlefs partition defined in platform/esp/resources/partitions.csv
+#define WWWFS_PARTITION_LABEL "wwwfs" // Name of the littlefs partition defined in platform/esp/resources/partitions.csv
+#define LFS_PARTITION_LABEL "lfs"
 
-static const esp_partition_t *partition;
-static SemaphoreHandle_t lfs_lock = NULL;
+static const esp_partition_t *wwwfsPartition, *lfsPartition;
+static SemaphoreHandle_t lfsLock = NULL;
 
 static int flash_read(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, void *buffer, lfs_size_t size) {
+    esp_partition_t *partition = (esp_partition_t *)c->context;
     assert(partition);
     assert(block < c->block_count);
     assert(off + size <= c->block_size);
@@ -38,6 +40,7 @@ static int flash_read(const struct lfs_config *c, lfs_block_t block, lfs_off_t o
 }
 
 static int flash_prog(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size) {
+    esp_partition_t *partition = (esp_partition_t *)c->context;
     assert(partition);
     assert(block < c->block_count);
     if (esp_partition_write(partition, (block * c->block_size) + off, buffer, size) != ESP_OK)
@@ -46,6 +49,7 @@ static int flash_prog(const struct lfs_config *c, lfs_block_t block, lfs_off_t o
 }
 
 static int flash_erase(const struct lfs_config *c, lfs_block_t block) {
+    esp_partition_t *partition = (esp_partition_t *)c->context;
     assert(partition);
     assert(block < c->block_count);
     if (esp_partition_erase_range(partition, block * c->block_size, c->block_size) != ESP_OK)
@@ -60,14 +64,14 @@ static int flash_sync(const struct lfs_config *c) {
 }
 
 static int flash_lock(const struct lfs_config *c) {
-    if (!lfs_lock) {
-        static portMUX_TYPE lfs_lock_mux = portMUX_INITIALIZER_UNLOCKED;
-        portENTER_CRITICAL(&lfs_lock_mux);
-        if (!lfs_lock)
-            lfs_lock = xSemaphoreCreateMutex();
-        portEXIT_CRITICAL(&lfs_lock_mux);
+    if (!lfsLock) {
+        static portMUX_TYPE lfsLock_mux = portMUX_INITIALIZER_UNLOCKED;
+        portENTER_CRITICAL(&lfsLock_mux);
+        if (!lfsLock)
+            lfsLock = xSemaphoreCreateMutex();
+        portEXIT_CRITICAL(&lfsLock_mux);
     }
-    if (xSemaphoreTake(lfs_lock, portMAX_DELAY) == pdTRUE)
+    if (xSemaphoreTake(lfsLock, portMAX_DELAY) == pdTRUE)
         return LFS_ERR_OK;
     else
         return LFS_ERR_IO;
@@ -75,7 +79,7 @@ static int flash_lock(const struct lfs_config *c) {
 }
 
 static int flash_unlock(const struct lfs_config *c) {
-    if (xSemaphoreGive(lfs_lock) == pdTRUE)
+    if (xSemaphoreGive(lfsLock) == pdTRUE)
         return LFS_ERR_OK;
     else
         return LFS_ERR_IO;
@@ -83,17 +87,46 @@ static int flash_unlock(const struct lfs_config *c) {
 }
 
 bool flash_setup() {
-    // Set partition to the littlefs partition defined in partitions.csv
-    partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_LITTLEFS, FS_PARTITION_LABEL);
-    if (!partition)
+#if PLATFORM_SUPPORTS_WIFI
+    // Find partitions defined in partitions.csv
+    wwwfsPartition =
+        esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_LITTLEFS, WWWFS_PARTITION_LABEL);
+    if (!wwwfsPartition)
         return false;
+    // Pass partition as context so block operations know where to read/write
+    wwwfs_cfg.context = (void *)wwwfsPartition;
     // Auto-detect block count based on partition size
-    lfs_cfg.block_count = partition->size / lfs_cfg.block_size;
-    if (lfs_cfg.block_count == 0)
+    wwwfs_cfg.block_count = wwwfsPartition->size / wwwfs_cfg.block_size;
+    if (wwwfs_cfg.block_count <= 0)
         return false;
-    return true;
+#endif
+    lfsPartition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_LITTLEFS, LFS_PARTITION_LABEL);
+    lfs_cfg.context = (void *)lfsPartition;
+    lfs_cfg.block_count = lfsPartition->size / lfs_cfg.block_size;
+    return lfs_cfg.block_count > 0;
 }
 
+#if PLATFORM_SUPPORTS_WIFI
+lfs_t wwwfs;
+struct lfs_config wwwfs_cfg = {
+    .read = flash_read,
+    .prog = flash_prog,
+    .erase = flash_erase,
+    .sync = flash_sync,
+    .lock = flash_lock,
+    .unlock = flash_unlock,
+    // context is set in flash_setup()
+    .read_size = READ_SIZE,
+    .prog_size = WRITE_SIZE,
+    .block_size = BLOCK_SIZE,
+    // block_count is set in flash_setup()
+    .cache_size = CACHE_SIZE,
+    .lookahead_size = LOOKAHEAD_SIZE,
+    .block_cycles = BLOCK_CYCLES,
+};
+#endif
+
+lfs_t lfs;
 struct lfs_config lfs_cfg = {
     .read = flash_read,
     .prog = flash_prog,
@@ -104,10 +137,7 @@ struct lfs_config lfs_cfg = {
     .read_size = READ_SIZE,
     .prog_size = WRITE_SIZE,
     .block_size = BLOCK_SIZE,
-    .block_count = 0, // Will be automatically set based on the partition size in flash_setup()
     .cache_size = CACHE_SIZE,
     .lookahead_size = LOOKAHEAD_SIZE,
     .block_cycles = BLOCK_CYCLES,
 };
-
-lfs_t lfs;

@@ -38,7 +38,7 @@ extern const char __lfs_end[];
 #define FLASH_OFFSET 0x10000000
 // The filesystem size and location are defined in the linker script, resources/memmap.ld
 #define WWWFS_BASE (__lfs_start - FLASH_OFFSET) // File system offset in system memory space
-#define WWWFS_SIZE (__lfs_end - __lfs_start) // File system size
+#define WWWFS_SIZE (__lfs_end - __lfs_start)    // File system size
 #define LFS_BASE (__lfs_end - FLASH_OFFSET + FLASH_SECTOR_SIZE)
 #define LFS_SIZE (PICO_FLASH_SIZE_BYTES - (uintptr_t)LFS_BASE)
 
@@ -76,7 +76,9 @@ static int flash_sync(const struct lfs_config *c) {
 }
 
 bool flash_setup() {
+#if PLATFORM_SUPPORTS_WIFI
     wwwfs_cfg.block_count = ((u32)WWWFS_SIZE / FLASH_SECTOR_SIZE);
+#endif
     lfs_cfg.block_count = ((u32)LFS_SIZE / FLASH_SECTOR_SIZE);
     return true;
 }
@@ -84,21 +86,21 @@ bool flash_setup() {
 // See platform/flash.h for why we have two filesystems.
 
 #if PLATFORM_SUPPORTS_WIFI
-    lfs_t wwwfs;
-    struct lfs_config wwwfs_cfg = {
-        .read = flash_read,
-        .prog = flash_prog,
-        .erase = flash_erase,
-        .sync = flash_sync,
-        .read_size = 1,
-        .context = (void *)WWWFS_BASE, // FS_BASE is provided as the context so that block operations know where to read/write
-        .prog_size = FLASH_PAGE_SIZE, // Minimum write size (256 bytes)
-        .block_size = FLASH_SECTOR_SIZE, // Block size must be a multiple of the sector size (4096 bytes)
-        // block_count is set in flash_setup()
-        .cache_size = (FLASH_SECTOR_SIZE / 4), // Must be a multiple of the block size (1024 bytes)
-        .lookahead_size = 32,
-        .block_cycles = 500,
-    };
+lfs_t wwwfs;
+struct lfs_config wwwfs_cfg = {
+    .read = flash_read,
+    .prog = flash_prog,
+    .erase = flash_erase,
+    .sync = flash_sync,
+    .context = (void *)WWWFS_BASE, // FS_BASE is provided as the context so that block operations know where to read/write
+    .read_size = 1,
+    .prog_size = FLASH_PAGE_SIZE,    // Minimum write size (256 bytes)
+    .block_size = FLASH_SECTOR_SIZE, // Block size must be a multiple of the sector size (4096 bytes)
+    // block_count is set in flash_setup()
+    .cache_size = (FLASH_SECTOR_SIZE / 4), // Must be a multiple of the block size (1024 bytes)
+    .lookahead_size = 32,
+    .block_cycles = 500,
+};
 #endif
 
 lfs_t lfs;
@@ -107,8 +109,8 @@ struct lfs_config lfs_cfg = {
     .prog = flash_prog,
     .erase = flash_erase,
     .sync = flash_sync,
-    .read_size = 1,
     .context = (void *)LFS_BASE,
+    .read_size = 1,
     .prog_size = FLASH_PAGE_SIZE,
     .block_size = FLASH_SECTOR_SIZE,
     .cache_size = (FLASH_SECTOR_SIZE / 4),

@@ -188,7 +188,7 @@ int main() {
             break;
     }
     if (!setup)
-        fail:
+    fail:
         log_message(ERROR, "Wi-Fi setup failed!", 2000, 0, false);
 #endif
 
