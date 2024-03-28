@@ -11,7 +11,8 @@
 #include "about.h"
 
 void api_about(const char *args) {
-    printraw("pico-fbw v%s, API v%s, \"%s\" v%s\n\n", PICO_FBW_VERSION, PICO_FBW_API_VERSION, PLATFORM_NAME, PLATFORM_VERSION);
+    printraw("pico-fbw v%s, API v%s, \"%s\" v%s\n", PICO_FBW_VERSION, PICO_FBW_API_VERSION, PLATFORM_NAME, PLATFORM_VERSION);
+    printraw("Built on %s at %s (C%ld)\n\n", __DATE__, __TIME__, __STDC_VERSION__);
     printraw("Copyright (C) 2023-2024 pico-fbw\n\n"
              "This program is free software: you can redistribute it and/or modify "
              "it under the terms of the GNU Affero General Public License as published by "

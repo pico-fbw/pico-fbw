@@ -6,7 +6,7 @@
     #define LFS_NO_DEBUG // Disable littlefs debug messages in release builds
 #endif
 
-// littlefs header is required for the lfs_config struct, but fbw_lib is not included in CMake as we don't require any actual
+// littlefs header is required for lfs struct definitions, but fbw_lib is not included in CMake as we don't require any actual
 // littlefs code
 #include "lib/lfs.h"
 
@@ -17,8 +17,21 @@
  */
 bool flash_setup();
 
+/* TWO filesystems? Why?
+Well, at least for most platforms, the files for pico-fbw's web interface are prebuilt and then compiled into the
+final binary that you flash to your device. This is notable because, well, you're flashing the device.
+That means overwriting whatever data may be there already. And it would kind of suck if all of your config
+and calibration data was erased every time you updated to the latest version.
+
+So for this reason, we have two filesystems! One (wwwfs) stores the aforementioned precompiled web assets,
+and is overwritten every time an update is flashed (this means we can also flash web updates).
+The other (lfs) is not overwritten when being flashed, so data persists between updates.
+It's used to store, well, persistant data, such as config, calibration, logs, and more. */
+
+#if PLATFORM_SUPPORTS_WIFI
+    extern lfs_t wwwfs;
+    extern struct lfs_config wwwfs_cfg;
+#endif
+
 extern lfs_t lfs;
 extern struct lfs_config lfs_cfg;
-
-// TODO: have 2 littlefs's (and configs); one for pico-fbw's data and one for the www data
-// (so that www updates can be pushed without overwriting config data)

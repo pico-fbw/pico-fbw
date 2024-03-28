@@ -58,19 +58,7 @@ if (FBW_PLATFORM STREQUAL "pico_w")
     target_link_libraries(platform_pico pico_stdlib pico_cyw43_arch_lwip_threadsafe_background)
     # Include the wifi directory so the lwipopts.h file can be found by lwIP
     target_include_directories(platform_pico PUBLIC ${CMAKE_SOURCE_DIR}/platform/pico/wifi)
-endif ()
+endif()
 
 # Include the source directory (so we can #include "platform/..." in files)
 target_include_directories(platform_pico PRIVATE ${CMAKE_SOURCE_DIR})
-
-# TODO: for uploading www fs, do we make a secondary uf2 to upload? or override linker script to link lfs image directly in?
-# For now, commands:
-# IN www
-# yarn build
-# IN build
-# mklittlefs -c www -b 4096 -p 256 -s 262144 -d 5 fs.bin
-# python3 ../platform/pico/resources/uf2conv.py --base 270270464 --family rp2040 fs.bin
-# cmake --build . && sudo picotool load pico-fbw.uf2 -uf
-
-# OR
-# python3 ../platform/pico/resources/uf2conv.py --base 270270464 -o fs.uf2 fs.bin

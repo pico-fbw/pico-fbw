@@ -7,6 +7,13 @@
 # For example, if your directory is called "lipsum", you should set this to "-DFBW_PLATFORM_LIPSUM".
 add_definitions(-DFBW_PLATFORM_EXAMPLE)
 
+# If your platform supports Wi-Fi, pico-fbw will automatically build a littlefs binary image for the webserver,
+# and it is your responsibility to provide the following variables to define how the image is built.
+# They should match the values given to `wwwfs_cfg` in flash.c.
+set(LFS_BLOCK_SIZE x)
+set(LFS_PROG_SIZE x)
+set(LFS_IMG_SIZE x)
+
 # This function will be called before any subdirectories are added (including the platform directory).
 # Take a look at other platforms to see how this is typically used, but some ideas include:
 # Initializing any SDKs or libraries you may be using, defining the main executable, etc.

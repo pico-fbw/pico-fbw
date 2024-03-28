@@ -52,28 +52,28 @@ static int handle_get(const char *request, char **result) {
     // Check littlefs for the file
     lfs_file_t file;
     i32 len = 0;
-    i32 err = lfs_file_open(&lfs, &file, path, LFS_O_RDONLY);
+    i32 err = lfs_file_open(&wwwfs, &file, path, LFS_O_RDONLY);
     LWIP_DEBUGF(TCP_DEBUG, ("GET %s (%ld)\n", path, err));
     // If the file was found, read it into the result buffer
     if (err == LFS_ERR_OK) {
         // Read the contents of the file into the result buffer
         struct lfs_info info;
-        lfs_stat(&lfs, path, &info);
+        lfs_stat(&wwwfs, path, &info);
         *result = malloc(info.size);
         if (*result == NULL) {
-            lfs_file_close(&lfs, &file);
+            lfs_file_close(&wwwfs, &file);
             free(path);
             return ERR_MEM;
         }
         // Read the file into the result buffer
-        len = lfs_file_read(&lfs, &file, *result, info.size);
+        len = lfs_file_read(&wwwfs, &file, *result, info.size);
         if (len <= 0) {
-            lfs_file_close(&lfs, &file);
+            lfs_file_close(&wwwfs, &file);
             free(path);
             free(*result);
             return len; // littlefs error
         }
-        lfs_file_close(&lfs, &file);
+        lfs_file_close(&wwwfs, &file);
     }
     free(path);
     return len;

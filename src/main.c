@@ -170,9 +170,13 @@ int main() {
         }
     }
 
+    // Platform-defined feature setup
+
 #if PLATFORM_SUPPORTS_WIFI
     boot_set_progress(85, "Initializing Wi-Fi");
     bool setup = false;
+    if (lfs_mount(&wwwfs, &wwwfs_cfg) != LFS_ERR_OK)
+        goto fail;
     switch ((WifiEnabled)config.general[GENERAL_WIFI_ENABLED]) {
         case WIFI_ENABLED_OPEN:
             setup = wifi_setup(config.wifi.ssid, NULL);
@@ -184,14 +188,16 @@ int main() {
             break;
     }
     if (!setup)
+        fail:
         log_message(ERROR, "Wi-Fi setup failed!", 2000, 0, false);
 #endif
 
-    boot_set_progress(90, "Finishing up");
 // ADC
 #if PLATFORM_SUPPORTS_ADC
     adc_setup(ADC_PINS, ADC_NUM_CHANNELS);
 #endif
+
+    boot_set_progress(90, "Finishing up");
     // Final platform-specific setup tasks
     boot_complete();
     // Main program loop

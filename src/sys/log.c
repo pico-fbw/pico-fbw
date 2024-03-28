@@ -129,21 +129,18 @@ static void display_log(LogEntry *entry) {
         } else {
             display_lines(typeMsg, NULL, DISP_LOG_URL, codeStr, true);
         }
-    } else {
+    }
 #endif
 #ifdef PIN_LED
-        led_reset();
-        // If pulse has been enabled, turn the LED off now so it pulses to the on state, not the off state (looks better)
-        if (entry->pulse != 0) {
-            gpio_set(PIN_LED, LOW);
-            pulseMs = entry->pulse;
-        }
-        // Display on built-in LED
-        toggleMs = entry->code;
-        toggleCallback = callback_in_ms(toggleMs, led_callback);
-#endif
-#if PLATFORM_SUPPORTS_DISPLAY
+    led_reset();
+    // If pulse has been enabled, turn the LED off now so it pulses to the on state, not the off state (looks better)
+    if (entry->pulse != 0) {
+        gpio_set(PIN_LED, LOW);
+        pulseMs = entry->pulse;
     }
+    // Display on built-in LED
+    toggleMs = entry->code;
+    toggleCallback = callback_in_ms(toggleMs, led_callback);
 #endif
     lastDisplayedEntry = entry;
 }

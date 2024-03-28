@@ -19,6 +19,7 @@
 
 #include <errno.h>
 #include <string.h>
+#include "platform/int.h"
 
 #include "lwip/debug.h"
 #include "lwip/udp.h"
@@ -29,12 +30,12 @@
 // clang-format on
 
 typedef struct dns_header_t_ {
-    uint16_t id;
-    uint16_t flags;
-    uint16_t question_count;
-    uint16_t answer_record_count;
-    uint16_t authority_record_count;
-    uint16_t additional_record_count;
+    u16 id;
+    u16 flags;
+    u16 question_count;
+    u16 answer_record_count;
+    u16 authority_record_count;
+    u16 additional_record_count;
 } dns_header_t;
 
 static int dns_socket_new_dgram(struct udp_pcb **udp, void *cb_data, udp_recv_fn cb_udp_recv) {
@@ -53,7 +54,7 @@ static void dns_socket_free(struct udp_pcb **udp) {
     }
 }
 
-static int dns_socket_bind(struct udp_pcb **udp, uint32_t ip, uint16_t port) {
+static int dns_socket_bind(struct udp_pcb **udp, u32 ip, u16 port) {
     ip_addr_t addr;
     IP4_ADDR(&addr, ip >> 24 & 0xff, ip >> 16 & 0xff, ip >> 8 & 0xff, ip & 0xff);
     err_t err = udp_bind(*udp, &addr, port);
@@ -63,7 +64,7 @@ static int dns_socket_bind(struct udp_pcb **udp, uint32_t ip, uint16_t port) {
     return err;
 }
 
-static int dns_socket_sendto(struct udp_pcb **udp, const void *buf, size_t len, const ip_addr_t *dest, uint16_t port) {
+static int dns_socket_sendto(struct udp_pcb **udp, const void *buf, size_t len, const ip_addr_t *dest, u16 port) {
     if (len > 0xffff) {
         len = 0xffff;
     }
@@ -91,7 +92,7 @@ static void dns_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p, 
     DNSServer *d = arg;
     LWIP_DEBUGF(DNS_DEBUG, ("dns_server_process %u\n", p->tot_len));
 
-    uint8_t dns_msg[MAX_DNS_MSG_SIZE];
+    u8 dns_msg[MAX_DNS_MSG_SIZE];
     dns_header_t *dns_hdr = (dns_header_t *)dns_msg;
 
     size_t msg_len = pbuf_copy_partial(p, dns_msg, sizeof(dns_msg), 0);
@@ -99,8 +100,8 @@ static void dns_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p, 
         goto ignore_request;
     }
 
-    uint16_t flags = lwip_ntohs(dns_hdr->flags);
-    uint16_t question_count = lwip_ntohs(dns_hdr->question_count);
+    u16 flags = lwip_ntohs(dns_hdr->flags);
+    u16 question_count = lwip_ntohs(dns_hdr->question_count);
 
     LWIP_DEBUGF(DNS_DEBUG, ("len %d\n", msg_len));
     LWIP_DEBUGF(DNS_DEBUG, ("dns flags 0x%x\n", flags));
@@ -131,9 +132,9 @@ static void dns_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p, 
 
     // Print the question
     LWIP_DEBUGF(DNS_DEBUG, ("question: "));
-    const uint8_t *question_ptr_start = dns_msg + sizeof(dns_header_t);
-    const uint8_t *question_ptr_end = dns_msg + msg_len;
-    const uint8_t *question_ptr = question_ptr_start;
+    const u8 *question_ptr_start = dns_msg + sizeof(dns_header_t);
+    const u8 *question_ptr_end = dns_msg + msg_len;
+    const u8 *question_ptr = question_ptr_start;
     while (question_ptr < question_ptr_end) {
         if (*question_ptr == 0) {
             question_ptr++;
@@ -163,7 +164,7 @@ static void dns_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p, 
     question_ptr += 4;
 
     // Generate answer
-    uint8_t *answer_ptr = dns_msg + (question_ptr - dns_msg);
+    u8 *answer_ptr = dns_msg + (question_ptr - dns_msg);
     *answer_ptr++ = 0xc0;                         // pointer
     *answer_ptr++ = question_ptr_start - dns_msg; // pointer to question
 

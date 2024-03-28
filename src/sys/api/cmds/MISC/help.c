@@ -27,7 +27,7 @@ void api_help(const char *args) {
 #endif
         "GET_THRUST - Get current thrust value\n"
         "SET_BAY <0/1> - Set the current position of the drop bay <0=closed, 1=open>\n"
-        "SET_CONFIG <section> <key> <value> [-S] - Set configuration value (providing no arguments will save config to flash)\n"
+        "SET_CONFIG <section> <key> <value> [-S] - Set configuration value (no arguments: save current config to flash) [-S = save]\n"
         "SET_FPLAN <json> - Set the flightplan JSON\n"
         "SET_MODE <mode> - Set the flight mode\n"
         "SET_TARGET <roll> <pitch> <yaw> [thrust] - Set the desired attitude/thrust target in normal mode\n"

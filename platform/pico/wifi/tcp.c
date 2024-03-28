@@ -23,7 +23,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "platform/flash.h"
 
 #include "lwip/debug.h"
 #include "lwip/err.h"

@@ -1,5 +1,5 @@
-set(FBW_BUILD_WWW CACHE BOOL ON)
-if (NOT $CACHE{FBW_BUILD_WWW})
+set(FBW_BUILD_WWW ON CACHE BOOL "Build the web interface")
+if (NOT ${FBW_BUILD_WWW})
     message("Skipping web interface build")
     return()
 endif()
@@ -29,11 +29,35 @@ if (NOT YARN_EXECUTABLE)
     endif()
 endif()
 
-# Define a custom www target that builds the web interface
+# Define custom targets to build mklittlefs and the web interface
+
+if (WIN32)
+    set(MKLITTLEFS_EXE_NAME mklittlefs.exe)
+else()
+    set(MKLITTLEFS_EXE_NAME mklittlefs)
+endif()
+set(MKLITTLEFS_EXE ${CMAKE_BINARY_DIR}/mklittlefs/${MKLITTLEFS_EXE_NAME})
+add_custom_target(mklittlefs
+    COMMAND make
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/${MKLITTLEFS_EXE_NAME}
+    COMMAND ${CMAKE_COMMAND} -E copy ${MKLITTLEFS_EXE_NAME} ${CMAKE_BINARY_DIR}/${MKLITTLEFS_EXE_NAME}
+    COMMAND ${CMAKE_COMMAND} -E remove ${MKLITTLEFS_EXE_NAME}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/utils/mklittlefs
+    COMMENT "Building mklittlefs"
+)
+
 add_custom_target(www
     COMMAND yarn install && yarn build
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/www
     COMMENT "Building the web interface"
 )
 
-add_dependencies(${PROJECT_NAME} www)
+add_custom_target(wwwfs
+    COMMAND ${CMAKE_COMMAND} -E make_directory generated/www
+    COMMAND ${MKLITTLEFS_EXE} -c www -b ${LFS_BLOCK_SIZE} -p ${LFS_PROG_SIZE} -s ${LFS_IMG_SIZE} generated/www/lfs.bin
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    COMMENT "Creating littlefs image of web interface"
+)
+
+add_dependencies(${PROJECT_NAME} wwwfs)
+add_dependencies(wwwfs www mklittlefs)

@@ -1,4 +1,8 @@
 cmake_minimum_required(VERSION 3.13)
+if (NOT CMAKE_BUILD_TYPE)
+    message("Defaulting to Release build since no build type was specified")
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+endif()
 
 # Establish the platform to build for, default is pico but the user can change this to any supported platform
 if (NOT DEFINED FBW_PLATFORM)
