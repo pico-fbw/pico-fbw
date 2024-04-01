@@ -1,8 +1,11 @@
 find_program(CLANG_FORMAT_EXE NAMES "clang-format")
 if (CLANG_FORMAT_EXE)
-    file(GLOB_RECURSE ALL_SOURCE_FILES ${PROJECT_SOURCE_DIR}/*.c ${PROJECT_SOURCE_DIR}/*.h)
-    file(GLOB_RECURSE LIB_FILES ${PROJECT_SOURCE_DIR}/lib/*.c ${PROJECT_SOURCE_DIR}/lib/*.h)
-    list(REMOVE_ITEM ALL_SOURCE_FILES ${LIB_FILES})
+    file(GLOB_RECURSE ALL_SOURCE_FILES
+        ${CMAKE_SOURCE_DIR}/src/*.c
+        ${CMAKE_SOURCE_DIR}/src/*.h
+        ${CMAKE_SOURCE_DIR}/platform/*.c
+        ${CMAKE_SOURCE_DIR}/platform/*.h
+    )
     add_custom_target(
         clang-format
         COMMAND ${CLANG_FORMAT_EXE}

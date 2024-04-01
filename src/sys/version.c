@@ -23,7 +23,7 @@ i32 version_check(char vstr[]) {
         if (lfs_file_close(&lfs, &file) != LFS_ERR_OK)
             return -4;
         if (read <= 0) {
-            print("[version] no version found in flash");
+            printpre("version", "no version found in flash");
             strcpy(vstr, "0.0.0");
             return -2;
         }
@@ -38,14 +38,14 @@ i32 version_check(char vstr[]) {
     semver_t flash;
     if (semver_parse(version, &flash) < 0) {
         semver_free(&flash);
-        print("[version] unable to parse input version string!");
+        printpre("version", "unable to parse input version string!");
         return -3;
     }
     semver_t binary;
     if (semver_parse(PICO_FBW_VERSION, &binary) < 0) {
         semver_free(&flash);
         semver_free(&binary);
-        print("[version] unable to parse binary version string!");
+        printpre("version", "unable to parse binary version string!");
         return -3;
     }
     switch (semver_compare(binary, flash)) {
@@ -57,7 +57,7 @@ i32 version_check(char vstr[]) {
             if (binary.prerelease[0] == '\0') {
                 return -1; // Lower
             } else {
-                print("[version] thanks for testing %s :)", binary.prerelease);
+                printpre("version", "thanks for testing %s :)", binary.prerelease);
                 return 1; // Higher
             }
         case -1:

@@ -4,15 +4,7 @@
         ".js",
         ".css",
         ".svg",
-        ".png",
-        ".jpg",
-        ".ico",
-        ".txt",
-        ".json",
-        ".mp3",
-        ".wav",
-        ".tff",
-        ".woff2"
+        ".gif"
     ],
     "algorithms": ["gz"],
     "directory": "../build/www/www",

@@ -120,7 +120,7 @@ bool aahrs_init() {
     printfbw(aahrs, "initialized fusion memory defaults");
     // Install the sensors defined in the config
     if (shouldPrint.aahrs)
-        printraw("[aahrs] installing ");
+        printpre("aahrs", "installing ");
     switch ((IMUModel)config.sensors[SENSORS_IMU_MODEL]) {
         case IMU_MODEL_BNO055:
             // Allocate memory for the sensor and install it

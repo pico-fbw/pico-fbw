@@ -1,12 +1,9 @@
-import axios from "axios";
-import { useEffect, useState } from "preact/hooks";
-import hasInternet from "../../helpers/hasInternet";
-
-// Proof of concept.
+import { useEffect, useState } from 'preact/hooks';
+import Alert from '../elements/Alert';
+import hasInternet from '../helpers/hasInternet';
 
 export default function Index() {
     const [hasConnection, setHasConnection] = useState(false);
-    const [heapInfo, setHeapInfo] = useState({});
     const [loading, setLoading] = useState(true);
 
     const checkInternetConnection = async () => {
@@ -15,32 +12,28 @@ export default function Index() {
         setLoading(false);
     };
 
-    const getHeapInfo = async () => {
-        const { data } = await axios.post('/api/v1/heap');
-        setHeapInfo(data);
-    }
-
     useEffect(() => {
         checkInternetConnection();
-        getHeapInfo();
     }, []);
-    
+
     return (
         <div className="flex flex-col items-center justify-center h-screen">
             {loading ? (
                 <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                    <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-white/20" />
+                    <img src="load.gif" alt="loading" className="h-32 w-32" />
                 </div>
             ) : (
                 <>
                     <h1 className="text-4xl font-bold mb-4 text-gray-300">Welcome to pico-fbw</h1>
-                    <p className="text-gray-500 font-bold text-center">
-                        {hasConnection ? 'Connected to the internet' : 'Not connected to the internet'}
-                    </p>
-                    <div className="mt-4">
-                        <p className="text-gray-300">Heap Info:</p>
-                        <pre className="text-gray-500">{JSON.stringify(heapInfo, null, 2)}</pre>
-                    </div>
+                    {hasConnection ? (
+                        <Alert type="info" className="mx-4 sm:mx-8 lg:mx-0">
+                            Connected to the internet
+                        </Alert>
+                    ) : (
+                        <Alert type="warning" className="mx-4 sm:mx-8 lg:mx-0">
+                            Not connected to the internet
+                        </Alert>
+                    )}
                 </>
             )}
         </div>

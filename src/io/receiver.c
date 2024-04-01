@@ -54,7 +54,7 @@ static inline float read_raw(u32 pin, ReceiverMode mode) {
 }
 
 void receiver_enable(const u32 pins[], u32 num_pins) {
-    print("[pwm] enabling PWM input on %lu pins", num_pins);
+    printpre("receiver", "enabling PWM input on %lu pins", num_pins);
     if (!pwm_setup_read(pins, num_pins))
         log_message(FATAL, "Failed to enable PWM input!", 500, 0, true);
 }
@@ -72,18 +72,18 @@ bool receiver_calibrate(const u32 pins[], u32 num_pins, float deviations[], u32 
     sleep_ms_blocking(2000); // Wait a few moments for tx/rx to set itself up
     for (u32 i = 0; i < num_pins; i++) {
         u32 pin = pins[i];
-        print("[pwm] calibrating pin %lu (%lu/%lu)", pin, i + 1, num_pins);
+        printpre("receiver", "calibrating pin %lu (%lu/%lu)", pin, i + 1, num_pins);
         display_string("Please do not touch the transmitter!", ((i + 1) * 100) / num_pins);
         float deviation = deviations[i];
         float finalDifference = 0.0f;
         bool isThrottle = pins[i] == (u32)config.pins[PINS_INPUT_THROTTLE];
         for (u32 t = 0; t < run_times; t++) {
-            print("[pwm] running trial %lu out of %lu", t + 1, run_times);
+            printpre("receiver", "running trial %lu out of %lu", t + 1, run_times);
             float total_difference = 0.0f;
             for (u32 s = 0; s < num_samples; s++) {
                 float read = isThrottle ? read_raw(pin, RECEIVER_MODE_PERCENT) : read_raw(pin, RECEIVER_MODE_DEGREE);
                 if (read == INFINITY) {
-                    print("[pwm] ERROR: [FBW-500] pin %lu is not a valid pin to calibrate!", pin);
+                    printpre("receiver", "ERROR: (FBW-500) pin %lu is not a valid pin to calibrate!", pin);
                     return false;
                 }
                 total_difference += deviation - read;
@@ -91,7 +91,7 @@ bool receiver_calibrate(const u32 pins[], u32 num_pins, float deviations[], u32 
             }
             // Check to see if the deviation is 270 (this value occurs with a pulsewidth of 0 or 1, aka not connected)
             if ((total_difference / (float)num_samples) == 270.0f) {
-                print("[pwm] WARNING: pin %lu's calibration value seems abnormal, is it connected?", pin);
+                printpre("receiver", "WARNING: pin %lu's calibration value seems abnormal, is it connected?", pin);
                 return false;
             }
             // Add the total difference recorded divided by the samples we took (average) to the final difference
@@ -113,7 +113,7 @@ bool receiver_calibrate(const u32 pins[], u32 num_pins, float deviations[], u32 
         } else if (pin == (u32)config.pins[PINS_INPUT_THROTTLE]) {
             loc = PWM_OFFSET_THR;
         } else {
-            print("[pwm] ERROR: [FBW-500] pin %lu is not a valid pin to calibrate!", pin);
+            printpre("receiver", "ERROR: (FBW-500) pin %lu is not a valid pin to calibrate!", pin);
             return false;
         }
         // Check to ensure the value is within limits before adding it to be written
@@ -127,14 +127,14 @@ bool receiver_calibrate(const u32 pins[], u32 num_pins, float deviations[], u32 
             } else
                 goto error;
         error:
-            print("[pwm] ERROR: [FBW-500] pin %lu's calibration value is too high!", pin);
+            printpre("receiver", "ERROR: (FBW-500) pin %lu's calibration value is too high!", pin);
             return false;
         }
         calibration.pwm[loc] = finalDifference / (float)run_times;
     }
     calibration.pwm[PWM_CALIBRATED] = true;
     calibration.pwm[PWM_MODE] = (ControlMode)config.general[GENERAL_CONTROL_MODE];
-    print("[pwm] saving calibration to flash");
+    printpre("receiver", "saving calibration to flash");
     config_save();
     log_clear(INFO);
     return true;

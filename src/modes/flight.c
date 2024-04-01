@@ -68,7 +68,7 @@ void flight_init() {
             pitchLimit = config.control[CONTROL_MAX_ELEVON_DEFLECTION];
             break;
         default:
-            print("[flight] ERROR: unknown control mode!");
+            printpre("flight", "ERROR: unknown control mode!");
             aircraft.change_to(MODE_DIRECT);
             return;
     }
@@ -110,8 +110,8 @@ void flight_init() {
 void flight_update(double roll, double pitch, double yaw, bool override) {
     // Check flight envelope for hard-coded irregularities
     if (fabsf(aahrs.roll) > 72 || aahrs.pitch > 35 || aahrs.pitch < -20) {
-        print("[flight] WARNING: flight envelope exceeded! (roll: %.0f, pitch: %.0f, yaw: %.0f)", aahrs.roll, aahrs.pitch,
-              aahrs.yaw);
+        printpre("flight", "WARNING: flight envelope exceeded! (roll: %.0f, pitch: %.0f, yaw: %.0f)", aahrs.roll, aahrs.pitch,
+                 aahrs.yaw);
         aircraft.set_aahrs_safe(false);
     }
 
@@ -167,7 +167,7 @@ void flight_update(double roll, double pitch, double yaw, bool override) {
             break;
         }
         default: {
-            print("[flight] ERROR: unknown control mode!");
+            printpre("flight", "ERROR: unknown control mode!");
             aircraft.change_to(MODE_DIRECT);
             return;
         }

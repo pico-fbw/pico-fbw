@@ -22,7 +22,8 @@
 
 void sys_boot_begin() {
 #ifdef RASPBERRYPI_PICO_W
-    assert(cyw43_arch_init() == 0);
+    int init = cyw43_arch_init();
+    assert(init == 0);
 #endif
 }
 

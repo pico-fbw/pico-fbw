@@ -32,8 +32,8 @@ typedef struct TCP_SERVER_T_ {
 typedef struct TCP_CONNECT_STATE_T_ {
     struct tcp_pcb *pcb;
     i32 sent_len; // Signed, as these can also hold error codes
-    i32 header_len;
     i32 result_len;
+    char *result;
     // Pointers to server state
     ip_addr_t *ip;
     request_handler *on_get, *on_post;

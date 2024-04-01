@@ -8,7 +8,6 @@
 
 .cpu cortex-m0plus
 .thumb
-
 # .lfs is a section (defined in memmap.ld) that has been created to store lfs.bin.
 # It's exactly 256KB in size, same as lfs.bin.
 .section .lfs , "a" , %progbits

@@ -36,7 +36,7 @@ int main() {
     boot_set_progress(0, "Mounting filesystem");
     if (lfs_mount(&lfs, &lfs_cfg) != LFS_ERR_OK) {
         // Failed to mount, try formatting
-        print("[boot] filesystem not found, attempting to format...");
+        printpre("boot", "filesystem not found, attempting to format...");
         lfs_format(&lfs, &lfs_cfg);
         if (lfs_mount(&lfs, &lfs_cfg) != LFS_ERR_OK)
             log_message(FATAL, "Failed to mount filesystem!", 250, 0, true);
@@ -52,15 +52,15 @@ int main() {
         if (versionCheck < -2) {
             log_message(FATAL, "Failed to run update checker!", 250, 0, true);
         } else {
-            print("[boot] performing a system update from v%s to v%s, please wait...",
-                  (strcmp(version, "") == 0) ? "0.0.0" : version, PICO_FBW_VERSION);
+            printpre("boot", "performing a system update from v%s to v%s, please wait...",
+                     (strcmp(version, "") == 0) ? "0.0.0" : version, PICO_FBW_VERSION);
             // << Insert system update code here, if applicable >>
             // Update flash with new version
             version_save();
-            print("[boot] update done!");
+            printpre("boot", "update done!");
         }
     } else {
-        print("[boot] no updates required");
+        printpre("boot", "no updates required");
     }
 
     // Receiver
@@ -71,22 +71,22 @@ int main() {
     boot_set_progress(15, "Enabling receiver");
     receiver_enable(pins, num_pins);
     if (!(bool)config.general[GENERAL_SKIP_CALIBRATION]) {
-        print("[boot] validating receiver calibration");
+        printpre("boot", "validating receiver calibration");
         ReceiverCalibrationStatus status = receiver_is_calibrated();
         switch (status) {
             case RECEIVERCALIBRATION_OK:
                 break;
             case RECEIVERCALIBRATION_INVALID:
-                print("[boot] receiver calibration was completed for a different control mode!");
+                printpre("boot", "receiver calibration was completed for a different control mode!");
                 /* fall through */
             default:
             case RECEIVERCALIBRATION_INCOMPLETE:
-                print("[boot] receiver calibration not found!");
-                print("[boot] calibrating now...do not touch the transmitter!");
+                printpre("boot", "receiver calibration not found!");
+                printpre("boot", "calibrating now...do not touch the transmitter!");
                 if (!receiver_calibrate(pins, num_pins, deviations, 2000, 2, 3) || receiver_is_calibrated() != 0) {
                     log_message(FATAL, "Receiver calibration failed!", 500, 0, true);
                 } else {
-                    print("[boot] calibration successful!");
+                    printpre("boot", "calibration successful!");
                 }
                 break;
         }
@@ -108,13 +108,13 @@ int main() {
         boot_set_progress(35, "Enabling ESC");
         esc_enable((u32)config.pins[PINS_ESC_THROTTLE]);
         if (!(bool)config.general[GENERAL_SKIP_CALIBRATION]) {
-            print("[boot] validating throttle detent calibration");
+            printpre("boot", "validating throttle detent calibration");
             if (!esc_is_calibrated()) {
-                print("[boot] throttle detent calibration not found!");
+                printpre("boot", "throttle detent calibration not found!");
                 if (!esc_calibrate((u32)config.pins[PINS_ESC_THROTTLE])) {
                     log_message(ERROR, "Throttle detent calibration failed!", 500, 0, false);
                 } else {
-                    print("[boot] throttle detent calibration successful!");
+                    printpre("boot", "throttle detent calibration successful!");
                 }
             }
         } else {
@@ -129,7 +129,7 @@ int main() {
         // Lock into direct mode for safety reasons
         // This is done now because minimum peripherals have been initialized, but not more complex ones that could be causing
         // the watchdog reboots
-        boot_complete();
+        sys_boot_end();
         aircraft.change_to(MODE_DIRECT);
         while (true)
             runtime_loop_minimal();
@@ -143,13 +143,13 @@ int main() {
         log_message(aahrs.isCalibrated ? ERROR : FATAL, "AAHRS initialization failed!", 1000, 0, false);
     }
     if (!(bool)config.general[GENERAL_SKIP_CALIBRATION]) {
-        print("[boot] validating AAHRS calibration");
+        printpre("boot", "validating AAHRS calibration");
         if (!aahrs.isCalibrated) {
-            print("[boot] AAHRS calibration not found!");
+            printpre("boot", "AAHRS calibration not found!");
             if (!aahrs.calibrate()) {
                 log_message(FATAL, "AAHRS calibration failed!", 1000, 0, true);
             } else {
-                print("[boot] AAHRS calibration successful!");
+                printpre("boot", "AAHRS calibration successful!");
             }
         }
     } else {
@@ -162,7 +162,7 @@ int main() {
             ;
         boot_set_progress(65, "Initializing GPS");
         if (gps.init()) {
-            print("[boot] GPS ok");
+            printpre("boot", "GPS ok");
             // We don't set the GPS safe just yet, comms are good but we are still unsure if the data is good
             log_message(LOG, "GPS has no signal.", 5000, 150, false);
         } else {
@@ -200,6 +200,7 @@ int main() {
     boot_set_progress(90, "Finishing up");
     // Final platform-specific setup tasks
     boot_complete();
+    sleep_ms_blocking(2000);
     // Main program loop
     while (true)
         runtime_loop(true);

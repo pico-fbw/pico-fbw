@@ -9,12 +9,8 @@ export function App() {
     return (
         <main class={'w-full h-full'}>
             <Router>
-                <Route path="/">
-                    {() => <Index />}
-                </Route>
-                <Route path=":rest*">
-                    {() => <NoMatch />}
-                </Route>
+                <Route path="/">{() => <Index />}</Route>
+                <Route path=":rest*">{() => <NoMatch />}</Route>
             </Router>
         </main>
     );

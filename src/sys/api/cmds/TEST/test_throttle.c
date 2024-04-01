@@ -39,13 +39,13 @@ i32 api_test_throttle(const char *args) {
                 return 400;
         // Transition into thrust mode to set thrust percentages
         throttle.mode = THRMODE_THRUST;
-        printraw("[test] setting idle thrust (%.1f%%) for %.1fs\n", *idle, t_idle);
+        printpre("test", "setting idle thrust (%.1f%%) for %.1fs", *idle, t_idle);
         throttle.target = *idle;
         waitFor((u32)(t_idle));
-        printraw("[test] setting MCT (%.1f%%) for %.1fs\n", *mct, t_mct);
+        printpre("test", "setting MCT (%.1f%%) for %.1fs", *mct, t_mct);
         throttle.target = *mct;
         waitFor((u32)(t_mct));
-        printraw("[test] setting MAX thrust (%.1f%%) for %.1fs\n", *max, t_max);
+        printpre("test", "setting MAX thrust (%.1f%%) for %.1fs", *max, t_max);
         throttle.target = *max;
         waitFor((u32)(t_max));
         throttle.target = 0;

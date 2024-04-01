@@ -31,25 +31,25 @@ static bool waitForAxis(IMUAxis axis, u32 breakpoint, u32 timeout_ms) {
         i32 diff_pitch = ANGLE_DIFFERENCE((i32)original.pitch, (i32)aahrs.pitch);
         i32 diff_yaw = ANGLE_DIFFERENCE((i32)original.yaw, (i32)aahrs.yaw);
         if (abs(diff_roll) > breakpoint) {
-            printraw("[test] detected roll axis\n");
+            printpre("test", "detected roll axis");
             if (diff_roll < 0) {
-                printraw("[test] incorrect direction detected!\n");
+                printpre("test", "incorrect direction detected!");
                 return false;
             }
             moved = IMU_AXIS_ROLL;
             break;
         } else if (abs(diff_pitch) > breakpoint) {
-            printraw("[test] detected pitch axis\n");
+            printpre("test", "detected pitch axis");
             if (diff_pitch < 0) {
-                printraw("[test] incorrect direction detected!\n");
+                printpre("test", "incorrect direction detected!");
                 return false;
             }
             moved = IMU_AXIS_PITCH;
             break;
         } else if (abs(diff_yaw) > breakpoint) {
-            printraw("[test] detected yaw axis\n");
+            printpre("test", "detected yaw axis");
             if ((diff_yaw) < 0) {
-                printraw("[test] incorrect direction detected!\n");
+                printpre("test", "incorrect direction detected!");
                 return false;
             }
             moved = IMU_AXIS_YAW;
@@ -62,17 +62,17 @@ static bool waitForAxis(IMUAxis axis, u32 breakpoint, u32 timeout_ms) {
 }
 
 i32 api_test_aahrs(const char *args) {
-    printraw("[test] awaiting right roll...\n");
+    printpre("test", "awaiting right roll...");
     if (!waitForAxis(IMU_AXIS_ROLL, 20, 10000))
         return 500;
-    printraw("[test] return to center.\n");
+    printpre("test", "return to center.");
     runtime_sleep_ms(1500, false);
-    printraw("[test] awaiting pitch up...\n");
+    printpre("test", "awaiting pitch up...");
     if (!waitForAxis(IMU_AXIS_PITCH, 20, 10000))
         return 500;
-    printraw("[test] return to center.\n");
+    printpre("test", "return to center.\n");
     runtime_sleep_ms(1500, false);
-    printraw("[test] awaiting right yaw...\n");
+    printpre("test", "awaiting right yaw...");
     if (!waitForAxis(IMU_AXIS_YAW, 20, 10000))
         return 500;
     return 200;

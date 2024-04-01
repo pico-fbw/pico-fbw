@@ -58,18 +58,16 @@ const char *get_mime_type(const char *file) {
     }
     if (strcmp(ext, ".html") == 0 || strcmp(ext, ".htm") == 0) {
         return "text/html";
-    }
-    if (strcmp(ext, ".js") == 0) {
+    } else if (strcmp(ext, ".js") == 0) {
         return "application/javascript";
-    }
-    if (strcmp(ext, ".css") == 0) {
+    } else if (strcmp(ext, ".css") == 0) {
         return "text/css";
-    }
-    if (strcmp(ext, ".svg") == 0) {
+    } else if (strcmp(ext, ".svg") == 0) {
         return "image/svg+xml";
-    }
-    // Add more types as needed
-    return "application/octet-stream";
+    } else if (strcmp(ext, ".gif") == 0) {
+        return "image/gif";
+    } else
+        return "application/octet-stream";
 }
 
 /**
@@ -102,13 +100,41 @@ static err_t tcp_close_client_connection(TCPConnection *con_state, struct tcp_pc
     return close_err;
 }
 
+/**
+ * Sends the body of a response to a client.
+ * @param pcb the lwIP protocol control block for the connection
+ * @param state the connection state data
+ * @return the error code of the operation
+ */
+static err_t tcp_send_body(struct tcp_pcb *pcb, TCPConnection *state) {
+    LWIP_DEBUGF(TCP_DEBUG, ("sending %ld bytes\n", state->result_len));
+    u16 chunk_len = LWIP_MIN(state->result_len, TCP_SND_BUF);
+    err_t wrerr = tcp_write(pcb, state->result, chunk_len, TCP_WRITE_FLAG_COPY);
+    if (wrerr != ERR_OK)
+        LWIP_DEBUGF(TCP_DEBUG, ("ERROR: failed to write body data %d\n", wrerr));
+    return wrerr;
+}
+
 // lwIP callback. Will be called when TCP data has been successfully sent.
 static err_t tcp_server_sent(void *arg, struct tcp_pcb *pcb, u16_t len) {
     TCPConnection *con_state = (TCPConnection *)arg;
     LWIP_DEBUGF(TCP_DEBUG, ("tcp_server_sent %d\n", len));
     con_state->sent_len += len;
-    if (con_state->sent_len >= con_state->header_len + con_state->result_len) {
-        // All data has been sent, close the connection
+
+    if (con_state->sent_len < con_state->result_len) {
+        // Still data left to send
+        err_t wrerr = tcp_send_body(pcb, con_state);
+        if (wrerr != ERR_OK) {
+            LWIP_DEBUGF(TCP_DEBUG, ("ERROR: failed to write result data %d\n", wrerr));
+            return wrerr;
+        }
+    } else {
+        // All data sent, clean up and close the connection
+        LWIP_DEBUGF(TCP_DEBUG, ("all data sent\n"));
+        if (con_state->result) {
+            free(con_state->result);
+            con_state->result = NULL;
+        }
         return tcp_close_client_connection(con_state, pcb, ERR_OK);
     }
     return ERR_OK;
@@ -121,86 +147,98 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err
     if (!p)
         return tcp_close_client_connection(con_state, pcb, ERR_OK);
     assert(con_state && con_state->pcb == pcb);
+
+    char *received = NULL; // Buffer to store the received data
+    char *header = NULL;   // Buffer to store the header that will be sent to the client
+    i32 header_len = 0;
     if (p->tot_len > 0) {
         LWIP_DEBUGF(TCP_DEBUG, ("tcp_server_recv %d err %d\n", p->tot_len, err));
         for (struct pbuf *q = p; q != NULL; q = q->next)
             LWIP_DEBUGF(TCP_INPUT_DEBUG, ("in: %.*s\n\n\n", q->len, (char *)q->payload));
 
         // Transfer the received data from the pbuf to our buffer
-        char *header = NULL;
-        header = malloc(p->tot_len + 1);
-        if (!header) {
-            LWIP_DEBUGF(TCP_DEBUG, ("ERROR: failed to allocate header buffer\n"));
-            return tcp_close_client_connection(con_state, pcb, ERR_MEM);
+        received = malloc(p->tot_len + 1);
+        if (!received) {
+            LWIP_DEBUGF(TCP_DEBUG, ("ERROR: failed to allocate received buffer\n"));
+            goto close;
         }
-        pbuf_copy_partial(p, (void *)header, p->tot_len, 0);
-        header[p->tot_len] = '\0';
-
-        char *result = NULL; // Will eventually hold the content to send back to the client
+        pbuf_copy_partial(p, (void *)received, p->tot_len, 0);
+        received[p->tot_len] = '\0';
 
         // Filter by request type
-        if (strncmp(HTTP_GET, header, sizeof(HTTP_GET) - 1) == 0) { // -1 to ignore null terminator
+        if (strncmp(HTTP_GET, received, sizeof(HTTP_GET) - 1) == 0) { // -1 to ignore null terminator
             // GET request:
             // Extract the request (everything but "GET") and parameters
-            char *request = header + sizeof(HTTP_GET); // no -1 because we want to skip the space
+            char *request = received + sizeof(HTTP_GET); // no -1 because we want to skip the space
 
             // Call the on_get function provided by the http server to fetch the content
-            con_state->result_len = (*con_state->on_get)(request, &result);
+            con_state->result_len = (*con_state->on_get)(request, &con_state->result);
 
             // Prepare the response header
             if (con_state->result_len > 0) {
                 // Content was fetched successfully
                 const char *mime_type = get_mime_type(request);
-                con_state->header_len =
-                    snprintf(header, p->tot_len, HTTP_RESPONSE_HEADER, 200, con_state->result_len, mime_type);
+                header = malloc(strlen(HTTP_RESPONSE_HEADER) + sizeof(int) + sizeof(int) + strlen(mime_type) + 1);
+                header_len = sprintf(header, HTTP_RESPONSE_HEADER, 200, con_state->result_len, mime_type);
             } else if (con_state->result_len == 0) {
                 // Content couldn't be fetched
                 // Try redirecting the client back to the root?
-                con_state->header_len = snprintf(header, p->tot_len, HTTP_RESPONSE_REDIRECT, ipaddr_ntoa(con_state->ip));
+                header = malloc(strlen(HTTP_RESPONSE_REDIRECT) + strlen(ipaddr_ntoa(con_state->ip)) + 1);
+                header_len = sprintf(header, HTTP_RESPONSE_REDIRECT, ipaddr_ntoa(con_state->ip));
             } else {
                 // Error while fetching content, close the connection
                 LWIP_DEBUGF(TCP_DEBUG, ("ERROR: failed to fetch content %ld\n", con_state->result_len));
-                return tcp_close_client_connection(con_state, pcb, ERR_CLSD);
+                goto close;
             }
-        } else if (strncmp(HTTP_POST, header, sizeof(HTTP_POST) - 1) == 0) {
+        } else if (strncmp(HTTP_POST, received, sizeof(HTTP_POST) - 1) == 0) {
             // POST request:
-            char *request = header + sizeof(HTTP_POST);
+            char *request = received + sizeof(HTTP_POST);
 
-            con_state->result_len = (*con_state->on_post)(request, &result);
+            con_state->result_len = (*con_state->on_post)(request, &con_state->result);
 
             if (con_state->result_len < 0) {
                 LWIP_DEBUGF(TCP_DEBUG, ("ERROR: failed to fetch content %ld\n", con_state->result_len));
-                return tcp_close_client_connection(con_state, pcb, ERR_CLSD);
+                goto close;
             }
             // All API responses are raw JSON (so no gzip)
             const char *mime_type = "application/json";
-            con_state->header_len =
-                snprintf(header, p->tot_len, HTTP_RESPONSE_HEADER_NOGZIP, 200, con_state->result_len, mime_type);
+            header = malloc(strlen(HTTP_RESPONSE_HEADER_NOGZIP) + sizeof(int) + sizeof(int) + strlen(mime_type) + 1);
+            header_len = sprintf(header, HTTP_RESPONSE_HEADER_NOGZIP, 200, con_state->result_len, mime_type);
         }
+        // Request is now processed, time to send our response
 
-        // Send the header and body to the client
+        // Send the header to the client
+        if (header_len > TCP_SND_BUF) {
+            LWIP_DEBUGF(TCP_DEBUG, ("ERROR: header too large %d\n", header_len));
+            goto close;
+        }
         con_state->sent_len = 0;
-        err_t wrerr = tcp_write(pcb, header, con_state->header_len, 0);
+        err_t wrerr = tcp_write(pcb, header, header_len, 0);
         if (wrerr != ERR_OK) {
             LWIP_DEBUGF(TCP_DEBUG, ("ERROR: failed to write header data %d\n", wrerr));
-            return tcp_close_client_connection(con_state, pcb, wrerr);
+            goto close;
         }
+        // Send the first chunk of body data
         if (con_state->result_len > 0) {
-            LWIP_DEBUGF(TCP_DEBUG, ("sending %ld bytes\n", con_state->result_len));
-            wrerr = tcp_write(pcb, result, con_state->result_len, TCP_WRITE_FLAG_COPY);
-            if (wrerr != ERR_OK) {
-                LWIP_DEBUGF(TCP_DEBUG, ("ERROR: failed to write result data %d\n", wrerr));
-                return tcp_close_client_connection(con_state, pcb, wrerr);
-            }
+            if (tcp_send_body(pcb, con_state) != ERR_OK)
+                goto close;
         }
 
-        // Clean up
-        free(header);
-        free(result);
         tcp_recved(pcb, p->tot_len);
     }
     pbuf_free(p);
+    if (received)
+        free(received);
+    if (header)
+        free(header);
+    // Don't free con_state->result here, as it will be freed after the response is sent
     return ERR_OK;
+close:
+    if (received)
+        free(received);
+    if (header)
+        free(header);
+    return tcp_close_client_connection(con_state, pcb, err);
     (void)err;
 }
 

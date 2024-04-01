@@ -17,11 +17,12 @@ i32 api_test_gps(const char *args) {
         return 403;
     if (!aircraft.gpsSafe)
         return 500;
-    printraw("[test] dumping GPS data, check for validity!\n"
+    printpre("test",
+             "dumping GPS data, check for validity!\n"
              "==================================\n"
              "lat::%.10Lf, lng::%.10Lf, alt::%ld, speed::%f, track::%f, "
              "pdop::%f, hdop::%f, vdop::%f, altOffset::%ld, altOffsetCalibrated::%d\n"
-             "==================================\n",
+             "==================================",
              gps.lat, gps.lng, gps.alt, gps.speed, gps.track, gps.pdop, gps.hdop, gps.vdop, gps.altOffset,
              gps.altOffsetCalibrated);
     return 200;

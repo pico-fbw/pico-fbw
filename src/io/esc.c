@@ -33,7 +33,7 @@ static bool wait_for_detent(u32 pin, float *detent, u32 timeout_ms, u32 duration
         hasMoved = (abs(((u16)receiver_get(pin, RECEIVER_MODE_PERCENT) - lastReading)) > config.control[CONTROL_DEADBAND]);
     }
     if (timestamp_reached(&wait)) {
-        print("[ESC] ESC calibration timed out!");
+        printpre("ESC", "ESC calibration timed out!");
         return false;
     }
 
@@ -57,7 +57,7 @@ static bool wait_for_detent(u32 pin, float *detent, u32 timeout_ms, u32 duration
 }
 
 void esc_enable(u32 pin) {
-    print("[ESC] setting up ESC on pin %lu", pin);
+    printpre("ESC", "setting up ESC on pin %lu", pin);
     u32 pins[] = {pin};
     if (!pwm_setup_write(pins, 1, config.general[GENERAL_ESC_HZ]))
         log_message(FATAL, "Failed to enable PWM output!", 500, 0, true);
@@ -85,10 +85,10 @@ bool esc_calibrate(u32 pin) {
     display_string("Select max thrust.", 66);
     if (!wait_for_detent(pin, &calibration.esc[ESC_DETENT_MAX], (u32)10E3, 1000))
         return false;
-    print("[ESC] final detents: %d, %d, %d", (u16)calibration.esc[ESC_DETENT_IDLE], (u16)calibration.esc[ESC_DETENT_MCT],
-          (u16)calibration.esc[ESC_DETENT_MAX]);
+    printpre("ESC", "final detents: %d, %d, %d", (u16)calibration.esc[ESC_DETENT_IDLE], (u16)calibration.esc[ESC_DETENT_MCT],
+             (u16)calibration.esc[ESC_DETENT_MAX]);
     calibration.esc[ESC_CALIBRATED] = true;
-    print("[ESC] saving detents to flash");
+    printpre("ESC", "saving detents to flash");
     config_save();
     log_clear(INFO);
     return true;

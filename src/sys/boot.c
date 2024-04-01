@@ -27,19 +27,24 @@ void boot_begin() {
     log_init();
     isBooted = false;
     display_init();
-    sleep_ms_blocking(BOOT_WAIT_MS); // Wait for peripherals to power up
+    sleep_ms_blocking(
+        BOOT_WAIT_MS); // Wait for peripherals to power up
+#if !NO_COLOR_OUTPUT
+                       // If we're using color output, reset color to default in case the previous output was colored
+    printraw(COLOR_RESET);
+#endif
 }
 
 void boot_set_progress(float progress, const char *message) {
-    print("[boot] (%1.f%%) %s", progress, message);
+    printpre("boot", "%s(%.f%%)%s %s", COLOR_BLUE, progress, COLOR_RESET, message);
     display_string(message, (i32)progress);
 }
 
 void boot_complete() {
-    print("[boot] (100%%) Done!");
-    sys_boot_end();
+    printpre("boot", "%s(100%%)%s Done!", COLOR_BLUE, COLOR_RESET);
     if (log_count_errs() == 0)
         display_anim();
+    sys_boot_end();
     isBooted = true;
 }
 

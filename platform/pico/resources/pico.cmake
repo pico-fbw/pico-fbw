@@ -26,13 +26,29 @@ endfunction()
 
 # Will run after the subdirectories have been added and processed
 function(setup_after_subdirs)
+    # Both USB and UART (pins moved) are enabled by default (either can be disabled by setting to 0, if needed)
+    # These are compiled into stdio, so using printf() will output to whatever is enabled
+    pico_enable_stdio_usb(${PROJECT_NAME} 1)
+    pico_enable_stdio_uart(${PROJECT_NAME} 1)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE
+        PICO_DEFAULT_UART_TX_PIN=12 # Must be a pin with UART0 TX
+        PICO_DEFAULT_UART_RX_PIN=13 # Must be a pin with UART0 RX
+    )
     pico_add_extra_outputs(${PROJECT_NAME}) # Tell the pico-sdk to generate extra outputs, which includes .uf2 (easier to upload)
     # If the web interface is going to be built,
-    # Select our custom linker script and assembly file that link the littlefs binary into the firmware
     if (${FBW_BUILD_WWW})
-        target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_BINARY_DIR}/generated/www) # So lfs.S can find the binary
+        # Compile our custom assembly file that includes the littlefs binary data into the final executable
+        target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_BINARY_DIR}/generated/www) # So lfs.S can find the binary data
         target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/platform/pico/resources/lfs.S)
-        pico_set_linker_script(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/platform/pico/resources/memmap.ld)
+        # If any of the files in the www directory have been changed, we "touch" the lfs.S file to force it to be recompiled
+        # This means that if the web interface is changed, linking will be re-run and the new files will be included
+        file(GLOB_RECURSE WWW_FILES ${CMAKE_SOURCE_DIR}/www/*)
+        add_custom_command(
+            OUTPUT ${CMAKE_SOURCE_DIR}/platform/pico/resources/lfs.S
+            COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_SOURCE_DIR}/platform/pico/resources/lfs.S
+            DEPENDS ${WWW_FILES}
+        )
     endif()
-    # FIXME: the custom linker script only works on debug builds? pico never boots on release builds
+    # Always use our custom linker script regardless of the web interface, this is so littlefs can always be in the same place
+    pico_set_linker_script(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/platform/pico/resources/memmap.ld)
 endfunction()

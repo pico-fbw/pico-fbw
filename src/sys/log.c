@@ -20,10 +20,10 @@
 
 #include "log.h"
 
-#define MSG_INFO "INFO:"
-#define MSG_WARN "WARNING:"
-#define MSG_ERROR "ERROR:"
-#define MSG_FATAL "FATAL:"
+#define MSG_INFO "INFO"
+#define MSG_WARN "WARNING"
+#define MSG_ERROR "ERROR"
+#define MSG_FATAL "FATAL"
 
 #define DISP_LOG_URL "pico-fbw.org/"
 
@@ -207,31 +207,35 @@ void log_message(LogType type, const char *msg, i32 code, u32 pulse_ms, bool for
 
     // Format an error string to be printed
     const char *typeMsg = NULL;
+    const char *colorCode = "";
     switch (type) {
         case INFO:
             typeMsg = MSG_INFO;
+            colorCode = COLOR_BLUE;
             break;
         case WARNING:
             typeMsg = MSG_WARN;
+            colorCode = COLOR_YELLOW;
             break;
         case ERROR:
             typeMsg = MSG_ERROR;
+            colorCode = COLOR_LIGHT_RED;
             break;
         case FATAL:
             typeMsg = MSG_FATAL;
+            colorCode = COLOR_DARK_RED;
             break;
         default:
             break;
     }
     if (typeMsg) {
         if (code > -1) {
-            print("%s (FBW-%ld) %s", typeMsg, code, msg);
+            print("%s%s: (FBW-%ld) %s%s", colorCode, typeMsg, code, msg, COLOR_RESET);
         } else {
-            print("%s %s", typeMsg, msg);
+            print("%s%s %s", colorCode, typeMsg, msg, COLOR_RESET);
         }
-    } else {
+    } else
         print("%s", msg);
-    }
 
     if (type == FATAL) {
         // Halt execution for fatal errors

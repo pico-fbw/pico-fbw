@@ -26,12 +26,12 @@ FlightplanError flightplan_parse(const char *json) {
     jsmn_init(&parser);
     i32 tokenCount = jsmn_parse(&parser, json, strlen(json), tokens, count_of(tokens));
     if (strlen(json) == 0 || json[0] != '{' || json[strlen(json) - 1] != '}') {
-        print("[fplan] ERROR: JSON start/end not found!");
+        printpre("fplan", "ERROR: JSON start/end not found!");
         state = FPLAN_ERR_PARSE;
         return state;
     }
     if (tokenCount < 0) {
-        print("[fplan] ERROR: no valid tokens found!");
+        printpre("fplan", "ERROR: no valid tokens found!");
         state = FPLAN_ERR_PARSE;
         return state;
     }
@@ -50,15 +50,15 @@ FlightplanError flightplan_parse(const char *json) {
                 strncpy(version, json + tokens[i + 1].start, tokens[i + 1].end - tokens[i + 1].start);
                 version[tokens[i + 1].end - tokens[i + 1].start] = '\0';
 
-                print("[fplan] flightplan version: %s", version);
+                printpre("fplan", "flightplan version: %s", version);
                 if (strcmp(version, FPLAN_VERSION) != 0) {
-                    print("[fplan] ERROR: flightplan version incompatable!");
+                    printpre("fplan", "ERROR: flightplan version incompatable!");
                     state = FPLAN_ERR_VERSION;
                     return state;
                 }
                 flightplan.version = malloc(strlen(version) + 1);
                 if (!flightplan.version) {
-                    print("[fplan] ERROR: memory allocation for version data failed!");
+                    printpre("fplan", "ERROR: memory allocation for version data failed!");
                     state = FPLAN_ERR_MEM;
                     return state;
                 }
@@ -69,21 +69,21 @@ FlightplanError flightplan_parse(const char *json) {
                 strncpy(versionFw, json + tokens[i + 1].start, tokens[i + 1].end - tokens[i + 1].start);
                 versionFw[tokens[i + 1].end - tokens[i + 1].start] = '\0';
 
-                print("[fplan] firmware version: %s", versionFw);
+                printpre("fplan", "firmware version: %s", versionFw);
                 i32 versionCheck = version_check(versionFw);
                 if (versionCheck < 0) {
                     if (versionCheck < -1) {
-                        print("[fplan] ERROR: version check failed!");
+                        printpre("fplan", "ERROR: version check failed!");
                         status = FPLAN_ERR_PARSE;
                         return status;
                     } else {
-                        print("[fplan] WARNING: a new version of pico-fbw is available, please download it!");
+                        printpre("fplan", "WARNING: a new version of pico-fbw is available, please download it!");
                         status = FPLAN_WARN_FW_VERSION;
                     }
                 }
                 flightplan.version_fw = malloc(strlen(versionFw) + 1);
                 if (!flightplan.version_fw) {
-                    print("[fplan] ERROR: memory allocation for firmware version data failed!");
+                    printpre("fplan", "ERROR: memory allocation for firmware version data failed!");
                     state = FPLAN_ERR_MEM;
                     return state;
                 }
@@ -97,7 +97,7 @@ FlightplanError flightplan_parse(const char *json) {
 
                 // We expect a value between zero and 100 (only calculate if non-zero)
                 if (flightplan.alt_samples <= 100 && flightplan.alt_samples >= 0) {
-                    print("[fplan] num alt samples: %ld", flightplan.alt_samples);
+                    printpre("fplan", "num alt samples: %ld", flightplan.alt_samples);
                     if (flightplan.alt_samples != 0 && status == FPLAN_STATUS_OK)
                         status = FPLAN_STATUS_GPS_OFFSET; // Only replace the status if it is still OK (no warnings yet)
                 } else {
@@ -108,18 +108,18 @@ FlightplanError flightplan_parse(const char *json) {
             } else if (strcmp(field_name, "waypoints") == 0) {
                 if (tokens[i + 1].type == JSMN_ARRAY) {
                     flightplan.waypoint_count = tokens[i + 1].size;
-                    print("[fplan] flightplan contains %lu waypoints", flightplan.waypoint_count);
+                    printpre("fplan", "flightplan contains %lu waypoints", flightplan.waypoint_count);
                     // Allocate memory for the waypoints array
                     flightplan.waypoints = calloc(flightplan.waypoint_count, sizeof(Waypoint));
                     if (!flightplan.waypoints) {
-                        print("[fplan] ERROR: memory allocation for Waypoint data failed!");
+                        printpre("fplan", "ERROR: memory allocation for Waypoint data failed!");
                         state = FPLAN_ERR_MEM;
                         return state;
                     }
                     u32 waypoint_token_index = i + 2; // Skip the array token
                     // Waypoint iteration
                     for (u32 w = 0; w < flightplan.waypoint_count; w++) {
-                        print("[fplan] processing Waypoint %lu:", w + 1);
+                        printpre("fplan", "processing Waypoint %lu:", w + 1);
                         if (tokens[waypoint_token_index].type == JSMN_OBJECT) {
                             u32 waypoint_tokenCount = tokens[waypoint_token_index].size;
                             u32 waypoint_field_token_index = waypoint_token_index + 1; // Skip the object token
@@ -191,7 +191,7 @@ FlightplanError flightplan_parse(const char *json) {
                                         waypoint.drop = atoi(drp);
                                         print("Drop: %s", drp);
                                     } else {
-                                        print("[fplan] ERROR: Waypoint field name not recognized!");
+                                        printpre("fplan", "ERROR: Waypoint field name not recognized!");
                                         state = FPLAN_ERR_PARSE;
                                         return false;
                                     }
@@ -202,7 +202,7 @@ FlightplanError flightplan_parse(const char *json) {
                             // Check if the Waypoint data is valid (aka that we got everything we expect and need)
                             if (waypoint.lat == INFINITY || waypoint.lng == INFINITY || waypoint.alt == INT16_MIN ||
                                 waypoint.speed == INFINITY) {
-                                print("[fplan] ERROR: Waypoint data is invalid!");
+                                printpre("fplan", "ERROR: Waypoint data is invalid!");
                                 state = FPLAN_ERR_PARSE;
                                 return state;
                             }
@@ -211,13 +211,13 @@ FlightplanError flightplan_parse(const char *json) {
                             // Advance to the next waypoint
                             waypoint_token_index += WAYPOINT_NUM_FIELDS * 2 + 1; // + 1 for object token yet again
                         } else {
-                            print("[fplan] ERROR: Waypoint token type not recognized!");
+                            printpre("fplan", "ERROR: Waypoint token type not recognized!");
                             state = FPLAN_ERR_PARSE;
                             return state;
                         }
                     }
                 } else {
-                    print("[fplan] ERROR: waypoints array not found!");
+                    printpre("fplan", "ERROR: waypoints array not found!");
                     state = FPLAN_ERR_PARSE;
                     return state;
                 }
@@ -225,12 +225,12 @@ FlightplanError flightplan_parse(const char *json) {
         }
     }
     if (!has_version || !has_version_fw || !has_alt_samples) {
-        print("[fplan] ERROR: flightplan missing data!");
+        printpre("fplan", "ERROR: flightplan missing data!");
         state = FPLAN_ERR_PARSE;
         return state;
     }
 
-    print("[fplan] Waypoint data:");
+    printpre("fplan", "Waypoint data:");
     for (u32 i = 0; i < flightplan.waypoint_count; i++) {
         print("Waypoint #%lu: lat=%.10Lf, lng=%.10Lf, alt=%ld, speed=%f, drop=%ld", i + 1, flightplan.waypoints[i].lat,
               flightplan.waypoints[i].lng, flightplan.waypoints[i].alt, flightplan.waypoints[i].speed,
@@ -239,7 +239,7 @@ FlightplanError flightplan_parse(const char *json) {
     // Save the flightplan JSON string
     flightplan.json = malloc(strlen(json) + 1);
     if (!flightplan.json) {
-        print("[fplan] ERROR: memory allocation for flightplan JSON failed!");
+        printpre("fplan", "ERROR: memory allocation for flightplan JSON failed!");
         state = FPLAN_ERR_MEM;
         return false;
     }
