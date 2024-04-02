@@ -200,7 +200,6 @@ int main() {
     boot_set_progress(90, "Finishing up");
     // Final platform-specific setup tasks
     boot_complete();
-    sleep_ms_blocking(2000);
     // Main program loop
     while (true)
         runtime_loop(true);

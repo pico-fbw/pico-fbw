@@ -1,6 +1,14 @@
 #pragma once
 
+#include "platform/defs.h"
+
+#if PLATFORM_SUPPORTS_ADC
+
+// clang-format off
+
 #include "platform/int.h"
+
+// clang-format on
 
 /**
  * Sets up `pins[]` for reading ADC signals.
@@ -15,3 +23,5 @@ void adc_setup(const u32 pins[], u32 num_pins);
  * @return the voltage of the ADC signal in volts, or -1 if the pin is invalid
  */
 double adc_read_raw(u32 pin);
+
+#endif // PLATFORM_SUPPORTS_ADC

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import Alert from '../elements/Alert';
 import hasInternet from '../helpers/hasInternet';
+import api from '../helpers/api';
 
 export default function Index() {
     const [hasConnection, setHasConnection] = useState(false);
@@ -14,6 +15,14 @@ export default function Index() {
 
     useEffect(() => {
         checkInternetConnection();
+        // testing
+        api('ping').then((res) => {
+            if (res.err === 0) {
+                console.log('API is working');
+            } else {
+                console.error('API is not working');
+            }
+        });
     }, []);
 
     return (

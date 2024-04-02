@@ -193,7 +193,7 @@ void log_message(LogType type, const char *msg, i32 code, u32 pulse_ms, bool for
     // there was a code given, the type is severe enough, it was forced, or of the same type (but newer)
     if (type > LOG && code > -1) {
         if (force || (lastEntry && (type >= lastEntry->type && code <= lastEntry->code))) {
-            if (boot_is_booted() || type == FATAL || type == INFO) {
+            if (boot_is_booted() || force || type == FATAL || type == INFO) {
                 display_log(entry);
             } else {
                 // The system isn't booted and the type isn't severe enough to warrant displaying it at the moment,
@@ -232,7 +232,7 @@ void log_message(LogType type, const char *msg, i32 code, u32 pulse_ms, bool for
         if (code > -1) {
             print("%s%s: (FBW-%ld) %s%s", colorCode, typeMsg, code, msg, COLOR_RESET);
         } else {
-            print("%s%s %s", colorCode, typeMsg, msg, COLOR_RESET);
+            print("%s%s %s%s", colorCode, typeMsg, msg, COLOR_RESET);
         }
     } else
         print("%s", msg);
