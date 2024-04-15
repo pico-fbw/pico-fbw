@@ -125,7 +125,7 @@ bool i2c_read(u32 sda, u32 scl, byte addr, byte reg, byte dest[], size_t len) {
     return (i2c_master_transmit_receive(device->handle, &reg, sizeof(reg), dest, len + 1, I2C_TIMEOUT_MS) == ESP_OK);
 }
 
-bool i2c_write(u32 sda, u32 scl, byte addr, byte reg, byte src[], size_t len) {
+bool i2c_write(u32 sda, u32 scl, byte addr, byte reg, const byte src[], size_t len) {
     I2CDevice *device = i2c_device_from_details(sda, scl, addr);
     if (!device)
         return false;

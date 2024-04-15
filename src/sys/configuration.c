@@ -53,7 +53,8 @@ Config config = {
         CONFIG_END_MAGIC,
     },
     .sensors = {
-        IMU_MODEL_BNO055, BARO_MODEL_NONE, GPS_COMMAND_TYPE_PMTK, 9600,
+        IMU_MODEL_BNO055, BARO_MODEL_NONE, 400, // AAHRS configuration
+        GPS_COMMAND_TYPE_PMTK, 9600, // GPS configuration
         CONFIG_END_MAGIC,
     },
     .system = {

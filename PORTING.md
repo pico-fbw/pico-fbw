@@ -4,7 +4,7 @@ If you're interested in porting pico-fbw to a new platform, read on!
 
 - Before you get started, **consider the practical requirements.**
 While it doesn't require loads of processing power, pico-fbw was designed with newer, ARM/RISCV-based microcontrollers in mind.
-Consider: does your platform provide enough power to support running moderately heavy calcuations (such as the fusion algorithm) at a fast rate?
+Consider: does your platform provide enough power to support running moderately heavy calcuations (such as the fusion algorithm) at a fast rate? Does it have the necessary hardware peripherals to support pico-fbw's interfacing with various sensor hardware? Can it run calculations often enough to keep input lag at bay?
 - Obviously, **your platform must have a C compiler.**
 GCC is preferred and all current ports use it, but other toolchains like Clang might work with some modification.
 - **We've created an "example" directory to ease in porting.**

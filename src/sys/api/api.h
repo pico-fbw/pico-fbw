@@ -13,5 +13,5 @@ i32 api_poll();
  * @param result pointer to a buffer to store the result of the command
  * @note The caller is responsible for freeing the result buffer.
  * This function is not threadsafe.
-*/
+ */
 i32 api_call(const char *cmd, const char *args, char **result);

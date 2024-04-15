@@ -10,7 +10,8 @@
 
 #include "platform/i2c.h"
 
-#define I2C_TIMEOUT_US 50E3 // The timeout for i2c operations in microseconds
+#define I2C_TIMEOUT_MS 10 // The timeout for i2c operations in milliseconds
+#define I2C_TIMEOUT_US (I2C_TIMEOUT_MS * 1000)
 
 /**
  * @param sda the pin number of the SDA pin
@@ -87,7 +88,7 @@ bool i2c_read(u32 sda, u32 scl, byte addr, byte reg, byte dest[], size_t len) {
     return timeout == (i32)len;
 }
 
-bool i2c_write(u32 sda, u32 scl, byte addr, byte reg, byte src[], size_t len) {
+bool i2c_write(u32 sda, u32 scl, byte addr, byte reg, const byte src[], size_t len) {
     i2c_inst_t *i2c = i2c_inst_from_pins(sda, scl);
     if (!i2c)
         return false;

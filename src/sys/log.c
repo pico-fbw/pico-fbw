@@ -29,20 +29,21 @@
 
 static LogEntry *logs = NULL;
 static u32 numLogs = 0;
-static LogEntry *lastEntry, *lastDisplayedEntry, *queuedEntry;
+static LogEntry *lastEntry = NULL, *lastDisplayedEntry = NULL, *queuedEntry = NULL;
 
 /* --- LED --- */
 
-static CallbackData *pulseCallback;
+static CallbackData *pulseCallback = NULL;
 static u32 pulseMs = 0;
-static CallbackData *toggleCallback;
+static CallbackData *toggleCallback = NULL;
 static u32 toggleMs = 0;
 
 // Resets the LED to the on state and cancels any scheduled state change callbacks
 static void led_reset() {
     cancel_callback(toggleCallback);
     toggleMs = 0;
-    cancel_callback(pulseCallback);
+    // We cannot cancel the pulse callback as it does not reschedule itself, and the callback system doesn't support
+    // cancelling a one-time callback
     pulseMs = 0;
 #ifdef PIN_LED
     gpio_set(PIN_LED, HIGH);
@@ -78,7 +79,7 @@ i32 led_callback() {
 static void display_log(LogEntry *entry) {
 #if PLATFORM_SUPPORTS_DISPLAY
     if ((bool)config.system[SYSTEM_USE_DISPLAY]) {
-        // Display the entry on the built-in display on FBW
+        // Display the entry on the external display, if available
         // We don't want to use the builtin display_string() function because it might wrap text weirdly;
         // we want control over what goes on each line
         char typeMsg[DISPLAY_MAX_LINE_LEN];
@@ -149,7 +150,8 @@ static void display_log(LogEntry *entry) {
 i32 process_queue() {
     if (!boot_is_booted())
         return 500; // Not booted yet, check back in 500ms
-    display_log(queuedEntry);
+    if (queuedEntry)
+        display_log(queuedEntry);
     return 0;
 }
 
@@ -223,7 +225,7 @@ void log_message(LogType type, const char *msg, i32 code, u32 pulse_ms, bool for
             break;
         case FATAL:
             typeMsg = MSG_FATAL;
-            colorCode = COLOR_DARK_RED;
+            colorCode = COLOR_LIGHT_RED_BOLD;
             break;
         default:
             break;
@@ -239,7 +241,7 @@ void log_message(LogType type, const char *msg, i32 code, u32 pulse_ms, bool for
 
     if (type == FATAL) {
         // Halt execution for fatal errors
-        print("\nFatal error encountered, halting pico-fbw!");
+        print("\n" COLOR_LIGHT_RED "Fatal error encountered, halting pico-fbw!");
         while (true)
             // Keep the system running but hang (callbacks still run for LED)
             sys_periodic();

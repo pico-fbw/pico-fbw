@@ -1,16 +1,16 @@
 /**
  * This file utilizes code under the MIT License. See "LICENSE" for details.
-*/
+ */
 
 /**
  * Credit goes to pms67 and drbitboy for developing this PID implementation, check it out here:
  * https://github.com/drbitboy/PID
-*/
+ */
 
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU AGPL-3.0
-*/
+ */
 
 #include "platform/time.h"
 

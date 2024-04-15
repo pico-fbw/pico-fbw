@@ -36,7 +36,7 @@ typedef struct PIDController {
 /**
  * Initalizes a PIDController.
  * @param pid Pointer to the PIDController to initialize.
-*/
+ */
 void pid_init(PIDController *pid);
 
 /**
@@ -44,5 +44,5 @@ void pid_init(PIDController *pid);
  * @param pid Pointer to the PIDController to update.
  * @param setpoint The target value.
  * @param measurement The measured value.
-*/
+ */
 void pid_update(PIDController *pid, double setpoint, double measurement);

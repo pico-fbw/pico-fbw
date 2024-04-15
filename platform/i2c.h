@@ -10,7 +10,7 @@
  * @param freq the frequency to run the I2C bus at, in Hz
  * @return true if the setup was successful
  * @note Many platforms have limitations on which pins and frequencies can be used for I2C.
- * Check the documentation of the platform you are using to ensure you are using valid pins and frequencies.
+ * This means that the frequency that you request may not be the exact frequency that is set.
  */
 bool i2c_setup(u32 sda, u32 scl, u32 freq);
 
@@ -23,7 +23,8 @@ bool i2c_setup(u32 sda, u32 scl, u32 freq);
  * @param dest the buffer to read the data into
  * @param len the number of bytes to read
  * @return true if the read was successful
- * @note `dest[]` must be large enough to hold `len` bytes of data
+ * @note `dest[]` must be large enough to hold `len` bytes of data.
+ * @note `sda` and `scl` must be set up with `i2c_setup()` before calling this function.
  */
 bool i2c_read(u32 sda, u32 scl, byte addr, byte reg, byte dest[], size_t len);
 
@@ -37,5 +38,6 @@ bool i2c_read(u32 sda, u32 scl, byte addr, byte reg, byte dest[], size_t len);
  * @param len the number of bytes to write
  * @return true if the write was successful
  * @note `src[]` must contain at least `len` bytes of data
+ * @note `sda` and `scl` must be set up with `i2c_setup()` before calling this function.
  */
-bool i2c_write(u32 sda, u32 scl, byte addr, byte reg, byte src[], size_t len);
+bool i2c_write(u32 sda, u32 scl, byte addr, byte reg, const byte src[], size_t len);

@@ -34,11 +34,13 @@ CallbackData *callback_in_ms(u32 ms, Callback callback);
 /**
  * Cancels a callback with the given ID.
  * @param id the ID of the callback to cancel
+ * @note This function only works with repeating timers (aka timers that return a positive value in the callback).
+ * Attempting to call this function on a non-repeating timer will result in undefined behavior.
  */
 void cancel_callback(CallbackData *data);
 
 /**
- * Sleeps for `us` microseconds, blocking the current thread.
+ * Sleeps for `us` microseconds, blocking the current core.
  * @param us the number of microseconds to sleep
  */
 void sleep_us_blocking(u64 us);

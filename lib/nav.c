@@ -1,14 +1,14 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU AGPL-3.0
-*/
+ */
 
 #include <math.h>
 #include "platform/int.h"
 
 #include "nav.h"
 
-#define EARTH_RADIUS_KM 6371  // Earth's radius in kilometers
+#define EARTH_RADIUS_KM 6371                    // Earth's radius in kilometers
 #define EARTH_RADIUS_M (EARTH_RADIUS_KM * 1000) // Earth's radius in meters
 
 double calculate_bearing(long double latA, long double lonA, long double latB, long double lonB) {
@@ -34,9 +34,8 @@ double calculate_distance(long double latA, long double lonA, long double latB, 
     long double deltaL = radians(lonB - lonA);
 
     double a = sin((double)deltaT / 2) * sin((double)deltaT / 2) +
-               cos((double)thetaA) * cos((double)thetaB) *
-               sin((double)deltaL / 2) * sin((double)deltaL / 2);
+               cos((double)thetaA) * cos((double)thetaB) * sin((double)deltaL / 2) * sin((double)deltaL / 2);
     double c = 2 * atan2(sqrt(a), sqrt(1 - a));
 
-    return EARTH_RADIUS_M * c;           
+    return EARTH_RADIUS_M * c;
 }

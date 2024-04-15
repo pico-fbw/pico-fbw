@@ -7,7 +7,7 @@
  * @param latB Latitude of the second point.
  * @param lonB Longitude of the second point.
  * @return Bearing in degrees.
-*/
+ */
 double calculate_bearing(long double latA, long double lonA, long double latB, long double lonB);
 
 /**
@@ -17,5 +17,5 @@ double calculate_bearing(long double latA, long double lonA, long double latB, l
  * @param latB Latitude of the second point.
  * @param lonB Longitude of the second point.
  * @return Distance in meters.
-*/
+ */
 double calculate_distance(long double latA, long double lonA, long double latB, long double lonB);

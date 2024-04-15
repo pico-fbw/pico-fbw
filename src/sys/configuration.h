@@ -86,6 +86,7 @@ typedef enum ConfigPins {
 typedef enum ConfigSensors {
     SENSORS_IMU_MODEL,
     SENSORS_BARO_MODEL,
+    SENSORS_AAHRS_BUS_FREQ,
     SENSORS_GPS_COMMAND_TYPE,
     SENSORS_GPS_BAUDRATE,
 } ConfigSensors;

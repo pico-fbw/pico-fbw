@@ -27,9 +27,9 @@ CallbackData *callback_in_ms(u32 ms, Callback callback) {
 
     // This function also needs to return a CallbackData that can be used to cancel the callback.
     // A CallbackData is a struct that contains the callback and its ID (which you define in defs.h).
-    // This function can return NULL if the callback could not be scheduled.
     // Most platforms choose to allocate a new CallbackData on the heap and free() is when the callback is either cancelled or
     // returns zero.
+    // However, a non-rescheduling callback will never be cancelled.
 
     // So, in summary:
     // 1. Schedule a Callback `callback` to be called in `ms` milliseconds.
@@ -37,7 +37,7 @@ CallbackData *callback_in_ms(u32 ms, Callback callback) {
     // 3. Make sure to handle the Callback's return value correctly.
     // 4. Make sure to handle your memory correctly.
 
-    // Good luck!
+    // This function can return NULL if the callback could not be scheduled.
 }
 
 void cancel_callback(CallbackData *data) {

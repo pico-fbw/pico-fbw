@@ -19,7 +19,7 @@ bool i2c_read(u32 sda, u32 scl, byte addr, byte reg, byte dest[], size_t len) {
     // before reading from it. This function should return true if the read was successful, false if not.
 }
 
-bool i2c_write(u32 sda, u32 scl, byte addr, byte reg, byte src[], size_t len) {
+bool i2c_write(u32 sda, u32 scl, byte addr, byte reg, const byte src[], size_t len) {
     // This function should write `len` bytes from the array `src[]` to an 8-bit I2C device address `addr` at an 8-bit I2C
     // register `reg`. For example, if `addr` is 0x69, `reg` is 0x01, and `len` is 1, this function should initiate an I2C
     // transaction to write 1 byte to register 0x01 of device 0x69 with the value `src[0]`. This function should return true if

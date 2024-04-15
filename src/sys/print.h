@@ -13,7 +13,7 @@
     #define COLOR_YELLOW "\x1b[38;2;234;179;8m"
     #define COLOR_LIGHT_GREEN "\x1b[38;2;22;163;74m"
     #define COLOR_LIGHT_RED "\x1b[38;2;248;113;113m"
-    #define COLOR_DARK_RED "\x1b[31m"
+    #define COLOR_LIGHT_RED_BOLD "\x1b[1;38;2;248;113;113m"
     #define COLOR_RESET "\x1b[0m"
 #else
     #define COLOR_BLUE ""

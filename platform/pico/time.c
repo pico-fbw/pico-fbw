@@ -31,6 +31,10 @@ CallbackData *callback_in_ms(u32 ms, Callback callback) {
         return NULL;
     data->callback = callback;
     data->id = add_alarm_in_ms(ms, callback_to_sdk, (void *)data, true);
+    if (data->id < 0) {
+        free(data);
+        return NULL;
+    }
     return data;
 }
 
