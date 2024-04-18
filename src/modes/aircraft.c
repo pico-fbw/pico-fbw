@@ -126,6 +126,13 @@ void set_aahrs_safe(bool state) {
     if (state != aircraft.aahrsSafe) {
         aircraft.aahrsSafe = state;
         if (state) {
+            if (!aahrs.isInitialized) {
+                if (!aahrs.init()) {
+                    log_message(ERROR, "AAHRS initialization failed!", 1000, 0, false);
+                    change_to(MODE_DIRECT);
+                    return;
+                }
+            }
             printfbw(aircraft, "AAHRS set as safe");
         } else {
             // Change to direct mode as it doesn't require AAHRS, and deinit

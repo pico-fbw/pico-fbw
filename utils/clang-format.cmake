@@ -2,6 +2,10 @@ find_program(CLANG_FORMAT_EXE NAMES "clang-format")
 if (CLANG_FORMAT_EXE)
     message("clang-format found at ${CLANG_FORMAT_EXE}")
     file(GLOB_RECURSE ALL_SOURCE_FILES
+        ${CMAKE_SOURCE_DIR}/lib/fusion/*.c
+        ${CMAKE_SOURCE_DIR}/lib/fusion/*.h
+        ${CMAKE_SOURCE_DIR}/lib/fusion/drivers/*.c
+        ${CMAKE_SOURCE_DIR}/lib/fusion/drivers/*.h
         ${CMAKE_SOURCE_DIR}/platform/*.c
         ${CMAKE_SOURCE_DIR}/platform/*.h
         ${CMAKE_SOURCE_DIR}/src/*.c

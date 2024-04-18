@@ -1,91 +1,140 @@
+/*
+ * Copyright 2018 Google Inc.
+ *
+ * This file utilizes code under the Apache-2.0 License. See "LICENSE" for details.
+ */
+
+/**
+ * pico-fbw's IMU/fusion implementation is based on the mongoose-os's IMU library.
+ * Check it out at https://github.com/mongoose-os-libs/imu
+ */
+
+/**
+ * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
+ * Licensed under the GNU AGPL-3.0
+ */
+
 #pragma once
 
+#include <stdbool.h>
 #include "platform/int.h"
 
-#define DRIVER_FREQ_KHZ 400  // The frequency of the I2C bus in kHz
-#define DRIVER_INIT_ATTEMPTS 5 // The maximum number of attempts that the driver will make to initialize the sensor
+/* Accelerometer */
 
-/*******************************************************************************
- * Definitions
- ******************************************************************************/
+typedef struct Accelerometer Accelerometer;
 
-/* @brief This enum defines Write flag for the Register Write. */
-typedef enum EWriteFlags
-{
-    WRITE_OVERWRITE = 0, /* Overwrite the Register Value.*/
-    WRITE_MASK = 1       /* Read and Mask and OR it with Register content.*/
-} EWriteFlags_t;
+typedef bool (*acc_detect_fn)(Accelerometer *dev, void *imu_user_data);
+typedef bool (*acc_create_fn)(Accelerometer *dev, void *imu_user_data);
+typedef bool (*acc_destroy_fn)(Accelerometer *dev, void *imu_user_data);
+typedef bool (*acc_read_fn)(Accelerometer *dev, void *imu_user_data);
+typedef bool (*acc_get_odr_fn)(Accelerometer *dev, void *imu_user_data, float *odr);
+typedef bool (*acc_set_odr_fn)(Accelerometer *dev, void *imu_user_data, float odr);
+typedef bool (*acc_get_scale_fn)(Accelerometer *dev, void *imu_user_data, float *scale);
+typedef bool (*acc_set_scale_fn)(Accelerometer *dev, void *imu_user_data, float scale);
 
-/* @brief This enum defines Sensor State. */
-enum ESensorErrors
-{
-    SENSOR_ERROR_NONE = 0,
-    SENSOR_ERROR_INVALID_PARAM,
-    SENSOR_ERROR_BAD_ADDRESS,
-    SENSOR_ERROR_INIT,
-    SENSOR_ERROR_WRITE,
-    SENSOR_ERROR_READ,
-};
+typedef struct AccelerometerOptions {
+    float odr;   // Data rate, in Hz. See doc for set_odr().
+    float scale; // Scale. See doc for set_scale().
+    bool no_rst; // Do not perform reset of the device when configuring.
+} AccelerometerOptions;
 
-/* The MAXIMUM number of Sensor Registers possible. */
-#define SENSOR_MAX_REGISTER_COUNT 128 /* As per 7-Bit address. */
+typedef struct Accelerometer {
+    acc_detect_fn detect;
+    acc_create_fn create;
+    acc_destroy_fn destroy;
+    acc_read_fn read;
+    acc_get_odr_fn get_odr;
+    acc_set_odr_fn set_odr;
+    acc_get_scale_fn get_scale;
+    acc_set_scale_fn set_scale;
 
-/* Used with the RegisterWriteList types as a list terminator */
-#define __END_WRITE_DATA__            \
-    {                                 \
-        .writeTo = 0xFFFF, .value = 0 \
-    }
+    byte addr; // I2C address of the device
+    AccelerometerOptions opts;
 
-/* Used with the RegisterReadList types as a list terminator */
-#define __END_READ_DATA__                 \
-    {                                     \
-        .readFrom = 0xFFFF, .numBytes = 0 \
-    }
+    float scale;
+    float offset_ax, offset_ay, offset_az;
+    int16_t ax, ay, az;
+} Accelerometer;
 
-/* Used with the Sensor Command List types as a list terminator */
-#define __END_WRITE_CMD__                \
-    {                                    \
-        .writeTo = 0xFFFF, .numBytes = 0 \
-    }
+/* Gyroscope */
 
-/*******************************************************************************
- * Types
- ******************************************************************************/
-/*!
- * @brief This structure defines the Write command List.
- */
-typedef struct
-{
-    u16 writeTo; /* Address where the value is writes to.*/
-    u8 value;    /* value. Note that value should be shifted based on the bit position.*/
-    u8 mask;     /* mask of the field to be set with given value.*/
-} registerWriteList_t;
+typedef struct Gyroscope Gyroscope;
 
-/*!
- * @brief This structure defines the Read command List.
- */
-typedef struct
-{
-    u16 readFrom; /* Address where the value is read from .*/
-    u8 numBytes;  /* Number of bytes to read.*/
-} registerReadList_t;
+typedef bool (*gyro_detect_fn)(Gyroscope *dev, void *imu_user_data);
+typedef bool (*gyro_create_fn)(Gyroscope *dev, void *imu_user_data);
+typedef bool (*gyro_destroy_fn)(Gyroscope *dev, void *imu_user_data);
+typedef bool (*gyro_read_fn)(Gyroscope *dev, void *imu_user_data);
+typedef bool (*gyro_get_odr_fn)(Gyroscope *dev, void *imu_user_data, float *odr);
+typedef bool (*gyro_set_odr_fn)(Gyroscope *dev, void *imu_user_data, float odr);
+typedef bool (*gyro_get_scale_fn)(Gyroscope *dev, void *imu_user_data, float *scale);
+typedef bool (*gyro_set_scale_fn)(Gyroscope *dev, void *imu_user_data, float scale);
 
-/*!
- * @brief This is the register idle function type.
- */
-typedef void (*registeridlefunction_t)(void *userParam);
+typedef struct GyroscopeOptions {
+    float odr;   // Data rate, in Hz. See doc for set_odr().
+    float scale; // Scale. See doc for set_scale().
+    bool no_rst; // Do not perform reset of the device when configuring.
+} GyroscopeOptions;
 
-/*!
- * @brief This structure defines the device specific info required by register I/O.
- */
-typedef struct
-{
-    registeridlefunction_t idleFunction;
-    void *functionParam;
-    u8 deviceInstance;
-} registerDeviceInfo_t;
+typedef struct Gyroscope {
+    gyro_detect_fn detect;
+    gyro_create_fn create;
+    gyro_destroy_fn destroy;
+    gyro_read_fn read;
+    gyro_get_odr_fn get_odr;
+    gyro_set_odr_fn set_odr;
+    gyro_get_scale_fn get_scale;
+    gyro_set_scale_fn set_scale;
 
-void driver_init();
-i32 driver_read(registerDeviceInfo_t *devInfo, u16 peripheralAddress, const registerReadList_t *pReadList, u8 *pOutBuf);
-i32 driver_read_register(registerDeviceInfo_t *devInfo, u16 peripheralAddress, u8 offset, u8 len, u8 *pOutBuf);
-i8 driver_write_list(registerDeviceInfo_t *devInfo, u16 peripheralAddress, const registerWriteList_t *pRegWriteList);
+    byte addr;
+    GyroscopeOptions opts;
+
+    float scale;
+    float offset_gx, offset_gy, offset_gz;
+    float orientation[9];
+    int16_t gx, gy, gz;
+} Gyroscope;
+
+/* Magnetometer */
+
+typedef struct Magnetometer Magnetometer;
+
+typedef bool (*mag_detect_fn)(Magnetometer *dev, void *imu_user_data);
+typedef bool (*mag_create_fn)(Magnetometer *dev, void *imu_user_data);
+typedef bool (*mag_destroy_fn)(Magnetometer *dev, void *imu_user_data);
+typedef bool (*mag_read_fn)(Magnetometer *dev, void *imu_user_data);
+typedef bool (*mag_get_odr_fn)(Magnetometer *dev, void *imu_user_data, float *odr);
+typedef bool (*mag_set_odr_fn)(Magnetometer *dev, void *imu_user_data, float odr);
+typedef bool (*mag_get_scale_fn)(Magnetometer *dev, void *imu_user_data, float *scale);
+typedef bool (*mag_set_scale_fn)(Magnetometer *dev, void *imu_user_data, float scale);
+
+typedef struct MagnetometerOptions {
+    float odr;   // Data rate, in Hz. See doc for set_odr().
+    float scale; // Scale. See doc for set_scale().
+    bool no_rst; // Do not perform reset of the device when configuring.
+} MagnetometerOptions;
+
+typedef struct Magnetometer {
+    mag_detect_fn detect;
+    mag_create_fn create;
+    mag_destroy_fn destroy;
+    mag_read_fn read;
+    mag_get_odr_fn get_odr;
+    mag_set_odr_fn set_odr;
+    mag_get_scale_fn get_scale;
+    mag_set_scale_fn set_scale;
+
+    byte addr;
+    MagnetometerOptions opts;
+
+    float scale;
+    float bias[3];
+    float orientation[9];
+    int16_t mx, my, mz;
+} Magnetometer;
+
+typedef struct IMU {
+    Accelerometer *acc;
+    Gyroscope *gyro;
+    Magnetometer *mag;
+    void *state; // A driver may choose to store some state here
+} IMU;

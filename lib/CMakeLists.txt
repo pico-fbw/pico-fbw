@@ -1,16 +1,9 @@
 add_library(fbw_lib
-    fusion/acc.c
-    fusion/approx.c
-    fusion/calibration.c
-    fusion/fmath.c
+    fusion/accel.c
     fusion/fusion.c
+    fusion/gyro.c
+    fusion/madgwick.c
     fusion/mag.c
-    fusion/matrix.c
-    fusion/orient.c
-    fusion/status.c
-    fusion/drivers/drivers.c
-    fusion/drivers/ak09916.c
-    fusion/drivers/bno055.c
     fusion/drivers/icm20948.c
     lfs.c
     lfs_util.c
@@ -20,8 +13,8 @@ add_library(fbw_lib
     semver.c
 )
 
-target_link_libraries(fbw_lib
-    fbw_sys
-)
+# fbw_sys is not included here
+# Even though it does make use of sys/configuration and sys/print.h, this merely replaces code with macros and variable locations,
+# and thus compilation is not necessary
 
 target_include_directories(fbw_lib PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/src)

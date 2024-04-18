@@ -182,7 +182,7 @@ typedef struct Calibration {
 #define CONFIG_PWM_STR "PWM"
     float esc[CONFIG_SECTION_SIZE];
 #define CONFIG_ESC_STR "ESC"
-    float aahrs[CONFIG_SECTION_SIZE * 2];
+    float aahrs[CONFIG_SECTION_SIZE];
 #define CONFIG_AAHRS_STR "AAHRS"
     float pid[CONFIG_SECTION_SIZE];
 #define CONFIG_PID_STR "PID"

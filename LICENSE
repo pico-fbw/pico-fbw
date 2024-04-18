@@ -4,7 +4,7 @@ Copyright (c) 2023-2024, pico-fbw
 GNU Affero General Public License, Version 3
 ======================================
 
-pico-fbw is licensed under the GNU Affero General Public License, Version 3.
+pico-fbw, except where otherwise noted in the following information, is licensed under the GNU Affero General Public License, Version 3.
 
 You can find a copy of the License at the following URL:
 <https://opensource.org/license/agpl-v3/>
@@ -13,7 +13,7 @@ You can find a copy of the License at the following URL:
 MIT License
 ======================================
 
-The following files (and their corresponding Header [.h] files, when applicable) of this project utilize code that is licensed under the MIT License:
+The following files (and their corresponding Header [.h] files, where applicable) of this project utilize code which is licensed under the MIT License:
 
 - lib/jsmn.h
 - lib/minmea.c
@@ -30,30 +30,32 @@ You can find a copy of the License at the following URL:
 BSD 3-Clause License
 ======================================
 
-The following files (and their corresponding Header [.h] files, when applicable) of this project utilize code that is licensed under the BSD 3-Clause License:
+The following files (and their corresponding Header [.h] files, where applicable) of this project utilize code which is licensed under the BSD 3-Clause License:
 
 - lib/lfs_util.c
 - lib/lfs.c
-- lib/fusion/acc.c
-- lib/fusion/approx.c
-- lib/fusion/calibration.c
-- lib/fusion/fconfig.h
-- lib/fusion/fmath.c
-- lib/fusion/fusion.c
-- lib/fusion/mag.c
-- lib/fusion/matrix.c
-- lib/fusion/orient.c
-- lib/fusion/status.c
-- lib/fusion/drivers/ak09916.c
-- lib/fusion/drivers/bno055.c
-- lib/fusion/drivers/drivers.c
-- lib/fusion/drivers/icm20948.c
 - platform/pico/flash.c
-- io/aahrs.c
 - io/display.c
 
 You can find a copy of the License at the following URL:
 <https://opensource.org/licenses/BSD-3-Clause>
+
+======================================
+Apache-2.0 License
+======================================
+
+The following files (and their corresponding Header [.h] files, where applicable) of this project utilize code which is licensed under the  Apache-2.0 License:
+
+- lib/fusion/accel.c
+- lib/fusion/fusion.c
+- lib/fusion/gyro.c
+- lib/fusion/madgwick.c
+- lib/fusion/mag.c
+- lib/fusion/drivers/drivers.h
+- lib/fusion/drivers/icm20948.c
+
+You can find a copy of the License at the following URL:
+<https://opensource.org/license/apache-2-0>
 
 ======================================
 

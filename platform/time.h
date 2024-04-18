@@ -110,6 +110,14 @@ static inline u32 time_since_ms(const Timestamp *timestamp) {
 
 /**
  * @param timestamp the Timestamp to check
+ * @return the time since the Timestamp was created, in seconds
+ */
+static inline float time_since_s(const Timestamp *timestamp) {
+    return time_since_us(timestamp) / 1E6;
+}
+
+/**
+ * @param timestamp the Timestamp to check
  * @return true if the current time is greater than or equal to the Timestamp
  */
 static inline bool timestamp_reached(const Timestamp *timestamp) {

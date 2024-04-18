@@ -84,7 +84,8 @@ void runtime_loop(bool update_aircraft) {
     // Update the mode switch's position, update sensors, run the current mode's code, respond to any new API calls, and run
     // platform-specific system tasks
     switch_update();
-    aahrs.update();
+    if (aahrs.isInitialized)
+        aahrs.update();
     if (gps.is_supported())
         gps.update();
     if (update_aircraft)
