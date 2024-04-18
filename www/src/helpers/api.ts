@@ -1,18 +1,49 @@
-export interface APIData {
-    err: number; // Error code: 0 if no error
+/**
+ * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
+ * Licensed under the GNU AGPL-3.0
+ */
+
+export enum ERR {
+    OK = 0,
+    ARG = 1,
+    NET = 2,
+}
+
+interface APIData {
+    err: ERR; // Error code
     dat?: Array<{ [key: string]: any }>; // Data: array of key-value pairs, for example {"pi":3.14},{"client":"mom"} etc.
 }
 
-export const ERR_OK = 0;
-export const ERR_ARG = 1;
-
-export default async (endpoint: string, data?: object): Promise<APIData> => {
-    const options: RequestInit = {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
+export async function api(endpoint: string, data?: object): Promise<APIData> {
+    let options: RequestInit = {
+        method: 'GET',
     };
-    return fetch(`/api/v1/${endpoint}`, options).then((res) => res.json());
+    if (data) {
+        options = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        };
+    }
+
+    return fetch(`/api/v1/${endpoint}`, options)
+        .then(res => {
+            if (!res.ok) {
+                throw new Error(`HTTP error ${res.status}`);
+            }
+            return res.json();
+        })
+        .catch(error => {
+            console.error(`Error fetching data from /api/v1/${endpoint}:`, error);
+            return { err: ERR.NET };
+        }) as Promise<APIData>;
 }
+
+/**
+ * /api/v1:
+ *  /ping => always returns ERR.OK
+ *  /set
+ *   /fplan => requires 'data' to be an array of Waypoint, returns an ERR code
+ */

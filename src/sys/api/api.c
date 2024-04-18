@@ -12,6 +12,12 @@
 
 #include "api.h"
 
+/**
+ * Executes an API command.
+ * @param cmd command to execute
+ * @param args arguments to the command
+ * @return status code of the command
+ */
 static i32 api_exec(const char *cmd, const char *args) {
     i32 status;
     if (strncasecmp(cmd, "GET_", 4) == 0) {
@@ -49,20 +55,4 @@ i32 api_poll() {
         return status;
     }
     return 0;
-}
-
-i32 api_call(const char *cmd, const char *args, char **result) {
-    FILE *oldStdout = stdout;
-    char *buf;
-    size_t size = 0;
-    FILE *stream = open_memstream(&buf, &size);
-    if (!stream)
-        return 500;
-    stdout = stream;
-    i32 status = api_exec(cmd, args);
-    fflush(stream);
-    fclose(stream);
-    stdout = oldStdout;
-    *result = buf;
-    return status;
 }

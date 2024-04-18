@@ -1,20 +1,14 @@
+/**
+ * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
+ * Licensed under the GNU AGPL-3.0
+ */
+
 import { render } from 'preact';
 import { Router, Route } from 'wouter-preact';
 
 import Index from './pages/Index';
 
 import './style.css';
-
-export function App() {
-    return (
-        <main class={'w-full h-full'}>
-            <Router>
-                <Route path="/">{() => <Index />}</Route>
-                <Route path=":rest*">{() => <NoMatch />}</Route>
-            </Router>
-        </main>
-    );
-}
 
 function NoMatch() {
     return (
@@ -29,11 +23,30 @@ function NoMatch() {
     );
 }
 
+export function App() {
+    return (
+        <main class={'w-full h-full'}>
+            <Router>
+                <Route path="/">{() => <Index />}</Route>
+                <Route path=":rest*">{() => <NoMatch />}</Route>
+            </Router>
+        </main>
+    );
+}
+
 render(<App />, document.getElementById('root'));
 
-// TODO: FEATURE LIST
-// - Check for (dual-band) internet connection, and if so allow flight planner to be used and data to be uploaded
-//   - If not, allow uploading externally generated plan (also allow this as an option for dual-band users)
-// - Allow setting config (make an api endpoint /api/v1 where any JSON posted will just be sent to the api)
-// - Info page with misc info like version, free heap, etc
-// - Allow downloading the entire config (as a littlefs blob?)
+// FEATURE LIST
+// [ ] Check for (dual-band) internet connection, and if so allow flight planner to be used and data to be uploaded
+//   [ ] If not, allow uploading externally generated plan (also allow this as an option for dual-band users)
+//     [ ] Allow both copy/paste and file upload
+// [ ] Port config editor
+// [ ] Info page with misc info like version, platform, free heap, etc
+// [ ] Allow backing up the config (as a littlefs blob?), to client, and reuploading it
+// [ ] Allow saving flightplans to the server (in littlefs)
+// [ ] If possible, allow adding the web interface as a stdio stream
+// [ ] Document most ts functions
+// [ ] Add transitions and styling to look cool
+// [ ] Allow more actions (retriggering config, rebooting, etc)
+// [ ] It also might be fun to have a plane visualization of some sort
+// [ ] Easter eggs!!

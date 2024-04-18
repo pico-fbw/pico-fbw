@@ -1,9 +1,17 @@
+/**
+ * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
+ * Licensed under the GNU AGPL-3.0
+ */
+
 import preact from 'preact';
-import { ExclamationTriangleOutline, InformationCircleOutline, ShieldExclamationOutline } from 'preact-heroicons';
+import { useState } from 'preact/hooks';
+import { ExclamationTriangleOutline, InformationCircleOutline, ShieldExclamationOutline, XMarkSolid } from 'preact-heroicons';
+
 import classNames from '../helpers/classNames';
 
 interface AlertProps {
     type: 'warning' | 'danger' | 'info';
+    onClose?: () => void;
     className?: string;
     children: preact.ComponentChildren;
 }
@@ -19,9 +27,23 @@ function getColors(type: AlertProps['type']) {
     }
 }
 
-const Alert: preact.FunctionComponent<AlertProps> = ({ type, className = '', children }) => {
+const Alert: preact.FunctionComponent<AlertProps> = ({ type, onClose, className = '', children }) => {
+    const [hidden, setHidden] = useState(false);
+
+    const handleClose = () => {
+        setHidden(true);
+        onClose();
+    };
+
     return (
-        <div className={classNames('rounded-md p-4', getColors(type), className)}>
+        <div className={classNames('relative rounded-md p-4', getColors(type), className, hidden && 'hidden')}>
+            {onClose && (
+                <div onClick={handleClose} className="absolute top-0 right-0 p-1">
+                    <button className="flex items-center justify-center h-6 w-6 text-gray-400 hover:text-gray-500">
+                        <XMarkSolid className="h-5 w-5" />
+                    </button>
+                </div>
+            )}
             <div className="flex">
                 <div className="flex-shrink-0">
                     {type === 'danger' ? (
@@ -32,55 +54,10 @@ const Alert: preact.FunctionComponent<AlertProps> = ({ type, className = '', chi
                         <InformationCircleOutline className={'mr-2 h-6 w-6 text-blue-500'} />
                     )}
                 </div>
-                <div className="ml-3 flex-1 md:flex md:justify-between">{children}</div>
+                <div className={`ml-3 ${onClose ? 'mr-4' : ''} flex-1 md:flex md:justify-between`}>{children}</div>
             </div>
         </div>
     );
 };
 
 export default Alert;
-
-// import React from 'react';
-// import { ExclamationTriangleIcon, InformationCircleIcon, ShieldExclamationIcon } from '@heroicons/react/24/outline';
-
-// interface AlertProps {
-//     type: 'warning' | 'danger' | 'info';
-//     className?: string;
-//     children: React.ReactNode;
-// }
-
-// function classNames(...classes: string[]) {
-//     return classes.filter(Boolean).join(' ');
-// }
-
-// function getColors(type: AlertProps['type']) {
-//     switch (type) {
-//         case 'warning':
-//             return 'bg-yellow-400/10 text-yellow-500';
-//         case 'danger':
-//             return 'bg-red-400/10 text-red-400';
-//         case 'info':
-//             return 'bg-blue-400/10 text-blue-500';
-//     }
-// }
-
-// const Alert: React.FC<AlertProps> = ({ type, className = '', children }) => {
-//     return (
-//         <div className={classNames('rounded-md p-4', getColors(type), className)}>
-//             <div className="flex">
-//                 <div className="flex-shrink-0">
-//                     {type === 'danger' ? (
-//                         <ShieldExclamationIcon className={'mr-2 h-6 w-6 text-red-400'} />
-//                     ) : type === 'warning' ? (
-//                         <ExclamationTriangleIcon className={'mr-2 h-6 w-6 text-yellow-500'} />
-//                     ) : (
-//                         <InformationCircleIcon className={'mr-2 h-6 w-6 text-blue-500'} />
-//                     )}
-//                 </div>
-//                 <div className="ml-3 flex-1 md:flex md:justify-between">{children}</div>
-//             </div>
-//         </div>
-//     );
-// };
-
-// export default Alert;
