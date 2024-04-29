@@ -25,7 +25,7 @@
  * @param duration_ms the duration (after the throttle stops moving) in milliseconds
  * @return Whether a timeout occured.
  */
-static bool wait_for_detent(u32 pin, float *detent, u32 timeout_ms, u32 duration_ms) {
+static bool wait_for_detent(u32 pin, f32 *detent, u32 timeout_ms, u32 duration_ms) {
     Timestamp wait = timestamp_in_ms(timeout_ms);
     u16 lastReading = receiver_get(pin, RECEIVER_MODE_PERCENT);
     bool hasMoved = (abs(((u16)receiver_get(pin, RECEIVER_MODE_PERCENT) - lastReading)) > config.control[CONTROL_DEADBAND]);
@@ -51,7 +51,7 @@ static bool wait_for_detent(u32 pin, float *detent, u32 timeout_ms, u32 duration
         }
         lastReading = receiver_get(pin, RECEIVER_MODE_PERCENT);
     }
-    *detent = (float)lastReading;
+    *detent = (f32)lastReading;
     esc_set((u32)config.pins[PINS_ESC_THROTTLE], 0);
     return true;
 }
@@ -64,12 +64,12 @@ void esc_enable(u32 pin) {
     esc_set(pin, 0); // Set initial position to 0 to be safe
 }
 
-void esc_set(u32 pin, float speed) {
+void esc_set(u32 pin, f32 speed) {
     // Ensure speed is within range 0-100% and convert from percentage to duty cycle
     // See servo.c for more information on how the duty cycle is calculated
     speed = clampf(speed, 0, 100);
-    float pulsewidth = 1E3f + ((float)speed / 100.0f) * 1E3f;
-    float period = 1E6f / config.general[GENERAL_ESC_HZ];
+    f32 pulsewidth = 1E3f + ((f32)speed / 100.0f) * 1E3f;
+    f32 period = 1E6f / config.general[GENERAL_ESC_HZ];
     u16 duty = (u16)((pulsewidth / period) * UINT16_MAX);
     pwm_write_raw(pin, duty);
 }

@@ -32,14 +32,14 @@ i32 api_test_pwm(const char *args) {
                 return 400;
             numBridges = numArgs / 2;
         }
-        const float testDegrees[] = {23, 67, 82, 153, 169};
+        const f32 testDegrees[] = {23, 67, 82, 153, 169};
         // For every bridge, set the degree value from the predefined set and compare the read value
         for (u32 i = 0; i < numBridges; i++) {
             printpre("test", "testing pin combo %lu:%lu", in[i], out[i]);
-            float deg = testDegrees[i % (count_of(testDegrees))];
+            f32 deg = testDegrees[i % (count_of(testDegrees))];
             servo_set(out[i], deg);
             sleep_ms_blocking(100);
-            float degRead = receiver_get(in[i], RECEIVER_MODE_DEGREE);
+            f32 degRead = receiver_get(in[i], RECEIVER_MODE_DEGREE);
             if (fabsf(deg - degRead) > config.control[CONTROL_DEADBAND]) {
                 printpre("test", "failed! read %.0f, expected %.0f", degRead, deg);
                 return 500;

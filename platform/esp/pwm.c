@@ -194,7 +194,7 @@ bool pwm_setup_write(const u32 pins[], u32 num_pins, u32 freq) {
     return true;
 }
 
-float pwm_read_raw(u32 pin) {
+f32 pwm_read_raw(u32 pin) {
     PWMChannel *channel = get_channel(pin);
     if (!channel)
         return -1.f;
@@ -202,7 +202,7 @@ float pwm_read_raw(u32 pin) {
     return channel->tPulsewidth * (1E6f / esp_clk_apb_freq());
 }
 
-void pwm_write_raw(u32 pin, float pulsewidth) {
+void pwm_write_raw(u32 pin, f32 pulsewidth) {
     PWMChannel *channel = get_channel(pin);
     if (!channel)
         return;

@@ -15,6 +15,9 @@ typedef int16_t i16;
 typedef int32_t i32;
 typedef int64_t i64;
 
+typedef float f32;
+typedef double f64;
+
 #ifndef count_of
     // Returns the number of elements in an array.
     #define count_of(a) (sizeof(a) / sizeof((a)[0]))
@@ -26,8 +29,8 @@ typedef int64_t i64;
 #endif
 
 // Clamps a value `f` between `min` and `max`.
-static inline float clampf(float f, float min, float max) {
-    const float t = f < min ? min : f;
+static inline f32 clampf(f32 f, f32 min, f32 max) {
+    const f32 t = f < min ? min : f;
     return t > max ? max : t;
 }
 
@@ -37,7 +40,7 @@ static inline float clampf(float f, float min, float max) {
 #endif
 
 // Maps a value `f` from the range `in_min` to `in_max` to the range `out_min` to `out_max`.
-static inline float mapf(float f, float in_min, float in_max, float out_min, float out_max) {
+static inline f32 mapf(f32 f, f32 in_min, f32 in_max, f32 out_min, f32 out_max) {
     return (f - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 

@@ -4,8 +4,8 @@
  */
 
 #include <math.h>
-#include "platform/int.h"
 #include "platform/time.h"
+#include "platform/types.h"
 
 #include "io/gps.h"
 
@@ -46,11 +46,11 @@ typedef enum HoldStatus {
 
 static HoldStatus turnStatus = HOLD_TURN_UNSCHEDULED;
 
-static float oldTrack;
-static float targetTrack;
+static f32 oldTrack;
+static f32 targetTrack;
 static i32 targetAlt;
 
-static double rollSet;
+static f64 rollSet;
 
 static PIDController vertGuid;
 

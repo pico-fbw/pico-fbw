@@ -17,7 +17,7 @@
 #pragma once
 
 #include <stdbool.h>
-#include "platform/int.h"
+#include "platform/types.h"
 
 /* Accelerometer */
 
@@ -27,14 +27,14 @@ typedef bool (*acc_detect_fn)(Accelerometer *dev, void *imu_user_data);
 typedef bool (*acc_create_fn)(Accelerometer *dev, void *imu_user_data);
 typedef bool (*acc_destroy_fn)(Accelerometer *dev, void *imu_user_data);
 typedef bool (*acc_read_fn)(Accelerometer *dev, void *imu_user_data);
-typedef bool (*acc_get_odr_fn)(Accelerometer *dev, void *imu_user_data, float *odr);
-typedef bool (*acc_set_odr_fn)(Accelerometer *dev, void *imu_user_data, float odr);
-typedef bool (*acc_get_scale_fn)(Accelerometer *dev, void *imu_user_data, float *scale);
-typedef bool (*acc_set_scale_fn)(Accelerometer *dev, void *imu_user_data, float scale);
+typedef bool (*acc_get_odr_fn)(Accelerometer *dev, void *imu_user_data, f32 *odr);
+typedef bool (*acc_set_odr_fn)(Accelerometer *dev, void *imu_user_data, f32 odr);
+typedef bool (*acc_get_scale_fn)(Accelerometer *dev, void *imu_user_data, f32 *scale);
+typedef bool (*acc_set_scale_fn)(Accelerometer *dev, void *imu_user_data, f32 scale);
 
 typedef struct AccelerometerOptions {
-    float odr;   // Data rate, in Hz. See doc for set_odr().
-    float scale; // Scale. See doc for set_scale().
+    f32 odr;     // Data rate, in Hz. See doc for set_odr().
+    f32 scale;   // Scale. See doc for set_scale().
     bool no_rst; // Do not perform reset of the device when configuring.
 } AccelerometerOptions;
 
@@ -51,8 +51,8 @@ typedef struct Accelerometer {
     byte addr; // I2C address of the device
     AccelerometerOptions opts;
 
-    float scale;
-    float offset_ax, offset_ay, offset_az;
+    f32 scale;
+    f32 offset_ax, offset_ay, offset_az;
     int16_t ax, ay, az;
 } Accelerometer;
 
@@ -64,14 +64,14 @@ typedef bool (*gyro_detect_fn)(Gyroscope *dev, void *imu_user_data);
 typedef bool (*gyro_create_fn)(Gyroscope *dev, void *imu_user_data);
 typedef bool (*gyro_destroy_fn)(Gyroscope *dev, void *imu_user_data);
 typedef bool (*gyro_read_fn)(Gyroscope *dev, void *imu_user_data);
-typedef bool (*gyro_get_odr_fn)(Gyroscope *dev, void *imu_user_data, float *odr);
-typedef bool (*gyro_set_odr_fn)(Gyroscope *dev, void *imu_user_data, float odr);
-typedef bool (*gyro_get_scale_fn)(Gyroscope *dev, void *imu_user_data, float *scale);
-typedef bool (*gyro_set_scale_fn)(Gyroscope *dev, void *imu_user_data, float scale);
+typedef bool (*gyro_get_odr_fn)(Gyroscope *dev, void *imu_user_data, f32 *odr);
+typedef bool (*gyro_set_odr_fn)(Gyroscope *dev, void *imu_user_data, f32 odr);
+typedef bool (*gyro_get_scale_fn)(Gyroscope *dev, void *imu_user_data, f32 *scale);
+typedef bool (*gyro_set_scale_fn)(Gyroscope *dev, void *imu_user_data, f32 scale);
 
 typedef struct GyroscopeOptions {
-    float odr;   // Data rate, in Hz. See doc for set_odr().
-    float scale; // Scale. See doc for set_scale().
+    f32 odr;     // Data rate, in Hz. See doc for set_odr().
+    f32 scale;   // Scale. See doc for set_scale().
     bool no_rst; // Do not perform reset of the device when configuring.
 } GyroscopeOptions;
 
@@ -88,9 +88,9 @@ typedef struct Gyroscope {
     byte addr;
     GyroscopeOptions opts;
 
-    float scale;
-    float offset_gx, offset_gy, offset_gz;
-    float orientation[9];
+    f32 scale;
+    f32 offset_gx, offset_gy, offset_gz;
+    f32 orientation[9];
     int16_t gx, gy, gz;
 } Gyroscope;
 
@@ -102,14 +102,14 @@ typedef bool (*mag_detect_fn)(Magnetometer *dev, void *imu_user_data);
 typedef bool (*mag_create_fn)(Magnetometer *dev, void *imu_user_data);
 typedef bool (*mag_destroy_fn)(Magnetometer *dev, void *imu_user_data);
 typedef bool (*mag_read_fn)(Magnetometer *dev, void *imu_user_data);
-typedef bool (*mag_get_odr_fn)(Magnetometer *dev, void *imu_user_data, float *odr);
-typedef bool (*mag_set_odr_fn)(Magnetometer *dev, void *imu_user_data, float odr);
-typedef bool (*mag_get_scale_fn)(Magnetometer *dev, void *imu_user_data, float *scale);
-typedef bool (*mag_set_scale_fn)(Magnetometer *dev, void *imu_user_data, float scale);
+typedef bool (*mag_get_odr_fn)(Magnetometer *dev, void *imu_user_data, f32 *odr);
+typedef bool (*mag_set_odr_fn)(Magnetometer *dev, void *imu_user_data, f32 odr);
+typedef bool (*mag_get_scale_fn)(Magnetometer *dev, void *imu_user_data, f32 *scale);
+typedef bool (*mag_set_scale_fn)(Magnetometer *dev, void *imu_user_data, f32 scale);
 
 typedef struct MagnetometerOptions {
-    float odr;   // Data rate, in Hz. See doc for set_odr().
-    float scale; // Scale. See doc for set_scale().
+    f32 odr;     // Data rate, in Hz. See doc for set_odr().
+    f32 scale;   // Scale. See doc for set_scale().
     bool no_rst; // Do not perform reset of the device when configuring.
 } MagnetometerOptions;
 
@@ -126,9 +126,9 @@ typedef struct Magnetometer {
     byte addr;
     MagnetometerOptions opts;
 
-    float scale;
-    float bias[3];
-    float orientation[9];
+    f32 scale;
+    f32 bias[3];
+    f32 orientation[9];
     int16_t mx, my, mz;
 } Magnetometer;
 

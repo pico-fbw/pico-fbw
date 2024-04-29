@@ -3,7 +3,7 @@
  * Licensed under the GNU AGPL-3.0
  */
 
-#include "platform/int.h"
+#include "platform/types.h"
 
 #include "io/esc.h"
 #include "io/receiver.h"
@@ -15,8 +15,8 @@
 #include "direct.h"
 
 void direct_update() {
-    float ail = receiver_get((u32)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE);
-    float ele = receiver_get((u32)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEGREE);
+    f32 ail = receiver_get((u32)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE);
+    f32 ele = receiver_get((u32)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEGREE);
     switch ((ControlMode)config.general[GENERAL_CONTROL_MODE]) {
         case CTRLMODE_3AXIS_ATHR:
         case CTRLMODE_3AXIS:

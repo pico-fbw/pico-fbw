@@ -35,7 +35,7 @@ void boot_begin() {
 #endif
 }
 
-void boot_set_progress(float progress, const char *message) {
+void boot_set_progress(f32 progress, const char *message) {
     printpre("boot", "%s(%.f%%)%s %s", COLOR_BLUE, progress, COLOR_RESET, message);
     display_string(message, (i32)progress);
 }

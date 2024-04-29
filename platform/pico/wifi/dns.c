@@ -19,7 +19,7 @@
 
 #include <errno.h>
 #include <string.h>
-#include "platform/int.h"
+#include "platform/types.h"
 
 #include "lwip/debug.h"
 #include "lwip/udp.h"

@@ -6,7 +6,7 @@
 
 // clang-format off
 
-#include "platform/int.h"
+#include "platform/types.h"
 
 // clang-format on
 
@@ -22,6 +22,6 @@ void adc_setup(const u32 pins[], u32 num_pins);
  * @param pin pin to read ADC signal from
  * @return the voltage of the ADC signal in volts, or -1 if the pin is invalid
  */
-double adc_read_raw(u32 pin);
+f64 adc_read_raw(u32 pin);
 
 #endif // PLATFORM_SUPPORTS_ADC

@@ -33,7 +33,7 @@ endif()
 set(MKLITTLEFS_SRC ${CMAKE_SOURCE_DIR}/utils/mklittlefs)
 if (NOT EXISTS ${MKLITTLEFS_SRC})
     # mklittlefs doesn't exist, try cloning submodules?
-    execute_process(COMMAND git submodule update --init --recursive
+    execute_process(COMMAND git submodule update --init --recursive --progress
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
     if (NOT EXISTS ${MKLITTLEFS_SRC})
         message(FATAL_ERROR "mklittlefs could not be downloaded!")

@@ -42,7 +42,7 @@ static Timestamp lastTuneEvent;
  * @param req_rate requested rate of the axis in deg/s
  * @param act_rate actual rate of the axis in deg/s
  */
-static void update_gain(Axis axis, float req_rate, float act_rate) {
+static void update_gain(Axis axis, f32 req_rate, f32 act_rate) {
     static u32 tDiffRoll = 0;
     static u32 tDiffPitch = 0;
     u32 *tDiff = (axis == ROLL) ? &tDiffRoll : &tDiffPitch;
@@ -53,7 +53,7 @@ static void update_gain(Axis axis, float req_rate, float act_rate) {
         if (*tDiff == 0)
             *tDiff = time_ms();
         if (time_ms() - *tDiff > P_GAIN_DIFF_TIME_MS) {
-            double kP;
+            f64 kP;
             flight_params_get(axis, &kP, NULL, NULL);
             flight_params_update(axis, kP + P_GAIN_STEP, INFINITY, INFINITY, false);
             *tDiff = 0;
@@ -62,7 +62,7 @@ static void update_gain(Axis axis, float req_rate, float act_rate) {
         // Check if any overshoots have occured and increase the D gain if necessary
     } else if (fabsf(req_rate - act_rate) < D_GAIN_REQ_RATE_THRESHOLD) {
         if (fabsf(req_rate - act_rate) > D_GAIN_OVERSHOOT_THRESHOLD) {
-            double kD;
+            f64 kD;
             flight_params_get(axis, NULL, &kD, NULL);
             flight_params_update(axis, INFINITY, kD + D_GAIN_STEP, INFINITY, false);
             lastTuneEvent = timestamp_now();
@@ -80,13 +80,13 @@ void tune_update() {
     if (calibration.pid[PID_TUNED])
         return;
 
-    float rollInput = receiver_get((u32)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE) - 90.f;
-    float pitchInput = receiver_get((u32)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEGREE) - 90.f;
+    f32 rollInput = receiver_get((u32)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE) - 90.f;
+    f32 pitchInput = receiver_get((u32)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEGREE) - 90.f;
     // Get the requested and actual roll and pitch rates
-    float reqRollRate = control_get_dps(ROLL, rollInput, pitchInput);
-    float reqPitchRate = control_get_dps(PITCH, rollInput, pitchInput);
-    float actRollRate = aahrs.rollRate;
-    float actPitchRate = aahrs.pitchRate;
+    f32 reqRollRate = control_get_dps(ROLL, rollInput, pitchInput);
+    f32 reqPitchRate = control_get_dps(PITCH, rollInput, pitchInput);
+    f32 actRollRate = aahrs.rollRate;
+    f32 actPitchRate = aahrs.pitchRate;
 
     update_gain(ROLL, reqRollRate, actRollRate);
     update_gain(PITCH, reqPitchRate, actPitchRate);

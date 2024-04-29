@@ -17,12 +17,12 @@ bool pwm_setup_write(const u32 pins[], u32 num_pins, u32 freq) {
     // It should return true if the setup was successful, false if not.
 }
 
-float pwm_read_raw(u32 pin) {
+f32 pwm_read_raw(u32 pin) {
     // This function should return the pulsewidth of the PWM signal on the given pin.
-    // The pulsewidth should be returned in the form of a floating-point number, measured in μs (microseconds).
+    // The pulsewidth should be returned in the form of a f32ing-point number, measured in μs (microseconds).
     // If the pin is invalid or some sort of error occurs, return -1.
 }
 
-void pwm_write_raw(u32 pin, float pulsewidth) {
+void pwm_write_raw(u32 pin, f32 pulsewidth) {
     // This function should write the given pulsewidth to the PWM signal on the given pin.
 }

@@ -30,10 +30,10 @@ static void waitFor(u32 s) {
 
 i32 api_test_throttle(const char *args) {
     if (aircraft.mode == MODE_DIRECT) {
-        float *idle = &calibration.esc[ESC_DETENT_IDLE];
-        float *mct = &calibration.esc[ESC_DETENT_MCT];
-        float *max = &calibration.esc[ESC_DETENT_MAX];
-        float t_idle = 4, t_mct = 2, t_max = 1;
+        f32 *idle = &calibration.esc[ESC_DETENT_IDLE];
+        f32 *mct = &calibration.esc[ESC_DETENT_MCT];
+        f32 *max = &calibration.esc[ESC_DETENT_MAX];
+        f32 t_idle = 4, t_mct = 2, t_max = 1;
         if (args)
             if (sscanf(args, "%f %f %f", &t_idle, &t_mct, &t_max) < 3)
                 return 400;

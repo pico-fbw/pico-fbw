@@ -36,8 +36,8 @@ static bool autoComplete = false;
 
 // Details of the current Waypoint we're tracking to
 static u32 currentWaypoint = 0;
-static double distance;
-static double bearing;
+static f64 distance;
+static f64 bearing;
 static i32 alt;
 static PIDController latGuid;
 static PIDController vertGuid;
@@ -136,7 +136,7 @@ void auto_update() {
 
     // Calculate the radius at which to consider the Waypoint intercepted
     // This must be calculated every loop as we need to turn sooner if we're going faster to stay on course
-    double radius = INTERCEPT_BASE_RADIUS + (throttle.target - INTERCEPT_BASE_SPEED) * 5;
+    f64 radius = INTERCEPT_BASE_RADIUS + (throttle.target - INTERCEPT_BASE_SPEED) * 5;
     radius = (radius < MIN_RADIUS) ? MIN_RADIUS : radius;
     // If we've intercepted the waypoint,
     if (distance < radius) {

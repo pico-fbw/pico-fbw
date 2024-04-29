@@ -4,7 +4,6 @@
  */
 
 #include <math.h>
-#include "platform/int.h"
 #include "platform/time.h"
 
 #include "io/esc.h"
@@ -29,8 +28,8 @@
 
 #define yawing() (fabsf(yawInput) > config.control[CONTROL_DEADBAND])
 
-static float rollInput, pitchInput, yawInput;
-static float rollSet, pitchSet, throttleSet;
+static f32 rollInput, pitchInput, yawInput;
+static f32 rollSet, pitchSet, throttleSet;
 
 static bool overrideYaw = false;
 static bool overrideSetpoints = false;
@@ -55,8 +54,8 @@ void normal_update() {
         // Override the input to bring it back in the opposite direction at the specified rate
         rollInput = rollSet < 0 ? CONTROL_ROLL_RETURN_DPS : -CONTROL_ROLL_RETURN_DPS;
     // Calculate control adjustments based on input
-    float rollAdj = control_calc_adjust(ROLL, rollInput, pitchInput);
-    float pitchAdj = control_calc_adjust(PITCH, rollInput, pitchInput);
+    f32 rollAdj = control_calc_adjust(ROLL, rollInput, pitchInput);
+    f32 pitchAdj = control_calc_adjust(PITCH, rollInput, pitchInput);
 
     // Check for manual overrides of externally set (by API) setpoints
     if (rolling() || pitching() || yawing())
@@ -96,7 +95,7 @@ void normal_update() {
         overrideYaw = false;
 
     // Update the flight and throttle systems with calculated setpoints
-    flight_update((double)rollSet, (double)pitchSet, (double)yawInput, overrideYaw);
+    flight_update((f64)rollSet, (f64)pitchSet, (f64)yawInput, overrideYaw);
     throttle.target = throttleSet;
     throttle.update();
 }
@@ -108,7 +107,7 @@ void normal_deinit() {
     control_reset();
 }
 
-bool normal_set(float roll, float pitch, float yaw, float throttle, bool useThrottle) {
+bool normal_set(f32 roll, f32 pitch, f32 yaw, f32 throttle, bool useThrottle) {
     // Ensure there are no manual control inputs before we allow setpoints to be externally set
     if (rolling() || pitching() || yawing())
         return false;

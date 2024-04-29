@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
-#include "platform/int.h"
+#include "platform/types.h"
 
 #define IMU_MODEL_MIN IMU_MODEL_BNO055
 typedef enum IMUModel {
@@ -32,13 +32,13 @@ typedef bool (*aahrs_calibrate_t)();
 
 // Altitude-Attitude Heading Reference System (AAHRS)
 typedef struct AAHRS {
-    float roll;         // (Read-only)
-    float rollRate;     // (Read-only)
-    float pitch;        // (Read-only)
-    float pitchRate;    // (Read-only)
-    float yaw;          // (Read-only)
-    float yawRate;      // (Read-only)
-    float alt;          // (Read-only)
+    f32 roll;           // (Read-only)
+    f32 rollRate;       // (Read-only)
+    f32 pitch;          // (Read-only)
+    f32 pitchRate;      // (Read-only)
+    f32 yaw;            // (Read-only)
+    f32 yawRate;        // (Read-only)
+    f32 alt;            // (Read-only)
     bool isCalibrated;  // (Read-only)
     bool isInitialized; // (Read-only)
     /**

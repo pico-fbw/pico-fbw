@@ -30,7 +30,7 @@ def install_ninja():
 
 def install_pico_sdk():
     os.chdir("pico-sdk")
-    os.system("git submodule update --init")
+    os.system("git submodule update --init --progress")
     os.chdir("..")
 
 dependencies = {

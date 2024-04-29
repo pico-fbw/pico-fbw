@@ -106,8 +106,8 @@ bool fusion_magnetometer_find(IMU *imu, const MagnetometerOptions *opts) {
     return false;
 }
 
-bool fusion_magnetometer_get(IMU *imu, float *x, float *y, float *z) {
-    float mxb, myb, mzb;
+bool fusion_magnetometer_get(IMU *imu, f32 *x, f32 *y, f32 *z) {
+    f32 mxb, myb, mzb;
 
     if (!imu->mag || !imu->mag->read)
         return false;
@@ -129,44 +129,44 @@ bool fusion_magnetometer_get(IMU *imu, float *x, float *y, float *z) {
     return true;
 }
 
-bool fusion_magnetometer_get_orientation(IMU *imu, float v[9]) {
+bool fusion_magnetometer_get_orientation(IMU *imu, f32 v[9]) {
     if (!imu || !imu->mag || !v)
         return false;
 
-    memcpy(v, imu->mag->orientation, sizeof(float) * 9);
+    memcpy(v, imu->mag->orientation, sizeof(f32) * 9);
     return true;
 }
 
-bool fusion_magnetometer_set_orientation(IMU *imu, float v[9]) {
+bool fusion_magnetometer_set_orientation(IMU *imu, f32 v[9]) {
     if (!imu || !imu->mag || !v)
         return false;
 
-    memcpy(imu->mag->orientation, v, sizeof(float) * 9);
+    memcpy(imu->mag->orientation, v, sizeof(f32) * 9);
     return true;
 }
 
-bool fusion_magnetometer_get_scale(IMU *imu, float *scale) {
+bool fusion_magnetometer_get_scale(IMU *imu, f32 *scale) {
     if (!imu || !imu->mag || !imu->mag->get_scale || !scale)
         return false;
 
     return imu->mag->get_scale(imu->mag, imu->state, scale);
 }
 
-bool fusion_magnetometer_set_scale(IMU *imu, float scale) {
+bool fusion_magnetometer_set_scale(IMU *imu, f32 scale) {
     if (!imu || !imu->mag || !imu->mag->set_scale)
         return false;
 
     return imu->mag->set_scale(imu->mag, imu->state, scale);
 }
 
-bool fusion_magnetometer_get_odr(IMU *imu, float *hertz) {
+bool fusion_magnetometer_get_odr(IMU *imu, f32 *hertz) {
     if (!imu || !imu->mag || !imu->mag->get_odr || !hertz)
         return false;
 
     return imu->mag->get_odr(imu->mag, imu->state, hertz);
 }
 
-bool fusion_magnetometer_set_odr(IMU *imu, float hertz) {
+bool fusion_magnetometer_set_odr(IMU *imu, f32 hertz) {
     if (!imu || !imu->mag || !imu->mag->set_odr)
         return false;
 

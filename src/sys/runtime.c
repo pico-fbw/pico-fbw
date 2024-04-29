@@ -31,7 +31,7 @@ typedef enum SwitchPosition {
 
 static SwitchPosition lastPos;
 
-static SwitchPosition deg_to_pos(float deg) {
+static SwitchPosition deg_to_pos(f32 deg) {
     switch ((SwitchType)config.general[GENERAL_SWITCH_TYPE]) {
         case SWITCH_TYPE_2_POS:
             if (deg < 90)

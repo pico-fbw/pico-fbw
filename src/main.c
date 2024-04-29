@@ -8,9 +8,9 @@
 #include "platform/adc.h"
 #include "platform/defs.h"
 #include "platform/flash.h"
-#include "platform/int.h"
 #include "platform/sys.h"
 #include "platform/time.h"
+#include "platform/types.h"
 #include "platform/wifi.h"
 
 #include "io/aahrs.h"
@@ -66,7 +66,7 @@ int main() {
     // Receiver
     u32 num_pins = 5; // Maximum amount is 5 pins, may be overridden
     u32 pins[num_pins];
-    float deviations[num_pins];
+    f32 deviations[num_pins];
     receiver_get_pins(pins, &num_pins, deviations);
     boot_set_progress(15, "Enabling receiver");
     receiver_enable(pins, num_pins);
@@ -100,7 +100,7 @@ int main() {
     u32 servos[num_servos];
     servo_get_pins(servos, &num_servos);
     servo_enable(servos, num_servos);
-    float degrees[] = DEFAULT_SERVO_TEST;
+    f32 degrees[] = DEFAULT_SERVO_TEST;
     servo_test(servos, num_servos, degrees, count_of(degrees), DEFAULT_SERVO_TEST_PAUSE_MS);
 
     // ESC

@@ -5,7 +5,6 @@
 */
 
 #include <stddef.h>
-#include "platform/int.h"
 
 #ifdef __cplusplus
 extern "C" {

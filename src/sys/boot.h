@@ -14,7 +14,7 @@ void boot_begin();
  * @param progress the progress percentage (0-100)
  * @param message the message to display
  */
-void boot_set_progress(float progress, const char *message);
+void boot_set_progress(f32 progress, const char *message);
 
 /**
  * Runs end of boot tasks, should be called at the end of `main()`.

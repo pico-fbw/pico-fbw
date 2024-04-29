@@ -1,5 +1,7 @@
 #pragma once
 
+#include "platform/types.h"
+
 /**
  * Calculates the bearing between two points.
  * @param latA Latitude of the first point.
@@ -8,7 +10,7 @@
  * @param lonB Longitude of the second point.
  * @return Bearing in degrees.
  */
-double calculate_bearing(long double latA, long double lonA, long double latB, long double lonB);
+f64 calculate_bearing(f64 latA, f64 lonA, f64 latB, f64 lonB);
 
 /**
  * Calculates the distance between two points.
@@ -18,4 +20,4 @@ double calculate_bearing(long double latA, long double lonA, long double latB, l
  * @param lonB Longitude of the second point.
  * @return Distance in meters.
  */
-double calculate_distance(long double latA, long double lonA, long double latB, long double lonB);
+f64 calculate_distance(f64 latA, f64 lonA, f64 latB, f64 lonB);

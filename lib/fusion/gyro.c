@@ -107,7 +107,7 @@ bool fusion_gyroscope_find(IMU *imu, const GyroscopeOptions *opts) {
     return false;
 }
 
-bool fusion_gyroscope_get(IMU *imu, float *x, float *y, float *z) {
+bool fusion_gyroscope_get(IMU *imu, f32 *x, f32 *y, f32 *z) {
     if (!imu->gyro || !imu->gyro->read)
         return false;
     if (!imu->gyro->read(imu->gyro, imu->state)) {
@@ -134,7 +134,7 @@ bool fusion_gyroscope_get(IMU *imu, float *x, float *y, float *z) {
     return true;
 }
 
-bool fusion_gyroscope_set_offset(IMU *imu, float x, float y, float z) {
+bool fusion_gyroscope_set_offset(IMU *imu, f32 x, f32 y, f32 z) {
     if (!imu || !imu->gyro)
         return false;
 
@@ -144,7 +144,7 @@ bool fusion_gyroscope_set_offset(IMU *imu, float x, float y, float z) {
     return true;
 }
 
-bool fusion_gyroscope_get_offset(IMU *imu, float *x, float *y, float *z) {
+bool fusion_gyroscope_get_offset(IMU *imu, f32 *x, f32 *y, f32 *z) {
     if (!imu || !imu->gyro)
         return false;
 
@@ -157,44 +157,44 @@ bool fusion_gyroscope_get_offset(IMU *imu, float *x, float *y, float *z) {
     return true;
 }
 
-bool fusion_gyroscope_get_orientation(IMU *imu, float v[9]) {
+bool fusion_gyroscope_get_orientation(IMU *imu, f32 v[9]) {
     if (!imu || !imu->gyro || !v)
         return false;
 
-    memcpy(v, imu->gyro->orientation, sizeof(float) * 9);
+    memcpy(v, imu->gyro->orientation, sizeof(f32) * 9);
     return true;
 }
 
-bool fusion_gyroscope_set_orientation(IMU *imu, float v[9]) {
+bool fusion_gyroscope_set_orientation(IMU *imu, f32 v[9]) {
     if (!imu || !imu->gyro || !v)
         return false;
 
-    memcpy(imu->gyro->orientation, v, sizeof(float) * 9);
+    memcpy(imu->gyro->orientation, v, sizeof(f32) * 9);
     return true;
 }
 
-bool fusion_gyroscope_get_scale(IMU *imu, float *scale) {
+bool fusion_gyroscope_get_scale(IMU *imu, f32 *scale) {
     if (!imu || !imu->gyro || !imu->gyro->get_scale || !scale)
         return false;
 
     return imu->gyro->get_scale(imu->gyro, imu->state, scale);
 }
 
-bool fusion_gyroscope_set_scale(IMU *imu, float scale) {
+bool fusion_gyroscope_set_scale(IMU *imu, f32 scale) {
     if (!imu || !imu->gyro || !imu->gyro->set_scale)
         return false;
 
     return imu->gyro->set_scale(imu->gyro, imu->state, scale);
 }
 
-bool fusion_gyroscope_get_odr(IMU *imu, float *hertz) {
+bool fusion_gyroscope_get_odr(IMU *imu, f32 *hertz) {
     if (!imu || !imu->gyro || !imu->gyro->get_odr || !hertz)
         return false;
 
     return imu->gyro->get_odr(imu->gyro, imu->state, hertz);
 }
 
-bool fusion_gyroscope_set_odr(IMU *imu, float hertz) {
+bool fusion_gyroscope_set_odr(IMU *imu, f32 hertz) {
     if (!imu || !imu->gyro || !imu->gyro->set_odr)
         return false;
 

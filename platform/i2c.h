@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
-#include "platform/int.h"
+#include "platform/types.h"
 
 /**
  * Sets up the given SDA and SCL pins for I2C communication at the given frequency.

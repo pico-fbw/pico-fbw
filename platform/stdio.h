@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 #include <sys/cdefs.h>
-#include "platform/int.h"
+#include "platform/types.h"
 
 /**
  * Sets up all relavent stdio sources.

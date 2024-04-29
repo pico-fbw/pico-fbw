@@ -1,6 +1,6 @@
 #pragma once
 
-#include "platform/int.h"
+#include "platform/types.h"
 
 #define DEFAULT_SERVO_TEST                                                                                                     \
     { 110.f, 70.f, 90.f }               // Default degree amounts to move the servos to
@@ -18,7 +18,7 @@ void servo_enable(const u32 pins[], u32 num_pins);
  * @param gpio_pin the GPIO pin the servo is attached to
  * @param degree the position in degrees, within 0-180
  */
-void servo_set(u32 pin, float degree);
+void servo_set(u32 pin, f32 degree);
 
 /**
  * "Tests" a list of servos by moving them to a list of degree positions.
@@ -30,7 +30,7 @@ void servo_set(u32 pin, float degree);
  * @note If num_servos = 0, the servos from the config will be tested.
  * You also may want to add 90 at the end of the list to ensure that the servos return to a neutral position.
  */
-void servo_test(u32 servos[], u32 num_servos, float degrees[], u32 num_degrees, u32 pause_between_moves_ms);
+void servo_test(u32 servos[], u32 num_servos, f32 degrees[], u32 num_degrees, u32 pause_between_moves_ms);
 
 /**
  * Gets the GPIO pins and number of pins designated as servos in the config.

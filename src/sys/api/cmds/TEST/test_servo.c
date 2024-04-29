@@ -15,7 +15,7 @@ i32 api_test_servo(const char *args) {
     if (aircraft.mode == MODE_DIRECT) {
         u32 num_servos = 3;
         u32 servos[num_servos];
-        float degrees[] = DEFAULT_SERVO_TEST;
+        f32 degrees[] = DEFAULT_SERVO_TEST;
         if (args) {
             // Test the servo that was provided in the command
             servos[0] = atoi(args);

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "platform/int.h"
+#include "platform/types.h"
 
 /**
  * Handles API GET commands.

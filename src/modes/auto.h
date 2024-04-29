@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
-#include "platform/int.h"
+#include "platform/types.h"
 
 /* PID constants for the autopilot's lateral guidance. */
 #define latGuid_kP 0.005
@@ -21,9 +21,9 @@
 #define vertGuid_integLim 50.0
 
 typedef struct Waypoint {
-    long double lat, lng;
+    f64 lat, lng;
     i32 alt;
-    float speed;
+    f32 speed;
     i32 drop;
 } Waypoint;
 #define WAYPOINT_NUM_FIELDS 5

@@ -105,7 +105,7 @@ void aahrs_update() {
     if (time_since_s(&lastUpdate) < (1.f / FUSION_RATE))
         return;
 
-    float acc[3], gyro[3], mag[3];
+    f32 acc[3], gyro[3], mag[3];
     fusion_accelerometer_get(imu, &acc[0], &acc[1], &acc[2]);
     fusion_gyroscope_get(imu, &gyro[0], &gyro[1], &gyro[2]);
     fusion_magnetometer_get(imu, &mag[0], &mag[1], &mag[2]);
@@ -115,7 +115,7 @@ void aahrs_update() {
     //                          mag[1], mag[2]);
     lastUpdate = timestamp_now();
 
-    float roll, pitch, yaw;
+    f32 roll, pitch, yaw;
     madgwick_get_angles(filter, &roll, &pitch, &yaw);
     aahrs.roll = degrees(roll);
     aahrs.pitch = degrees(pitch);
@@ -130,9 +130,9 @@ bool aahrs_calibrate() {
     // also, drift detection should be added to check if the calibrationa actually works
 
     // Get offset values for the accelerometer and gyroscope
-    double ao[3] = {0.0, 0.0, 0.0}, go[3] = {0.0, 0.0, 0.0};
+    f64 ao[3] = {0.0, 0.0, 0.0}, go[3] = {0.0, 0.0, 0.0};
     for (u32 i = 0; i < FUSION_CALIBRATION_SAMPLES; i++) {
-        float a[3], g[3];
+        f32 a[3], g[3];
         fusion_accelerometer_get(imu, &a[0], &a[1], &a[2]);
         fusion_gyroscope_get(imu, &g[0], &g[1], &g[2]);
         ao[0] += a[0];

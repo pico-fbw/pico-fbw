@@ -15,7 +15,7 @@
 
 i32 api_set_target(const char *args) {
     if (aircraft.mode == MODE_NORMAL) {
-        float roll, pitch, yaw, throttle;
+        f32 roll, pitch, yaw, throttle;
         i32 numArgs = sscanf(args, "%f %f %f %f", &roll, &pitch, &yaw, &throttle);
         if (numArgs < 3)
             return 400;

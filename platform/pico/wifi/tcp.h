@@ -7,7 +7,7 @@
 // clang-format off
 
 #include <stdbool.h>
-#include "platform/int.h"
+#include "platform/types.h"
 
 #include "lwip/ip_addr.h"
 

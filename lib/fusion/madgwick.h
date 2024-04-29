@@ -2,17 +2,17 @@
 
 #include <math.h>
 #include <stdbool.h>
-#include "platform/int.h"
+#include "platform/types.h"
 
 /* Madgwick filter structure. */
 typedef struct Madgwick {
-    float beta;
-    float q0;
-    float q1;
-    float q2;
-    float q3;
-    float freq;
-    float inv_freq;
+    f32 beta;
+    f32 q0;
+    f32 q1;
+    f32 q2;
+    f32 q3;
+    f32 freq;
+    f32 inv_freq;
     u32 counter;
 } Madgwick;
 
@@ -30,7 +30,7 @@ bool madgwick_destroy(Madgwick **filter);
  * The `madgwick_update()` function then expects to be called at `freq`
  * per second.
  */
-bool madgwick_set_params(Madgwick *filter, float frequency, float beta);
+bool madgwick_set_params(Madgwick *filter, f32 frequency, f32 beta);
 
 /* Resets the filter Quaternion to an initial state (of {1,0,0,0}).
  */
@@ -42,8 +42,7 @@ bool madgwick_reset(Madgwick *filter);
  * case the magnetometer fusion will not occur.
  * Returns true on success, false on failure.
  */
-bool madgwick_update(Madgwick *filter, float gx, float gy, float gz, float ax, float ay, float az, float mx, float my,
-                     float mz);
+bool madgwick_update(Madgwick *filter, f32 gx, f32 gy, f32 gz, f32 ax, f32 ay, f32 az, f32 mx, f32 my, f32 mz);
 
 /*
  * Returns AHRS Quaternion, as values between -1.0 and +1.0.
@@ -52,7 +51,7 @@ bool madgwick_update(Madgwick *filter, float gx, float gy, float gz, float ax, f
  * Returns true on success, false in case of error, in which case the values of
  * q0, q1, q2 and q3 are undetermined.
  */
-bool madgwick_get_quaternion(Madgwick *filter, float *q0, float *q1, float *q2, float *q3);
+bool madgwick_get_quaternion(Madgwick *filter, f32 *q0, f32 *q1, f32 *q2, f32 *q3);
 
 /*
  * Returns AHRS angles of roll, pitch and yaw, in Radians between -Pi and +Pi.
@@ -61,7 +60,7 @@ bool madgwick_get_quaternion(Madgwick *filter, float *q0, float *q1, float *q2, 
  * Returns true on success, false in case of error, in which case the values of
  * roll, pitch and yaw are undetermined.
  */
-bool madgwick_get_angles(Madgwick *filter, float *roll, float *pitch, float *yaw);
+bool madgwick_get_angles(Madgwick *filter, f32 *roll, f32 *pitch, f32 *yaw);
 
 /*
  * Returns filter counter. Each call to `madgwick_update()` increments the

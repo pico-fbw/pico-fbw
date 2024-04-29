@@ -11,7 +11,7 @@
 #include <string.h>
 #include "platform/defs.h"
 #include "platform/flash.h"
-#include "platform/int.h"
+#include "platform/types.h"
 #include "platform/wifi.h"
 
 #include "io/aahrs.h"
@@ -164,7 +164,7 @@ void config_reset() {
 
 // I'm so sorry (this is a C moment)
 
-static void get_from_general(const char *key, float **value) {
+static void get_from_general(const char *key, f32 **value) {
     if (strcasecmp(key, "controlMode") == 0) {
         *value = &config.general[GENERAL_CONTROL_MODE];
     } else if (strcasecmp(key, "switchType") == 0) {
@@ -186,7 +186,7 @@ static void get_from_general(const char *key, float **value) {
     }
 }
 
-static bool set_to_general(const char *key, float value) {
+static bool set_to_general(const char *key, f32 value) {
     if (strcasecmp(key, "controlMode") == 0) {
         config.general[GENERAL_CONTROL_MODE] = value;
     } else if (strcasecmp(key, "switchType") == 0) {
@@ -208,7 +208,7 @@ static bool set_to_general(const char *key, float value) {
     return true;
 }
 
-static void get_from_control(const char *key, float **value) {
+static void get_from_control(const char *key, f32 **value) {
     if (strcasecmp(key, "maxRollRate") == 0) {
         *value = &config.control[CONTROL_MAX_ROLL_RATE];
     } else if (strcasecmp(key, "maxPitchRate") == 0) {
@@ -254,7 +254,7 @@ static void get_from_control(const char *key, float **value) {
     }
 }
 
-static bool set_to_control(const char *key, float value) {
+static bool set_to_control(const char *key, f32 value) {
     if (strcasecmp(key, "maxRollRate") == 0) {
         config.control[CONTROL_MAX_ROLL_RATE] = value;
     } else if (strcasecmp(key, "maxPitchRate") == 0) {
@@ -300,7 +300,7 @@ static bool set_to_control(const char *key, float value) {
     return true;
 }
 
-static void get_from_pins(const char *key, float **value) {
+static void get_from_pins(const char *key, f32 **value) {
     if (strcasecmp(key, "inputAil") == 0) {
         *value = &config.pins[PINS_INPUT_AIL];
     } else if (strcasecmp(key, "servoAil") == 0) {
@@ -340,7 +340,7 @@ static void get_from_pins(const char *key, float **value) {
     }
 }
 
-static bool set_to_pins(const char *key, float value) {
+static bool set_to_pins(const char *key, f32 value) {
     if (strcasecmp(key, "inputAil") == 0) {
         config.pins[PINS_INPUT_AIL] = value;
     } else if (strcasecmp(key, "servoAil") == 0) {
@@ -380,7 +380,7 @@ static bool set_to_pins(const char *key, float value) {
     return true;
 }
 
-static void get_from_sensors(const char *key, float **value) {
+static void get_from_sensors(const char *key, f32 **value) {
     if (strcasecmp(key, "imuModel") == 0) {
         *value = &config.sensors[SENSORS_IMU_MODEL];
     } else if (strcasecmp(key, "baroModel") == 0) {
@@ -394,7 +394,7 @@ static void get_from_sensors(const char *key, float **value) {
     }
 }
 
-static bool set_to_sensors(const char *key, float value) {
+static bool set_to_sensors(const char *key, f32 value) {
     if (strcasecmp(key, "imuModel") == 0) {
         config.sensors[SENSORS_IMU_MODEL] = value;
     } else if (strcasecmp(key, "baroModel") == 0) {
@@ -408,7 +408,7 @@ static bool set_to_sensors(const char *key, float value) {
     return true;
 }
 
-static void get_from_system(const char *key, float **value) {
+static void get_from_system(const char *key, f32 **value) {
     if (strcasecmp(key, "printFBW") == 0) {
         *value = &config.system[SYSTEM_PRINT_FBW];
     } else if (strcasecmp(key, "printAAHRS") == 0) {
@@ -424,7 +424,7 @@ static void get_from_system(const char *key, float **value) {
     }
 }
 
-static bool set_to_system(const char *key, float value) {
+static bool set_to_system(const char *key, f32 value) {
     if (strcasecmp(key, "printFBW") == 0) {
         config.system[SYSTEM_PRINT_FBW] = value;
     } else if (strcasecmp(key, "printAAHRS") == 0) {
@@ -600,22 +600,22 @@ bool config_validate() {
 
 ConfigSectionType config_get(const char *section, const char *key, void **value) {
     if (strcasecmp(section, CONFIG_GENERAL_STR) == 0) {
-        float *v;
+        f32 *v;
         get_from_general(key, &v);
         *value = v;
         return SECTION_TYPE_FLOAT;
     } else if (strcasecmp(section, CONFIG_CONTROL_STR) == 0) {
-        float *v;
+        f32 *v;
         get_from_control(key, &v);
         *value = v;
         return SECTION_TYPE_FLOAT;
     } else if (strcasecmp(section, CONFIG_PINS_STR) == 0) {
-        float *v;
+        f32 *v;
         get_from_pins(key, &v);
         *value = v;
         return SECTION_TYPE_FLOAT;
     } else if (strcasecmp(section, CONFIG_SENSORS_STR) == 0) {
-        float *v;
+        f32 *v;
         get_from_sensors(key, &v);
         *value = v;
         return SECTION_TYPE_FLOAT;
@@ -625,7 +625,7 @@ ConfigSectionType config_get(const char *section, const char *key, void **value)
         *value = v;
         return SECTION_TYPE_STRING;
     } else if (strcasecmp(section, CONFIG_SYSTEM_STR) == 0) {
-        float *v;
+        f32 *v;
         get_from_system(key, &v);
         *value = v;
         return SECTION_TYPE_FLOAT;

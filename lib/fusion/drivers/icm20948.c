@@ -148,7 +148,7 @@ bool icm20948_acc_read(Accelerometer *dev, void *state) {
     return true;
 }
 
-bool icm20948_acc_get_scale(Accelerometer *dev, void *state, float *scale) {
+bool icm20948_acc_get_scale(Accelerometer *dev, void *state, f32 *scale) {
     u8 fs = 0;
 
     if (!scale)
@@ -177,7 +177,7 @@ bool icm20948_acc_get_scale(Accelerometer *dev, void *state, float *scale) {
     return true;
 }
 
-bool icm20948_acc_set_scale(Accelerometer *dev, void *state, float scale) {
+bool icm20948_acc_set_scale(Accelerometer *dev, void *state, f32 scale) {
     u8 fs = 0;
 
     if (scale <= 2) {
@@ -205,7 +205,7 @@ bool icm20948_acc_set_scale(Accelerometer *dev, void *state, float scale) {
     return true;
 }
 
-bool icm20948_acc_get_odr(Accelerometer *dev, void *state, float *odr) {
+bool icm20948_acc_get_odr(Accelerometer *dev, void *state, f32 *odr) {
     u16 div = 0;
 
     if (!odr)
@@ -222,7 +222,7 @@ bool icm20948_acc_get_odr(Accelerometer *dev, void *state, float *odr) {
     return *odr >= 0;
 }
 
-bool icm20948_acc_set_odr(Accelerometer *dev, void *state, float odr) {
+bool icm20948_acc_set_odr(Accelerometer *dev, void *state, f32 odr) {
     u16 div = 0;
 
     if (odr <= 0)
@@ -288,7 +288,7 @@ bool icm20948_gyro_read(Gyroscope *dev, void *state) {
     return true;
 }
 
-bool icm20948_gyro_get_scale(Gyroscope *dev, void *state, float *scale) {
+bool icm20948_gyro_get_scale(Gyroscope *dev, void *state, f32 *scale) {
     u8 fs = 0;
     if (!scale)
         return false;
@@ -315,7 +315,7 @@ bool icm20948_gyro_get_scale(Gyroscope *dev, void *state, float *scale) {
     return true;
 }
 
-bool icm20948_gyro_set_scale(Gyroscope *dev, void *state, float scale) {
+bool icm20948_gyro_set_scale(Gyroscope *dev, void *state, f32 scale) {
     u8 fs = 0;
 
     if (scale <= 250) {
@@ -343,7 +343,7 @@ bool icm20948_gyro_set_scale(Gyroscope *dev, void *state, float scale) {
     return true;
 }
 
-bool icm20948_gyro_get_odr(Gyroscope *dev, void *state, float *odr) {
+bool icm20948_gyro_get_odr(Gyroscope *dev, void *state, f32 *odr) {
     u8 div = 0;
     if (!odr)
         return false;
@@ -359,7 +359,7 @@ bool icm20948_gyro_get_odr(Gyroscope *dev, void *state, float *odr) {
     return *odr >= 0;
 }
 
-bool icm20948_gyro_set_odr(Gyroscope *dev, void *state, float odr) {
+bool icm20948_gyro_set_odr(Gyroscope *dev, void *state, f32 odr) {
     u8 div = 0;
     if (odr <= 0 || odr > ICM20948_GYRO_BASE_ODR)
         return false;
@@ -425,7 +425,7 @@ bool icm20948_mag_read(Magnetometer *dev, void *state) {
     (void)state;
 }
 
-bool icm20948_mag_get_odr(Magnetometer *dev, void *state, float *odr) {
+bool icm20948_mag_get_odr(Magnetometer *dev, void *state, f32 *odr) {
     i16 mode;
     if (!odr)
         return false;
@@ -455,7 +455,7 @@ bool icm20948_mag_get_odr(Magnetometer *dev, void *state, float *odr) {
     (void)state;
 }
 
-bool icm20948_mag_set_odr(Magnetometer *dev, void *state, float odr) {
+bool icm20948_mag_set_odr(Magnetometer *dev, void *state, f32 odr) {
     u8 mode = 0;
 
     if (odr <= 10) {

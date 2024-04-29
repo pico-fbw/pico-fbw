@@ -3,7 +3,7 @@
 #include "pico/config.h" // For platform-specific defines (e.g. RASPBERRYPI_PICO_W)
 #include "pico/time.h"
 
-#include "platform/int.h"
+#include "platform/types.h"
 
 typedef alarm_id_t __callback_id_t;
 

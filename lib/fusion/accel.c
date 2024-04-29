@@ -105,7 +105,7 @@ bool fusion_accelerometer_find(IMU *imu, const AccelerometerOptions *opts) {
     return false;
 }
 
-bool fusion_accelerometer_get(IMU *imu, float *x, float *y, float *z) {
+bool fusion_accelerometer_get(IMU *imu, f32 *x, f32 *y, f32 *z) {
     if (!imu->acc || !imu->acc->read)
         return false;
     if (!imu->acc->read(imu->acc, imu->state)) {
@@ -122,7 +122,7 @@ bool fusion_accelerometer_get(IMU *imu, float *x, float *y, float *z) {
     return true;
 }
 
-bool fusion_accelerometer_set_offset(IMU *imu, float x, float y, float z) {
+bool fusion_accelerometer_set_offset(IMU *imu, f32 x, f32 y, f32 z) {
     if (!imu || !imu->acc)
         return false;
 
@@ -132,7 +132,7 @@ bool fusion_accelerometer_set_offset(IMU *imu, float x, float y, float z) {
     return true;
 }
 
-bool fusion_accelerometer_get_offset(IMU *imu, float *x, float *y, float *z) {
+bool fusion_accelerometer_get_offset(IMU *imu, f32 *x, f32 *y, f32 *z) {
     if (!imu || !imu->acc)
         return false;
 
@@ -145,28 +145,28 @@ bool fusion_accelerometer_get_offset(IMU *imu, float *x, float *y, float *z) {
     return true;
 }
 
-bool fusion_accelerometer_get_scale(IMU *imu, float *scale) {
+bool fusion_accelerometer_get_scale(IMU *imu, f32 *scale) {
     if (!imu || !imu->acc || !imu->acc->get_scale || !scale)
         return false;
 
     return imu->acc->get_scale(imu->acc, imu->state, scale);
 }
 
-bool fusion_accelerometer_set_scale(IMU *imu, float scale) {
+bool fusion_accelerometer_set_scale(IMU *imu, f32 scale) {
     if (!imu || !imu->acc || !imu->acc->set_scale)
         return false;
 
     return imu->acc->set_scale(imu->acc, imu->state, scale);
 }
 
-bool fusion_accelerometer_get_odr(IMU *imu, float *hertz) {
+bool fusion_accelerometer_get_odr(IMU *imu, f32 *hertz) {
     if (!imu || !imu->acc || !imu->acc->get_odr || !hertz)
         return false;
 
     return imu->acc->get_odr(imu->acc, imu->state, hertz);
 }
 
-bool fusion_accelerometer_set_odr(IMU *imu, float hertz) {
+bool fusion_accelerometer_set_odr(IMU *imu, f32 hertz) {
     if (!imu || !imu->acc || !imu->acc->set_odr)
         return false;
 

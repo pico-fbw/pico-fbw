@@ -28,7 +28,7 @@
 
 #define M_TO_FT 3.28084f // Meters to feet conversion constant
 
-static inline bool pos_valid(float lat, float lng) {
+static inline bool pos_valid(f32 lat, f32 lng) {
     return lat <= 90 && lat >= -90 && lng <= 180 && lng >= -180 && isfinite(lat) && isfinite(lng);
 }
 
@@ -36,20 +36,20 @@ static inline bool alt_valid(i32 alt) {
     return alt >= 0;
 }
 
-static inline bool speed_valid(float speed) {
+static inline bool speed_valid(f32 speed) {
     return speed >= 0 && isfinite(speed);
 }
 
-static inline bool track_valid(float track) {
+static inline bool track_valid(f32 track) {
     return track >= 0 && isfinite(track);
 }
 
 // (DOP stands for dilution of precision, basically a mesaure of how confident the GPS is in its output)
-static inline bool dop_valid(float pdop, float hdop, float vdop) {
+static inline bool dop_valid(f32 pdop, f32 hdop, f32 vdop) {
     return pdop < GPS_SAFE_PDOP_THRESHOLD && hdop < GPS_SAFE_HDOP_THRESHOLD && vdop < GPS_SAFE_VDOP_THRESHOLD;
 }
 
-static inline bool data_valid(float lat, float lng, i32 alt, float speed, float track, float pdop, float hdop, float vdop) {
+static inline bool data_valid(f32 lat, f32 lng, i32 alt, f32 speed, f32 track, f32 pdop, f32 hdop, f32 vdop) {
     return pos_valid(lat, lng) && alt_valid(alt) && speed_valid(speed) && track_valid(track) && dop_valid(pdop, hdop, vdop);
 }
 

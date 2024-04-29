@@ -42,11 +42,11 @@ void adc_setup(const u32 pins[], u32 num_pins) {
         adc_gpio_init(pins[i]);
 }
 
-double adc_read_raw(u32 pin) {
+f64 adc_read_raw(u32 pin) {
     // Force the SMPS into PWM mode while reading the ADC to reduce noise
     gpio_set(PIN_SMPS_MODE, SMPS_MODE_PWM);
     adc_select_input(PIN_TO_ADC_CHANNEL(pin));
-    double reading = (double)adc_read() * ADC_CONVERT_FACTOR;
+    f64 reading = (f64)adc_read() * ADC_CONVERT_FACTOR;
     gpio_set(PIN_SMPS_MODE, SMPS_MODE_PFM);
     return reading;
 }

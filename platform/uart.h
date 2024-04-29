@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
-#include "platform/int.h"
+#include "platform/types.h"
 
 /**
  * Sets up the given TX and RX pins for UART communication at the given baudrate.

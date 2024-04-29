@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include "platform/types.h"
 
 #include "sys/control.h"
 
@@ -27,7 +28,7 @@ void flight_init();
  * degree * CONTROL_RUDDER_SENSITIVITY). If override is set to false and roll is below the deadband, a "dynamic damper" will be
  * applied instead (uses PID to achieve the correct yaw angle).
  */
-void flight_update(double roll, double pitch, double yaw, bool override);
+void flight_update(f64 roll, f64 pitch, f64 yaw, bool override);
 
 /**
  * Gets the current PID parameters for an axis.
@@ -36,7 +37,7 @@ void flight_update(double roll, double pitch, double yaw, bool override);
  * @param kI pointer to where to store the integral gain, or NULL if not needed
  * @param kD pointer to where to store the derivative gain, or NULL if not needed
  */
-void flight_params_get(Axis axis, double *kP, double *kI, double *kD);
+void flight_params_get(Axis axis, f64 *kP, f64 *kI, f64 *kD);
 
 /**
  * Updates an axis's PID parameters.
@@ -46,4 +47,4 @@ void flight_params_get(Axis axis, double *kP, double *kI, double *kD);
  * @param kD the new derivative gain, or INFINITY to keep the current value
  * @param reset whether or not to reset the PID
  */
-void flight_params_update(Axis axis, double kP, double kI, double kD, bool reset);
+void flight_params_update(Axis axis, f64 kP, f64 kI, f64 kD, bool reset);

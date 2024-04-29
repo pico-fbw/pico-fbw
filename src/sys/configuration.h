@@ -106,15 +106,15 @@ typedef struct ConfigWifi {
 } ConfigWifi;
 
 typedef struct Config {
-    float general[CONFIG_SECTION_SIZE];
+    f32 general[CONFIG_SECTION_SIZE];
 #define CONFIG_GENERAL_STR "General"
-    float control[CONFIG_SECTION_SIZE];
+    f32 control[CONFIG_SECTION_SIZE];
 #define CONFIG_CONTROL_STR "Control"
-    float pins[CONFIG_SECTION_SIZE];
+    f32 pins[CONFIG_SECTION_SIZE];
 #define CONFIG_PINS_STR "Pins"
-    float sensors[CONFIG_SECTION_SIZE];
+    f32 sensors[CONFIG_SECTION_SIZE];
 #define CONFIG_SENSORS_STR "Sensors"
-    float system[CONFIG_SECTION_SIZE];
+    f32 system[CONFIG_SECTION_SIZE];
 #define CONFIG_SYSTEM_STR "System"
     ConfigWifi wifi;
 #define CONFIG_WIFI_STR "WiFi"
@@ -178,13 +178,13 @@ typedef enum CalibrationPID {
 } CalibrationPID;
 
 typedef struct Calibration {
-    float pwm[CONFIG_SECTION_SIZE];
+    f32 pwm[CONFIG_SECTION_SIZE];
 #define CONFIG_PWM_STR "PWM"
-    float esc[CONFIG_SECTION_SIZE];
+    f32 esc[CONFIG_SECTION_SIZE];
 #define CONFIG_ESC_STR "ESC"
-    float aahrs[CONFIG_SECTION_SIZE];
+    f32 aahrs[CONFIG_SECTION_SIZE];
 #define CONFIG_AAHRS_STR "AAHRS"
-    float pid[CONFIG_SECTION_SIZE];
+    f32 pid[CONFIG_SECTION_SIZE];
 #define CONFIG_PID_STR "PID"
 } Calibration;
 
@@ -235,7 +235,7 @@ bool config_validate();
  * @param section The name of the section to look in
  * @param key The name of the key to look up
  * @param value The pointer to the value to store the result in
- * The pointer will point to either a float or a char depending on the...
+ * The pointer will point to either a f32 or a char depending on the...
  * @return type of the value stored.
  */
 ConfigSectionType config_get(const char *section, const char *key, void **value);
@@ -245,7 +245,7 @@ ConfigSectionType config_get(const char *section, const char *key, void **value)
  * @param section The name of the section to look in
  * @param key The name of the key to look up
  * @param value The pointer to the value to store
- * The pointer will point to either a float or a char depending on the section type/user input.
+ * The pointer will point to either a f32 or a char depending on the section type/user input.
  * @return Whether the value was successfully set.
  */
 bool config_set(const char *section, const char *key, const char *value);

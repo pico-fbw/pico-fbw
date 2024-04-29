@@ -2,7 +2,7 @@
 
 #include <stdbool.h>
 #include "platform/defs.h"
-#include "platform/int.h"
+#include "platform/types.h"
 
 typedef i32 (*Callback)();
 
@@ -55,7 +55,7 @@ static inline u32 time_ms() {
 /**
  * @return the current time since the system powered on, in seconds
  */
-static inline float time_s() {
+static inline f32 time_s() {
     return time_us() / 1E6;
 }
 
@@ -112,7 +112,7 @@ static inline u32 time_since_ms(const Timestamp *timestamp) {
  * @param timestamp the Timestamp to check
  * @return the time since the Timestamp was created, in seconds
  */
-static inline float time_since_s(const Timestamp *timestamp) {
+static inline f32 time_since_s(const Timestamp *timestamp) {
     return time_since_us(timestamp) / 1E6;
 }
 

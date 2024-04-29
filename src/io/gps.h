@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
-#include "platform/int.h"
+#include "platform/types.h"
 
 #define GPS_COMMAND_TYPE_MIN GPS_COMMAND_TYPE_NONE
 typedef enum GPSCommandType {
@@ -17,12 +17,12 @@ typedef i32 (*gps_calibrate_alt_offset_t)(u32);
 typedef bool (*gps_is_supported_t)();
 
 typedef struct GPS {
-    long double lat;        // -90 to 90 deg. (Read-only)
-    long double lng;        // -180 to 180 deg. (Read-only)
-    i32 alt;                // MSL, ft. (Read-only)
-    float speed;            // Groundspeed, kts. (Read-only)
-    float track;            // True (NOT magnetic) heading, 0 to 360 deg. (Read-only)
-    float pdop, hdop, vdop; // GPS DOP (dilution of precision) measurements for position, horizontal, and vertical (Read-only)
+    f64 lat;              // -90 to 90 deg. (Read-only)
+    f64 lng;              // -180 to 180 deg. (Read-only)
+    i32 alt;              // MSL, ft. (Read-only)
+    f32 speed;            // Groundspeed, kts. (Read-only)
+    f32 track;            // True (NOT magnetic) heading, 0 to 360 deg. (Read-only)
+    f32 pdop, hdop, vdop; // GPS DOP (dilution of precision) measurements for position, horizontal, and vertical (Read-only)
     i32 altOffset; // This is a positive value (basically where the GPS is MSL) or possibly zero if no calibration has been
                    // performed. (Read-only)
     bool altOffsetCalibrated; // (Read-only)

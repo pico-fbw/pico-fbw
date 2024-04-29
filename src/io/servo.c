@@ -22,14 +22,14 @@ void servo_enable(const u32 pins[], u32 num_pins) {
         servo_set(pins[i], 90.f); // Set initial position to 90 degrees
 }
 
-void servo_set(u32 pin, float degree) {
+void servo_set(u32 pin, f32 degree) {
     // Ensure speed is within range 0-180deg
     degree = clampf(degree, 0.f, 180.f);
     // Almost all servos expect a pulsewidth of 500-2500μs (500μs is 0deg, 2500μs is 180deg)
     pwm_write_raw(pin, mapf(degree, 0.f, 180.f, 500.f, 2500.f));
 }
 
-void servo_test(u32 servos[], u32 num_servos, float degrees[], u32 num_degrees, u32 pause_between_moves_ms) {
+void servo_test(u32 servos[], u32 num_servos, f32 degrees[], u32 num_degrees, u32 pause_between_moves_ms) {
     for (u32 d = 0; d < num_degrees; d++) {
         for (u32 s = 0; s < num_servos; s++) {
             if (servos[s] == (u32)config.pins[PINS_SERVO_BAY]) {

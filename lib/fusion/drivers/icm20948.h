@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
-#include "platform/int.h"
+#include "platform/types.h"
 
 #include "drivers.h"
 
@@ -50,21 +50,21 @@ void *icm20948_state_destroy(void *state);
 bool icm20948_acc_detect(byte addr, void *state);
 bool icm20948_acc_create(Accelerometer *dev, void *state);
 bool icm20948_acc_read(Accelerometer *dev, void *state);
-bool icm20948_acc_get_scale(Accelerometer *dev, void *state, float *scale);
-bool icm20948_acc_set_scale(Accelerometer *dev, void *state, float scale);
-bool icm20948_acc_get_odr(Accelerometer *dev, void *state, float *odr);
-bool icm20948_acc_set_odr(Accelerometer *dev, void *state, float odr);
+bool icm20948_acc_get_scale(Accelerometer *dev, void *state, f32 *scale);
+bool icm20948_acc_set_scale(Accelerometer *dev, void *state, f32 scale);
+bool icm20948_acc_get_odr(Accelerometer *dev, void *state, f32 *odr);
+bool icm20948_acc_set_odr(Accelerometer *dev, void *state, f32 odr);
 
 bool icm20948_gyro_detect(byte addr, void *state);
 bool icm20948_gyro_create(Gyroscope *dev, void *state);
 bool icm20948_gyro_read(Gyroscope *dev, void *state);
-bool icm20948_gyro_get_scale(Gyroscope *dev, void *state, float *scale);
-bool icm20948_gyro_set_scale(Gyroscope *dev, void *state, float scale);
-bool icm20948_gyro_get_odr(Gyroscope *dev, void *state, float *odr);
-bool icm20948_gyro_set_odr(Gyroscope *dev, void *state, float odr);
+bool icm20948_gyro_get_scale(Gyroscope *dev, void *state, f32 *scale);
+bool icm20948_gyro_set_scale(Gyroscope *dev, void *state, f32 scale);
+bool icm20948_gyro_get_odr(Gyroscope *dev, void *state, f32 *odr);
+bool icm20948_gyro_set_odr(Gyroscope *dev, void *state, f32 odr);
 
 bool icm20948_mag_detect(byte addr, void *state);
 bool icm20948_mag_create(Magnetometer *dev, void *state);
 bool icm20948_mag_read(Magnetometer *dev, void *state);
-bool icm20948_mag_get_odr(Magnetometer *dev, void *state, float *odr);
-bool icm20948_mag_set_odr(Magnetometer *dev, void *state, float odr);
+bool icm20948_mag_get_odr(Magnetometer *dev, void *state, f32 *odr);
+bool icm20948_mag_set_odr(Magnetometer *dev, void *state, f32 odr);

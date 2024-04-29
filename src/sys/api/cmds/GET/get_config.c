@@ -16,7 +16,7 @@
  * @param section The section to get the memory offset of
  * @return The memory offset of the section.
  */
-static float *getSectionMem(ConfigSection section) {
+static f32 *getSectionMem(ConfigSection section) {
     switch (section) {
         case CONFIG_GENERAL:
             return config.general;
@@ -45,7 +45,7 @@ i32 api_get_config(const char *args) {
             return 400;
         switch (type) {
             case SECTION_TYPE_FLOAT:
-                printraw("{\"key\":%f}\n", *(float *)value);
+                printraw("{\"key\":%f}\n", *(f32 *)value);
                 break;
             case SECTION_TYPE_STRING:
                 printraw("{\"key\":\"%s\"}\n", (char *)value);
@@ -63,7 +63,7 @@ i32 api_get_config(const char *args) {
             printraw("{\"name\":\"%s\",\"keys\":[", sectionStr);
             switch (type) {
                 case SECTION_TYPE_FLOAT: {
-                    float *section = getSectionMem(s);
+                    f32 *section = getSectionMem(s);
                     if (!section)
                         return 400;
                     for (u32 v = 0; v < CONFIG_SECTION_SIZE; v++) {

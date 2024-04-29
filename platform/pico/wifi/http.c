@@ -34,7 +34,8 @@
 
 // clang-format on
 
-// TODO: rewrite http/tcp code (take inspiration from arduino esp32 core and webserver, etc.) to be simpler, send in chunks, etc.
+// TODO: rewrite http/tcp code (take inspiration from arduino esp32 core and webserver, etc.) to be simpler, send in chunks,
+// etc.
 
 /**
  * Gets the MIME type of a file based on its extension.

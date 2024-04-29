@@ -29,14 +29,14 @@
 // Fast inverse square-root
 // See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
 
-static float invSqrt(float x) {
+static f32 invSqrt(f32 x) {
     union {
-        float f;
+        f32 f;
         u32 i;
     } conv;
 
-    float x2;
-    const float threehalfs = 1.5F;
+    f32 x2;
+    const f32 threehalfs = 1.5F;
 
     x2 = x * 0.5F;
     conv.f = x;
@@ -66,7 +66,7 @@ bool madgwick_destroy(Madgwick **filter) {
     return true;
 }
 
-bool madgwick_set_params(Madgwick *filter, float freq, float beta) {
+bool madgwick_set_params(Madgwick *filter, f32 freq, f32 beta) {
     if (!filter) {
         return false;
     }
@@ -88,11 +88,11 @@ bool madgwick_reset(Madgwick *filter) {
     return true;
 }
 
-static bool madgwick_updateIMU(Madgwick *filter, float gx, float gy, float gz, float ax, float ay, float az) {
-    float recipNorm;
-    float s0, s1, s2, s3;
-    float qDot1, qDot2, qDot3, qDot4;
-    float _2q0, _2q1, _2q2, _2q3, _4q0, _4q1, _4q2, _8q1, _8q2, q0q0, q1q1, q2q2, q3q3;
+static bool madgwick_updateIMU(Madgwick *filter, f32 gx, f32 gy, f32 gz, f32 ax, f32 ay, f32 az) {
+    f32 recipNorm;
+    f32 s0, s1, s2, s3;
+    f32 qDot1, qDot2, qDot3, qDot4;
+    f32 _2q0, _2q1, _2q2, _2q3, _4q0, _4q1, _4q2, _8q1, _8q2, q0q0, q1q1, q2q2, q3q3;
 
     // No need to check filter pointer -- it's checked by _update()
 
@@ -160,17 +160,16 @@ static bool madgwick_updateIMU(Madgwick *filter, float gx, float gy, float gz, f
     return true;
 }
 
-bool madgwick_update(Madgwick *filter, float gx, float gy, float gz, float ax, float ay, float az, float mx, float my,
-                     float mz) {
+bool madgwick_update(Madgwick *filter, f32 gx, f32 gy, f32 gz, f32 ax, f32 ay, f32 az, f32 mx, f32 my, f32 mz) {
     if (!filter) {
         return false;
     }
-    float recipNorm;
-    float s0, s1, s2, s3;
-    float qDot1, qDot2, qDot3, qDot4;
-    float hx, hy;
-    float _2q0mx, _2q0my, _2q0mz, _2q1mx, _2bx, _2bz, _4bx, _4bz, _2q0, _2q1, _2q2, _2q3, _2q0q2, _2q2q3, q0q0, q0q1, q0q2,
-        q0q3, q1q1, q1q2, q1q3, q2q2, q2q3, q3q3;
+    f32 recipNorm;
+    f32 s0, s1, s2, s3;
+    f32 qDot1, qDot2, qDot3, qDot4;
+    f32 hx, hy;
+    f32 _2q0mx, _2q0my, _2q0mz, _2q1mx, _2bx, _2bz, _4bx, _4bz, _2q0, _2q1, _2q2, _2q3, _2q0q2, _2q2q3, q0q0, q0q1, q0q2, q0q3,
+        q1q1, q1q2, q1q3, q2q2, q2q3, q3q3;
 
     // Use IMU algorithm if magnetometer measurement invalid (avoids NaN in magnetometer normalisation)
     if ((mx == 0.0f) && (my == 0.0f) && (mz == 0.0f)) {
@@ -280,7 +279,7 @@ bool madgwick_update(Madgwick *filter, float gx, float gy, float gz, float ax, f
     return true;
 }
 
-bool madgwick_get_quaternion(Madgwick *filter, float *q0, float *q1, float *q2, float *q3) {
+bool madgwick_get_quaternion(Madgwick *filter, f32 *q0, f32 *q1, f32 *q2, f32 *q3) {
     if (!filter) {
         return false;
     }
@@ -299,7 +298,7 @@ bool madgwick_get_quaternion(Madgwick *filter, float *q0, float *q1, float *q2, 
     return true;
 }
 
-bool madgwick_get_angles(Madgwick *filter, float *roll, float *pitch, float *yaw) {
+bool madgwick_get_angles(Madgwick *filter, f32 *roll, f32 *pitch, f32 *yaw) {
     if (!filter) {
         return false;
     }

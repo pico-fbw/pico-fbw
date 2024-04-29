@@ -173,7 +173,7 @@ bool pwm_setup_write(const u32 pins[], u32 num_pins, u32 freq) {
     return true;
 }
 
-float pwm_read_raw(u32 pin) {
+f32 pwm_read_raw(u32 pin) {
     // Find the pin's state machine
     for (u32 i = 0; i < count_of(inData); i++) {
         if (inData[i].pin == pin) {
@@ -181,14 +181,14 @@ float pwm_read_raw(u32 pin) {
             // - Multiply by 2 because PWM measurements are taken with 2 clock cycles per timer tick
             // - Divide by the system clock frequency to get the pulsewidth in seconds
             // - Multiply by 1000 to convert to μs
-            return (float)inData[i].pulsewidth * 2 / clock_get_hz(clk_sys) * 1E6f;
+            return (f32)inData[i].pulsewidth * 2 / clock_get_hz(clk_sys) * 1E6f;
         }
     }
     return -1.f; // Pin not found
 }
 
-void pwm_write_raw(u32 pin, float pulsewidth) {
+void pwm_write_raw(u32 pin, f32 pulsewidth) {
     // Calculate the duty cycle from the given pulsewidth and period (calculated from the frequency)
-    float period = 1E6f / frequencies[pwm_gpio_to_slice_num(pin)];
+    f32 period = 1E6f / frequencies[pwm_gpio_to_slice_num(pin)];
     pwm_set_gpio_level(pin, (u16)((pulsewidth / period) * UINT16_MAX));
 }

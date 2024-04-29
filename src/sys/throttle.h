@@ -14,7 +14,7 @@ typedef struct Throttle {
     // Highest ThrottleMode supported in the system's current configuration (some extra sensors are required for SPEED mode).
     // If this is set to THRUST mode
     ThrottleMode supportedMode;
-    float target; // Target speed [kts] or thrust [0-100] (depending on mode)
+    f32 target; // Target speed [kts] or thrust [0-100] (depending on mode)
     /**
      * Initializes the throttle system (checks for highest supported mode and initializes it).
      */

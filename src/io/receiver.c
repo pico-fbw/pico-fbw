@@ -26,7 +26,7 @@
  * Be aware that this value may not be cohesive;
  * this function does not check to see whether or not a calibration has been done, so it is able to return random data.
  */
-static inline float offset_of(u32 pin) {
+static inline f32 offset_of(u32 pin) {
     // Look up the correct value to fetch based on the pin
     u32 val;
     if (pin == (u32)config.pins[PINS_INPUT_ELE]) {
@@ -44,8 +44,8 @@ static inline float offset_of(u32 pin) {
     return calibration.pwm[val];
 }
 
-static inline float read_raw(u32 pin, ReceiverMode mode) {
-    float pulsewidth = pwm_read_raw(pin);
+static inline f32 read_raw(u32 pin, ReceiverMode mode) {
+    f32 pulsewidth = pwm_read_raw(pin);
     if (pulsewidth < 0)
         return 0; // Invalid pin
     // Map pulsewidth to either 0-180.f (degree) or 0-100.f (percent)
@@ -59,29 +59,28 @@ void receiver_enable(const u32 pins[], u32 num_pins) {
         log_message(FATAL, "Failed to enable PWM input!", 500, 0, true);
 }
 
-float receiver_get(u32 pin, ReceiverMode mode) {
-    float raw = read_raw(pin, mode);
+f32 receiver_get(u32 pin, ReceiverMode mode) {
+    f32 raw = read_raw(pin, mode);
     if (raw < 0)
         return raw;
     return raw + offset_of(pin);
 }
 
-bool receiver_calibrate(const u32 pins[], u32 num_pins, float deviations[], u32 num_samples, u32 sample_delay_ms,
-                        u32 run_times) {
+bool receiver_calibrate(const u32 pins[], u32 num_pins, f32 deviations[], u32 num_samples, u32 sample_delay_ms, u32 run_times) {
     log_message(INFO, "Calibrating receiver", 100, 0, true);
     sleep_ms_blocking(2000); // Wait a few moments for tx/rx to set itself up
     for (u32 i = 0; i < num_pins; i++) {
         u32 pin = pins[i];
         printpre("receiver", "calibrating pin %lu (%lu/%lu)", pin, i + 1, num_pins);
         display_string("Please do not touch the transmitter!", ((i + 1) * 100) / num_pins);
-        float deviation = deviations[i];
-        float finalDifference = 0.0f;
+        f32 deviation = deviations[i];
+        f32 finalDifference = 0.0f;
         bool isThrottle = pins[i] == (u32)config.pins[PINS_INPUT_THROTTLE];
         for (u32 t = 0; t < run_times; t++) {
             printpre("receiver", "running trial %lu out of %lu", t + 1, run_times);
-            float total_difference = 0.0f;
+            f32 total_difference = 0.0f;
             for (u32 s = 0; s < num_samples; s++) {
-                float read = isThrottle ? read_raw(pin, RECEIVER_MODE_PERCENT) : read_raw(pin, RECEIVER_MODE_DEGREE);
+                f32 read = isThrottle ? read_raw(pin, RECEIVER_MODE_PERCENT) : read_raw(pin, RECEIVER_MODE_DEGREE);
                 if (read == INFINITY) {
                     printpre("receiver", "ERROR: (FBW-500) pin %lu is not a valid pin to calibrate!", pin);
                     return false;
@@ -90,16 +89,16 @@ bool receiver_calibrate(const u32 pins[], u32 num_pins, float deviations[], u32 
                 sleep_ms_blocking(sample_delay_ms);
             }
             // Check to see if the deviation is 270 (this value occurs with a pulsewidth of 0 or 1, aka not connected)
-            if ((total_difference / (float)num_samples) == 270.0f) {
+            if ((total_difference / (f32)num_samples) == 270.0f) {
                 printpre("receiver", "WARNING: pin %lu's calibration value seems abnormal, is it connected?", pin);
                 return false;
             }
             // Add the total difference recorded divided by the samples we took (average) to the final difference
-            finalDifference = finalDifference + (total_difference / (float)num_samples);
+            finalDifference = finalDifference + (total_difference / (f32)num_samples);
         }
         // Get our final average and save it to the correct byte in our array which we write to flash
         // Any pins over 4 (thus, pins belonging to PIO1) will be in the second array
-        print("pin %lu's final offset is %f", pin, (finalDifference / (float)run_times));
+        print("pin %lu's final offset is %f", pin, (finalDifference / (f32)run_times));
         // Find the correct location in the array to write to
         CalibrationPWM loc;
         if (pin == (u32)config.pins[PINS_INPUT_AIL]) {
@@ -121,8 +120,8 @@ bool receiver_calibrate(const u32 pins[], u32 num_pins, float deviations[], u32 
             if (pin == (u32)config.pins[PINS_INPUT_SWITCH]) {
                 // The switch pin is a little special; it can have high offsets but only if they are negative, otherwise modes
                 // won't register properly
-                if ((finalDifference / (float)run_times) < -200.0f ||
-                    (finalDifference / (float)run_times) > config.general[GENERAL_MAX_CALIBRATION_OFFSET])
+                if ((finalDifference / (f32)run_times) < -200.0f ||
+                    (finalDifference / (f32)run_times) > config.general[GENERAL_MAX_CALIBRATION_OFFSET])
                     goto error;
             } else
                 goto error;
@@ -130,7 +129,7 @@ bool receiver_calibrate(const u32 pins[], u32 num_pins, float deviations[], u32 
             printpre("receiver", "ERROR: (FBW-500) pin %lu's calibration value is too high!", pin);
             return false;
         }
-        calibration.pwm[loc] = finalDifference / (float)run_times;
+        calibration.pwm[loc] = finalDifference / (f32)run_times;
     }
     calibration.pwm[PWM_CALIBRATED] = true;
     calibration.pwm[PWM_MODE] = (ControlMode)config.general[GENERAL_CONTROL_MODE];
@@ -153,7 +152,7 @@ ReceiverCalibrationStatus receiver_is_calibrated() {
     }
 }
 
-void receiver_get_pins(u32 *pins, u32 *num_pins, float *deviations) {
+void receiver_get_pins(u32 *pins, u32 *num_pins, f32 *deviations) {
     // Consistant between all control modes
     pins[0] = (u32)config.pins[PINS_INPUT_AIL];
     pins[1] = (u32)config.pins[PINS_INPUT_ELE];

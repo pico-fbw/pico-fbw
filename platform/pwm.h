@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
-#include "platform/int.h"
+#include "platform/types.h"
 
 /**
  * Sets up `pins[]` for reading PWM signals.
@@ -26,7 +26,7 @@ bool pwm_setup_write(const u32 pins[], u32 num_pins, u32 freq);
  * @return the pulsewidth of the PWM signal in μs, or -1 if the pin is invalid
  * @note `pin` must have been previously set up to read PWM signals using `pwm_setup_read()`
  */
-float pwm_read_raw(u32 pin);
+f32 pwm_read_raw(u32 pin);
 
 /**
  * Writes a PWM signal to `pin`.
@@ -34,4 +34,4 @@ float pwm_read_raw(u32 pin);
  * @param pulsewidth pulsewidth of the PWM signal in μs
  * @note `pin` must have been previously set up to write PWM signals using `pwm_setup_write()`
  */
-void pwm_write_raw(u32 pin, float pulsewidth);
+void pwm_write_raw(u32 pin, f32 pulsewidth);

@@ -5,7 +5,6 @@
 
 #include <math.h>
 #include <stdlib.h>
-#include "platform/int.h"
 
 #include "io/aahrs.h"
 #include "io/receiver.h"
@@ -22,14 +21,14 @@
 #include "flight.h"
 
 static PIDController rollC, pitchC, yawC;
-static float ailOut, eleOut, rudOut;
-static float lElevonOut, rElevonOut;
+static f32 ailOut, eleOut, rudOut;
+static f32 lElevonOut, rElevonOut;
 
-static float yawOutput;
-static float flightYawSetpoint;
+static f32 yawOutput;
+static f32 flightYawSetpoint;
 static bool yawDamperOn;
 
-static void flight_roll_params_update(double kP, double kI, double kD, bool reset) {
+static void flight_roll_params_update(f64 kP, f64 kI, f64 kD, bool reset) {
     if (kP != INFINITY)
         rollC.Kp = kP;
     if (kI != INFINITY)
@@ -40,7 +39,7 @@ static void flight_roll_params_update(double kP, double kI, double kD, bool rese
         pid_init(&rollC);
 }
 
-static void flight_pitch_params_update(double kP, double kI, double kD, bool reset) {
+static void flight_pitch_params_update(f64 kP, f64 kI, f64 kD, bool reset) {
     if (kP != INFINITY)
         pitchC.Kp = kP;
     if (kI != INFINITY)
@@ -52,8 +51,8 @@ static void flight_pitch_params_update(double kP, double kI, double kD, bool res
 }
 
 void flight_init() {
-    float rollLimit;
-    float pitchLimit;
+    f32 rollLimit;
+    f32 pitchLimit;
     switch ((ControlMode)config.general[GENERAL_CONTROL_MODE]) {
         case CTRLMODE_3AXIS_ATHR:
         case CTRLMODE_2AXIS_ATHR:
@@ -107,7 +106,7 @@ void flight_init() {
 #pragma GCC diagnostic pop
 }
 
-void flight_update(double roll, double pitch, double yaw, bool override) {
+void flight_update(f64 roll, f64 pitch, f64 yaw, bool override) {
     // Check flight envelope for hard-coded irregularities
     if (fabsf(aahrs.roll) > 72 || aahrs.pitch > 35 || aahrs.pitch < -20) {
         printpre("flight", "WARNING: flight envelope exceeded! (roll: %.0f, pitch: %.0f, yaw: %.0f)", aahrs.roll, aahrs.pitch,
@@ -116,11 +115,11 @@ void flight_update(double roll, double pitch, double yaw, bool override) {
     }
 
     // Update PID controllers
-    pid_update(&rollC, roll, (double)aahrs.roll);
-    pid_update(&pitchC, pitch, (double)aahrs.pitch);
+    pid_update(&rollC, roll, (f64)aahrs.roll);
+    pid_update(&pitchC, pitch, (f64)aahrs.pitch);
     // All control modes require the roll/pitch PIDs to be mapped to a servo output (0-180)
-    ailOut = (((bool)config.pins[PINS_REVERSE_ROLL] ? -1 : 1) * (float)rollC.out + 90.f);
-    eleOut = (((bool)config.pins[PINS_REVERSE_PITCH] ? -1 : 1) * (float)pitchC.out + 90.f);
+    ailOut = (((bool)config.pins[PINS_REVERSE_ROLL] ? -1 : 1) * (f32)rollC.out + 90.f);
+    eleOut = (((bool)config.pins[PINS_REVERSE_PITCH] ? -1 : 1) * (f32)pitchC.out + 90.f);
     // Now things get specific to each mode
     switch ((ControlMode)config.general[GENERAL_CONTROL_MODE]) {
         // Compute yaw damper output for 3axis (rudder-enabled) control modes
@@ -128,22 +127,22 @@ void flight_update(double roll, double pitch, double yaw, bool override) {
         case CTRLMODE_3AXIS: {
             if (override) {
                 // Yaw override (raw)
-                yawOutput = (float)yaw;
+                yawOutput = (f32)yaw;
                 yawDamperOn = false;
             } else if (fabs(roll) > config.control[CONTROL_DEADBAND]) {
                 // Yaw damper disabled (passthrough)
-                yawOutput = (float)(rollC.out * config.control[CONTROL_RUDDER_SENSITIVITY]);
+                yawOutput = (f32)(rollC.out * config.control[CONTROL_RUDDER_SENSITIVITY]);
                 yawDamperOn = false;
             } else {
                 // Yaw damper enabled
                 if (!yawDamperOn)
                     flightYawSetpoint = aahrs.yaw; // Yaw damper was just enabled, create our setpoint
                 pid_update(&yawC, flightYawSetpoint, aahrs.yaw);
-                yawOutput = (float)yawC.out;
+                yawOutput = (f32)yawC.out;
                 yawDamperOn = true;
             }
 
-            rudOut = (((bool)config.pins[PINS_REVERSE_YAW] ? -1 : 1) * (float)yawOutput + 90.f);
+            rudOut = (((bool)config.pins[PINS_REVERSE_YAW] ? -1 : 1) * (f32)yawOutput + 90.f);
             servo_set((u32)config.pins[PINS_SERVO_RUD], rudOut);
         }
         /* fall through */
@@ -174,7 +173,7 @@ void flight_update(double roll, double pitch, double yaw, bool override) {
     }
 }
 
-void flight_params_get(Axis axis, double *kP, double *kI, double *kD) {
+void flight_params_get(Axis axis, f64 *kP, f64 *kI, f64 *kD) {
     PIDController *axisC = NULL;
     switch (axis) {
         case ROLL:
@@ -194,7 +193,7 @@ void flight_params_get(Axis axis, double *kP, double *kI, double *kD) {
         *kD = axisC->Kd;
 }
 
-void flight_params_update(Axis axis, double kP, double kI, double kD, bool reset) {
+void flight_params_update(Axis axis, f64 kP, f64 kI, f64 kD, bool reset) {
     switch (axis) {
         case ROLL:
             flight_roll_params_update(kP, kI, kD, reset);

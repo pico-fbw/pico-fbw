@@ -3,8 +3,8 @@
  * Licensed under the GNU AGPL-3.0
  */
 
-#include "platform/int.h"
 #include "platform/time.h"
+#include "platform/types.h"
 
 #include "io/esc.h"
 #include "io/gps.h"
@@ -35,7 +35,7 @@ void throttle_init() {
 }
 
 void throttle_update() {
-    static float escTarget = 0.0f, prevEscTarget = 0.0f;
+    static f32 escTarget = 0.0f, prevEscTarget = 0.0f;
     static ThrottleState state = THRSTATE_NORMAL;
     static u64 stateChangeAt = 0;
     switch (throttle.mode) {
@@ -43,8 +43,8 @@ void throttle_update() {
             escTarget = throttle.target;
             break;
         case THRMODE_SPEED:
-            pid_update(&athr_c, (double)throttle.target, (double)gps.speed);
-            escTarget = (float)athr_c.out;
+            pid_update(&athr_c, (f64)throttle.target, (f64)gps.speed);
+            escTarget = (f32)athr_c.out;
             break;
     }
     // Validate against performance limits

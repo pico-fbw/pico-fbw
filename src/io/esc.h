@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
-#include "platform/int.h"
+#include "platform/types.h"
 
 /**
  * Enables ESC control on a certain pin.
@@ -14,7 +14,7 @@ void esc_enable(u32 pin);
  * @param pin the GPIO pin the ESC is attached to
  * @param speed the speed to set, between 0 and 100
  */
-void esc_set(u32 pin, float speed);
+void esc_set(u32 pin, f32 speed);
 
 /**
  * Calibrates the ESC's throttle detents (IDLE, MCT, MAX) in the config.
