@@ -61,11 +61,11 @@ CallbackData *callback_in_ms(u32 ms, Callback callback) {
 
 void cancel_callback(CallbackData *data) {
     // Check if the data is valid (it is possible that the callback has been automatically deleted); this prevents a double free
-    if (data) {
-        esp_timer_stop(data->id);
-        esp_timer_delete(data->id);
-        free(data);
-    }
+    if (!data)
+        return;
+    esp_timer_stop(data->id);
+    esp_timer_delete(data->id);
+    free(data);
 }
 
 void sleep_us_blocking(u64 us) {

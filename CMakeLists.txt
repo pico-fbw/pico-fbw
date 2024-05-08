@@ -53,3 +53,11 @@ include(www/www.cmake)
 # Final setup tasks
 message("Finishing up setup for ${FBW_PLATFORM}")
 setup_after_subdirs()
+
+message("Configuration summary:")
+message("    Version: ${PICO_FBW_VERSION}")
+message("    Build type: ${CMAKE_BUILD_TYPE}")
+message("    Platform: ${FBW_PLATFORM}")
+message("    Compilers: ${CMAKE_C_COMPILER} (C${CMAKE_C_STANDARD}), ${CMAKE_CXX_COMPILER} (C++${CMAKE_CXX_STANDARD})")
+message("    Build web interface? ${FBW_BUILD_WWW}")
+message("    Format code? ${FBW_FORMAT}")

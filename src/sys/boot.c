@@ -3,6 +3,7 @@
  * Licensed under the GNU AGPL-3.0
  */
 
+#include <assert.h>
 #include "platform/defs.h"
 #include "platform/flash.h"
 #include "platform/gpio.h"
@@ -23,15 +24,13 @@ bool isBooted = false;
 void boot_begin() {
     sys_boot_begin();
     stdio_setup();
-    flash_setup();
+    bool flashOk = flash_setup();
+    assert(flashOk);
     log_init();
-    isBooted = false;
     display_init();
-    sleep_ms_blocking(
-        BOOT_WAIT_MS); // Wait for peripherals to power up
+    sleep_ms_blocking(BOOT_WAIT_MS); // Wait for peripherals to power up
 #if !NO_COLOR_OUTPUT
-                       // If we're using color output, reset color to default in case the previous output was colored
-    printraw(COLOR_RESET);
+    printraw(COLOR_RESET); // If we're using color output, reset color to default in case the previous output was colored
 #endif
 }
 

@@ -47,6 +47,8 @@ i32 api_poll() {
             free(line);
             return 500;
         }
+        if (!args)
+            args = ""; // Ensure args does not end up being a null pointer
 
         i32 status = api_exec(cmd, args);
         if (status != -1)

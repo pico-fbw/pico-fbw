@@ -36,7 +36,7 @@ int main() {
     boot_set_progress(0, "Mounting filesystem");
     if (lfs_mount(&lfs, &lfs_cfg) != LFS_ERR_OK) {
         // Failed to mount, try formatting
-        printpre("boot", "filesystem not found, attempting to format...");
+        printpre("boot", "filesystem corrupt, attempting to format...");
         lfs_format(&lfs, &lfs_cfg);
         if (lfs_mount(&lfs, &lfs_cfg) != LFS_ERR_OK)
             log_message(FATAL, "Failed to mount filesystem!", 250, 0, true);
@@ -140,7 +140,12 @@ int main() {
     if (!aahrs.init()) {
         // If AAHRS is calibrated: severity level is only an error as we could be in flight and we want to finish the boot,
         // If AAHRS is not calibrated: severity level is a fatal error to help point the user in the right direction
-        log_message(aahrs.isCalibrated ? ERROR : FATAL, "AAHRS initialization failed!", 1000, 0, false);
+        LogType severity = aahrs.isCalibrated ? ERROR : FATAL;
+        // Host platforms are the only exception, as AAHRS will always fail to initialize
+#ifdef FBW_PLATFORM_HOST
+        severity = ERROR;
+#endif
+        log_message(severity, "AAHRS initialization failed!", 1000, 0, false);
     }
     if (!(bool)config.general[GENERAL_SKIP_CALIBRATION]) {
         printpre("boot", "validating AAHRS calibration");

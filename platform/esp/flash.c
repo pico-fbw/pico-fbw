@@ -106,9 +106,8 @@ bool flash_setup() {
     return lfs_cfg.block_count > 0;
 }
 
-#if PLATFORM_SUPPORTS_WIFI
-lfs_t wwwfs;
-struct lfs_config wwwfs_cfg = {
+lfs_t lfs;
+struct lfs_config lfs_cfg = {
     .read = flash_read,
     .prog = flash_prog,
     .erase = flash_erase,
@@ -124,10 +123,10 @@ struct lfs_config wwwfs_cfg = {
     .lookahead_size = LOOKAHEAD_SIZE,
     .block_cycles = BLOCK_CYCLES,
 };
-#endif
 
-lfs_t lfs;
-struct lfs_config lfs_cfg = {
+#if PLATFORM_SUPPORTS_WIFI
+lfs_t wwwfs;
+struct lfs_config wwwfs_cfg = {
     .read = flash_read,
     .prog = flash_prog,
     .erase = flash_erase,
@@ -141,3 +140,4 @@ struct lfs_config lfs_cfg = {
     .lookahead_size = LOOKAHEAD_SIZE,
     .block_cycles = BLOCK_CYCLES,
 };
+#endif

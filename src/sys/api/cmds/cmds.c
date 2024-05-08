@@ -90,16 +90,15 @@ i32 api_handle_test(const char *cmd, const char *args) {
 
 i32 api_handle_misc(const char *cmd, const char *args) {
     if (strcasecmp(cmd, "ABOUT") == 0) {
-        api_about(args);
+        return api_about(args);
     } else if (strcasecmp(cmd, "HELP") == 0) {
-        api_help(args);
+        return api_help(args);
     } else if (strcasecmp(cmd, "PING") == 0) {
-        api_ping(args);
+        return api_ping(args);
     } else if (strcasecmp(cmd, "REBOOT") == 0) {
-        api_reboot(args);
+        return api_reboot(args);
     } else if (strcasecmp(cmd, "RESET") == 0) {
-        api_reset(args);
+        return api_reset(args);
     } else
         return 404;
-    return -1;
 }

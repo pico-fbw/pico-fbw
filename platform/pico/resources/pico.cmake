@@ -1,4 +1,4 @@
-# Define a macro FBW_PLATFORM_PICO that can be used in the code to determine the current platform
+# See platform/example/resources/example.cmake for comments regarding the structure of this file
 add_definitions(-DFBW_PLATFORM_PICO)
 
 # Import the pico-sdk
@@ -16,15 +16,11 @@ set(LFS_BLOCK_SIZE 4096)
 set(LFS_PROG_SIZE 256)
 set(LFS_IMG_SIZE 262144) # 256KB
 
-# The below functions will be called by the main CMakeLists.txt file later, to further to set up the project for buulding
-
-# Will run after the project has been initialized, but before the subdirectories are added and processed
 function(setup_before_subdirs)
     pico_sdk_init()
     add_executable(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/src/main.c)
 endfunction()
 
-# Will run after the subdirectories have been added and processed
 function(setup_after_subdirs)
     # Both USB and UART (pins moved) are enabled by default (either can be disabled by setting to 0, if needed)
     # These are compiled into stdio, so using printf() will output to whatever is enabled

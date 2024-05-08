@@ -32,6 +32,23 @@ bool flash_setup() {
 
 // clang-format off
 
+// See platform/flash.h for why we have two filesystems.
+
+lfs_t lfs;
+struct lfs_config lfs_cfg = {
+    .read = flash_read,
+    .prog = flash_prog,
+    .erase = flash_erase,
+    .sync = flash_sync,
+    .read_size = (x),
+    .prog_size = (x),
+    .block_size = (x),
+    .block_count = (x),
+    .cache_size = (x),
+    .lookahead_size = (x),
+    .block_cycles = (x),
+};
+
 #if PLATFORM_SUPPORTS_WIFI
 // This filesystem isn't required if your platform isn't using Wi-Fi.
 // See platform/flash.h for a longer description on the differences between wwwfs and lfs.
@@ -47,23 +64,8 @@ struct lfs_config wwwfs_cfg = {
     .block_count = (x),
     .cache_size = (x),
     .lookahead_size = (x),
-    .block_cycles = (x)
+    .block_cycles = (x),
 };
 #endif
-
-lfs_t lfs;
-struct lfs_config lfs_cfg = {
-    .read = flash_read,
-    .prog = flash_prog,
-    .erase = flash_erase,
-    .sync = flash_sync,
-    .read_size = (x),
-    .prog_size = (x),
-    .block_size = (x),
-    .block_count = (x),
-    .cache_size = (x),
-    .lookahead_size = (x),
-    .block_cycles = (x)
-};
 
 // clang-format on

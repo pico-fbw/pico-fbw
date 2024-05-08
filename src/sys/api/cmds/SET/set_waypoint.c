@@ -19,7 +19,7 @@ void interceptCallback() {
 i32 api_set_waypoint(const char *args) {
     if (aircraft.mode == MODE_AUTO) {
         Waypoint wpt;
-        i32 numArgs = sscanf(args, "%Lf %Lf %ld %f %ld", &wpt.lat, &wpt.lng, &wpt.alt, &wpt.speed, &wpt.drop);
+        i32 numArgs = sscanf(args, "%lf %lf %ld %f %ld", &wpt.lat, &wpt.lng, &wpt.alt, &wpt.speed, &wpt.drop);
         switch (numArgs) {
             case 2:
                 wpt.alt = -5;

@@ -40,7 +40,6 @@ GyroscopeDetails gyroscopes[] = {
 bool fusion_gyroscope_find(IMU *imu, const GyroscopeOptions *opts) {
     if (!imu)
         return false;
-    imu->gyro->opts = *opts;
 
     for (u32 i = 0; i < count_of(gyroscopes); i++) {
         imu->gyro = &(gyroscopes[i].device);
@@ -67,6 +66,7 @@ bool fusion_gyroscope_find(IMU *imu, const GyroscopeOptions *opts) {
             }
         }
         if (detected) {
+            imu->gyro->opts = *opts;
             if (imu->gyro->create) {
                 if (!imu->gyro->create(imu->gyro, imu->state)) {
                     printfbw(aahrs, "ERROR: could not create gyroscope \"%s\" at I2C 0x%02x", gyroscopes[i].name,

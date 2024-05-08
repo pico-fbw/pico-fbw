@@ -42,7 +42,6 @@ AccelerometerDetails accelerometers[] = {
 bool fusion_accelerometer_find(IMU *imu, const AccelerometerOptions *opts) {
     if (!imu)
         return false;
-    imu->acc->opts = *opts;
 
     for (u32 i = 0; i < count_of(accelerometers); i++) {
         // (possibly) Temporarily assign the current accelerometer's device driver into the global imu struct
@@ -72,7 +71,8 @@ bool fusion_accelerometer_find(IMU *imu, const AccelerometerOptions *opts) {
             }
         }
         if (detected) {
-            // Successfully detected an accelerometer, initialize it (create, set parameters)
+            // Successfully detected an accelerometer, copy options and initialize it (create, set parameters)
+            imu->acc->opts = *opts;
             if (imu->acc->create) {
                 if (!imu->acc->create(imu->acc, imu->state)) {
                     printfbw(aahrs, "ERROR: could not create accelerometer \"%s\" at I2C 0x%02x", accelerometers[i].name,

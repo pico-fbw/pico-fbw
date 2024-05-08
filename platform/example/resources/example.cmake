@@ -13,6 +13,9 @@ add_definitions(-DFBW_PLATFORM_EXAMPLE)
 set(LFS_BLOCK_SIZE x)
 set(LFS_PROG_SIZE x)
 set(LFS_IMG_SIZE x)
+# If your platform does not support Wi-Fi, you can comment/remove the above lines.
+
+# The below functions will be called by the main CMakeLists.txt file during the configure process, to further to set up the project for bulding.
 
 # This function will be called before any subdirectories are added (including the platform directory).
 # Take a look at other platforms to see how this is typically used, but some ideas include:

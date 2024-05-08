@@ -51,7 +51,7 @@ i32 api_get_sensor(const char *args) {
             if (!gps.is_supported())
                 return 403;
             if (aircraft.gpsSafe) {
-                printraw("{\"gps\":{\"lat\":%.10Lf,\"lng\":%.10Lf,\"alt\":%ld,\"speed\":%.4f,\"track\":%.4f}}\n", gps.lat,
+                printraw("{\"gps\":{\"lat\":%.10lf,\"lng\":%.10lf,\"alt\":%ld,\"speed\":%.4f,\"track\":%.4f}}\n", gps.lat,
                          gps.lng, gps.alt, gps.speed, gps.track);
             } else {
                 printraw("{\"gps\":{\"lat\":null,\"lng\":null,\"alt\":null,\"speed\":null,\"track\":null}}\n");
@@ -70,7 +70,7 @@ i32 api_get_sensor(const char *args) {
                 return 403;
             if (aircraft.aahrsSafe && aircraft.gpsSafe) {
                 printraw("{\"aahrs\":{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f},"
-                         "\"gps\":{\"lat\":%.10Lf,\"lng\":%.10Lf,\"alt\":%ld,\"speed\":%.4f,\"track\":%.4f}",
+                         "\"gps\":{\"lat\":%.10lf,\"lng\":%.10lf,\"alt\":%ld,\"speed\":%.4f,\"track\":%.4f}",
                          aahrs.roll, aahrs.pitch, aahrs.yaw, gps.lat, gps.lng, gps.alt, gps.speed, gps.track);
                 print_batt();
                 printraw("}\n");
@@ -82,7 +82,7 @@ i32 api_get_sensor(const char *args) {
                 printraw("}\n");
             } else if (aircraft.gpsSafe) {
                 printraw("{\"aahrs\":{\"roll\":null,\"pitch\":null,\"yaw\":null},"
-                         "\"gps\":{\"lat\":%.10Lf,\"lng\":%.10Lf,\"alt\":%ld,\"speed\":%.4f,\"track\":%.4f}",
+                         "\"gps\":{\"lat\":%.10lf,\"lng\":%.10lf,\"alt\":%ld,\"speed\":%.4f,\"track\":%.4f}",
                          gps.lat, gps.lng, gps.alt, gps.speed, gps.track);
                 print_batt();
                 printraw("}\n");

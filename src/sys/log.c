@@ -67,6 +67,8 @@ i32 led_callback() {
     if (pulseMs != 0)
         pulseCallback = callback_in_ms(pulseMs, led_pulse_callback);
     return toggleMs;
+#else
+    return 0;
 #endif
 }
 
@@ -178,7 +180,7 @@ void log_init() {
 
 void log_message(LogType type, const char *msg, i32 code, u32 pulse_ms, bool force) {
     numLogs++;
-    LogEntry *new = reallocarray(logs, numLogs, sizeof(LogEntry));
+    LogEntry *new = realloc(logs, numLogs * sizeof(LogEntry));
     if (!new) {
         numLogs--;
         return;
@@ -256,7 +258,7 @@ void log_clear(LogType type) {
                 logs[j] = logs[j + 1];
             numLogs--;
             i--;
-            LogEntry *new = reallocarray(logs, numLogs, sizeof(LogEntry));
+            LogEntry *new = realloc(logs, numLogs * sizeof(LogEntry));
             if (!new)
                 return;
             logs = new;

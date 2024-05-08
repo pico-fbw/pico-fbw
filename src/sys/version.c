@@ -12,12 +12,14 @@
 
 #include "version.h"
 
+#define FILE_VERSION "version.txt"
+
 i32 version_check(char vstr[]) {
     char version[64];
     if (!vstr || vstr[0] == '\0') {
         // No version given, grab from flash
         lfs_file_t file;
-        if (lfs_file_open(&lfs, &file, "version", LFS_O_RDONLY | LFS_O_CREAT) != LFS_ERR_OK)
+        if (lfs_file_open(&lfs, &file, FILE_VERSION, LFS_O_RDONLY | LFS_O_CREAT) != LFS_ERR_OK)
             return -4;
         i32 read = lfs_file_read(&lfs, &file, version, 32);
         if (lfs_file_close(&lfs, &file) != LFS_ERR_OK)
@@ -68,7 +70,7 @@ i32 version_check(char vstr[]) {
 
 bool version_save() {
     lfs_file_t file;
-    if (lfs_file_open(&lfs, &file, "version", LFS_O_WRONLY | LFS_O_CREAT) != LFS_ERR_OK)
+    if (lfs_file_open(&lfs, &file, FILE_VERSION, LFS_O_WRONLY | LFS_O_CREAT) != LFS_ERR_OK)
         return false;
     if (lfs_file_write(&lfs, &file, PICO_FBW_VERSION, strlen(PICO_FBW_VERSION) + 1) != strlen(PICO_FBW_VERSION) + 1) {
         lfs_file_close(&lfs, &file);

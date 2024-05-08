@@ -1,3 +1,5 @@
 #pragma once
 
-void api_help(const char *args);
+#include "platform/types.h"
+
+i32 api_help(const char *args);

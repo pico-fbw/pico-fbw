@@ -80,7 +80,20 @@ bool flash_setup() {
     return true;
 }
 
-// See platform/flash.h for why we have two filesystems.
+lfs_t lfs;
+struct lfs_config lfs_cfg = {
+    .read = flash_read,
+    .prog = flash_prog,
+    .erase = flash_erase,
+    .sync = flash_sync,
+    .context = (void *)LFS_BASE,
+    .read_size = 1,
+    .prog_size = FLASH_PAGE_SIZE,
+    .block_size = FLASH_SECTOR_SIZE,
+    .cache_size = (FLASH_SECTOR_SIZE / 4),
+    .lookahead_size = 32,
+    .block_cycles = 500,
+};
 
 #if PLATFORM_SUPPORTS_WIFI
 lfs_t wwwfs;
@@ -99,18 +112,3 @@ struct lfs_config wwwfs_cfg = {
     .block_cycles = 500,
 };
 #endif
-
-lfs_t lfs;
-struct lfs_config lfs_cfg = {
-    .read = flash_read,
-    .prog = flash_prog,
-    .erase = flash_erase,
-    .sync = flash_sync,
-    .context = (void *)LFS_BASE,
-    .read_size = 1,
-    .prog_size = FLASH_PAGE_SIZE,
-    .block_size = FLASH_SECTOR_SIZE,
-    .cache_size = (FLASH_SECTOR_SIZE / 4),
-    .lookahead_size = 32,
-    .block_cycles = 500,
-};

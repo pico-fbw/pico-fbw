@@ -38,7 +38,6 @@ MagnetometerDetails magnetometers[] = {
 bool fusion_magnetometer_find(IMU *imu, const MagnetometerOptions *opts) {
     if (!imu)
         return false;
-    imu->mag->opts = *opts;
 
     for (u32 i = 0; i < count_of(magnetometers); i++) {
         imu->mag = &(magnetometers[i].device);
@@ -65,6 +64,7 @@ bool fusion_magnetometer_find(IMU *imu, const MagnetometerOptions *opts) {
             }
         }
         if (detected) {
+            imu->mag->opts = *opts;
             if (imu->mag->create) {
                 if (!imu->mag->create(imu->mag, imu->state)) {
                     printfbw(aahrs, "ERROR: could not create magnetometer \"%s\" at I2C 0x%02x", magnetometers[i].name,

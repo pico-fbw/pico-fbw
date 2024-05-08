@@ -5,6 +5,13 @@ if (NOT ${FBW_BUILD_WWW})
 endif()
 message("Configuring web interface build")
 
+# Ensure that LFS_ variables are defined
+if (NOT DEFINED LFS_BLOCK_SIZE OR NOT DEFINED LFS_PROG_SIZE OR NOT DEFINED LFS_IMG_SIZE)
+    message("littlefs configuration not defined, skipping web interface build")
+    set(FBW_BUILD_WWW OFF CACHE BOOL "Build the web interface" FORCE)
+    return()
+endif()
+
 # Check to ensure npm and yarn are installed
 find_program(NPM_EXECUTABLE npm)
 if (NPM_EXECUTABLE)

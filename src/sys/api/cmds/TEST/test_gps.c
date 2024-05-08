@@ -20,7 +20,7 @@ i32 api_test_gps(const char *args) {
     printpre("test",
              "dumping GPS data, check for validity!\n"
              "==================================\n"
-             "lat::%.10Lf, lng::%.10Lf, alt::%ld, speed::%f, track::%f, "
+             "lat::%.10lf, lng::%.10lf, alt::%ld, speed::%f, track::%f, "
              "pdop::%f, hdop::%f, vdop::%f, altOffset::%ld, altOffsetCalibrated::%d\n"
              "==================================",
              gps.lat, gps.lng, gps.alt, gps.speed, gps.track, gps.pdop, gps.hdop, gps.vdop, gps.altOffset,

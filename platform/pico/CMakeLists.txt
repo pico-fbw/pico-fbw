@@ -43,12 +43,13 @@ target_link_libraries(platform_pico
     hardware_uart
     hardware_watchdog
 )
-# Additionally, link to the cyw43 driver if the pico_w board is being used
+
+# Extra steps for pico_w
 if (FBW_PLATFORM STREQUAL "pico_w")
-    # Link to the stdlib too, cyw43 driver uses it
-    target_link_libraries(platform_pico pico_stdlib pico_cyw43_arch_lwip_threadsafe_background)
     # Include the wifi directory so the lwipopts.h file can be found by lwIP
     target_include_directories(platform_pico PUBLIC ${CMAKE_SOURCE_DIR}/platform/pico/wifi)
+    # Link to llhttp, stdlib (cyw43 driver uses it), and the cyw43 driver/lwIP
+    target_link_libraries(platform_pico llhttp_static pico_stdlib pico_cyw43_arch_lwip_threadsafe_background)
 endif()
 
 # Include the source directory (so we can #include "platform/..." in files)

@@ -24,6 +24,9 @@
 
 #include "configuration.h"
 
+#define FILE_CONFIG "config.dat"
+#define FILE_CALIBRATION "calibration.dat"
+
 // clang-format off
 Config config = {
     .general = {
@@ -34,7 +37,13 @@ Config config = {
         #else
             WIFI_DISABLED,
         #endif
-        false, CONFIG_END_MAGIC,
+        // Host platforms don't have the necessary hardware to pass calibration, so skip it by default
+        #if FBW_PLATFORM_HOST
+            true,
+        #else
+            false,
+        #endif
+        CONFIG_END_MAGIC,
     },
     .control = {
         25, 15, 1.5f, 2.f, // Control handling preferences
@@ -142,8 +151,8 @@ static bool save_struct_to_file(const char *file, void *strct, size_t size) {
 }
 
 void config_load() {
-    load_file_to_struct("config", &config, sizeof(config));
-    load_file_to_struct("calibration", &calibration, sizeof(calibration));
+    load_file_to_struct(FILE_CONFIG, &config, sizeof(config));
+    load_file_to_struct(FILE_CALIBRATION, &calibration, sizeof(calibration));
     // Load print settings and set debug flag
     shouldPrint.fbw = config.system[SYSTEM_PRINT_FBW];
     shouldPrint.aahrs = config.system[SYSTEM_PRINT_AAHRS];
@@ -153,13 +162,13 @@ void config_load() {
 }
 
 void config_save() {
-    save_struct_to_file("config", &config, sizeof(config));
-    save_struct_to_file("calibration", &calibration, sizeof(calibration));
+    save_struct_to_file(FILE_CONFIG, &config, sizeof(config));
+    save_struct_to_file(FILE_CALIBRATION, &calibration, sizeof(calibration));
 }
 
 void config_reset() {
-    lfs_remove(&lfs, "config");
-    lfs_remove(&lfs, "calibration");
+    lfs_remove(&lfs, FILE_CONFIG);
+    lfs_remove(&lfs, FILE_CALIBRATION);
 }
 
 // I'm so sorry (this is a C moment)
@@ -636,22 +645,22 @@ ConfigSectionType config_get(const char *section, const char *key, void **value)
 
 bool config_set(const char *section, const char *key, const char *value) {
     if (strcasecmp(section, CONFIG_GENERAL_STR) == 0) {
-        if (!set_to_general(key, atoff(value)))
+        if (!set_to_general(key, (f32)atof(value)))
             return false;
     } else if (strcasecmp(section, CONFIG_CONTROL_STR) == 0) {
-        if (!set_to_control(key, atoff(value)))
+        if (!set_to_control(key, (f32)atof(value)))
             return false;
     } else if (strcasecmp(section, CONFIG_PINS_STR) == 0) {
-        if (!set_to_pins(key, atoff(value)))
+        if (!set_to_pins(key, (f32)atof(value)))
             return false;
     } else if (strcasecmp(section, CONFIG_SENSORS_STR) == 0) {
-        if (!set_to_sensors(key, atoff(value)))
+        if (!set_to_sensors(key, (f32)atof(value)))
             return false;
     } else if (strcasecmp(section, CONFIG_WIFI_STR) == 0) {
         if (!set_to_wifi(key, value))
             return false;
     } else if (strcasecmp(section, CONFIG_SYSTEM_STR) == 0) {
-        if (!set_to_system(key, atoff(value)))
+        if (!set_to_system(key, (f32)atof(value)))
             return false;
     } else
         return false;

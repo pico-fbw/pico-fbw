@@ -8,7 +8,7 @@
 
 #include "reboot.h"
 
-void api_reboot(const char *args) {
+i32 api_reboot(const char *args) {
     switch (atoi(args)) {
         case 1:
             sys_reboot(true);
@@ -16,4 +16,5 @@ void api_reboot(const char *args) {
         default:
             sys_reboot(false);
     }
+    return -1;
 }

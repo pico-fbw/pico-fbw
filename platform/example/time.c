@@ -37,7 +37,7 @@ CallbackData *callback_in_ms(u32 ms, Callback callback) {
     // 3. Make sure to handle the Callback's return value correctly.
     // 4. Make sure to handle your memory correctly.
 
-    // This function can return NULL if the callback could not be scheduled.
+    // This function should return NULL if the callback could not be scheduled.
 }
 
 void cancel_callback(CallbackData *data) {

@@ -39,10 +39,10 @@ CallbackData *callback_in_ms(u32 ms, Callback callback) {
 }
 
 void cancel_callback(CallbackData *data) {
-    if (data) {
-        cancel_alarm(data->id);
-        free(data);
-    }
+    if (!data)
+        return;
+    cancel_alarm(data->id);
+    free(data);
 }
 
 void sleep_us_blocking(u64 us) {

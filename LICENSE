@@ -35,6 +35,8 @@ The following files (and their corresponding Header [.h] files, where applicable
 - lib/lfs_util.c
 - lib/lfs.c
 - platform/pico/flash.c
+- platform/pico/wifi/dns.c
+- platform/pico/wifi/tcp.c
 - io/display.c
 
 You can find a copy of the License at the following URL:

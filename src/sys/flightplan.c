@@ -232,7 +232,7 @@ FlightplanError flightplan_parse(const char *json) {
 
     printpre("fplan", "Waypoint data:");
     for (u32 i = 0; i < flightplan.waypoint_count; i++) {
-        print("Waypoint #%lu: lat=%.10Lf, lng=%.10Lf, alt=%ld, speed=%f, drop=%ld", i + 1, flightplan.waypoints[i].lat,
+        print("Waypoint #%lu: lat=%.10lf, lng=%.10lf, alt=%ld, speed=%f, drop=%ld", i + 1, flightplan.waypoints[i].lat,
               flightplan.waypoints[i].lng, flightplan.waypoints[i].alt, flightplan.waypoints[i].speed,
               flightplan.waypoints[i].drop);
     }

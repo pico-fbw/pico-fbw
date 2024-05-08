@@ -10,7 +10,7 @@
 
 #include "help.h"
 
-void api_help(const char *args) {
+i32 api_help(const char *args) {
     printraw(
         "\npico-fbw API v%s\n"
         "Commands:\n"
@@ -56,5 +56,6 @@ void api_help(const char *args) {
         "500 Internal Error - Internal error executing the requested command\n\n"
         "More information can be found at https://pico-fbw.org/wiki/docs/API\n",
         PICO_FBW_API_VERSION);
+    return -1;
     (void)args;
 }

@@ -1,3 +1,5 @@
 #pragma once
 
-void api_reset(const char *args);
+#include "platform/types.h"
+
+i32 api_reset(const char *args);
