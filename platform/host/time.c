@@ -12,6 +12,7 @@
     #include <unistd.h>
     #include "time_apple.h" // Compatibility layer for <time.h> on macOS
 #elif defined(__linux__)
+    #include <signal.h>
     #include <sys/time.h>
     #include <time.h>
     #include <unistd.h>

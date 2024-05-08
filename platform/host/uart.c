@@ -7,12 +7,20 @@
 
 bool uart_setup(u32 tx, u32 rx, u32 baud) {
     return true; // Not implemented
+    (void)tx;
+    (void)rx;
+    (void)baud;
 }
 
 char *uart_read(u32 tx, u32 rx) {
     return NULL; // Not implemented
+    (void)tx;
+    (void)rx;
 }
 
 bool uart_write(u32 tx, u32 rx, const char *str) {
     return true; // Not implemented
+    (void)tx;
+    (void)rx;
+    (void)str;
 }

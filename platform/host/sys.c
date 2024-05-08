@@ -43,6 +43,7 @@ void __attribute__((noreturn)) sys_shutdown() {
 void __attribute__((noreturn)) sys_reboot(bool bootloader) {
     printf("\npico-fbw is running in host mode. Rebooting is not supported, terminating instead.\n");
     exit(0);
+    (void)bootloader;
 }
 
 BootType sys_boot_type() {

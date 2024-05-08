@@ -1,8 +1,31 @@
 #pragma once
 
 #include <stdlib.h>
-#include <sys/cdefs.h>
 #include "platform/types.h"
+
+// For __printflike:
+#if defined(_WIN32)
+
+#include <sal.h>
+#if defined(_MSC_VER) && _MSC_VER > 1400
+#define __printflike(fmtarg, firstvararg) _Printf_format_string_ fmtarg
+#else
+#define __printflike(fmtarg, firstvararg)
+#endif
+
+#elif defined(__APPLE__)
+
+#include <sys/cdefs.h>
+
+#elif defined(__linux__)
+
+#if defined(__GNUC__) && __GNUC__ >= 3
+#define __printflike(fmtarg, firstvararg) __attribute__((__format__(__printf__, fmtarg, firstvararg)))
+#else
+#define __printflike(fmtarg, firstvararg)
+#endif
+
+#endif
 
 /**
  * Sets up all relavent stdio sources.

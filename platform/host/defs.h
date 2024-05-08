@@ -9,7 +9,7 @@ typedef HANDLE __callback_id_t;
     #include "time_apple.h"
 typedef timer_t __callback_id_t;
 #elif defined(__linux__)
-    #include <sys/time.h>
+    #include <time.h>
 typedef timer_t __callback_id_t;
 #else
     #warning "Unknown host platform, things may not work as expected."
