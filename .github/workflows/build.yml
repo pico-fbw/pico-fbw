@@ -115,15 +115,11 @@ jobs:
 
     - name: Set up C build environment (windows)
       if: matrix.OS == 'windows-latest'
-      run: choco install ninja ccache
+      run: choco install ccache cmake ninja && echo "D:/a/_temp/msys64/mingw64/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
     - name: Set up C build environment (macos)
       if: matrix.OS == 'macos-latest'
       run: brew install ccache cmake ninja
-
-    - name: Add MSYS2 to PATH (windows)
-      if: matrix.OS == 'windows-latest'
-      run: echo "D:/a/_temp/msys64/mingw64/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
     
     - name: Configure CMake
       shell: bash

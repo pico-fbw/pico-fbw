@@ -22,8 +22,8 @@
 #else
     #define PIN_SMPS_MODE PICO_SMPS_MODE_PIN
 #endif
-#define SMPS_MODE_PFM LOW
-#define SMPS_MODE_PWM HIGH
+#define SMPS_MODE_PFM STATE_LOW
+#define SMPS_MODE_PWM STATE_HIGH
 
 #define ADC_GPIO_BASE 26 // GPIO26 is ADC0, 27-29 are ADC1-3 respectively
 #define PIN_TO_ADC_CHANNEL(pin) (pin - ADC_GPIO_BASE)
