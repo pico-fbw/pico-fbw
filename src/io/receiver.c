@@ -56,7 +56,7 @@ static inline f32 read_raw(u32 pin, ReceiverMode mode) {
 void receiver_enable(const u32 pins[], u32 num_pins) {
     printpre("receiver", "enabling PWM input on %lu pins", num_pins);
     if (!pwm_setup_read(pins, num_pins))
-        log_message(FATAL, "Failed to enable PWM input!", 500, 0, true);
+        log_message(TYPE_FATAL, "Failed to enable PWM input!", 500, 0, true);
 }
 
 f32 receiver_get(u32 pin, ReceiverMode mode) {
@@ -67,7 +67,7 @@ f32 receiver_get(u32 pin, ReceiverMode mode) {
 }
 
 bool receiver_calibrate(const u32 pins[], u32 num_pins, f32 deviations[], u32 num_samples, u32 sample_delay_ms, u32 run_times) {
-    log_message(INFO, "Calibrating receiver", 100, 0, true);
+    log_message(TYPE_INFO, "Calibrating receiver", 100, 0, true);
     sleep_ms_blocking(2000); // Wait a few moments for tx/rx to set itself up
     for (u32 i = 0; i < num_pins; i++) {
         u32 pin = pins[i];
@@ -135,7 +135,7 @@ bool receiver_calibrate(const u32 pins[], u32 num_pins, f32 deviations[], u32 nu
     calibration.pwm[PWM_MODE] = (ControlMode)config.general[GENERAL_CONTROL_MODE];
     printpre("receiver", "saving calibration to flash");
     config_save();
-    log_clear(INFO);
+    log_clear(TYPE_INFO);
     return true;
 }
 

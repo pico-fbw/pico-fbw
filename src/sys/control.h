@@ -3,13 +3,13 @@
 #include "platform/types.h"
 
 typedef enum Axis {
-    ROLL,
-    PITCH,
+    AXIS_ROLL,
+    AXIS_PITCH,
 } Axis;
 
 typedef enum Elevon {
-    LEFT,
-    RIGHT,
+    ELEVON_LEFT,
+    ELEVON_RIGHT,
 } Elevon;
 
 /**

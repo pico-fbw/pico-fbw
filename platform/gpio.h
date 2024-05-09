@@ -4,15 +4,15 @@
 #include "platform/types.h"
 
 typedef enum PinMode {
-    INPUT,
-    OUTPUT,
-    INPUT_PULLUP,
-    INPUT_PULLDOWN,
+    MODE_INPUT,
+    MODE_OUTPUT,
+    MODE_INPUT_PULLUP,
+    MODE_INPUT_PULLDOWN,
 } PinMode;
 
 typedef enum PinState {
-    LOW,
-    HIGH,
+    STATE_LOW,
+    STATE_HIGH,
 } PinState;
 
 /**

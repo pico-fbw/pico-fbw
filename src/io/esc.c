@@ -60,7 +60,7 @@ void esc_enable(u32 pin) {
     printpre("ESC", "setting up ESC on pin %lu", pin);
     u32 pins[] = {pin};
     if (!pwm_setup_write(pins, 1, config.general[GENERAL_ESC_HZ]))
-        log_message(FATAL, "Failed to enable PWM output!", 500, 0, true);
+        log_message(TYPE_FATAL, "Failed to enable PWM output!", 500, 0, true);
     esc_set(pin, 0); // Set initial position to 0 to be safe
 }
 
@@ -75,7 +75,7 @@ void esc_set(u32 pin, f32 speed) {
 }
 
 bool esc_calibrate(u32 pin) {
-    log_message(INFO, "Calibrating ESC", 200, 0, false);
+    log_message(TYPE_INFO, "Calibrating ESC", 200, 0, false);
     display_string("Select idle thrust.", 0);
     if (!wait_for_detent(pin, &calibration.esc[ESC_DETENT_IDLE], (u32)20E3, 4000))
         return false;
@@ -90,7 +90,7 @@ bool esc_calibrate(u32 pin) {
     calibration.esc[ESC_CALIBRATED] = true;
     printpre("ESC", "saving detents to flash");
     config_save();
-    log_clear(INFO);
+    log_clear(TYPE_INFO);
     return true;
 }
 

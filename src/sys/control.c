@@ -37,9 +37,9 @@ static f32 calc_pitch_adjust(f32 pitch) {
 
 f32 control_get_dps(Axis axis, f32 roll, f32 pitch) {
     switch (axis) {
-        case ROLL:
+        case AXIS_ROLL:
             return get_roll_dps(roll);
-        case PITCH:
+        case AXIS_PITCH:
             return get_pitch_dps(pitch);
         default:
             return 0.f;
@@ -48,9 +48,9 @@ f32 control_get_dps(Axis axis, f32 roll, f32 pitch) {
 
 f32 control_calc_adjust(Axis axis, f32 roll, f32 pitch) {
     switch (axis) {
-        case ROLL:
+        case AXIS_ROLL:
             return calc_roll_adjust(roll);
-        case PITCH:
+        case AXIS_PITCH:
             return calc_pitch_adjust(pitch);
         default:
             return 0.f;
@@ -65,7 +65,7 @@ void control_reset() {
 f32 control_mix_elevon(Elevon elevon, f64 roll, f64 pitch) {
     f32 rollComponent = ((bool)config.pins[PINS_REVERSE_ROLL] ? -1 : 1) * roll * config.control[CONTROL_AIL_MIXING_BIAS];
     f32 pitchComponent = ((bool)config.pins[PINS_REVERSE_PITCH] ? -1 : 1) * pitch * config.control[CONTROL_ELEV_MIXING_BIAS];
-    if (elevon == LEFT) {
+    if (elevon == ELEVON_LEFT) {
         return (rollComponent + pitchComponent) * config.control[CONTROL_ELEVON_MIXING_GAIN] + 90.f;
     } else
         return (rollComponent - pitchComponent) * config.control[CONTROL_ELEVON_MIXING_GAIN] + 90.f;

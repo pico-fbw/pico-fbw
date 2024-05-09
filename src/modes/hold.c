@@ -71,7 +71,7 @@ bool hold_init() {
     flight_init();
     throttle.init();
     if (throttle.supportedMode < THRMODE_SPEED) {
-        log_message(WARNING, "SPEED mode required!", 2000, 0, false);
+        log_message(TYPE_WARNING, "SPEED mode required!", 2000, 0, false);
         return false;
     }
     throttle.mode = THRMODE_SPEED;

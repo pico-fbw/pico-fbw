@@ -39,7 +39,7 @@ int main() {
         printpre("boot", "filesystem corrupt, attempting to format...");
         lfs_format(&lfs, &lfs_cfg);
         if (lfs_mount(&lfs, &lfs_cfg) != LFS_ERR_OK)
-            log_message(FATAL, "Failed to mount filesystem!", 250, 0, true);
+            log_message(TYPE_FATAL, "Failed to mount filesystem!", 250, 0, true);
     }
     boot_set_progress(5, "Loading configuration");
     config_load();
@@ -50,7 +50,7 @@ int main() {
     i32 versionCheck = version_check(version);
     if (versionCheck != 0) {
         if (versionCheck < -2) {
-            log_message(FATAL, "Failed to run update checker!", 250, 0, true);
+            log_message(TYPE_FATAL, "Failed to run update checker!", 250, 0, true);
         } else {
             printpre("boot", "performing a system update from v%s to v%s, please wait...",
                      (strcmp(version, "") == 0) ? "0.0.0" : version, PICO_FBW_VERSION);
@@ -84,14 +84,14 @@ int main() {
                 printpre("boot", "receiver calibration not found!");
                 printpre("boot", "calibrating now...do not touch the transmitter!");
                 if (!receiver_calibrate(pins, num_pins, deviations, 2000, 2, 3) || receiver_is_calibrated() != 0) {
-                    log_message(FATAL, "Receiver calibration failed!", 500, 0, true);
+                    log_message(TYPE_FATAL, "Receiver calibration failed!", 500, 0, true);
                 } else {
                     printpre("boot", "calibration successful!");
                 }
                 break;
         }
     } else {
-        log_message(WARNING, "Receiver calibration skipped!", 500, 0, false);
+        log_message(TYPE_WARNING, "Receiver calibration skipped!", 500, 0, false);
     }
 
     // Servos
@@ -112,19 +112,19 @@ int main() {
             if (!esc_is_calibrated()) {
                 printpre("boot", "throttle detent calibration not found!");
                 if (!esc_calibrate((u32)config.pins[PINS_ESC_THROTTLE])) {
-                    log_message(ERROR, "Throttle detent calibration failed!", 500, 0, false);
+                    log_message(TYPE_ERROR, "Throttle detent calibration failed!", 500, 0, false);
                 } else {
                     printpre("boot", "throttle detent calibration successful!");
                 }
             }
         } else {
-            log_message(WARNING, "Throttle detent calibration skipped!", 500, 0, false);
+            log_message(TYPE_WARNING, "Throttle detent calibration skipped!", 500, 0, false);
         }
     }
 
     // Check for watchdog reboot
     if (boot_type() == BOOT_WATCHDOG) {
-        log_message(ERROR, "Watchdog rebooted!", 500, 150, true);
+        log_message(TYPE_ERROR, "Watchdog rebooted!", 500, 150, true);
         print("\nPlease report this error! Only direct mode is available until the next reboot.\n");
         // Lock into direct mode for safety reasons
         // This is done now because minimum peripherals have been initialized, but not more complex ones that could be causing
@@ -140,10 +140,10 @@ int main() {
     if (!aahrs.init()) {
         // If AAHRS is calibrated: severity level is only an error as we could be in flight and we want to finish the boot,
         // If AAHRS is not calibrated: severity level is a fatal error to help point the user in the right direction
-        LogType severity = aahrs.isCalibrated ? ERROR : FATAL;
+        LogType severity = aahrs.isCalibrated ? TYPE_ERROR : TYPE_FATAL;
         // Host platforms are the only exception, as AAHRS will always fail to initialize
 #ifdef FBW_PLATFORM_HOST
-        severity = ERROR;
+        severity = TYPE_ERROR;
 #endif
         log_message(severity, "AAHRS initialization failed!", 1000, 0, false);
     }
@@ -152,13 +152,13 @@ int main() {
         if (!aahrs.isCalibrated) {
             printpre("boot", "AAHRS calibration not found!");
             if (!aahrs.calibrate()) {
-                log_message(FATAL, "AAHRS calibration failed!", 1000, 0, true);
+                log_message(TYPE_FATAL, "AAHRS calibration failed!", 1000, 0, true);
             } else {
                 printpre("boot", "AAHRS calibration successful!");
             }
         }
     } else {
-        log_message(WARNING, "AAHRS calibration skipped!", 1000, 0, false);
+        log_message(TYPE_WARNING, "AAHRS calibration skipped!", 1000, 0, false);
     }
 
     // GPS
@@ -169,9 +169,9 @@ int main() {
         if (gps.init()) {
             printpre("boot", "GPS ok");
             // We don't set the GPS safe just yet, comms are good but we are still unsure if the data is good
-            log_message(LOG, "GPS has no signal.", 5000, 150, false);
+            log_message(TYPE_LOG, "GPS has no signal.", 5000, 150, false);
         } else {
-            log_message(ERROR, "GPS not found!", 1000, 0, false);
+            log_message(TYPE_ERROR, "GPS not found!", 1000, 0, false);
         }
     }
 
@@ -194,7 +194,7 @@ int main() {
     }
     if (!setup)
     fail:
-        log_message(ERROR, "Wi-Fi setup failed!", 2000, 0, false);
+        log_message(TYPE_ERROR, "Wi-Fi setup failed!", 2000, 0, false);
 #endif
 
 // ADC

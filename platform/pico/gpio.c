@@ -26,17 +26,17 @@ void gpio_setup(u32 pin, PinMode mode) {
 #endif
     gpio_init(pin);
     switch (mode) {
-        case INPUT_PULLDOWN:
+        case MODE_INPUT_PULLDOWN:
             gpio_pull_down(pin);
             gpio_set_dir(pin, GPIO_IN);
             break;
-        case INPUT_PULLUP:
+        case MODE_INPUT_PULLUP:
             gpio_pull_up(pin);
         /* fall through */
-        case INPUT:
+        case MODE_INPUT:
             gpio_set_dir(pin, GPIO_IN);
             break;
-        case OUTPUT:
+        case MODE_OUTPUT:
             gpio_set_dir(pin, GPIO_OUT);
     }
 }

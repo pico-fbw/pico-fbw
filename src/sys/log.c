@@ -46,7 +46,7 @@ static void led_reset() {
     // cancelling a one-time callback
     pulseMs = 0;
 #ifdef PIN_LED
-    gpio_set(PIN_LED, HIGH);
+    gpio_set(PIN_LED, STATE_HIGH);
 #endif
 }
 
@@ -138,7 +138,7 @@ static void display_log(LogEntry *entry) {
     led_reset();
     // If pulse has been enabled, turn the LED off now so it pulses to the on state, not the off state (looks better)
     if (entry->pulse != 0) {
-        gpio_set(PIN_LED, LOW);
+        gpio_set(PIN_LED, STATE_LOW);
         pulseMs = entry->pulse;
     }
     // Display on built-in LED
@@ -163,15 +163,15 @@ i32 process_queue() {
  */
 void reset_last() {
     if (lastEntry) {
-        lastEntry->type = NONE;
+        lastEntry->type = TYPE_NONE;
         lastEntry->code = UINT16_MAX;
     }
 }
 
 void log_init() {
 #ifdef PIN_LED
-    gpio_setup(PIN_LED, OUTPUT);
-    gpio_set(PIN_LED, HIGH);
+    gpio_setup(PIN_LED, MODE_OUTPUT);
+    gpio_set(PIN_LED, STATE_HIGH);
 #endif
     logs = NULL;
     numLogs = 0;
@@ -195,9 +195,9 @@ void log_message(LogType type, const char *msg, i32 code, u32 pulse_ms, bool for
 
     // Display the entry if: the error is more severe than the last,
     // there was a code given, the type is severe enough, it was forced, or of the same type (but newer)
-    if (type > LOG && code > -1) {
+    if (type > TYPE_LOG && code > -1) {
         if (force || (lastEntry && (type >= lastEntry->type && code <= lastEntry->code))) {
-            if (boot_is_booted() || force || type == FATAL || type == INFO) {
+            if (boot_is_booted() || force || type == TYPE_FATAL || type == TYPE_INFO) {
                 display_log(entry);
             } else {
                 // The system isn't booted and the type isn't severe enough to warrant displaying it at the moment,
@@ -213,19 +213,19 @@ void log_message(LogType type, const char *msg, i32 code, u32 pulse_ms, bool for
     const char *typeMsg = NULL;
     const char *colorCode = "";
     switch (type) {
-        case INFO:
+        case TYPE_INFO:
             typeMsg = MSG_INFO;
             colorCode = COLOR_BLUE;
             break;
-        case WARNING:
+        case TYPE_WARNING:
             typeMsg = MSG_WARN;
             colorCode = COLOR_YELLOW;
             break;
-        case ERROR:
+        case TYPE_ERROR:
             typeMsg = MSG_ERROR;
             colorCode = COLOR_LIGHT_RED;
             break;
-        case FATAL:
+        case TYPE_FATAL:
             typeMsg = MSG_FATAL;
             colorCode = COLOR_LIGHT_RED_BOLD;
             break;
@@ -241,7 +241,7 @@ void log_message(LogType type, const char *msg, i32 code, u32 pulse_ms, bool for
     } else
         print("%s", msg);
 
-    if (type == FATAL) {
+    if (type == TYPE_FATAL) {
         // Halt execution for fatal errors
         print("\n" COLOR_LIGHT_RED "Fatal error encountered, halting pico-fbw!");
         while (true)
@@ -272,7 +272,7 @@ void log_clear(LogType type) {
         if (lastEntry->type == type) {
             // Go through all log types in reverse order to find the most fatal error (if it exists), and display it instead
             bool hadError = false;
-            for (LogType type = FATAL; type >= INFO; type--) {
+            for (LogType type = TYPE_FATAL; type >= TYPE_INFO; type--) {
                 for (u32 i = 0; i < numLogs; i++) {
                     if (logs[i].type == type) {
                         display_log(&logs[i]);
@@ -301,7 +301,7 @@ u32 log_count() {
 u32 log_count_errs() {
     u32 count = 0;
     for (u32 i = 0; i < numLogs; i++) {
-        if (logs[i].type == WARNING || logs[i].type == ERROR || logs[i].type == FATAL)
+        if (logs[i].type == TYPE_WARNING || logs[i].type == TYPE_ERROR || logs[i].type == TYPE_FATAL)
             count++;
     }
     return count;

@@ -45,7 +45,7 @@ static Timestamp lastTuneEvent;
 static void update_gain(Axis axis, f32 req_rate, f32 act_rate) {
     static u32 tDiffRoll = 0;
     static u32 tDiffPitch = 0;
-    u32 *tDiff = (axis == ROLL) ? &tDiffRoll : &tDiffPitch;
+    u32 *tDiff = (axis == AXIS_ROLL) ? &tDiffRoll : &tDiffPitch;
 
     // If the difference between the requested and actual rates is greater than the threshold for longer than the set time,
     // increase the P gain
@@ -83,13 +83,13 @@ void tune_update() {
     f32 rollInput = receiver_get((u32)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE) - 90.f;
     f32 pitchInput = receiver_get((u32)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEGREE) - 90.f;
     // Get the requested and actual roll and pitch rates
-    f32 reqRollRate = control_get_dps(ROLL, rollInput, pitchInput);
-    f32 reqPitchRate = control_get_dps(PITCH, rollInput, pitchInput);
+    f32 reqRollRate = control_get_dps(AXIS_ROLL, rollInput, pitchInput);
+    f32 reqPitchRate = control_get_dps(AXIS_PITCH, rollInput, pitchInput);
     f32 actRollRate = aahrs.rollRate;
     f32 actPitchRate = aahrs.pitchRate;
 
-    update_gain(ROLL, reqRollRate, actRollRate);
-    update_gain(PITCH, reqPitchRate, actPitchRate);
+    update_gain(AXIS_ROLL, reqRollRate, actRollRate);
+    update_gain(AXIS_PITCH, reqPitchRate, actPitchRate);
 
     // Set the tuned flag if there haven't been any tune events for a while
     if (time_since_ms(&lastTuneEvent) > TUNED_THRESHOLD_MS) {

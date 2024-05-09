@@ -246,7 +246,7 @@ FlightplanError flightplan_parse(const char *json) {
     strcpy(flightplan.json, json);
     state = status;
     if (state == FPLAN_STATUS_OK || state == FPLAN_STATUS_GPS_OFFSET || state == FPLAN_WARN_FW_VERSION)
-        log_message(INFO, "Flightplan recieved!", -1, 0, false);
+        log_message(TYPE_INFO, "Flightplan recieved!", -1, 0, false);
     return state;
 }
 

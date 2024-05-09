@@ -117,7 +117,7 @@ void change_to(Mode newMode) {
         }
     } else {
         printfbw(aircraft, "AAHRS has failed, entering direct mode!");
-        log_message(ERROR, "AAHRS has failed!", 250, 0, true);
+        log_message(TYPE_ERROR, "AAHRS has failed!", 250, 0, true);
         aircraft.mode = MODE_DIRECT;
     }
 }
@@ -128,7 +128,7 @@ void set_aahrs_safe(bool state) {
         if (state) {
             if (!aahrs.isInitialized) {
                 if (!aahrs.init()) {
-                    log_message(ERROR, "AAHRS initialization failed!", 1000, 0, false);
+                    log_message(TYPE_ERROR, "AAHRS initialization failed!", 1000, 0, false);
                     change_to(MODE_DIRECT);
                     return;
                 }
@@ -148,7 +148,7 @@ void set_gps_safe(bool state) {
         aircraft.gpsSafe = state;
         if (state) {
             printfbw(aircraft, "GPS set as safe");
-            log_clear(INFO);
+            log_clear(TYPE_INFO);
         } else {
             printfbw(aircraft, "GPS set as unsafe");
             if (aircraft.mode == MODE_AUTO || aircraft.mode == MODE_HOLD) {

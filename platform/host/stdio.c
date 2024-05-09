@@ -7,6 +7,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if defined(_WIN32)
+    #include "stdio_windows.h"
+#endif
 
 #include "platform/stdio.h"
 

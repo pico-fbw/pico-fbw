@@ -54,8 +54,8 @@ void normal_update() {
         // Override the input to bring it back in the opposite direction at the specified rate
         rollInput = rollSet < 0 ? CONTROL_ROLL_RETURN_DPS : -CONTROL_ROLL_RETURN_DPS;
     // Calculate control adjustments based on input
-    f32 rollAdj = control_calc_adjust(ROLL, rollInput, pitchInput);
-    f32 pitchAdj = control_calc_adjust(PITCH, rollInput, pitchInput);
+    f32 rollAdj = control_calc_adjust(AXIS_ROLL, rollInput, pitchInput);
+    f32 pitchAdj = control_calc_adjust(AXIS_PITCH, rollInput, pitchInput);
 
     // Check for manual overrides of externally set (by API) setpoints
     if (rolling() || pitching() || yawing())

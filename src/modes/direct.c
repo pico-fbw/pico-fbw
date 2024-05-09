@@ -29,8 +29,8 @@ void direct_update() {
             break;
         case CTRLMODE_FLYINGWING_ATHR:
         case CTRLMODE_FLYINGWING:
-            servo_set((u32)config.pins[PINS_SERVO_AIL], control_mix_elevon(LEFT, ail, ele));
-            servo_set((u32)config.pins[PINS_SERVO_ELE], control_mix_elevon(RIGHT, ail, ele));
+            servo_set((u32)config.pins[PINS_SERVO_AIL], control_mix_elevon(ELEVON_LEFT, ail, ele));
+            servo_set((u32)config.pins[PINS_SERVO_ELE], control_mix_elevon(ELEVON_RIGHT, ail, ele));
             break;
     }
     if (receiver_has_athr())

@@ -49,7 +49,7 @@ static void (*captureCallback)(void) = NULL;
 
 // Callback for when the bay needs to be closed after a user-specified delay (within the flightplan)
 i32 dropCallback() {
-    auto_set_bay_position(CLOSED);
+    auto_set_bay_position(POS_CLOSED);
     return 0; // Don't repeat
 }
 
@@ -64,7 +64,7 @@ static inline void loadWaypoint(Waypoint *wpt) {
     throttle.target = (wpt->speed == -5) ? gps.speed : wpt->speed;
     // Initiate a drop if applicable
     if (wpt->drop != 0) {
-        auto_set_bay_position(OPEN);
+        auto_set_bay_position(POS_OPEN);
         if (wpt->drop > 0)
             // Schedule a callback if the bay needs to close after some time
             callback_in_ms(wpt->drop * 1000, dropCallback);
@@ -74,7 +74,7 @@ static inline void loadWaypoint(Waypoint *wpt) {
 bool auto_init() {
     // Import flightplan data
     if (!flightplan_was_parsed()) {
-        log_message(ERROR, "No flightplan parsed!", 2000, 0, false);
+        log_message(TYPE_ERROR, "No flightplan parsed!", 2000, 0, false);
         return false;
     }
     guidanceSource = FPLAN;
@@ -83,7 +83,7 @@ bool auto_init() {
     throttle.init();
     // Check if SPEED mode is supported, which we need for autopilot
     if (throttle.supportedMode < THRMODE_SPEED) {
-        log_message(WARNING, "SPEED mode required!", 2000, 0, false);
+        log_message(TYPE_WARNING, "SPEED mode required!", 2000, 0, false);
         return false;
     }
     throttle.mode = THRMODE_SPEED;
@@ -173,10 +173,10 @@ void auto_set(Waypoint wpt, void (*callback)(void)) {
 
 void auto_set_bay_position(BayPosition pos) {
     switch (pos) {
-        case OPEN:
+        case POS_OPEN:
             servo_set(config.pins[PINS_SERVO_BAY], config.control[CONTROL_DROP_DETENT_OPEN]);
             break;
-        case CLOSED:
+        case POS_CLOSED:
         default:
             servo_set(config.pins[PINS_SERVO_BAY], config.control[CONTROL_DROP_DETENT_CLOSED]);
             break;

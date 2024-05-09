@@ -13,7 +13,7 @@
 i32 api_set_bay(const char *args) {
     if (aircraft.mode == MODE_NORMAL) {
         BayPosition pos = atoi(args);
-        if (pos == CLOSED || pos == OPEN) {
+        if (pos == POS_CLOSED || pos == POS_OPEN) {
             auto_set_bay_position(pos);
         } else
             return 400;

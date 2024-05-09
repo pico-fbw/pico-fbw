@@ -153,7 +153,7 @@ void gps_update() {
 }
 
 i32 gps_calibrate_alt_offset(u32 num_samples) {
-    log_message(INFO, "Calibrating altitude", 1000, 100, false);
+    log_message(TYPE_INFO, "Calibrating altitude", 1000, 100, false);
     // GPS updates should be at 1Hz (give or take 2s) so if the calibration takes longer we cut it short
     Timestamp calibrationTimeout = timestamp_in_ms((num_samples * 1000) + 2000);
     u32 samples = 0;
@@ -185,7 +185,7 @@ i32 gps_calibrate_alt_offset(u32 num_samples) {
             free(line);
         }
     }
-    log_clear(INFO);
+    log_clear(TYPE_INFO);
     if (timestamp_reached(&calibrationTimeout)) {
         printfbw(gps, "ERROR: altitude calibration timed out");
         return -1;

@@ -155,8 +155,8 @@ void flight_update(f64 roll, f64 pitch, f64 yaw, bool override) {
         // Flying wing control modes must mix elevator and aileron outputs to create elevon outputs
         case CTRLMODE_FLYINGWING_ATHR:
         case CTRLMODE_FLYINGWING: {
-            lElevonOut = control_mix_elevon(LEFT, ailOut, eleOut);
-            rElevonOut = control_mix_elevon(RIGHT, ailOut, eleOut);
+            lElevonOut = control_mix_elevon(ELEVON_LEFT, ailOut, eleOut);
+            rElevonOut = control_mix_elevon(ELEVON_RIGHT, ailOut, eleOut);
             // Limit elevon outputs
             clampf(lElevonOut, -config.control[CONTROL_MAX_ELEVON_DEFLECTION], config.control[CONTROL_MAX_ELEVON_DEFLECTION]);
             clampf(rElevonOut, -config.control[CONTROL_MAX_ELEVON_DEFLECTION], config.control[CONTROL_MAX_ELEVON_DEFLECTION]);
@@ -176,10 +176,10 @@ void flight_update(f64 roll, f64 pitch, f64 yaw, bool override) {
 void flight_params_get(Axis axis, f64 *kP, f64 *kI, f64 *kD) {
     PIDController *axisC = NULL;
     switch (axis) {
-        case ROLL:
+        case AXIS_ROLL:
             axisC = &rollC;
             break;
-        case PITCH:
+        case AXIS_PITCH:
             axisC = &pitchC;
             break;
     }
@@ -195,10 +195,10 @@ void flight_params_get(Axis axis, f64 *kP, f64 *kI, f64 *kD) {
 
 void flight_params_update(Axis axis, f64 kP, f64 kI, f64 kD, bool reset) {
     switch (axis) {
-        case ROLL:
+        case AXIS_ROLL:
             flight_roll_params_update(kP, kI, kD, reset);
             break;
-        case PITCH:
+        case AXIS_PITCH:
             flight_pitch_params_update(kP, kI, kD, reset);
             break;
     }

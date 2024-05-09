@@ -12,7 +12,7 @@ void gpio_setup(u32 pin, PinMode mode) {
 }
 
 PinState gpio_state(u32 pin) {
-    return LOW; // Not implemented
+    return STATE_LOW; // Not implemented
     (void)pin;
 }
 

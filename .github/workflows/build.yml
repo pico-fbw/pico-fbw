@@ -14,18 +14,18 @@ on:
   workflow_dispatch:
 
 env:
-  # Debug build will enable more warnings
+  # Debug build will enable more useful warnings
   BUILD_TYPE: Debug
   PICO_SDK_PATH: ${{github.workspace}}/pico-sdk
   ESP_IDF_VERSION: v5.2.1
 
 jobs:
-  build:
+  embedded:
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        PLATFORM: [ esp32, host, pico, pico_w ]
+        PLATFORM: [ esp32, pico, pico_w ]
 
     steps:
     - name: Checkout pico-fbw
@@ -95,3 +95,53 @@ jobs:
       shell: bash
       run: source ~/esp/esp-idf/export.sh && 
         cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} --parallel ${{steps.core_count.outputs.output}}
+
+  host:
+    runs-on: ${{ matrix.OS }}
+
+    strategy:
+      matrix:
+        OS: [ ubuntu-latest, windows-latest, macos-latest ]
+
+    steps:
+    - name: Checkout pico-fbw
+      uses: actions/checkout@v4.1.1
+      with:
+        submodules: 'recursive'
+
+    - name: Set up C build environment (linux)
+      if: matrix.OS == 'ubuntu-latest'
+      run: sudo apt-get install ccache cmake ninja-build
+
+    - name: Set up C build environment (windows)
+      if: matrix.OS == 'windows-latest'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: UCRT64
+        install: >-
+          base-devel
+          cmake
+          mingw-w64-ucrt-x86_64-toolchain
+          ninja
+
+    - name: Set up C build environment (macos)
+      if: matrix.OS == 'macos-latest'
+      run: brew install ccache cmake ninja
+    
+    - name: Configure CMake
+      if: matrix.OS != 'windows-latest'
+      run: cmake -B ${{github.workspace}}/build -DFBW_PLATFORM=host -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -GNinja
+
+    - name: Configure CMake (windows)
+      if: matrix.OS == 'windows-latest'
+      shell: msys2 {0}
+      run: cmake -B ${{github.workspace}}/build -DFBW_PLATFORM=host -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -GNinja
+
+    - name: Build
+      if : matrix.OS != 'windows-latest'
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+    - name: Build (windows)
+      if: matrix.OS == 'windows-latest'
+      shell: msys2 {0}
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}

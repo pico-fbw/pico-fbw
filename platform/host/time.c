@@ -25,7 +25,7 @@
 #if defined(_WIN32)
 
 VOID CALLBACK callback_to_WAITORTIMERCALLBACK(PVOID lp_param, BOOLEAN timer_or_wait_fired) {
-    CallbackData *data = (CallbackData *)lpParam;
+    CallbackData *data = (CallbackData *)lp_param;
     if (!data)
         return;
     i32 reschedule = data->callback();
@@ -37,7 +37,7 @@ VOID CALLBACK callback_to_WAITORTIMERCALLBACK(PVOID lp_param, BOOLEAN timer_or_w
 
 #elif defined(__APPLE__) || defined(__linux__)
 
-static void callback_to_sigevent(union sigval sv);
+static void callback_to_sigevent(union sigval sv); // Forward declaration
 
 /**
  * Creates a system timer from the given data and schedules it to fire after `ms` milliseconds.
@@ -105,7 +105,7 @@ CallbackData *callback_in_ms(u32 ms, Callback callback) {
         return NULL;
     data->callback = callback;
 #if defined(_WIN32)
-    if (!CreateTimerQueueTimer(&data->id, NULL, callback_to_WAITORTIMERCALLBACK, data, ms, 0, 0)) {
+    if (!CreateTimerQueueTimer(&data->id, NULL, callback_to_WAITORTIMERCALLBACK, data, ms, ms, 0)) {
         free(data);
         return NULL;
     }

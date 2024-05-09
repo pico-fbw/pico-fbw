@@ -10,9 +10,10 @@
 void gpio_setup(u32 pin, PinMode mode) {
     const gpio_config_t config = {
         .pin_bit_mask = 1u << pin,
-        .mode = mode == OUTPUT ? GPIO_MODE_INPUT_OUTPUT : GPIO_MODE_INPUT, // OUTPUT is mapped to INPUT_OUTPUT so toggle works
-        .pull_up_en = mode == INPUT_PULLUP ? GPIO_PULLUP_ENABLE : GPIO_PULLUP_DISABLE,
-        .pull_down_en = mode == INPUT_PULLDOWN ? GPIO_PULLDOWN_ENABLE : GPIO_PULLDOWN_DISABLE,
+        // OUTPUT is mapped to INPUT_OUTPUT so toggle works
+        .mode = mode == MODE_OUTPUT ? GPIO_MODE_INPUT_OUTPUT : GPIO_MODE_INPUT,
+        .pull_up_en = mode == MODE_INPUT_PULLUP ? GPIO_PULLUP_ENABLE : GPIO_PULLUP_DISABLE,
+        .pull_down_en = mode == MODE_INPUT_PULLDOWN ? GPIO_PULLDOWN_ENABLE : GPIO_PULLDOWN_DISABLE,
         .intr_type = GPIO_INTR_DISABLE,
     };
     gpio_config(&config);

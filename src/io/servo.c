@@ -17,7 +17,7 @@
 void servo_enable(const u32 pins[], u32 num_pins) {
     printpre("servo", "setting up %lu servos", num_pins);
     if (!pwm_setup_write(pins, num_pins, config.general[GENERAL_SERVO_HZ]))
-        log_message(FATAL, "Failed to enable PWM output!", 500, 0, true);
+        log_message(TYPE_FATAL, "Failed to enable PWM output!", 500, 0, true);
     for (u32 i = 0; i < num_pins; i++)
         servo_set(pins[i], 90.f); // Set initial position to 90 degrees
 }
