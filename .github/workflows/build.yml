@@ -135,7 +135,7 @@ jobs:
     - name: Configure CMake (windows)
       if: matrix.OS == 'windows-latest'
       shell: msys2 {0}
-      run: cmake -B ${{github.workspace}}/build -DFBW_PLATFORM=host -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -GNinja
+      run: cmake -B "${{github.workspace}}/build" -DFBW_PLATFORM=host -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -GNinja
 
     - name: Build
       if : matrix.OS != 'windows-latest'
@@ -144,4 +144,4 @@ jobs:
     - name: Build (windows)
       if: matrix.OS == 'windows-latest'
       shell: msys2 {0}
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      run: cmake --build "${{github.workspace}}/build" --config ${{env.BUILD_TYPE}}

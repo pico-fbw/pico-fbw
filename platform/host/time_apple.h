@@ -104,6 +104,8 @@ static inline int timer_settime(timer_t tim, int flags, const struct itimerspec 
         dispatch_resume(tim->tim_timer);
     }
     return (0);
+    (void)flags;
+    (void)remainvalue;
 }
 
 static inline int timer_delete(timer_t tim) {

@@ -86,13 +86,13 @@ static void display_log(LogEntry *entry) {
         // we want control over what goes on each line
         char typeMsg[DISPLAY_MAX_LINE_LEN];
         switch (entry->type) {
-            case WARNING:
+            case TYPE_WARNING:
                 strcpy(typeMsg, MSG_WARN);
                 break;
-            case ERROR:
+            case TYPE_ERROR:
                 strcpy(typeMsg, MSG_ERROR);
                 break;
-            case FATAL:
+            case TYPE_FATAL:
                 strcpy(typeMsg, MSG_FATAL);
                 break;
             default:
