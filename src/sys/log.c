@@ -101,7 +101,7 @@ static void display_log(LogEntry *entry) {
         char codeStr[DISPLAY_MAX_LINE_LEN];
         sprintf(codeStr, "%ld", entry->code);
         if (strlen(entry->msg) < DISPLAY_MAX_LINE_LEN + 1) {
-            if (entry->type != INFO) {
+            if (entry->type != TYPE_INFO) {
                 display_lines(typeMsg, entry->msg, DISP_LOG_URL, codeStr, true);
             } else {
                 // INFO messages shouldn't point people to a URL
@@ -124,7 +124,7 @@ static void display_log(LogEntry *entry) {
                 strncpy(line2, entry->msg + DISPLAY_MAX_LINE_LEN, DISPLAY_MAX_LINE_LEN);
                 line2[DISPLAY_MAX_LINE_LEN] = '\0';
             }
-            if (entry->type != INFO) {
+            if (entry->type != TYPE_INFO) {
                 display_lines(line1, line2, DISP_LOG_URL, codeStr, true);
             } else {
                 display_lines(NULL, line1, line2, NULL, true);
