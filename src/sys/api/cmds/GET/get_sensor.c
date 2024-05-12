@@ -3,13 +3,13 @@
  * Licensed under the GNU AGPL-3.0
  */
 
-#include <stdlib.h>
-
 #include "platform/adc.h"
 #include "platform/defs.h"
 
 #include "io/aahrs.h"
 #include "io/gps.h"
+
+#include "lib/parson.h"
 
 #include "modes/aircraft.h"
 
@@ -18,81 +18,166 @@
 
 #include "get_sensor.h"
 
-#if PLATFORM_SUPPORTS_ADC
-// Print battery sensor data as JSON. No opening or closing braces are printed, just the data "key:value" pairs.
-static inline void print_batt_data() {
-    for (u32 i = 0; i < ADC_NUM_CHANNELS; i++) {
-        if (i > 0)
-            printraw(",");
-        printraw("\"%lu\":%.6f", i, adc_read_raw(ADC_PINS[i]));
+typedef enum SensorData {
+    DATA_INVALID,
+    DATA_ALL,
+    DATA_AAHRS,
+    DATA_GPS,
+    DATA_BATT,
+} SensorData;
+
+/**
+ * @return JSON object with AAHRS data, or NULL on error
+ */
+static JSON_Value *create_aahrs_obj() {
+    JSON_Value *aahrsObj = json_value_init_object();
+    if (!aahrsObj)
+        return NULL;
+    JSON_Object *obj = json_value_get_object(aahrsObj);
+    if (aircraft.aahrsSafe) {
+        json_object_set_number(obj, "roll", aahrs.roll);
+        json_object_set_number(obj, "pitch", aahrs.pitch);
+        json_object_set_number(obj, "yaw", aahrs.yaw);
+    } else {
+        json_object_set_null(obj, "roll");
+        json_object_set_null(obj, "pitch");
+        json_object_set_null(obj, "yaw");
     }
+    return aahrsObj;
 }
-#endif
-// Print battery sensor data as JSON, including opening and closing braces. Should be printed as part of a larger JSON object.
-static inline void print_batt() {
+
+/**
+ * @return JSON object with GPS data, or NULL on error
+ */
+static JSON_Value *create_gps_obj() {
+    JSON_Value *gpsObj = json_value_init_object();
+    if (!gpsObj)
+        return NULL;
+    JSON_Object *obj = json_value_get_object(gpsObj);
+    if (aircraft.gpsSafe && gps.is_supported()) {
+        json_object_set_number(obj, "lat", gps.lat);
+        json_object_set_number(obj, "lng", gps.lng);
+        json_object_set_number(obj, "alt", gps.alt);
+        json_object_set_number(obj, "speed", gps.speed);
+        json_object_set_number(obj, "track", gps.track);
+    } else {
+        json_object_set_null(obj, "lat");
+        json_object_set_null(obj, "lng");
+        json_object_set_null(obj, "alt");
+        json_object_set_null(obj, "speed");
+        json_object_set_null(obj, "track");
+    }
+    return gpsObj;
+}
+
+/**
+ * @return JSON array with battery data, or NULL on error
+ */
+static JSON_Value *create_batt_arr() {
 #if PLATFORM_SUPPORTS_ADC
-    printraw(",\"batt\":{");
-    print_batt_data();
-    printraw("}");
+    JSON_Value *battArr = json_value_init_array();
+    if (!battArr)
+        return NULL;
+    JSON_Array *arr = json_value_get_array(battArr);
+    for (u32 i = 0; i < ADC_NUM_CHANNELS; i++) {
+        json_array_append_number(arr, adc_read_raw(ADC_PINS[i]));
+    }
+    return battArr;
+#else
+    return json_value_init_array();
 #endif
 }
 
+static SensorData parse_args(const char *args) {
+    JSON_Value *root = json_parse_string(args);
+    if (!root)
+        return DATA_INVALID;
+    JSON_Object *obj = json_value_get_object(root);
+    if (!obj) {
+        json_value_free(root);
+        return DATA_INVALID;
+    }
+    const char *data = json_object_get_string(obj, "data");
+    if (!data) {
+        json_value_free(root);
+        return DATA_INVALID;
+    }
+    SensorData ret = DATA_INVALID;
+    if (strcasecmp(data, "all") == 0)
+        ret = DATA_ALL;
+    else if (strcasecmp(data, "aahrs") == 0)
+        ret = DATA_AAHRS;
+    else if (strcasecmp(data, "gps") == 0)
+        ret = DATA_GPS;
+    else if (strcasecmp(data, "batt") == 0)
+        ret = DATA_BATT;
+    json_value_free(root);
+    return ret;
+}
+
+// Input:
+// {"data":"all|aahrs|gps|batt"}
+
+// Output (for data="all", note that "batt" may not exist and may have a different length):
+// {
+//  "aahrs":{"roll":number|null,"pitch":number|null,"yaw":number|null},
+//  "gps":{"lat":number|null,"lng":number|null,"alt":number|null,"speed":number|null,"track":number|null},
+//  "batt":"batt":[number,...]
+// }
+
 i32 api_get_sensor(const char *args) {
-    // Prepare the JSON output based on sensor type
-    switch (atoi(args)) {
-        case 1: // AAHRS only
-            if (aircraft.aahrsSafe) {
-                printraw("{\"aahrs\":{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f}}\n", aahrs.roll, aahrs.pitch, aahrs.yaw);
-            } else {
-                printraw("{\"aahrs\":{\"roll\":null,\"pitch\":null,\"yaw\":null}}\n");
-            }
-            break;
-        case 2: // GPS only
-            if (!gps.is_supported())
-                return 403;
-            if (aircraft.gpsSafe) {
-                printraw("{\"gps\":{\"lat\":%.10lf,\"lng\":%.10lf,\"alt\":%ld,\"speed\":%.4f,\"track\":%.4f}}\n", gps.lat,
-                         gps.lng, gps.alt, gps.speed, gps.track);
-            } else {
-                printraw("{\"gps\":{\"lat\":null,\"lng\":null,\"alt\":null,\"speed\":null,\"track\":null}}\n");
-            }
-            break;
-#if PLATFORM_SUPPORTS_ADC
-        case 3: // Battery only
-            printraw("{\"batt\":{");
-            print_batt_data();
-            printraw("}}\n");
-            break;
-#endif
-        case 0: // All sensors
+    // Parse args to determine the sensor data we should return
+    SensorData data = parse_args(args);
+    if (data == DATA_INVALID)
+        return 400;
+
+    // Generate all response data, regardless of the request
+    JSON_Value *root = json_value_init_object();
+    JSON_Object *obj = json_value_get_object(root);
+    JSON_Value *aahrsObj = create_aahrs_obj();
+    JSON_Value *gpsObj = create_gps_obj();
+    JSON_Value *battArr = create_batt_arr();
+    if (!aahrsObj || !gpsObj || !battArr)
+        return 500;
+
+    // Now, include response data selectively based on the request
+    switch (data) {
         default:
-            if (!gps.is_supported())
+        case DATA_ALL:
+            json_object_set_value(obj, "aahrs", aahrsObj);
+            json_object_set_value(obj, "gps", gpsObj);
+#if PLATFORM_SUPPORTS_ADC
+            json_object_set_value(obj, "batt", battArr);
+#endif
+            break;
+        case DATA_AAHRS:
+            json_object_set_value(obj, "aahrs", aahrsObj);
+            break;
+        case DATA_GPS:
+            if (!gps.is_supported()) {
+                json_value_free(battArr);
+                json_value_free(gpsObj);
+                json_value_free(aahrsObj);
+                json_value_free(root);
                 return 403;
-            if (aircraft.aahrsSafe && aircraft.gpsSafe) {
-                printraw("{\"aahrs\":{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f},"
-                         "\"gps\":{\"lat\":%.10lf,\"lng\":%.10lf,\"alt\":%ld,\"speed\":%.4f,\"track\":%.4f}",
-                         aahrs.roll, aahrs.pitch, aahrs.yaw, gps.lat, gps.lng, gps.alt, gps.speed, gps.track);
-                print_batt();
-                printraw("}\n");
-            } else if (aircraft.aahrsSafe) {
-                printraw("{\"aahrs\":{\"roll\":%.4f,\"pitch\":%.4f,\"yaw\":%.4f},"
-                         "\"gps\":{\"lat\":null,\"lng\":null,\"alt\":null,\"speed\":null,\"track\":null}",
-                         aahrs.roll, aahrs.pitch, aahrs.yaw);
-                print_batt();
-                printraw("}\n");
-            } else if (aircraft.gpsSafe) {
-                printraw("{\"aahrs\":{\"roll\":null,\"pitch\":null,\"yaw\":null},"
-                         "\"gps\":{\"lat\":%.10lf,\"lng\":%.10lf,\"alt\":%ld,\"speed\":%.4f,\"track\":%.4f}",
-                         gps.lat, gps.lng, gps.alt, gps.speed, gps.track);
-                print_batt();
-                printraw("}\n");
-            } else {
-                printraw("{\"aahrs\":{\"roll\":null,\"pitch\":null,\"yaw\":null},"
-                         "\"gps\":{\"lat\":null,\"lng\":null,\"alt\":null,\"speed\":null,\"track\":null}");
-                print_batt();
-                printraw("}\n");
             }
+            json_object_set_value(obj, "gps", gpsObj);
+            break;
+        case DATA_BATT:
+#if PLATFORM_SUPPORTS_ADC
+            json_object_set_value(obj, "batt", battArr);
+#else
+            json_value_free(battArr);
+            json_value_free(gpsObj);
+            json_value_free(aahrsObj);
+            json_value_free(root);
+            return 403;
+#endif
             break;
     }
+    char *serialized = json_serialize_to_string(root);
+    printraw("%s\n", serialized);
+    json_free_serialized_string(serialized);
+    json_value_free(root);
     return -1;
 }

@@ -4,6 +4,7 @@
  */
 
 #include <stdlib.h>
+#include "platform/helpers.h"
 #include "platform/pwm.h"
 #include "platform/time.h"
 

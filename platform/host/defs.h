@@ -53,11 +53,15 @@ typedef timer_t __callback_id_t;
 
 // Platform details
 #define PLATFORM_NAME (PLATFORM "-" ARCH)
-#define PLATFORM_VERSION "1.0.0" // If you ever make any changes to the platform code, it's a nice courtesy to increment this.
+#define PLATFORM_VERSION "1.0.0"
 // Platform features
 #define PLATFORM_SUPPORTS_ADC 0
 #define PLATFORM_SUPPORTS_DISPLAY 0
 #define PLATFORM_SUPPORTS_WIFI 0
+
+#if defined(_WIN32)
+    #define NO_COLOR_OUTPUT // Windows console does not support ANSI color codes
+#endif
 
 // For __printflike:
 #ifndef __printflike

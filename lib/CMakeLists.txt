@@ -9,6 +9,7 @@ add_library(fbw_lib
     lfs_util.c
     minmea.c
     nav.c
+    parson.c
     pid.c
     semver.c
 )

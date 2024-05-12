@@ -6,7 +6,7 @@
 #include <string.h>
 
 #include "GET/get_config.h"
-#include "GET/get_fplan.h"
+#include "GET/get_flightplan.h"
 #include "GET/get_info.h"
 #include "GET/get_input.h"
 #include "GET/get_logs.h"
@@ -15,7 +15,7 @@
 
 #include "SET/set_bay.h"
 #include "SET/set_config.h"
-#include "SET/set_fplan.h"
+#include "SET/set_flightplan.h"
 #include "SET/set_mode.h"
 #include "SET/set_target.h"
 #include "SET/set_waypoint.h"
@@ -38,8 +38,8 @@
 i32 api_handle_get(const char *cmd, const char *args) {
     if (strcasecmp(cmd, "GET_CONFIG") == 0) {
         return api_get_config(args);
-    } else if (strcasecmp(cmd, "GET_FPLAN") == 0) {
-        return api_get_fplan(args);
+    } else if (strcasecmp(cmd, "GET_FLIGHTPLAN") == 0) {
+        return api_get_flightplan(args);
     } else if (strcasecmp(cmd, "GET_INFO") == 0) {
         return api_get_info(args);
     } else if (strcasecmp(cmd, "GET_INPUT") == 0) {
@@ -59,8 +59,8 @@ i32 api_handle_set(const char *cmd, const char *args) {
         return api_set_bay(args);
     } else if (strcasecmp(cmd, "SET_CONFIG") == 0) {
         return api_set_config(args);
-    } else if (strcasecmp(cmd, "SET_FPLAN") == 0) {
-        return api_set_fplan(args);
+    } else if (strcasecmp(cmd, "SET_FLIGHTPLAN") == 0) {
+        return api_set_flightplan(args);
     } else if (strcasecmp(cmd, "SET_MODE") == 0) {
         return api_set_mode(args);
     } else if (strcasecmp(cmd, "SET_TARGET") == 0) {

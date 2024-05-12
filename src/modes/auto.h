@@ -29,6 +29,7 @@ typedef struct Waypoint {
 #define WAYPOINT_NUM_FIELDS 5
 
 typedef enum BayPosition {
+    POS_INVALID,
     POS_CLOSED,
     POS_OPEN,
 } BayPosition;

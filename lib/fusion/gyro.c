@@ -15,6 +15,7 @@
  */
 
 #include <string.h>
+#include "platform/helpers.h"
 
 #include "drivers/drivers.h"
 #include "drivers/icm20948.h"

@@ -5,6 +5,7 @@
 
 #include <math.h>
 #include <stdlib.h>
+#include "platform/helpers.h"
 
 #include "io/aahrs.h"
 #include "io/receiver.h"

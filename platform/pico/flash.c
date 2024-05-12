@@ -21,6 +21,7 @@
 #include <assert.h>
 #include <limits.h>
 #include <string.h>
+
 #include "platform/types.h"
 
 #include "hardware/flash.h"

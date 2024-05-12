@@ -23,6 +23,8 @@
 #include "hardware/pio.h"
 #include "pwm.pio.h"
 
+#include "platform/helpers.h"
+
 #include "platform/pwm.h"
 
 // For PWM input

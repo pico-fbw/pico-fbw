@@ -35,7 +35,7 @@ jobs:
 
     - name: Set up C build environment
       shell: bash
-      run: sudo apt-get install ccache cmake ninja-build
+      run: sudo apt-get install cmake ninja-build
 
     - name: Set up web build environment
       uses: actions/setup-node@v4.0.2
@@ -95,9 +95,15 @@ jobs:
       shell: bash
       run: source ~/esp/esp-idf/export.sh && 
         cmake --build "${{github.workspace}}/build" --config ${{env.BUILD_TYPE}} --parallel ${{steps.core_count.outputs.output}}
+    
+    - name: Upload binaries
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{matrix.PLATFORM}}-binaries
+        path: ${{github.workspace}}/build
 
   host:
-    runs-on: ${{ matrix.OS }}
+    runs-on: ${{matrix.OS}}
 
     strategy:
       matrix:
@@ -111,15 +117,15 @@ jobs:
 
     - name: Set up C build environment (linux)
       if: matrix.OS == 'ubuntu-latest'
-      run: sudo apt-get install ccache cmake ninja-build
+      run: sudo apt-get install cmake ninja-build
 
     - name: Set up C build environment (windows)
       if: matrix.OS == 'windows-latest'
-      run: choco install ccache cmake ninja && echo "D:/a/_temp/msys64/mingw64/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      run: choco install cmake ninja && echo "D:/a/_temp/msys64/mingw64/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
     - name: Set up C build environment (macos)
       if: matrix.OS == 'macos-latest'
-      run: brew install ccache cmake ninja
+      run: brew install cmake ninja
     
     - name: Configure CMake
       shell: bash
@@ -128,3 +134,9 @@ jobs:
     - name: Build
       shell: bash
       run: cmake --build "${{github.workspace}}/build" --config ${{env.BUILD_TYPE}}
+
+    - name: Upload binaries
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{matrix.OS}}-binaries
+        path: ${{github.workspace}}/build

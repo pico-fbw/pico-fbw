@@ -33,6 +33,7 @@ VOID CALLBACK callback_to_WAITORTIMERCALLBACK(PVOID lp_param, BOOLEAN timer_or_w
         DeleteTimerQueueTimer(NULL, data->id, NULL);
         free(data);
     }
+    (void)timer_or_wait_fired;
 }
 
 #elif defined(__APPLE__) || defined(__linux__)
@@ -91,7 +92,7 @@ u64 time_us() {
 #if defined(_WIN32)
     LARGE_INTEGER tNow;
     QueryPerformanceCounter(&tNow);
-    return (tNow.QuadPart - tStart.QuadPart) * 1000000 / tFreq.QuadPart;
+    return (tNow.QuadPart - tStart.QuadPart) * 1000000 / tFreq.QuadPart; // tStart and tFreq are set in sys.c
 #elif defined(__APPLE__) || defined(__linux__)
     struct timeval tv;
     gettimeofday(&tv, NULL);

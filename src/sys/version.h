@@ -8,21 +8,28 @@
 #endif
 
 #define PICO_FBW_API_VERSION "1.0"
-#define FPLAN_VERSION "1.0"
+#define FLIGHTPLAN_VERSION "1.0" // Version of flightplan that this version supports
+
+typedef enum VersionCheck {
+    VERSION_SAME,
+    VERSION_NEWER,
+    VERSION_OLDER,
+    VERSION_NONE,
+    VERSION_ERROR,
+} VersionCheck;
 
 /**
  * Checks the version of pico-fbw (this binary) against the current one (stored in flash).
  * @param vstr the version string to check against, or NULL to check against the current version in flash
- * @return 0 if the versions match,
- * 1 if the version is newer (pre-release),
- * -1 if the version is older,
- * -2 if there was no valid version to parse,
- * -3 if there was a parse error,
- * or -4 if there was a filesystem error.
- * @note If no `vstr` is specified, the version read from flash will be copied into `vstr`.
- * `vstr` should be of at least length 64.
+ * @return VERSION_SAME if the versions match,
+ * VERSION_NEWER if the version is newer (pre-release),
+ * VERSION_OLDER if the version is older,
+ * VERSION_NONE if no version was found to compare against (didn't exist in flash),
+ * or VERSION_ERROR if there was an error (parse, filesystem).
+ * @note If no `vstr` is specified (""), the version read from flash will used (and will be copied into `vstr`).
+ * `vstr` should be of at least length 64, and should not be NULL.
  */
-i32 version_check(char vstr[]);
+VersionCheck version_check(char vstr[]);
 
 /**
  * Saves the current version of pico-fbw (this binary) to flash.

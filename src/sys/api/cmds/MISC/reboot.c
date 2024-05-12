@@ -3,18 +3,31 @@
  * Licensed under the GNU AGPL-3.0
  */
 
-#include <stdlib.h>
+#include <stdbool.h>
 #include "platform/sys.h"
+
+#include "lib/parson.h"
 
 #include "reboot.h"
 
+// {"bootloader":true|false}
+
 i32 api_reboot(const char *args) {
-    switch (atoi(args)) {
-        case 1:
-            sys_reboot(true);
-        case 0:
-        default:
-            sys_reboot(false);
+    JSON_Value *root = json_parse_string(args);
+    if (!root)
+        return 400;
+    JSON_Object *obj = json_value_get_object(root);
+    if (!obj) {
+        json_value_free(root);
+        return 400;
     }
+    JSON_Value *bootloader = json_object_get_value(obj, "bootloader");
+    if (!bootloader || json_value_get_type(bootloader) != JSONBoolean) {
+        json_value_free(root);
+        return 400;
+    }
+    sys_reboot((bool)json_value_get_boolean(bootloader));
+    json_value_free(bootloader);
+    json_value_free(root);
     return -1;
 }

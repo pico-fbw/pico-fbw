@@ -236,7 +236,7 @@ void log_message(LogType type, const char *msg, i32 code, u32 pulse_ms, bool for
         if (code > -1) {
             print("%s%s: (FBW-%ld) %s%s", colorCode, typeMsg, code, msg, COLOR_RESET);
         } else {
-            print("%s%s %s%s", colorCode, typeMsg, msg, COLOR_RESET);
+            print("%s%s: %s%s", colorCode, typeMsg, msg, COLOR_RESET);
         }
     } else
         print("%s", msg);

@@ -2,4 +2,4 @@
 
 #include "platform/types.h"
 
-i32 api_get_fplan(const char *args);
+i32 api_set_flightplan(const char *args);

@@ -3,6 +3,7 @@
  * Licensed under the GNU AGPL-3.0
  */
 
+#include "platform/helpers.h"
 #include "platform/time.h"
 
 #include "sys/configuration.h"

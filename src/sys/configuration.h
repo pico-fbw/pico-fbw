@@ -232,29 +232,28 @@ bool config_validate();
 
 /**
  * Gets a value from the config based on its string representation.
- * @param section The name of the section to look in
- * @param key The name of the key to look up
- * @param value The pointer to the value to store the result in
- * The pointer will point to either a f32 or a char depending on the...
- * @return type of the value stored.
+ * @param section the name of the section to look in
+ * @param key the name of the key to look up
+ * @param value the pointer to the value to store the result in
+ * @return type of the value stored
+ * @note Value will store either an `f32` or `const char*` depending on the type of section and should be cast accordingly.
  */
 ConfigSectionType config_get(const char *section, const char *key, void **value);
 
 /**
  * Sets a value in the config based on its string representation.
- * @param section The name of the section to look in
- * @param key The name of the key to look up
- * @param value The pointer to the value to store
- * The pointer will point to either a f32 or a char depending on the section type/user input.
+ * @param section the name of the section to look in
+ * @param key the name of the key to look up
+ * @param value the string represenation to the value to store, will be parsed into other formats as needed
  * @return Whether the value was successfully set.
  */
 bool config_set(const char *section, const char *key, const char *value);
 
 /**
  * Gets a string representation of a config section based on its (enum) index, as well as its type.
- * @param section The (enum) index of the section
- * @param str The pointer to the string to store the result in
- * @return The type of the section
+ * @param section the (enum) index of the section
+ * @param str pointer to a string to store the result in
+ * @return the type of the section
  */
 ConfigSectionType config_to_string(ConfigSection section, const char **str);
 

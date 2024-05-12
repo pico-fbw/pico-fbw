@@ -8,6 +8,7 @@
 #include "platform/adc.h"
 #include "platform/defs.h"
 #include "platform/flash.h"
+#include "platform/helpers.h"
 #include "platform/sys.h"
 #include "platform/time.h"
 #include "platform/types.h"
@@ -46,10 +47,10 @@ int main() {
 
     // Check version
     boot_set_progress(10, "Checking for updates");
-    char version[64] = "\0";
-    i32 versionCheck = version_check(version);
-    if (versionCheck != 0) {
-        if (versionCheck < -2) {
+    char version[64] = "";
+    VersionCheck versionCheck = version_check(version);
+    if (versionCheck != VERSION_SAME) {
+        if (versionCheck == VERSION_ERROR) {
             log_message(TYPE_FATAL, "Failed to run update checker!", 250, 0, true);
         } else {
             printpre("boot", "performing a system update from v%s to v%s, please wait...",
@@ -100,7 +101,7 @@ int main() {
     u32 servos[num_servos];
     servo_get_pins(servos, &num_servos);
     servo_enable(servos, num_servos);
-    f32 degrees[] = DEFAULT_SERVO_TEST;
+    const f32 degrees[] = DEFAULT_SERVO_TEST;
     servo_test(servos, num_servos, degrees, count_of(degrees), DEFAULT_SERVO_TEST_PAUSE_MS);
 
     // ESC

@@ -14,6 +14,8 @@
 #include "freertos/task.h"
 #include "soc/soc_caps.h"
 
+#include "platform/helpers.h"
+
 #include "platform/pwm.h"
 
 #define NUM_PWM_CHANNELS 8

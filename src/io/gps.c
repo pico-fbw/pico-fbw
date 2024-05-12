@@ -201,17 +201,21 @@ bool gps_is_supported() {
     return ((GPSCommandType)config.sensors[SENSORS_GPS_COMMAND_TYPE] != GPS_COMMAND_TYPE_NONE);
 }
 
-GPS gps = {.lat = -200.0,
-           .lng = -200.0,
-           .alt = -1,
-           .speed = -1.0f,
-           .track = -1.0f,
-           .pdop = -1.0f,
-           .hdop = -1.0f,
-           .vdop = -1.0f,
-           .altOffset = 0,
-           .altOffsetCalibrated = false,
-           .init = gps_init,
-           .update = gps_update,
-           .calibrate_alt_offset = gps_calibrate_alt_offset,
-           .is_supported = gps_is_supported};
+// clang-format off
+GPS gps = {
+    .lat = -200.0,
+    .lng = -200.0,
+    .alt = -1,
+    .speed = -1.0f,
+    .track = -1.0f,
+    .pdop = -1.0f,
+    .hdop = -1.0f,
+    .vdop = -1.0f,
+    .altOffset = 0,
+    .altOffsetCalibrated = false,
+    .init = gps_init,
+    .update = gps_update,
+    .calibrate_alt_offset = gps_calibrate_alt_offset,
+    .is_supported = gps_is_supported
+};
+// clang-format on

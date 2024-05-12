@@ -48,12 +48,12 @@ static Waypoint externWpt;
 static void (*captureCallback)(void) = NULL;
 
 // Callback for when the bay needs to be closed after a user-specified delay (within the flightplan)
-i32 dropCallback() {
+i32 callback_drop() {
     auto_set_bay_position(POS_CLOSED);
     return 0; // Don't repeat
 }
 
-static inline void loadWaypoint(Waypoint *wpt) {
+static inline void load_waypoint(Waypoint *wpt) {
     // Load the next altitude, if it is -5 (the default) just discard it (by setting it to our current alt; no change)
     if (gps.altOffsetCalibrated) {
         // Factor in the altitude offset calculated earlier
@@ -67,7 +67,7 @@ static inline void loadWaypoint(Waypoint *wpt) {
         auto_set_bay_position(POS_OPEN);
         if (wpt->drop > 0)
             // Schedule a callback if the bay needs to close after some time
-            callback_in_ms(wpt->drop * 1000, dropCallback);
+            callback_in_ms(wpt->drop * 1000, callback_drop);
     }
 }
 
@@ -99,7 +99,7 @@ bool auto_init() {
     pid_init(&latGuid);
     pid_init(&vertGuid);
     // Load the first Waypoint from the flightplan (subsequent waypoints will be loaded on waypoint interception)
-    loadWaypoint(&flightplan_get()->waypoints[currentWaypoint]);
+    load_waypoint(&(flightplan_get()->waypoints[currentWaypoint]));
     return true;
 }
 
@@ -151,7 +151,7 @@ void auto_update() {
                     aircraft.change_to(MODE_HOLD);
                 } else
                     // More waypoints to go, load the next one
-                    loadWaypoint(&flightplan_get()->waypoints[currentWaypoint]);
+                    load_waypoint(&flightplan_get()->waypoints[currentWaypoint]);
                 break;
             case EXTERNAL:
                 // then execute the callback function and enter a holding pattern
@@ -168,7 +168,7 @@ void auto_set(Waypoint wpt, void (*callback)(void)) {
     guidanceSource = EXTERNAL;
     externWpt = wpt;
     captureCallback = callback;
-    loadWaypoint(&externWpt);
+    load_waypoint(&externWpt);
 }
 
 void auto_set_bay_position(BayPosition pos) {

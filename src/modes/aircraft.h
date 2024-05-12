@@ -5,6 +5,7 @@
 #define MODE_MIN MODE_DIRECT
 // clang-format off
 typedef enum Mode {
+    MODE_INVALID,
     MODE_DIRECT,
     MODE_NORMAL,
     MODE_AUTO,

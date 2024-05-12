@@ -7,6 +7,8 @@
 #include <string.h>
 #include "driver/i2c_master.h" // https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32/api-reference/peripherals/i2c.html
 
+#include "platform/helpers.h"
+
 #include "platform/i2c.h"
 
 // TODO: aahrs system supports a device dropping offline and then coming back online, so this should be handled

@@ -3,9 +3,11 @@
  * Licensed under the GNU AGPL-3.0
  */
 
-#include <math.h>
-#include <stdio.h>
+#include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
+
+#include "lib/parson.h"
 
 #include "sys/configuration.h"
 #include "sys/print.h"
@@ -16,7 +18,7 @@
  * @param section The section to get the memory offset of
  * @return The memory offset of the section.
  */
-static f32 *getSectionMem(ConfigSection section) {
+static f32 *get_section_mem(ConfigSection section) {
     switch (section) {
         case CONFIG_GENERAL:
             return config.general;
@@ -33,65 +35,119 @@ static f32 *getSectionMem(ConfigSection section) {
     }
 }
 
+/**
+ * Helper to parse command arguments.
+ * @param args command arguments
+ * @param section pointer to store the section
+ * @param key pointer to store the key
+ * @return true if the arguments were parsed successfully
+ * @note The caller is responsible for freeing the memory allocated for section and key.
+ */
+static bool parse_args(const char *args, char **section, char **key) {
+    JSON_Value *root = json_parse_string(args);
+    if (!root)
+        return false;
+    JSON_Object *obj = json_value_get_object(root);
+    if (!obj) {
+        json_value_free(root);
+        return false;
+    }
+    const char *s = json_object_get_string(obj, "section");
+    const char *k = json_object_get_string(obj, "key");
+    if (!s || !k) {
+        json_value_free(root);
+        return false;
+    }
+    *section = malloc(strlen(s) + 1);
+    *key = malloc(strlen(k) + 1);
+    strcpy(*section, s);
+    strcpy(*key, k);
+    json_value_free(root);
+    return true;
+}
+
+// Input:
+// {"section":"","key":""}
+
+// get_config {"section":"general","key":"skipcalibration"}
+
+// Output (argument):
+// {"key":number|""}
+
+// Output (no argument):
+// {"sections":[{"name":"","keys":[{"key":number|""}]}]}
+
 i32 api_get_config(const char *args) {
+    char *serialized = NULL;
     if (args) {
-        char section[64];
-        char key[64];
-        if (sscanf(args, "%63s %63s", section, key) < 2)
+        // Arguments are present, parse them to figure out what config value to get
+        char *section = NULL, *key = NULL;
+        if (!parse_args(args, &section, &key))
             return 400;
         void *value = NULL;
         ConfigSectionType type = config_get(section, key, &value);
         if (!value)
             return 400;
+        // The requested config value exists and we now have it + its type
+        // Now, generate our response
+        JSON_Value *root = json_value_init_object();
+        JSON_Object *obj = json_value_get_object(root);
         switch (type) {
             case SECTION_TYPE_FLOAT:
-                printraw("{\"key\":%f}\n", *(f32 *)value);
+                json_object_set_number(obj, "key", *(f32 *)value);
                 break;
             case SECTION_TYPE_STRING:
-                printraw("{\"key\":\"%s\"}\n", (char *)value);
+                json_object_set_string(obj, "key", (char *)value);
                 break;
-            default:
-                return 400;
+            default: {
+                free(section);
+                free(key);
+                json_value_free(root);
+                return 500;
+            }
         }
+        serialized = json_serialize_to_string(root);
+        free(section);
+        free(key);
+        json_value_free(root);
     } else {
-        // No args, gather all data
-        printraw("{\"sections\":[");
+        // No arguments were given, return all config values
+        JSON_Value *root = json_value_init_object();
+        JSON_Object *obj = json_value_get_object(root);
+        JSON_Value *sectionsArr = json_value_init_array();
+        JSON_Array *sections = json_value_get_array(sectionsArr);
+        // For every config section...
         for (ConfigSection s = 0; s < NUM_CONFIG_SECTIONS; s++) {
-            // Section header, based on name
+            JSON_Value *sectionObj = json_value_init_object();
+            JSON_Object *section = json_value_get_object(sectionObj);
             const char *sectionStr;
             ConfigSectionType type = config_to_string(s, &sectionStr);
-            printraw("{\"name\":\"%s\",\"keys\":[", sectionStr);
+            json_object_set_string(section, "name", sectionStr);
+            JSON_Value *keysArr = json_value_init_array();
+            JSON_Array *keys = json_value_get_array(keysArr);
+            // ...and for every key in the section, add it to the array
             switch (type) {
                 case SECTION_TYPE_FLOAT: {
-                    f32 *section = getSectionMem(s);
+                    f32 *section = get_section_mem(s);
                     if (!section)
                         return 400;
                     for (u32 v = 0; v < CONFIG_SECTION_SIZE; v++) {
-                        // Read values, up until we hit the end of the data (signified by FLAG_END) or end of the sector
                         if (section[v + 1] != CONFIG_END_MAGIC && v < CONFIG_SECTION_SIZE - 1) {
-                            // For float sectors we need to check for finite values and change them to null because json is dumb
-                            isfinite(section[v]) ? printraw("%f,", section[v]) : printraw("null,");
+                            json_array_append_number(keys, section[v]);
                         } else {
-                            if (s < NUM_CONFIG_SECTIONS - 1) {
-                                isfinite(section[v]) ? printraw("%f]},", section[v]) : printraw("null]},");
-                            } else {
-                                isfinite(section[v]) ? printraw("%f]}]}\n", section[v]) : printraw("null]}]}\n");
-                            }
+                            json_array_append_number(keys, section[v]);
                             break;
                         }
                     }
                     break;
                 }
                 case SECTION_TYPE_STRING: {
-                    // I didn't feel like figuring out how to loop this, plus there's not much anyway so it's probably smaller
-                    // ._.
+                    // I didn't feel like looping this and plus, there's only one string section
                     switch (s) {
                         case CONFIG_WIFI:
-                            if (s < NUM_CONFIG_SECTIONS - 1) {
-                                printraw("\"%s\",\"%s\"]},", config.wifi.ssid, config.wifi.pass);
-                            } else {
-                                printraw("\"%s\",\"%s\"]}]}\n", config.wifi.ssid, config.wifi.pass);
-                            }
+                            json_array_append_string(keys, config.wifi.ssid);
+                            json_array_append_string(keys, config.wifi.pass);
+                            break;
                         default:
                             break;
                     }
@@ -101,7 +157,14 @@ i32 api_get_config(const char *args) {
                     return 500;
                 }
             }
+            json_object_set_value(section, "keys", keysArr);
+            json_array_append_value(sections, sectionObj);
         }
+        json_object_set_value(obj, "sections", sectionsArr);
+        serialized = json_serialize_to_string(root);
+        json_value_free(root);
     }
+    printraw("%s\n", serialized);
+    json_free_serialized_string(serialized);
     return -1;
 }

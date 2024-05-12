@@ -4,6 +4,7 @@
  */
 
 #include <math.h>
+#include "platform/helpers.h"
 
 #include "nav.h"
 

@@ -2,7 +2,7 @@ add_library(fbw_api
     api.c
     cmds/cmds.c
     cmds/GET/get_config.c
-    cmds/GET/get_fplan.c
+    cmds/GET/get_flightplan.c
     cmds/GET/get_info.c
     cmds/GET/get_input.c
     cmds/GET/get_logs.c
@@ -15,7 +15,7 @@ add_library(fbw_api
     cmds/MISC/reset.c
     cmds/SET/set_bay.c
     cmds/SET/set_config.c
-    cmds/SET/set_fplan.c
+    cmds/SET/set_flightplan.c
     cmds/SET/set_mode.c
     cmds/SET/set_target.c
     cmds/SET/set_waypoint.c
@@ -29,6 +29,7 @@ add_library(fbw_api
 
 target_link_libraries(fbw_api
     fbw_io
+    fbw_lib
     fbw_modes
     fbw_sys
 )

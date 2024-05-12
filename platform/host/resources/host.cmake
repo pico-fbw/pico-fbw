@@ -6,7 +6,8 @@ function(setup_before_subdirs)
 endfunction()
 
 function(setup_after_subdirs)
-    if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-    target_link_libraries(fbw_lib m)
+    # Link math library on Linux for trig functions
+    if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+        target_link_libraries(fbw_lib m)
     endif()
 endfunction()

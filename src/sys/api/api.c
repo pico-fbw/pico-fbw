@@ -43,16 +43,14 @@ i32 api_poll() {
         char *args = strtok(NULL, "");
         if (!cmd) {
             // Out of memory?
-            print("pico-fbw 500");
+            printraw("pico-fbw 500\n");
             free(line);
             return 500;
         }
-        if (!args)
-            args = ""; // Ensure args does not end up being a null pointer
 
         i32 status = api_exec(cmd, args);
         if (status != -1)
-            print("pico-fbw %ld", status);
+            printraw("pico-fbw %ld\n", status);
         free(line);
         return status;
     }

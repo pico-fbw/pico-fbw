@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "platform/defs.h"
+#include "platform/helpers.h"
 #include "platform/i2c.h"
 #include "platform/time.h"
 
@@ -1854,8 +1855,9 @@ void display_string(const char *str, i32 progress) {
             wordCount++;
         }
     } else {
-    // Split words between lines irregularly; we can't fit each neatly on its own line
-    split : {
+        // clang-format off
+// Split words between lines irregularly; we can't fit each neatly on its own line
+split: {
         u32 numLines = (strlen(str) + (DISPLAY_MAX_LINE_LEN - 1)) / DISPLAY_MAX_LINE_LEN;
         switch (numLines) {
             default:
@@ -1871,7 +1873,8 @@ void display_string(const char *str, i32 progress) {
                 strncpy(line1, str, DISPLAY_MAX_LINE_LEN);
                 break;
         }
-    }
+}
+        // clang-format on
     }
     // If we have a progress bar, create it now
     if (progress >= 0) {
