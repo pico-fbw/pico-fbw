@@ -29,7 +29,7 @@ void boot_begin() {
     log_init();
     display_init();
     sleep_ms_blocking(BOOT_WAIT_MS); // Wait for peripherals to power up
-#if !NO_COLOR_OUTPUT
+#ifndef NO_COLOR_OUTPUT
     printraw(COLOR_RESET); // If we're using color output, reset color to default in case the previous output was colored
 #endif
 }

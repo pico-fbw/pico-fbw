@@ -2,15 +2,21 @@
 
 #if defined(_WIN32)
     #include <windows.h>
-typedef HANDLE __callback_id_t;
+    #if _WIN32_WINNT < _WIN32_WINNT_WIN10
+        #error "Windows version not supported, please update to Windows 10 or later."
+    #endif
 #elif defined(__APPLE__)
     #include "time_apple.h"
-typedef timer_t __callback_id_t;
 #elif defined(__linux__)
     #include <time.h>
-typedef timer_t __callback_id_t;
 #else
     #warning "Unknown host platform, things may not work as expected."
+#endif
+
+#if defined(_WIN32)
+typedef HANDLE __callback_id_t;
+#elif defined(__APPLE__) || defined(__linux__)
+typedef timer_t __callback_id_t;
 #endif
 
 // Not implemented
@@ -58,10 +64,6 @@ typedef timer_t __callback_id_t;
 #define PLATFORM_SUPPORTS_ADC 0
 #define PLATFORM_SUPPORTS_DISPLAY 0
 #define PLATFORM_SUPPORTS_WIFI 0
-
-#if defined(_WIN32)
-    #define NO_COLOR_OUTPUT // Windows console does not support ANSI color codes
-#endif
 
 // For __printflike:
 #ifndef __printflike

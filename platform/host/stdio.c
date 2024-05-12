@@ -8,13 +8,27 @@
 #include <stdlib.h>
 #include <string.h>
 #if defined(_WIN32)
+    #include <windows.h>
     #include "stdio_windows.h"
 #endif
 
 #include "platform/stdio.h"
 
 void stdio_setup() {
+#if defined(_WIN32)
+    // To be able to use ANSI escape codes, we need to enable virtual terminal processing
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hOut == INVALID_HANDLE_VALUE)
+        return;
+    DWORD dwMode = 0;
+    if (!GetConsoleMode(hOut, &dwMode))
+        return;
+    dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+    if (!SetConsoleMode(hOut, dwMode))
+        return;
+#else
     return;
+#endif
 }
 
 char *stdin_read() {

@@ -7,7 +7,7 @@
 #include "platform/defs.h" // A platform can define NO_COLOR_OUTPUT to disable terminal color output
 #include "platform/stdio.h"
 
-#if !NO_COLOR_OUTPUT
+#ifndef NO_COLOR_OUTPUT
     // Color codes for ANSI terminal colors
     #define COLOR_BLUE "\x1b[38;2;59;130;246m"
     #define COLOR_YELLOW "\x1b[38;2;234;179;8m"
@@ -20,7 +20,7 @@
     #define COLOR_YELLOW ""
     #define COLOR_LIGHT_GREEN ""
     #define COLOR_LIGHT_RED ""
-    #define COLOR_DARK_RED ""
+    #define COLOR_LIGHT_RED_BOLD ""
     #define COLOR_RESET ""
 #endif
 

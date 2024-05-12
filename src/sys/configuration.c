@@ -1,9 +1,6 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU AGPL-3.0
- *
- * I would much rather this file be named `config.c`, but the C compiler does not share this sentiment.
- * (I think there's a file called "sys/config.h" in GCC so it gets mad? Annoying.)
  */
 
 #include <math.h>
@@ -28,6 +25,9 @@
 #define FILE_CALIBRATION "calibration.dat"
 
 // clang-format off
+
+// Default configuration values
+
 Config config = {
     .general = {
         CTRLMODE_2AXIS_ATHR, SWITCH_TYPE_3_POS, 20, 50, 50, true,

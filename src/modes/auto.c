@@ -28,7 +28,7 @@
 #define MIN_RADIUS 5             // The minimum radius that is possible (after being calculated), in meters
 
 typedef enum GuidanceSource {
-    FPLAN,
+    FLIGHTPLAN,
     EXTERNAL,
 } GuidanceSource;
 
@@ -43,7 +43,7 @@ static PIDController latGuid;
 static PIDController vertGuid;
 
 // Allows auto mode to be externally controlled (by API setting a custom Waypoint and callback)
-static GuidanceSource guidanceSource = FPLAN;
+static GuidanceSource guidanceSource = FLIGHTPLAN;
 static Waypoint externWpt;
 static void (*captureCallback)(void) = NULL;
 
@@ -77,7 +77,7 @@ bool auto_init() {
         log_message(TYPE_ERROR, "No flightplan parsed!", 2000, 0, false);
         return false;
     }
-    guidanceSource = FPLAN;
+    guidanceSource = FLIGHTPLAN;
     currentWaypoint = 0;
     flight_init();
     throttle.init();
@@ -112,7 +112,7 @@ void auto_update() {
 
     // Calculate the bearing and distance...
     switch (guidanceSource) {
-        case FPLAN:
+        case FLIGHTPLAN:
             // ...to the current Waypoint in the flightplan
             bearing = calculate_bearing(gps.lat, gps.lng, flightplan_get()->waypoints[currentWaypoint].lat,
                                         flightplan_get()->waypoints[currentWaypoint].lng);
@@ -141,7 +141,7 @@ void auto_update() {
     // If we've intercepted the waypoint,
     if (distance < radius) {
         switch (guidanceSource) {
-            case FPLAN:
+            case FLIGHTPLAN:
                 // then advance to the next one
                 currentWaypoint++;
                 // Check if the flightplan is over
@@ -157,7 +157,7 @@ void auto_update() {
                 // then execute the callback function and enter a holding pattern
                 if (captureCallback)
                     (captureCallback)();
-                guidanceSource = FPLAN;
+                guidanceSource = FLIGHTPLAN;
                 aircraft.change_to(MODE_HOLD);
                 break;
         }

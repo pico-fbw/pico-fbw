@@ -119,7 +119,7 @@ FlightplanError flightplan_parse(const char *json, bool silent) {
     flightplan.json = malloc(strlen(json) + 1);
     if (!flightplan.json) {
         if (!silent)
-            printpre("fplan", "ERROR: out of memory");
+            printpre("flightplan", "ERROR: out of memory");
         state = FLIGHTPLAN_ERR_MEM;
         return state;
     }
