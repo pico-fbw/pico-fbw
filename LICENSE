@@ -15,8 +15,8 @@ MIT License
 
 The following files (and their corresponding Header [.h] files, where applicable) of this project utilize code which is licensed under the MIT License:
 
-- lib/jsmn.h
 - lib/minmea.c
+- lib/parson.c
 - lib/pid.c
 - lib/semver.c
 - platform/pico/pwm.c

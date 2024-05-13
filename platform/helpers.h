@@ -49,14 +49,18 @@ static inline f32 mapf(f32 f, f32 in_min, f32 in_max, f32 out_min, f32 out_max) 
 
 /* Compiler optimization helpers */
 
-#ifndef likely
-    // Hints the compiler that the expression is likely to be true.
-    #define likely(x) __builtin_expect(!!(x), 1)
-#endif
+#if defined(__GNUC__) || defined(__clang__)
 
-#ifndef unlikely
-    // Hints the compiler that the expression is likely to be false.
-    #define unlikely(x) __builtin_expect(!!(x), 0)
+    #ifndef likely
+        // Hints the compiler that the expression is likely to be true.
+        #define likely(x) __builtin_expect(!!(x), 1)
+    #endif
+
+    #ifndef unlikely
+        // Hints the compiler that the expression is likely to be false.
+        #define unlikely(x) __builtin_expect(!!(x), 0)
+    #endif
+
 #endif
 
 /* Bit manipulation helpers */

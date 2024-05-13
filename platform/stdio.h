@@ -1,10 +1,11 @@
 #pragma once
 
+#include "platform/defs.h" // Platforms can define/import __printflike
+
 #include <stdlib.h>
 #if __has_include(<sys/cdefs.h>)
     #include <sys/cdefs.h>
 #endif
-#include "platform/defs.h"
 #include "platform/types.h"
 
 #ifndef __printflike

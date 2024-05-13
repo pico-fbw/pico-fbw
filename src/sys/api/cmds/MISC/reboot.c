@@ -10,7 +10,7 @@
 
 #include "reboot.h"
 
-// {"bootloader":true|false}
+// {"bootloader":boolean}
 
 i32 api_reboot(const char *args) {
     JSON_Value *root = json_parse_string(args);

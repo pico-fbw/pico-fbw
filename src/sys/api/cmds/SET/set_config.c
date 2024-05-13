@@ -12,8 +12,7 @@
 
 #include "set_config.h"
 
-// {"changes":[{"section":"","key":"","value":""}, ...]}
-// {"changes":[{"section":"","key":"","value":""}, ...], "save":true|false}
+// {"changes":[{"section":"","key":"","value":""}, ...], "save":boolean}
 
 // For example:
 // {"changes":[{"section":"GENERAL","key":"skipCalibration","value":"1"},{"section":"WIFI","key":"ssid","value":"coolwifiname"}],"save":true}

@@ -49,20 +49,19 @@ static bool parse_args(const char *args, f32 *roll, f32 *pitch, f32 *yaw, f32 *t
         return false;
     }
     JSON_Value *throttleVal = json_object_get_value(obj, "throttle");
-    if (throttleVal && json_value_get_type(throttleVal) != JSONNumber) {
+    if (!throttleVal || json_value_get_type(throttleVal) != JSONNumber) {
         json_value_free(root);
         return false;
     }
     *roll = (f32)json_value_get_number(rollVal);
     *pitch = (f32)json_value_get_number(pitchVal);
     *yaw = (f32)json_value_get_number(yawVal);
-    *throttle = throttleVal ? (f32)json_value_get_number(throttleVal) : -1.f;
+    *throttle = (f32)json_value_get_number(throttleVal);
     json_value_free(root);
     return true;
 }
 
-// {"roll":number,"pitch":number,"yaw":number}
-// {"roll":number,"pitch":number,"yaw":number,"throttle":0-100}
+// {"roll":number,"pitch":number,"yaw":number,"throttle":number}
 
 i32 api_set_target(const char *args) {
     if (aircraft.mode != MODE_NORMAL)
@@ -78,5 +77,5 @@ i32 api_set_target(const char *args) {
     if (throttle < 0.f || throttle > 100.f)
         return 400;
     // Pass the setpoints into normal mode, 423 will be returned if the mode rejects the code (user input takes priority)
-    return normal_set(roll, pitch, yaw, throttle, (throttle >= 0.f)) ? 200 : 423;
+    return normal_set(roll, pitch, yaw, throttle) ? 200 : 423;
 }

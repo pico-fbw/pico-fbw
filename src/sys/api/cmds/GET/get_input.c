@@ -12,7 +12,8 @@
 
 #include "get_input.h"
 
-// {"ail":-180.000000,"elev":-180.000000,"thr":-100.000000,"switch":-180.000000}
+// {"ail":number,"ele":number,"rud":number,"thr":number,"switch":number}
+// Only "ail" and "ele" are guaranteed to be present
 
 i32 api_get_input(const char *args) {
     JSON_Value *root = json_value_init_object();

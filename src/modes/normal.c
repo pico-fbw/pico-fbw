@@ -107,15 +107,14 @@ void normal_deinit() {
     control_reset();
 }
 
-bool normal_set(f32 roll, f32 pitch, f32 yaw, f32 throttle, bool useThrottle) {
+bool normal_set(f32 roll, f32 pitch, f32 yaw, f32 throttle) {
     // Ensure there are no manual control inputs before we allow setpoints to be externally set
     if (rolling() || pitching() || yawing())
         return false;
     rollSet = roll;
     pitchSet = pitch;
     yawInput = yaw;
-    if (useThrottle)
-        throttleSet = throttle;
+    throttleSet = throttle;
     overrideSetpoints = true;
     return true;
 }

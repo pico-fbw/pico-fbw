@@ -69,8 +69,6 @@ static bool parse_args(const char *args, char **section, char **key) {
 // Input:
 // {"section":"","key":""}
 
-// get_config {"section":"general","key":"skipcalibration"}
-
 // Output (argument):
 // {"key":number|""}
 

@@ -28,8 +28,8 @@
 #define MIN_RADIUS 5             // The minimum radius that is possible (after being calculated), in meters
 
 typedef enum GuidanceSource {
-    FLIGHTPLAN,
-    EXTERNAL,
+    SOURCE_FLIGHTPLAN,
+    SOURCE_EXTERNAL,
 } GuidanceSource;
 
 static bool autoComplete = false;
@@ -43,7 +43,7 @@ static PIDController latGuid;
 static PIDController vertGuid;
 
 // Allows auto mode to be externally controlled (by API setting a custom Waypoint and callback)
-static GuidanceSource guidanceSource = FLIGHTPLAN;
+static GuidanceSource guidanceSource = SOURCE_FLIGHTPLAN;
 static Waypoint externWpt;
 static void (*captureCallback)(void) = NULL;
 
@@ -53,21 +53,25 @@ i32 callback_drop() {
     return 0; // Don't repeat
 }
 
+/**
+ * Load the given Waypoint and begin tracking to it.
+ * @param wpt the Waypoint to load
+ */
 static inline void load_waypoint(Waypoint *wpt) {
-    // Load the next altitude, if it is -5 (the default) just discard it (by setting it to our current alt; no change)
+    // Load the next altitude
+    // Altitudes/speeds less than 0 are considered to mean "hold current altitude"
     if (gps.altOffsetCalibrated) {
         // Factor in the altitude offset calculated earlier
-        alt = (wpt->alt <= -5) ? gps.alt : (wpt->alt + gps.altOffset);
+        alt = (wpt->alt < 0) ? gps.alt : (wpt->alt + gps.altOffset);
     } else
-        alt = (wpt->alt <= -5) ? gps.alt : wpt->alt;
+        alt = (wpt->alt < 0) ? gps.alt : wpt->alt;
     // Set the (possibly new) target speed
-    throttle.target = (wpt->speed == -5) ? gps.speed : wpt->speed;
+    throttle.target = (wpt->speed < 0) ? gps.speed : wpt->speed;
     // Initiate a drop if applicable
-    if (wpt->drop != 0) {
+    if (wpt->drop > 0) {
         auto_set_bay_position(POS_OPEN);
-        if (wpt->drop > 0)
-            // Schedule a callback if the bay needs to close after some time
-            callback_in_ms(wpt->drop * 1000, callback_drop);
+        // Schedule a callback, since the bay needs to close after some time
+        callback_in_ms(wpt->drop * 1000, callback_drop);
     }
 }
 
@@ -77,7 +81,7 @@ bool auto_init() {
         log_message(TYPE_ERROR, "No flightplan parsed!", 2000, 0, false);
         return false;
     }
-    guidanceSource = FLIGHTPLAN;
+    guidanceSource = SOURCE_FLIGHTPLAN;
     currentWaypoint = 0;
     flight_init();
     throttle.init();
@@ -112,14 +116,14 @@ void auto_update() {
 
     // Calculate the bearing and distance...
     switch (guidanceSource) {
-        case FLIGHTPLAN:
+        case SOURCE_FLIGHTPLAN:
             // ...to the current Waypoint in the flightplan
             bearing = calculate_bearing(gps.lat, gps.lng, flightplan_get()->waypoints[currentWaypoint].lat,
                                         flightplan_get()->waypoints[currentWaypoint].lng);
             distance = calculate_distance(gps.lat, gps.lng, flightplan_get()->waypoints[currentWaypoint].lat,
                                           flightplan_get()->waypoints[currentWaypoint].lng);
             break;
-        case EXTERNAL:
+        case SOURCE_EXTERNAL:
             // ...to the current Waypoint (temporarily set)
             bearing = calculate_bearing(gps.lat, gps.lng, externWpt.lat, externWpt.lng);
             distance = calculate_distance(gps.lat, gps.lng, externWpt.lat, externWpt.lng);
@@ -141,7 +145,7 @@ void auto_update() {
     // If we've intercepted the waypoint,
     if (distance < radius) {
         switch (guidanceSource) {
-            case FLIGHTPLAN:
+            case SOURCE_FLIGHTPLAN:
                 // then advance to the next one
                 currentWaypoint++;
                 // Check if the flightplan is over
@@ -153,11 +157,11 @@ void auto_update() {
                     // More waypoints to go, load the next one
                     load_waypoint(&flightplan_get()->waypoints[currentWaypoint]);
                 break;
-            case EXTERNAL:
+            case SOURCE_EXTERNAL:
                 // then execute the callback function and enter a holding pattern
                 if (captureCallback)
                     (captureCallback)();
-                guidanceSource = FLIGHTPLAN;
+                guidanceSource = SOURCE_FLIGHTPLAN;
                 aircraft.change_to(MODE_HOLD);
                 break;
         }
@@ -165,7 +169,7 @@ void auto_update() {
 }
 
 void auto_set(Waypoint wpt, void (*callback)(void)) {
-    guidanceSource = EXTERNAL;
+    guidanceSource = SOURCE_EXTERNAL;
     externWpt = wpt;
     captureCallback = callback;
     load_waypoint(&externWpt);

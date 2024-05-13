@@ -10,7 +10,7 @@
 
 #include "get_logs.h"
 
-// {"logs":[{"type":1-5,"msg":"","code":number,"timestamp":number}]}
+// {"logs":[{"type":number,"msg":"","code":number,"timestamp":number}]}
 
 i32 api_get_logs(const char *args) {
     u32 logCount = log_count();
