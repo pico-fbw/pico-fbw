@@ -33,6 +33,8 @@ static LogEntry *lastEntry = NULL, *lastDisplayedEntry = NULL, *queuedEntry = NU
 
 /* --- LED --- */
 
+#ifdef PIN_LED
+
 static CallbackData *pulseCallback = NULL;
 static u32 pulseMs = 0;
 static CallbackData *toggleCallback = NULL;
@@ -45,32 +47,26 @@ static void led_reset() {
     // We cannot cancel the pulse callback as it does not reschedule itself, and the callback system doesn't support
     // cancelling a one-time callback
     pulseMs = 0;
-#ifdef PIN_LED
     gpio_set(PIN_LED, STATE_HIGH);
-#endif
 }
 
 // Callback to pulse the LED
 i32 led_pulse_callback() {
-#ifdef PIN_LED
     gpio_toggle(PIN_LED);
-#endif
     return 0; // Don't reschedule
 }
 
 // Callback to toggle the LED and schedule an additional pulse if needed
 i32 led_callback() {
-#ifdef PIN_LED
     // Toggle LED immediately...
     gpio_toggle(PIN_LED);
     // then, if we need to pulse, schedule an additional toggle (to turn off the LED)
     if (pulseMs != 0)
         pulseCallback = callback_in_ms(pulseMs, led_pulse_callback);
     return toggleMs;
-#else
-    return 0;
-#endif
 }
+
+#endif // PIN_LED
 
 /* --- Logging --- */
 
@@ -287,8 +283,10 @@ void log_clear(LogType type) {
             if (!hadError) {
                 if ((bool)config.system[SYSTEM_USE_DISPLAY])
                     display_power_save();
+#ifdef PIN_LED
                 else
                     led_reset();
+#endif
             }
         }
     }

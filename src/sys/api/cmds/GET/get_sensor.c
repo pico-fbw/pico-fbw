@@ -3,6 +3,7 @@
  * Licensed under the GNU AGPL-3.0
  */
 
+#include <string.h>
 #include "platform/adc.h"
 #include "platform/defs.h"
 
