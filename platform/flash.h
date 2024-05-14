@@ -1,14 +1,5 @@
 #pragma once
 
-#include "platform/defs.h" // Some platforms may define LFS_ config macros in their defs; this will make sure they're respected
-
-#ifdef NDEBUG
-    // Disable littlefs messages in release builds
-    #define LFS_NO_DEBUG
-    #define LFS_NO_WARN
-    #define LFS_NO_ERROR
-#endif
-
 // littlefs header is required for lfs struct definitions, but fbw_lib is not included in CMake as we don't require any actual
 // littlefs code
 #include "lib/lfs.h"

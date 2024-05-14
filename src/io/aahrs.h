@@ -3,10 +3,9 @@
 #include <stdbool.h>
 #include "platform/types.h"
 
-#define IMU_MODEL_MIN IMU_MODEL_BNO055
+#define IMU_MODEL_MIN IMU_MODEL_ICM20948
 typedef enum IMUModel {
     IMU_MODEL_NONE,
-    IMU_MODEL_BNO055,
     IMU_MODEL_ICM20948,
 } IMUModel;
 #define IMU_MODEL_MAX IMU_MODEL_ICM20948

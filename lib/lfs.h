@@ -15,6 +15,8 @@ extern "C"
 {
 #endif
 
+// pico-fbw-specific configuration
+#include "platform/defs.h" // Some platforms may define LFS_ config macros in their defs; this will make sure they're respected
 
 /// Version info ///
 

@@ -25,7 +25,7 @@ i32 api_help(const char *args) {
              "SET_TARGET - Set the desired attitude/thrust target\n"
              "SET_WAYPOINT - Create and track onto a Waypoint\n"
              "TEST_ALL - Runs all possible system tests using default values\n"
-             "TEST_AAHRS - Tests the AAHRS (Altitude-Attitude Heading Reference System)\n"
+             "TEST_AAHRS - Tests the AAHRS\n"
              "TEST_GPS - Tests the GPS module\n"
              "TEST_PWM - Tests the PWM input system\n"
              "TEST_SERVO - Tests the servo(s)\n"
@@ -35,7 +35,7 @@ i32 api_help(const char *args) {
              "PING - Pong!\n"
              "REBOOT - Reboot the system\n"
              "RESET - Reset pico-fbw to \"factory\" defaults\n"
-             "\nMore information can be found at https://pico-fbw.org/wiki/docs/API\n",
+             "\nMore information can be found at https://pico-fbw.org/wiki/\n",
              PICO_FBW_API_VERSION);
     return -1;
     (void)args;

@@ -7,6 +7,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#include "platform/time.h"
+
 #include "platform/stdio.h"
 
 void stdio_setup() {
@@ -27,6 +29,7 @@ char *stdin_read() {
             if (!buf)
                 return NULL;
             buf[i++] = c;
+            sleep_us_blocking(100); // Sleep for a bit to wait for more input (possibly)
         }
     }
     if (i != 0) {

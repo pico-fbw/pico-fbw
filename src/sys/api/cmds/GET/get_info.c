@@ -12,7 +12,7 @@
 
 #include "get_info.h"
 
-// {"version":"","version_api":"","version_fplan":"","platform":"","platform_version":""}
+// {"version":"","version_api":"","version_flightplan":"","platform":"","platform_version":""}
 
 i32 api_get_info(const char *args) {
     JSON_Value *root = json_value_init_object();

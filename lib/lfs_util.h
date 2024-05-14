@@ -25,6 +25,15 @@
 #include <string.h>
 #include <inttypes.h>
 
+// pico-fbw-specific configuration
+#include "platform/defs.h" // Some platforms may define LFS_ config macros in their defs; this will make sure they're respected
+#ifdef NDEBUG
+    // Disable littlefs messages in release builds
+    #define LFS_NO_DEBUG
+    #define LFS_NO_WARN
+    #define LFS_NO_ERROR
+#endif
+
 #ifndef LFS_NO_MALLOC
 #include <stdlib.h>
 #endif

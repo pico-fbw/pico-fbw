@@ -62,7 +62,7 @@ Config config = {
         CONFIG_END_MAGIC,
     },
     .sensors = {
-        IMU_MODEL_BNO055, BARO_MODEL_NONE, 400, // AAHRS configuration
+        IMU_MODEL_ICM20948, BARO_MODEL_NONE, 400, // AAHRS configuration
         GPS_COMMAND_TYPE_PMTK, 9600, // GPS configuration
         CONFIG_END_MAGIC,
     },
@@ -71,7 +71,7 @@ Config config = {
         // This is true because the display is initialized before the config is loaded,
         // so setting it to true means the display will always be initialized on boot (if possible),
         // because this is the initial state of the config before it becomes overwritten by config_load()
-        true, false, false, false, false, false, // Default print settings, also found in PrintDefs below
+        true, false, false, false, false, // Default print settings, also found in PrintDefs below
         CONFIG_END_MAGIC,
     },
     .wifi = {
@@ -314,9 +314,9 @@ static void get_from_pins(const char *key, f32 **value) {
         *value = &config.pins[PINS_INPUT_AIL];
     } else if (strcasecmp(key, "servoAil") == 0) {
         *value = &config.pins[PINS_SERVO_AIL];
-    } else if (strcasecmp(key, "inputElev") == 0) {
+    } else if (strcasecmp(key, "inputEle") == 0) {
         *value = &config.pins[PINS_INPUT_ELE];
-    } else if (strcasecmp(key, "servoElev") == 0) {
+    } else if (strcasecmp(key, "servoEle") == 0) {
         *value = &config.pins[PINS_SERVO_ELE];
     } else if (strcasecmp(key, "inputRud") == 0) {
         *value = &config.pins[PINS_INPUT_RUD];
@@ -354,9 +354,9 @@ static bool set_to_pins(const char *key, f32 value) {
         config.pins[PINS_INPUT_AIL] = value;
     } else if (strcasecmp(key, "servoAil") == 0) {
         config.pins[PINS_SERVO_AIL] = value;
-    } else if (strcasecmp(key, "inputElev") == 0) {
+    } else if (strcasecmp(key, "inputEle") == 0) {
         config.pins[PINS_INPUT_ELE] = value;
-    } else if (strcasecmp(key, "servoElev") == 0) {
+    } else if (strcasecmp(key, "servoEle") == 0) {
         config.pins[PINS_SERVO_ELE] = value;
     } else if (strcasecmp(key, "inputRud") == 0) {
         config.pins[PINS_INPUT_RUD] = value;
@@ -394,6 +394,8 @@ static void get_from_sensors(const char *key, f32 **value) {
         *value = &config.sensors[SENSORS_IMU_MODEL];
     } else if (strcasecmp(key, "baroModel") == 0) {
         *value = &config.sensors[SENSORS_BARO_MODEL];
+    } else if (strcasecmp(key, "aahrsBusFreq") == 0) {
+        *value = &config.sensors[SENSORS_AAHRS_BUS_FREQ];
     } else if (strcasecmp(key, "gpsCommandType") == 0) {
         *value = &config.sensors[SENSORS_GPS_COMMAND_TYPE];
     } else if (strcasecmp(key, "gpsBaudrate") == 0) {
@@ -408,6 +410,8 @@ static bool set_to_sensors(const char *key, f32 value) {
         config.sensors[SENSORS_IMU_MODEL] = value;
     } else if (strcasecmp(key, "baroModel") == 0) {
         config.sensors[SENSORS_BARO_MODEL] = value;
+    } else if (strcasecmp(key, "aahrsBusFreq") == 0) {
+        config.sensors[SENSORS_AAHRS_BUS_FREQ] = value;
     } else if (strcasecmp(key, "gpsCommandType") == 0) {
         config.sensors[SENSORS_GPS_COMMAND_TYPE] = value;
     } else if (strcasecmp(key, "gpsBaudrate") == 0) {
@@ -418,7 +422,9 @@ static bool set_to_sensors(const char *key, f32 value) {
 }
 
 static void get_from_system(const char *key, f32 **value) {
-    if (strcasecmp(key, "printFBW") == 0) {
+    if (strcasecmp(key, "useDisplay") == 0) {
+        *value = &config.system[SYSTEM_USE_DISPLAY];
+    } else if (strcasecmp(key, "printFBW") == 0) {
         *value = &config.system[SYSTEM_PRINT_FBW];
     } else if (strcasecmp(key, "printAAHRS") == 0) {
         *value = &config.system[SYSTEM_PRINT_AAHRS];
@@ -434,7 +440,9 @@ static void get_from_system(const char *key, f32 **value) {
 }
 
 static bool set_to_system(const char *key, f32 value) {
-    if (strcasecmp(key, "printFBW") == 0) {
+    if (strcasecmp(key, "useDisplay") == 0) {
+        config.system[SYSTEM_USE_DISPLAY] = value;
+    } else if (strcasecmp(key, "printFBW") == 0) {
         config.system[SYSTEM_PRINT_FBW] = value;
     } else if (strcasecmp(key, "printAAHRS") == 0) {
         config.system[SYSTEM_PRINT_AAHRS] = value;

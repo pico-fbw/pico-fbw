@@ -36,6 +36,12 @@ i32 api_set_config(const char *args) {
         json_value_free(root);
         return 400;
     }
+    JSON_Value *saveVal = json_object_get_value(obj, "save");
+    if (!saveVal || json_value_get_type(saveVal) != JSONBoolean) {
+        json_value_free(root);
+        return 400;
+    }
+    bool save = json_value_get_boolean(saveVal);
     // There may be multiple config changes in one request
     for (u32 i = 0; i < json_array_get_count(arr); i++) {
         // For each config change, get the requested config section, key, and new value
@@ -48,13 +54,6 @@ i32 api_set_config(const char *args) {
             return 400;
         }
     }
-    // Save to flash now, if requested
-    JSON_Value *saveVal = json_object_get_value(obj, "save");
-    if (!saveVal || json_value_get_type(saveVal) != JSONBoolean) {
-        json_value_free(root);
-        return 400;
-    }
-    bool save = json_value_get_boolean(saveVal);
     json_value_free(root);
     if (save)
         goto save;
