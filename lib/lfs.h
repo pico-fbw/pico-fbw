@@ -8,6 +8,13 @@
  */
 #pragma once
 
+/* 
+    !!! IMPORTANT !!! 
+
+    pico-fbw developers: do not include this file!
+    Instead, to use littlefs, include "platform/flash.h" to access platform-specific littlefs implementation.
+*/
+
 #include "lfs_util.h"
 
 #ifdef __cplusplus

@@ -18,51 +18,81 @@
 
 #include "platform/pwm.h"
 
-#define NUM_PWM_CHANNELS 8
+#define NUM_PWM_IN_CHANNELS 8
+#define NUM_PWM_OUT_CHANNELS 8
 
-typedef struct PWMChannel {
+typedef struct PWMInChannel {
     u32 pin;
-    // PWM input: rise/falling edge timestamps and pulsewidth (in ticks)
-    u32 tRise, tFall;
-    u32 tPulsewidth;
-    // PWM output: mcpwm_cmpr_handle_t for the channel and the period (in μs)
-    mcpwm_cmpr_handle_t out;
-    u32 period;
-    // Internal
+    u32 tRise, tFall; // rise/falling edge timestamps (in ticks)
+    u32 tPulsewidth;  // pulsewidth (in ticks)
+    bool active;      // whether or not channel is in use; internal
+} PWMInChannel;
+
+typedef struct PWMOutChannel {
+    u32 pin;
+    mcpwm_cmpr_handle_t out; // mcpwm_cmpr_handle_t for the channel
+    u32 period;              // period (in μs)
     bool active;
-} PWMChannel;
+} PWMOutChannel;
 
-static PWMChannel channels[NUM_PWM_CHANNELS];
+static PWMInChannel inChannels[NUM_PWM_IN_CHANNELS];
+static size_t numCaptureChannels = 0; // Number of MCPWM capture channels in use
+static int currentCaptureTimer = 0;   // Current capture timer being used to create channels
 
-static size_t numMCPWMCaptureChannels = 0; // Number of MCPWM capture channels in use
-static size_t numMCPWMOperators = 0;       // Number of MCPWM operators in use
+static PWMOutChannel outChannels[NUM_PWM_OUT_CHANNELS];
+static size_t numOperators = 0; // Number of MCPWM operators in use
+static int currentTimer = 0;    // Current timer being used to create operators
 
 /**
- * @return a pointer to the first available PWM channel, or NULL if none are available
+ * @return a pointer to the first available PWM IN channel, or NULL if none are available
  */
-static PWMChannel *get_available_channel() {
-    for (size_t i = 0; i < count_of(channels); i++) {
-        if (!channels[i].active) {
-            channels[i].active = true;
-            return &channels[i];
+static PWMInChannel *get_available_in_channel() {
+    for (u32 i = 0; i < count_of(inChannels); i++) {
+        if (!inChannels[i].active) {
+            inChannels[i].active = true;
+            return &inChannels[i];
         }
     }
     return NULL;
 }
 
 /**
- * @return a pointer to the PWM channel for the given pin, or NULL if none match
+ * @return a pointer to the first available PWM OUT channel, or NULL if none are available
  */
-static PWMChannel *get_channel(u32 pin) {
-    for (size_t i = 0; i < count_of(channels); i++) {
-        if (channels[i].pin == pin)
-            return &channels[i];
+static PWMOutChannel *get_available_out_channel() {
+    for (u32 i = 0; i < count_of(outChannels); i++) {
+        if (!outChannels[i].active) {
+            outChannels[i].active = true;
+            return &outChannels[i];
+        }
+    }
+    return NULL;
+}
+
+/**
+ * @return a pointer to the PWM IN channel representing the given pin, or NULL if none match
+ */
+static PWMInChannel *get_in_channel(u32 pin) {
+    for (u32 i = 0; i < count_of(inChannels); i++) {
+        if (inChannels[i].pin == pin)
+            return &inChannels[i];
+    }
+    return NULL;
+}
+
+/**
+ * @return a pointer to the PWM OUT channel representing the given pin, or NULL if none match
+ */
+static PWMOutChannel *get_out_channel(u32 pin) {
+    for (u32 i = 0; i < count_of(outChannels); i++) {
+        if (outChannels[i].pin == pin)
+            return &outChannels[i];
     }
     return NULL;
 }
 
 static bool pwm_read_callback(mcpwm_cap_channel_handle_t cap_channel, const mcpwm_capture_event_data_t *event, void *data) {
-    PWMChannel *channel = (PWMChannel *)data;
+    PWMInChannel *channel = (PWMInChannel *)data;
     if (event->cap_edge == MCPWM_CAP_EDGE_POS) {
         // Rising edge
         channel->tRise = event->cap_value;
@@ -79,23 +109,27 @@ static bool pwm_read_callback(mcpwm_cap_channel_handle_t cap_channel, const mcpw
 
 bool pwm_setup_read(const u32 pins[], u32 num_pins) {
     // Static variable; this means that the timer can be reused for multiple channels
+    // Once it has been maxed out with channels, a new timer will be created
     static mcpwm_cap_timer_handle_t timer;
     mcpwm_capture_timer_config_t config = {
         .clk_src = MCPWM_CAPTURE_CLK_SRC_DEFAULT,
+        .group_id = currentCaptureTimer,
     };
 
     for (u32 i = 0; i < num_pins; i++) {
-        // Create a new timer group if necessary
-        bool newTimerNeeded = numMCPWMCaptureChannels % SOC_MCPWM_CAPTURE_CHANNELS_PER_TIMER == 0;
+        // Create a new capture timer if necessary
+        bool newTimerNeeded = numCaptureChannels % SOC_MCPWM_CAPTURE_CHANNELS_PER_TIMER == 0;
         if (newTimerNeeded) {
-            config.group_id = numMCPWMCaptureChannels / SOC_MCPWM_CAPTURE_CHANNELS_PER_TIMER;
-            if (config.group_id >= SOC_MCPWM_TIMERS_PER_GROUP)
+            currentCaptureTimer = numCaptureChannels / SOC_MCPWM_CAPTURE_CHANNELS_PER_TIMER;
+            if (currentCaptureTimer >= SOC_MCPWM_TIMERS_PER_GROUP)
                 return false;
+            config.group_id = currentCaptureTimer;
             if (mcpwm_new_capture_timer(&config, &timer) != ESP_OK)
                 return false;
         }
+
         // Get an available channel in the array, this will allow us to interact with the channel later
-        PWMChannel *channel = get_available_channel();
+        PWMInChannel *channel = get_available_in_channel();
         if (!channel)
             return false;
         channel->pin = pins[i];
@@ -110,7 +144,7 @@ bool pwm_setup_read(const u32 pins[], u32 num_pins) {
         };
         if (mcpwm_new_capture_channel(timer, &captureConfig, &capture) != ESP_OK)
             return false;
-        numMCPWMCaptureChannels++;
+        numCaptureChannels++;
 
         mcpwm_capture_event_callbacks_t callbacks = {
             .on_cap = pwm_read_callback,
@@ -131,26 +165,28 @@ bool pwm_setup_read(const u32 pins[], u32 num_pins) {
 }
 
 bool pwm_setup_write(const u32 pins[], u32 num_pins, u32 freq) {
+    const u32 period = 1000000 / freq; // Period in μs
     static mcpwm_timer_handle_t timer;
-    u32 period = 1000000 / freq; // Period in μs
     mcpwm_timer_config_t config = {
         .clk_src = MCPWM_TIMER_CLK_SRC_DEFAULT,
         .resolution_hz = 1000000, // 1MHz, esp does not like going lower
         .period_ticks = period,
         .count_mode = MCPWM_TIMER_COUNT_MODE_UP,
+        .group_id = currentTimer,
     };
 
     for (u32 i = 0; i < num_pins; i++) {
-        bool newTimerNeeded = numMCPWMOperators % SOC_MCPWM_OPERATORS_PER_GROUP == 0;
+        bool newTimerNeeded = numOperators % SOC_MCPWM_OPERATORS_PER_GROUP == 0;
         if (newTimerNeeded) {
-            config.group_id = numMCPWMOperators / SOC_MCPWM_OPERATORS_PER_GROUP;
-            if (config.group_id >= SOC_MCPWM_TIMERS_PER_GROUP)
+            currentTimer = numOperators / SOC_MCPWM_OPERATORS_PER_GROUP;
+            if (currentTimer >= SOC_MCPWM_TIMERS_PER_GROUP)
                 return false;
+            config.group_id = currentTimer;
             if (mcpwm_new_timer(&config, &timer) != ESP_OK)
                 return false;
         }
 
-        PWMChannel *channel = get_available_channel();
+        PWMOutChannel *channel = get_available_out_channel();
         if (!channel)
             return false;
         channel->pin = pins[i];
@@ -162,7 +198,7 @@ bool pwm_setup_write(const u32 pins[], u32 num_pins, u32 freq) {
         };
         if (mcpwm_new_operator(&operatorConfig, &operator) != ESP_OK)
             return false;
-        numMCPWMOperators++;
+        numOperators++;
         if (mcpwm_operator_connect_timer(operator, timer) != ESP_OK)
             return false;
 
@@ -197,7 +233,7 @@ bool pwm_setup_write(const u32 pins[], u32 num_pins, u32 freq) {
 }
 
 f32 pwm_read_raw(u32 pin) {
-    PWMChannel *channel = get_channel(pin);
+    PWMInChannel *channel = get_in_channel(pin);
     if (!channel)
         return -1.f;
     // Convert the pulsewidth from ticks to μs
@@ -205,7 +241,7 @@ f32 pwm_read_raw(u32 pin) {
 }
 
 void pwm_write_raw(u32 pin, f32 pulsewidth) {
-    PWMChannel *channel = get_channel(pin);
+    PWMOutChannel *channel = get_out_channel(pin);
     if (!channel)
         return;
     // `cmp_ticks` corresponds to the pulsewidth (in μs), so we can just write the pulsewidth directly

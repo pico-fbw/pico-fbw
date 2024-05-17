@@ -1,10 +1,12 @@
 #pragma once
 
+#include "platform/defs.h" // Platforms can define FORCE_DEFINE_HELPERS to force defining helpers
 #include "platform/types.h"
 
 /* Number operation helpers */
 
-#ifndef clamp
+#if !defined(clamp) || FORCE_DEFINE_HELPERS
+    #undef clamp
     // Clamps a value `i` between `min` and `max`.
     #define clamp(i, min, max) ((i) < (min) ? (min) : ((i) > (max) ? (max) : (i)))
 #endif
@@ -15,7 +17,8 @@ static inline f32 clampf(f32 f, f32 min, f32 max) {
     return t > max ? max : t;
 }
 
-#ifndef map
+#if !defined(map) || FORCE_DEFINE_HELPERS
+    #undef map
     // Maps a value `x` from the range `in_min` to `in_max` to the range `out_min` to `out_max`.
     #define map(x, in_min, in_max, out_min, out_max) (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 #endif
@@ -25,24 +28,24 @@ static inline f32 mapf(f32 f, f32 in_min, f32 in_max, f32 out_min, f32 out_max) 
     return (f - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
-#ifndef radians
+#if !defined(radians) || FORCE_DEFINE_HELPERS
     // Converts degrees to radians.
     #define radians(deg) (deg * M_PI / 180.0)
 #endif
 
-#ifndef degrees
+#if !defined(degrees) || FORCE_DEFINE_HELPERS
     // Converts radians to degrees.
     #define degrees(rad) (rad * 180.0 / M_PI)
 #endif
 
-#ifndef lerp
+#if !defined(lerp) || FORCE_DEFINE_HELPERS
     // Linearly interpolates between `a` and `b` by `t`.
     #define lerp(a, b, t) (a + t * (b - a))
 #endif
 
 /* Array helpers */
 
-#ifndef count_of
+#if !defined(count_of) || FORCE_DEFINE_HELPERS
     // Returns the number of elements in an array.
     #define count_of(a) (sizeof(a) / sizeof((a)[0]))
 #endif
@@ -51,12 +54,12 @@ static inline f32 mapf(f32 f, f32 in_min, f32 in_max, f32 out_min, f32 out_max) 
 
 #if defined(__GNUC__) || defined(__clang__)
 
-    #ifndef likely
+    #if !defined(likely) || FORCE_DEFINE_HELPERS
         // Hints the compiler that the expression is likely to be true.
         #define likely(x) __builtin_expect(!!(x), 1)
     #endif
 
-    #ifndef unlikely
+    #if !defined(unlikely) || FORCE_DEFINE_HELPERS
         // Hints the compiler that the expression is likely to be false.
         #define unlikely(x) __builtin_expect(!!(x), 0)
     #endif
@@ -65,7 +68,7 @@ static inline f32 mapf(f32 f, f32 in_min, f32 in_max, f32 out_min, f32 out_max) 
 
 /* Bit manipulation helpers */
 
-#ifndef bit
+#if !defined(bit) || FORCE_DEFINE_HELPERS
     // Returns a bit mask with the bit at position `n` set.
     #define bit(n) (1 << (n))
 #endif

@@ -19,6 +19,8 @@ The following files (and their corresponding Header [.h] files, where applicable
 - lib/parson.c
 - lib/pid.c
 - lib/semver.c
+- platform/esp/flash.c
+- platform/pico/flash.c
 - platform/pico/pwm.c
 - platform/pico/pwm.pio
 - .github/workflows/build.yml

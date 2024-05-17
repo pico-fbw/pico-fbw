@@ -29,7 +29,7 @@ char *stdin_read() {
             if (!buf)
                 return NULL;
             buf[i++] = c;
-            sleep_us_blocking(100); // Sleep for a bit to wait for more input (possibly)
+            sleep_us_blocking(50); // Sleep for a bit to wait for more input (possibly)
         }
     }
     if (i != 0) {

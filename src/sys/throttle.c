@@ -89,5 +89,12 @@ void throttle_update() {
     esc_set((u32)config.pins[PINS_ESC_THROTTLE], (u16)(escTarget + 0.5f));
 }
 
+// clang-format off
 Throttle throttle = {
-    .mode = THRMODE_THRUST, .supportedMode = THRMODE_THRUST, .target = 0.0f, .init = throttle_init, .update = throttle_update};
+    .mode = THRMODE_THRUST,
+    .supportedMode = THRMODE_THRUST,
+    .target = 0.f,
+    .init = throttle_init,
+    .update = throttle_update
+};
+// clang-format on

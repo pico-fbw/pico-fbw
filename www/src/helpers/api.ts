@@ -3,20 +3,15 @@
  * Licensed under the GNU AGPL-3.0
  */
 
-export enum ERR {
-    OK = 0,
-    ARG = 1,
-    NET = 2,
-}
+const timeout = 2000; // Timeout for any API request in ms
 
-interface APIData {
-    err: ERR; // Error code
-    dat?: Array<{ [key: string]: any }>; // Data: array of key-value pairs, for example {"pi":3.14},{"client":"mom"} etc.
-}
+export type EmptyResponse = Record<string, never>;
 
-export async function api(endpoint: string, data?: object): Promise<APIData> {
+export async function api<T = any>(endpoint: string, data?: object): Promise<T> {
+    const controller = new AbortController();
     let options: RequestInit = {
         method: 'GET',
+        signal: controller.signal,
     };
     if (data) {
         options = {
@@ -28,17 +23,15 @@ export async function api(endpoint: string, data?: object): Promise<APIData> {
         };
     }
 
-    return fetch(`/api/v1/${endpoint}`, options)
-        .then(res => {
-            if (!res.ok) {
-                throw new Error(`HTTP error ${res.status}`);
-            }
-            return res.json();
-        })
-        .catch(error => {
-            console.error(`Error fetching data from /api/v1/${endpoint}:`, error);
-            return { err: ERR.NET };
-        }) as Promise<APIData>;
+    const id = setTimeout(() => controller.abort(), timeout);
+    const response = fetch(`/api/v1/${endpoint}`, options).then(res => {
+        if (!res.ok) {
+            throw new Error(`API error (${res.status})`);
+        }
+        return res.json();
+    }) as Promise<T>;
+    clearTimeout(id);
+    return response;
 }
 
 /**

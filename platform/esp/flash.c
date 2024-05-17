@@ -23,11 +23,11 @@
 #define LOOKAHEAD_SIZE 128
 #define BLOCK_CYCLES 512
 
-#define WWWFS_PARTITION_LABEL "wwwfs" // Name of the littlefs partition defined in platform/esp/resources/partitions.csv
-#define LFS_PARTITION_LABEL "lfs"
+#define LFS_PARTITION_LABEL "lfs" // Name of the littlefs partition defined in platform/esp/resources/partitions.csv
+#define WWWFS_PARTITION_LABEL "wwwfs"
 
 static const esp_partition_t *wwwfsPartition, *lfsPartition;
-static SemaphoreHandle_t lfsLock = NULL;
+static SemaphoreHandle_t lfsLock = NULL; // Mutex to prevent concurrent access to flash
 
 static int flash_read(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, void *buffer, lfs_size_t size) {
     esp_partition_t *partition = (esp_partition_t *)c->context;
@@ -101,6 +101,8 @@ bool flash_setup() {
         return false;
 #endif
     lfsPartition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_LITTLEFS, LFS_PARTITION_LABEL);
+    if (!lfsPartition)
+        return false;
     lfs_cfg.context = (void *)lfsPartition;
     lfs_cfg.block_count = lfsPartition->size / lfs_cfg.block_size;
     return lfs_cfg.block_count > 0;

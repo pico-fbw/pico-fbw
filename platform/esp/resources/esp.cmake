@@ -23,16 +23,20 @@ function(setup_before_subdirs)
             # See IDF_PATH/components/README.md for a list of available components
             driver
             esptool_py
+            esp_event
+            esp_http_server
             esp_hw_support
+            esp_netif
             esp_partition
             esp_system
             esp_timer
+            esp_wifi
             freertos
             newlib
             nvs_flash
             soc
         SDKCONFIG
-            ${CMAKE_SOURCE_DIR}/platform/esp/resources/sdkconfig
+            ${CMAKE_BINARY_DIR}/sdkconfig
         SDKCONFIG_DEFAULTS
             ${SDKCONFIG_DEFAULTS_PATH}
     )

@@ -9,7 +9,7 @@ import Alert from '../elements/Alert';
 import Map from '../elements/Map';
 import Uploader from '../elements/Uploader';
 
-import { api, ERR } from '../helpers/api';
+import { api, EmptyResponse } from '../helpers/api';
 import hasInternet from '../helpers/hasInternet';
 
 export default function Index() {
@@ -18,12 +18,16 @@ export default function Index() {
     const [hasConnection, setHasConnection] = useState<boolean | null>(null);
 
     const checkAPIConnection = async () => {
-        const res = await api('ping');
-        const isConnected = res.err === ERR.OK;
-        setAPIConnection(isConnected);
-        if (!isConnected) {
-            setStatus(`Server error (${res.err})`);
+        // The API will respond with an empty JSON object at the PING endpoint,
+        // so if no errors are thrown, the connection is working
+        try {
+            await api<EmptyResponse>('ping');
+        } catch (e) {
+            setAPIConnection(false);
+            setStatus(`Oops! ${(e as Error).message}`);
+            return;
         }
+        setAPIConnection(true);
     };
 
     const checkInternetConnection = async () => {

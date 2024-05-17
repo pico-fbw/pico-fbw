@@ -14,10 +14,14 @@ add_library(platform_esp
 # Link the platform library to the pico-sdk libraries
 target_link_libraries(platform_esp
     idf::driver
+    idf::esp_event
+    idf::esp_http_server
     idf::esp_hw_support
+    idf::esp_netif
     idf::esp_partition
     idf::esp_system
     idf::esp_timer
+    idf::esp_wifi
     idf::freertos
     idf::newlib
     idf::nvs_flash

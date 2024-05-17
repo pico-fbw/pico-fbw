@@ -13,7 +13,7 @@ export default async (): Promise<boolean> => {
         const response = await fetch(url, { signal: controller.signal, cache: 'no-store' }); // Skip cache
         clearTimeout(id);
         return response.ok;
-    } catch (error) {
+    } catch (e) {
         return false;
     }
 };

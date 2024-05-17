@@ -7,7 +7,7 @@ import { useState } from 'preact/hooks';
 
 import Alert from './Alert';
 
-import { api, ERR } from '../helpers/api';
+import { api, EmptyResponse } from '../helpers/api';
 import { Flightplan } from '../helpers/flightplan';
 import { Settings } from '../helpers/settings';
 
@@ -25,9 +25,10 @@ export default function Uploader() {
             setError('Invalid flightplan!');
             return;
         }
-        const res = await api('set/fplan', fplan);
-        if (res.err !== ERR.OK) {
-            setError(`Server error whilst uploading (${res.err})`);
+        try {
+            await api<EmptyResponse>('set/fplan', fplan);
+        } catch (e) {
+            setError(`Server error whilst uploading: ${(e as Error).message}`);
         }
     };
 
@@ -68,7 +69,7 @@ export default function Uploader() {
                 </Alert>
             )}
             <textarea
-                className="p-2 border border-gray-300 rounded resize-none md:w-[36rem] w-fit"
+                className="p-2 bg-white/5 placeholder:text-gray-400 text-gray-200 ring-1 ring-inset ring-white/10 shadow-sm rounded resize-none w-full"
                 placeholder={
                     window.innerWidth <= 768
                         ? 'Paste flightplan here...'

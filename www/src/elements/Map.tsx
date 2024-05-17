@@ -9,7 +9,7 @@ import { GlobeAmericasOutline, MapOutline, MapPinOutline, Square3Stack3dOutline 
 
 import Alert from './Alert';
 
-import { api, ERR } from '../helpers/api';
+import { api, EmptyResponse } from '../helpers/api';
 import { Flightplan, markersToFlightplan } from '../helpers/flightplan';
 import Settings from '../helpers/settings';
 
@@ -87,9 +87,10 @@ export default function Map() {
             setError(`Error generating flightplan: ${(e as Error).message}`);
             return;
         }
-        const res = await api('set/fplan', fplan);
-        if (res.err !== ERR.OK) {
-            setError(`Server error whilst uploading (${res.err})`);
+        try {
+            await api<EmptyResponse>('set/fplan', fplan);
+        } catch (e) {
+            setError(`Server error whilst uploading: ${(e as Error).message}`);
         }
     };
 
@@ -135,7 +136,7 @@ export default function Map() {
 
             map.current.on('click', handleMapClick);
         }
-    });
+    }, []);
 
     // Rerenders markers and polyline when markers are updated
     useEffect(() => {

@@ -19,6 +19,9 @@
 
 // clang-format on
 
+// https://github.com/sysprogs/PicoHTTPServer
+// or https://github.com/earlephilhower/arduino-pico
+
 // TODO: pico rndis driver so pico (non-w) can still have the web interface?
 // see https://github.com/OpenStickCommunity/GP2040-CE/blob/main/lib/rndis/rndis.c
 
