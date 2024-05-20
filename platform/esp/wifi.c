@@ -3,6 +3,7 @@
  * Licensed under the GNU AGPL-3.0
  */
 
+#include <stdlib.h>
 #include <string.h>
 #include "esp_event.h"
 #include "esp_http_server.h"
@@ -11,20 +12,47 @@
 
 #include "platform/flash.h"
 #include "platform/helpers.h"
+#include "platform/types.h"
 #include "resources/mimetype.h"
+
+#include "sys/api/cmds/GET/get_info.h"
+#include "sys/api/cmds/SET/set_flightplan.h"
 
 #include "platform/wifi.h"
 
 #define WIFI_CHANNEL 1 // See https://en.wikipedia.org/wiki/List_of_WLAN_channels
 #define WIFI_MAX_CONNECTIONS 4
 
-#define MSG_FILE_FAIL "Failed to read file!"
-#define MSG_FILE_NOT_FOUND "File not found!"
 #define CHUNK_XFER_SIZE 1024
 
 #if PLATFORM_SUPPORTS_WIFI
 
+// GET handlers
+
+static esp_err_t handle_api_v1_get_info(httpd_req_t *req) {
+    char *data = NULL;
+    i32 ret = api_handle_get_info(NULL, &data);
+    if (!data) {
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+    if (ret != 200) {
+        free(data);
+        httpd_resp_send_err(req, ret, NULL);
+        return ESP_FAIL;
+    }
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_sendstr(req, data);
+    free(data);
+    return ESP_OK;
+}
+
+// SET handlers
+
+// MISC handlers
+
 static esp_err_t handle_api_v1_ping(httpd_req_t *req) {
+    httpd_resp_set_type(req, "application/json");
     httpd_resp_sendstr(req, "{}");
     return ESP_OK;
 }
@@ -37,7 +65,7 @@ static esp_err_t handle_get(httpd_req_t *req) {
     size_t pathSize = strlen(req->uri) + sizeof("/www") + sizeof("index.html") + sizeof(".gz");
     char *path = malloc(pathSize);
     if (!path) {
-        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, MSG_FILE_FAIL);
+        httpd_resp_send_500(req);
         return ESP_ERR_NO_MEM;
     }
     strcpy(path, "/www"); // Prepend "/www" to the path since web assets are stored in "/www/..." in the wwwfs
@@ -62,15 +90,8 @@ static esp_err_t handle_get(httpd_req_t *req) {
         }
         break;
     }
-    if (err == LFS_ERR_NOENT) {
-        // Redirect to / if the file wasn't found (captive portal)
-        httpd_resp_set_status(req, "302 Redirect");
-        httpd_resp_set_hdr(req, "Location", "/");
-        free(path);
-        return ESP_OK;
-    }
     if (err != LFS_ERR_OK) {
-        httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, MSG_FILE_NOT_FOUND);
+        httpd_resp_send_404(req);
         free(path);
         return ESP_ERR_NOT_FOUND;
     }
@@ -91,7 +112,7 @@ static esp_err_t handle_get(httpd_req_t *req) {
         bytesRead = lfs_file_read(&wwwfs, &file, chunk, sizeof(chunk));
         if (bytesRead < 0 || httpd_resp_send_chunk(req, chunk, bytesRead) != ESP_OK) {
             httpd_resp_sendstr_chunk(req, NULL);
-            httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, MSG_FILE_FAIL);
+            httpd_resp_send_500(req);
             lfs_file_close(&wwwfs, &file);
             free(path);
             return ESP_FAIL;
@@ -116,26 +137,26 @@ bool wifi_setup(const char *ssid, const char *pass) {
     wifi_init_config_t initConfig = WIFI_INIT_CONFIG_DEFAULT();
     if (esp_wifi_init(&initConfig) != ESP_OK)
         return false;
-    wifi_config_t wifi_config = {
-        .ap =
-            {
-                // ssid and password are copied below, since thety are stored as arrays and not pointers
-                .ssid_len = strlen(ssid),
-                .channel = WIFI_CHANNEL,
-                .max_connection = WIFI_MAX_CONNECTIONS,
-                .authmode = pass ? WIFI_AUTH_WPA2_WPA3_PSK : WIFI_AUTH_OPEN,
-                .pmf_cfg =
-                    {
-                        .required = true,
-                    },
+    // clang-format off
+    wifi_config_t wifiConfig = {
+        .ap = {
+            // ssid and password are copied below, since thety are stored as arrays and not pointers
+            .ssid_len = strlen(ssid),
+            .channel = WIFI_CHANNEL,
+            .max_connection = WIFI_MAX_CONNECTIONS,
+            .authmode = pass ? WIFI_AUTH_WPA2_WPA3_PSK : WIFI_AUTH_OPEN,
+            .pmf_cfg = {
+                .required = true,
             },
+        },
     };
-    strncpy((char *)wifi_config.ap.ssid, ssid, sizeof(wifi_config.ap.ssid));
+    // clang-format on
+    strncpy((char *)wifiConfig.ap.ssid, ssid, sizeof(wifiConfig.ap.ssid));
     if (pass)
-        strncpy((char *)wifi_config.ap.password, pass, sizeof(wifi_config.ap.password));
+        strncpy((char *)wifiConfig.ap.password, pass, sizeof(wifiConfig.ap.password));
     if (esp_wifi_set_mode(WIFI_MODE_AP) != ESP_OK)
         return false;
-    if (esp_wifi_set_config(WIFI_IF_AP, &wifi_config) != ESP_OK)
+    if (esp_wifi_set_config(WIFI_IF_AP, &wifiConfig) != ESP_OK)
         return false;
     if (esp_wifi_start() != ESP_OK)
         return false;
@@ -147,21 +168,25 @@ bool wifi_setup(const char *ssid, const char *pass) {
     if (httpd_start(&server, &config) != ESP_OK)
         return false;
 
-    // API (v1)
+    // API handlers
+    httpd_uri_t apiV1GetInfoURI = {
+        .uri = "/api/v1/get/info",
+        .method = HTTP_GET,
+        .handler = handle_api_v1_get_info,
+    };
+    httpd_register_uri_handler(server, &apiV1GetInfoURI);
     httpd_uri_t apiV1PingURI = {
         .uri = "/api/v1/ping",
         .method = HTTP_GET,
         .handler = handle_api_v1_ping,
-        .user_ctx = NULL,
     };
     httpd_register_uri_handler(server, &apiV1PingURI);
 
-    // Handle common GET requests
+    // Common GET handler (for serving files)
     httpd_uri_t commonGETURI = {
         .uri = "/*",
         .method = HTTP_GET,
         .handler = handle_get,
-        .user_ctx = NULL,
     };
     httpd_register_uri_handler(server, &commonGETURI);
 

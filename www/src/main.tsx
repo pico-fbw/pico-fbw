@@ -3,12 +3,15 @@
  * Licensed under the GNU AGPL-3.0
  */
 
-import { render } from 'preact';
-import { Router, Route } from 'wouter-preact';
+import { render } from "preact";
+import { Route, Switch } from "wouter-preact";
 
-import Index from './pages/Index';
+import Index from "./pages/Index";
+import Info from "./pages/Info";
+import Planner from "./pages/Planner";
+import Upload from "./pages/Upload";
 
-import './style.css';
+import "./style.css";
 
 function NoMatch() {
     return (
@@ -25,16 +28,19 @@ function NoMatch() {
 
 export function App() {
     return (
-        <main class={'w-full h-full'}>
-            <Router>
+        <main class={"w-full h-full"}>
+            <Switch>
                 <Route path="/">{() => <Index />}</Route>
-                <Route path=":rest*">{() => <NoMatch />}</Route>
-            </Router>
+                <Route path="/info">{() => <Info />}</Route>
+                <Route path="/planner">{() => <Planner />}</Route>
+                <Route path="/upload">{() => <Upload />}</Route>
+                <Route>{() => <NoMatch />}</Route>
+            </Switch>
         </main>
     );
 }
 
-render(<App />, document.getElementById('root'));
+render(<App />, document.getElementById("root"));
 
 // FEATURE LIST
 // [ ] Check for (dual-band) internet connection, and if so allow flight planner to be used and data to be uploaded

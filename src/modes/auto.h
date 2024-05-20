@@ -4,21 +4,21 @@
 #include "platform/types.h"
 
 /* PID constants for the autopilot's lateral guidance. */
-#define latGuid_kP 0.005
-#define latGuid_kI 0.008
-#define latGuid_kD 0.002
-#define latGuid_tau 0.001
-#define latGuid_lim 33 // The maximum roll angle the autopilot can command
-#define latGuid_integLim 50.0
+#define LATGD_KP 0.005
+#define LATGD_KI 0.008
+#define LATGD_KD 0.002
+#define LATGD_TAU 0.001
+#define LATGD_LIM 33 // The maximum roll angle the autopilot can command
+#define LATGD_INTEGLIM 50.0
 
 /* PID constants for the autopilot's vertical guidance. */
-#define vertGuid_kP 0.05
-#define vertGuid_kI 0.0025
-#define vertGuid_kD 0.001
-#define vertGuid_tau 0.001
-#define vertGuid_loLim -15 // The minimum pitch angle the autopilot can command
-#define vertGuid_hiLim 25  // The maximum pitch angle the autopilot can command
-#define vertGuid_integLim 50.0
+#define VERTGD_KP 0.05
+#define VERTGD_KI 0.0025
+#define VERTGD_KD 0.001
+#define VERTGD_TAU 0.001
+#define VERTGD_LOLIM -15 // The minimum pitch angle the autopilot can command
+#define VERTGD_HILIM 25  // The maximum pitch angle the autopilot can command
+#define VERTGD_INTEGLIM 50.0
 
 typedef struct Waypoint {
     f64 lat, lng;

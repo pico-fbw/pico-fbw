@@ -3,17 +3,17 @@
  * Licensed under the GNU AGPL-3.0
  */
 
-import L, { LatLng } from 'leaflet';
-import { useEffect, useRef, useState } from 'preact/hooks';
-import { GlobeAmericasOutline, MapOutline, MapPinOutline, Square3Stack3dOutline } from 'preact-heroicons';
+import L, { LatLng } from "leaflet";
+import { useEffect, useRef, useState } from "preact/hooks";
+import { GlobeAmericasOutline, MapOutline, MapPinOutline, Square3Stack3dOutline } from "preact-heroicons";
 
-import Alert from './Alert';
+import Alert from "./Alert";
 
-import { api, EmptyResponse } from '../helpers/api';
-import { Flightplan, markersToFlightplan } from '../helpers/flightplan';
-import Settings from '../helpers/settings';
+import { api } from "../helpers/api";
+import { Flightplan, markersToFlightplan } from "../helpers/flightplan";
+import Settings from "../helpers/settings";
 
-import 'leaflet/dist/leaflet.css';
+import "leaflet/dist/leaflet.css";
 
 export interface Marker {
     id: number;
@@ -26,52 +26,52 @@ export interface Marker {
 const layers = [
     {
         id: 0,
-        name: 'Google Satellite',
-        attribution: 'Imagery &copy; Google Satellite Imagery Sources',
-        link: 'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
+        name: "Google Satellite",
+        attribution: "Imagery &copy; Google Satellite Imagery Sources",
+        link: "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
         icon: GlobeAmericasOutline,
     },
     {
         id: 1,
-        name: 'Google Hybrid',
-        attribution: 'Imagery &copy; Google Satellite Imagery Sources, Map data &copy; 2023 Google',
-        link: 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+        name: "Google Hybrid",
+        attribution: "Imagery &copy; Google Satellite Imagery Sources, Map data &copy; 2023 Google",
+        link: "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
         icon: Square3Stack3dOutline,
     },
     {
         id: 2,
-        name: 'Google Map',
-        attribution: 'Map data &copy; 2023 Google',
-        link: 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
+        name: "Google Map",
+        attribution: "Map data &copy; 2023 Google",
+        link: "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",
         icon: MapOutline,
     },
     {
         id: 3,
-        name: 'OpenStreetMap',
+        name: "OpenStreetMap",
         attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> and contributors',
-        link: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        link: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
         icon: MapPinOutline,
     },
 ];
 
 export default function Map() {
     const [defaultAlt, setDefaultAlt] = useState(20);
-    const [defaultSpeed] = useState(Number(Settings.get('defaultSpeed')));
+    const [defaultSpeed] = useState(Number(Settings.get("defaultSpeed")));
 
     const [markers, setMarkers] = useState<Marker[]>([]);
     const polyline = useRef<L.Polyline | null>(null);
-    const polylineColor = '#a21caf';
+    const polylineColor = "#a21caf";
 
     const [mapAttribution, setMapAttribution] = useState(layers[0].attribution);
     const [mapLink, setMapLink] = useState(layers[0].link);
     const mapContainer = useRef(null); // div that will contain the map
     const map = useRef<L.Map | null>(null);
 
-    const [error, setError] = useState('');
+    const [error, setError] = useState("");
 
     const markerIcon = L.icon({
-        iconUrl: '../../marker-icon.png',
-        shadowUrl: '../../marker-shadow.png',
+        iconUrl: "marker-icon.png",
+        shadowUrl: "marker-shadow.png",
         iconSize: [25, 41],
         shadowSize: [41, 41],
         iconAnchor: [12.5, 38],
@@ -79,16 +79,16 @@ export default function Map() {
     });
 
     const uploadFlightplan = async () => {
-        let fplan: Flightplan;
+        let flightplan: Flightplan;
         try {
-            fplan = markersToFlightplan(markers);
+            flightplan = markersToFlightplan(markers);
         } catch (e) {
-            console.error('Error parsing markers:', (e as Error).message);
+            console.error("Error parsing markers:", (e as Error).message);
             setError(`Error generating flightplan: ${(e as Error).message}`);
             return;
         }
         try {
-            await api<EmptyResponse>('set/fplan', fplan);
+            await api("set/flightplan", flightplan);
         } catch (e) {
             setError(`Server error whilst uploading: ${(e as Error).message}`);
         }
@@ -134,7 +134,7 @@ export default function Map() {
                 attribution: mapAttribution,
             }).addTo(map.current);
 
-            map.current.on('click', handleMapClick);
+            map.current.on("click", handleMapClick);
         }
     }, []);
 
@@ -153,7 +153,7 @@ export default function Map() {
                 const { position, id } = marker;
                 L.marker(position, { icon: markerIcon, draggable: true })
                     .addTo(map.current)
-                    .on('dragend', e => handleMarkerDragEnd(e, id));
+                    .on("dragend", e => handleMarkerDragEnd(e, id));
             });
 
             // Add polyline connecting all markers
@@ -168,7 +168,7 @@ export default function Map() {
                 id="map"
                 className="w-full h-full relative"
                 ref={mapContainer}
-                style={{ height: '500px', position: 'relative' }}
+                style={{ height: "500px", position: "relative" }}
             />
             {error && (
                 <Alert type="danger" className="mt-4 mx-4 sm:mx-8 lg:mx-0">

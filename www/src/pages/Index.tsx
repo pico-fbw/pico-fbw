@@ -3,17 +3,16 @@
  * Licensed under the GNU AGPL-3.0
  */
 
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useState } from "preact/hooks";
+import { Redirect } from "wouter-preact";
 
-import Alert from '../elements/Alert';
-import Map from '../elements/Map';
-import Uploader from '../elements/Uploader';
+import Alert from "../elements/Alert";
 
-import { api, EmptyResponse } from '../helpers/api';
-import hasInternet from '../helpers/hasInternet';
+import { api } from "../helpers/api";
+import hasInternet from "../helpers/hasInternet";
 
 export default function Index() {
-    const [status, setStatus] = useState('loading');
+    const [status, setStatus] = useState("loading");
     const [apiConnection, setAPIConnection] = useState<boolean | null>(null);
     const [hasConnection, setHasConnection] = useState<boolean | null>(null);
 
@@ -21,7 +20,7 @@ export default function Index() {
         // The API will respond with an empty JSON object at the PING endpoint,
         // so if no errors are thrown, the connection is working
         try {
-            await api<EmptyResponse>('ping');
+            await api("ping");
         } catch (e) {
             setAPIConnection(false);
             setStatus(`Oops! ${(e as Error).message}`);
@@ -44,7 +43,7 @@ export default function Index() {
     }, []);
 
     useEffect(() => {
-        if (status === 'loading' && apiConnection !== null && hasConnection !== null) {
+        if (status === "loading" && apiConnection !== null && hasConnection !== null) {
             const delay = Math.floor(Math.random() * (1000 - 500 + 1)) + 500;
             setTimeout(() => {
                 setStatus(null);
@@ -53,20 +52,24 @@ export default function Index() {
     }, [status, apiConnection, hasConnection]);
 
     return (
-        <div className="flex flex-col items-center justify-center h-screen">
+        <>
             {status ? (
-                status === 'loading' ? (
-                    <div className="animate-pulse fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                        <img src="icon.svg" alt="loading" className="h-64 w-64" />
-                    </div>
-                ) : (
-                    <Alert type="danger" className="mx-4 sm:mx-8 lg:mx-0">
-                        {status}
-                    </Alert>
-                )
+                <div className="flex flex-col items-center justify-center h-screen">
+                    {status === "loading" ? (
+                        <div className="animate-pulse fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                            <img src="icon.svg" alt="loading" className="h-64 w-64" />
+                        </div>
+                    ) : (
+                        <Alert type="danger" className="mx-4 sm:mx-8 lg:mx-0">
+                            {status}
+                        </Alert>
+                    )}
+                </div>
+            ) : hasConnection ? (
+                <Redirect to="/planner" />
             ) : (
-                <>{hasConnection ? <Map /> : <Uploader />}</>
+                <Redirect to="/upload" />
             )}
-        </div>
+        </>
     );
 }

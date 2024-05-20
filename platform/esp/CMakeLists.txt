@@ -28,4 +28,4 @@ target_link_libraries(platform_esp
     idf::soc
 )
 
-target_include_directories(platform_esp PRIVATE ${CMAKE_SOURCE_DIR})
+target_include_directories(platform_esp PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/src)

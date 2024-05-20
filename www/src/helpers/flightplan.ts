@@ -3,15 +3,15 @@
  * Licensed under the GNU AGPL-3.0
  */
 
-import { LatLng } from 'leaflet';
-import { Marker } from '../elements/Map';
-import Settings from './settings';
+import { LatLng } from "leaflet";
+import { Marker } from "../elements/Map";
+import Settings from "./settings";
 
-const generatorVersion = '1.0';
-const firmwareVersion = '1.0.0'; // This should match PICO_FBW_VERSION in the root CMakelists.txt
+const generatorVersion = "1.0";
+const firmwareVersion = "1.0.0"; // This should match PICO_FBW_VERSION in the root CMakelists.txt
 
 // Copy of Waypoint struct in src/modes/auto.h
-interface Waypoint {
+export interface Waypoint {
     lat: number;
     lng: number;
     alt: number;
@@ -29,18 +29,18 @@ export interface Flightplan {
 }
 
 export function markersToFlightplan(markers: Marker[]): Flightplan {
-    const altSamples = Number(Settings.get('altSamples'));
-    const dropSecs = Number(Settings.get('dropSecs'));
+    const altSamples = Number(Settings.get("altSamples"));
+    const dropSecs = Number(Settings.get("dropSecs"));
 
     const waypoints: Waypoint[] = markers.map(marker => {
         if (marker.position.lat <= -90 || marker.position.lat >= 90) {
-            throw new Error('Invalid latitude');
+            throw new Error("Invalid latitude");
         }
         if (marker.position.lng <= -180 || marker.position.lng > 180) {
-            throw new Error('Invalid longitude');
+            throw new Error("Invalid longitude");
         }
         if (marker.alt < 0 || marker.alt > 400) {
-            throw new Error('Invalid altitude');
+            throw new Error("Invalid altitude");
         }
 
         return {
@@ -63,7 +63,7 @@ export function markersToFlightplan(markers: Marker[]): Flightplan {
 export function flightplanToMarkers(json: string): Marker[] {
     const parsed: Flightplan = JSON.parse(json) as Flightplan;
     if (parsed.version !== generatorVersion) {
-        throw new Error('Invalid JSON version');
+        throw new Error("Invalid JSON version");
     }
 
     return parsed.waypoints.map((waypoint: Waypoint, index: number) => ({

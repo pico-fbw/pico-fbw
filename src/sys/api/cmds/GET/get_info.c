@@ -14,7 +14,7 @@
 
 // {"version":"","version_api":"","version_flightplan":"","platform":"","platform_version":""}
 
-i32 api_get_info(const char *args) {
+i32 api_handle_get_info(const char *input, char **output) {
     JSON_Value *root = json_value_init_object();
     JSON_Object *obj = json_value_get_object(root);
     json_object_set_string(obj, "version", PICO_FBW_VERSION);
@@ -23,9 +23,23 @@ i32 api_get_info(const char *args) {
     json_object_set_string(obj, "platform", PLATFORM_NAME);
     json_object_set_string(obj, "platform_version", PLATFORM_VERSION);
     char *serialized = json_serialize_to_string(root);
-    printraw("%s\n", serialized);
-    json_free_serialized_string(serialized);
     json_value_free(root);
+    *output = serialized;
+    return 200;
+    (void)input;
+}
+
+i32 api_get_info(const char *args) {
+    char *output = NULL;
+    i32 ret = api_handle_get_info(args, &output);
+    if (!output)
+        return 500;
+    if (ret != 200) {
+        json_free_serialized_string(output);
+        return ret;
+    }
+    printraw("%s\n", output);
+    json_free_serialized_string(output);
     return -1;
     (void)args;
 }

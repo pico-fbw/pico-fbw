@@ -5,19 +5,37 @@
 
 const timeout = 2000; // Timeout for any API request in ms
 
-export type EmptyResponse = Record<string, never>;
+type EmptyResponse = Record<string, never>;
+// GET endpoints
+export type GET_INFO = {
+    version: string;
+    version_api: string;
+    version_flightplan: string;
+    platform: string;
+    platform_version: string;
+};
+// SET endpoints
+export type SET_FLIGHTPLAN = EmptyResponse;
+// MISC endpoints
+export type PING = EmptyResponse;
 
-export async function api<T = any>(endpoint: string, data?: object): Promise<T> {
+type EndpointMap = {
+    "get/info": GET_INFO;
+    "set/flightplan": SET_FLIGHTPLAN;
+    ping: PING;
+};
+
+export async function api<E extends keyof EndpointMap>(endpoint: E, data?: object): Promise<EndpointMap[E]> {
     const controller = new AbortController();
     let options: RequestInit = {
-        method: 'GET',
+        method: "GET",
         signal: controller.signal,
     };
     if (data) {
         options = {
-            method: 'POST',
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
             },
             body: JSON.stringify(data),
         };
@@ -29,14 +47,7 @@ export async function api<T = any>(endpoint: string, data?: object): Promise<T> 
             throw new Error(`API error (${res.status})`);
         }
         return res.json();
-    }) as Promise<T>;
+    }) as Promise<EndpointMap[E]>;
     clearTimeout(id);
     return response;
 }
-
-/**
- * /api/v1:
- *  /ping => always returns ERR.OK
- *  /set
- *   /fplan => requires 'data' to be an array of Waypoint, returns an ERR code
- */

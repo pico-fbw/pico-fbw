@@ -608,8 +608,8 @@ bool config_validate() {
         print("ERROR: Wi-Fi SSID must be between %d and %d characters.", WIFI_SSID_MIN_LEN, WIFI_SSID_MAX_LEN);
         return false;
     }
-    if (strlen(config.wifi.pass) > 0 && strlen(config.wifi.pass) < WIFI_PASS_MIN_LEN ||
-        strlen(config.wifi.pass) > WIFI_SSID_MAX_LEN) {
+    if (strlen(config.wifi.pass) > 0 &&
+        (strlen(config.wifi.pass) < WIFI_PASS_MIN_LEN || strlen(config.wifi.pass) > WIFI_SSID_MAX_LEN)) {
         print("ERROR: Wi-Fi password must be between %d and %d characters.", WIFI_PASS_MIN_LEN, WIFI_PASS_MAX_LEN);
         return false;
     }

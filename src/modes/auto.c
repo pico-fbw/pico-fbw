@@ -95,10 +95,9 @@ bool auto_init() {
 // The PIDController struct contains some internal variables that we don't initialize, so we suppress the warning
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-    latGuid = (PIDController){latGuid_kP,   latGuid_kI,  latGuid_kD,        latGuid_tau,
-                              -latGuid_lim, latGuid_lim, -latGuid_integLim, latGuid_integLim};
-    vertGuid = (PIDController){vertGuid_kP,    vertGuid_kI,    vertGuid_kD,        vertGuid_tau,
-                               vertGuid_loLim, vertGuid_hiLim, -vertGuid_integLim, vertGuid_integLim};
+    latGuid = (PIDController){LATGD_KP, LATGD_KI, LATGD_KD, LATGD_TAU, -LATGD_LIM, LATGD_LIM, -LATGD_INTEGLIM, LATGD_INTEGLIM};
+    vertGuid = (PIDController){VERTGD_KP,    VERTGD_KI,    VERTGD_KD,        VERTGD_TAU,
+                               VERTGD_LOLIM, VERTGD_HILIM, -VERTGD_INTEGLIM, VERTGD_INTEGLIM};
 #pragma GCC diagnostic pop
     pid_init(&latGuid);
     pid_init(&vertGuid);

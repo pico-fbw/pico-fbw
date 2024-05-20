@@ -81,8 +81,8 @@ bool hold_init() {
 // (sadly)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-    vertGuid = (PIDController){vertGuid_kP,    vertGuid_kI,    vertGuid_kD,        vertGuid_tau,
-                               vertGuid_loLim, vertGuid_hiLim, -vertGuid_integLim, vertGuid_integLim};
+    vertGuid = (PIDController){VERTGD_KP,    VERTGD_KI,    VERTGD_KD,        VERTGD_TAU,
+                               VERTGD_LOLIM, VERTGD_HILIM, -VERTGD_INTEGLIM, VERTGD_INTEGLIM};
 #pragma GCC diagnostic pop
     pid_init(&vertGuid);
     targetAlt = gps.alt; // targetAlt is just the current alt from whenever we enter the mode

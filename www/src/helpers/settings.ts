@@ -5,12 +5,12 @@
 
 export class Settings {
     static setting = {
-        altSamples: { default: '10' },
-        configAutoSave: { default: '1' },
-        defaultMap: { default: '0' },
-        dropSecs: { default: '10' },
-        defaultSpeed: { default: '25' },
-        showOfflineNotice: { default: '1' },
+        altSamples: { default: "10" },
+        configAutoSave: { default: "1" },
+        defaultMap: { default: "0" },
+        dropSecs: { default: "10" },
+        defaultSpeed: { default: "25" },
+        showOfflineNotice: { default: "1" },
     } as const;
 
     static get<K extends keyof typeof this.setting>(key: K): string {
