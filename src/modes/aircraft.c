@@ -3,6 +3,7 @@
  * Licensed under the GNU AGPL-3.0
  */
 
+#include "platform/defs.h"
 #include "platform/wifi.h"
 
 #include "io/aahrs.h"
@@ -92,9 +93,12 @@ void change_to(Mode newMode) {
                     printfbw(aircraft, "entering auto mode");
                     if (auto_init()) {
                         aircraft.mode = MODE_AUTO;
-                        // Auto mode has been initialized, wifi is no longer needed
+#if PLATFORM_SUPPORTS_WIFI
+                        // Auto mode has been initialized, wifi is no longer needed// Auto mode has been initialized, wifi is no
+                        // longer needed
                         if (!wifi_disable())
                             printfbw(network, "WARNING: failed to disable wifi!");
+#endif
                     } else
                         goto NORMAL;
                 } else
