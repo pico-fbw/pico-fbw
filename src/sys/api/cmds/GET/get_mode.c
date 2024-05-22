@@ -11,6 +11,8 @@
 
 #include "get_mode.h"
 
+// {"mode":number}
+
 i32 api_get_mode(const char *args) {
     JSON_Value *root = json_value_init_object();
     JSON_Object *obj = json_value_get_object(root);

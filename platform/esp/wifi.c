@@ -3,6 +3,7 @@
  * Licensed under the GNU AGPL-3.0
  */
 
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 #include "esp_event.h"
@@ -15,44 +16,162 @@
 #include "platform/types.h"
 #include "resources/mimetype.h"
 
+#include "sys/api/cmds/GET/get_config.h"
 #include "sys/api/cmds/GET/get_info.h"
+#include "sys/api/cmds/SET/set_config.h"
 #include "sys/api/cmds/SET/set_flightplan.h"
 
 #include "platform/wifi.h"
 
 #define WIFI_CHANNEL 1 // See https://en.wikipedia.org/wiki/List_of_WLAN_channels
 #define WIFI_MAX_CONNECTIONS 4
+#define HTTP_ANY INT_MAX
 
 #define CHUNK_XFER_SIZE 1024
 
 #if PLATFORM_SUPPORTS_WIFI
 
+httpd_handle_t server = NULL;
+
+/**
+ * Converts an API response code to an HTTP status code.
+ * @param res the API response code
+ * @return the HTTP status code (as a string)
+ */
+static const char *api_res_to_http_status(i32 res) {
+    switch (res) {
+        case -1: // -1 is an alternate API code which more or less means the same as 200
+        case 200:
+            return "200 OK";
+        case 202:
+            return "202 Accepted";
+        case 204:
+            return "204 No Content";
+        case 400:
+            return "400 Bad Request";
+        case 403:
+            return "403 Forbidden";
+        case 404:
+            return "404 Not Found";
+        case 409:
+            return "409 Conflict";
+        case 500:
+        default:
+            return "500 Internal Server Error";
+    }
+}
+
+/**
+ * Gets the body of a request and stores it in a buffer.
+ * @param req the request
+ * @param response the buffer to store the body in
+ * @return ESP_OK if successful, an ESP_ERR otherwise
+ * @note The buffer will be allocated by this function and must be freed by the caller.
+ */
+static esp_err_t get_body(httpd_req_t *req, char **response) {
+    // First check if the request has a body
+    if (req->content_len == 0) {
+        *response = NULL;
+        return ESP_OK;
+    }
+    // Allocate a buffer and read in the request body
+    char *buf = malloc(req->content_len + 1);
+    if (!buf) {
+        httpd_resp_send_500(req);
+        return ESP_ERR_NO_MEM;
+    }
+    u32 received = 0;
+    do {
+        i32 len = httpd_req_recv(req, buf + received, req->content_len);
+        if (len < 0) {
+            httpd_resp_send_500(req);
+            free(buf);
+            return ESP_FAIL;
+        }
+        received += len;
+    } while (received < req->content_len);
+    buf[req->content_len] = '\0';
+    *response = buf;
+    return ESP_OK;
+}
+
 // GET handlers
 
-static esp_err_t handle_api_v1_get_info(httpd_req_t *req) {
-    char *data = NULL;
-    i32 ret = api_handle_get_info(NULL, &data);
-    if (!data) {
+static esp_err_t handle_api_v1_get_config(httpd_req_t *req) {
+    // Get the request body
+    char *in = NULL;
+    esp_err_t err = get_body(req, &in);
+    if (err != ESP_OK)
+        return err;
+    char *out = NULL;
+    // Perform the relavent API call and obtain its output
+    i32 res = api_handle_get_config(in, &out);
+    // Set the status of the HTTP response to the status of the API response
+    httpd_resp_set_status(req, api_res_to_http_status(res));
+    if (!out) {
         httpd_resp_send_500(req);
-        return ESP_FAIL;
+        return ESP_ERR_NO_MEM;
     }
-    if (ret != 200) {
-        free(data);
-        httpd_resp_send_err(req, ret, NULL);
-        return ESP_FAIL;
+    free(in);
+    // Set the content type of the HTTP response to JSON and send the output
+    httpd_resp_set_type(req, HTTPD_TYPE_JSON);
+    httpd_resp_sendstr(req, out);
+    free(out);
+    return res < 500 ? ESP_OK : ESP_FAIL;
+}
+
+static esp_err_t handle_api_v1_get_info(httpd_req_t *req) {
+    char *out = NULL;
+    i32 res = api_handle_get_info(&out);
+    httpd_resp_set_status(req, api_res_to_http_status(res));
+    if (!out) {
+        httpd_resp_send_500(req);
+        return ESP_ERR_NO_MEM;
     }
-    httpd_resp_set_type(req, "application/json");
-    httpd_resp_sendstr(req, data);
-    free(data);
-    return ESP_OK;
+    httpd_resp_set_type(req, HTTPD_TYPE_JSON);
+    httpd_resp_sendstr(req, out);
+    free(out);
+    return res < 500 ? ESP_OK : ESP_FAIL;
 }
 
 // SET handlers
 
+static esp_err_t handle_api_v1_set_config(httpd_req_t *req) {
+    char *in = NULL;
+    esp_err_t err = get_body(req, &in);
+    if (err != ESP_OK)
+        return err;
+    i32 res = api_handle_set_config(in);
+    httpd_resp_set_status(req, api_res_to_http_status(res));
+    free(in);
+    httpd_resp_set_type(req, HTTPD_TYPE_JSON);
+    httpd_resp_sendstr(req, "{}");
+    return res < 500 ? ESP_OK : ESP_FAIL;
+}
+
+static esp_err_t handle_api_v1_set_flightplan(httpd_req_t *req) {
+    char *in = NULL;
+    esp_err_t err = get_body(req, &in);
+    if (err != ESP_OK)
+        return err;
+    char *out = NULL;
+    i32 res = api_handle_set_flightplan(in, &out);
+    httpd_resp_set_status(req, api_res_to_http_status(res));
+    if (!out) {
+        httpd_resp_send_500(req);
+        return ESP_ERR_NO_MEM;
+    }
+    free(in);
+    httpd_resp_set_type(req, HTTPD_TYPE_JSON);
+    httpd_resp_sendstr(req, out);
+    free(out);
+    return res < 500 ? ESP_OK : ESP_FAIL;
+}
+
 // MISC handlers
 
 static esp_err_t handle_api_v1_ping(httpd_req_t *req) {
-    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_type(req, HTTPD_TYPE_JSON);
     httpd_resp_sendstr(req, "{}");
     return ESP_OK;
 }
@@ -162,19 +281,43 @@ bool wifi_setup(const char *ssid, const char *pass) {
         return false;
 
     // Initialize the HTTP server
-    httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.uri_match_fn = httpd_uri_match_wildcard;
     if (httpd_start(&server, &config) != ESP_OK)
         return false;
 
     // API handlers
+    httpd_uri_t apiV1GetConfigURIGet = {
+        .uri = "/api/v1/get/config",
+        .method = HTTP_GET,
+        .handler = handle_api_v1_get_config,
+    };
+    httpd_uri_t apiV1GetConfigURIPost = {
+        .uri = "/api/v1/get/config",
+        .method = HTTP_POST,
+        .handler = handle_api_v1_get_config,
+    };
+    // get/config supports both GET and POST
+    httpd_register_uri_handler(server, &apiV1GetConfigURIGet);
+    httpd_register_uri_handler(server, &apiV1GetConfigURIPost);
     httpd_uri_t apiV1GetInfoURI = {
         .uri = "/api/v1/get/info",
         .method = HTTP_GET,
         .handler = handle_api_v1_get_info,
     };
     httpd_register_uri_handler(server, &apiV1GetInfoURI);
+    httpd_uri_t apiV1SetConfigURI = {
+        .uri = "/api/v1/set/config",
+        .method = HTTP_POST,
+        .handler = handle_api_v1_set_config,
+    };
+    httpd_register_uri_handler(server, &apiV1SetConfigURI);
+    httpd_uri_t apiV1SetFlightplanURI = {
+        .uri = "/api/v1/set/flightplan",
+        .method = HTTP_POST,
+        .handler = handle_api_v1_set_flightplan,
+    };
+    httpd_register_uri_handler(server, &apiV1SetFlightplanURI);
     httpd_uri_t apiV1PingURI = {
         .uri = "/api/v1/ping",
         .method = HTTP_GET,
@@ -195,6 +338,18 @@ bool wifi_setup(const char *ssid, const char *pass) {
 
 void wifi_periodic() {
     return; // esp wifi handles events in background through tasks
+}
+
+bool wifi_disable() {
+    if (esp_wifi_stop() != ESP_OK)
+        return false;
+    if (esp_wifi_deinit() != ESP_OK)
+        return false;
+    if (httpd_stop(server) != ESP_OK)
+        return false;
+    if (esp_event_loop_delete_default() != ESP_OK)
+        return false;
+    return esp_netif_deinit() == ESP_OK;
 }
 
 #endif // PLATFORM_SUPPORTS_WIFI

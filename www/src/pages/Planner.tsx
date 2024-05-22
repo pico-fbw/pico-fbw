@@ -19,7 +19,8 @@ export default function Planner() {
     }, []);
 
     return (
-        <ContentBlock title="Planner">
+        // FIXME: ContentBlock swipe handlers cause problems when navigating the map
+        <ContentBlock title="Planner" loading={hasConnection === null}>
             {hasConnection ? (
                 <Map />
             ) : (

@@ -5,7 +5,7 @@
 
 import { LatLng } from "leaflet";
 import { Marker } from "../elements/Map";
-import Settings from "./settings";
+import settings from "./settings";
 
 const generatorVersion = "1.0";
 const firmwareVersion = "1.0.0"; // This should match PICO_FBW_VERSION in the root CMakelists.txt
@@ -29,8 +29,8 @@ export interface Flightplan {
 }
 
 export function markersToFlightplan(markers: Marker[]): Flightplan {
-    const altSamples = Number(Settings.get("altSamples"));
-    const dropSecs = Number(Settings.get("dropSecs"));
+    const altSamples = Number(settings.get("altSamples"));
+    const dropSecs = Number(settings.get("dropSecs"));
 
     const waypoints: Waypoint[] = markers.map(marker => {
         if (marker.position.lat <= -90 || marker.position.lat >= 90) {

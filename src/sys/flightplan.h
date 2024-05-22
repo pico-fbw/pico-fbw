@@ -5,6 +5,9 @@
 
 #include "modes/auto.h"
 
+#define FLIGHTPLAN_MSG_STATUS_GPS_OFFSET "When ready, please engage auto mode to calibrate the GPS."
+#define FLIGHTPLAN_MSG_WARN_FW_VERSION "A new firmware version is available!"
+
 typedef struct Flightplan {
     char *version;
     char *version_fw;

@@ -37,4 +37,9 @@ bool wifi_setup(const char *ssid, const char *pass);
  */
 void wifi_periodic();
 
+/**
+ * Disables the Wi-Fi access point.
+ */
+bool wifi_disable();
+
 #endif // PLATFORM_SUPPORTS_WIFI

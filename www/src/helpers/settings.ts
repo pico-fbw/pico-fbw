@@ -3,13 +3,12 @@
  * Licensed under the GNU AGPL-3.0
  */
 
-export class Settings {
+export class settings {
     static setting = {
         altSamples: { default: "10" },
-        configAutoSave: { default: "1" },
         defaultMap: { default: "0" },
-        dropSecs: { default: "10" },
         defaultSpeed: { default: "25" },
+        dropSecs: { default: "10" },
         showOfflineNotice: { default: "1" },
     } as const;
 
@@ -27,4 +26,4 @@ export class Settings {
     }
 }
 
-export default Settings;
+export default settings;

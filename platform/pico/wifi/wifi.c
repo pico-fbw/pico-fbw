@@ -51,4 +51,8 @@ void wifi_periodic() {
     return; // Nothing to do, all wifi tasks are handled in the background through interrupts
 }
 
+bool wifi_disable() {
+    return true; // TODO
+}
+
 #endif // PLATFORM_SUPPORTS_WIFI

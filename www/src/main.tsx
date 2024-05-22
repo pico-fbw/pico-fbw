@@ -7,8 +7,8 @@ import { render } from "preact";
 import { Route, Switch } from "wouter-preact";
 
 import Index from "./pages/Index";
-import Info from "./pages/Info";
 import Planner from "./pages/Planner";
+import Settings from "./pages/Settings";
 import Upload from "./pages/Upload";
 
 import "./style.css";
@@ -31,8 +31,8 @@ export function App() {
         <main class={"w-full h-full"}>
             <Switch>
                 <Route path="/">{() => <Index />}</Route>
-                <Route path="/info">{() => <Info />}</Route>
                 <Route path="/planner">{() => <Planner />}</Route>
+                <Route path="/settings">{() => <Settings />}</Route>
                 <Route path="/upload">{() => <Upload />}</Route>
                 <Route>{() => <NoMatch />}</Route>
             </Switch>

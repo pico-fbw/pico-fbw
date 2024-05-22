@@ -12,13 +12,15 @@ import ContentBlock from "../elements/ContentBlock";
 import { api } from "../helpers/api";
 import { Flightplan } from "../helpers/flightplan";
 import hasInternet from "../helpers/hasInternet";
-import { Settings } from "../helpers/settings";
+import settings from "../helpers/settings";
 
 export default function Upload() {
     const [flightplan, setFlightplan] = useState("");
     const [error, setError] = useState("");
+    const [uploaded, setUploaded] = useState(false);
     const [hasConnection, setHasConnection] = useState<boolean | null>(null);
-    const showOfflineNotice = Settings.get("showOfflineNotice") === "1";
+
+    const showOfflineNotice = settings.get("showOfflineNotice") === "1";
 
     const sendFlightplan = async (input: string) => {
         let flightplan: Flightplan;
@@ -30,9 +32,16 @@ export default function Upload() {
             return;
         }
         try {
-            await api("set/flightplan", flightplan);
+            await api("set/flightplan", flightplan).then(() => setUploaded(true));
         } catch (e) {
-            setError(`Server error whilst uploading: ${(e as Error).message}`);
+            const error = (e as Error).message;
+            if (error === "400") {
+                setError("Invalid flightplan!");
+            } else if (error === "409") {
+                setError("A flightplan already exists!");
+            } else {
+                setError(`Server error whilst uploading: ${error}`);
+            }
         }
     };
 
@@ -55,14 +64,18 @@ export default function Upload() {
     };
 
     useEffect(() => {
+        setError("");
+    }, [uploaded]);
+
+    useEffect(() => {
         checkInternetConnection().catch(console.error);
     }, []);
 
     return (
-        <ContentBlock title="Upload">
+        <ContentBlock title="Upload" loading={hasConnection === null}>
             <div className="flex flex-col items-center justify-center h-screen space-y-4 p-8">
                 {!hasConnection && showOfflineNotice && (
-                    <Alert type="info" onClose={() => Settings.set("showOfflineNotice", "0")} className="mx-4 sm:mx-8 lg:mx-0">
+                    <Alert type="info" onClose={() => settings.set("showOfflineNotice", "0")} className="mx-4 sm:mx-8 lg:mx-0">
                         It looks like you're offline. You can still upload flightplans that have been pre-generated at&nbsp;
                         <a
                             href="https://pico-fbw.org/tools/planner"
@@ -93,6 +106,11 @@ export default function Upload() {
                 {error && (
                     <Alert type="danger" className="mx-4 sm:mx-8 lg:mx-0">
                         {error}
+                    </Alert>
+                )}
+                {uploaded && (
+                    <Alert type="okay" onClose={() => setUploaded(false)} className="mx-4 sm:mx-8 lg:mx-0">
+                        Flightplan uploaded successfully!
                     </Alert>
                 )}
                 <button

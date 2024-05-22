@@ -1,0 +1,9 @@
+export default function Spinner() {
+    return (
+        <div className="relative top-1/2">
+            <div className="absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-white/20" />
+            </div>
+        </div>
+    );
+}

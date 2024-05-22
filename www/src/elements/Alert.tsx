@@ -5,12 +5,18 @@
 
 import preact from "preact";
 import { useState } from "preact/hooks";
-import { ExclamationTriangleOutline, InformationCircleOutline, ShieldExclamationOutline, XMarkSolid } from "preact-heroicons";
+import {
+    CheckCircleOutline,
+    ExclamationTriangleOutline,
+    InformationCircleOutline,
+    ShieldExclamationOutline,
+    XMarkSolid,
+} from "preact-heroicons";
 
 import classNames from "../helpers/classNames";
 
 interface AlertProps {
-    type: "warning" | "danger" | "info";
+    type: "okay" | "info" | "warning" | "danger";
     onClose?: () => void;
     className?: string;
     children: preact.ComponentChildren;
@@ -18,12 +24,14 @@ interface AlertProps {
 
 function getColors(type: AlertProps["type"]) {
     switch (type) {
+        case "okay":
+            return "bg-green-400/10 text-green-500";
+        case "info":
+            return "bg-blue-400/10 text-blue-500";
         case "warning":
             return "bg-yellow-400/10 text-yellow-500";
         case "danger":
             return "bg-red-400/10 text-red-400";
-        case "info":
-            return "bg-blue-400/10 text-blue-500";
     }
 }
 
@@ -46,12 +54,14 @@ const Alert: preact.FunctionComponent<AlertProps> = ({ type, onClose, className 
             )}
             <div className="flex">
                 <div className="flex-shrink-0">
-                    {type === "danger" ? (
-                        <ShieldExclamationOutline className={"mr-2 h-6 w-6 text-red-400"} />
+                    {type === "okay" ? (
+                        <CheckCircleOutline className={"mr-2 h-6 w-6 text-green-500"} />
+                    ) : type === "info" ? (
+                        <InformationCircleOutline className={"mr-2 h-6 w-6 text-blue-500"} />
                     ) : type === "warning" ? (
                         <ExclamationTriangleOutline className={"mr-2 h-6 w-6 text-yellow-500"} />
                     ) : (
-                        <InformationCircleOutline className={"mr-2 h-6 w-6 text-blue-500"} />
+                        <ShieldExclamationOutline className={"mr-2 h-6 w-6 text-red-400"} />
                     )}
                 </div>
                 <div className={`ml-3 ${onClose ? "mr-4" : ""} flex-1 md:flex md:justify-between`}>{children}</div>

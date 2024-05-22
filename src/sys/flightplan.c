@@ -23,6 +23,15 @@
 static Flightplan flightplan;
 static FlightplanError state = FLIGHTPLAN_STATUS_AWAITING; // Current state of the flightplan parsage
 
+static inline bool state_is_error() {
+    return state == FLIGHTPLAN_ERR_PARSE || state == FLIGHTPLAN_ERR_VERSION || state == FLIGHTPLAN_ERR_MEM ||
+           state == FLIGHTPLAN_ERR_ALREADY_PARSED;
+}
+
+static inline bool state_is_warning() {
+    return state == FLIGHTPLAN_WARN_FW_VERSION;
+}
+
 bool waypoint_is_valid(Waypoint *wpt) {
     return fabs(wpt->lat) <= 90 && fabs(wpt->lng) <= 180 && wpt->alt >= -5 && wpt->alt <= 400 && wpt->speed >= -5 &&
            wpt->speed <= 100 && wpt->drop >= 0 && wpt->drop <= 60;
@@ -33,7 +42,7 @@ bool flightplan_was_parsed() {
 }
 
 FlightplanError flightplan_parse(const char *json, bool silent) {
-    if (state != FLIGHTPLAN_STATUS_AWAITING)
+    if (flightplan_was_parsed())
         return FLIGHTPLAN_ERR_ALREADY_PARSED;
     // Ensure the recieved JSON matches the template schema for a valid flightplan
     JSON_Value *schema = json_parse_string(JSON_SCHEMA);
@@ -88,6 +97,8 @@ FlightplanError flightplan_parse(const char *json, bool silent) {
         state = FLIGHTPLAN_ERR_PARSE;
         goto cleanup;
     }
+    if (flightplan.alt_samples != 0 && !state_is_warning() && !state_is_error())
+        state = FLIGHTPLAN_STATUS_GPS_OFFSET; // Only replace the state if there have been no warnings/errors up to this point
     // Waypoint array
     JSON_Array *waypoints = json_object_get_array(obj, "waypoints");
     flightplan.waypoint_count = json_array_get_count(waypoints);

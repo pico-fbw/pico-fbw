@@ -23,7 +23,7 @@ export default function Index() {
             await api("ping");
         } catch (e) {
             setAPIConnection(false);
-            setStatus(`Oops! ${(e as Error).message}`);
+            setStatus(`Oops! API error (${(e as Error).message})`);
             return;
         }
         setAPIConnection(true);

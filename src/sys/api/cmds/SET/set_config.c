@@ -12,18 +12,11 @@
 
 #include "set_config.h"
 
-// {"changes":[{"section":"","key":"","value":""}, ...], "save":boolean}
+i32 api_handle_set_config(const char *input) {
+    if (!input)
+        goto save; // No input, trigger a save to flash
 
-// For example:
-// {"changes":[{"section":"GENERAL","key":"skipCalibration","value":"1"},{"section":"WIFI","key":"ssid","value":"coolwifiname"}],"save":true}
-// will set the skipCalibration key in the GENERAL section to 1 (true) and the ssid key in the WIFI section to "coolwifiname",
-// and save the changes to flash
-
-i32 api_set_config(const char *args) {
-    if (!args)
-        goto save; // No args, trigger a save to flash
-
-    JSON_Value *root = json_parse_string(args);
+    JSON_Value *root = json_parse_string(input);
     if (!root)
         return 400;
     JSON_Object *obj = json_value_get_object(root);
@@ -60,8 +53,20 @@ i32 api_set_config(const char *args) {
     return 200;
 
 save:
+    // Validate before saving
     if (!config_validate())
         return 400;
     config_save();
     return 200;
+}
+
+// {"changes":[{"section":"","key":"","value":""}, ...], "save":boolean}
+
+// For example:
+// {"changes":[{"section":"GENERAL","key":"skipCalibration","value":"1"},{"section":"WIFI","key":"ssid","value":"coolwifiname"}],"save":true}
+// will set the skipCalibration key in the GENERAL section to 1 (true) and the ssid key in the WIFI section to "coolwifiname",
+// and save the changes to flash
+
+i32 api_set_config(const char *args) {
+    return api_handle_set_config(args);
 }

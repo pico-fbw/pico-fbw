@@ -7,6 +7,12 @@ const timeout = 2000; // Timeout for any API request in ms
 
 type EmptyResponse = Record<string, never>;
 // GET endpoints
+export type GET_CONFIG = {
+    sections: {
+        name: string;
+        keys: (number | string)[];
+    }[];
+};
 export type GET_INFO = {
     version: string;
     version_api: string;
@@ -15,12 +21,17 @@ export type GET_INFO = {
     platform_version: string;
 };
 // SET endpoints
-export type SET_FLIGHTPLAN = EmptyResponse;
+export type SET_CONFIG = EmptyResponse;
+export type SET_FLIGHTPLAN = {
+    message: string;
+};
 // MISC endpoints
 export type PING = EmptyResponse;
 
 type EndpointMap = {
+    "get/config": GET_CONFIG;
     "get/info": GET_INFO;
+    "set/config": SET_CONFIG;
     "set/flightplan": SET_FLIGHTPLAN;
     ping: PING;
 };
@@ -44,7 +55,7 @@ export async function api<E extends keyof EndpointMap>(endpoint: E, data?: objec
     const id = setTimeout(() => controller.abort(), timeout);
     const response = fetch(`/api/v1/${endpoint}`, options).then(res => {
         if (!res.ok) {
-            throw new Error(`API error (${res.status})`);
+            throw new Error(res.status.toString());
         }
         return res.json();
     }) as Promise<EndpointMap[E]>;

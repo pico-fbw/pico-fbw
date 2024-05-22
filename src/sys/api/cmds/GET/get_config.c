@@ -73,26 +73,36 @@ static bool parse_args(const char *args, char **section, char **key) {
  * @return the serialized JSON object containing the value
  * @note The caller is responsible for freeing the memory allocated for the output.
  */
-static char *get_config_value(const char *section, const char *key) {
+static char *get_config_value(const char *section_name, const char *key) {
     void *value = NULL;
-    ConfigSectionType type = config_get(section, key, &value);
+    ConfigSectionType type = config_get(section_name, key, &value);
     if (!value)
         return NULL;
-    JSON_Value *root = json_value_init_object();
-    JSON_Object *obj = json_value_get_object(root);
     // The requested config value exists and we now have it + its type
     // Now, generate our response
+    JSON_Value *root = json_value_init_object();
+    JSON_Object *obj = json_value_get_object(root);
+    JSON_Value *sectionsArr = json_value_init_array();
+    JSON_Array *sections = json_value_get_array(sectionsArr);
+    JSON_Value *sectionObj = json_value_init_object();
+    JSON_Object *section = json_value_get_object(sectionObj);
+    json_object_set_string(section, "name", section_name);
+    JSON_Value *keysArr = json_value_init_array();
+    JSON_Array *keys = json_value_get_array(keysArr);
     switch (type) {
         case SECTION_TYPE_FLOAT:
-            json_object_set_number(obj, "key", *(f32 *)value);
+            json_array_append_number(keys, *(f32 *)value);
             break;
         case SECTION_TYPE_STRING:
-            json_object_set_string(obj, "key", (char *)value);
+            json_array_append_string(keys, (char *)value);
             break;
         default:
             json_value_free(root);
             return NULL; // This should never happen
     }
+    json_object_set_value(section, "keys", keysArr);
+    json_array_append_value(sections, sectionObj);
+    json_object_set_value(obj, "sections", sectionsArr);
     char *serialized = json_serialize_to_string(root);
     json_value_free(root);
     return serialized;
@@ -180,20 +190,17 @@ i32 api_handle_get_config(const char *input, char **output) {
 // Input:
 // {"section":"","key":""}
 
-// Output (argument):
-// {"key":number|""}
-
-// Output (no argument):
+// Output:
 // {"sections":[{"name":"","keys":[{"key":number|""}]}]}
 
 i32 api_get_config(const char *args) {
     char *output = NULL;
-    i32 ret = api_handle_get_config(args, &output);
+    i32 res = api_handle_get_config(args, &output);
     if (!output)
         return 500;
-    if (ret != 200) {
+    if (res != 200) {
         json_free_serialized_string(output);
-        return ret;
+        return res;
     }
     printraw("%s\n", output);
     json_free_serialized_string(output);

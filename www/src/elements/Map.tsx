@@ -11,7 +11,7 @@ import Alert from "./Alert";
 
 import { api } from "../helpers/api";
 import { Flightplan, markersToFlightplan } from "../helpers/flightplan";
-import Settings from "../helpers/settings";
+import settings from "../helpers/settings";
 
 import "leaflet/dist/leaflet.css";
 
@@ -56,7 +56,7 @@ const layers = [
 
 export default function Map() {
     const [defaultAlt, setDefaultAlt] = useState(20);
-    const [defaultSpeed] = useState(Number(Settings.get("defaultSpeed")));
+    const [defaultSpeed] = useState(Number(settings.get("defaultSpeed")));
 
     const [markers, setMarkers] = useState<Marker[]>([]);
     const polyline = useRef<L.Polyline | null>(null);
