@@ -71,7 +71,7 @@ const config: Config = {
         {
             name: "Wi-Fi Enabled",
             id: "wifiEnabled",
-            desc: "Whether or not Wi-Fly is enabled. If you would like the network to be password-protected, select that option and configure the password in the `Wi-Fly` section.",
+            desc: "Whether or not Wi-Fi is enabled. If you would like the network to be password-protected, select that option and configure the password in the `Wi-Fi` section.",
             enumMap: {
                 0: "Disabled",
                 1: "Enabled (no password)",
@@ -335,12 +335,12 @@ const config: Config = {
         {
             name: "Network Name",
             id: "ssid",
-            desc: "The name of the wireless network that Wi-Fly creates.",
+            desc: "The name of the wireless network that is created.",
         },
         {
             name: "Network Password",
             id: "pass",
-            desc: "The password for the wireless network that Wi-Fly creates. Must be at least eight characters long, and will only be used if `Wi-Fly Enabled` is set to `Enabled (with password)` in the `General` section.",
+            desc: "The password for the wireless network that is created. Must be at least eight characters long, and will only be used if `Wi-Fi Enabled` is set to `Enabled (with password)`.",
         },
     ],
 

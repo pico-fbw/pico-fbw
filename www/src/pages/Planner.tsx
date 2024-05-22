@@ -8,6 +8,7 @@ import hasInternet from "../helpers/hasInternet";
 
 export default function Planner() {
     const [hasConnection, setHasConnection] = useState<boolean | null>(null);
+    const [isMapFocused, setIsMapFocused] = useState(false);
 
     const checkInternetConnection = async () => {
         const isConnected = await hasInternet();
@@ -19,10 +20,9 @@ export default function Planner() {
     }, []);
 
     return (
-        // FIXME: ContentBlock swipe handlers cause problems when navigating the map
-        <ContentBlock title="Planner" loading={hasConnection === null}>
+        <ContentBlock title="Planner" loading={hasConnection === null} ignoreSwipe={isMapFocused}>
             {hasConnection ? (
-                <Map />
+                <Map setIsFocused={setIsMapFocused} />
             ) : (
                 <div className="flex flex-col items-center justify-center h-screen">
                     <Alert type="danger" className="mx-4 sm:mx-8 lg:mx-0">

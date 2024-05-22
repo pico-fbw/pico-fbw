@@ -15,15 +15,16 @@ const sidebarNav: SidebarNavigation[] = [
 interface ContentBlockProps {
     title?: string;
     loading?: boolean;
+    ignoreSwipe?: boolean;
     children: preact.ComponentChildren;
 }
 
-const ContentBlock: preact.FunctionComponent<ContentBlockProps> = ({ title, loading, children }) => {
+const ContentBlock: preact.FunctionComponent<ContentBlockProps> = ({ title, loading, ignoreSwipe, children }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const swipeHandlers = useSwipe({
-        onSwipedLeft: () => setIsSidebarOpen(false),
-        onSwipedRight: () => setIsSidebarOpen(true),
+        onSwipedLeft: () => !ignoreSwipe && setIsSidebarOpen(false),
+        onSwipedRight: () => !ignoreSwipe && setIsSidebarOpen(true),
     });
 
     useEffect(() => {

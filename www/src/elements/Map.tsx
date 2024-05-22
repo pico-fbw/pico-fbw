@@ -54,7 +54,11 @@ const layers = [
     },
 ];
 
-export default function Map() {
+interface MapProps {
+    setIsFocused?: (isFocused: boolean) => void;
+}
+
+const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
     const [defaultAlt, setDefaultAlt] = useState(20);
     const [defaultSpeed] = useState(Number(settings.get("defaultSpeed")));
 
@@ -121,23 +125,6 @@ export default function Map() {
         setMarkers(updatedMarkers);
     };
 
-    useEffect(() => {
-        if (mapContainer.current) {
-            map.current = L.map(mapContainer.current as HTMLElement, {
-                center: [20, 0],
-                zoom: 2,
-                scrollWheelZoom: true,
-                zoomAnimation: true,
-            });
-
-            L.tileLayer(mapLink, {
-                attribution: mapAttribution,
-            }).addTo(map.current);
-
-            map.current.on("click", handleMapClick);
-        }
-    }, []);
-
     // Rerenders markers and polyline when markers are updated
     useEffect(() => {
         if (map.current) {
@@ -162,6 +149,27 @@ export default function Map() {
         }
     }, [markers]);
 
+    useEffect(() => {
+        if (mapContainer.current) {
+            map.current = L.map(mapContainer.current as HTMLElement, {
+                center: [20, 0],
+                zoom: 2,
+                scrollWheelZoom: true,
+                zoomAnimation: true,
+            });
+
+            L.tileLayer(mapLink, {
+                attribution: mapAttribution,
+            }).addTo(map.current);
+
+            map.current.on("click", handleMapClick);
+            map.current.on("dragstart" || "mousedown", () => setIsFocused(true));
+            map.current.on("dragend" || "mouseup", () => {
+                setTimeout(() => setIsFocused(false), 100);
+            });
+        }
+    }, []);
+
     return (
         <>
             <div
@@ -185,4 +193,6 @@ export default function Map() {
             </button>
         </>
     );
-}
+};
+
+export default Map;
