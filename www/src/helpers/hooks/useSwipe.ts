@@ -17,25 +17,37 @@ interface SwipeOutput {
 }
 
 export default ({ onSwipedLeft, onSwipedRight }: SwipeInput): SwipeOutput => {
-    const touchStart = useRef(0);
-    const touchEnd = useRef(0);
+    const touchStartX = useRef(0);
+    const touchEndX = useRef(0);
+    const touchStartY = useRef(0);
+    const touchEndY = useRef(0);
 
     const minSwipeDistance = 50;
 
     const onTouchStart = (e: TouchEvent) => {
-        touchEnd.current = 0;
-        touchStart.current = e.targetTouches[0].clientX;
+        touchEndX.current = 0;
+        touchEndY.current = 0;
+        touchStartX.current = e.targetTouches[0].clientX;
+        touchStartY.current = e.targetTouches[0].clientY;
     };
 
-    const onTouchMove = (e: TouchEvent) => (touchEnd.current = e.targetTouches[0].clientX);
+    const onTouchMove = (e: TouchEvent) => {
+        touchEndX.current = e.targetTouches[0].clientX;
+        touchEndY.current = e.targetTouches[0].clientY;
+    };
 
     const onTouchEnd = () => {
-        if (!touchStart.current || !touchEnd.current) {
+        if (!touchStartX.current || !touchEndX.current) {
             return;
         }
-        const distance = touchStart.current - touchEnd.current;
-        const isLeftSwipe = distance > minSwipeDistance;
-        const isRightSwipe = distance < -minSwipeDistance;
+        const distanceX = touchStartX.current - touchEndX.current;
+        const distanceY = touchStartY.current - touchEndY.current;
+        const isVerticalScroll = Math.abs(distanceY) > Math.abs(distanceX);
+        if (isVerticalScroll) {
+            return;
+        }
+        const isLeftSwipe = distanceX > minSwipeDistance;
+        const isRightSwipe = distanceX < -minSwipeDistance;
         if (isLeftSwipe) {
             onSwipedLeft();
         }

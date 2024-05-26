@@ -9,10 +9,10 @@
 
 // clang-format off
 
-#include "platform/gpio.h"
-
 #include "pico/config.h"
 #include "hardware/adc.h"
+
+#include "platform/gpio.h"
 
 // The Pico includes an RT6150 buck-boost SMPS which includes a PS pin to switch between PFM and PWM modes
 // PFM mode (default) is very efficient but can exhibit quite a bit of output ripple/noise
@@ -31,13 +31,8 @@
 
 // clang-format on
 
-static bool adcActive = false;
-
 void adc_setup(const u32 pins[], u32 num_pins) {
-    if (!adcActive) {
-        adc_init();
-        adcActive = true;
-    }
+    adc_init();
     for (u32 i = 0; i < num_pins; i++)
         adc_gpio_init(pins[i]);
 }

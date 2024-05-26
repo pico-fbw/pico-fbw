@@ -11,7 +11,6 @@ add_library(platform_pico
     uart.c
     wifi/dhcp.c
     wifi/dns.c
-    wifi/http.c
     wifi/tcp.c
     wifi/wifi.c
 )

@@ -19,22 +19,167 @@
 
 #include <assert.h>
 #include <errno.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "platform/flash.h"
+
+#include "lib/mimetype.h"
 
 #include "lwip/debug.h"
 #include "lwip/err.h"
 #include "lwip/pbuf.h"
 #include "lwip/tcp.h"
 
+#define CHUNK_XFER_SIZE 1024 // Size of each chunk to send in a chunked transfer
 #define POLL_TIME_S 5 // Interval to poll a TCP connection for activity
 
+#define API_V1_PATH "/api/v1/"
 #define HTTP_GET "GET"
 #define HTTP_POST "POST"
 
+#define HEADER_404 "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n"
+#define HEADER_500 "HTTP/1.1 500 Internal Server Error\r\nContent-Length: 0\r\n\r\n"
+
 // clang-format on
+
+typedef struct FileState {
+    char *path;
+    i32 offset;
+} FileState;
+
+/**
+ * Extracts the URI from a given HTTP request.
+ * @param received the received HTTP request
+ * @param method the HTTP method used in the request
+ * @return the URI from the request
+ */
+static char *extract_uri(char *received, char *method) {
+    char *request = received + strlen(method) + 1; // +1 to skip the space
+    char *end = strchr(request, ' ');
+    if (end != NULL)
+        *end = '\0'; // End the string at the first space
+    return request;
+}
+
+/**
+ * Sends a chunk of a file to a client.
+ * @param con_state the connection state data
+ * @param pcb the lwIP protocol control block for the connection
+ * @param path the path to the file to send
+ * @param offset the offset in the file to start sending from
+ * @return positive (# of bytes sent), 0 if there are no more bytes to send, or negative on error
+ */
+static i32 send_file_chunk(TCPConnection *con_state, struct tcp_pcb *pcb, const char *path, i32 offset) {
+    lfs_file_t file;
+    i32 err = lfs_file_open(&wwwfs, &file, path, LFS_O_RDONLY);
+    LWIP_DEBUGF(TCP_DEBUG, ("send_file_chunk(%p, %p, %s, %ld): lfs_open -> %ld\n", con_state, pcb, path, offset, err));
+    if (err != LFS_ERR_OK) {
+        LWIP_DEBUGF(TCP_DEBUG, ("send_file_chunk: failed to open file (%ld)\n", err));
+        return err;
+    }
+    if (offset >= lfs_file_size(&wwwfs, &file)) {
+        LWIP_DEBUGF(TCP_DEBUG, ("send_file_chunk: no more data\n"));
+        lfs_file_close(&wwwfs, &file);
+        return 0;
+    }
+    lfs_file_seek(&wwwfs, &file, offset, LFS_SEEK_SET);
+    char chunk[CHUNK_XFER_SIZE];
+    i32 bytesRead = lfs_file_read(&wwwfs, &file, chunk, sizeof(chunk));
+    LWIP_DEBUGF(TCP_DEBUG, ("send_file_chunk: read %ld bytes\n", bytesRead));
+    if (bytesRead < 0) {
+        lfs_file_close(&wwwfs, &file);
+        return -1;
+    }
+    char chunkBegin[16] = "";
+    snprintf(chunkBegin, sizeof(chunkBegin), "%lx\r\n", bytesRead);
+    tcp_write(pcb, chunkBegin, strlen(chunkBegin), 0);
+    tcp_write(pcb, chunk, bytesRead, 0);
+    tcp_write(pcb, "\r\n", strlen("\r\n"), 0);
+    lfs_file_close(&wwwfs, &file);
+    return bytesRead;
+}
+
+static bool handle_common_get(TCPConnection *con_state, struct tcp_pcb *pcb, const char *uri) {
+    // This function is very similar to the esp32's handle_common_get, so take a look at that for more details/documentation
+    size_t pathSize = strlen(uri) + sizeof("/www") + sizeof("index.html") + sizeof(".gz");
+    char *path = malloc(pathSize);
+    if (!path) {
+        tcp_write(pcb, HEADER_500, strlen(HEADER_500), 0);
+        return false;
+    }
+    strcpy(path, "/www");
+    if (uri[strlen(uri) - 1] == '/')
+        strlcat(path, "/index.html", pathSize);
+    else
+        strlcat(path, uri, pathSize);
+    LWIP_DEBUGF(TCP_DEBUG, ("GET path: %s\n", path));
+
+    bool gzipped = false;
+    lfs_file_t file;
+    i32 err;
+    for (u32 i = 0; i < 2; i++) {
+        err = lfs_file_open(&wwwfs, &file, path, LFS_O_RDONLY);
+        if (err == LFS_ERR_NOENT && !gzipped) {
+            strcat(path, ".gz");
+            gzipped = true;
+            continue;
+        }
+        break;
+    }
+    if (err != LFS_ERR_OK) {
+        LWIP_DEBUGF(TCP_DEBUG, ("file %s not found\n", path));
+        tcp_write(pcb, HEADER_404, strlen(HEADER_404), 0);
+        free(path);
+        return false;
+    } else
+        lfs_file_close(&wwwfs, &file);
+
+    // Create a state object to keep track of the file transfer
+    // This is because the transfer happens in chunks, and later chunks are handled in the tcp_server_sent callback,
+    // so it needs to know the file path and the current offset in the file to continue sending the file
+    con_state->state = malloc(sizeof(FileState));
+    if (!con_state->state) {
+        lfs_file_close(&wwwfs, &file);
+        free(path);
+        tcp_write(pcb, HEADER_500, strlen(HEADER_500), 0);
+        return false;
+    }
+    FileState *state = (FileState *)con_state->state;
+    state->path = strdup(path);
+    state->offset = 0;
+
+    // Construct and send the HTTP header
+    char header[512] = "";
+    strcat(header, "HTTP/1.1 200 OK\r\n");
+    if (gzipped) {
+        path[strlen(path) - 3] = '\0';
+        strcat(header, "Content-Encoding: gzip\r\n");
+    }
+    strcat(header, "Content-Type: ");
+    strcat(header, get_content_type(path));
+    strcat(header, "\r\n");
+    strcat(header, "Transfer-Encoding: chunked\r\n");
+    strcat(header, "Connection: close\r\n");
+    strcat(header, "\r\n");
+    printf("sending header:\n%s\n", header);
+    tcp_write(pcb, header, strlen(header), 0);
+
+    // Send the first chunk of the file
+    // As mentioned earlier, subsequent chunks will be sent in the tcp_server_sent callback until the entire file is sent
+    i32 sent = send_file_chunk(con_state, pcb, state->path, state->offset);
+    if (sent <= 0) {
+        free(state->path);
+        free(state);
+        free(path);
+        return false;
+    }
+    state->offset += sent;
+
+    free(path);
+    return true;
+}
 
 /**
  * Closes a TCP connection with a client and cleans up any related data.
@@ -66,49 +211,32 @@ static err_t tcp_close_client_connection(TCPConnection *con_state, struct tcp_pc
     return close_err;
 }
 
-/**
- * Sends the body of a response to a client.
- * @param pcb the lwIP protocol control block for the connection
- * @param state the connection state data
- * @return the error code of the operation
- */
-static err_t tcp_send_body(struct tcp_pcb *pcb, TCPConnection *state) {
-    // FIXME: chunked tranfer encoding, currently does not work. solution is to give lwip more memory, but this will not scale
-    // it's also currently very unstable
-    // FIXME: and captive portal on mobile is broken
-
-    // u16 chunk_len = LWIP_MIN(state->result_len, TCP_MSS);
-    u16 chunk_len = state->result_len;
-    LWIP_DEBUGF(TCP_DEBUG, ("sending %d bytes\n", chunk_len));
-    err_t wrerr = tcp_write(pcb, state->result, chunk_len, TCP_WRITE_FLAG_COPY);
-    if (wrerr != ERR_OK)
-        LWIP_DEBUGF(TCP_DEBUG, ("ERROR: failed to write body data %d\n", wrerr));
-    return wrerr;
-}
+/* Networking (lwIP) functions */
 
 // lwIP callback. Will be called when TCP data has been successfully sent.
 static err_t tcp_server_sent(void *arg, struct tcp_pcb *pcb, u16_t len) {
     TCPConnection *con_state = (TCPConnection *)arg;
     LWIP_DEBUGF(TCP_DEBUG, ("tcp_server_sent %d\n", len));
-    con_state->sent_len += len;
 
-    if (con_state->sent_len < con_state->result_len) {
-        // Still data left to send
-        LWIP_DEBUGF(TCP_DEBUG, ("sending more data\n"));
-        err_t wrerr = tcp_send_body(pcb, con_state);
-        if (wrerr != ERR_OK) {
-            LWIP_DEBUGF(TCP_DEBUG, ("ERROR: failed to write result data %d\n", wrerr));
-            return wrerr;
+    // There is an ongoing send operation
+    if (con_state->state) {
+        FileState *state = (FileState *)con_state->state;
+        // Continue sending the file
+        i32 sent = send_file_chunk(con_state, pcb, state->path, state->offset);
+        if (sent <= 0) {
+            free(state->path);
+            free(state);
         }
-    } else {
-        // All data sent, clean up and close the connection
-        LWIP_DEBUGF(TCP_DEBUG, ("all data sent\n"));
-        if (con_state->result) {
-            free(con_state->result);
-            con_state->result = NULL;
+        if (sent < 0)
+            return tcp_close_client_connection(con_state, pcb, ERR_ABRT);
+        else if (sent == 0) {
+            tcp_write(pcb, "0\r\n\r\n", strlen("0\r\n\r\n"), 0); // Send a zero-length chunk to indicate the end of the transfer
+            tcp_output(pcb);                                     // Flush output buffer
+            return tcp_close_client_connection(con_state, pcb, ERR_OK);
         }
-        return tcp_close_client_connection(con_state, pcb, ERR_OK);
+        state->offset += sent;
     }
+
     return ERR_OK;
 }
 
@@ -116,86 +244,48 @@ static err_t tcp_server_sent(void *arg, struct tcp_pcb *pcb, u16_t len) {
 // This is also where we send data back to the client.
 static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err) {
     TCPConnection *con_state = (TCPConnection *)arg;
-    if (!p)
+    if (!p || p->tot_len <= 0)
         return tcp_close_client_connection(con_state, pcb, ERR_OK);
     assert(con_state && con_state->pcb == pcb);
 
-    char *received = NULL; // Buffer to store the received data
-    char *header = NULL;   // Buffer to store the header that will be sent to the client
-    i32 header_len = 0;
-    if (p->tot_len > 0) {
-        LWIP_DEBUGF(TCP_DEBUG, ("tcp_server_recv %d err %d\n", p->tot_len, err));
-        for (struct pbuf *q = p; q != NULL; q = q->next)
-            LWIP_DEBUGF(TCP_INPUT_DEBUG, ("in: %.*s\n\n\n", q->len, (char *)q->payload));
+    LWIP_DEBUGF(TCP_DEBUG, ("tcp_server_recv %d err %d\n", p->tot_len, err));
+    for (struct pbuf *q = p; q != NULL; q = q->next)
+        LWIP_DEBUGF(TCP_INPUT_DEBUG, ("in: %.*s\n\n\n", q->len, (char *)q->payload));
 
-        // Transfer the received data from the pbuf to our buffer
-        received = malloc(p->tot_len + 1);
-        if (!received) {
-            LWIP_DEBUGF(TCP_DEBUG, ("ERROR: failed to allocate received buffer\n"));
-            goto close;
-        }
-        pbuf_copy_partial(p, (void *)received, p->tot_len, 0);
-        received[p->tot_len] = '\0';
-
-        // Filter by request type
-        if (strncmp(HTTP_GET, received, sizeof(HTTP_GET) - 1) == 0) { // -1 to ignore null terminator
-            // GET request:
-            // Extract the request (everything but "GET") and parameters
-            char *request = received + sizeof(HTTP_GET); // no -1 because we want to skip the space
-
-            // Call the on_get function provided by the http server to fetch the content
-            if ((*con_state->on_get)(con_state, request, &header, &header_len, &con_state->result, &con_state->result_len) != 0)
-                goto close;
-
-        } else if (strncmp(HTTP_POST, received, sizeof(HTTP_POST) - 1) == 0) {
-            // POST request:
-            char *request = received + sizeof(HTTP_POST);
-            if ((*con_state->on_post)(con_state, request, &header, &header_len, &con_state->result, &con_state->result_len) !=
-                0)
-                goto close;
-        }
-        // Request is now processed, time to send our response
-
-        // Send the header to the client
-        if (!header) {
-            LWIP_DEBUGF(TCP_DEBUG, ("ERROR: no header data\n"));
-            goto close;
-        }
-        if (header_len > TCP_SND_BUF) {
-            LWIP_DEBUGF(TCP_DEBUG, ("ERROR: header too large %ld\n", header_len));
-            goto close;
-        }
-        err_t wrerr = tcp_write(pcb, header, header_len, 0);
-        if (wrerr != ERR_OK) {
-            LWIP_DEBUGF(TCP_DEBUG, ("ERROR: failed to write header data (%d)\n", wrerr));
-            goto close;
-        }
-
-        // Send the first chunk of body data, if any
-        if (con_state->result) {
-            con_state->sent_len = 0;
-            if (con_state->result_len > 0) {
-                if (tcp_send_body(pcb, con_state) != ERR_OK)
-                    goto close;
-            }
-        }
-
-        tcp_recved(pcb, p->tot_len);
+    // Transfer the received data from the pbuf to our buffer
+    char *received = malloc(p->tot_len + 1);
+    if (!received) {
+        LWIP_DEBUGF(TCP_DEBUG, ("ERROR: failed to allocate received buffer\n"));
+        goto close;
     }
+    pbuf_copy_partial(p, (void *)received, p->tot_len, 0);
+    received[p->tot_len] = '\0';
+
+    // Filter by request type
+    if (strncmp(HTTP_GET, received, strlen(HTTP_GET)) == 0) {
+        const char *uri = extract_uri(received, HTTP_GET);
+        // Filter based on the URI
+        if (strncmp(uri, API_V1_PATH, strlen(API_V1_PATH)) == 0) {
+            // TODO: api gets
+        } else {
+            // No other requests mathed, so it's probably a request for a file
+            if (!handle_common_get(con_state, pcb, uri))
+                goto close;
+        }
+    } else if (strncmp(HTTP_POST, received, strlen(HTTP_POST)) == 0) {
+        const char *uri = extract_uri(received, HTTP_POST);
+        // TODO: api posts
+    }
+
+    tcp_recved(pcb, p->tot_len);
     pbuf_free(p);
     if (received)
         free(received);
-    if (header)
-        free(header);
-    // Don't free con_state->result here, as it will be freed after the response is sent
     return ERR_OK;
 close:
     if (received)
         free(received);
-    if (header)
-        free(header);
     return tcp_close_client_connection(con_state, pcb, err);
-    (void)err;
 }
 
 // lwIP callback. Will be called when a connection is idle and needs to be polled.
@@ -231,8 +321,6 @@ static err_t tcp_server_accept(void *arg, struct tcp_pcb *client_pcb, err_t err)
     }
     con_state->pcb = client_pcb;
     con_state->ip = &state->ip;
-    con_state->on_get = &state->on_get;
-    con_state->on_post = &state->on_post;
 
     // Set up callbacks
     tcp_arg(client_pcb, con_state);
@@ -272,12 +360,14 @@ bool tcp_server_open(TCPServer *state, u16 port) {
     return true;
 }
 
-void tcp_server_close(TCPServer *state) {
+bool tcp_server_close(TCPServer *state) {
     if (state->server_pcb) {
         tcp_arg(state->server_pcb, NULL);
-        tcp_close(state->server_pcb);
+        if (!tcp_close(state->server_pcb) != ERR_OK)
+            return false;
         state->server_pcb = NULL;
     }
+    return true;
 }
 
 #endif // PLATFORM_SUPPORTS_WIFI

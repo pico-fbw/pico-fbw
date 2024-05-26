@@ -15,19 +15,18 @@
 
 #include "dhcp.h"
 #include "dns.h"
-#include "http.h"
+#include "tcp.h"
+
+#define HTTP_PORT 80
 
 // clang-format on
-
-// https://github.com/sysprogs/PicoHTTPServer
-// or https://github.com/earlephilhower/arduino-pico
 
 // TODO: pico rndis driver so pico (non-w) can still have the web interface?
 // see https://github.com/OpenStickCommunity/GP2040-CE/blob/main/lib/rndis/rndis.c
 
 DHCPServer dhcp;
 DNSServer dns;
-HTTPServer server;
+TCPServer server;
 ip_addr_t gateway, netmask;
 
 bool wifi_setup(const char *ssid, const char *pass) {
@@ -44,7 +43,7 @@ bool wifi_setup(const char *ssid, const char *pass) {
         return false;
     if (!dns_server_init(&dns, &gateway))
         return false;
-    return http_server_init(&server, &gateway);
+    return tcp_server_open(&server, HTTP_PORT);
 }
 
 void wifi_periodic() {
@@ -52,7 +51,13 @@ void wifi_periodic() {
 }
 
 bool wifi_disable() {
-    return true; // TODO
+    if (!tcp_server_close(&server))
+        return false;
+    dns_server_deinit(&dns);
+    dhcp_server_deinit(&dhcp);
+    cyw43_arch_disable_ap_mode();
+    // Don't run cyw43_arch_deinit(), as we still need the driver for things like the LED
+    return true;
 }
 
 #endif // PLATFORM_SUPPORTS_WIFI

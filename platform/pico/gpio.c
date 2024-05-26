@@ -5,8 +5,6 @@
 
 #include "pico/config.h"
 
-#include "platform/defs.h"
-
 #if defined(RASPBERRYPI_PICO)
     #include "hardware/gpio.h"
 #elif defined(RASPBERRYPI_PICO_W)
@@ -16,6 +14,8 @@ char buf[1];
 #else
     #error "Unsupported Pico variant"
 #endif
+
+#include "platform/defs.h"
 
 #include "platform/gpio.h"
 

@@ -11,12 +11,11 @@
 #ifdef RASPBERRYPI_PICO_W
     #include "pico/cyw43_arch.h"
 #endif
-
 #include "hardware/watchdog.h"
 
 #include "platform/sys.h"
 
-#define WATCHDOG_TIMEOUT_MS 1000
+#define WATCHDOG_TIMEOUT_MS 2000
 #define WATCHDOG_TIMEOUT_MAGIC 0xAC0B3DED
 #define WATCHDOG_FORCE_MAGIC 0xC0DE3298
 

@@ -109,7 +109,7 @@ export default function Upload() {
                     </Alert>
                 )}
                 {uploaded && (
-                    <Alert type="okay" onClose={() => setUploaded(false)} className="mx-4 sm:mx-8 lg:mx-0">
+                    <Alert type="success" onClose={() => setUploaded(false)} className="mx-4 sm:mx-8 lg:mx-0">
                         Flightplan uploaded successfully!
                     </Alert>
                 )}

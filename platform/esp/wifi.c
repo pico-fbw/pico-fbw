@@ -3,6 +3,9 @@
  * Licensed under the GNU AGPL-3.0
  */
 
+// TODO: implement captive portal for esp
+// https://github.com/espressif/esp-idf/tree/master/examples/protocols/http_server/captive_portal
+
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,10 +14,11 @@
 #include "esp_netif.h"
 #include "esp_wifi.h"
 
+#include "lib/mimetype.h"
+
 #include "platform/flash.h"
 #include "platform/helpers.h"
 #include "platform/types.h"
-#include "resources/mimetype.h"
 
 #include "sys/api/cmds/GET/get_config.h"
 #include "sys/api/cmds/GET/get_info.h"
@@ -25,7 +29,6 @@
 
 #define WIFI_CHANNEL 1 // See https://en.wikipedia.org/wiki/List_of_WLAN_channels
 #define WIFI_MAX_CONNECTIONS 4
-#define HTTP_ANY INT_MAX
 
 #define CHUNK_XFER_SIZE 1024
 
@@ -178,7 +181,7 @@ static esp_err_t handle_api_v1_ping(httpd_req_t *req) {
 
 // Fetches the content requested by a GET request from littlefs and responds with the content.
 // Will be called by the HTTP server when a GET request is received.
-static esp_err_t handle_get(httpd_req_t *req) {
+static esp_err_t handle_common_get(httpd_req_t *req) {
     // Allocate a buffer to store the path to the file in the filesystem
     // Ensure the buffer is large enough to store anything that could be appended to the path
     size_t pathSize = strlen(req->uri) + sizeof("/www") + sizeof("index.html") + sizeof(".gz");
@@ -187,7 +190,7 @@ static esp_err_t handle_get(httpd_req_t *req) {
         httpd_resp_send_500(req);
         return ESP_ERR_NO_MEM;
     }
-    strcpy(path, "/www"); // Prepend "/www" to the path since web assets are stored in "/www/..." in the wwwfs
+    strcpy(path, "/www"); // Prepend "/www" to the path since web assets are stored in "/www/..." in the filesystem
     // Append the URI to the path
     // If the request is for the root path, append "index.html"
     if (req->uri[strlen(req->uri) - 1] == '/')
@@ -229,6 +232,8 @@ static esp_err_t handle_get(httpd_req_t *req) {
     do {
         char chunk[CHUNK_XFER_SIZE];
         bytesRead = lfs_file_read(&wwwfs, &file, chunk, sizeof(chunk));
+        if (bytesRead == 0)
+            break;
         if (bytesRead < 0 || httpd_resp_send_chunk(req, chunk, bytesRead) != ESP_OK) {
             httpd_resp_sendstr_chunk(req, NULL);
             httpd_resp_send_500(req);
@@ -244,6 +249,11 @@ static esp_err_t handle_get(httpd_req_t *req) {
 }
 
 bool wifi_setup(const char *ssid, const char *pass) {
+    if (!ssid || strlen(ssid) < WIFI_SSID_MIN_LEN || strlen(ssid) > WIFI_SSID_MAX_LEN)
+        return false;
+    if (pass && (strlen(pass) < WIFI_PASS_MIN_LEN || strlen(pass) > WIFI_PASS_MAX_LEN))
+        return false;
+
     // Initialize underlying network stack
     // NVS is initialized in sys_boot_begin()
     if (esp_netif_init() != ESP_OK)
@@ -329,7 +339,7 @@ bool wifi_setup(const char *ssid, const char *pass) {
     httpd_uri_t commonGETURI = {
         .uri = "/*",
         .method = HTTP_GET,
-        .handler = handle_get,
+        .handler = handle_common_get,
     };
     httpd_register_uri_handler(server, &commonGETURI);
 

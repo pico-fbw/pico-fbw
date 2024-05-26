@@ -4,11 +4,10 @@
  */
 
 #include <string.h>
+#include "hardware/uart.h"
+#include "hardware/gpio.h"
 
 #include "platform/stdio.h"
-
-#include "hardware/gpio.h"
-#include "hardware/uart.h"
 
 #include "platform/uart.h"
 

@@ -16,7 +16,7 @@ import {
 import classNames from "../helpers/classNames";
 
 interface AlertProps {
-    type: "okay" | "info" | "warning" | "danger";
+    type: "success" | "info" | "warning" | "danger";
     onClose?: () => void;
     className?: string;
     children: preact.ComponentChildren;
@@ -24,7 +24,7 @@ interface AlertProps {
 
 function getColors(type: AlertProps["type"]) {
     switch (type) {
-        case "okay":
+        case "success":
             return "bg-green-400/10 text-green-500";
         case "info":
             return "bg-blue-400/10 text-blue-500";
@@ -54,7 +54,7 @@ const Alert: preact.FunctionComponent<AlertProps> = ({ type, onClose, className 
             )}
             <div className="flex">
                 <div className="flex-shrink-0">
-                    {type === "okay" ? (
+                    {type === "success" ? (
                         <CheckCircleOutline className={"mr-2 h-6 w-6 text-green-500"} />
                     ) : type === "info" ? (
                         <InformationCircleOutline className={"mr-2 h-6 w-6 text-blue-500"} />

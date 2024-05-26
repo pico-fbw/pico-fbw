@@ -21,12 +21,11 @@
 #include <assert.h>
 #include <limits.h>
 #include <string.h>
-
-#include "platform/types.h"
-
 #include "hardware/flash.h"
 #include "hardware/regs/addressmap.h"
 #include "hardware/sync.h"
+
+#include "platform/types.h"
 
 #include "platform/flash.h"
 
