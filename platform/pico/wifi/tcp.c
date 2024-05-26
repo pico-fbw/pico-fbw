@@ -11,6 +11,7 @@
  * Licensed under the GNU AGPL-3.0
  */
 
+
 #include "tcp.h"
 
 #if PLATFORM_SUPPORTS_WIFI
@@ -22,23 +23,31 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "platform/flash.h"
-
-#include "lib/mimetype.h"
-
 #include "lwip/debug.h"
 #include "lwip/err.h"
 #include "lwip/pbuf.h"
 #include "lwip/tcp.h"
 
+#include "lib/mimetype.h"
+
+#include "platform/flash.h"
+
+#include "sys/api/api.h"
+#include "sys/api/cmds/GET/get_config.h"
+#include "sys/api/cmds/GET/get_info.h"
+#include "sys/api/cmds/SET/set_config.h"
+#include "sys/api/cmds/SET/set_flightplan.h"
+
 #define CHUNK_XFER_SIZE 1024 // Size of each chunk to send in a chunked transfer
 #define POLL_TIME_S 5 // Interval to poll a TCP connection for activity
+
+#define TYPE_JSON "application/json"
 
 #define API_V1_PATH "/api/v1/"
 #define HTTP_GET "GET"
 #define HTTP_POST "POST"
 
+#define HEADER_302 "HTTP/1.1 302 Redirect\r\nLocation: http://%s/\r\nContent-Length: 0\r\n\r\n"
 #define HEADER_404 "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n"
 #define HEADER_500 "HTTP/1.1 500 Internal Server Error\r\nContent-Length: 0\r\n\r\n"
 
@@ -49,18 +58,71 @@ typedef struct FileState {
     i32 offset;
 } FileState;
 
+/* --- Miscellaneous helpers --- */
+
 /**
- * Extracts the URI from a given HTTP request.
- * @param received the received HTTP request
+ * Extracts the URI of an HTTP request.
+ * @param req the HTTP request
  * @param method the HTTP method used in the request
  * @return the URI from the request
+ * @note The URI will be allocated by this function and must be freed by the caller.
  */
-static char *extract_uri(char *received, char *method) {
-    char *request = received + strlen(method) + 1; // +1 to skip the space
+static char *extract_uri(const char *req, char *method) {
+    const char *request = req + strlen(method) + 1; // +1 to skip the space
     char *end = strchr(request, ' ');
-    if (end != NULL)
-        *end = '\0'; // End the string at the first space
-    return request;
+    if (end == NULL)
+        return NULL;
+    size_t uri_length = end - request;
+    char *uri = malloc(uri_length + 1);
+    if (uri != NULL) {
+        strncpy(uri, request, uri_length);
+        uri[uri_length] = '\0';
+    }
+    return uri;
+}
+
+/**
+ * Extracts the body of an HTTP request.
+ * @param req the HTTP request
+ * @return the body of the request, or NULL if there is no body
+ */
+static const char *get_request_body(const char *req) {
+    const char *body = strstr(req, "\r\n\r\n");
+    if (body && *(body + 4) != '\0')
+        return body + 4;
+    return NULL;
+}
+
+/**
+ * Creates an HTTP response.
+ * @param status the HTTP status code, as a string (e.g. "200 OK")
+ * @param content_type the content type of the response
+ * @param body the body of the response, or NULL if not needed
+ * @return the response, or NULL on error
+ * @note The response will be allocated by this function and must be freed by the caller.
+ */
+static char *create_response(const char *status, const char *content_type, const char *body) {
+    char contentLength[32];
+    if (body)
+        snprintf(contentLength, sizeof(contentLength), "%u", strlen(body));
+    else
+        strcpy(contentLength, "0");
+
+    char *response =
+        malloc(strlen("HTTP/1.1 ") + strlen(status) + strlen("\r\nContent-Type: ") + strlen(content_type) +
+               strlen("\r\nContent-Length: ") + strlen(contentLength) + strlen("\r\n\r\n") + (body ? strlen(body) : 0) + 1);
+    if (!response)
+        return NULL;
+    strcpy(response, "HTTP/1.1 ");
+    strcat(response, status);
+    strcat(response, "\r\nContent-Type: ");
+    strcat(response, content_type);
+    strcat(response, "\r\nContent-Length: ");
+    strcat(response, contentLength);
+    strcat(response, "\r\n\r\n");
+    if (body)
+        strcat(response, body);
+    return response;
 }
 
 /**
@@ -94,6 +156,7 @@ static i32 send_file_chunk(TCPConnection *con_state, struct tcp_pcb *pcb, const 
     }
     char chunkBegin[16] = "";
     snprintf(chunkBegin, sizeof(chunkBegin), "%lx\r\n", bytesRead);
+    // No need to use TCP_WRITE_FLAG_COPY, since the chunk data will not be modified until it is sent anyway
     tcp_write(pcb, chunkBegin, strlen(chunkBegin), 0);
     tcp_write(pcb, chunk, bytesRead, 0);
     tcp_write(pcb, "\r\n", strlen("\r\n"), 0);
@@ -101,11 +164,113 @@ static i32 send_file_chunk(TCPConnection *con_state, struct tcp_pcb *pcb, const 
     return bytesRead;
 }
 
-static bool handle_common_get(TCPConnection *con_state, struct tcp_pcb *pcb, const char *uri) {
+/* --- API GET handlers --- */
+
+static bool handle_api_v1_get_config(TCPConnection *con_state, struct tcp_pcb *pcb, const char *req) {
+    char *out = NULL;
+    // Perform the relavent API call using the request body and obtain its output
+    i32 res = api_handle_get_config(get_request_body(req), &out);
+    if (!out) {
+        tcp_write(pcb, HEADER_500, strlen(HEADER_500), 0);
+        return false;
+    }
+    // Create and send the HTTP response
+    char *resp = create_response(api_res_to_http_status(res), TYPE_JSON, out);
+    if (!resp) {
+        free(out);
+        tcp_write(pcb, HEADER_500, strlen(HEADER_500), 0);
+        return false;
+    }
+    // Ensure to copy the response data into lwIP's memory space, since we free it immediately,
+    // but lwIP may not have sent it yet
+    tcp_write(pcb, resp, strlen(resp), TCP_WRITE_FLAG_COPY);
+    free(resp);
+    free(out);
+    return res < 500 ? true : false;
+    (void)con_state;
+}
+
+static bool handle_api_v1_get_info(TCPConnection *con_state, struct tcp_pcb *pcb, const char *req) {
+    char *out = NULL;
+    i32 res = api_handle_get_info(&out);
+    if (!out) {
+        tcp_write(pcb, HEADER_500, strlen(HEADER_500), 0);
+        return false;
+    }
+    char *resp = create_response(api_res_to_http_status(res), TYPE_JSON, out);
+    if (!resp) {
+        free(out);
+        tcp_write(pcb, HEADER_500, strlen(HEADER_500), 0);
+        return false;
+    }
+    tcp_write(pcb, resp, strlen(resp), TCP_WRITE_FLAG_COPY);
+    free(resp);
+    free(out);
+    return res < 500 ? true : false;
+    (void)con_state;
+    (void)req;
+}
+
+/* --- API SET handlers --- */
+
+static bool handle_api_v1_set_config(TCPConnection *con_state, struct tcp_pcb *pcb, const char *req) {
+    i32 res = api_handle_set_config(get_request_body(req));
+    char *resp = create_response(api_res_to_http_status(res), TYPE_JSON, "{}");
+    if (!resp) {
+        tcp_write(pcb, HEADER_500, strlen(HEADER_500), 0);
+        return false;
+    }
+    tcp_write(pcb, resp, strlen(resp), TCP_WRITE_FLAG_COPY);
+    free(resp);
+    return res < 500 ? true : false;
+    (void)con_state;
+}
+
+static bool handle_api_v1_set_flightplan(TCPConnection *con_state, struct tcp_pcb *pcb, const char *req) {
+    char *out = NULL;
+    i32 res = api_handle_set_flightplan(get_request_body(req), &out);
+    if (!out) {
+        tcp_write(pcb, HEADER_500, strlen(HEADER_500), 0);
+        return false;
+    }
+    char *resp = create_response(api_res_to_http_status(res), TYPE_JSON, out);
+    if (!resp) {
+        free(out);
+        tcp_write(pcb, HEADER_500, strlen(HEADER_500), 0);
+        return false;
+    }
+    tcp_write(pcb, resp, strlen(resp), TCP_WRITE_FLAG_COPY);
+    free(resp);
+    free(out);
+    return res < 500 ? true : false;
+    (void)con_state;
+}
+
+/* --- API MISC handlers --- */
+
+static bool handle_api_v1_ping(TCPConnection *con_state, struct tcp_pcb *pcb, const char *req) {
+    char *resp = create_response("200 OK", TYPE_JSON, "{}");
+    if (!resp) {
+        tcp_write(pcb, HEADER_500, strlen(HEADER_500), 0);
+        return false;
+    }
+    tcp_write(pcb, resp, strlen(resp), TCP_WRITE_FLAG_COPY);
+    free(resp);
+    return true;
+    (void)con_state;
+    (void)req;
+}
+
+// Generic GET handler.
+// Fetches the content requested by a GET request from littlefs and responds with the content.
+// Will be called by the TCP server when a GET request is received that doesn't match any of the API paths.
+static bool handle_common_get(TCPConnection *con_state, struct tcp_pcb *pcb, const char *req) {
     // This function is very similar to the esp32's handle_common_get, so take a look at that for more details/documentation
+    char *uri = extract_uri(req, HTTP_GET);
     size_t pathSize = strlen(uri) + sizeof("/www") + sizeof("index.html") + sizeof(".gz");
     char *path = malloc(pathSize);
     if (!path) {
+        free(uri);
         tcp_write(pcb, HEADER_500, strlen(HEADER_500), 0);
         return false;
     }
@@ -114,7 +279,8 @@ static bool handle_common_get(TCPConnection *con_state, struct tcp_pcb *pcb, con
         strlcat(path, "/index.html", pathSize);
     else
         strlcat(path, uri, pathSize);
-    LWIP_DEBUGF(TCP_DEBUG, ("GET path: %s\n", path));
+    free(uri);
+    LWIP_DEBUGF(TCP_DEBUG, ("handle_common_get: GET path: %s\n", path));
 
     bool gzipped = false;
     lfs_file_t file;
@@ -129,8 +295,7 @@ static bool handle_common_get(TCPConnection *con_state, struct tcp_pcb *pcb, con
         break;
     }
     if (err != LFS_ERR_OK) {
-        LWIP_DEBUGF(TCP_DEBUG, ("file %s not found\n", path));
-        tcp_write(pcb, HEADER_404, strlen(HEADER_404), 0);
+        LWIP_DEBUGF(TCP_DEBUG, ("handle_common_get: file %s not found\n", path));
         free(path);
         return false;
     } else
@@ -151,8 +316,7 @@ static bool handle_common_get(TCPConnection *con_state, struct tcp_pcb *pcb, con
     state->offset = 0;
 
     // Construct and send the HTTP header
-    char header[512] = "";
-    strcat(header, "HTTP/1.1 200 OK\r\n");
+    char header[512] = "HTTP/1.1 200 OK\r\n";
     if (gzipped) {
         path[strlen(path) - 3] = '\0';
         strcat(header, "Content-Encoding: gzip\r\n");
@@ -161,9 +325,8 @@ static bool handle_common_get(TCPConnection *con_state, struct tcp_pcb *pcb, con
     strcat(header, get_content_type(path));
     strcat(header, "\r\n");
     strcat(header, "Transfer-Encoding: chunked\r\n");
-    strcat(header, "Connection: close\r\n");
     strcat(header, "\r\n");
-    printf("sending header:\n%s\n", header);
+    LWIP_DEBUGF(TCP_DEBUG, ("handle_common_get: sending header:\n%s\n", header));
     tcp_write(pcb, header, strlen(header), 0);
 
     // Send the first chunk of the file
@@ -180,6 +343,60 @@ static bool handle_common_get(TCPConnection *con_state, struct tcp_pcb *pcb, con
     free(path);
     return true;
 }
+
+/* --- High-level request handling --- */
+
+static bool handle_request(TCPConnection *con_state, struct tcp_pcb *pcb, const char *request) {
+    bool res = false;
+    char *uri = NULL;
+    // Filter by request type
+    if (strncmp(HTTP_GET, request, strlen(HTTP_GET)) == 0) {
+        // Filter based on the URI
+        uri = extract_uri(request, HTTP_GET);
+        if (!uri) {
+            tcp_write(pcb, HEADER_500, strlen(HEADER_500), 0);
+            return false;
+        }
+        LWIP_DEBUGF(TCP_DEBUG, ("handle_request: GET URI: %s\n", uri));
+        if (strncmp(uri, API_V1_PATH, strlen(API_V1_PATH)) == 0) {
+            if (strcmp(uri + strlen(API_V1_PATH), "get/config") == 0)
+                res = handle_api_v1_get_config(con_state, pcb, request);
+            else if (strcmp(uri + strlen(API_V1_PATH), "get/info") == 0)
+                res = handle_api_v1_get_info(con_state, pcb, uri);
+            else if (strcmp(uri + strlen(API_V1_PATH), "ping") == 0)
+                res = handle_api_v1_ping(con_state, pcb, request);
+        } else {
+            // No other requests mathed, so it's probably a request for a file
+            res = handle_common_get(con_state, pcb, request);
+        }
+    } else if (strncmp(HTTP_POST, request, strlen(HTTP_POST)) == 0) {
+        uri = extract_uri(request, HTTP_POST);
+        if (!uri) {
+            tcp_write(pcb, HEADER_500, strlen(HEADER_500), 0);
+            return false;
+        }
+        LWIP_DEBUGF(TCP_DEBUG, ("handle_request: POST URI: %s\n", uri));
+        if (strncmp(uri, API_V1_PATH, strlen(API_V1_PATH)) == 0) {
+            if (strcmp(uri + strlen(API_V1_PATH), "get/config") == 0)
+                // GET_CONFIG can also be called with a POST request (in addition to a GET request, handled above)
+                res = handle_api_v1_get_config(con_state, pcb, request);
+            else if (strcmp(uri + strlen(API_V1_PATH), "set/config") == 0)
+                res = handle_api_v1_set_config(con_state, pcb, request);
+            else if (strcmp(uri + strlen(API_V1_PATH), "set/flightplan") == 0)
+                res = handle_api_v1_set_flightplan(con_state, pcb, request);
+        }
+    }
+    free(uri);
+    if (!res) {
+        // Redirect the client to the index page; this provides the captive portal behavior
+        char header[sizeof(HEADER_302) + 32] = "";
+        snprintf(header, sizeof(header), HEADER_302, ipaddr_ntoa(con_state->ip));
+        tcp_write(pcb, header, strlen(header), 0);
+    }
+    return res;
+}
+
+/* --- Networking (lwIP) functions --- */
 
 /**
  * Closes a TCP connection with a client and cleans up any related data.
@@ -210,8 +427,6 @@ static err_t tcp_close_client_connection(TCPConnection *con_state, struct tcp_pc
     }
     return close_err;
 }
-
-/* Networking (lwIP) functions */
 
 // lwIP callback. Will be called when TCP data has been successfully sent.
 static err_t tcp_server_sent(void *arg, struct tcp_pcb *pcb, u16_t len) {
@@ -261,24 +476,12 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err
     pbuf_copy_partial(p, (void *)received, p->tot_len, 0);
     received[p->tot_len] = '\0';
 
-    // Filter by request type
-    if (strncmp(HTTP_GET, received, strlen(HTTP_GET)) == 0) {
-        const char *uri = extract_uri(received, HTTP_GET);
-        // Filter based on the URI
-        if (strncmp(uri, API_V1_PATH, strlen(API_V1_PATH)) == 0) {
-            // TODO: api gets
-        } else {
-            // No other requests mathed, so it's probably a request for a file
-            if (!handle_common_get(con_state, pcb, uri))
-                goto close;
-        }
-    } else if (strncmp(HTTP_POST, received, strlen(HTTP_POST)) == 0) {
-        const char *uri = extract_uri(received, HTTP_POST);
-        // TODO: api posts
-    }
-
+    bool res = handle_request(con_state, pcb, received);
     tcp_recved(pcb, p->tot_len);
     pbuf_free(p);
+    if (!res)
+        goto close;
+
     if (received)
         free(received);
     return ERR_OK;
@@ -321,6 +524,7 @@ static err_t tcp_server_accept(void *arg, struct tcp_pcb *client_pcb, err_t err)
     }
     con_state->pcb = client_pcb;
     con_state->ip = &state->ip;
+    con_state->state = NULL;
 
     // Set up callbacks
     tcp_arg(client_pcb, con_state);
@@ -332,22 +536,23 @@ static err_t tcp_server_accept(void *arg, struct tcp_pcb *client_pcb, err_t err)
     return ERR_OK;
 }
 
-bool tcp_server_open(TCPServer *state, u16 port) {
+bool tcp_server_open(TCPServer *state, ip_addr_t *ip, u16 port) {
     LWIP_DEBUGF(TCP_DEBUG, ("starting server on port %d\n", port));
     // First, create a temporary lwIP protocol control block
     // (the real one is created a few lines down using tcp_listen_with_backlog)
-    struct tcp_pcb *tempPcb = tcp_new_ip_type(IPADDR_TYPE_ANY);
+    struct tcp_pcb *tempPcb = tcp_new_ip_type(IPADDR_TYPE_V4);
     if (!tempPcb) {
         LWIP_DEBUGF(TCP_DEBUG, ("ERROR: failed to create PCB\n"));
         return false;
     }
     // Bind it to the TCP port, and start listening
-    err_t err = tcp_bind(tempPcb, IP_ANY_TYPE, port);
+    err_t err = tcp_bind(tempPcb, ip ? ip : IP_ANY_TYPE, port);
     if (err) {
         LWIP_DEBUGF(TCP_DEBUG, ("ERROR: failed to bind PCB\n"));
         return false;
     }
     state->server_pcb = tcp_listen_with_backlog(tempPcb, 1);
+    state->ip = *ip;
     if (!state->server_pcb) {
         LWIP_DEBUGF(TCP_DEBUG, ("ERROR: failed to listen\n"));
         if (tempPcb)

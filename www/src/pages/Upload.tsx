@@ -90,11 +90,7 @@ export default function Upload() {
                 )}
                 <textarea
                     className="p-4 bg-white/5 placeholder:text-gray-400 text-gray-200 ring-1 ring-inset ring-white/10 shadow-sm rounded resize-none w-full h-1/3"
-                    placeholder={
-                        window.innerWidth <= 768
-                            ? "Paste flightplan here..."
-                            : "Paste flightplan here, or click Upload to select a file..."
-                    }
+                    placeholder="Paste flightplan here, or click Upload to select a file..."
                     value={flightplan}
                     onInput={e => setFlightplan(e.currentTarget.value)}
                     // Disable native spellcheck and grammarly for user convenience

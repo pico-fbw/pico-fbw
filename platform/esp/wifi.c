@@ -20,6 +20,7 @@
 #include "platform/helpers.h"
 #include "platform/types.h"
 
+#include "sys/api/api.h"
 #include "sys/api/cmds/GET/get_config.h"
 #include "sys/api/cmds/GET/get_info.h"
 #include "sys/api/cmds/SET/set_config.h"
@@ -37,41 +38,13 @@
 httpd_handle_t server = NULL;
 
 /**
- * Converts an API response code to an HTTP status code.
- * @param res the API response code
- * @return the HTTP status code (as a string)
- */
-static const char *api_res_to_http_status(i32 res) {
-    switch (res) {
-        case -1: // -1 is an alternate API code which more or less means the same as 200
-        case 200:
-            return "200 OK";
-        case 202:
-            return "202 Accepted";
-        case 204:
-            return "204 No Content";
-        case 400:
-            return "400 Bad Request";
-        case 403:
-            return "403 Forbidden";
-        case 404:
-            return "404 Not Found";
-        case 409:
-            return "409 Conflict";
-        case 500:
-        default:
-            return "500 Internal Server Error";
-    }
-}
-
-/**
  * Gets the body of a request and stores it in a buffer.
  * @param req the request
  * @param response the buffer to store the body in
  * @return ESP_OK if successful, an ESP_ERR otherwise
  * @note The buffer will be allocated by this function and must be freed by the caller.
  */
-static esp_err_t get_body(httpd_req_t *req, char **response) {
+static esp_err_t get_request_body(httpd_req_t *req, char **response) {
     // First check if the request has a body
     if (req->content_len == 0) {
         *response = NULL;
@@ -103,7 +76,7 @@ static esp_err_t get_body(httpd_req_t *req, char **response) {
 static esp_err_t handle_api_v1_get_config(httpd_req_t *req) {
     // Get the request body
     char *in = NULL;
-    esp_err_t err = get_body(req, &in);
+    esp_err_t err = get_request_body(req, &in);
     if (err != ESP_OK)
         return err;
     char *out = NULL;
@@ -141,7 +114,7 @@ static esp_err_t handle_api_v1_get_info(httpd_req_t *req) {
 
 static esp_err_t handle_api_v1_set_config(httpd_req_t *req) {
     char *in = NULL;
-    esp_err_t err = get_body(req, &in);
+    esp_err_t err = get_request_body(req, &in);
     if (err != ESP_OK)
         return err;
     i32 res = api_handle_set_config(in);
@@ -154,7 +127,7 @@ static esp_err_t handle_api_v1_set_config(httpd_req_t *req) {
 
 static esp_err_t handle_api_v1_set_flightplan(httpd_req_t *req) {
     char *in = NULL;
-    esp_err_t err = get_body(req, &in);
+    esp_err_t err = get_request_body(req, &in);
     if (err != ESP_OK)
         return err;
     char *out = NULL;

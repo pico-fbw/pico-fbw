@@ -17,12 +17,13 @@
 #include "dns.h"
 #include "tcp.h"
 
-#define HTTP_PORT 80
+#define TCP_PORT 80
 
 // clang-format on
 
 // TODO: pico rndis driver so pico (non-w) can still have the web interface?
 // see https://github.com/OpenStickCommunity/GP2040-CE/blob/main/lib/rndis/rndis.c
+// https://github.com/sidd-kishan/PicoPiFi
 
 DHCPServer dhcp;
 DNSServer dns;
@@ -43,7 +44,7 @@ bool wifi_setup(const char *ssid, const char *pass) {
         return false;
     if (!dns_server_init(&dns, &gateway))
         return false;
-    return tcp_server_open(&server, HTTP_PORT);
+    return tcp_server_open(&server, &gateway, TCP_PORT);
 }
 
 void wifi_periodic() {

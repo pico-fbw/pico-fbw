@@ -27,10 +27,11 @@ typedef struct TCPConnection {
 /**
  * Opens a lwIP TCP server on the given port.
  * @param state the TCP server state
+ * @param ip the IP address to open the server on, or NULL for any
  * @param port the port to open the server on
  * @return true if the server was opened successfully
  */
-bool tcp_server_open(TCPServer *state, u16 port);
+bool tcp_server_open(TCPServer *state, ip_addr_t *ip, u16 port);
 
 /**
  * Closes a lwIP TCP server.

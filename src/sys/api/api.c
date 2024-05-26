@@ -56,3 +56,26 @@ i32 api_poll() {
     }
     return 0;
 }
+
+const char *api_res_to_http_status(i32 res) {
+    switch (res) {
+        case -1: // -1 is an alternate API code which more or less means the same as 200
+        case 200:
+            return "200 OK";
+        case 202:
+            return "202 Accepted";
+        case 204:
+            return "204 No Content";
+        case 400:
+            return "400 Bad Request";
+        case 403:
+            return "403 Forbidden";
+        case 404:
+            return "404 Not Found";
+        case 409:
+            return "409 Conflict";
+        case 500:
+        default:
+            return "500 Internal Server Error";
+    }
+}

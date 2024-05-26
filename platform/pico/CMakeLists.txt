@@ -51,5 +51,6 @@ if (FBW_PLATFORM STREQUAL "pico_w")
     target_link_libraries(platform_pico pico_stdlib pico_cyw43_arch_lwip_threadsafe_background)
 endif()
 
-# Include the source directory (so we can #include "platform/..." in files)
-target_include_directories(platform_pico PRIVATE ${CMAKE_SOURCE_DIR})
+# Include the root directory (so we can #include "platform/..." in files),
+# and the source directory (so we can include "sys/...", etc. in files)
+target_include_directories(platform_pico PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/src)

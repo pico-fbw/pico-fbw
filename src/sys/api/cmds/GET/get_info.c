@@ -12,8 +12,6 @@
 
 #include "get_info.h"
 
-// {"version":"","version_api":"","version_flightplan":"","platform":"","platform_version":""}
-
 i32 api_handle_get_info(char **output) {
     JSON_Value *root = json_value_init_object();
     JSON_Object *obj = json_value_get_object(root);
@@ -27,6 +25,8 @@ i32 api_handle_get_info(char **output) {
     *output = serialized;
     return 200;
 }
+
+// {"version":"","version_api":"","version_flightplan":"","platform":"","platform_version":""}
 
 i32 api_get_info(const char *args) {
     char *output = NULL;

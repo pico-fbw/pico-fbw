@@ -4,7 +4,7 @@
  */
 
 import { render } from "preact";
-import { Route, Switch } from "wouter-preact";
+import { Link, Route, Switch } from "wouter-preact";
 
 import Index from "./pages/Index";
 import Planner from "./pages/Planner";
@@ -18,9 +18,9 @@ function NoMatch() {
         <div className="flex flex-col items-center justify-center h-screen">
             <h2 className="text-4xl font-bold mb-4 text-gray-300">(404) Nothing to see here!</h2>
             <p>
-                <a href="/" className="text-blue-600 hover:text-sky-500 hover:underline">
+                <Link to="/" className="text-blue-600 hover:text-sky-500 hover:underline">
                     Return to the home page
-                </a>
+                </Link>
             </p>
         </div>
     );

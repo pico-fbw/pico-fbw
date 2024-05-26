@@ -139,7 +139,7 @@ export default function Settings() {
 
     return (
         <ContentBlock title="Settings" loading={!info}>
-            <div className="divide-y divide-white/20">
+            <div>
                 <SettingsUI />
                 <ConfigUI />
             </div>
