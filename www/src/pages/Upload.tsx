@@ -37,8 +37,6 @@ export default function Upload() {
             const error = (e as Error).message;
             if (error === "400") {
                 setError("Invalid flightplan!");
-            } else if (error === "409") {
-                setError("A flightplan already exists!");
             } else {
                 setError(`Server error whilst uploading: ${error}`);
             }

@@ -1,4 +1,4 @@
-export default function Spinner() {
+const Spinner = () => {
     return (
         <div className="relative top-1/2">
             <div className="absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2">
@@ -6,4 +6,6 @@ export default function Spinner() {
             </div>
         </div>
     );
-}
+};
+
+export default Spinner;

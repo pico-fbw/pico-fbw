@@ -59,14 +59,13 @@ i32 callback_drop() {
  */
 static inline void load_waypoint(Waypoint *wpt) {
     // Load the next altitude
-    // Altitudes/speeds less than 0 are considered to mean "hold current altitude"
     if (gps.altOffsetCalibrated) {
         // Factor in the altitude offset calculated earlier
-        alt = (wpt->alt < 0) ? gps.alt : (wpt->alt + gps.altOffset);
+        alt = wpt->alt + gps.altOffset;
     } else
-        alt = (wpt->alt < 0) ? gps.alt : wpt->alt;
+        alt = wpt->alt;
     // Set the (possibly new) target speed
-    throttle.target = (wpt->speed < 0) ? gps.speed : wpt->speed;
+    throttle.target = wpt->speed;
     // Initiate a drop if applicable
     if (wpt->drop > 0) {
         auto_set_bay_position(POS_OPEN);

@@ -5,6 +5,8 @@
 
 #include "lib/parson.h"
 
+#include "modes/aircraft.h"
+
 #include "sys/flightplan.h"
 #include "sys/print.h"
 
@@ -13,6 +15,8 @@
 i32 api_handle_set_flightplan(const char *input, char **output) {
     if (!input)
         return 400;
+    if (aircraft.mode == MODE_AUTO)
+        return 403;
     JSON_Value *root = json_value_init_object();
     JSON_Object *obj = json_value_get_object(root);
     i32 res;
@@ -32,9 +36,6 @@ i32 api_handle_set_flightplan(const char *input, char **output) {
         case FLIGHTPLAN_ERR_PARSE:
         case FLIGHTPLAN_ERR_VERSION:
             res = 400;
-            break;
-        case FLIGHTPLAN_ERR_ALREADY_PARSED:
-            res = 409; // Conflict, a flightplan already exists
             break;
         default:
             res = 500;

@@ -19,7 +19,7 @@ export interface Waypoint {
     drop: number;
 }
 
-// Copy of Flughtplan struct in src/sys/flightplan.h
+// Copy of Flightplan struct in src/sys/flightplan.h
 export interface Flightplan {
     version: string;
     version_fw: string;

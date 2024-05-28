@@ -24,8 +24,7 @@ static Flightplan flightplan;
 static FlightplanError state = FLIGHTPLAN_STATUS_AWAITING; // Current state of the flightplan parsage
 
 static inline bool state_is_error() {
-    return state == FLIGHTPLAN_ERR_PARSE || state == FLIGHTPLAN_ERR_VERSION || state == FLIGHTPLAN_ERR_MEM ||
-           state == FLIGHTPLAN_ERR_ALREADY_PARSED;
+    return state == FLIGHTPLAN_ERR_PARSE || state == FLIGHTPLAN_ERR_VERSION || state == FLIGHTPLAN_ERR_MEM;
 }
 
 static inline bool state_is_warning() {
@@ -33,7 +32,7 @@ static inline bool state_is_warning() {
 }
 
 bool waypoint_is_valid(Waypoint *wpt) {
-    return fabs(wpt->lat) <= 90 && fabs(wpt->lng) <= 180 && wpt->alt >= -5 && wpt->alt <= 400 && wpt->speed >= -5 &&
+    return fabs(wpt->lat) <= 90 && fabs(wpt->lng) <= 180 && wpt->alt >= 0 && wpt->alt <= 400 && wpt->speed >= 0 &&
            wpt->speed <= 100 && wpt->drop >= 0 && wpt->drop <= 60;
 }
 
@@ -43,7 +42,7 @@ bool flightplan_was_parsed() {
 
 FlightplanError flightplan_parse(const char *json, bool silent) {
     if (flightplan_was_parsed())
-        return FLIGHTPLAN_ERR_ALREADY_PARSED;
+        state = FLIGHTPLAN_STATUS_AWAITING;
     // Ensure the recieved JSON matches the template schema for a valid flightplan
     JSON_Value *schema = json_parse_string(JSON_SCHEMA);
     JSON_Value *root = json_parse_string(json);
