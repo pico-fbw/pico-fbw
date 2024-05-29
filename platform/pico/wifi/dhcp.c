@@ -25,9 +25,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include "platform/time.h"
-
 #include "lwip/debug.h"
+
+#include "platform/time.h"
 
 #define DHCPDISCOVER    (1)
 #define DHCPOFFER       (2)

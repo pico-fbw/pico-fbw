@@ -26,9 +26,6 @@ import settings from "../helpers/settings";
 
 import "leaflet/dist/leaflet.css";
 
-// TODO: remember last general location where a flight was planned?
-// (maybe average all waypoints, zoom out a bit, and center the map there)
-
 export interface Marker {
     id: number;
     position: LatLng;
@@ -168,6 +165,13 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
         setMarkers(updatedMarkers);
     };
 
+    const validateAndClamp = (value: number, min: number, max: number): number => {
+        if (isNaN(value)) {
+            return min;
+        }
+        return Math.min(Math.max(value, min), max);
+    };
+
     useEffect(() => {
         setError("");
     }, [uploaded]);
@@ -196,6 +200,14 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
         // Add polyline connecting all markers
         const latLngs = markers.map(marker => marker.position);
         polyline.current = L.polyline(latLngs, { color: polylineColor }).addTo(map.current);
+
+        // Calculate the average position of all markers and lowest possible zoom level that still shows all markers
+        const averageLat = markers.reduce((acc, marker) => acc + marker.position.lat, 0) / markers.length;
+        const averageLng = markers.reduce((acc, marker) => acc + marker.position.lng, 0) / markers.length;
+        const zoom = map.current.getBoundsZoom(L.latLngBounds(latLngs), false);
+        // Save these for later, so that when the user returns to the map, they are pretty much right back where they left off
+        settings.set("lastMapPosition", `${averageLat},${averageLng}`);
+        settings.set("lastMapZoom", zoom.toString());
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [markers]);
 
@@ -235,6 +247,11 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
         const index = Number(settings.get("defaultMap"));
         setMapLink(layers[index].link);
         setMapAttribution(layers[index].attribution);
+
+        if (settings.get("lastMapPosition") !== "") {
+            const [lat, lng] = settings.get("lastMapPosition").split(",").map(Number);
+            map.current.setView([lat, lng], Number(settings.get("lastMapZoom")));
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -270,13 +287,27 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
                             step={5}
                             className="h-6 rounded-full appearance-none bg-white/5 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all px-1"
                             value={currentAlt}
-                            // FIXME: this onChange is causing the slider to act weirdly
                             onChange={e => setCurrentAlt(Number((e.target as HTMLInputElement).value))}
                             onFocus={() => setIsFocused(true)}
                             onBlur={() => setTimeout(() => setIsFocused(false), 100)}
                         />
-                        {/* TODO: maybe make this a covert input so you can also enter an altitude? */}
-                        <span className="my-auto text-gray-300 ml-3 transition-all">{currentAlt}ft</span>
+                        <input
+                            type="text"
+                            className="my-auto text-gray-300 ml-3 pr-0 mr-0 transition-all bg-transparent border-0 outline-none focus:outline-none focus:border-b-2 focus:border-indigo-500"
+                            value={currentAlt}
+                            style={{
+                                width: `${currentAlt.toString().length}ch`,
+                                minWidth: "2ch",
+                                maxWidth: "6ch",
+                            }}
+                            onFocus={() => setIsFocused(true)}
+                            onBlur={e => {
+                                const newAlt = validateAndClamp(Number((e.target as HTMLInputElement).value), 0, 400);
+                                setCurrentAlt(newAlt);
+                                setTimeout(() => setIsFocused(false), 100);
+                            }}
+                        />
+                        <span className="text-gray-300 my-auto">ft</span>
                     </div>
                     <div className="ml-5 sm:mt-0 flex-none mr-3 my-auto flex">
                         <PlusOutline
@@ -414,13 +445,6 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
             }));
             setMarkers(shiftedMarkers);
             setEditing(-1);
-        };
-
-        const validateAndClamp = (value: number, min: number, max: number): number => {
-            if (isNaN(value)) {
-                return min;
-            }
-            return Math.min(Math.max(value, min), max);
         };
 
         return (

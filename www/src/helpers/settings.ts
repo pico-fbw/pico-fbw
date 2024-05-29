@@ -6,9 +6,12 @@
 export class settings {
     static setting = {
         altSamples: { default: "10" },
-        defaultMap: { default: "0" },
         defaultSpeed: { default: "25" },
         dropSecs: { default: "10" },
+        // Internal settings, cannot be changed by user
+        defaultMap: { default: "0" },
+        lastMapPosition: { default: "" },
+        lastMapZoom: { default: "" },
         showOfflineNotice: { default: "1" },
     } as const;
 

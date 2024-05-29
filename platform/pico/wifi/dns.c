@@ -19,10 +19,10 @@
 
 #include <errno.h>
 #include <string.h>
-#include "platform/types.h"
-
 #include "lwip/debug.h"
 #include "lwip/udp.h"
+
+#include "platform/types.h"
 
 #define PORT_DNS_SERVER 53
 #define MAX_DNS_MSG_SIZE 300

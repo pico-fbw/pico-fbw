@@ -16,10 +16,10 @@
 // clang-format off
 
 #include <stdbool.h>
-#include "platform/types.h"
-
 #include "lwip/ip_addr.h"
 #include "lwip/udp.h"
+
+#include "platform/types.h"
 
 #define DHCPS_BASE_IP (16)
 #define DHCPS_MAX_IP (8)

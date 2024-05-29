@@ -8,7 +8,9 @@ add_library(platform_esp
     sys.c
     time.c
     uart.c
-    wifi.c
+    wifi/dns.c
+    wifi/http.c
+    wifi/wifi.c
 )
 
 # Link the platform library to the pico-sdk libraries

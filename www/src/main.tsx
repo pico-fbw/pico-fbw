@@ -43,14 +43,12 @@ export function App() {
 render(<App />, document.getElementById("root"));
 
 // FEATURE LIST
-// [ ] Check for (dual-band) internet connection, and if so allow flight planner to be used and data to be uploaded
-//   [ ] If not, allow uploading externally generated plan (also allow this as an option for dual-band users)
-//     [ ] Allow both copy/paste and file upload
-// [ ] Port config editor
-// [ ] Info page with misc info like version, platform, free heap, etc
+// [x] Check for (dual-band) internet connection, and if so allow flight planner to be used and data to be uploaded
+//   [x] If not, allow uploading externally generated plan (also allow this as an option for dual-band users)
+//     [x] Allow both copy/paste and file upload
+// [x] Port config editor
 // [ ] Allow backing up the config (as a littlefs blob?), to client, and reuploading it
 // [ ] Allow saving flightplans to the server (in littlefs)
-// [ ] If possible, allow adding the web interface as a stdio stream
 // [ ] Document most ts functions
 // [ ] Add transitions and styling to look cool
 // [ ] Allow more actions (retriggering config, rebooting, etc)

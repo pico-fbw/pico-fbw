@@ -11,7 +11,6 @@
  * Licensed under the GNU AGPL-3.0
  */
 
-
 #include "tcp.h"
 
 #if PLATFORM_SUPPORTS_WIFI
@@ -267,7 +266,7 @@ static bool handle_api_v1_ping(TCPConnection *con_state, struct tcp_pcb *pcb, co
 static bool handle_common_get(TCPConnection *con_state, struct tcp_pcb *pcb, const char *req) {
     // This function is very similar to the esp32's handle_common_get, so take a look at that for more details/documentation
     char *uri = extract_uri(req, HTTP_GET);
-    size_t pathSize = strlen(uri) + sizeof("/www") + sizeof("index.html") + sizeof(".gz");
+    size_t pathSize = strlen(uri) + strlen("/www") + strlen("index.html") + strlen(".gz");
     char *path = malloc(pathSize);
     if (!path) {
         free(uri);

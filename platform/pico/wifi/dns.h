@@ -13,7 +13,6 @@
 // clang-format off
 
 #include <stdbool.h>
-
 #include "lwip/ip_addr.h"
 
 // clang-format on
