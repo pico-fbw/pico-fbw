@@ -107,7 +107,7 @@ CallbackData *callback_in_ms(u32 ms, Callback callback, void *data) {
     cbData->callback = callback;
     cbData->data = data;
 #if defined(_WIN32)
-    if (!CreateTimerQueueTimer(&data->id, NULL, callback_to_WAITORTIMERCALLBACK, cbData, ms, ms, 0)) {
+    if (!CreateTimerQueueTimer(&cbData->id, NULL, callback_to_WAITORTIMERCALLBACK, cbData, ms, ms, 0)) {
         free(data);
         return NULL;
     }
