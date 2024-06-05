@@ -103,7 +103,7 @@ const config: Config = {
         {
             name: "Rudder Sensitivity",
             id: "rudderSensitivity",
-            desc: "",
+            desc: "When the yaw damper is disabled (or when turning), the aileron value will be multiplied by this value to determine the rudder value.",
         },
         {
             name: "Control Deadband",
@@ -465,7 +465,7 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
             const response = await api("get/config", getConfigCommand);
             const newc = response.sections[0].keys[0];
 
-            if ((!newc || newc !== toSet) && toSetNum !== 0) {
+            if ((!newc || String(newc) !== String(toSet)) && toSetNum !== 0) {
                 console.warn(`Value read back was ${newc}, should have been ${toSet}`);
                 throw new Error("Failed to verify config change, please try again");
             }

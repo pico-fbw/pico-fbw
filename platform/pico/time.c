@@ -14,7 +14,7 @@ static i64 callback_to_sdk(alarm_id_t id, void *udata) {
     CallbackData *data = (CallbackData *)udata;
     if (!data)
         return 0;
-    i32 reschedule = data->callback();
+    i32 reschedule = data->callback(data->data);
     if (reschedule == 0)
         free(data);                  // Free the data if the callback is not rescheduled
     return (i64)(reschedule * 1000); // Convert to microseconds
@@ -25,17 +25,18 @@ u64 time_us() {
     return time_us_64();
 }
 
-CallbackData *callback_in_ms(u32 ms, Callback callback) {
-    CallbackData *data = malloc(sizeof(CallbackData));
-    if (!data)
+CallbackData *callback_in_ms(u32 ms, Callback callback, void *data) {
+    CallbackData *cbData = malloc(sizeof(CallbackData));
+    if (!cbData)
         return NULL;
-    data->callback = callback;
-    data->id = add_alarm_in_ms(ms, callback_to_sdk, (void *)data, true);
-    if (data->id < 0) {
-        free(data);
+    cbData->callback = callback;
+    cbData->data = data;
+    cbData->id = add_alarm_in_ms(ms, callback_to_sdk, (void *)cbData, true);
+    if (cbData->id < 0) {
+        free(cbData);
         return NULL;
     }
-    return data;
+    return cbData;
 }
 
 void cancel_callback(CallbackData *data) {

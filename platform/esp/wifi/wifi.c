@@ -20,6 +20,7 @@
 
 // clang-format on
 
+esp_netif_t *netif = NULL;
 httpd_handle_t httpServer = NULL;
 dns_server_handle_t dnsServer = NULL;
 
@@ -35,7 +36,7 @@ bool wifi_setup(const char *ssid, const char *pass) {
         return false;
     if (esp_event_loop_create_default() != ESP_OK)
         return false;
-    esp_netif_create_default_wifi_ap();
+    netif = esp_netif_create_default_wifi_ap();
 
     // Initialize wifi access point
     wifi_init_config_t initConfig = WIFI_INIT_CONFIG_DEFAULT();
@@ -80,15 +81,19 @@ void wifi_periodic() {
 bool wifi_disable() {
     if (dns_server_stop(dnsServer) != ESP_OK)
         return false;
-    if (http_server_close(httpServer) != ESP_OK)
+    if (http_server_close(&httpServer) != ESP_OK)
         return false;
     if (esp_wifi_stop() != ESP_OK)
+        return false;
+    if (esp_wifi_set_mode(WIFI_MODE_NULL) != ESP_OK)
         return false;
     if (esp_wifi_deinit() != ESP_OK)
         return false;
     if (esp_event_loop_delete_default() != ESP_OK)
         return false;
-    return esp_netif_deinit() == ESP_OK;
+    esp_netif_destroy_default_wifi(netif);
+    esp_err_t deinit = esp_netif_deinit();
+    return deinit == ESP_OK || deinit == ESP_ERR_NOT_SUPPORTED; // Deinit may not be supported, so this is the best we can do
 }
 
 #endif // PLATFORM_SUPPORTS_WIFI

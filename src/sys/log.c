@@ -29,7 +29,7 @@
 
 static LogEntry *logs = NULL;
 static u32 numLogs = 0;
-static LogEntry *lastEntry = NULL, *lastDisplayedEntry = NULL, *queuedEntry = NULL;
+static LogEntry *lastEntry = NULL, *lastDisplayedEntry = NULL;
 
 /* --- LED --- */
 
@@ -51,19 +51,21 @@ static void led_reset() {
 }
 
 // Callback to pulse the LED
-i32 led_pulse_callback() {
+static i32 led_pulse_callback(void *data) {
     gpio_toggle(PIN_LED);
     return 0; // Don't reschedule
+    (void)data;
 }
 
 // Callback to toggle the LED and schedule an additional pulse if needed
-i32 led_callback() {
+static i32 led_callback(void *data) {
     // Toggle LED immediately...
     gpio_toggle(PIN_LED);
     // then, if we need to pulse, schedule an additional toggle (to turn off the LED)
     if (pulseMs != 0)
-        pulseCallback = callback_in_ms(pulseMs, led_pulse_callback);
+        pulseCallback = callback_in_ms(pulseMs, led_pulse_callback, NULL);
     return toggleMs;
+    (void)data;
 }
 
 #endif // PIN_LED
@@ -139,15 +141,16 @@ static void display_log(LogEntry *entry) {
     }
     // Display on built-in LED
     toggleMs = entry->code;
-    toggleCallback = callback_in_ms(toggleMs, led_callback);
+    toggleCallback = callback_in_ms(toggleMs, led_callback, NULL);
 #endif
     lastDisplayedEntry = entry;
 }
 
 // Callback to process the a queued log entry from boot
-i32 process_queue() {
+static i32 process_queue(void *data) {
     if (!boot_is_booted())
         return 500; // Not booted yet, check back in 500ms
+    LogEntry *queuedEntry = (LogEntry *)data;
     if (queuedEntry)
         display_log(queuedEntry);
     return 0;
@@ -198,8 +201,7 @@ void log_message(LogType type, const char *msg, i32 code, u32 pulse_ms, bool for
             } else {
                 // The system isn't booted and the type isn't severe enough to warrant displaying it at the moment,
                 // so we'll check back every 500ms if the system is booted and display if it is
-                queuedEntry = entry;
-                callback_in_ms(500, process_queue);
+                callback_in_ms(500, process_queue, (void *)entry);
             }
         }
     }
@@ -270,7 +272,7 @@ void log_clear(LogType type) {
             bool hadError = false;
             for (LogType type = TYPE_FATAL; type >= TYPE_INFO; type--) {
                 for (u32 i = 0; i < numLogs; i++) {
-                    if (logs[i].type == type) {
+                    if (logs[i].type >= type) {
                         display_log(&logs[i]);
                         hadError = true;
                         break;

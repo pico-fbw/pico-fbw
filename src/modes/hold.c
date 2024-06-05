@@ -55,16 +55,16 @@ static f64 rollSet;
 static PIDController vertGuid;
 
 // Callback for when a turnaround should be completed in a holding pattern
-static i32 turn_around() {
+static i32 turn_around(void *data) {
     // Get current track (beginning of the turn)
     oldTrack = gps.track;
     // Set our target heading based on this (with wrap protection)
     targetTrack = (oldTrack + 180);
-    if (targetTrack > 360) {
+    if (targetTrack > 360)
         targetTrack -= 360;
-    }
     turnStatus = HOLD_TURN_INPROGRESS;
     return 0; // Don't reschedule, we will wait until the turn is complete to do that
+    (void)data;
 }
 
 bool hold_init() {
@@ -124,7 +124,7 @@ void hold_update() {
                 rollSet -= (HOLD_TURN_BANK_ANGLE * config.control[CONTROL_RUDDER_SENSITIVITY]);
             break;
         case HOLD_TURN_UNSCHEDULED:
-            callback_in_ms((HOLD_TIME_PER_LEG_S * 1000), turn_around);
+            callback_in_ms((HOLD_TIME_PER_LEG_S * 1000), turn_around, NULL);
             turnStatus = HOLD_AWAITING_TURN;
             break;
         default:

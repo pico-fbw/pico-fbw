@@ -1,15 +1,23 @@
 import preact from "preact";
 import { useEffect, useState } from "preact/hooks";
 import { useSwipe } from "../helpers/hooks";
-import { ArrowUpTrayOutline, Cog8ToothOutline, GlobeAmericasOutline } from "preact-heroicons";
+import {
+    AdjustmentsHorizontalOutline,
+    ArrowUpTrayOutline,
+    Cog8ToothOutline,
+    GlobeAmericasOutline,
+    PaperAirplaneOutline,
+} from "preact-heroicons";
 
 import Sidebar, { SidebarNavigation } from "./Sidebar";
 import Spinner from "./Spinner";
 
 const sidebarNav: SidebarNavigation[] = [
+    { name: "Dashboard", to: "/dashboard", icon: PaperAirplaneOutline },
     { name: "Planner", to: "/planner", icon: GlobeAmericasOutline },
     { name: "Upload", to: "/upload", icon: ArrowUpTrayOutline },
     { name: "Settings", to: "/settings", icon: Cog8ToothOutline },
+    { name: "Advanced", to: "/advanced", icon: AdjustmentsHorizontalOutline },
 ];
 
 interface ContentBlockProps {

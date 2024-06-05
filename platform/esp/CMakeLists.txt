@@ -13,7 +13,6 @@ add_library(platform_esp
     wifi/wifi.c
 )
 
-# Link the platform library to the pico-sdk libraries
 target_link_libraries(platform_esp
     idf::driver
     idf::esp_event

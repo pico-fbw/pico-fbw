@@ -18,7 +18,7 @@ static void callback_to_esp_timer_cb_t(void *arg) {
         return;
     // Run the specified callback function which should return either zero or a number of milliseconds to reschedule the
     // callback
-    i32 reschedule = data->callback();
+    i32 reschedule = data->callback(data->data);
     if (reschedule > 0) {
         esp_timer_start_once(data->id, reschedule * 1000);
     } else {
@@ -31,32 +31,33 @@ u64 time_us() {
     return esp_timer_get_time();
 }
 
-CallbackData *callback_in_ms(u32 ms, Callback callback) {
+CallbackData *callback_in_ms(u32 ms, Callback callback, void *data) {
     // Create a new CallbackData to store the callback with its corresponding id (so it can be used later to reschedule/cancel
     // the callback)
-    CallbackData *data = malloc(sizeof(CallbackData));
-    if (!data)
+    CallbackData *cbData = malloc(sizeof(CallbackData));
+    if (!cbData)
         return NULL;
-    data->callback = callback;
+    cbData->callback = callback;
+    cbData->data = data;
     // Use esp_timer to schedule the callback and return its id
     const esp_timer_create_args_t timer = {
         .callback = callback_to_esp_timer_cb_t,
-        .arg = (void *)data, // Our data will be stored in the esp timer and later passed to the wrapper function
+        .arg = (void *)cbData, // Our data will be stored in the esp timer and later passed to the wrapper function
         .dispatch_method = ESP_TIMER_TASK,
         .skip_unhandled_events = false,
     };
     esp_timer_handle_t handle;
     if (esp_timer_create(&timer, &handle) != ESP_OK) {
-        free(data);
+        free(cbData);
         return NULL;
     }
     if (esp_timer_start_once(handle, ms * 1000) != ESP_OK) {
         esp_timer_delete(handle);
-        free(data);
+        free(cbData);
         return NULL;
     }
-    data->id = handle;
-    return data;
+    cbData->id = handle;
+    return cbData;
 }
 
 void cancel_callback(CallbackData *data) {

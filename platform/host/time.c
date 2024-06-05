@@ -28,7 +28,7 @@ VOID CALLBACK callback_to_WAITORTIMERCALLBACK(PVOID lp_param, BOOLEAN timer_or_w
     CallbackData *data = (CallbackData *)lp_param;
     if (!data)
         return;
-    i32 reschedule = data->callback();
+    i32 reschedule = data->callback(data->data);
     if (reschedule <= 0) {
         DeleteTimerQueueTimer(NULL, data->id, NULL);
         free(data);
@@ -75,7 +75,7 @@ static void callback_to_sigevent(union sigval sv) {
     CallbackData *data = sv.sival_ptr;
     if (!data)
         return;
-    i32 reschedule = data->callback();
+    i32 reschedule = data->callback(data->data);
     if (reschedule > 0) {
         timer_delete(data->id);
         if (!create_timer(data, reschedule))
@@ -86,7 +86,7 @@ static void callback_to_sigevent(union sigval sv) {
     }
 }
 
-#endif
+#endif // defined(__APPLE__) || defined(__linux__)
 
 u64 time_us() {
 #if defined(_WIN32)
@@ -100,23 +100,24 @@ u64 time_us() {
 #endif
 }
 
-CallbackData *callback_in_ms(u32 ms, Callback callback) {
-    CallbackData *data = malloc(sizeof(CallbackData));
-    if (!data)
+CallbackData *callback_in_ms(u32 ms, Callback callback, void *data) {
+    CallbackData *cbData = malloc(sizeof(CallbackData));
+    if (!cbData)
         return NULL;
-    data->callback = callback;
+    cbData->callback = callback;
+    cbData->data = data;
 #if defined(_WIN32)
-    if (!CreateTimerQueueTimer(&data->id, NULL, callback_to_WAITORTIMERCALLBACK, data, ms, ms, 0)) {
+    if (!CreateTimerQueueTimer(&data->id, NULL, callback_to_WAITORTIMERCALLBACK, cbData, ms, ms, 0)) {
         free(data);
         return NULL;
     }
 #elif defined(__APPLE__) || defined(__linux__)
-    if (!create_timer(data, ms)) {
-        free(data);
+    if (!create_timer(cbData, ms)) {
+        free(cbData);
         return NULL;
     }
 #endif
-    return data;
+    return cbData;
 }
 
 void cancel_callback(CallbackData *data) {

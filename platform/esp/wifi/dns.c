@@ -81,7 +81,7 @@ static char *parse_dns_name(char *raw_name, char *parsed_name, size_t parsed_nam
 
     char *label = raw_name;
     char *name_itr = parsed_name;
-    int name_len = 0;
+    uint name_len = 0;
 
     do {
         int sub_name_len = *label;
@@ -130,7 +130,7 @@ static int parse_dns_request(char *req, size_t req_len, char *dns_reply, size_t 
     uint16_t qd_count = ntohs(header->qd_count);
     header->an_count = htons(qd_count);
 
-    int reply_len = qd_count * sizeof(dns_answer_t) + req_len;
+    uint reply_len = qd_count * sizeof(dns_answer_t) + req_len;
     if (reply_len > dns_reply_max_len) {
         return -1;
     }
@@ -289,6 +289,7 @@ dns_server_handle_t dns_server_start(dns_server_config_t *config) {
 esp_err_t dns_server_stop(dns_server_handle_t handle) {
     if (!handle)
         return ESP_ERR_INVALID_ARG;
+    ESP_LOGI(TAG, "Stopping DNS server");
     handle->started = false;
     vTaskDelete(handle->task);
     free(handle);

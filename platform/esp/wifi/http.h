@@ -14,16 +14,16 @@
 
 /**
  * Starts the HTTP server.
- * @param server the server handle to store the server in
+ * @param server pointer to the server handle to store the server in
  * @return ESP_OK if successful, an ESP_ERR otherwise
-*/
+ */
 esp_err_t http_server_open(httpd_handle_t *server);
 
 /**
  * Stops the HTTP server.
- * @param server the server handle to close
+ * @param server pointer to the server handle to close
  * @return ESP_OK if successful, an ESP_ERR otherwise
-*/
-esp_err_t http_server_close(httpd_handle_t server);
+ */
+esp_err_t http_server_close(httpd_handle_t *server);
 
 #endif // PLATFORM_SUPPORTS_WIFI

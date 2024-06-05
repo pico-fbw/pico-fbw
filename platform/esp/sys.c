@@ -26,7 +26,7 @@ void sys_boot_begin() {
 }
 
 void sys_boot_end() {
-    // Watchdog is automatically initialized by bootloader, so we just need to subscribed to it
+    // Watchdog is automatically initialized by bootloader, so we just need to subscribe to it
     esp_task_wdt_add(NULL);
 }
 
@@ -44,6 +44,8 @@ void __attribute__((noreturn)) sys_shutdown() {
 
 void __attribute__((noreturn)) sys_reboot(bool bootloader) {
     esp_restart();
+    while (true)
+        ;
     (void)bootloader; // ESP does not support rebooting into bootloader
 }
 
@@ -51,7 +53,6 @@ BootType sys_boot_type() {
     switch (esp_reset_reason()) {
         case ESP_RST_POWERON:
             return BOOT_COLD;
-        case ESP_RST_EXT:
         case ESP_RST_SW:
             return BOOT_REBOOT;
         case ESP_RST_PANIC:
@@ -59,6 +60,7 @@ BootType sys_boot_type() {
         case ESP_RST_TASK_WDT:
         case ESP_RST_WDT:
             return BOOT_WATCHDOG;
+        case ESP_RST_EXT:
         default:
             return BOOT_RESET;
     }

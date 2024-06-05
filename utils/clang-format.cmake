@@ -28,7 +28,7 @@ add_custom_target(
     -style=file
     -i
     ${ALL_SOURCE_FILES}
-    COMMENT "Running clang-format on all source files"
+    COMMENT "Running clang-format"
 )
 message("Code will be formatted")
 add_dependencies(${PROJECT_NAME} clang-format)

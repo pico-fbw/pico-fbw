@@ -44,9 +44,10 @@ void update() {
 }
 
 // TODO: autolaunch(detect accel and fly away)->normal/auto mode?
+// TODO: make is_flying aircraft state var
 
-void change_to(Mode newMode) {
-    // Run deinit code for aircraft.mode and then run init code for newMode
+void change_to(Mode new_mode) {
+    // Run deinit code for aircraft.mode and then run init code for the new mode
     switch (aircraft.mode) {
         default:
         case MODE_DIRECT:
@@ -68,7 +69,7 @@ void change_to(Mode newMode) {
             break;
     }
     if (aircraft.aahrsSafe) {
-        switch (newMode) {
+        switch (new_mode) {
             default:
             case MODE_DIRECT:
                 printfbw(aircraft, "entering direct mode");

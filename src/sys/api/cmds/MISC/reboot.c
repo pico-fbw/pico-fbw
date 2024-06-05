@@ -4,6 +4,8 @@
  */
 
 #include <stdbool.h>
+#include "platform/defs.h"
+#include "platform/gpio.h"
 #include "platform/sys.h"
 
 #include "lib/parson.h"
@@ -26,7 +28,11 @@ i32 api_reboot(const char *args) {
         json_value_free(root);
         return 400;
     }
+#ifdef PIN_LED
+    gpio_set(PIN_LED, STATE_LOW);
+#endif
     sys_reboot((bool)json_value_get_boolean(bootloader));
+    // Unreachable
     json_value_free(bootloader);
     json_value_free(root);
     return -1;

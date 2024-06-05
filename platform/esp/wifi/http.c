@@ -223,7 +223,7 @@ esp_err_t http_server_open(httpd_handle_t *server) {
     httpdConfig.uri_match_fn = httpd_uri_match_wildcard;
     httpdConfig.max_open_sockets = 13;
     httpdConfig.lru_purge_enable = true;
-    if (httpd_start(&server, &httpdConfig) != ESP_OK)
+    if (httpd_start(server, &httpdConfig) != ESP_OK)
         return ESP_FAIL;
 
     // API handlers
@@ -238,32 +238,32 @@ esp_err_t http_server_open(httpd_handle_t *server) {
         .handler = handle_api_v1_get_config,
     };
     // get/config supports both GET and POST
-    httpd_register_uri_handler(server, &apiV1GetConfigURIGet);
-    httpd_register_uri_handler(server, &apiV1GetConfigURIPost);
+    httpd_register_uri_handler(*server, &apiV1GetConfigURIGet);
+    httpd_register_uri_handler(*server, &apiV1GetConfigURIPost);
     httpd_uri_t apiV1GetInfoURI = {
         .uri = "/api/v1/get/info",
         .method = HTTP_GET,
         .handler = handle_api_v1_get_info,
     };
-    httpd_register_uri_handler(server, &apiV1GetInfoURI);
+    httpd_register_uri_handler(*server, &apiV1GetInfoURI);
     httpd_uri_t apiV1SetConfigURI = {
         .uri = "/api/v1/set/config",
         .method = HTTP_POST,
         .handler = handle_api_v1_set_config,
     };
-    httpd_register_uri_handler(server, &apiV1SetConfigURI);
+    httpd_register_uri_handler(*server, &apiV1SetConfigURI);
     httpd_uri_t apiV1SetFlightplanURI = {
         .uri = "/api/v1/set/flightplan",
         .method = HTTP_POST,
         .handler = handle_api_v1_set_flightplan,
     };
-    httpd_register_uri_handler(server, &apiV1SetFlightplanURI);
+    httpd_register_uri_handler(*server, &apiV1SetFlightplanURI);
     httpd_uri_t apiV1PingURI = {
         .uri = "/api/v1/ping",
         .method = HTTP_GET,
         .handler = handle_api_v1_ping,
     };
-    httpd_register_uri_handler(server, &apiV1PingURI);
+    httpd_register_uri_handler(*server, &apiV1PingURI);
 
     // Common GET handler (for serving files)
     httpd_uri_t commonGETURI = {
@@ -271,13 +271,13 @@ esp_err_t http_server_open(httpd_handle_t *server) {
         .method = HTTP_GET,
         .handler = handle_common_get,
     };
-    httpd_register_uri_handler(server, &commonGETURI);
+    httpd_register_uri_handler(*server, &commonGETURI);
 
     return ESP_OK;
 }
 
-esp_err_t http_server_close(httpd_handle_t server) {
-    return httpd_stop(server);
+esp_err_t http_server_close(httpd_handle_t *server) {
+    return httpd_stop(*server);
 }
 
 #endif // PLATFORM_SUPPORTS_WIFI

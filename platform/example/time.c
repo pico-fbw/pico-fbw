@@ -13,7 +13,7 @@ u64 time_us() {
     // This function should return the amount of time since the system powered on, in microseconds.
 }
 
-CallbackData *callback_in_ms(u32 ms, Callback callback) {
+CallbackData *callback_in_ms(u32 ms, Callback callback, void *data) {
     // This function is tricky! Take some time on it, and take a look at the other platforms for inspiration.
 
     // This function should schedule a callback to be called in `ms` milliseconds.
@@ -26,7 +26,7 @@ CallbackData *callback_in_ms(u32 ms, Callback callback) {
     // have it call the actual callback function through the user data (platforms like the pico and esp do this).
 
     // This function also needs to return a CallbackData that can be used to cancel the callback.
-    // A CallbackData is a struct that contains the callback and its ID (which you define in defs.h).
+    // A CallbackData is a struct that contains the callback, its ID (which you define the type of in defs.h), and its data.
     // Most platforms choose to allocate a new CallbackData on the heap and free() is when the callback is either cancelled or
     // returns zero.
     // However, a non-rescheduling callback will never be cancelled.

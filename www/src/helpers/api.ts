@@ -6,6 +6,7 @@
 const timeout = 2000; // Timeout for any API request in ms
 
 type EmptyResponse = Record<string, never>;
+
 // GET endpoints
 export type GET_CONFIG = {
     sections: {
@@ -20,11 +21,13 @@ export type GET_INFO = {
     platform: string;
     platform_version: string;
 };
+
 // SET endpoints
 export type SET_CONFIG = EmptyResponse;
 export type SET_FLIGHTPLAN = {
     message: string;
 };
+
 // MISC endpoints
 export type PING = EmptyResponse;
 

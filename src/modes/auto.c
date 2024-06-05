@@ -48,9 +48,10 @@ static Waypoint externWpt;
 static void (*captureCallback)(void) = NULL;
 
 // Callback for when the bay needs to be closed after a user-specified delay (within the flightplan)
-i32 callback_drop() {
+static i32 callback_drop(void *data) {
     auto_set_bay_position(POS_CLOSED);
     return 0; // Don't repeat
+    (void)data;
 }
 
 /**
@@ -70,7 +71,7 @@ static inline void load_waypoint(Waypoint *wpt) {
     if (wpt->drop > 0) {
         auto_set_bay_position(POS_OPEN);
         // Schedule a callback, since the bay needs to close after some time
-        callback_in_ms(wpt->drop * 1000, callback_drop);
+        callback_in_ms(wpt->drop * 1000, callback_drop, NULL);
     }
 }
 
