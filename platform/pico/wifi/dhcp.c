@@ -107,7 +107,6 @@ static void dhcp_socket_free(struct udp_pcb **udp) {
 static int dhcp_socket_bind(struct udp_pcb **udp, u32 ip, u16 port) {
     ip_addr_t addr;
     IP_ADDR4(&addr, ip >> 24 & 0xff, ip >> 16 & 0xff, ip >> 8 & 0xff, ip & 0xff);
-    // TODO convert lwIP errors to errno
     return udp_bind(*udp, &addr, port);
 }
 

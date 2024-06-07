@@ -108,7 +108,7 @@ CallbackData *callback_in_ms(u32 ms, Callback callback, void *data) {
     cbData->data = data;
 #if defined(_WIN32)
     if (!CreateTimerQueueTimer(&cbData->id, NULL, callback_to_WAITORTIMERCALLBACK, cbData, ms, ms, 0)) {
-        free(data);
+        free(cbData);
         return NULL;
     }
 #elif defined(__APPLE__) || defined(__linux__)

@@ -22,6 +22,10 @@ export default function Upload() {
 
     const showOfflineNotice = settings.get("showOfflineNotice") === "1";
 
+    /**
+     * Send the flightplan to the server.
+     * @param input the flightplan as a JSON string
+     */
     const sendFlightplan = async (input: string) => {
         let flightplan: Flightplan;
         try {
@@ -43,6 +47,7 @@ export default function Upload() {
         }
     };
 
+    // Use the file upload hook to handle file selection
     const { openFilePicker } = useFileUpload({
         accept: ".json",
         onFileChange: selectedFile => {
@@ -56,6 +61,9 @@ export default function Upload() {
         },
     });
 
+    /**
+     * Check if the user has an internet connection, and update the state accordingly.
+     */
     const checkInternetConnection = async () => {
         const isConnected = await hasInternet();
         setHasConnection(isConnected);

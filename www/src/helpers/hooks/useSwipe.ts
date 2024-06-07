@@ -16,6 +16,12 @@ interface SwipeOutput {
     onTouchEnd: () => void;
 }
 
+/**
+ * Hook to detect swipe gestures on a touchscreen device.
+ * @param onSwipedLeft the function to call when swiped left
+ * @param onSwipedRight the function to call when swiped right
+ * @returns the swipe gesture handlers
+ */
 export default ({ onSwipedLeft, onSwipedRight }: SwipeInput): SwipeOutput => {
     const touchStartX = useRef(0);
     const touchEndX = useRef(0);

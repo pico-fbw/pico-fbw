@@ -31,12 +31,11 @@ typedef bool (*aahrs_calibrate_t)();
 
 // Altitude-Attitude Heading Reference System (AAHRS)
 typedef struct AAHRS {
-    f32 roll;           // (Read-only)
-    f32 rollRate;       // (Read-only)
-    f32 pitch;          // (Read-only)
-    f32 pitchRate;      // (Read-only)
-    f32 yaw;            // (Read-only)
-    f32 yawRate;        // (Read-only)
+    f32 roll, pitch, yaw;             // (Read-only), deg
+    f32 rollRate, pitchRate, yawRate; // (Read-only), deg/s
+    // Note that while roll, pitch, and yaw are guaranteed to be abstracted by AAHRS to indicate the correct axes,
+    // accelerations are not. This means that the directions of X, Y, and Z can very between aircraft.
+    f32 accel[3];       // [X, Y, Z] (Read-only), g
     f32 alt;            // (Read-only)
     bool isCalibrated;  // (Read-only)
     bool isInitialized; // (Read-only)

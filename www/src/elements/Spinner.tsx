@@ -1,3 +1,8 @@
+/**
+ * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
+ * Licensed under the GNU AGPL-3.0
+ */
+
 const Spinner = () => {
     return (
         <div className="relative top-1/2">

@@ -28,6 +28,11 @@ export interface Flightplan {
     // waypoint_count is not included in JSON; it is set when parsed
 }
 
+/**
+ * Converts an array of markers to a Flightplan.
+ * @param markers the markers to convert
+ * @returns the markers expressed as a Flightplan
+ */
 export function markersToFlightplan(markers: Marker[]): Flightplan {
     const altSamples = Number(settings.get("altSamples"));
     const dropSecs = Number(settings.get("dropSecs"));
@@ -60,6 +65,11 @@ export function markersToFlightplan(markers: Marker[]): Flightplan {
     };
 }
 
+/**
+ * Converts a Flightplan JSON string to an array of markers.
+ * @param json the JSON string to convert, which should be a valid Flightplan
+ * @returns the Flightplan expressed as an array of markers
+ */
 export function flightplanToMarkers(json: string): Marker[] {
     const parsed: Flightplan = JSON.parse(json) as Flightplan;
     if (parsed.version !== generatorVersion) {

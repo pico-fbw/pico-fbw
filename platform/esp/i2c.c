@@ -12,8 +12,9 @@
 #include "platform/i2c.h"
 
 // TODO: aahrs system supports a device dropping offline and then coming back online, so this should be handled
+// https://www.esp32.com/viewtopic.php?t=1483
 
-#define I2C_TIMEOUT_MS 50 // Interrupt WDT had to be increased to prevent it from triggering during long timeouts
+#define I2C_TIMEOUT_MS 50 // Interrupt WDT had to be increased in sdkconfig to prevent it from triggering during long timeouts
 
 typedef struct I2CDevice {
     byte addr;
@@ -124,7 +125,7 @@ bool i2c_read(u32 sda, u32 scl, byte addr, byte reg, byte dest[], size_t len) {
     if (!device)
         return false;
     // The ESP-IDF function subtracts 1 from the read length and I have no clue why...
-    return (i2c_master_transmit_receive(device->handle, &reg, sizeof(reg), dest, len + 1, I2C_TIMEOUT_MS) == ESP_OK);
+    return i2c_master_transmit_receive(device->handle, &reg, sizeof(reg), dest, len + 1, I2C_TIMEOUT_MS) == ESP_OK;
 }
 
 bool i2c_write(u32 sda, u32 scl, byte addr, byte reg, const byte src[], size_t len) {
@@ -135,5 +136,5 @@ bool i2c_write(u32 sda, u32 scl, byte addr, byte reg, const byte src[], size_t l
     byte cmd[len + 1];
     cmd[0] = reg;
     memcpy(cmd + 1, src, len);
-    return (i2c_master_transmit(device->handle, cmd, len, I2C_TIMEOUT_MS) == ESP_OK);
+    return i2c_master_transmit(device->handle, cmd, len, I2C_TIMEOUT_MS) == ESP_OK;
 }

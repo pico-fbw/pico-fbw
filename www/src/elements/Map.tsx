@@ -34,6 +34,7 @@ export interface Marker {
     drop: boolean;
 }
 
+// Different tilesets (layers) that can be used for the map
 const layers = [
     {
         id: 0,
@@ -76,7 +77,7 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
     const [markers, setMarkers] = useState<Marker[]>([]);
     const [editing, setEditing] = useState(-1); // Marker currently being edited
     const polyline = useRef<L.Polyline | null>(null);
-    const polylineColor = "#a21caf";
+    const polylineColor = "#a21caf"; // Color of the line connecting all markers
 
     const [mapAttribution, setMapAttribution] = useState(layers[0].attribution);
     const [mapLink, setMapLink] = useState(layers[0].link);
@@ -86,6 +87,7 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
     const [error, setError] = useState(""); // Any current errors, to be displayed in an alert
     const [uploaded, setUploaded] = useState(false); // Whether the flightplan has been uploaded
 
+    // Configuration of the icon used to visually display markers
     const markerIcon = L.icon({
         iconUrl: "marker-icon.png",
         shadowUrl: "marker-shadow.png",
@@ -95,6 +97,10 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
         shadowAnchor: [12.5, 38],
     });
 
+    /**
+     * Uploads a flightplan to the server.
+     * @param input the flightplan to upload
+     */
     const uploadFlightplan = async (input: string) => {
         let flightplan: Flightplan;
         try {
@@ -110,6 +116,8 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
             setError(`Server error whilst uploading: ${(e as Error).message}`);
         }
     };
+
+    // Configure file upload and download hooks
 
     const { downloadFile } = useFileDownload({
         filename: "flightplan.json",
@@ -129,15 +137,24 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
         },
     });
 
-    const markerEditMode = (id: number, map: L.Map | null) => {
-        if (!map) {
+    /**
+     * Enters marker edit mode for the marker with the given ID.
+     * @param id the ID of the marker to edit
+     */
+    const markerEditMode = (id: number) => {
+        if (!map.current) {
             return;
         }
         const marker = markers.find(marker => marker.id === id);
-        map.setView(marker ? marker.position : ({ lat: 0, lng: 0 } as LatLng));
+        map.current.setView(marker ? marker.position : ({ lat: 0, lng: 0 } as LatLng));
         setEditing(id);
     };
 
+    /**
+     * Event handler for when the map is clicked.
+     * Adds a new marker at the clicked location.
+     * @param e the Leaflet mouse event
+     */
     const handleMapClick = (e: L.LeafletMouseEvent) => {
         const { latlng } = e;
         setMarkers(prevMarkers => {
@@ -152,6 +169,12 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
         });
     };
 
+    /**
+     * Event handler for when a marker is dropped after being dragged.
+     * Updates the position of the marker in the state.
+     * @param e the Leaflet drag end event
+     * @param id the ID of the marker that was dragged
+     */
     const handleMarkerDragEnd = (e: L.DragEndEvent, id: number) => {
         const updatedMarkers = markers.map(marker => {
             if (marker.id === id) {
@@ -165,6 +188,13 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
         setMarkers(updatedMarkers);
     };
 
+    /**
+     * Validates a number and clamps it to a given range.
+     * @param value the value to validate
+     * @param min the minimum value
+     * @param max the maximum value
+     * @returns the validated and clamped value
+     */
     const validateAndClamp = (value: number, min: number, max: number): number => {
         if (isNaN(value)) {
             return min;
@@ -172,6 +202,7 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
         return Math.min(Math.max(value, min), max);
     };
 
+    // Clear any errors if a successful upload has occurred
     useEffect(() => {
         setError("");
     }, [uploaded]);
@@ -193,7 +224,7 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
             const { position, id } = marker;
             L.marker(position, { icon: markerIcon, draggable: true })
                 .addTo(map.current)
-                .on("click", () => markerEditMode(id, map.current))
+                .on("click", () => markerEditMode(id))
                 .on("dragend", e => handleMarkerDragEnd(e, id));
         });
 
@@ -224,6 +255,7 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
         map.current.attributionControl.setPrefix(mapAttribution);
     }, [mapLink, mapAttribution]);
 
+    // Registers event listeners and initializes the map when the component is mounted
     useEffect(() => {
         if (!mapContainer.current) {
             return;
@@ -257,9 +289,11 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
 
     // The controls located directly under the map (altitude slider, marker add button, settings button)
     const MapControls = () => {
-        const [showSettings, setShowSettings] = useState(false);
-        const [renderDropdown, setRenderDropdown] = useState(false);
+        const [showSettings, setShowSettings] = useState(false); // Whether the settings dropdown should be visible to the user
+        const [renderDropdown, setRenderDropdown] = useState(false); // Whether the settings dropdown should be rendered
+        // Visible and rendered are seperated here to allow for a transition to occur before content is unrendered.
 
+        // Show/hide the settings dropdown
         useEffect(() => {
             if (showSettings) {
                 setRenderDropdown(true);
@@ -279,6 +313,7 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
                         <label htmlFor="alt" className="text-gray-300 mr-3 hidden md:block">
                             Altitude:
                         </label>
+                        {/* FIXME: this slider is very...laggy and I have no clue why. It isn't laggy on the React version..? */}
                         <input
                             type="range"
                             name="alt"
@@ -399,6 +434,11 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
 
     // The dock that appears when a waypoint is being edited
     const EditDock = () => {
+        /**
+         * Gets the marker with the given ID.
+         * @param id the ID of the marker to get
+         * @returns the marker with the given ID, or a default marker if the ID is invalid
+         */
         const getMarker = (id: number): { position: LatLng; alt: number; speed: number; drop: boolean } => {
             const marker = markers.find(marker => marker.id === id);
 
@@ -421,6 +461,15 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
                 : { position: { lat: 0, lng: 0 } as LatLng, alt: 0, speed: 0, drop: false };
         };
 
+        /**
+         * Sets the position, altitude, speed, and drop status of the marker with the given ID.
+         * @param id the ID of the marker to set
+         * @param lat the new latitude of the marker
+         * @param lng the new longitude of the marker
+         * @param alt the new altitude of the marker
+         * @param speed the new speed at the marker
+         * @param drop the new drop status at the marker
+         */
         const setMarker = (id: number, lat: number, lng: number, alt: number, speed: number, drop: boolean): void => {
             const updatedMarkers = markers.map(marker => {
                 if (marker.id === id) {
@@ -437,6 +486,10 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
             setMarkers(updatedMarkers);
         };
 
+        /**
+         * Removes the marker with the given ID.
+         * @param id the ID of the marker to remove
+         */
         const removeMarker = (id: number) => {
             const updatedMarkers = markers.filter(marker => marker.id !== id);
             const shiftedMarkers = updatedMarkers.map((marker, index) => ({
@@ -620,6 +673,7 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
         );
     };
 
+    // The table containing all waypoints
     const WaypointTable = () => {
         return (
             <table className="min-w-full divide-y divide-gray-700">
@@ -688,7 +742,7 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
                                 </td>
                                 <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
                                     <a
-                                        onClick={() => markerEditMode(marker.id, map.current)}
+                                        onClick={() => markerEditMode(marker.id)}
                                         className="text-indigo-400 hover:text-indigo-300 cursor-pointer"
                                     >
                                         Edit

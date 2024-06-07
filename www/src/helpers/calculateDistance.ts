@@ -3,11 +3,18 @@
  * Licensed under the GNU AGPL-3.0
  */
 
-export default (lat1: number, lon1: number, lat2: number, lon2: number): string => {
+/**
+ * @param lat1 the latitude of the first coordinate
+ * @param lng1 the longitude of the first coordinate
+ * @param lat2 the latitude of the second coordinate
+ * @param lng2 the longitude of the second coordinate
+ * @returns the distance between the two coordinates
+ */
+export default (lat1: number, lng1: number, lat2: number, lng2: number): string => {
     const earthRadius = 6371e3; // Earth's radius in meters
     const toRadians = (degrees: number) => degrees * (Math.PI / 180);
     const deltaLat = toRadians(lat2 - lat1);
-    const deltaLon = toRadians(lon2 - lon1);
+    const deltaLon = toRadians(lng2 - lng1);
 
     const a =
         Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +

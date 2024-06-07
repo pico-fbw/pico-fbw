@@ -15,8 +15,7 @@
 
 #include "flightplan.h"
 
-// Flightplan v1.0 schema
-#define JSON_SCHEMA                                                                                                            \
+#define JSON_SCHEMA_V1                                                                                                         \
     "{\"version\":\"\",\"version_fw\":\"\",\"alt_samples\":0,\"waypoints\":"                                                   \
     "[{\"lat\":0,\"lng\":0,\"alt\":0,\"speed\":0,\"drop\":0}]}"
 
@@ -44,7 +43,7 @@ FlightplanError flightplan_parse(const char *json, bool silent) {
     if (flightplan_was_parsed())
         state = FLIGHTPLAN_STATUS_AWAITING;
     // Ensure the recieved JSON matches the template schema for a valid flightplan
-    JSON_Value *schema = json_parse_string(JSON_SCHEMA);
+    JSON_Value *schema = json_parse_string(JSON_SCHEMA_V1);
     JSON_Value *root = json_parse_string(json);
     if (json_validate(schema, root) != JSONSuccess) {
         if (!silent)
@@ -98,6 +97,7 @@ FlightplanError flightplan_parse(const char *json, bool silent) {
     }
     if (flightplan.alt_samples != 0 && !state_is_warning() && !state_is_error())
         state = FLIGHTPLAN_STATUS_GPS_OFFSET; // Only replace the state if there have been no warnings/errors up to this point
+    // Note that the signal to start sampling altitudes is only sent once the user engages auto mode
     // Waypoint array
     JSON_Array *waypoints = json_object_get_array(obj, "waypoints");
     flightplan.waypoint_count = json_array_get_count(waypoints);

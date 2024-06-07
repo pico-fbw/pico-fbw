@@ -28,7 +28,7 @@
  */
 static inline f32 offset_of(u32 pin) {
     // Look up the correct value to fetch based on the pin
-    u32 val;
+    u32 val = PWM_OFFSET_AIL; // Default/fallback as well as AIL
     if (pin == (u32)config.pins[PINS_INPUT_ELE]) {
         val = PWM_OFFSET_ELE;
     } else if (pin == (u32)config.pins[PINS_INPUT_RUD]) {
@@ -37,10 +37,7 @@ static inline f32 offset_of(u32 pin) {
         val = PWM_OFFSET_SW;
     } else if (pin == (u32)config.pins[PINS_INPUT_THROTTLE]) {
         val = PWM_OFFSET_THR;
-    } else {
-        val = PWM_OFFSET_AIL; // Default as well as AIL
-    }
-    // Read from the correct sector based on the value
+    } // No else statement needed as we already have a default value
     return calibration.pwm[val];
 }
 
@@ -117,13 +114,12 @@ bool receiver_calibrate(const u32 pins[], u32 num_pins, f32 deviations[], u32 nu
         }
         // Check to ensure the value is within limits before adding it to be written
         if (!WITHIN_MAX_CALIBRATION_OFFSET((finalDifference / run_times), config.general[GENERAL_MAX_CALIBRATION_OFFSET])) {
-            if (pin == (u32)config.pins[PINS_INPUT_SWITCH]) {
-                // The switch pin is a little special; it can have high offsets but only if they are negative, otherwise modes
-                // won't register properly
-                if ((finalDifference / (f32)run_times) < -200.0f ||
-                    (finalDifference / (f32)run_times) > config.general[GENERAL_MAX_CALIBRATION_OFFSET])
-                    goto error;
-            } else
+            if (pin != (u32)config.pins[PINS_INPUT_SWITCH])
+                goto error;
+            // The switch pin is a little special; it can have high offsets but only if they are negative, otherwise modes
+            // won't register properly
+            if ((finalDifference / (f32)run_times) < -200.0f ||
+                (finalDifference / (f32)run_times) > config.general[GENERAL_MAX_CALIBRATION_OFFSET])
                 goto error;
         error:
             printpre("receiver", "ERROR: (FBW-500) pin %lu's calibration value is too high!", pin);
@@ -143,9 +139,8 @@ ReceiverCalibrationStatus receiver_is_calibrated() {
     // Read the calibration flag
     if ((bool)calibration.pwm[PWM_CALIBRATED]) {
         // Ensure that the control mode we are in is the same as the one in which we calibrated
-        if ((ControlMode)config.general[GENERAL_CONTROL_MODE] != (ControlMode)calibration.pwm[PWM_MODE]) {
+        if ((ControlMode)config.general[GENERAL_CONTROL_MODE] != (ControlMode)calibration.pwm[PWM_MODE])
             return RECEIVERCALIBRATION_INVALID;
-        }
         return RECEIVERCALIBRATION_OK;
     } else {
         return RECEIVERCALIBRATION_INCOMPLETE;

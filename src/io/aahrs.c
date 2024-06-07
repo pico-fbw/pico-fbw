@@ -3,12 +3,15 @@
  * Licensed under the GNU AGPL-3.0
  */
 
+#include <string.h>
 #include "platform/helpers.h"
 #include "platform/i2c.h"
 #include "platform/time.h"
 
 #include "lib/fusion/fusion.h"
 #include "lib/fusion/madgwick.h"
+
+#include "modes/aircraft.h"
 
 #include "sys/configuration.h"
 #include "sys/log.h"
@@ -103,6 +106,7 @@ void aahrs_deinit() {
 
 void aahrs_update() {
     static Timestamp lastUpdate;
+    // Throttle the update rate
     if (time_since_s(&lastUpdate) < (1.f / FUSION_RATE))
         return;
 
@@ -111,24 +115,32 @@ void aahrs_update() {
     fusion_gyroscope_get(imu, &gyro[0], &gyro[1], &gyro[2]);
     fusion_magnetometer_get(imu, &mag[0], &mag[1], &mag[2]);
 
-    madgwick_update(filter, radians(gyro[0]), radians(gyro[1]), radians(gyro[2]), acc[0], acc[1], acc[2], 0, 0, 0);
+    madgwick_update(filter, radians(gyro[0]), radians(gyro[1]), radians(gyro[2]), acc[0], acc[1], acc[2], 0.f, 0.f, 0.f);
+    // FIXME: For when magnetometer calibration is added:
     // madgwick_update(filter, radians(gyro[0]), radians(gyro[1]), radians(gyro[2]), acc[0], acc[1], acc[2], mag[0],
     //                          mag[1], mag[2]);
     lastUpdate = timestamp_now();
 
     f32 roll, pitch, yaw;
-    madgwick_get_angles(filter, &roll, &pitch, &yaw);
+    if (!madgwick_get_angles(filter, &roll, &pitch, &yaw)) {
+        printfbw(aahrs, "failed to get angles");
+        aircraft.set_aahrs_safe(false);
+        return;
+    }
     aahrs.roll = degrees(roll);
     aahrs.pitch = degrees(pitch);
     aahrs.yaw = degrees(yaw);
-    // TODO: rates
-    printraw("r: %.4f p: %.4f y: %.4f\n", aahrs.roll, aahrs.pitch, aahrs.yaw);
+    // TODO: are the rates pulled from gyro confirmed to be same axes as angles?
+    aahrs.rollRate = gyro[0];
+    aahrs.pitchRate = gyro[1];
+    aahrs.yawRate = gyro[2];
+    memcpy(aahrs.accel, acc, sizeof(aahrs.accel));
 }
 
 bool aahrs_calibrate() {
     // TODO: this calibration is very primitive and should be improved
-    // it assumes the IMU is parallel to the ground
-    // also, drift detection should be added to check if the calibrationa actually works
+    // it assumes the IMU is perfectly parallel to the ground
+    // also, drift detection should be added to check if the calibration actually works
 
     // Get offset values for the accelerometer and gyroscope
     f64 ao[3] = {0.0, 0.0, 0.0}, go[3] = {0.0, 0.0, 0.0};
@@ -170,11 +182,12 @@ bool aahrs_calibrate() {
 
 AAHRS aahrs = {
     .roll = INFINITY,
-    .rollRate = INFINITY,
     .pitch = INFINITY,
-    .pitchRate = INFINITY,
     .yaw = INFINITY,
+    .rollRate = INFINITY,
+    .pitchRate = INFINITY,
     .yawRate = INFINITY,
+    .accel = {0.f, 0.f, 0.f},
     .alt = -1,
     .init = aahrs_init,
     .deinit = aahrs_deinit,

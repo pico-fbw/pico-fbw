@@ -6,10 +6,10 @@
 #include <math.h>
 #include "platform/time.h"
 
-#include "io/esc.h"
 #include "io/receiver.h"
 #include "io/servo.h"
 
+#include "modes/aircraft.h"
 #include "modes/flight.h"
 
 #include "sys/configuration.h"
@@ -21,12 +21,6 @@
 // The rate at which the roll setpoint returns to its limit from the hold limit (in deg)
 // This is NOT in deg/s, think of it as someone holding the stick at the magnitude of this value
 #define CONTROL_ROLL_RETURN_DPS 45.f
-
-#define rolling() (fabsf(rollInput) > config.control[CONTROL_DEADBAND])
-
-#define pitching() (fabsf(pitchInput) > config.control[CONTROL_DEADBAND])
-
-#define yawing() (fabsf(yawInput) > config.control[CONTROL_DEADBAND])
 
 static f32 rollInput, pitchInput, yawInput;
 static f32 rollSet, pitchSet, throttleSet;
@@ -58,15 +52,15 @@ void normal_update() {
     f32 pitchAdj = control_calc_adjust(AXIS_PITCH, rollInput, pitchInput);
 
     // Check for manual overrides of externally set (by API) setpoints
-    if (rolling() || pitching() || yawing())
+    if (USER_INPUTTING())
         overrideSetpoints = false;
 
     if (!overrideSetpoints) {
         // Use the inputs from the receiver to calculate the setpoint values
         // Take deadband into account so we don't get crazy setpoints due to PWM fluctuations
-        if (rolling())
+        if (ROLL_INPUT())
             rollSet += rollAdj;
-        if (pitching())
+        if (PITCH_INPUT())
             pitchSet += pitchAdj;
 
         // Make sure the setpoints aren't set to unsafe values so we don't get weird outputs from PID,
@@ -109,7 +103,7 @@ void normal_deinit() {
 
 bool normal_set(f32 roll, f32 pitch, f32 yaw, f32 throttle) {
     // Ensure there are no manual control inputs before we allow setpoints to be externally set
-    if (rolling() || pitching() || yawing())
+    if (USER_INPUTTING())
         return false;
     rollSet = roll;
     pitchSet = pitch;

@@ -11,8 +11,11 @@ import Map from "../elements/Map";
 
 import hasInternet from "../helpers/hasInternet";
 
+// [ ] Allow saving flightplans to the server (in littlefs)
+
 export default function Planner() {
     const [hasConnection, setHasConnection] = useState<boolean | null>(null);
+    // Keep track of whether the map is focused, so that we don't trigger swipe events when the user is interacting with the map
     const [isMapFocused, setIsMapFocused] = useState(false);
 
     const checkInternetConnection = async () => {

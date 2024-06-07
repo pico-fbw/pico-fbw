@@ -16,6 +16,9 @@ export default function Index() {
     const [apiConnection, setAPIConnection] = useState<boolean | null>(null);
     const [hasConnection, setHasConnection] = useState<boolean | null>(null);
 
+    /**
+     * Check if the API is reachable, and update the state accordingly.
+     */
     const checkAPIConnection = async () => {
         // The API will respond with an empty JSON object at the PING endpoint,
         // so if no errors are thrown, the connection is working
@@ -29,19 +32,15 @@ export default function Index() {
         setAPIConnection(true);
     };
 
+    /**
+     * Check if the user has an internet connection, and update the state accordingly.
+     */
     const checkInternetConnection = async () => {
         const isConnected = await hasInternet();
         setHasConnection(isConnected);
     };
 
-    useEffect(() => {
-        checkAPIConnection()
-            .then(() => {
-                checkInternetConnection().catch(console.error);
-            })
-            .catch(console.error);
-    }, []);
-
+    // Clear the loading status after the API and internet connection checks are done
     useEffect(() => {
         if (status === "loading" && apiConnection !== null && hasConnection !== null) {
             const delay = Math.floor(Math.random() * (1000 - 500 + 1)) + 500;
@@ -50,6 +49,15 @@ export default function Index() {
             }, delay);
         }
     }, [status, apiConnection, hasConnection]);
+
+    // Check the API and internet connections on page load
+    useEffect(() => {
+        checkAPIConnection()
+            .then(() => {
+                checkInternetConnection().catch(console.error);
+            })
+            .catch(console.error);
+    }, []);
 
     return (
         <>

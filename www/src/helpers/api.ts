@@ -3,7 +3,7 @@
  * Licensed under the GNU AGPL-3.0
  */
 
-const timeout = 2000; // Timeout for any API request in ms
+const timeout = 2000; // Timeout for an API request in ms
 
 type EmptyResponse = Record<string, never>;
 
@@ -31,6 +31,7 @@ export type SET_FLIGHTPLAN = {
 // MISC endpoints
 export type PING = EmptyResponse;
 
+// Maps API URIs to their respective response types
 type EndpointMap = {
     "get/config": GET_CONFIG;
     "get/info": GET_INFO;
@@ -39,6 +40,12 @@ type EndpointMap = {
     ping: PING;
 };
 
+/**
+ * Executes an API request.
+ * @param endpoint the API endpoint to call
+ * @param data the optional data to send to the endpoint
+ * @returns the response from the API
+ */
 export async function api<E extends keyof EndpointMap>(endpoint: E, data?: object): Promise<EndpointMap[E]> {
     const controller = new AbortController();
     let options: RequestInit = {

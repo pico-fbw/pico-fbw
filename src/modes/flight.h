@@ -13,7 +13,6 @@ void flight_init();
 /**
  * Updates the flight system's aircraft data (from IMU and GPS), checks flight envelope,
  * computes PID, updates setpoints, and actuates servos to the current commanded flight angles (from PIDs).
- * ONLY call this function from CORE 0!!
  * Must be called periodically to ensure up-to-date flight data, setpoints and servo actuation.
  *
  * @param roll the desired roll angle

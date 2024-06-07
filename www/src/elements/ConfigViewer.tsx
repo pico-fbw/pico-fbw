@@ -1,9 +1,14 @@
+/**
+ * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
+ * Licensed under the GNU AGPL-3.0
+ */
+
 import { useEffect, useState } from "preact/hooks";
 import { MinusSolid, PlusSolid } from "preact-heroicons";
 
 import { api, GET_CONFIG } from "../helpers/api";
 
-interface ConfigItem {
+interface ConfigDatabaseItem {
     name: string;
     id: string;
     desc: string;
@@ -11,16 +16,19 @@ interface ConfigItem {
     readOnly?: boolean;
 }
 
-interface Config {
-    General: ConfigItem[];
-    Control: ConfigItem[];
-    Pins: ConfigItem[];
-    Sensors: ConfigItem[];
-    System: ConfigItem[];
-    WiFi: ConfigItem[];
+interface ConfigDatabase {
+    General: ConfigDatabaseItem[];
+    Control: ConfigDatabaseItem[];
+    Pins: ConfigDatabaseItem[];
+    Sensors: ConfigDatabaseItem[];
+    System: ConfigDatabaseItem[];
+    WiFi: ConfigDatabaseItem[];
 }
 
-const config: Config = {
+// A database containing all configuration options.
+// This is used by the ConfigViewer component to display more useful/readable information about each configuration option
+// received from the API, such as a readable name, description, and readable enum values.
+const config: ConfigDatabase = {
     General: [
         {
             name: "Control Mode",
@@ -76,6 +84,15 @@ const config: Config = {
                 0: "Disabled",
                 1: "Enabled (no password)",
                 2: "Enabled (with password)",
+            },
+        },
+        {
+            name: "Launch Assist Enabled",
+            id: "launchAssistEnabled",
+            desc: "Whether or not to enable launch assist. See the documentation on launch assist for more information.",
+            enumMap: {
+                0: "Disabled",
+                1: "Enabled",
             },
         },
         {
@@ -408,10 +425,19 @@ interface ConfigViewerProps {
 
 function ConfigViewer({ setError }: ConfigViewerProps) {
     const [data, setData] = useState<GET_CONFIG | null>(null);
+    // Whether each section is visible or not (aka dropped down or not)
     const [sectionVisibility, setSectionVisibility] = useState<boolean[]>(
         data ? new Array(data.sections.length).fill(false) : [],
     );
 
+    /**
+     * Handle a change in the configuration.
+     * @param sectionName the name of the section where the change occurred
+     * @param sectionIndex the index of the section where the change occurred
+     * @param keyIndex the index of the key where the change occurred
+     * @param value the new value of the key
+     * @param write whether or not to write the change to the API
+     */
     const handleConfigChange = async (
         sectionName: string,
         sectionIndex: number,
@@ -419,6 +445,7 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
         value: string,
         write = true,
     ) => {
+        // Normalize and update the field, visible to the user
         let toSet: number | string = value;
         let toSetNum = parseFloat(value);
         if (write) {
@@ -443,9 +470,10 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
         });
 
         if (!write) {
-            return;
+            return; // No need to continue if we're not writing
         }
 
+        // Send the new value to the API and verify it was set correctly
         try {
             const key = config[sectionName as keyof typeof config][keyIndex].id;
             const command = {
@@ -474,6 +502,9 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
         }
     };
 
+    /**
+     * Retrieves the configuration data from the API and sets it into the state.
+     */
     const getConfigData = async () => {
         try {
             const response = await api("get/config");
@@ -483,6 +514,10 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
         }
     };
 
+    /**
+     * Toggles the visibility of a section.
+     * @param sectionIndex the index of the section to toggle
+     */
     const toggleSection = (sectionIndex: number) => {
         const newSectionVisibility = [...sectionVisibility];
         newSectionVisibility[sectionIndex] = !newSectionVisibility[sectionIndex];
@@ -497,13 +532,16 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
     return (
         data && (
             <div className="divide-y divide-white/5">
+                {/* Each section of the config gets a dropdown */}
                 {data.sections.map((section, sectionIndex) => (
                     <div key={sectionIndex} className="py-6">
+                        {/* Section name and toggle button */}
                         <div
                             className="flex w-full items-start justify-between text-left text-white cursor-pointer"
                             onClick={() => toggleSection(sectionIndex)}
                         >
                             <span className="text-base font-semibold leading-7">
+                                {/* Slight change to the wifi section name */}
                                 {section.name === "WiFi" ? "Wi-Fi" : section.name}
                             </span>
                             <span className="ml-6 flex h-7 items-center">
@@ -514,8 +552,10 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
                                 )}
                             </span>
                         </div>
+                        {/* Dropdown with all values */}
                         {sectionVisibility[sectionIndex] && (
                             <ul className="mt-4 space-y-4">
+                                {/* Each key will get its id looked up and matched with more information from the database to create its box */}
                                 {section.keys.map(
                                     (value, keyIndex) =>
                                         value !== null && (
@@ -568,11 +608,13 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
                                                             ))}
                                                         </select>
                                                     ) : (
-                                                        // Input for strings and numerical values
+                                                        // Generic input for strings and numerical values
                                                         <input
                                                             type="text"
                                                             className="block w-full border-gray-300 rounded-md shadow-sm p-2 focus:ring focus:ring-opacity-50"
                                                             value={value.toString()}
+                                                            // onChange will only update the value in the state, onBlur will write it to the API
+                                                            // This is so we don't spam the API with requests while the user is typing
                                                             // eslint-disable-next-line @typescript-eslint/no-misused-promises
                                                             onChange={e =>
                                                                 handleConfigChange(

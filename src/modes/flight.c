@@ -3,6 +3,8 @@
  * Licensed under the GNU AGPL-3.0
  */
 
+// "Flight" is not an actual mode--it is merely a collection of common controllers and code that is used by many other modes.
+
 #include <math.h>
 #include <stdlib.h>
 #include "platform/helpers.h"

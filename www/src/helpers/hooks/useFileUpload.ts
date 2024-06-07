@@ -17,6 +17,14 @@ interface UseFileUploadOutput {
     file?: File | null;
 }
 
+/**
+ * Hook to open a file picker.
+ * @param accept the file types to accept
+ * @param multiple whether to allow multiple files
+ * @param maxSize the maximum file size in bytes
+ * @param onFileChange the function to call when a file is selected
+ * @returns the file picker function and the selected file
+ */
 export default ({ accept, multiple, maxSize, onFileChange }: UseFileUploadInput): UseFileUploadOutput => {
     const [file, setFile] = useState<File | null>(null);
 

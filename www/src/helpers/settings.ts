@@ -15,6 +15,11 @@ export class settings {
         showOfflineNotice: { default: "1" },
     } as const;
 
+    /**
+     * Get a setting from local storage, or the default value if it doesn't exist.
+     * @param key the setting to get
+     * @returns the value of the setting
+     */
     static get<K extends keyof typeof this.setting>(key: K): string {
         const value = localStorage.getItem(key);
         if (value) {
@@ -24,6 +29,11 @@ export class settings {
         return this.setting[key].default;
     }
 
+    /**
+     * Set a setting in local storage.
+     * @param key the setting to set
+     * @param value the value to set the setting to
+     */
     static set<K extends keyof typeof this.setting>(key: K, value: string): void {
         localStorage.setItem(key, value);
     }

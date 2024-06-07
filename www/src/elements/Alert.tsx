@@ -38,9 +38,12 @@ function getColors(type: AlertProps["type"]) {
 const Alert: preact.FunctionComponent<AlertProps> = ({ type, onClose, className = "", children }) => {
     const [hidden, setHidden] = useState(false);
 
+    /**
+     * Handles the closure of the alert.
+     */
     const handleClose = () => {
         setHidden(true);
-        onClose();
+        onClose(); // Call the provided onClose function
     };
 
     return (

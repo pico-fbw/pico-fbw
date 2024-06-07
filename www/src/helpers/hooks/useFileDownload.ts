@@ -14,6 +14,12 @@ interface UseFileDownloadOutput {
     downloadFile: (content: BlobPart) => void;
 }
 
+/**
+ * Hook to download a file.
+ * @param filename the name of the file
+ * @param filetype the MIME type of the file
+ * @returns a function to download the file
+ */
 export default ({ filename, filetype }: UseFileDownloadInput): UseFileDownloadOutput => {
     const downloadFile = useCallback(
         (content: BlobPart) => {

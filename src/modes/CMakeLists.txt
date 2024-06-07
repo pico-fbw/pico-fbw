@@ -4,6 +4,7 @@ add_library(fbw_modes
     direct.c
     flight.c
     hold.c
+    launch.c
     normal.c
     tune.c
 )
