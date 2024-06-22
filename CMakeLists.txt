@@ -4,12 +4,12 @@ if (NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 endif()
 
-# Establish the platform to build for, default is pico but the user can change this to any supported platform
+# Establish the platform to build for, default is host but the user can change this to any supported platform
 if (NOT DEFINED FBW_PLATFORM)
-    message("Defaulting FBW_PLATFORM to \"pico\" since not specified")
+    message("Defaulting FBW_PLATFORM to \"host\" since not specified")
     message(STATUS "To specify a platform, run cmake with -DFBW_PLATFORM=<platform>")
 endif()
-set(FBW_PLATFORM "pico" CACHE STRING "Platform to build pico-fbw for")
+set(FBW_PLATFORM "host" CACHE STRING "Platform to build pico-fbw for")
 # Special cases
 if (FBW_PLATFORM STREQUAL "pico_w")
     set(PLATFORM_DIR "pico")

@@ -12,7 +12,11 @@
     #include "pico/cyw43_arch.h"
 char buf[1];
 #else
-    #error "Unsupported Pico variant"
+    #warning "Unsupported Pico variant, GPIO may not work as expected."
+    #if __has_include("hardware/gpio.h")
+        #include "hardware/gpio.h"
+        #define RASPBERRYPI_PICO
+    #endif
 #endif
 
 #include "platform/defs.h"

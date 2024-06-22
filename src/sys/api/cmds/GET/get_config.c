@@ -76,7 +76,7 @@ static bool parse_args(const char *args, char **section, char **key) {
 static char *get_config_value(const char *section_name, const char *key) {
     void *value = NULL;
     ConfigSectionType type = config_get(section_name, key, &value);
-    if (!value)
+    if (!value || type == SECTION_TYPE_NONE)
         return NULL;
     // The requested config value exists and we now have it + its type
     // Now, generate our response
@@ -87,20 +87,20 @@ static char *get_config_value(const char *section_name, const char *key) {
     JSON_Value *sectionObj = json_value_init_object();
     JSON_Object *section = json_value_get_object(sectionObj);
     json_object_set_string(section, "name", section_name);
-    JSON_Value *keysArr = json_value_init_array();
-    JSON_Array *keys = json_value_get_array(keysArr);
+    JSON_Value *valuesArr = json_value_init_array();
+    JSON_Array *values = json_value_get_array(valuesArr);
     switch (type) {
         case SECTION_TYPE_FLOAT:
-            json_array_append_number(keys, *(f32 *)value);
+            json_array_append_number(values, *(f32 *)value);
             break;
         case SECTION_TYPE_STRING:
-            json_array_append_string(keys, (char *)value);
+            json_array_append_string(values, (char *)value);
             break;
         default:
             json_value_free(root);
             return NULL; // This should never happen
     }
-    json_object_set_value(section, "keys", keysArr);
+    json_object_set_value(section, "values", valuesArr);
     json_array_append_value(sections, sectionObj);
     json_object_set_value(obj, "sections", sectionsArr);
     char *serialized = json_serialize_to_string(root);
@@ -125,8 +125,8 @@ static char *get_entire_config() {
         const char *sectionStr;
         ConfigSectionType type = config_to_string(s, &sectionStr);
         json_object_set_string(section, "name", sectionStr);
-        JSON_Value *keysArr = json_value_init_array();
-        JSON_Array *keys = json_value_get_array(keysArr);
+        JSON_Value *valuesArr = json_value_init_array();
+        JSON_Array *values = json_value_get_array(valuesArr);
         // ...and for every key in the section, add it to the array
         switch (type) {
             case SECTION_TYPE_FLOAT: {
@@ -135,9 +135,9 @@ static char *get_entire_config() {
                     return NULL;
                 for (u32 v = 0; v < CONFIG_SECTION_SIZE; v++) {
                     if (section[v + 1] != CONFIG_END_MAGIC && v < CONFIG_SECTION_SIZE - 1) {
-                        json_array_append_number(keys, section[v]);
+                        json_array_append_number(values, section[v]);
                     } else {
-                        json_array_append_number(keys, section[v]);
+                        json_array_append_number(values, section[v]);
                         break;
                     }
                 }
@@ -147,8 +147,8 @@ static char *get_entire_config() {
                 // I didn't feel like looping this and plus, there's only one string section
                 switch (s) {
                     case CONFIG_WIFI:
-                        json_array_append_string(keys, config.wifi.ssid);
-                        json_array_append_string(keys, config.wifi.pass);
+                        json_array_append_string(values, config.wifi.ssid);
+                        json_array_append_string(values, config.wifi.pass);
                         break;
                     default:
                         break;
@@ -158,7 +158,7 @@ static char *get_entire_config() {
             default:
                 return NULL; // This should never happen
         }
-        json_object_set_value(section, "keys", keysArr);
+        json_object_set_value(section, "values", valuesArr);
         json_array_append_value(sections, sectionObj);
     }
     json_object_set_value(obj, "sections", sectionsArr);
@@ -191,15 +191,14 @@ i32 api_handle_get_config(const char *input, char **output) {
 // {"section":"","key":""}
 
 // Output:
-// {"sections":[{"name":"","keys":[{"key":number|""}]}]}
+// {"sections":[{"name":"","keys":[number|""]}]}
 
 i32 api_get_config(const char *args) {
     char *output = NULL;
     i32 res = api_handle_get_config(args, &output);
-    if (!output)
-        return 500;
-    if (res != 200) {
-        json_free_serialized_string(output);
+    if (res != 200 || !output) {
+        if (output)
+            json_free_serialized_string(output);
         return res;
     }
     printraw("%s\n", output);

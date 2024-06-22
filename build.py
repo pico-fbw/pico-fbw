@@ -10,9 +10,7 @@ from pathlib import Path
 from urllib.request import urlretrieve
 import zipfile
 
-# TODO: install npm and yarn
-
-# TODO: test more on windows
+rootDir = Path(__file__).resolve().parent
 
 def install_esp_idf():
     if os.sys.platform.lower() == "win32":
@@ -43,11 +41,11 @@ dependencies = {
         }
     },
     'cmake': {
-        'version': '3.28.3',
+        'version': '3.29.6',
         'url': {
-            'linux': 'https://github.com/Kitware/CMake/releases/download/v3.28.3/cmake-3.28.3-linux-x86_64.tar.gz',
-            'win32': 'https://github.com/Kitware/CMake/releases/download/v3.28.3/cmake-3.28.3-win32-x86_64.zip',
-            'darwin': 'https://github.com/Kitware/CMake/releases/download/v3.28.3/cmake-3.28.3-macos-universal.tar.gz',
+            'linux': 'https://github.com/Kitware/CMake/releases/download/v3.29.6/cmake-3.29.6-linux-x86_64.tar.gz',
+            'win32': 'https://github.com/Kitware/CMake/releases/download/v3.29.6/cmake-3.29.6-windows-x86_64.zip',
+            'darwin': 'https://github.com/Kitware/CMake/releases/download/v3.29.6/cmake-3.29.6-macos-universal.tar.gz',
         },
     },
     'ESP-IDF': {
@@ -60,11 +58,11 @@ dependencies = {
         'install': install_esp_idf,
     },
     'ninja': {
-        'version': '1.11.1',
+        'version': '1.12.1',
         'url': {
-            'linux': 'https://github.com/ninja-build/ninja/releases/download/v1.11.1/ninja-linux.zip',
-            'win32': 'https://github.com/ninja-build/ninja/releases/download/v1.11.1/ninja-win.zip',
-            'darwin': 'https://github.com/ninja-build/ninja/releases/download/v1.11.1/ninja-mac.zip',
+            'linux': 'https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-linux.zip',
+            'win32': 'https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-win.zip',
+            'darwin': 'https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-mac.zip',
         },
         'install': install_ninja,
     },
@@ -75,9 +73,18 @@ dependencies = {
     },
 }
 
-platforms = {
-    1: "pico",
-    2: "esp32"
+platforms = [
+    "pico",
+    "pico_w",
+    "esp32",
+    "host"
+]
+
+platformDependencies = {
+    "pico": ["ninja", "cmake", "node", "arm-none-eabi-gcc", "pico-sdk"],
+    "pico_w": ["ninja", "cmake", "node", "arm-none-eabi-gcc", "pico-sdk"],
+    "esp32": ["ninja", "cmake", "node", "ESP-IDF"],
+    "host": ["ninja", "cmake"],
 }
 
 def find_single_subdir(path: Path):
@@ -94,6 +101,7 @@ def download_progress(count, block_size, total_size):
     sys.stdout.write("\rDownload progress: %d%%" % percent)
     sys.stdout.flush()
 
+# FIXME: this func has problems on windows
 def download_and_extract(url: str, directory: Path):
     extract_dir = directory.with_suffix('.temp')
     shutil.rmtree(directory, ignore_errors=True)
@@ -112,7 +120,6 @@ def download_and_extract(url: str, directory: Path):
             obj.extractall(path=str(extract_dir))
 
     subdir = find_single_subdir(extract_dir)
-    # FIXME: these don't work on windows?
     shutil.move(str(subdir), str(directory))
     shutil.rmtree(extract_dir, ignore_errors=True)
 
@@ -134,7 +141,6 @@ def install_dependency(dep: str):
     os.chdir(dir)
 
     if 'install' in dependencies[dep]:
-        print(Path(os.getcwd()))
         # The dependency requires some post-installation steps, run them
         dependencies[dep]['install']()
     os.chdir("..")
@@ -171,79 +177,96 @@ def find_dependency(program: str):
     # Couldn't find the dependency
     return None
 
-rootDir = Path(__file__).resolve().parent
-platform = None
-# If the argument to the command is clean, remove the build directory
-if len(os.sys.argv) > 1 and os.sys.argv[1] == "clean":
-    shutil.rmtree("build", ignore_errors=True)
-    exit(0)
-# Otherwise, interpret the argument as the platform to build for
-elif len(os.sys.argv) > 1:
-    platform = os.sys.argv[1]
-# If no argument is given...
-if platform == None:
-    # If the cmake cache is present, pull the platform from there
-    if os.path.exists("build/CMakeCache.txt"):
-        with open("build/CMakeCache.txt") as f:
-            for line in f:
-                if "FBW_PLATFORM" in line:
-                    platform = line.split("=")[1].strip()
-                    break
-    # Otherwise, prompt the user to select a platform
+def construct_cmake_command(platform: str):
+    # CMake configure step args depend on the platform
+    if platform == "pico" or platform == "pico_w":
+        os.environ["PICO_SDK_PATH"] = str(find_dependency("pico-sdk"))
+        os.environ["PATH"] += os.pathsep + str(find_dependency("arm-none-eabi-gcc"))
+        cmd = ' '.join([str(find_dependency("cmake")),
+                        "-B", "build", f"-DFBW_PLATFORM={platform}", "-DCMAKE_BUILD_TYPE=Release", 
+                        f"-DCMAKE_MAKE_PROGRAM={str(find_dependency('ninja'))}", "-GNinja"])
+    elif platform == "esp32":
+        os.environ["IDF_PATH"] = str(find_dependency("ESP-IDF"))
+        cmd = ' '.join([f". $IDF_PATH/export.sh &&", str(find_dependency("cmake")),
+                        "-B", "build", f"-DFBW_PLATFORM={platform}", "-DCMAKE_BUILD_TYPE=Release", 
+                        f"-DCMAKE_MAKE_PROGRAM={str(find_dependency('ninja'))}", "-GNinja"])
     else:
-        platform = int(input("Select platform (1: Pico, 2: ESP32): "))
-        platform = platforms[platform]
-print(f"Building for platform: {platform}")
+        cmd = ' '.join([str(find_dependency("cmake")),
+                        "-B", "build", f"-DFBW_PLATFORM={platform}", "-DCMAKE_BUILD_TYPE=Release", 
+                        f"-DCMAKE_MAKE_PROGRAM={str(find_dependency('ninja'))}", "-GNinja"])
+    # Build step is the same for all platforms
+    return cmd + " && " + " ".join([str(find_dependency("cmake")), "--build", "build", "--parallel"])
 
-# Find which dependencies we need based on the platform
-if platform == "pico" or platform == "pico_w":
-    needed = ["ninja", "cmake", "arm-none-eabi-gcc", "pico-sdk"]
-elif platform == "esp32":
-    needed = ["ninja", "cmake", "ESP-IDF"]
-else:
-    print("Invalid platform")
-    exit(1)
-
-print("Indexing dependencies...")
-# Check what dependencies (if any) are installed and remove them from the list
-for dep in needed.copy():
-    if find_dependency(dep) is not None:
-        print(f"Depencency {dep} found at {find_dependency(dep)}")
-        needed.remove(dep)
-if needed:
-    # Create the deps directory if it doesn't exist
-    if not os.path.exists(rootDir / "build"):
-        os.mkdir("build")
-    if not os.path.exists(rootDir / "build" / "deps"):
-        os.chdir(rootDir / "build")
-        os.mkdir("deps")
-    os.chdir(rootDir / "build" / "deps")
-    print("Need to install: " + ", ".join(needed))
-    for dep in needed:
-        if dep in dependencies:
-            install_dependency(dep)
+def main():
+    platform = None
+    # If the argument to the command is clean, remove the build directory
+    if len(os.sys.argv) > 1 and os.sys.argv[1] == "clean":
+        shutil.rmtree("build", ignore_errors=True)
+        exit(0)
+    # Otherwise, interpret the argument as the platform to build for
+    elif len(os.sys.argv) > 1:
+        platform = os.sys.argv[1]
+    # If no argument is given...
+    if platform == None:
+        # If the cmake cache is present, pull the platform from there
+        if os.path.exists("build/CMakeCache.txt"):
+            with open("build/CMakeCache.txt") as f:
+                for line in f:
+                    if "FBW_PLATFORM" in line:
+                        platform = line.split("=")[1].strip()
+                        break
+        # Otherwise, prompt the user to select a platform
         else:
-            print(f"Dependency {dep} not found in the list of dependencies")
-            exit(1)
-        # Sanity check to make sure we can find the dependency after installing it
-        if not find_dependency(dep):
-            print(f"Failed to install {dep}")
-            exit(1)
-os.chdir(rootDir)
-print("All dependencies installed")
+            for index, platform in enumerate(platforms):
+                print(f"{index + 1}: {platform}")
+            choice = int(input("Select platform: ")) - 1
+            platform = platforms[choice]
+    print(f"-- Building for platform: {platform}")
+    if platform not in platforms:
+        print(f"Invalid platform: {platform}")
+        exit(1)
 
-# Run the build
-if platform == "pico" or platform == "pico_w":
-    os.environ["PICO_SDK_PATH"] = str(find_dependency("pico-sdk"))
-    os.environ["PATH"] += os.pathsep + str(find_dependency("arm-none-eabi-gcc"))
-    cmake_command = ' '.join([str(find_dependency("cmake")),
-                    "-B", "build", f"-DFBW_PLATFORM={platform}", "-DCMAKE_BUILD_TYPE=Release", 
-                    f"-DCMAKE_MAKE_PROGRAM={str(find_dependency('ninja'))}", "-GNinja"])
-elif platform == "esp32":
-    os.environ["IDF_PATH"] = str(find_dependency("ESP-IDF"))
-    cmake_command = ' '.join([f". $IDF_PATH/export.sh &&", str(find_dependency("cmake")),
-                    "-B", "build", f"-DFBW_PLATFORM={platform}", "-DCMAKE_BUILD_TYPE=Release", 
-                    f"-DCMAKE_MAKE_PROGRAM={str(find_dependency('ninja'))}", "-GNinja"])
-cmake_command += " && " + " ".join([str(find_dependency("cmake")), "--build", "build", "--parallel"])
-print("Running CMake command:", cmake_command)
-os.system(cmake_command)
+    # Find which dependencies we need based on the platform
+    needed = platformDependencies[platform].copy()
+    print("-- Indexing dependencies...")
+    # Check what dependencies (if any) are installed and remove them from the list
+    for dep in needed.copy():
+        if find_dependency(dep) is not None:
+            print(f"Depencency {dep} found at {find_dependency(dep)}")
+            needed.remove(dep)
+    if needed:
+        # Create the deps directory if it doesn't exist
+        if not os.path.exists(rootDir / "build"):
+            os.mkdir("build")
+        if not os.path.exists(rootDir / "build" / "deps"):
+            os.chdir(rootDir / "build")
+            os.mkdir("deps")
+        os.chdir(rootDir / "build" / "deps")
+        print("Need to install: " + ", ".join(needed))
+        for dep in needed:
+            if dep in dependencies:
+                install_dependency(dep)
+            else:
+                print(f"Dependency {dep} not found in the list of dependencies")
+                exit(1)
+            # Sanity check to make sure we can find the dependency after installing it
+            if not find_dependency(dep):
+                print(f"Failed to install {dep}")
+                exit(1)
+    os.chdir(rootDir)
+    print("-- All dependencies installed")
+
+    # Generate the command and run the build
+    cmakeCommand = construct_cmake_command(platform)
+    print("-- Running CMake command:", cmakeCommand, "\n\n")
+    os.system(cmakeCommand)
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n\n-- Build interrupted by user")
+        exit(1)
+    except Exception as e:
+        print(f"\n\n-- Build failed: {e}")
+        exit(1)

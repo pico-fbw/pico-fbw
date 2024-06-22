@@ -5,8 +5,7 @@
 
 typedef enum LogType {
     TYPE_NONE,
-    TYPE_LOG,  // Logs are simply printed to the console
-    TYPE_INFO, // Info is logged in RAM and can be read back later, and is additionally displayed on the system's LED/OLED
+    TYPE_INFO, // Printed to the console and displayed on the system's LED/OLED
     TYPE_WARNING,
     TYPE_ERROR,
     TYPE_FATAL, // Fatal errors will halt the program

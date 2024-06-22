@@ -39,6 +39,12 @@ static JSON_Value *create_aahrs_obj() {
         json_object_set_number(obj, "roll", aahrs.roll);
         json_object_set_number(obj, "pitch", aahrs.pitch);
         json_object_set_number(obj, "yaw", aahrs.yaw);
+        json_object_set_number(obj, "roll_rate", aahrs.rollRate);
+        json_object_set_number(obj, "pitch_rate", aahrs.pitchRate);
+        json_object_set_number(obj, "yaw_rate", aahrs.yawRate);
+        json_object_set_number(obj, "accel_x", aahrs.accel[0]);
+        json_object_set_number(obj, "accel_y", aahrs.accel[1]);
+        json_object_set_number(obj, "accel_z", aahrs.accel[2]);
     } else {
         json_object_set_null(obj, "roll");
         json_object_set_null(obj, "pitch");
@@ -80,9 +86,8 @@ static JSON_Value *create_batt_arr() {
     if (!battArr)
         return NULL;
     JSON_Array *arr = json_value_get_array(battArr);
-    for (u32 i = 0; i < ADC_NUM_CHANNELS; i++) {
+    for (u32 i = 0; i < ADC_NUM_CHANNELS; i++)
         json_array_append_number(arr, adc_read_raw(ADC_PINS[i]));
-    }
     return battArr;
 #else
     return json_value_init_array();
@@ -121,7 +126,8 @@ static SensorData parse_args(const char *args) {
 
 // Output (for data="all", note that "batt" may not exist and may have a different length):
 // {
-//  "aahrs":{"roll":number|null,"pitch":number|null,"yaw":number|null},
+//  "aahrs":{"roll":number|null,"pitch":number|null,"yaw":number|null,"roll_rate":number|null,"pitch_rate":number|null,
+//           "yaw_rate":number|null,"accel_x":number|null,"accel_y":number|null,"accel_z":number|null},
 //  "gps":{"lat":number|null,"lng":number|null,"alt":number|null,"speed":number|null,"track":number|null},
 //  "batt":"batt":[number,...]
 // }

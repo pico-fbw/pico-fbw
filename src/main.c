@@ -170,7 +170,7 @@ int main() {
         if (gps.init()) {
             printpre("boot", "GPS ok");
             // We don't set the GPS safe just yet, comms are good but we are still unsure if the data is good
-            log_message(TYPE_LOG, "GPS has no signal.", 5000, 150, false);
+            log_message(TYPE_INFO, "GPS has no signal.", 5000, 150, false);
         } else {
             log_message(TYPE_ERROR, "GPS not found!", 1000, 0, false);
         }

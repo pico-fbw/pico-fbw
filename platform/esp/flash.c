@@ -1,4 +1,8 @@
 /**
+ * This file utilizes code under the MIT License. See "LICENSE" for details.
+ */
+
+/**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the GNU AGPL-3.0
  */

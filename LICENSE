@@ -20,9 +20,9 @@ The following files (and their corresponding Header [.h] files, where applicable
 - lib/pid.c
 - lib/semver.c
 - platform/esp/flash.c
-- platform/pico/flash.c
 - platform/pico/pwm.c
 - platform/pico/pwm.pio
+- platform/pico/wifi/dhcp.c
 - .github/workflows/build.yml
 
 You can find a copy of the License at the following URL:

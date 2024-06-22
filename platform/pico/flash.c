@@ -1,10 +1,4 @@
-/* Copyright (C) 1883 Thomas Edison - All Rights Reserved
- * You may use, distribute and modify this code under the
- * terms of the BSD 3 clause license, which unfortunately
- * won't be written for another century.
- *
- * A little flash file system for the Raspberry Pico
- *
+/**
  * This file utilizes code under the BSD-3-Clause License. See "LICENSE" for details.
  */
 
