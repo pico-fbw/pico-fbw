@@ -67,6 +67,10 @@ static JSON_Value *create_gps_obj() {
         json_object_set_number(obj, "alt", gps.alt);
         json_object_set_number(obj, "speed", gps.speed);
         json_object_set_number(obj, "track", gps.track);
+        json_object_set_number(obj, "pdop", gps.pdop);
+        json_object_set_number(obj, "hdop", gps.hdop);
+        json_object_set_number(obj, "vdop", gps.vdop);
+        json_object_set_number(obj, "sats", gps.sats);
     } else {
         json_object_set_null(obj, "lat");
         json_object_set_null(obj, "lng");
@@ -128,7 +132,8 @@ static SensorData parse_args(const char *args) {
 // {
 //  "aahrs":{"roll":number|null,"pitch":number|null,"yaw":number|null,"roll_rate":number|null,"pitch_rate":number|null,
 //           "yaw_rate":number|null,"accel_x":number|null,"accel_y":number|null,"accel_z":number|null},
-//  "gps":{"lat":number|null,"lng":number|null,"alt":number|null,"speed":number|null,"track":number|null},
+//  "gps":{"lat":number|null,"lng":number|null,"alt":number|null,"speed":number|null,"track":number|null,
+//         "pdop":number|null,"hdop":number|null,"vdop":number|null,"sats":number|null},
 //  "batt":"batt":[number,...]
 // }
 

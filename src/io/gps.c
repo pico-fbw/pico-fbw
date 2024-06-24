@@ -111,6 +111,7 @@ void gps_update() {
                         printfbw(gps, "ERROR: incorrect altitude units!");
                         return;
                     }
+                    gps.sats = gga.satellites_tracked;
                 } else {
                     printfbw(gps, "ERROR: failed parsing $xxGGA sentence");
                 }

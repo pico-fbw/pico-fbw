@@ -23,6 +23,7 @@ typedef struct GPS {
     f32 speed;            // Groundspeed, kts. (Read-only)
     f32 track;            // True (NOT magnetic) heading, 0 to 360 deg. (Read-only)
     f32 pdop, hdop, vdop; // GPS DOP (dilution of precision) measurements for position, horizontal, and vertical (Read-only)
+    int sats;             // Number of satellites in view (Read-only)
     i32 altOffset; // This is a positive value (basically where the GPS is MSL) or possibly zero if no calibration has been
                    // performed. (Read-only)
     bool altOffsetCalibrated; // (Read-only)
