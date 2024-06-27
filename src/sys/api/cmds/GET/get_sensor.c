@@ -49,6 +49,12 @@ static JSON_Value *create_aahrs_obj() {
         json_object_set_null(obj, "roll");
         json_object_set_null(obj, "pitch");
         json_object_set_null(obj, "yaw");
+        json_object_set_null(obj, "roll_rate");
+        json_object_set_null(obj, "pitch_rate");
+        json_object_set_null(obj, "yaw_rate");
+        json_object_set_null(obj, "accel_x");
+        json_object_set_null(obj, "accel_y");
+        json_object_set_null(obj, "accel_z");
     }
     return aahrsObj;
 }
@@ -77,6 +83,10 @@ static JSON_Value *create_gps_obj() {
         json_object_set_null(obj, "alt");
         json_object_set_null(obj, "speed");
         json_object_set_null(obj, "track");
+        json_object_set_null(obj, "pdop");
+        json_object_set_null(obj, "hdop");
+        json_object_set_null(obj, "vdop");
+        json_object_set_null(obj, "sats");
     }
     return gpsObj;
 }

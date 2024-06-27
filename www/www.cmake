@@ -7,7 +7,7 @@ message("Configuring web interface build")
 
 # Ensure that LFS_ variables are defined
 if (NOT DEFINED LFS_BLOCK_SIZE OR NOT DEFINED LFS_PROG_SIZE OR NOT DEFINED LFS_IMG_SIZE)
-    message("littlefs configuration not defined, skipping web interface build")
+    message(WARNING "littlefs configuration not defined, skipping web interface build")
     set(FBW_BUILD_WWW OFF CACHE BOOL "Build the web interface" FORCE)
     return()
 endif()
@@ -36,33 +36,23 @@ if (NOT YARN_EXECUTABLE)
     endif()
 endif()
 
-# Make sure mklittlefs exists
-set(MKLITTLEFS_SRC ${CMAKE_SOURCE_DIR}/utils/mklittlefs)
-if (NOT EXISTS ${MKLITTLEFS_SRC})
-    # mklittlefs doesn't exist, try cloning submodules?
-    execute_process(COMMAND git submodule update --init --recursive --progress
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
-    if (NOT EXISTS ${MKLITTLEFS_SRC})
-        message(FATAL_ERROR "mklittlefs could not be downloaded!")
-    endif()
-endif()
-message("mklittlefs found at ${MKLITTLEFS_SRC}")
-include(ExternalProject)
-
 # Add mklittlefs as an external project so it will be built to be used later
+include(ExternalProject)
+set(MKLITTLEFS_DIR ${CMAKE_BINARY_DIR}/mklittlefs)
 if (WIN32)
     set(MKLITTLEFS_EXE_NAME mklittlefs.exe)
 else()
     set(MKLITTLEFS_EXE_NAME mklittlefs)
 endif()
-set(MKLITTLEFS_BIN ${CMAKE_BINARY_DIR}/mklittlefs)
-set(MKLITTLEFS_EXE ${MKLITTLEFS_BIN}/${MKLITTLEFS_EXE_NAME})
-if (NOT EXISTS ${MKLITTLEFS_BIN})
-    file(MAKE_DIRECTORY ${MKLITTLEFS_BIN})
-endif()
+set(MKLITTLEFS_EXE ${MKLITTLEFS_DIR}/${MKLITTLEFS_EXE_NAME})
 ExternalProject_Add(mklittlefs
-    SOURCE_DIR ${CMAKE_SOURCE_DIR}/utils # Not MKLITTLEFS_SRC because it doesn't have a CMakeLists.txt
-    BINARY_DIR ${CMAKE_BINARY_DIR}/mklittlefs
+    GIT_REPOSITORY https://github.com/earlephilhower/mklittlefs.git
+        GIT_TAG 4.0.0
+        GIT_SUBMODULES_RECURSE TRUE
+    SOURCE_DIR ${MKLITTLEFS_DIR}
+        BUILD_IN_SOURCE TRUE
+    # mklittlefs is not a CMake project, so we need to copy one in
+    PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/utils/mklittlefs/CMakeLists.txt <SOURCE_DIR>/CMakeLists.txt
     INSTALL_COMMAND ""
     COMMENT "Building mklittlefs"
 )
@@ -77,14 +67,15 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_BINARY_DIR}/generated/www/built
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/www
     DEPENDS ${WWW_FILES}
+    USES_TERMINAL
     COMMENT "Building the web interface"
 )
 # This target uses the built mklittlefs binary and the built assets to create a littlefs image that will be included
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/generated/www/lfs.bin
-    COMMAND ${CMAKE_COMMAND} -E make_directory generated/www
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/generated/www
     # These LFS_ variables are defined by each platform in their respective .cmake files
-    COMMAND ${MKLITTLEFS_EXE} -c www -b ${LFS_BLOCK_SIZE} -p ${LFS_PROG_SIZE} -s ${LFS_IMG_SIZE} generated/www/lfs.bin
+    COMMAND ${MKLITTLEFS_EXE} -d 5 -c www -b ${LFS_BLOCK_SIZE} -p ${LFS_PROG_SIZE} -s ${LFS_IMG_SIZE} generated/www/lfs.bin
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     # Similarly, this target depends on that file we created earlier, so if the web interface is rebuilt, this will be too
     DEPENDS ${CMAKE_BINARY_DIR}/generated/www/built
