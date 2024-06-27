@@ -15,7 +15,7 @@ const configData = {
     sections: [
         {
             name: "General",
-            keys: [0, 1, 20, 50, 50, 1, 0, 1],
+            keys: [2, 1, 20, 50, 50, 1, 0, 0, 0],
         },
         {
             name: "Control",

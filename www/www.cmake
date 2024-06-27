@@ -39,7 +39,7 @@ endif()
 # Add mklittlefs as an external project so it will be built to be used later
 include(ExternalProject)
 set(MKLITTLEFS_DIR ${CMAKE_BINARY_DIR}/mklittlefs)
-if (WIN32)
+if (CMAKE_HOST_WIN32)
     set(MKLITTLEFS_EXE_NAME mklittlefs.exe)
 else()
     set(MKLITTLEFS_EXE_NAME mklittlefs)
@@ -75,10 +75,11 @@ add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/generated/www/lfs.bin
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/generated/www
     # These LFS_ variables are defined by each platform in their respective .cmake files
-    COMMAND ${MKLITTLEFS_EXE} -d 5 -c www -b ${LFS_BLOCK_SIZE} -p ${LFS_PROG_SIZE} -s ${LFS_IMG_SIZE} generated/www/lfs.bin
+    COMMAND ${MKLITTLEFS_EXE} -d 1 -c www -b ${LFS_BLOCK_SIZE} -p ${LFS_PROG_SIZE} -s ${LFS_IMG_SIZE} generated/www/lfs.bin
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     # Similarly, this target depends on that file we created earlier, so if the web interface is rebuilt, this will be too
     DEPENDS ${CMAKE_BINARY_DIR}/generated/www/built
+    USES_TERMINAL
     COMMENT "Creating littlefs image of web interface"
 )
 

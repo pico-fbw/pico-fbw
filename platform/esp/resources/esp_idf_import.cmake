@@ -28,7 +28,7 @@ endif()
 find_program(TOOLS_IN_PATH xtensa-esp-elf-gcc PATH ENV{PATH})
 if (NOT TOOLS_IN_PATH)
     set(EXPORT_COMMAND_NAME "export.sh")
-    if (WIN32)
+    if (CMAKE_HOST_WIN32)
         set(EXPORT_COMMAND_NAME "export.bat")
     endif()
     message(

@@ -30,6 +30,7 @@
 static LogEntry *logs = NULL;
 static u32 numLogs = 0;
 static LogEntry *lastEntry = NULL, *lastDisplayedEntry = NULL;
+static CallbackData *queueCallback = NULL;
 
 /* --- LED --- */
 
@@ -201,7 +202,9 @@ void log_message(LogType type, const char *msg, i32 code, u32 pulse_ms, bool for
             } else {
                 // The system isn't booted and the type isn't severe enough to warrant displaying it at the moment,
                 // so we'll check back every 500ms if the system is booted and display if it is
-                callback_in_ms(500, process_queue, (void *)entry);
+                if (queueCallback)
+                    cancel_callback(queueCallback);
+                queueCallback =  callback_in_ms(500, process_queue, (void *)entry);
             }
         }
     }

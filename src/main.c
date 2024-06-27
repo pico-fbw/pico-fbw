@@ -176,7 +176,7 @@ int main() {
         }
     }
 
-    // Platform-defined feature setup
+    // Platform-specific feature setup
 
 #if PLATFORM_SUPPORTS_WIFI
     boot_set_progress(85, "Initializing Wi-Fi");
