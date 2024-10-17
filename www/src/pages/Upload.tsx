@@ -100,7 +100,7 @@ export default function Upload() {
                     value={flightplan}
                     onInput={e => setFlightplan(e.currentTarget.value)}
                     // Disable native spellcheck and grammarly for user convenience
-                    spellCheck={false}
+                    spellcheck={false}
                     data-gramm="false"
                     data-gramm_editor="false"
                     data-enable-grammarly="false"

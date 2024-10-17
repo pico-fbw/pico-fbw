@@ -58,7 +58,7 @@ jobs:
 
     - name: Prepare (pico)
       if: matrix.PLATFORM == 'pico' || matrix.PLATFORM == 'pico_w'
-      uses: Fortinbra/RaspberryPiPicoBuild@v3
+      uses: Fortinbra/RaspberryPiPicoBuild@v4
     
     - name: Prepare (esp)
       if: matrix.PLATFORM == 'esp32'

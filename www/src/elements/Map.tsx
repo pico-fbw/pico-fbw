@@ -272,8 +272,12 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
         }).addTo(map.current);
 
         map.current.on("click", handleMapClick);
-        map.current.on("dragstart" || "mousedown", () => setIsFocused(true));
-        map.current.on("dragend" || "mouseup", () => {
+        map.current.on("dragstart", () => setIsFocused(true));
+        map.current.on("mousedown", () => setIsFocused(true));
+        map.current.on("dragend", () => {
+            setTimeout(() => setIsFocused(false), 100);
+        });
+        map.current.on("mouseup", () => {
             setTimeout(() => setIsFocused(false), 100);
         });
         const index = Number(settings.get("defaultMap"));

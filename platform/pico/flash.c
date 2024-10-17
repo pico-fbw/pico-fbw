@@ -61,7 +61,7 @@ static int flash_erase(const struct lfs_config *c, lfs_block_t block) {
 }
 
 static int flash_sync(const struct lfs_config *c) {
-    // Cache is automatically flushed in flash_range_program() so nothing to do here
+    flash_flush_cache();
     return LFS_ERR_OK;
     (void)c; // Supress unused parameter warning
 }
