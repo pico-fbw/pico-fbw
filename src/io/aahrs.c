@@ -19,6 +19,8 @@
 
 #include "aahrs.h"
 
+// https://ardupilot.org/copter/docs/deadreckoning-failsafe.html
+
 static IMU *imu;
 static Madgwick *filter;
 

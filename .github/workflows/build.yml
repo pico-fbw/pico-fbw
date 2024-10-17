@@ -17,7 +17,7 @@ env:
   # Debug build will enable more useful warnings
   BUILD_TYPE: Debug
   PICO_SDK_PATH: ${{github.workspace}}/pico-sdk
-  ESP_IDF_VERSION: v5.2.1
+  ESP_IDF_VERSION: v5.3.1
 
 jobs:
   embedded:
@@ -36,12 +36,15 @@ jobs:
     - name: Set up C build environment
       uses: seanmiddleditch/gha-setup-ninja@v4
 
+    - name: Enable Corepack
+      run: corepack enable
+
     - name: Set up web build environment
-      uses: actions/setup-node@v4.0.2
+      uses: actions/setup-node@v4.0.4
       with:
-        node-version: '20.x'
+        node-version: '22'
         cache: 'npm'
-        cache-dependency-path: www/yarn.lock
+        cache-dependency-path: '${{github.workspace}}/www/yarn.lock'
 
     - name: Check cache (esp)
       if: matrix.PLATFORM == 'esp32'

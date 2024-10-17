@@ -13,27 +13,36 @@ if (NOT DEFINED LFS_BLOCK_SIZE OR NOT DEFINED LFS_PROG_SIZE OR NOT DEFINED LFS_I
 endif()
 
 # Check to ensure npm and yarn are installed
-find_program(NPM_EXECUTABLE npm)
-if (NPM_EXECUTABLE)
-    message("npm found at ${NPM_EXECUTABLE}")
-endif()
-find_program(YARN_EXECUTABLE yarn)
-if (YARN_EXECUTABLE)
-    message("yarn found at ${YARN_EXECUTABLE}")
+if (EXISTS "$ENV{NVM_DIR}/nvm.sh")
+    message("nvm detected, using it to find npm and yarn")
+    set(USING_NVM ON)
+    execute_process(
+        COMMAND bash -c "source $ENV{NVM_DIR}/nvm.sh && which npm"
+        OUTPUT_VARIABLE NPM_EXE
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    execute_process(
+        COMMAND bash -c "source $ENV{NVM_DIR}/nvm.sh && which yarn"
+        OUTPUT_VARIABLE YARN_EXE
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+else()
+    # Not using nvm, leave it to cmake to find npm and yarn
+    find_program(NPM_EXE npm)
+    find_program(YARN_EXE yarn)
 endif()
 
-if (NOT NPM_EXECUTABLE)
+if (NPM_EXE)
+    message("npm found at ${NPM_EXE}")
+else()
     message(FATAL_ERROR "npm was not found, but is required to build the web interface!
     npm can be installed from https://docs.npmjs.com/downloading-and-installing-node-js-and-npm.")
 endif()
-if (NOT YARN_EXECUTABLE)
-    # No yarn but we do have npm which can be used to install install yarn
-    message("yarn not found, trying to install now...")
-    execute_process(COMMAND ${NPM_EXECUTABLE} install -g yarn)
-    find_program(YARN_EXECUTABLE yarn)
-    if (NOT YARN_EXECUTABLE)
-        message(FATAL_ERROR "yarn could not be installed!")
-    endif()
+if (YARN_EXE)
+    message("yarn found at ${YARN_EXE}")
+else()
+    message(FATAL_ERROR "yarn was not found, but is required to build the web interface!
+    yarn can be installed from https://yarnpkg.com/getting-started/install.")
 endif()
 
 # Add mklittlefs as an external project so it will be built to be used later
@@ -52,28 +61,43 @@ ExternalProject_Add(mklittlefs
     SOURCE_DIR ${MKLITTLEFS_DIR}
         BUILD_IN_SOURCE TRUE
     # mklittlefs is not a CMake project, so we need to copy one in
-    PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/utils/mklittlefs/CMakeLists.txt <SOURCE_DIR>/CMakeLists.txt
+    PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/utils/mklittlefs/CMakeLists.txt <SOURCE_DIR>/CMakeLists.txt
     INSTALL_COMMAND ""
     COMMENT "Building mklittlefs"
 )
 
 # Add a target to build the web interface
 # It depends on all files in the www directory, so it will only rebuild if any of those files change
-file(GLOB_RECURSE WWW_FILES ${CMAKE_SOURCE_DIR}/www/*)
-add_custom_command(
-    # This command will output an empty file that can be used to check if the web interface has been built
-    OUTPUT ${CMAKE_BINARY_DIR}/generated/www/built
-    COMMAND yarn install && yarn build
-    COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_BINARY_DIR}/generated/www/built
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/www
-    DEPENDS ${WWW_FILES}
-    USES_TERMINAL
-    COMMENT "Building the web interface"
-)
+file(GLOB_RECURSE WWW_FILES ${PROJECT_SOURCE_DIR}/www/*)
+if (NOT CMAKE_HOST_WIN32)
+    # Invoke our custom wrapper script to ensure that nvm is sourced
+    add_custom_command(
+        # This command will also output an empty file whose modify timestamp can be used to check if/when the web interface has been built
+        OUTPUT ${CMAKE_BINARY_DIR}/generated/www/built
+        COMMAND ${PROJECT_SOURCE_DIR}/www/www.sh ${PROJECT_SOURCE_DIR}/www ${YARN_EXE}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/generated/www
+        COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_BINARY_DIR}/generated/www/built
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/www
+        DEPENDS ${WWW_FILES}
+        USES_TERMINAL
+        COMMENT "Building the web interface"
+    )
+else()
+    # Because cmake is weird, no, there is (probably) not a better way than copying this function twice...sigh
+    add_custom_command(
+        OUTPUT ${CMAKE_BINARY_DIR}/generated/www/built
+        COMMAND ${YARN_EXE} install && ${YARN_EXE} build # nvm doesn't exist on windows so just attempt to run directly
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/generated/www
+        COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_BINARY_DIR}/generated/www/built
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/www
+        DEPENDS ${WWW_FILES}
+        USES_TERMINAL
+        COMMENT "Building the web interface"
+    )
+endif()
 # This target uses the built mklittlefs binary and the built assets to create a littlefs image that will be included
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/generated/www/lfs.bin
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/generated/www
     # These LFS_ variables are defined by each platform in their respective .cmake files
     COMMAND ${MKLITTLEFS_EXE} -d 1 -c www -b ${LFS_BLOCK_SIZE} -p ${LFS_PROG_SIZE} -s ${LFS_IMG_SIZE} generated/www/lfs.bin
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
@@ -83,6 +107,6 @@ add_custom_command(
     COMMENT "Creating littlefs image of web interface"
 )
 
-add_custom_target(www ALL DEPENDS ${CMAKE_BINARY_DIR}/generated/www/built)
-add_custom_target(wwwfs ALL DEPENDS ${CMAKE_BINARY_DIR}/generated/www/lfs.bin)
+add_custom_target(www DEPENDS ${CMAKE_BINARY_DIR}/generated/www/built)
+add_custom_target(wwwfs DEPENDS ${CMAKE_BINARY_DIR}/generated/www/lfs.bin)
 add_dependencies(${PROJECT_NAME} wwwfs)
