@@ -1,5 +1,3 @@
-# TODO: update to pico sdk 2 (any changes needed?)
-
 # Define the platform library and its files
 add_library(platform_pico
     adc.c
@@ -25,7 +23,7 @@ target_link_libraries(platform_pico
     pico_base_headers
     pico_bootrom
     pico_platform
-    pico_runtime # For libc
+    pico_clib_interface
     pico_stdio
     pico_stdio_uart
     pico_stdio_usb

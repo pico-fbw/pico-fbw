@@ -1,13 +1,13 @@
 # See platform/example/resources/example.cmake for comments regarding the structure of this file
 add_definitions(-DFBW_PLATFORM_PICO)
 
+# Forward the user-set platform (Pico, Pico 2, Pico W, etc.) to the pico-sdk
+set(PICO_BOARD ${FBW_PLATFORM})
 # Import the pico-sdk
 include(${CMAKE_CURRENT_LIST_DIR}/pico_sdk_import.cmake)
 # Set up some CMake cross-compilation variables
 set(CMAKE_SYSTEM_PROCESSOR arm)
 set(CMAKE_OSX_ARCHITECTURES "")
-# Forward the user-set platform (normal Pico or W) to the pico-sdk
-set(PICO_BOARD ${FBW_PLATFORM})
 # The pico-sdk does require some assembly and C++ features so we need to add them to the project
 project(${PROJECT_NAME} LANGUAGES ASM CXX)
 set(CMAKE_CXX_STANDARD 17)
