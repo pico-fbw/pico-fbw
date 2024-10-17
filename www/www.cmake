@@ -95,14 +95,20 @@ else()
         COMMENT "Building the web interface"
     )
 endif()
+
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(MKLITTLEFS_DEBUG_LEVEL 0)
+else()
+    set(MKLITTLEFS_DEBUG_LEVEL 1)
+endif()
 # This target uses the built mklittlefs binary and the built assets to create a littlefs image that will be included
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/generated/www/lfs.bin
     # These LFS_ variables are defined by each platform in their respective .cmake files
-    COMMAND ${MKLITTLEFS_EXE} -d 1 -c www -b ${LFS_BLOCK_SIZE} -p ${LFS_PROG_SIZE} -s ${LFS_IMG_SIZE} generated/www/lfs.bin
+    COMMAND ${MKLITTLEFS_EXE} -d ${MKLITTLEFS_DEBUG_LEVEL} -c www -b ${LFS_BLOCK_SIZE} -p ${LFS_PROG_SIZE} -s ${LFS_IMG_SIZE} generated/www/lfs.bin
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     # Similarly, this target depends on that file we created earlier, so if the web interface is rebuilt, this will be too
-    DEPENDS ${CMAKE_BINARY_DIR}/generated/www/built
+    DEPENDS ${CMAKE_BINARY_DIR}/generated/www/built mklittlefs
     USES_TERMINAL
     COMMENT "Creating littlefs image of web interface"
 )

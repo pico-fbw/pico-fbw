@@ -20,10 +20,12 @@ pico_generate_pio_header(platform_pico ${CMAKE_CURRENT_LIST_DIR}/pwm.pio)
 
 # Link the platform library to the pico-sdk libraries
 target_link_libraries(platform_pico
+    boot_picobin_headers
     pico_base_headers
     pico_bootrom
-    pico_platform
     pico_clib_interface
+    pico_platform
+    pico_runtime
     pico_stdio
     pico_stdio_uart
     pico_stdio_usb
