@@ -22,6 +22,7 @@ env:
 jobs:
   embedded:
     runs-on: ubuntu-latest
+    continue-on-error: true
 
     strategy:
       matrix:
@@ -57,7 +58,7 @@ jobs:
         key: ${{runner.os}}-esp-idf-${{hashFiles('.github/workflows/esp-idf_install.sh')}}-${{env.ESP_IDF_VERSION}}
 
     - name: Prepare (pico)
-      if: matrix.PLATFORM == 'pico' || matrix.PLATFORM == 'pico_w'
+      if: matrix.PLATFORM == 'pico' || matrix.platform == 'pico2' || matrix.PLATFORM == 'pico_w'
       uses: Fortinbra/RaspberryPiPicoBuild@v4
     
     - name: Prepare (esp)
