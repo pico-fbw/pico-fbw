@@ -26,7 +26,7 @@ typedef alarm_id_t __callback_id_t;
 #define PIN_GPS_RX 20
 
 // Status LED
-#ifdef RASPBERRYPI_PICO
+#ifdef PICO_DEFAULT_LED_PIN
     #define PIN_LED PICO_DEFAULT_LED_PIN
 #endif
 
@@ -62,6 +62,11 @@ static const u32 ADC_PINS[] = {PIN_ADC_0, PIN_ADC_1, PIN_ADC_2, PIN_ADC_3};
 
 // Wi-Fi
 #define PLATFORM_SUPPORTS_WIFI 0
+
+#ifdef RASPBERRYPI_PICO2
+    #undef PLATFORM_NAME
+    #define PLATFORM_NAME "Raspberry Pi Pico 2"
+#endif
 
 #ifdef RASPBERRYPI_PICO_W
     // To access GPIO on the CYW43 chip, add CYW43_GPIO_OFFSET to the GPIO number and use the typical GPIO functions

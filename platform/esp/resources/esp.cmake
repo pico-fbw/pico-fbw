@@ -24,7 +24,7 @@ function(setup_before_subdirs)
         # For debug builds we use a different set of defaults (namely just with more logging enabled)
         set(SDKCONFIG_DEFAULTS ${SDKCONFIG_DEFAULTS}.debug)
     endif()
-    set(ESP_PARTTABLE_PATH ${CMAKE_SOURCE_DIR}/platform/esp/resources/partitions_no-ota.csv)
+    set(ESP_PARTTABLE_PATH ${CMAKE_SOURCE_DIR}/platform/esp/resources/partitions.csv)
     message("Targeting ${ESP_FLASH_SIZE} flash esp models")
     # Calculate individual flash size options for sdkconfig
     set(ESP_FLASH_SIZE_2MB "n")

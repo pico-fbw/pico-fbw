@@ -31,7 +31,7 @@
 
 int main() {
     boot_begin();
-    print("\nhello and welcome to pico-fbw v%s!\nrunning on \"%s\" v%s", PICO_FBW_VERSION, PLATFORM_NAME, PLATFORM_VERSION);
+    print("\nhello and welcome to pico-fbw v%s!\nrunning on \"%s\", HAL v%s", PICO_FBW_VERSION, PLATFORM_NAME, PLATFORM_VERSION);
 
     // Mount filesystem and load config
     boot_set_progress(0, "Mounting filesystem");

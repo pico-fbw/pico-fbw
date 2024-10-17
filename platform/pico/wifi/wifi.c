@@ -36,7 +36,7 @@ bool wifi_setup(const char *ssid, const char *pass) {
         return false;
     if (pass && (strlen(pass) < WIFI_PASS_MIN_LEN || strlen(pass) > WIFI_PASS_MAX_LEN))
         return false;
-    cyw43_arch_enable_ap_mode(ssid, pass, pass ? CYW43_AUTH_WPA2_AES_PSK : CYW43_AUTH_OPEN);
+    cyw43_arch_enable_ap_mode(ssid, pass, pass ? CYW43_AUTH_WPA3_WPA2_AES_PSK : CYW43_AUTH_OPEN);
     // Gateway will use the IP 192.168.4.1, with a netmask of 255.255.255.0
     IP4_ADDR(ip_2_ip4(&gateway), 192, 168, 4, 1);
     IP4_ADDR(ip_2_ip4(&netmask), 255, 255, 255, 0);

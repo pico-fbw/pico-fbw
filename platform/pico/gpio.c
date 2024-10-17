@@ -5,17 +5,19 @@
 
 #include "pico/config.h"
 
-#if defined(RASPBERRYPI_PICO)
+#if defined(RASPBERRYPI_PICO) || defined(RASPBERRYPI_PICO2)
     #include "hardware/gpio.h"
 #elif defined(RASPBERRYPI_PICO_W)
     #include <stdio.h>
     #include "pico/cyw43_arch.h"
 char buf[1];
 #else
-    #warning "Unsupported Pico variant, GPIO may not work as expected."
+    // Unidentified rp2 board, does it have gpio.h we can fall back to?
     #if __has_include("hardware/gpio.h")
         #include "hardware/gpio.h"
         #define RASPBERRYPI_PICO
+    #else
+        #warning "Unsupported Pico variant, GPIO may not work as expected."
     #endif
 #endif
 
