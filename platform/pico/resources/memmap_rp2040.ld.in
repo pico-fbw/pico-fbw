@@ -1,4 +1,4 @@
-/* Derived from <PICO_SDK_PATH>/src/rp2_common/pico_standard_link/memmap_default.ld */
+/* Derived from <PICO_SDK_PATH>/src/rp2_common/pico_crt0/rp2040/memmap_default.ld */
 
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
@@ -6,19 +6,19 @@
  */
 
 /* All comments, except those outlining additions to this file, have been removed.
-Please see the original file for more details on how/why this file works. */
+Please see the original file for more details. */
 
 MEMORY
 {
     /* Memory map has been modified from the pico-sdk's original so the the littlefs blob can be linked in.
-    Instead of one 2MB section of flash, we have a smaller 1790K section of flash, then a 256K section
+    Instead of one section of flash, we have a smaller section of flash (normal size - 256K), then a 256K section
     where the prebuilt littlefs image will be linked in.
-    You may notice that there is 256K of unaddressed space between LFS and RAM; this is for a secondary filesystem
+    There is also 256K of unaddressed space between LFS and RAM; this is for a secondary filesystem
     but one that is managed by pico-fbw. Nothing should be at that address space, otherwise important data
     such as config and calibration would be removed when trying to flash an update binary. */
 
-    FLASH(rx) : ORIGIN = 0x10000000, LENGTH = 1536k
-    LFS(rx) : ORIGIN = 0x10180000, LENGTH = 256k
+    FLASH(rx) : ORIGIN = 0x10000000, LENGTH = @MEMMAP_FLASH_SIZE@
+    LFS(rx) : ORIGIN = @MEMMAP_LFS_ORIGIN@, LENGTH = 256k
     RAM(rwx) : ORIGIN =  0x20000000, LENGTH = 256k
     SCRATCH_X(rwx) : ORIGIN = 0x20040000, LENGTH = 4k
     SCRATCH_Y(rwx) : ORIGIN = 0x20041000, LENGTH = 4k
@@ -46,6 +46,8 @@ SECTIONS
         KEEP (*(.vectors))
         KEEP (*(.binary_info_header))
         __binary_info_header_end = .;
+        KEEP (*(.embedded_block))
+        __embedded_block_end = .;
         KEEP (*(.reset))
         *(.init)
         *(EXCLUDE_FILE(*libgcc.a: *libc.a:*lib_a-mem*.o *libm.a:) .text*)
@@ -61,6 +63,24 @@ SECTIONS
         *(SORT(.dtors.*))
         *(.dtors)
 
+        . = ALIGN(4);
+        PROVIDE_HIDDEN (__preinit_array_start = .);
+        KEEP(*(SORT(.preinit_array.*)))
+        KEEP(*(.preinit_array))
+        PROVIDE_HIDDEN (__preinit_array_end = .);
+
+        . = ALIGN(4);
+        PROVIDE_HIDDEN (__init_array_start = .);
+        KEEP(*(SORT(.init_array.*)))
+        KEEP(*(.init_array))
+        PROVIDE_HIDDEN (__init_array_end = .);
+
+        . = ALIGN(4);
+        PROVIDE_HIDDEN (__fini_array_start = .);
+        *(SORT(.fini_array.*))
+        *(.fini_array)
+        PROVIDE_HIDDEN (__fini_array_end = .);
+
         *(.eh_frame*)
         . = ALIGN(4);
     } > FLASH
@@ -72,7 +92,7 @@ SECTIONS
         . = ALIGN(4);
     } > FLASH
 
-    /* Here is our where the prebuilt littlefs binary data goes. */
+    /* Here is where the prebuilt littlefs binary data goes. */
     . = ALIGN(4);
     .lfs : {
         __lfs_start = .;
@@ -103,10 +123,13 @@ SECTIONS
     __binary_info_end = .;
     . = ALIGN(4);
 
-    __etext = .;
-
-   .ram_vector_table (COPY): {
+    .ram_vector_table (NOLOAD): {
         *(.ram_vector_table)
+    } > RAM
+
+    .uninitialized_data (NOLOAD): {
+        . = ALIGN(4);
+        *(.uninitialized_data*)
     } > RAM
 
     .data : {
@@ -131,31 +154,46 @@ SECTIONS
         PROVIDE_HIDDEN (__mutex_array_end = .);
 
         . = ALIGN(4);
-        PROVIDE_HIDDEN (__preinit_array_start = .);
-        KEEP(*(SORT(.preinit_array.*)))
-        KEEP(*(.preinit_array))
-        PROVIDE_HIDDEN (__preinit_array_end = .);
-
-        . = ALIGN(4);
-        PROVIDE_HIDDEN (__init_array_start = .);
-        KEEP(*(SORT(.init_array.*)))
-        KEEP(*(.init_array))
-        PROVIDE_HIDDEN (__init_array_end = .);
-
-        . = ALIGN(4);
-        PROVIDE_HIDDEN (__fini_array_start = .);
-        *(SORT(.fini_array.*))
-        *(.fini_array)
-        PROVIDE_HIDDEN (__fini_array_end = .);
-
         *(.jcr)
         . = ALIGN(4);
-        __data_end__ = .;
     } > RAM AT> FLASH
 
-    .uninitialized_data (COPY): {
+    .tdata : {
         . = ALIGN(4);
-        *(.uninitialized_data*)
+		*(.tdata .tdata.* .gnu.linkonce.td.*)
+        __tdata_end = .;
+    } > RAM AT> FLASH
+    PROVIDE(__data_end__ = .);
+
+    __etext = LOADADDR(.data);
+
+    .tbss (NOLOAD) : {
+        . = ALIGN(4);
+        __bss_start__ = .;
+        __tls_base = .;
+        *(.tbss .tbss.* .gnu.linkonce.tb.*)
+        *(.tcommon)
+
+        __tls_end = .;
+    } > RAM
+
+    .bss (NOLOAD) : {
+        . = ALIGN(4);
+        __tbss_end = .;
+
+        *(SORT_BY_ALIGNMENT(SORT_BY_NAME(.bss*)))
+        *(COMMON)
+        . = ALIGN(4);
+        __bss_end__ = .;
+    } > RAM
+
+    .heap (NOLOAD):
+    {
+        __end__ = .;
+        end = __end__;
+        KEEP(*(.heap*))
+        . = ORIGIN(RAM) + LENGTH(RAM);
+        __HeapLimit = .;
     } > RAM
 
     .scratch_x : {
@@ -174,34 +212,18 @@ SECTIONS
     } > SCRATCH_Y AT > FLASH
     __scratch_y_source__ = LOADADDR(.scratch_y);
 
-    .bss  : {
-        . = ALIGN(4);
-        __bss_start__ = .;
-        *(SORT_BY_ALIGNMENT(SORT_BY_NAME(.bss*)))
-        *(COMMON)
-        . = ALIGN(4);
-        __bss_end__ = .;
-    } > RAM
-
-    .heap (COPY):
-    {
-        __end__ = .;
-        end = __end__;
-        *(.heap*)
-        __HeapLimit = .;
-    } > RAM
-
-    .stack1_dummy (COPY):
+    .stack1_dummy (NOLOAD):
     {
         *(.stack1*)
     } > SCRATCH_X
-    .stack_dummy (COPY):
+    .stack_dummy (NOLOAD):
     {
-        *(.stack*)
+        KEEP(*(.stack*))
     } > SCRATCH_Y
 
     .flash_end : {
-        __flash_binary_end = .;
+        KEEP(*(.embedded_end_block*))
+        PROVIDE(__flash_binary_end = .);
     } > FLASH
 
     __StackLimit = ORIGIN(RAM) + LENGTH(RAM);
@@ -210,6 +232,16 @@ SECTIONS
     __StackOneBottom = __StackOneTop - SIZEOF(.stack1_dummy);
     __StackBottom = __StackTop - SIZEOF(.stack_dummy);
     PROVIDE(__stack = __StackTop);
+
+    PROVIDE (__heap_start = __end__);
+    PROVIDE (__heap_end = __HeapLimit);
+    PROVIDE( __tls_align = MAX(ALIGNOF(.tdata), ALIGNOF(.tbss)) );
+    PROVIDE( __tls_size_align = (__tls_size + __tls_align - 1) & ~(__tls_align - 1));
+    PROVIDE( __arm32_tls_tcb_offset = MAX(8, __tls_align) );
+
+    PROVIDE (_end = __end__);
+    PROVIDE (__llvm_libc_heap_limit = __HeapLimit);
+
     ASSERT(__StackLimit >= __HeapLimit, "region RAM overflowed")
 
     ASSERT( __binary_info_header_end - __logical_binary_start <= 256, "Binary info must be in first 256 bytes of the binary")

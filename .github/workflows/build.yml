@@ -25,7 +25,7 @@ jobs:
 
     strategy:
       matrix:
-        PLATFORM: [ esp32, pico, pico_w ]
+        PLATFORM: [ esp32, pico, pico2, pico_w ]
 
     steps:
     - name: Checkout pico-fbw

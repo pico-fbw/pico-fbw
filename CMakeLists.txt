@@ -11,9 +11,11 @@ if (NOT DEFINED FBW_PLATFORM)
 endif()
 set(FBW_PLATFORM "host" CACHE STRING "Platform to build pico-fbw for")
 # Special cases
-if (FBW_PLATFORM STREQUAL "pico_w")
+set(PICO_PLATFORMS "pico" "pico2" "pico_w")
+set(ESP_PLATFORMS "esp32")
+if (FBW_PLATFORM IN_LIST PICO_PLATFORMS)
     set(PLATFORM_DIR "pico")
-elseif (FBW_PLATFORM STREQUAL "esp32")
+elseif (FBW_PLATFORM IN_LIST ESP_PLATFORMS)
     set(PLATFORM_DIR "esp")
 else()
     # Default to the platform name as its directory

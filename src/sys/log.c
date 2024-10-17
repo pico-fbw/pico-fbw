@@ -196,7 +196,7 @@ void log_message(LogType type, const char *msg, i32 code, u32 pulse_ms, bool for
     // Display the entry if: the error is more severe than the last,
     // there was a code given, the type is severe enough, it was forced, or of the same type (but newer)
     if (type >= TYPE_INFO && code > -1) {
-        if (force || (lastEntry && (type >= lastEntry->type && code <= lastEntry->code))) {
+        if (force || (lastEntry && (type >= lastEntry->type || code <= lastEntry->code))) {
             if (boot_is_booted() || force || type == TYPE_FATAL || type == TYPE_INFO) {
                 display_log(entry);
             } else {
@@ -204,7 +204,7 @@ void log_message(LogType type, const char *msg, i32 code, u32 pulse_ms, bool for
                 // so we'll check back every 500ms if the system is booted and display if it is
                 if (queueCallback)
                     cancel_callback(queueCallback);
-                queueCallback =  callback_in_ms(500, process_queue, (void *)entry);
+                queueCallback = callback_in_ms(500, process_queue, (void *)entry);
             }
         }
     }

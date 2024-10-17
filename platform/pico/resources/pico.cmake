@@ -45,6 +45,16 @@ function(setup_after_subdirs)
             DEPENDS ${WWW_FILES}
         )
     endif()
+    # Calculate and generate the custom memory map linker script
+    # See memmap.ld.in for more information
+    math(EXPR MEMMAP_FLASH_SIZE "${PICO_FLASH_SIZE_BYTES} - 0x80000") # 512KB
+    math(EXPR MEMMAP_LFS_ORIGIN "0x10000000 + ${MEMMAP_FLASH_SIZE}")
+    set(MEMMAP_FILE "memmap_${PICO_PLATFORM}")
+    if (NOT EXISTS ${CMAKE_SOURCE_DIR}/platform/pico/resources/${MEMMAP_FILE}.ld.in)
+        message(FATAL_ERROR "Unsupported Pico platform (${PICO_PLATFORM})")
+    endif()
+    message("Linking with custom ${MEMMAP_FILE}.ld")
+    configure_file(${CMAKE_SOURCE_DIR}/platform/pico/resources/${MEMMAP_FILE}.ld.in ${CMAKE_BINARY_DIR}/memmap.ld)
     # Always use our custom linker script regardless of the web interface, this is so littlefs can always be in the same place
-    pico_set_linker_script(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/platform/pico/resources/memmap.ld)
+    pico_set_linker_script(${PROJECT_NAME} ${CMAKE_BINARY_DIR}/memmap.ld)
 endfunction()
