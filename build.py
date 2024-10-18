@@ -1,16 +1,38 @@
 # This file is heavily inspired by Prusa's build.py/bootstrap.py scripts, thanks!
 # https://github.com/prusa3d/Prusa-Firmware-Buddy/blob/master/utils/build.py
 
+# Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
+# Licensed under the GNU AGPL-3.0
+
 import os
 import shutil
+import ssl
 import stat
+import subprocess
 import sys
 import tarfile
 from pathlib import Path
 from urllib.request import urlretrieve
 import zipfile
 
-rootDir = Path(__file__).resolve().parent
+root_dir = Path(__file__).resolve().parent
+ssl._create_default_https_context = ssl._create_stdlib_context
+
+# TODO: switch from os.system to subprocess.check_call, multithread downloads?
+# also document things
+
+def setup_msys2():
+    # TODO: finish testing on windows, not sure if everything here works
+    if not (Path(os.path.abspath(os.sep)) / "msys64").exists():
+        print("-- Setting up MSYS2")
+        print("Downloading MSYS2")
+        subprocess.check_call(["curl", "-L", "-o", "msys2.zip", "https://repo.msys2.org/distrib/x86_64/msys2-base-x86_64-20240727.tar.xz"])
+        print("Extracting MSYS2, this may take a while")
+        subprocess.check_call(["tar", "-xf", "msys2.zip", "-C", "C:/"])
+        os.remove("msys2.zip")
+        print("Updating MSYS2")
+        subprocess.check_call(["C:/msys64/usr/bin/pacman", "-S", "mingw-w64-ucrt-x86_64-gcc", "--noconfirm"])
+    os.environ["PATH"] += os.pathsep + "C:/msys64/ucrt64/bin" + os.pathsep + "C:/msys64/usr/bin"
 
 def install_esp_idf():
     if os.sys.platform.lower() == "win32":
@@ -23,13 +45,27 @@ def install_esp_idf():
 def install_ninja():
     ninja = "ninja"
     if os.sys.platform.lower() == "win32":
-        ninja = "ninja.exe"
+        ninja += ".exe"
     os.chmod(ninja, os.stat(ninja).st_mode | stat.S_IEXEC)
+
+def install_node():
+    corepack = Path("bin/corepack")
+    if os.sys.platform.lower() == "win32":
+        corepack = Path("corepack.cmd")
+    # Enable corepack to install yarn
+    subprocess.check_call([str(corepack), "enable"])
 
 def install_pico_sdk():
     os.chdir("pico-sdk")
-    os.system("git submodule update --init --progress")
+    try:
+        subprocess.check_call(["git", "submodule", "update", "--init", "--progress"])
+    except subprocess.CalledProcessError:
+        print("git is required to install pico-sdk. Please install git (https://git-scm.com/) and try again.")
+        exit(1)
     os.chdir("..")
+    # Have to move everything in pico-sdk subdirectory back to the root
+    for item in Path("pico-sdk").iterdir():
+        shutil.move(str(item), str(Path(os.getcwd())))
 
 dependencies = {
     'arm-none-eabi-gcc': {
@@ -38,23 +74,21 @@ dependencies = {
             'linux': 'https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2',
             'win32': 'https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-win32.zip',
             'darwin': 'https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-mac.tar.bz2',
-        }
+        },
+        'add_to_path': 'bin',
     },
     'cmake': {
-        'version': '3.29.6',
+        'version': '3.30.5',
         'url': {
-            'linux': 'https://github.com/Kitware/CMake/releases/download/v3.29.6/cmake-3.29.6-linux-x86_64.tar.gz',
-            'win32': 'https://github.com/Kitware/CMake/releases/download/v3.29.6/cmake-3.29.6-windows-x86_64.zip',
-            'darwin': 'https://github.com/Kitware/CMake/releases/download/v3.29.6/cmake-3.29.6-macos-universal.tar.gz',
+            'linux': 'https://github.com/Kitware/CMake/releases/download/v3.30.5/cmake-3.30.5-linux-x86_64.tar.gz',
+            'win32': 'https://github.com/Kitware/CMake/releases/download/v3.30.5/cmake-3.30.5-windows-x86_64.zip',
+            'darwin': 'https://github.com/Kitware/CMake/releases/download/v3.30.5/cmake-3.30.5-macos-universal.tar.gz',
         },
     },
     'ESP-IDF': {
-        'version': '5.2.1',
-        'url': {
-            'linux': 'https://github.com/espressif/esp-idf/releases/download/v5.2.1/esp-idf-v5.2.1.zip',
-            'win32': 'https://github.com/espressif/esp-idf/releases/download/v5.2.1/esp-idf-v5.2.1.zip',
-            'darwin': 'https://github.com/espressif/esp-idf/releases/download/v5.2.1/esp-idf-v5.2.1.zip',
-        },
+        'version': '5.3.1',
+        'independent': True,
+        'url': 'https://github.com/espressif/esp-idf/releases/download/v5.3.1/esp-idf-v5.3.1.zip',
         'install': install_esp_idf,
     },
     'ninja': {
@@ -65,74 +99,92 @@ dependencies = {
             'darwin': 'https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-mac.zip',
         },
         'install': install_ninja,
+        'add_to_path': '',
+    },
+    'node': {
+        'version': '20.18.0',
+        'url': {
+            'linux': 'https://nodejs.org/dist/v20.18.0/node-v20.18.0-linux-x64.tar.xz',
+            'win32': 'https://nodejs.org/dist/v20.18.0/node-v20.18.0-win-x64.zip',
+            'darwin': 'https://nodejs.org/dist/v20.18.0/node-v20.18.0-darwin-x64.tar.gz',
+        },
+        'install': install_node,
+        # node is actually added to PATH but has to be handled as an edge case (in run_prebuild_tasks)
     },
     'pico-sdk': {
-        'version': '1.5.1',
-        'cmd': 'git clone https://github.com/raspberrypi/pico-sdk.git --branch 1.5.1 --depth 1',
+        'version': '2.0.0',
+        'cmd': 'git clone https://github.com/raspberrypi/pico-sdk.git --branch 2.0.0 --depth 1',
         'install': install_pico_sdk,
     },
 }
 
 platforms = [
-    "pico",
-    "pico_w",
     "esp32",
-    "host"
+    "host",
+    "pico",
+    "pico2",
+    "pico_w",
 ]
 
-platformDependencies = {
-    "pico": ["ninja", "cmake", "node", "arm-none-eabi-gcc", "pico-sdk"],
-    "pico_w": ["ninja", "cmake", "node", "arm-none-eabi-gcc", "pico-sdk"],
+platform_dependencies = {
     "esp32": ["ninja", "cmake", "node", "ESP-IDF"],
     "host": ["ninja", "cmake"],
+    "pico": ["ninja", "cmake", "node", "arm-none-eabi-gcc", "pico-sdk"],
+    "pico2": ["ninja", "cmake", "node", "arm-none-eabi-gcc", "pico-sdk"],
+    "pico_w": ["ninja", "cmake", "node", "arm-none-eabi-gcc", "pico-sdk"],
 }
 
-def find_single_subdir(path: Path):
+def find_innermost_subdir(path: Path):
     members = list(path.iterdir())
     if path.is_dir() and len(members) > 1:
         return path
     elif path.is_dir() and len(members) == 1:
-        return find_single_subdir(members[0]) if members[0].is_dir() else path
+        return find_innermost_subdir(members[0]) if members[0].is_dir() else path
     else:
         raise RuntimeError
-    
+
 def download_progress(count, block_size, total_size):
-    percent = count * block_size * 100 // total_size
-    sys.stdout.write("\rDownload progress: %d%%" % percent)
+    percent = min(count * block_size * 100 / total_size, 100)
+    bar_length = 40
+    filled_length = int(bar_length * percent // 100)
+    bar = '=' * filled_length + '-' * (bar_length - filled_length)
+    sys.stdout.write(f"\r|{bar}| {percent:.1f}%")
     sys.stdout.flush()
 
-# FIXME: this func has problems on windows
 def download_and_extract(url: str, directory: Path):
-    extract_dir = directory.with_suffix('.temp')
-    shutil.rmtree(directory, ignore_errors=True)
-    shutil.rmtree(extract_dir, ignore_errors=True)
-
-    print('Downloading ' + directory.name)
-    # TODO: handle error (RemoteDisconnected)
+    print(f"Downloading {directory.name}")
     f, _ = urlretrieve(url, filename=None, reporthook=download_progress)
     print()
-    print('Extracting ' + directory.name)
-    if '.tar.bz2' in url or '.tar.gz' in url or '.tar.xz' in url:
+    print(f"Extracting {directory.name}")
+    extract_dir = directory / (directory.name + ".tmp")
+    if any(x in url for x in [".tar.bz2", ".tar.gz", ".tar.xz"]):
         with tarfile.open(f) as obj:
             obj.extractall(path=str(extract_dir))
     else:
         with zipfile.ZipFile(f, 'r') as obj:
             obj.extractall(path=str(extract_dir))
+    subdir = find_innermost_subdir(extract_dir)
+    for item in Path(subdir).iterdir():
+        shutil.move(str(item), str(directory))
+    shutil.rmtree(extract_dir)
 
-    subdir = find_single_subdir(extract_dir)
-    shutil.move(str(subdir), str(directory))
-    shutil.rmtree(extract_dir, ignore_errors=True)
+def get_dependency_dir(dep: str):
+    return (root_dir / "build" / "deps" / Path(f"{dep}-{dependencies[dep]['version']}")).absolute()
 
 def install_dependency(dep: str):
-    dir = Path(f"{dep}-{dependencies[dep]['version']}")
+    print("-- Installing", dep)
+    dir = get_dependency_dir(dep)
     os.mkdir(dir)
     os.chdir(dir)
-    if 'cmd' in dependencies[dep]:
+    if "cmd" in dependencies[dep]:
         # A command needs to be run to install the dependency, create its directory and run the command
         os.system(dependencies[dep]['cmd'])
-    elif 'url' in dependencies[dep]:
+    elif "url" in dependencies[dep]:
         # A URL is provided to download the dependency, download and extract it
-        download_and_extract(dependencies[dep]['url'][os.sys.platform.lower()], Path(os.getcwd()))
+        if dependencies[dep].get('independent', False):
+            download_and_extract(dependencies[dep]['url'], Path(os.getcwd()))
+        else:
+            download_and_extract(dependencies[dep]['url'][os.sys.platform.lower()], Path(os.getcwd()))
     else:
         print(f"Dependency {dep} has no installation method")
         exit(1)
@@ -140,7 +192,8 @@ def install_dependency(dep: str):
     os.chdir("..")
     os.chdir(dir)
 
-    if 'install' in dependencies[dep]:
+    if "install" in dependencies[dep]:
+        print(f"Running post-installation steps for {dep}")
         # The dependency requires some post-installation steps, run them
         dependencies[dep]['install']()
     os.chdir("..")
@@ -159,7 +212,7 @@ def find_dependency(program: str):
 
     # Dependency isn't already installed, now check the deps directory
     try:
-        for path in (rootDir / "build" / "deps").iterdir():
+        for path in (root_dir / "build" / "deps").iterdir():
             if path.name.startswith(program):
                 if program == "arm-none-eabi-gcc":
                     return path / "bin" # Return the entire bin directory to have access to all tools
@@ -171,37 +224,45 @@ def find_dependency(program: str):
                     if os.sys.platform.lower() == "win32":
                         return path / "ninja.exe"
                     return path / "ninja"
+                elif program == "node":
+                    if os.sys.platform.lower() == "win32":
+                        return path / "node.exe"
+                    return path / "bin" / "node"
                 return path
     except FileNotFoundError:
         pass
     # Couldn't find the dependency
     return None
 
+def run_prebuild_tasks():
+    for dep in dependencies:
+        # Add needed dependencies to PATH
+        if "add_to_path" in dependencies[dep]:
+            os.environ["PATH"] += os.pathsep + str(get_dependency_dir(dep) / Path(dependencies[dep]["add_to_path"]))
+    # Edge case because node is weird (shocker)
+    if find_dependency("node") is not None:
+        os.environ["PATH"] += os.pathsep + (str(get_dependency_dir("node") / "bin") if os.sys.platform.lower() != "win32" else str(get_dependency_dir("node")))
+        os.environ["COREPACK_ENABLE_DOWNLOAD_PROMPT"] = "0" # Also disable download prompt for corepack
+
 def construct_cmake_command(platform: str):
+    precmd = ""
     # CMake configure step args depend on the platform
-    if platform == "pico" or platform == "pico_w":
+    if platform == "pico" or platform == "pico2" or platform == "pico_w":
         os.environ["PICO_SDK_PATH"] = str(find_dependency("pico-sdk"))
-        os.environ["PATH"] += os.pathsep + str(find_dependency("arm-none-eabi-gcc"))
-        cmd = ' '.join([str(find_dependency("cmake")),
-                        "-B", "build", f"-DFBW_PLATFORM={platform}", "-DCMAKE_BUILD_TYPE=Release", 
-                        f"-DCMAKE_MAKE_PROGRAM={str(find_dependency('ninja'))}", "-GNinja"])
     elif platform == "esp32":
         os.environ["IDF_PATH"] = str(find_dependency("ESP-IDF"))
-        cmd = ' '.join([f". $IDF_PATH/export.sh &&", str(find_dependency("cmake")),
-                        "-B", "build", f"-DFBW_PLATFORM={platform}", "-DCMAKE_BUILD_TYPE=Release", 
-                        f"-DCMAKE_MAKE_PROGRAM={str(find_dependency('ninja'))}", "-GNinja"])
-    else:
-        cmd = ' '.join([str(find_dependency("cmake")),
+        cmd += f". $IDF_PATH/export.sh &&"
+    cmd = " ".join([str(find_dependency("cmake")),
                         "-B", "build", f"-DFBW_PLATFORM={platform}", "-DCMAKE_BUILD_TYPE=Release", 
                         f"-DCMAKE_MAKE_PROGRAM={str(find_dependency('ninja'))}", "-GNinja"])
     # Build step is the same for all platforms
-    return cmd + " && " + " ".join([str(find_dependency("cmake")), "--build", "build", "--parallel"])
+    return precmd + cmd + " && " + " ".join([str(find_dependency("cmake")), "--build", "build", "--parallel"])
 
 def main():
     platform = None
     # If the argument to the command is clean, remove the build directory
     if len(os.sys.argv) > 1 and os.sys.argv[1] == "clean":
-        shutil.rmtree("build", ignore_errors=True)
+        shutil.rmtree("build")
         exit(0)
     # Otherwise, interpret the argument as the platform to build for
     elif len(os.sys.argv) > 1:
@@ -220,6 +281,9 @@ def main():
             for index, platform in enumerate(platforms):
                 print(f"{index + 1}: {platform}")
             choice = int(input("Select platform: ")) - 1
+            if choice < 0 or choice >= len(platforms):
+                print("Invalid choice")
+                exit(1)
             platform = platforms[choice]
     print(f"-- Building for platform: {platform}")
     if platform not in platforms:
@@ -227,7 +291,7 @@ def main():
         exit(1)
 
     # Find which dependencies we need based on the platform
-    needed = platformDependencies[platform].copy()
+    needed = platform_dependencies[platform].copy()
     print("-- Indexing dependencies...")
     # Check what dependencies (if any) are installed and remove them from the list
     for dep in needed.copy():
@@ -236,13 +300,13 @@ def main():
             needed.remove(dep)
     if needed:
         # Create the deps directory if it doesn't exist
-        if not os.path.exists(rootDir / "build"):
+        if not os.path.exists(root_dir / "build"):
             os.mkdir("build")
-        if not os.path.exists(rootDir / "build" / "deps"):
-            os.chdir(rootDir / "build")
+        if not os.path.exists(root_dir / "build" / "deps"):
+            os.chdir(root_dir / "build")
             os.mkdir("deps")
-        os.chdir(rootDir / "build" / "deps")
-        print("Need to install: " + ", ".join(needed))
+        os.chdir(root_dir / "build" / "deps")
+        print("Need to install:", ", ".join(needed))
         for dep in needed:
             if dep in dependencies:
                 install_dependency(dep)
@@ -253,13 +317,18 @@ def main():
             if not find_dependency(dep):
                 print(f"Failed to install {dep}")
                 exit(1)
-    os.chdir(rootDir)
+    os.chdir(root_dir)
+    # If on windows, setup msys2
+    if os.sys.platform.lower() == "win32":
+        setup_msys2()
     print("-- All dependencies installed")
 
-    # Generate the command and run the build
-    cmakeCommand = construct_cmake_command(platform)
-    print("-- Running CMake command:", cmakeCommand, "\n\n")
-    os.system(cmakeCommand)
+    # Run pre-build tasks and then build the project
+    print("-- Running pre-build tasks")
+    run_prebuild_tasks()
+    cmake_command = construct_cmake_command(platform)
+    print("-- Running CMake")
+    os.system(cmake_command)
 
 if __name__ == "__main__":
     try:
@@ -269,4 +338,4 @@ if __name__ == "__main__":
         exit(1)
     except Exception as e:
         print(f"\n\n-- Build failed: {e}")
-        exit(1)
+        raise e

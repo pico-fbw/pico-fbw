@@ -12,38 +12,25 @@ if (NOT DEFINED LFS_BLOCK_SIZE OR NOT DEFINED LFS_PROG_SIZE OR NOT DEFINED LFS_I
     return()
 endif()
 
-# Check to ensure npm and yarn are installed
+# Check to ensure yarn is installed
 if (EXISTS "$ENV{NVM_DIR}/nvm.sh")
-    message("nvm detected, using it to find npm and yarn")
+    message("nvm detected, using it to find yarn")
     set(USING_NVM ON)
-    execute_process(
-        COMMAND bash -c "source $ENV{NVM_DIR}/nvm.sh && which npm"
-        OUTPUT_VARIABLE NPM_EXE
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
     execute_process(
         COMMAND bash -c "source $ENV{NVM_DIR}/nvm.sh && which yarn"
         OUTPUT_VARIABLE YARN_EXE
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 else()
-    # Not using nvm, leave it to cmake to find npm and yarn
-    find_program(NPM_EXE npm)
+    # Not using nvm, leave it to cmake to find yarn
     find_program(YARN_EXE yarn)
 endif()
 
-if (NPM_EXE)
-    message("npm found at ${NPM_EXE}")
-else()
-    message(FATAL_ERROR "npm was not found, but is required to build the web interface!
-    npm can be installed from https://docs.npmjs.com/downloading-and-installing-node-js-and-npm.")
-endif()
-if (YARN_EXE)
-    message("yarn found at ${YARN_EXE}")
-else()
+if (NOT YARN_EXE)
     message(FATAL_ERROR "yarn was not found, but is required to build the web interface!
     yarn can be installed from https://yarnpkg.com/getting-started/install.")
 endif()
+message("yarn found at ${YARN_EXE}")
 
 # Add mklittlefs as an external project so it will be built to be used later
 include(ExternalProject)
