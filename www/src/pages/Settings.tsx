@@ -130,7 +130,7 @@ export default function Settings() {
                     <span className="block text-sm text-gray-500 text-center">
                         {info ? (
                             <>
-                                {info.platform} v{info.platform_version} | {info.version} | API v{info.version_api}
+                                {info.platform}, HAL v{info.platform_version} | {info.version} | API v{info.version_api}
                             </>
                         ) : (
                             <>No device information available</>

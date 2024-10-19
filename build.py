@@ -5,6 +5,7 @@
 # Licensed under the GNU AGPL-3.0
 
 import os
+import random
 import shutil
 import ssl
 import stat
@@ -15,58 +16,47 @@ from pathlib import Path
 from urllib.request import urlretrieve
 import zipfile
 
-root_dir = Path(__file__).resolve().parent
+host = os.sys.platform.lower() # OS of host machine
+root_dir = Path(__file__).resolve().parent # Root directory of the project
 ssl._create_default_https_context = ssl._create_stdlib_context
 
-# TODO: switch from os.system to subprocess.check_call, multithread downloads?
-# also document things
-
-def setup_msys2():
-    # TODO: finish testing on windows, not sure if everything here works
-    if not (Path(os.path.abspath(os.sep)) / "msys64").exists():
-        print("-- Setting up MSYS2")
-        print("Downloading MSYS2")
-        subprocess.check_call(["curl", "-L", "-o", "msys2.zip", "https://repo.msys2.org/distrib/x86_64/msys2-base-x86_64-20240727.tar.xz"])
-        print("Extracting MSYS2, this may take a while")
-        subprocess.check_call(["tar", "-xf", "msys2.zip", "-C", "C:/"])
-        os.remove("msys2.zip")
-        print("Updating MSYS2")
-        subprocess.check_call(["C:/msys64/usr/bin/pacman", "-S", "mingw-w64-ucrt-x86_64-gcc", "--noconfirm"])
-    os.environ["PATH"] += os.pathsep + "C:/msys64/ucrt64/bin" + os.pathsep + "C:/msys64/usr/bin"
+# === Install functions for dependencies ===
 
 def install_esp_idf():
-    if os.sys.platform.lower() == "win32":
-        os.system("install.bat")
+    if host == "win32":
+        subprocess.check_call(["install.bat"])
     else:
         os.chmod("install.sh", os.stat("install.sh").st_mode | stat.S_IEXEC)
-        os.system("./install.sh")
+        subprocess.check_call(["./install.sh"])
     os.chdir("..")
 
 def install_ninja():
     ninja = "ninja"
-    if os.sys.platform.lower() == "win32":
+    if host == "win32":
         ninja += ".exe"
     os.chmod(ninja, os.stat(ninja).st_mode | stat.S_IEXEC)
 
 def install_node():
     corepack = Path("bin/corepack")
-    if os.sys.platform.lower() == "win32":
+    if host == "win32":
         corepack = Path("corepack.cmd")
     # Enable corepack to install yarn
     subprocess.check_call([str(corepack), "enable"])
 
 def install_pico_sdk():
     os.chdir("pico-sdk")
+    # Finish installing by cloning submodules
     try:
         subprocess.check_call(["git", "submodule", "update", "--init", "--progress"])
     except subprocess.CalledProcessError:
         print("git is required to install pico-sdk. Please install git (https://git-scm.com/) and try again.")
         exit(1)
     os.chdir("..")
-    # Have to move everything in pico-sdk subdirectory back to the root
+    # Move everything in pico-sdk subdirectory back to the root
     for item in Path("pico-sdk").iterdir():
         shutil.move(str(item), str(Path(os.getcwd())))
 
+# Dependencies needed for the build process and details on how to install them
 dependencies = {
     'arm-none-eabi-gcc': {
         'version': '10.3.1',
@@ -118,6 +108,7 @@ dependencies = {
     },
 }
 
+# Platforms that can be built for
 platforms = [
     "esp32",
     "host",
@@ -126,6 +117,7 @@ platforms = [
     "pico_w",
 ]
 
+# Dependencies needed for each platform
 platform_dependencies = {
     "esp32": ["ninja", "cmake", "node", "ESP-IDF"],
     "host": ["ninja", "cmake"],
@@ -134,7 +126,11 @@ platform_dependencies = {
     "pico_w": ["ninja", "cmake", "node", "arm-none-eabi-gcc", "pico-sdk"],
 }
 
-def find_innermost_subdir(path: Path):
+def find_innermost_subdir(path: Path) -> Path:
+    """Find the innermost subdirectory of the specified path.
+    :param path: the path to search
+    :return: the innermost subdirectory
+    """
     members = list(path.iterdir())
     if path.is_dir() and len(members) > 1:
         return path
@@ -144,6 +140,11 @@ def find_innermost_subdir(path: Path):
         raise RuntimeError
 
 def download_progress(count, block_size, total_size):
+    """Hook for urlretrieve to display download progress.
+    :param count: the number of blocks downloaded
+    :param block_size: the size of each block
+    :param total_size: the total size of the file
+    """
     percent = min(count * block_size * 100 / total_size, 100)
     bar_length = 40
     filled_length = int(bar_length * percent // 100)
@@ -152,6 +153,10 @@ def download_progress(count, block_size, total_size):
     sys.stdout.flush()
 
 def download_and_extract(url: str, directory: Path):
+    """Download and extract a file to the specified directory.
+    :param url: the URL to download the file from
+    :param directory: the directory to extract the file to
+    """
     print(f"Downloading {directory.name}")
     f, _ = urlretrieve(url, filename=None, reporthook=download_progress)
     print()
@@ -169,22 +174,29 @@ def download_and_extract(url: str, directory: Path):
     shutil.rmtree(extract_dir)
 
 def get_dependency_dir(dep: str):
+    """Get the directory for the specified dependency.
+    :param dep: the name of the dependency
+    :return: the path to the dependency directory
+    """
     return (root_dir / "build" / "deps" / Path(f"{dep}-{dependencies[dep]['version']}")).absolute()
 
 def install_dependency(dep: str):
+    """Install the specified dependency.
+    :param dep: the name of the dependency to install
+    """
     print("-- Installing", dep)
     dir = get_dependency_dir(dep)
     os.mkdir(dir)
     os.chdir(dir)
     if "cmd" in dependencies[dep]:
         # A command needs to be run to install the dependency, create its directory and run the command
-        os.system(dependencies[dep]['cmd'])
+        subprocess.check_call(dependencies[dep]['cmd'], shell=True)
     elif "url" in dependencies[dep]:
         # A URL is provided to download the dependency, download and extract it
         if dependencies[dep].get('independent', False):
             download_and_extract(dependencies[dep]['url'], Path(os.getcwd()))
         else:
-            download_and_extract(dependencies[dep]['url'][os.sys.platform.lower()], Path(os.getcwd()))
+            download_and_extract(dependencies[dep]['url'][host], Path(os.getcwd()))
     else:
         print(f"Dependency {dep} has no installation method")
         exit(1)
@@ -199,7 +211,11 @@ def install_dependency(dep: str):
     os.chdir("..")
 
 # TODO: check version of installed dependencies and update if necessary
-def find_dependency(program: str):
+def find_dependency(program: str) -> Path | None:
+    """Find the path to the specified dependency.
+    :param program: the name of the dependency to find
+    :return: the path to the dependency, or None if it couldn't be found
+    """
     for path in os.environ['PATH'].split(os.pathsep):
         path = Path(path)
         if (path / program).exists():
@@ -217,15 +233,15 @@ def find_dependency(program: str):
                 if program == "arm-none-eabi-gcc":
                     return path / "bin" # Return the entire bin directory to have access to all tools
                 elif program == "cmake":
-                    if os.sys.platform.lower() == "win32":
+                    if host == "win32":
                         return path / "bin" / "cmake.exe"
                     return path / "bin" / "cmake"
                 elif program == "ninja":
-                    if os.sys.platform.lower() == "win32":
+                    if host == "win32":
                         return path / "ninja.exe"
                     return path / "ninja"
                 elif program == "node":
-                    if os.sys.platform.lower() == "win32":
+                    if host == "win32":
                         return path / "node.exe"
                     return path / "bin" / "node"
                 return path
@@ -234,57 +250,125 @@ def find_dependency(program: str):
     # Couldn't find the dependency
     return None
 
-def run_prebuild_tasks():
+def setup_host_tools():
+    """Install any necessary build tools for the host platform."""
+    if host == "linux":
+        if not shutil.which("gcc"):
+            print("-- Installing build tools")
+            # Try to install build-essential (or equivalent) via the system's package manager
+            if shutil.which("apt"):
+                subprocess.check_call(["sudo", "apt", "install", "build-essential", "-y"])
+            elif shutil.which("dnf"):
+                subprocess.check_call(["sudo", "dnf", "groupinstall", "development-tools", "-y"])
+            elif shutil.which("pacman"):
+                subprocess.check_call(["sudo", "pacman", "-S", "base-devel", "--noconfirm"])
+            elif shutil.which("zypper"):
+                subprocess.check_call(["sudo", "zypper", "install", "-t", "pattern", "devel_basis"])
+            else:
+                print("Unable to install build tools, please install them manually.")
+                exit(1)
+    elif host == "win32":
+        if not (Path(os.path.abspath(os.sep)) / "msys64").exists():
+            # Install tools via msys2
+            print("-- Setting up MSYS2")
+            print("Downloading MSYS2")
+            download = "msys2.exe"
+            f, _ = urlretrieve("https://github.com/msys2/msys2-installer/releases/download/2024-07-27/msys2-x86_64-20240727.exe", filename=download, reporthook=download_progress)
+            print()
+            print("Installing MSYS2")
+            subprocess.check_call(["msys2.exe", "in", "--confirm-command", "--accept-messages", "--root", "C:\\msys64"])
+            os.remove(download)
+            # Disable key refresh
+            post_file = Path(os.path.abspath(os.sep)) / "msys64" / "etc" / "post-install" / "07-pacman-key.post"
+            with open(str(post_file), "r", encoding="utf-8") as f:
+                content = f.read()
+            new_content = content.replace("--refresh-keys", "--version")
+            with open(str(post_file), "w", encoding="utf-8") as f:
+                f.write(new_content)
+            print("Installing build tools")
+            subprocess.check_call(["C:\\msys64\\usr\\bin\\pacman", "-S", "base-devel", "mingw-w64-ucrt-x86_64-toolchain", "--needed", "--noconfirm"])
+        os.environ["PATH"] += os.pathsep + "C:\\msys64\\ucrt64\\bin" + os.pathsep + "C:\\msys64\\usr\\bin" # Ensure packages are in PATH during build
+    elif host == "darwin":
+        if not (Path(os.path.abspath(os.sep)) / "Library/Developer/CommandLineTools").exists():
+            # Install tools via Xcode
+            print("-- Setting up Xcode command line tools")
+            subprocess.check_call(["xcode-select", "--install"])
+            subprocess.check_call(["softwareupdate", "-i", "-a"])
+            print("Please finish installing Xcode command line tools via System Preferences -> Software Update, and then run this script again.") # Just to be safe
+            exit(1)
+
+def run_prebuild_tasks(platform: str):
+    """Run any necessary pre-build tasks for the specified platform.
+    :param platform: the platform to build for
+    """
     for dep in dependencies:
         # Add needed dependencies to PATH
         if "add_to_path" in dependencies[dep]:
             os.environ["PATH"] += os.pathsep + str(get_dependency_dir(dep) / Path(dependencies[dep]["add_to_path"]))
     # Edge case because node is weird (shocker)
     if find_dependency("node") is not None:
-        os.environ["PATH"] += os.pathsep + (str(get_dependency_dir("node") / "bin") if os.sys.platform.lower() != "win32" else str(get_dependency_dir("node")))
+        os.environ["PATH"] += os.pathsep + (str(get_dependency_dir("node") / "bin") if host != "win32" else str(get_dependency_dir("node")))
         os.environ["COREPACK_ENABLE_DOWNLOAD_PROMPT"] = "0" # Also disable download prompt for corepack
-
-def construct_cmake_command(platform: str):
-    precmd = ""
-    # CMake configure step args depend on the platform
-    if platform == "pico" or platform == "pico2" or platform == "pico_w":
+    # Some platforms need to set environment variables
+    if platform in ["pico", "pico2", "pico_w"]:
         os.environ["PICO_SDK_PATH"] = str(find_dependency("pico-sdk"))
     elif platform == "esp32":
         os.environ["IDF_PATH"] = str(find_dependency("ESP-IDF"))
-        cmd += f". $IDF_PATH/export.sh &&"
-    cmd = " ".join([str(find_dependency("cmake")),
-                        "-B", "build", f"-DFBW_PLATFORM={platform}", "-DCMAKE_BUILD_TYPE=Release", 
-                        f"-DCMAKE_MAKE_PROGRAM={str(find_dependency('ninja'))}", "-GNinja"])
-    # Build step is the same for all platforms
-    return precmd + cmd + " && " + " ".join([str(find_dependency("cmake")), "--build", "build", "--parallel"])
+
+def construct_cmake_command(platform: str) -> tuple[str, str]:
+    """Construct the CMake configure and build commands based on the provided platform.
+    :param platform: the platform to build for
+    :return: a tuple containing the configure and build commands
+    """
+    source_dir = str(root_dir)
+    build_dir = "build"
+    # Base configure command 
+    configure = str(find_dependency("cmake")) + " -S" + source_dir + " -B" + build_dir + f" -DFBW_PLATFORM={platform}"+ " -DCMAKE_BUILD_TYPE=Release"
+    # If ninja is in PATH, use it as the build tool
+    if find_dependency("ninja") is not None:
+        configure += f" -DCMAKE_MAKE_PROGRAM={str(find_dependency('ninja'))}" + " -GNinja"
+    # Platform-specific modifications
+    if platform == "esp32":
+        if host == "win32":
+            configure = str(find_dependency("ESP-IDF") / "export.bat") + " && " + configure
+        else:
+            configure = ". $IDF_PATH/export.sh && " + configure
+        
+    # Base build command
+    build = str(find_dependency("cmake")) + " --build " + build_dir + " --parallel"
+    # More platform-specific modifications for build
+    if platform == "esp32":
+        if host == "win32":
+            build = str(find_dependency("ESP-IDF") / "export.bat") + " && " + build
+        else:
+            build = ". $IDF_PATH/export.sh && " + build
+
+    return configure, build
+
+def get_platform() -> str:
+    """:return: the platform to build for"""
+    # If an argument is given, use that as the platform
+    if len(os.sys.argv) > 1:
+        return str(os.sys.argv[1])
+    # If the cmake cache is present, pull the platform from there
+    if os.path.exists("build/CMakeCache.txt"):
+        with open("build/CMakeCache.txt") as f:
+            for line in f:
+                if "FBW_PLATFORM" in line:
+                    print("Auto-detected platform from previous build")
+                    return line.split("=")[1].strip()
+    # No platform could be found; prompt the user to select one
+    else:
+        for index, platform in enumerate(platforms):
+            print(f"{index + 1}: {platform}")
+        choice = int(input("Select platform: ")) - 1
+        if choice < 0 or choice >= len(platforms):
+            print("Invalid choice")
+            exit(1)
+        return platforms[choice]
 
 def main():
-    platform = None
-    # If the argument to the command is clean, remove the build directory
-    if len(os.sys.argv) > 1 and os.sys.argv[1] == "clean":
-        shutil.rmtree("build")
-        exit(0)
-    # Otherwise, interpret the argument as the platform to build for
-    elif len(os.sys.argv) > 1:
-        platform = os.sys.argv[1]
-    # If no argument is given...
-    if platform == None:
-        # If the cmake cache is present, pull the platform from there
-        if os.path.exists("build/CMakeCache.txt"):
-            with open("build/CMakeCache.txt") as f:
-                for line in f:
-                    if "FBW_PLATFORM" in line:
-                        platform = line.split("=")[1].strip()
-                        break
-        # Otherwise, prompt the user to select a platform
-        else:
-            for index, platform in enumerate(platforms):
-                print(f"{index + 1}: {platform}")
-            choice = int(input("Select platform: ")) - 1
-            if choice < 0 or choice >= len(platforms):
-                print("Invalid choice")
-                exit(1)
-            platform = platforms[choice]
+    platform = get_platform()
     print(f"-- Building for platform: {platform}")
     if platform not in platforms:
         print(f"Invalid platform: {platform}")
@@ -318,17 +402,18 @@ def main():
                 print(f"Failed to install {dep}")
                 exit(1)
     os.chdir(root_dir)
-    # If on windows, setup msys2
-    if os.sys.platform.lower() == "win32":
-        setup_msys2()
+    # Check for host build tools; cmake likes to use host compilers for a lot of things
+    setup_host_tools()
     print("-- All dependencies installed")
 
     # Run pre-build tasks and then build the project
     print("-- Running pre-build tasks")
-    run_prebuild_tasks()
-    cmake_command = construct_cmake_command(platform)
-    print("-- Running CMake")
-    os.system(cmake_command)
+    run_prebuild_tasks(platform)
+    configure_cmd, build_cmd = construct_cmake_command(platform)
+    print("-- Starting build")
+    subprocess.check_call(configure_cmd, shell=True)
+    subprocess.check_call(build_cmd, shell=True)
+    print("\n-- Build complete!", random.choice(["🎉", "🚀", "👍", "🥳", "🎈"]))
 
 if __name__ == "__main__":
     try:
