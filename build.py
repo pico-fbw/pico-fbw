@@ -37,6 +37,7 @@ def install_ninja():
     os.chmod(ninja, os.stat(ninja).st_mode | stat.S_IEXEC)
 
 def install_node():
+    os.environ["PATH"] += os.pathsep + (str(get_dependency_dir("node") / "bin") if host != "win32" else str(get_dependency_dir("node")))
     corepack = Path("bin/corepack")
     if host == "win32":
         corepack = Path("corepack.cmd")
@@ -46,11 +47,7 @@ def install_node():
 def install_pico_sdk():
     os.chdir("pico-sdk")
     # Finish installing by cloning submodules
-    try:
-        subprocess.check_call(["git", "submodule", "update", "--init", "--progress"])
-    except subprocess.CalledProcessError:
-        print("git is required to install pico-sdk. Please install git (https://git-scm.com/) and try again.")
-        exit(1)
+    subprocess.check_call(["git", "submodule", "update", "--init", "--progress"])
     os.chdir("..")
     # Move everything in pico-sdk subdirectory back to the root
     for item in Path("pico-sdk").iterdir():
@@ -157,10 +154,10 @@ def download_and_extract(url: str, directory: Path):
     :param url: the URL to download the file from
     :param directory: the directory to extract the file to
     """
-    print(f"Downloading {directory.name}")
+    print(f"Downloading '{directory.name}'")
     f, _ = urlretrieve(url, filename=None, reporthook=download_progress)
     print()
-    print(f"Extracting {directory.name}")
+    print(f"Extracting '{directory.name}'")
     extract_dir = directory / (directory.name + ".tmp")
     if any(x in url for x in [".tar.bz2", ".tar.gz", ".tar.xz"]):
         with tarfile.open(f) as obj:
@@ -184,13 +181,17 @@ def install_dependency(dep: str):
     """Install the specified dependency.
     :param dep: the name of the dependency to install
     """
-    print("-- Installing", dep)
+    print(f"-- Installing '{dep}'")
     dir = get_dependency_dir(dep)
     os.mkdir(dir)
     os.chdir(dir)
     if "cmd" in dependencies[dep]:
         # A command needs to be run to install the dependency, create its directory and run the command
-        subprocess.check_call(dependencies[dep]['cmd'], shell=True)
+        try:
+            subprocess.check_call(dependencies[dep]['cmd'], shell=True)
+        except subprocess.CalledProcessError:
+            print(f"Failed to install '{dep}'. Is '{dependencies[dep]['cmd'].split()[0]}' installed?")
+            exit(1)
     elif "url" in dependencies[dep]:
         # A URL is provided to download the dependency, download and extract it
         if dependencies[dep].get('independent', False):
@@ -198,14 +199,14 @@ def install_dependency(dep: str):
         else:
             download_and_extract(dependencies[dep]['url'][host], Path(os.getcwd()))
     else:
-        print(f"Dependency {dep} has no installation method")
+        print(f"Dependency '{dep}' has no installation method")
         exit(1)
     # No clue why but the dir has to be cycled to get the correct path
     os.chdir("..")
     os.chdir(dir)
 
     if "install" in dependencies[dep]:
-        print(f"Running post-installation steps for {dep}")
+        print(f"Running post-installation steps for '{dep}'")
         # The dependency requires some post-installation steps, run them
         dependencies[dep]['install']()
     os.chdir("..")
@@ -356,6 +357,7 @@ def get_platform() -> str:
             for line in f:
                 if "FBW_PLATFORM" in line:
                     print("Auto-detected platform from previous build")
+                    print(f"To build for a different platform, clean the previous build ('{os.sys.argv[0]} clean') and run this script again.")
                     return line.split("=")[1].strip()
     # No platform could be found; prompt the user to select one
     else:
@@ -368,19 +370,27 @@ def get_platform() -> str:
         return platforms[choice]
 
 def main():
+    # Clean the build directory if requested
+    if len(os.sys.argv) > 1 and os.sys.argv[1] == "clean":
+        print("-- Cleaning build directory")
+        for item in (root_dir / "build").iterdir():
+            if item.is_dir() and item.name != "deps":
+                shutil.rmtree(item)
+        exit(0)
+    # Get the platform to build for
     platform = get_platform()
-    print(f"-- Building for platform: {platform}")
+    print(f"-- Building for platform '{platform}'")
     if platform not in platforms:
-        print(f"Invalid platform: {platform}")
+        print(f"Invalid platform '{platform}'")
         exit(1)
 
-    # Find which dependencies we need based on the platform
+    # Find which dependencies we need based on the provided platform
     needed = platform_dependencies[platform].copy()
     print("-- Indexing dependencies...")
     # Check what dependencies (if any) are installed and remove them from the list
     for dep in needed.copy():
         if find_dependency(dep) is not None:
-            print(f"Depencency {dep} found at {find_dependency(dep)}")
+            print(f"Depencency '{dep}' found at '{find_dependency(dep)}'")
             needed.remove(dep)
     if needed:
         # Create the deps directory if it doesn't exist
@@ -395,11 +405,11 @@ def main():
             if dep in dependencies:
                 install_dependency(dep)
             else:
-                print(f"Dependency {dep} not found in the list of dependencies")
+                print(f"Dependency '{dep}' not found in the list of dependencies")
                 exit(1)
             # Sanity check to make sure we can find the dependency after installing it
             if not find_dependency(dep):
-                print(f"Failed to install {dep}")
+                print(f"Failed to install '{dep}'")
                 exit(1)
     os.chdir(root_dir)
     # Check for host build tools; cmake likes to use host compilers for a lot of things
@@ -422,5 +432,5 @@ if __name__ == "__main__":
         print("\n\n-- Build interrupted by user")
         exit(1)
     except Exception as e:
-        print(f"\n\n-- Build failed: {e}")
+        print(f"\n\n-- Build failed!", random.choice(["😢", "😭", "😞", "😟", "😦"]))
         raise e

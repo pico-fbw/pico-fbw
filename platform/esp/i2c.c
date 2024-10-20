@@ -11,9 +11,6 @@
 
 #include "platform/i2c.h"
 
-// TODO: aahrs system supports a device dropping offline and then coming back online, so this should be handled
-// https://www.esp32.com/viewtopic.php?t=1483
-
 #define I2C_TIMEOUT_MS 50 // Interrupt WDT had to be increased in sdkconfig to prevent it from triggering during long timeouts
 
 typedef struct I2CDevice {

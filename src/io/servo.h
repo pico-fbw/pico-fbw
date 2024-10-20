@@ -2,9 +2,8 @@
 
 #include "platform/types.h"
 
-#define DEFAULT_SERVO_TEST                                                                                                     \
-    { 110.f, 70.f, 90.f }               // Default degree amounts to move the servos to
-#define DEFAULT_SERVO_TEST_PAUSE_MS 300 // Default pause between servo moves in milliseconds
+#define DEFAULT_SERVO_TEST {110.f, 70.f, 90.f} // Default degree amounts to move the servos to
+#define DEFAULT_SERVO_TEST_PAUSE_MS 300        // Default pause between servo moves in milliseconds
 
 /**
  * Enables servo control on a list of pins.
