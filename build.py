@@ -2,7 +2,7 @@
 # https://github.com/prusa3d/Prusa-Firmware-Buddy/blob/master/utils/build.py
 
 # Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
-# Licensed under the GNU AGPL-3.0
+# Licensed under the GNU GPL-3.0
 
 import os
 import random

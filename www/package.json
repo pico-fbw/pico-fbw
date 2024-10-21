@@ -1,7 +1,7 @@
 {
     "private": true,
     "type": "module",
-    "license": "AGPL-3.0-only",
+    "license": "GPL-3.0-only",
     "scripts": {
         "dev": "vite",
         "build": "tsc && vite build && compress-cra -c compress-cra.json",

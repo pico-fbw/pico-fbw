@@ -1,6 +1,6 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU AGPL-3.0
+ * Licensed under the GNU GPL-3.0
  */
 
 // "Flight" is not an actual mode--it is merely a collection of common controllers and code that is used by many other modes.

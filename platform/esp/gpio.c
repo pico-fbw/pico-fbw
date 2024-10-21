@@ -1,6 +1,6 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU AGPL-3.0
+ * Licensed under the GNU GPL-3.0
  */
 
 #include "driver/gpio.h" // https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32/api-reference/peripherals/gpio.html
