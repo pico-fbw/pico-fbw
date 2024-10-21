@@ -1,13 +1,13 @@
 Copyright (c) 2023-2024, pico-fbw
 
 ======================================
-GNU Affero General Public License, Version 3
+GNU General Public License, Version 3
 ======================================
 
-pico-fbw, except where otherwise noted in the following information, is licensed under the GNU Affero General Public License, Version 3.
+pico-fbw, except where otherwise noted in the following information, is licensed under the GNU General Public License, Version 3.
 
 You can find a copy of the License at the following URL:
-<https://opensource.org/license/agpl-v3/>
+<https://opensource.org/license/gpl-3-0>
 
 ======================================
 MIT License
@@ -48,7 +48,7 @@ You can find a copy of the License at the following URL:
 Apache-2.0 License
 ======================================
 
-The following files (and their corresponding Header [.h] files, where applicable) of this project utilize code which is licensed under the  Apache-2.0 License:
+The following files (and their corresponding Header [.h] files, where applicable) of this project utilize code which is licensed under the Apache-2.0 License:
 
 - lib/fusion/accel.c
 - lib/fusion/fusion.c
