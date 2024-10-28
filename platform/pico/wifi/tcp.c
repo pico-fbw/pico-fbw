@@ -37,6 +37,8 @@
 #include "sys/api/cmds/SET/set_config.h"
 #include "sys/api/cmds/SET/set_flightplan.h"
 
+// TODO: this should probably be using lwip's httpd
+
 #define CHUNK_XFER_SIZE 1024 // Size of each chunk to send in a chunked transfer
 #define POLL_TIME_S 5 // Interval to poll a TCP connection for activity
 
@@ -535,7 +537,7 @@ static err_t tcp_server_accept(void *arg, struct tcp_pcb *client_pcb, err_t err)
     return ERR_OK;
 }
 
-bool tcp_server_open(TCPServer *state, ip_addr_t *ip, u16 port) {
+bool tcp_server_open(TCPServer *state, const ip_addr_t *ip, u16 port) {
     LWIP_DEBUGF(TCP_DEBUG, ("starting server on port %d\n", port));
     // First, create a temporary lwIP protocol control block
     // (the real one is created a few lines down using tcp_listen_with_backlog)

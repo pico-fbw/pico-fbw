@@ -31,7 +31,7 @@ include(platform/${PLATFORM_DIR}/resources/${PLATFORM_DIR}.cmake)
 # Define the project, the languages it uses, and the version
 project(pico-fbw LANGUAGES C)
 set(CMAKE_C_STANDARD 11)
-set(PICO_FBW_VERSION "1.0.0-alpha.3")
+set(PICO_FBW_VERSION "1.0.0-alpha.4")
 add_compile_definitions(PICO_FBW_VERSION="${PICO_FBW_VERSION}")
 # Enable all warnings + stop compilation on the first error for non-release builds (useful for project developers)
 message("Build type is: ${CMAKE_BUILD_TYPE}")

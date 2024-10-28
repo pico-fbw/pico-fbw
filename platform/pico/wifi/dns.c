@@ -201,7 +201,7 @@ ignore_request:
     (void)upcb;
 }
 
-bool dns_server_init(DNSServer *d, ip_addr_t *ip) {
+bool dns_server_init(DNSServer *d, const ip_addr_t *ip) {
     if (dns_socket_new_dgram(&d->udp, d, dns_server_process) != ERR_OK) {
         LWIP_DEBUGF(DNS_DEBUG, ("dns server failed to start\n"));
         return false;

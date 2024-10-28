@@ -93,7 +93,7 @@ void runtime_loop(bool update_aircraft) {
     if ((bool)config.general[GENERAL_API_ENABLED])
         api_poll();
 #if PLATFORM_SUPPORTS_WIFI
-    if ((WifiEnabled)config.general[GENERAL_WIFI_ENABLED] != WIFI_DISABLED)
+    if ((WifiEnabled)config.general[GENERAL_WIFI_ENABLED] != WIFI_DISABLED && !aircraft.wifiDeinitialized)
         wifi_periodic();
 #endif
     sys_periodic();

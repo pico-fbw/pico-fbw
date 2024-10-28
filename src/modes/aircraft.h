@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include "platform/defs.h"
 
 #define MODE_MIN MODE_DIRECT
 // clang-format off
@@ -26,8 +27,8 @@ typedef enum Mode {
 #define PITCH_INPUT() (fabsf(receiver_get((u32)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEGREE) - 90.f) > DEADBAND)
 #define YAW_INPUT()                                                                                                            \
     (receiver_has_rud() && fabsf(receiver_get((u32)config.pins[PINS_INPUT_RUD], RECEIVER_MODE_DEGREE) - 90.f) > DEADBAND)
-#define THROTTLE_INPUT() (fabsf(receiver_get((u32)config.pins[PINS_INPUT_THROTTLE], RECEIVER_MODE_PERCENT)) > DEADBAND)
-#define USER_INPUTTING() (ROLL_INPUT() || PITCH_INPUT() || YAW_INPUT() || THROTTLE_INPUT())
+// Throttle input usually isn't self-centering so it's more difficult to determine if there is input
+#define USER_INPUTTING() (ROLL_INPUT() || PITCH_INPUT() || YAW_INPUT())
 
 typedef void (*aircraft_update_t)();
 typedef void (*aircraft_change_to_t)(Mode);
@@ -35,8 +36,11 @@ typedef void (*aircraft_set_aahrs_safe_t)(bool);
 typedef void (*aircraft_set_gps_safe_t)(bool);
 
 typedef struct Aircraft {
-    Mode mode;      // (Read-only)
-    bool isFlying;  // (Read-only)
+    Mode mode;     // (Read-only)
+    bool isFlying; // (Read-only)
+#if PLATFORM_SUPPORTS_WIFI
+    bool wifiDeinitialized; // (Read-only)
+#endif
     bool aahrsSafe; // (Read-only)
     bool gpsSafe;   // (Read-only)
     /**

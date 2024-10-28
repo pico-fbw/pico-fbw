@@ -28,7 +28,12 @@ typedef struct dns_server_t_ {
  * @param ip the IP address of the server
  * @return true if the server was initialized successfully
  */
-bool dns_server_init(DNSServer *d, ip_addr_t *ip);
+bool dns_server_init(DNSServer *d, const ip_addr_t *ip);
+
+/**
+ * Deinitializes a DNS server.
+ * @param d the DNS server
+ */
 void dns_server_deinit(DNSServer *d);
 
 #endif // PLATFORM_SUPPORTS_WIFI

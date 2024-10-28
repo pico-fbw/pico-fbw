@@ -56,7 +56,7 @@ bool aahrs_init() {
         i2cInitialized = true;
     }
     imu = fusion_imu_create();
-    if (imu == NULL) {
+    if (!imu) {
         printfbw(aahrs, "failed to create IMU instance");
         return false;
     }

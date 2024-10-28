@@ -165,12 +165,11 @@ void change_to(Mode new_mode) {
             break;
     }
 #if PLATFORM_SUPPORTS_WIFI
-    static bool deinitializedWifi = false;
-    if (aircraft.isFlying && !deinitializedWifi) {
+    if (!aircraft.wifiDeinitialized && aircraft.isFlying) {
         // We're now airborne, so wifi is no longer needed
         if (!wifi_disable())
             printfbw(network, "WARNING: failed to disable wifi!");
-        deinitializedWifi = true;
+        aircraft.wifiDeinitialized = true;
     }
 #endif
 }
@@ -214,11 +213,14 @@ void set_gps_safe(bool state) {
 Aircraft aircraft = {
     .mode = MODE_DIRECT,
     .isFlying = false,
+    #if PLATFORM_SUPPORTS_WIFI
+    .wifiDeinitialized = false,
+    #endif
     .aahrsSafe = false,
     .gpsSafe = false,
     .update = update,
     .change_to = change_to,
     .set_aahrs_safe = set_aahrs_safe,
-    .set_gps_safe = set_gps_safe
+    .set_gps_safe = set_gps_safe,
 };
 // clang-format on

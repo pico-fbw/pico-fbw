@@ -45,7 +45,7 @@ typedef struct DHCPServer {
  * @param nm the netmask of the server
  * @return true if the server was initialized successfully
  */
-bool dhcp_server_init(DHCPServer *d, ip_addr_t *ip, ip_addr_t *nm);
+bool dhcp_server_init(DHCPServer *d, const ip_addr_t *ip, const ip_addr_t *nm);
 
 /**
  * Deinitializes a DHCP server.

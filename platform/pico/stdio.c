@@ -3,9 +3,14 @@
  * Licensed under the GNU GPL-3.0
  */
 
+#include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include "pico/stdio.h"
+#include "pico/config.h"
+#ifndef RASPBERRYPI_PICO_W
+    #include "tusb.h"
+#endif
 
 #include "platform/stdio.h"
 
@@ -13,6 +18,10 @@
 #define STDIO_TIMEOUT_US 1000
 
 void stdio_setup() {
+#ifndef RASPBERRYPI_PICO_W
+    // On devices other than the Pico W, we use a custom tinyusb device stack, so we must initialize it ourselves
+    assert(tusb_init());
+#endif
     stdio_init_all(); // The stdio types that are initializes here depend on what gets defined in platform/pico/CMakeLists.txt
 }
 

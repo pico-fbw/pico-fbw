@@ -10,6 +10,8 @@
 #include "pico/stdio.h"
 #ifdef RASPBERRYPI_PICO_W
     #include "pico/cyw43_arch.h"
+#else
+    #include "tusb.h"
 #endif
 #include "hardware/watchdog.h"
 
@@ -33,6 +35,9 @@ void sys_boot_end() {
 }
 
 void sys_periodic() {
+#ifndef RASPBERRYPI_PICO_W
+    tud_task(); // Handle USB events manually due to custom USB stack
+#endif
     watchdog_update();
 }
 

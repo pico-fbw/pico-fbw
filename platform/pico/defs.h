@@ -1,5 +1,6 @@
 #pragma once
 
+#include "pico/binary_info.h"
 #include "pico/config.h" // For platform-specific defines (e.g. RASPBERRYPI_PICO_W)
 #include "pico/time.h"
 
@@ -61,7 +62,7 @@ static const u32 ADC_PINS[] = {PIN_ADC_0, PIN_ADC_1, PIN_ADC_2, PIN_ADC_3};
 #endif
 
 // Wi-Fi
-#define PLATFORM_SUPPORTS_WIFI 0
+#define PLATFORM_SUPPORTS_WIFI 1 // Technically, only the Pico W supports Wi-Fi, but other platforms emulate it through USB
 
 #ifdef RASPBERRYPI_PICO2
     #undef PLATFORM_NAME
@@ -74,8 +75,15 @@ static const u32 ADC_PINS[] = {PIN_ADC_0, PIN_ADC_1, PIN_ADC_2, PIN_ADC_3};
     #undef PIN_LED
     #define PIN_LED (CYW43_WL_GPIO_LED_PIN + CYW43_GPIO_OFFSET) // See gpio.c for why this is done
 
-    #undef PLATFORM_SUPPORTS_WIFI
-    #define PLATFORM_SUPPORTS_WIFI 1
     #undef PLATFORM_NAME
     #define PLATFORM_NAME "Raspberry Pi Pico W"
 #endif
+
+bi_decl(bi_program_name("pico-fbw"));
+bi_decl(bi_program_description(
+    "A cost-effective, intuitive, and reliable remote control autopilot solution built for the future."));
+bi_decl(bi_program_url("https://pico-fbw.org"));
+bi_decl(bi_program_version_string(PICO_FBW_VERSION));
+bi_decl(bi_program_build_date_string(__DATE__ " " __TIME__));
+bi_decl(bi_program_build_attribute(PLATFORM_NAME));
+bi_decl(bi_program_build_attribute(PLATFORM_VERSION));

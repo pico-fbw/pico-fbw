@@ -21,15 +21,6 @@ pico_generate_pio_header(platform_pico ${CMAKE_CURRENT_LIST_DIR}/pwm.pio)
 # Link the platform library to the pico-sdk libraries
 target_link_libraries(platform_pico
     boot_picobin_headers
-    pico_base_headers
-    pico_bootrom
-    pico_clib_interface
-    pico_platform
-    pico_runtime
-    pico_stdio
-    pico_stdio_uart
-    pico_stdio_usb
-    pico_time
     hardware_adc
     hardware_clocks
     hardware_flash
@@ -43,14 +34,42 @@ target_link_libraries(platform_pico
     hardware_timer
     hardware_uart
     hardware_watchdog
+    pico_base_headers
+    pico_binary_info
+    pico_bootrom
+    pico_clib_interface
+    pico_platform
+    pico_runtime
+    pico_stdio
+    pico_stdio_uart
+    pico_stdio_usb
+    pico_time
 )
 
-# Extra steps for pico_w
+# Include the wifi directory so the lwipopts.h file can be found by lwIP
+target_include_directories(platform_pico PUBLIC ${CMAKE_SOURCE_DIR}/platform/pico/wifi)
+# Extra libraries for web interface support
 if (FBW_PLATFORM STREQUAL "pico_w")
-    # Include the wifi directory so the lwipopts.h file can be found by lwIP
-    target_include_directories(platform_pico PUBLIC ${CMAKE_SOURCE_DIR}/platform/pico/wifi)
     # Link to stdlib (cyw43 driver uses it), and the cyw43 driver/lwIP
-    target_link_libraries(platform_pico pico_stdlib pico_cyw43_arch_lwip_threadsafe_background)
+    target_link_libraries(platform_pico
+        pico_stdlib
+        pico_cyw43_arch_lwip_threadsafe_background
+    )
+else()
+    # Link to lwIP and tinyusb for RNDIS support
+    target_link_libraries(platform_pico
+        pico_async_context_threadsafe_background
+        pico_lwip_nosys
+        pico_rand
+        pico_unique_id
+        tinyusb_device
+    )
+    # Include the tinyusb directory so tusb_config.h can be found by tinyusb
+    target_include_directories(platform_pico PUBLIC ${CMAKE_SOURCE_DIR}/platform/pico/tinyusb)
+    # Add custom usb descriptors
+    target_sources(platform_pico PUBLIC tinyusb/usb_descriptors.c)
+    # USB reset via vendor interface gets disabled when manually using tinyusb, so re-enable it
+    add_compile_definitions(PICO_STDIO_USB_ENABLE_RESET_VIA_VENDOR_INTERFACE=1)
 endif()
 
 # Include the root directory (so we can #include "platform/..." in files),

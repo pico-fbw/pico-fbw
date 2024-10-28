@@ -286,7 +286,7 @@ ignore_request:
     pbuf_free(p);
 }
 
-bool dhcp_server_init(DHCPServer *d, ip_addr_t *ip, ip_addr_t *nm) {
+bool dhcp_server_init(DHCPServer *d, const ip_addr_t *ip, const ip_addr_t *nm) {
     ip_addr_copy(d->ip, *ip);
     ip_addr_copy(d->nm, *nm);
     memset(d->lease, 0, sizeof(d->lease));
