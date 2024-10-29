@@ -25,7 +25,7 @@
 #define CFG_TUD_CDC_TX_BUFSIZE (256)
 // Network class has 2 drivers: ECM/RNDIS and NCM
 // Only one of the drivers can be enabled
-#define CFG_TUD_ECM_RNDIS (0) // FIXME: rndis builds broken?
+#define CFG_TUD_ECM_RNDIS (1)
 #define CFG_TUD_NCM (!CFG_TUD_ECM_RNDIS)
 #if CFG_TUD_NCM
     // Must be >> MTU

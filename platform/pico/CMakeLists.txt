@@ -66,6 +66,12 @@ else()
     )
     # Include the tinyusb directory so tusb_config.h can be found by tinyusb
     target_include_directories(platform_pico PUBLIC ${CMAKE_SOURCE_DIR}/platform/pico/tinyusb)
+    # Add tinyusb's RNDIS support for USB networking
+    if (NOT PICO_TINYUSB_PATH)
+        set(PICO_TINYUSB_PATH ${PICO_SDK_PATH}/lib/tinyusb)
+    endif()
+    target_include_directories(platform_pico PUBLIC ${PICO_TINYUSB_PATH}/lib/networking)
+    target_sources(platform_pico PUBLIC ${PICO_TINYUSB_PATH}/lib/networking/rndis_reports.c)
     # Add custom usb descriptors
     target_sources(platform_pico PUBLIC tinyusb/usb_descriptors.c)
     # USB reset via baudrate/vendor interface gets disabled when manually configuring tinyusb, so re-enable it

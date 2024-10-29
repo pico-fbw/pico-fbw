@@ -101,6 +101,15 @@ static err_t netif_init_cb(struct netif *netif) {
     return ERR_OK;
 }
 
+// tinyusb callback. Will be called when the network interface is initialized.
+void tud_network_init_cb(void) {
+    // If the network is re-initializing and we have a leftover packet
+    if (received_frame) {
+        pbuf_free(received_frame);
+        received_frame = NULL;
+    }
+}
+
 // tinyusb callback. Will be called when a packet is received over the USB network interface.
 bool tud_network_recv_cb(const u8 *src, u16 size) {
     if (received_frame)

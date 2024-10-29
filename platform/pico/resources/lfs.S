@@ -3,11 +3,12 @@
  * Licensed under the GNU GPL-3.0
  */
 
+#include "pico/asm_helper.S"
+
 # lfs.bin will be generated (when necessary) using mklittlefs during the build.
 # The purpose of this file is to include the generated lfs.bin file into the compiled binary.
 
-.cpu cortex-m0plus
-.thumb
+pico_default_asm_setup
 # .lfs is a section (defined in memmap.ld) that has been created to store lfs.bin.
 # It's exactly 256KB in size, same as lfs.bin.
 .section .lfs , "a" , %progbits
