@@ -20,8 +20,6 @@
 
 #include "platform/types.h"
 
-// FIXME: RPI_RESET isn't working?
-
 // A reference for where fields are located in the string descriptor array (usbd_desc_str)
 enum StringDescriptorIndex {
     USBD_STR_LANGID = 0,
@@ -194,9 +192,8 @@ const u16 *tud_descriptor_string_cb(u8 index, __unused u16 langid) {
     static u16 desc_str[USBD_DESC_STR_MAX];
 
     // If we haven't generated a serial number yet, do so now
-    if (!usbd_serial_str[0]) {
+    if (!usbd_serial_str[0])
         pico_get_unique_board_id_string(usbd_serial_str, sizeof(usbd_serial_str));
-    }
 
     u8 len;
     switch (index) {

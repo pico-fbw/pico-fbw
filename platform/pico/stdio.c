@@ -3,16 +3,36 @@
  * Licensed under the GNU GPL-3.0
  */
 
-#include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include "pico/stdio.h"
 #include "pico/config.h"
 #ifndef RASPBERRYPI_PICO_W
+    #include <assert.h>
+    #include "platform/time.h"
     #include "tusb.h"
 #endif
 
 #include "platform/stdio.h"
+
+#ifndef RASPBERRYPI_PICO_W
+
+// clang-format off
+
+    // Interval between tinyusb tasks (in milliseconds)
+    #define TINYUSB_TASK_INTERVAL_MS (PICO_STDIO_USB_TASK_INTERVAL_US / 1000)
+    static_assert(TINYUSB_TASK_INTERVAL_MS > 0, "TINYUSB_TASK_INTERVAL_MS must be greater than 0");
+
+    // Callback for processing tinyusb events
+    static inline i32 tinyusb_task(void *data) {
+        tud_task();
+        return TINYUSB_TASK_INTERVAL_MS; // Reschedule
+        (void)data;
+    }
+
+// clang-format on
+
+#endif
 
 // Timeout between waiting for characters in the stdio read function (in microseconds)
 #define STDIO_TIMEOUT_US 1000
@@ -21,6 +41,8 @@ void stdio_setup() {
 #ifndef RASPBERRYPI_PICO_W
     // On devices other than the Pico W, we use a custom tinyusb device stack, so we must initialize it ourselves
     assert(tusb_init());
+    // We must handle USB events manually due to custom USB stack
+    assert(callback_in_ms(TINYUSB_TASK_INTERVAL_MS, tinyusb_task, NULL));
 #endif
     stdio_init_all(); // The stdio types that are initializes here depend on what gets defined in platform/pico/CMakeLists.txt
 }

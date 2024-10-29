@@ -68,8 +68,11 @@ else()
     target_include_directories(platform_pico PUBLIC ${CMAKE_SOURCE_DIR}/platform/pico/tinyusb)
     # Add custom usb descriptors
     target_sources(platform_pico PUBLIC tinyusb/usb_descriptors.c)
-    # USB reset via vendor interface gets disabled when manually using tinyusb, so re-enable it
-    add_compile_definitions(PICO_STDIO_USB_ENABLE_RESET_VIA_VENDOR_INTERFACE=1)
+    # USB reset via baudrate/vendor interface gets disabled when manually configuring tinyusb, so re-enable it
+    target_compile_definitions(${PROJECT_NAME} PRIVATE
+        PICO_STDIO_USB_ENABLE_RESET_VIA_BAUD_RATE=1
+        PICO_STDIO_USB_ENABLE_RESET_VIA_VENDOR_INTERFACE=1
+    )
 endif()
 
 # Include the root directory (so we can #include "platform/..." in files),

@@ -3,7 +3,7 @@
  * Licensed under the GNU GPL-3.0
  */
 
-const url = "https://pico-fbw.org"; // URL to run a GET request on to check for internet connection
+const url = "https://mt1.google.com/vt/lyrs=s&x=0&y=0&z=0"; // URL to run a GET request on to check for internet connection
 const timeout = 1000; // Timeout for the request in ms
 
 let hasInternetResult: boolean | null = null; // Cache the result
@@ -24,7 +24,7 @@ export default async (): Promise<boolean> => {
         const response = await fetch(url, { signal: controller.signal, cache: "no-store" }); // Skip cache
         clearTimeout(id);
         hasInternetResult = response.ok;
-    } catch (e) {
+    } catch {
         hasInternetResult = false;
     }
     return hasInternetResult;

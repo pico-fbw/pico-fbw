@@ -35,9 +35,6 @@ void sys_boot_end() {
 }
 
 void sys_periodic() {
-#ifndef RASPBERRYPI_PICO_W
-    tud_task(); // Handle USB events manually due to custom USB stack
-#endif
     watchdog_update();
 }
 

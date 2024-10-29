@@ -5,7 +5,7 @@
  * This file utilizes code under the MIT License. See "LICENSE" for details.
  */
 
-// The virtual ethernet interface (RNDIS/CDC-ECM) is derived from the tinyusb example "net_lwip_webserver", thanks!
+// The virtual network interface is derived from the tinyusb example "net_lwip_webserver", thanks!
 
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
@@ -20,9 +20,11 @@
 
 #include <string.h>
 #include "lwip/ip_addr.h"
+#include "pico/config.h"
 #ifdef RASPBERRYPI_PICO_W
 #include "pico/cyw43_arch.h"
 #else
+#include "lwip/debug.h"
 #include "lwip/err.h"
 #include "lwip/etharp.h"
 #include "lwip/pbuf.h"
@@ -30,6 +32,7 @@
 #include "netif/ethernet.h"
 #include "pico/async_context_threadsafe_background.h"
 #include "pico/lwip_nosys.h"
+#include "pico/time.h"
 #include "pico/unique_id.h"
 #include "tusb.h"
 #endif
@@ -50,23 +53,28 @@ static DNSServer dns;
 static TCPServer server;
 static const ip_addr_t gateway = IP4(192, 168, 4, 1), netmask = IP4(255, 255, 255, 0);
 
-    // If we're not on the Pico W, we can use RNDIS/CDC-ECM to provide a virtual ethernet interface when plugged in via USB
+    // If we're not on the Pico W, we can use RNDIS/CDC-ECM to provide a virtual network interface when plugged in via USB
     #ifndef RASPBERRYPI_PICO_W
 
 static async_context_threadsafe_background_t lwip_async_context;
-static struct netif usb_eth;
+static struct netif usb_net;
 static struct pbuf *received_frame;
-u8 tud_network_mac_address[6];
+u8 tud_network_mac_address[6] = {[0 ... 5] = 0x00};
 
-static void generate_macaddr(uint8_t *mac) {
-    pico_unique_board_id_t id;
-    pico_get_unique_board_id(&id);
-    memcpy(mac, id.id, 6);
+/**
+ * Generate a MAC address for the device based on the unique board ID.
+ * @param mac the buffer to store the generated MAC address in
+ */
+void generate_macaddr(u8 *mac) {
+    pico_unique_board_id_t board_id;
+    pico_get_unique_board_id(&board_id);
+    memcpy(mac, &board_id.id[2], 6);
     mac[0] |= 0x02; // Set the LSbit to 1 to indicate a locally administered MAC address
     mac[0] &= 0xFE; // Clear the I/G bit to indicate a unicast MAC address
 }
 
-static err_t usb_eth_xmit_packet(struct netif *netif, struct pbuf *p) {
+// lwIP callback. Will be called to transmit packets over the USB network interface.
+static err_t usb_net_xmit_packet(struct netif *netif, struct pbuf *p) {
     while (true) {
         if (!tud_ready())
             return ERR_USE; // tinyusb not ready
@@ -80,6 +88,7 @@ static err_t usb_eth_xmit_packet(struct netif *netif, struct pbuf *p) {
     (void)netif;
 }
 
+// lwIP callback. Will be called to initialize the USB network interface.
 static err_t netif_init_cb(struct netif *netif) {
     LWIP_ASSERT("netif != NULL", (netif != NULL));
     netif->mtu = CFG_TUD_NET_MTU;
@@ -87,11 +96,12 @@ static err_t netif_init_cb(struct netif *netif) {
     netif->state = NULL;
     netif->name[0] = 'E';
     netif->name[1] = 'X';
-    netif->linkoutput = usb_eth_xmit_packet;
+    netif->linkoutput = usb_net_xmit_packet;
     netif->output = etharp_output; // lwip ethernet output function
     return ERR_OK;
 }
 
+// tinyusb callback. Will be called when a packet is received over the USB network interface.
 bool tud_network_recv_cb(const u8 *src, u16 size) {
     if (received_frame)
         return false; // Haven't processed the previous packet yet, so we can't accept another
@@ -103,32 +113,37 @@ bool tud_network_recv_cb(const u8 *src, u16 size) {
         return false;
     // pbuf_alloc() has already initialized struct; all we need to do is copy the data
     memcpy(p->payload, src, size);
-    // usb_eth_process_packets() will handle this pbuf later
+    // usb_net_process_packets() will handle this pbuf later
     received_frame = p;
     return true;
 }
 
+// tinyusb callback. Will be called when a packet is ready to be transmitted over the USB network interface.
 u16 tud_network_xmit_cb(u8 *dst, void *ref, u16 arg) {
     struct pbuf *p = (struct pbuf *)ref;
     return pbuf_copy_partial(p, dst, p->tot_len, 0);
     (void)arg;
 }
 
-static bool usb_eth_init() {
+/**
+ * Initialize the USB network interface.
+ * @return true if successfully initialized
+ */
+static bool usb_net_init() {
     // Initialize lwip stack
     async_context_threadsafe_background_config_t config = async_context_threadsafe_background_default_config();
     async_context_threadsafe_background_init(&lwip_async_context, &config);
     if (!lwip_nosys_init(&lwip_async_context.core))
         return false;
 
-    struct netif *netif = &usb_eth;
+    struct netif *netif = &usb_net;
     // Generate MAC address
     generate_macaddr(tud_network_mac_address);
     netif->hwaddr_len = sizeof(tud_network_mac_address);
     memcpy(netif->hwaddr, tud_network_mac_address, sizeof(tud_network_mac_address));
-    LWIP_DEBUGF(NETIF_DEBUG, ("usb_eth_init: generated MAC address %02X:%02X:%02X:%02X:%02X:%02X\n", netif->hwaddr[0],
+    LWIP_DEBUGF(NETIF_DEBUG, ("usb_net_init: generated MAC address %02X:%02X:%02X:%02X:%02X:%02X\n", netif->hwaddr[0],
                               netif->hwaddr[1], netif->hwaddr[2], netif->hwaddr[3], netif->hwaddr[4], netif->hwaddr[5]));
-    // Add the usb ethernet interface to lwip
+    // Add the usb network interface to lwip
     netif = netif_add(netif, &gateway, &netmask, &gateway, NULL, netif_init_cb, ip_input);
     if (!netif)
         return false;
@@ -137,11 +152,14 @@ static bool usb_eth_init() {
     return true;
 }
 
-static void usb_eth_process_packets() {
+/**
+ * Process any packets received by the USB network interface (tud_network_recv_cb()) through lwip.
+ */
+static void usb_net_process_packets() {
     if (!received_frame)
         return;
-    // Process any packets received by the USB ethernet interface (tud_network_recv_cb()) through lwip
-    ethernet_input(received_frame, &usb_eth);
+    // Process any packets received by the USB network interface (tud_network_recv_cb()) through lwip
+    ethernet_input(received_frame, &usb_net);
     received_frame = NULL;
     tud_network_recv_renew();
 }
@@ -157,8 +175,16 @@ bool wifi_setup(const char *ssid, const char *pass) {
         return false;
     cyw43_arch_enable_ap_mode(ssid, pass, pass ? CYW43_AUTH_WPA3_WPA2_AES_PSK : CYW43_AUTH_OPEN);
     #else
-    if (!usb_eth_init())
+    if (!usb_net_init())
         return false;
+    // If a device is currently connected via USB...
+    if (tud_ready()) {
+        // ...force re-enumeration to make the virtual network interface available
+        tud_disconnect();
+        sleep_ms(50);
+        tud_connect();
+        sleep_ms(1000);
+    }
     (void)ssid;
     (void)pass;
     #endif
@@ -173,7 +199,7 @@ void wifi_periodic() {
     #ifdef RASPBERRYPI_PICO_W
     return; // Nothing to do, all wifi tasks are handled in the background through interrupts
     #else
-    usb_eth_process_packets();
+    usb_net_process_packets();
     #endif
 }
 
@@ -186,7 +212,7 @@ bool wifi_disable() {
     cyw43_arch_disable_ap_mode();
     // Don't run cyw43_arch_deinit(), as we still need the driver for LED, etc.
     #else
-    netif_remove(&usb_eth);
+    netif_remove(&usb_net);
     lwip_nosys_deinit(&lwip_async_context.core);
     #endif
     return true;

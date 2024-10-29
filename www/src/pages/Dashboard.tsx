@@ -4,6 +4,7 @@
  */
 
 // [ ] General dashboard layout with recomended actions to take based on current state
+// [ ] Any current alerts or warnings
 // [ ] It also might be fun to have a plane visualization of some sort, and be able to click on parts to see details or control things
 
 import ContentBlock from "../elements/ContentBlock";
