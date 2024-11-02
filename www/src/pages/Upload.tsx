@@ -81,7 +81,11 @@ export default function Upload() {
         <ContentBlock title="Upload" loading={hasConnection === null}>
             <div className="flex flex-col items-center justify-center h-screen space-y-4 p-8">
                 {!hasConnection && showOfflineNotice && (
-                    <Alert type="info" onClose={() => settings.set("showOfflineNotice", "0")} className="mx-4 sm:mx-8 lg:mx-0">
+                    <Alert
+                        type="info"
+                        onClose={() => settings.set("showOfflineNotice", "0")}
+                        className="flex mx-4 sm:mx-8 lg:mx-0"
+                    >
                         It looks like you're offline. You can still upload flightplans that have been pre-generated at&nbsp;
                         <a
                             href="https://pico-fbw.org/tools/planner"

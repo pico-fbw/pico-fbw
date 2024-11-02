@@ -50,9 +50,9 @@ export default function Dashboard() {
                             key={i}
                             type={logTypeToAlertType(log.type)}
                             onClose={() => {}}
-                            className="mx-4 sm:mx-8 lg:mx-0 mb-2"
+                            className="flex mx-4 sm:mx-8 lg:mx-0 mb-2"
                         >
-                            {log.msg} (FBW-{log.code})
+                            <strong>{log.msg}</strong>&nbsp;(FBW-{log.code})
                         </Alert>
                     ))}
                 </div>

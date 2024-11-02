@@ -215,7 +215,7 @@ static bool handle_api_v1_get_info(TCPConnection *con_state, struct tcp_pcb *pcb
 
 static bool handle_api_v1_get_logs(TCPConnection *con_state, struct tcp_pcb *pcb, const char *req) {
     char *out = NULL;
-    i32 res = api_handle_get_info(&out);
+    i32 res = api_handle_get_logs(&out);
     if (!out) {
         tcp_write(pcb, HEADER_500, strlen(HEADER_500), 0);
         return false;
