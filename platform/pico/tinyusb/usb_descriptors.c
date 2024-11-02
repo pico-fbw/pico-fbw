@@ -48,12 +48,21 @@ enum InterfaceNumber {
     ITF_NUM_RESET,
 #endif
 #if CFG_TUD_ECM_RNDIS
-    ITF_NUM_RNDIS,
-    ITF_NUM_CDC_ECM,
+    ITF_NUM_RNDIS_CDC_ECM,
 #else
     ITF_NUM_CDC_NCM,
 #endif
-    ITF_NUM_TOTAL
+    ITF_NUM_TOTAL,
+};
+
+enum ConfigurationDescriptorIndex {
+#if CFG_TUD_ECM_RNDIS
+    CONFIG_ID_RNDIS = 0,
+    CONFIG_ID_CDC_ECM,
+#else
+    CONFIG_ID_CDC_NCM = 0,
+#endif
+    CONFIG_ID_TOTAL,
 };
 
 /* General device and endpoint configuration */
@@ -115,7 +124,7 @@ static const tusb_desc_device_t usbd_desc_device = {
     .iManufacturer = USBD_STR_MANUFACTURER,
     .iProduct = USBD_STR_PRODUCT,
     .iSerialNumber = USBD_STR_SERIAL,
-    .bNumConfigurations = 0x01,
+    .bNumConfigurations = CONFIG_ID_TOTAL,
 };
 
 const u8 *tud_descriptor_device_cb(void) {
@@ -129,35 +138,71 @@ const u8 *tud_descriptor_device_cb(void) {
     9, TUSB_DESC_INTERFACE, _itfnum, 0, 0, TUSB_CLASS_VENDOR_SPECIFIC, RESET_INTERFACE_SUBCLASS, RESET_INTERFACE_PROTOCOL,     \
         _stridx,
 
-#define BASE_CONFIG_LEN (TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN)
+#define DESC_CDC_CFG_LEN (TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN)
 #if PICO_STDIO_USB_ENABLE_RESET_VIA_VENDOR_INTERFACE
     #define RPI_RESET_LEN (TUD_RPI_RESET_DESC_LEN)
 #else
     #define RPI_RESET_LEN (0)
 #endif
-#define NET_DESC_LEN (CFG_TUD_ECM_RNDIS ? (TUD_RNDIS_DESC_LEN + TUD_CDC_NCM_DESC_LEN) : TUD_CDC_NCM_DESC_LEN)
-#define CONFIG_TOTAL_LEN (BASE_CONFIG_LEN + RPI_RESET_LEN + NET_DESC_LEN)
+#define BASE_CFG_LEN (DESC_CDC_CFG_LEN + RPI_RESET_LEN)
 
-static const u8 usbd_desc_cfg[] = {
-    TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, USBD_CONFIGURATION_DESCRIPTOR_ATTRIBUTE, USBD_MAX_POWER_MA),
+#if CFG_TUD_ECM_RNDIS
+
+    #define RNDIS_CFG_LEN (BASE_CFG_LEN + TUD_RNDIS_DESC_LEN)
+static const u8 rndis_cfg[] = {
+    TUD_CONFIG_DESCRIPTOR(CONFIG_ID_RNDIS + 1, ITF_NUM_TOTAL, 0, RNDIS_CFG_LEN, USBD_CONFIGURATION_DESCRIPTOR_ATTRIBUTE, USBD_MAX_POWER_MA),
     TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, USBD_STR_CDC, USBD_CDC_EP_CMD, USBD_CDC_CMD_MAX_SIZE, USBD_CDC_EP_OUT, USBD_CDC_EP_IN,
                        USBD_CDC_IN_OUT_MAX_SIZE),
-#if PICO_STDIO_USB_ENABLE_RESET_VIA_VENDOR_INTERFACE
+    #if PICO_STDIO_USB_ENABLE_RESET_VIA_VENDOR_INTERFACE
     TUD_RPI_RESET_DESCRIPTOR(ITF_NUM_RESET, USBD_STR_RPI_RESET)
-#endif
-#if CFG_TUD_ECM_RNDIS
-        TUD_RNDIS_DESCRIPTOR(ITF_NUM_RNDIS, USBD_STR_RNDIS, USBD_NET_EP_NOTIF, 8, USBD_NET_EP_OUT, USBD_NET_EP_IN,
+    #endif
+        TUD_RNDIS_DESCRIPTOR(ITF_NUM_RNDIS_CDC_ECM, USBD_STR_RNDIS, USBD_NET_EP_NOTIF, 8, USBD_NET_EP_OUT, USBD_NET_EP_IN,
                              CFG_TUD_NET_ENDPOINT_SIZE),
-    TUD_CDC_ECM_DESCRIPTOR(ITF_NUM_CDC_ECM, USBD_STR_CDC_ECM, USBD_STR_MACADDR, USBD_NET_EP_NOTIF, 64, USBD_NET_EP_OUT,
-                           USBD_NET_EP_IN, CFG_TUD_NET_ENDPOINT_SIZE, CFG_TUD_NET_MTU),
-#else
-    TUD_CDC_NCM_DESCRIPTOR(ITF_NUM_CDC_NCM, USBD_STR_CDC_NCM, USBD_STR_MACADDR, USBD_NET_EP_NOTIF, 64, USBD_NET_EP_OUT,
-                           USBD_NET_EP_IN, CFG_TUD_NET_ENDPOINT_SIZE, CFG_TUD_NET_MTU),
-#endif
 };
 
-const u8 *tud_descriptor_configuration_cb(__unused u8 index) {
-    return usbd_desc_cfg;
+    #define CDC_ECM_CFG_LEN (BASE_CFG_LEN + TUD_CDC_ECM_DESC_LEN)
+static const u8 cdc_ecm_cfg[] = {
+    TUD_CONFIG_DESCRIPTOR(CONFIG_ID_CDC_ECM + 1, ITF_NUM_TOTAL, 0, CDC_ECM_CFG_LEN, USBD_CONFIGURATION_DESCRIPTOR_ATTRIBUTE, USBD_MAX_POWER_MA),
+    TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, USBD_STR_CDC, USBD_CDC_EP_CMD, USBD_CDC_CMD_MAX_SIZE, USBD_CDC_EP_OUT, USBD_CDC_EP_IN,
+                       USBD_CDC_IN_OUT_MAX_SIZE),
+    #if PICO_STDIO_USB_ENABLE_RESET_VIA_VENDOR_INTERFACE
+    TUD_RPI_RESET_DESCRIPTOR(ITF_NUM_RESET, USBD_STR_RPI_RESET)
+    #endif
+        TUD_CDC_ECM_DESCRIPTOR(ITF_NUM_RNDIS_CDC_ECM, USBD_STR_CDC_ECM, USBD_STR_MACADDR, USBD_NET_EP_NOTIF, 64,
+                               USBD_NET_EP_OUT, USBD_NET_EP_IN, CFG_TUD_NET_ENDPOINT_SIZE, CFG_TUD_NET_MTU),
+};
+
+#else
+
+    #define CDC_NCM_CFG_LEN (BASE_CFG_LEN + TUD_CDC_NCM_DESC_LEN)
+static const u8 cdc_ncm_cfg[] = {
+    TUD_CONFIG_DESCRIPTOR(CONFIG_ID_CDC_NCM + 1, ITF_NUM_TOTAL, 0, CDC_NCM_CFG_LEN, USBD_CONFIGURATION_DESCRIPTOR_ATTRIBUTE, USBD_MAX_POWER_MA),
+    TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, USBD_STR_CDC, USBD_CDC_EP_CMD, USBD_CDC_CMD_MAX_SIZE, USBD_CDC_EP_OUT, USBD_CDC_EP_IN,
+                       USBD_CDC_IN_OUT_MAX_SIZE),
+    #if PICO_STDIO_USB_ENABLE_RESET_VIA_VENDOR_INTERFACE
+    TUD_RPI_RESET_DESCRIPTOR(ITF_NUM_RESET, USBD_STR_RPI_RESET)
+    #endif
+        TUD_CDC_NCM_DESCRIPTOR(ITF_NUM_CDC_NCM, USBD_STR_CDC_NCM, USBD_STR_MACADDR, USBD_NET_EP_NOTIF, 64, USBD_NET_EP_OUT,
+                               USBD_NET_EP_IN, CFG_TUD_NET_ENDPOINT_SIZE, CFG_TUD_NET_MTU),
+};
+
+#endif
+
+const u8 *tud_descriptor_configuration_cb(u8 index) {
+    if (index >= CONFIG_ID_TOTAL)
+        return NULL;
+#if CFG_TUD_ECM_RNDIS
+    switch (index) {
+        case 0:
+            return rndis_cfg;
+        case 1:
+            return cdc_ecm_cfg;
+        default:
+            return NULL;
+    }
+#else
+    return cdc_ncm_cfg;
+#endif
 }
 
 /* String descriptors */
@@ -174,10 +219,10 @@ static const char *const usbd_desc_str[] = {
     [USBD_STR_RPI_RESET] = "Reset",
 #endif
 #if CFG_TUD_ECM_RNDIS
-    [USBD_STR_RNDIS] = "USB Network RNDIS",
-    [USBD_STR_CDC_ECM] = "USB Network CDC-ECM",
+    [USBD_STR_RNDIS] = "Network RNDIS",
+    [USBD_STR_CDC_ECM] = "Network CDC-ECM",
 #else
-    [USBD_STR_CDC_NCM] = "USB Network CDC-NCM",
+    [USBD_STR_CDC_NCM] = "Network CDC-NCM",
 #endif
 };
 

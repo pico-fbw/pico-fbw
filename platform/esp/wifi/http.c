@@ -23,6 +23,7 @@
 #include "sys/api/api.h"
 #include "sys/api/cmds/GET/get_config.h"
 #include "sys/api/cmds/GET/get_info.h"
+#include "sys/api/cmds/GET/get_logs.h"
 #include "sys/api/cmds/SET/set_config.h"
 #include "sys/api/cmds/SET/set_flightplan.h"
 
@@ -92,6 +93,20 @@ static esp_err_t handle_api_v1_get_config(httpd_req_t *req) {
 static esp_err_t handle_api_v1_get_info(httpd_req_t *req) {
     char *out = NULL;
     i32 res = api_handle_get_info(&out);
+    httpd_resp_set_status(req, api_res_to_http_status(res));
+    if (!out) {
+        httpd_resp_send_500(req);
+        return ESP_ERR_NO_MEM;
+    }
+    httpd_resp_set_type(req, HTTPD_TYPE_JSON);
+    httpd_resp_sendstr(req, out);
+    free(out);
+    return res < 500 ? ESP_OK : ESP_FAIL;
+}
+
+static esp_err_t handle_api_v1_get_logs(httpd_req_t *req) {
+    char *out = NULL;
+    i32 res = api_handle_get_logs(&out);
     httpd_resp_set_status(req, api_res_to_http_status(res));
     if (!out) {
         httpd_resp_send_500(req);
@@ -246,6 +261,12 @@ esp_err_t http_server_open(httpd_handle_t *server) {
         .handler = handle_api_v1_get_info,
     };
     httpd_register_uri_handler(*server, &apiV1GetInfoURI);
+    httpd_uri_t apiV1GetLogsURI = {
+        .uri = "/api/v1/get/logs",
+        .method = HTTP_GET,
+        .handler = handle_api_v1_get_logs,
+    };
+    httpd_register_uri_handler(*server, &apiV1GetLogsURI);
     httpd_uri_t apiV1SetConfigURI = {
         .uri = "/api/v1/set/config",
         .method = HTTP_POST,

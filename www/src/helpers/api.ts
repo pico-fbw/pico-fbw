@@ -21,6 +21,14 @@ export type GET_INFO = {
     platform: string;
     platform_version: string;
 };
+export type GET_LOGS = {
+    logs: {
+        type: number;
+        msg: string;
+        code: number;
+        timestamp: number;
+    }[];
+};
 
 // SET endpoints
 export type SET_CONFIG = EmptyResponse;
@@ -35,6 +43,7 @@ export type PING = EmptyResponse;
 type EndpointMap = {
     "get/config": GET_CONFIG;
     "get/info": GET_INFO;
+    "get/logs": GET_LOGS;
     "set/config": SET_CONFIG;
     "set/flightplan": SET_FLIGHTPLAN;
     ping: PING;

@@ -34,6 +34,7 @@
 #include "sys/api/api.h"
 #include "sys/api/cmds/GET/get_config.h"
 #include "sys/api/cmds/GET/get_info.h"
+#include "sys/api/cmds/GET/get_logs.h"
 #include "sys/api/cmds/SET/set_config.h"
 #include "sys/api/cmds/SET/set_flightplan.h"
 
@@ -212,6 +213,27 @@ static bool handle_api_v1_get_info(TCPConnection *con_state, struct tcp_pcb *pcb
     (void)req;
 }
 
+static bool handle_api_v1_get_logs(TCPConnection *con_state, struct tcp_pcb *pcb, const char *req) {
+    char *out = NULL;
+    i32 res = api_handle_get_info(&out);
+    if (!out) {
+        tcp_write(pcb, HEADER_500, strlen(HEADER_500), 0);
+        return false;
+    }
+    char *resp = create_response(api_res_to_http_status(res), TYPE_JSON, out);
+    if (!resp) {
+        free(out);
+        tcp_write(pcb, HEADER_500, strlen(HEADER_500), 0);
+        return false;
+    }
+    tcp_write(pcb, resp, strlen(resp), TCP_WRITE_FLAG_COPY);
+    free(resp);
+    free(out);
+    return res < 500 ? true : false;
+    (void)con_state;
+    (void)req;
+}
+
 /* --- API SET handlers --- */
 
 static bool handle_api_v1_set_config(TCPConnection *con_state, struct tcp_pcb *pcb, const char *req) {
@@ -364,6 +386,8 @@ static bool handle_request(TCPConnection *con_state, struct tcp_pcb *pcb, const 
                 res = handle_api_v1_get_config(con_state, pcb, request);
             else if (strcmp(uri + strlen(API_V1_PATH), "get/info") == 0)
                 res = handle_api_v1_get_info(con_state, pcb, uri);
+            else if (strcmp(uri + strlen(API_V1_PATH), "get/logs") == 0)
+                res = handle_api_v1_get_logs(con_state, pcb, uri);
             else if (strcmp(uri + strlen(API_V1_PATH), "ping") == 0)
                 res = handle_api_v1_ping(con_state, pcb, request);
         } else {
