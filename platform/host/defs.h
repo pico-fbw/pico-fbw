@@ -2,9 +2,6 @@
 
 #if defined(_WIN32)
     #include <windows.h>
-    #if _WIN32_WINNT < _WIN32_WINNT_WIN10
-        #error "Windows version not supported, please update to Windows 10 or later."
-    #endif
 #elif defined(__APPLE__)
     #include "time_apple.h"
 #elif defined(__linux__)

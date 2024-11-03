@@ -254,7 +254,10 @@ def find_dependency(program: str) -> Path | None:
 def setup_host_tools():
     """Install any necessary build tools for the host platform."""
     if host == "linux":
-        if not shutil.which("gcc"):
+        gcc = shutil.which("gcc")
+        if gcc:
+            print(f"Dependency 'gcc' found at '{gcc}'")
+        else:
             print("-- Installing build tools")
             # Try to install build-essential (or equivalent) via the system's package manager
             if shutil.which("apt"):
@@ -269,7 +272,10 @@ def setup_host_tools():
                 print("Unable to install build tools, please install them manually.")
                 exit(1)
     elif host == "win32":
-        if not (Path(os.path.abspath(os.sep)) / "msys64").exists():
+        msys2 = (Path(os.path.abspath(os.sep)) / "msys64")
+        if msys2.exists():
+            print(f"Dependency 'MSYS2' found at '{msys2}'")
+        else:
             # Install tools via msys2
             print("-- Setting up MSYS2")
             print("Downloading MSYS2")
@@ -280,7 +286,7 @@ def setup_host_tools():
             subprocess.check_call(["msys2.exe", "in", "--confirm-command", "--accept-messages", "--root", "C:\\msys64"])
             os.remove(download)
             # Disable key refresh
-            post_file = Path(os.path.abspath(os.sep)) / "msys64" / "etc" / "post-install" / "07-pacman-key.post"
+            post_file = msys2 / "etc" / "post-install" / "07-pacman-key.post"
             with open(str(post_file), "r", encoding="utf-8") as f:
                 content = f.read()
             new_content = content.replace("--refresh-keys", "--version")
@@ -290,7 +296,10 @@ def setup_host_tools():
             subprocess.check_call(["C:\\msys64\\usr\\bin\\pacman", "-S", "base-devel", "mingw-w64-ucrt-x86_64-toolchain", "--needed", "--noconfirm"])
         os.environ["PATH"] += os.pathsep + "C:\\msys64\\ucrt64\\bin" + os.pathsep + "C:\\msys64\\usr\\bin" # Ensure packages are in PATH during build
     elif host == "darwin":
-        if not (Path(os.path.abspath(os.sep)) / "Library/Developer/CommandLineTools").exists():
+        xcode = (Path(os.path.abspath(os.sep)) / "Library/Developer/CommandLineTools")
+        if xcode.exists():
+            print(f"Dependency 'Xcode' found at '{xcode}'")
+        else:
             # Install tools via Xcode
             print("-- Setting up Xcode command line tools")
             subprocess.check_call(["xcode-select", "--install"])
@@ -346,36 +355,51 @@ def construct_cmake_command(platform: str) -> tuple[str, str]:
 
     return configure, build
 
+def clean_build_dir():
+    """Clean the current build directory (ignoring the `deps` directory within)."""
+    print("-- Cleaning build directory")
+    for item in (root_dir / "build").iterdir():
+        if item.name == "deps":
+            continue
+        if item.is_dir():
+            shutil.rmtree(item)
+        elif item.is_file():
+            item.unlink()
+
 def get_platform() -> str:
     """:return: the platform to build for"""
-    # If an argument is given, use that as the platform
-    if len(os.sys.argv) > 1:
-        return str(os.sys.argv[1])
+    platform = None
     # If the cmake cache is present, pull the platform from there
     if os.path.exists("build/CMakeCache.txt"):
         with open("build/CMakeCache.txt") as f:
             for line in f:
                 if "FBW_PLATFORM" in line:
-                    print("Auto-detected platform from previous build")
-                    print(f"To build for a different platform, clean the previous build ('{os.sys.argv[0]} clean') and run this script again.")
-                    return line.split("=")[1].strip()
+                    platform = line.split("=")[1].strip()
+                    print(f"Auto-detected platform '{platform}' from previous build")
+                    if len(os.sys.argv) <= 1:
+                        print(f"To build for a different platform, run this script again and specify a platform as an argument ('python3 {os.sys.argv[0]} <YOUR PLATFORM>').")
+    # If an argument is given, that takes priority
+    if len(os.sys.argv) > 1:
+        # If the cache and current argument disagree, clean before 
+        platform_arg = str(os.sys.argv[1])
+        if platform_arg != platform:
+            clean_build_dir()
+        platform = platform_arg
     # No platform could be found; prompt the user to select one
-    else:
+    if not platform:
         for index, platform in enumerate(platforms):
             print(f"{index + 1}: {platform}")
         choice = int(input("Select platform: ")) - 1
         if choice < 0 or choice >= len(platforms):
             print("Invalid choice")
             exit(1)
-        return platforms[choice]
+        platform = platforms[choice]
+    return platform
 
 def main():
     # Clean the build directory if requested
     if len(os.sys.argv) > 1 and os.sys.argv[1] == "clean":
-        print("-- Cleaning build directory")
-        for item in (root_dir / "build").iterdir():
-            if item.is_dir() and item.name != "deps":
-                shutil.rmtree(item)
+        clean_build_dir()
         exit(0)
     # Get the platform to build for
     platform = get_platform()
@@ -413,6 +437,7 @@ def main():
                 exit(1)
     os.chdir(root_dir)
     # Check for host build tools; cmake likes to use host compilers for a lot of things
+    print("-- Setting up host tools")
     setup_host_tools()
     print("-- All dependencies installed")
 
