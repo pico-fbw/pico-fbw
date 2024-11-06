@@ -1,14 +1,14 @@
-set(FBW_BUILD_WWW ON CACHE BOOL "Build the web interface")
-if (NOT FBW_BUILD_WWW)
-    message("Skipping web interface build")
-    return()
-endif()
-message("Configuring web interface build")
+include(CMakeDependentOption)
+include(ExternalProject)
 
-# Ensure that LFS_ variables are defined
-if (NOT DEFINED LFS_BLOCK_SIZE OR NOT DEFINED LFS_PROG_SIZE OR NOT DEFINED LFS_IMG_SIZE)
-    message(WARNING "littlefs configuration not defined, skipping web interface build")
-    set(FBW_BUILD_WWW OFF CACHE BOOL "Build the web interface" FORCE)
+# We need LFS_ variables to be defined in order to run mklittlefs later (and therefore to build the web interface)
+cmake_dependent_option(FBW_BUILD_WWW "Build the web interface" ON "DEFINED LFS_BLOCK_SIZE;DEFINED LFS_PROG_SIZE;DEFINED LFS_IMG_SIZE" OFF)
+if (NOT FBW_BUILD_WWW)
+    if (DEFINED LFS_BLOCK_SIZE AND DEFINED LFS_PROG_SIZE AND DEFINED LFS_IMG_SIZE)
+        message("Web interface will NOT be built (disabled)")
+    else()
+        message("Web interface will NOT be built (unsupported)")
+    endif()
     return()
 endif()
 
@@ -33,7 +33,6 @@ endif()
 message("yarn found at ${YARN_EXE}")
 
 # Add mklittlefs as an external project so it will be built to be used later
-include(ExternalProject)
 set(MKLITTLEFS_DIR ${CMAKE_BINARY_DIR}/mklittlefs)
 if (CMAKE_HOST_WIN32)
     set(MKLITTLEFS_EXE_NAME mklittlefs.exe)
@@ -100,6 +99,7 @@ add_custom_command(
     COMMENT "Creating littlefs image of web interface"
 )
 
+message("Web interface will be built")
 add_custom_target(www DEPENDS ${CMAKE_BINARY_DIR}/generated/www/built)
 add_custom_target(wwwfs DEPENDS ${CMAKE_BINARY_DIR}/generated/www/lfs.bin)
 add_dependencies(${PROJECT_NAME} wwwfs)

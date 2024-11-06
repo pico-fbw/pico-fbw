@@ -1,7 +1,7 @@
-set(FBW_DOCS OFF CACHE BOOL "Generate docs using Doxygen")
+option(FBW_DOCS "Generate docs using Doxygen")
 
 if (NOT FBW_DOCS)
-    message("Documentation will not be generated (disabled)")
+    message("Documentation will NOT be generated (disabled)")
     return()
 endif()
 
@@ -22,7 +22,7 @@ add_custom_command(OUTPUT ${DOXYGEN_INDEX_FILE}
     COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_CONFIG_FILE}
     MAIN_DEPENDENCY ${DOXYGEN_CONFIG_FILE}
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    COMMENT "Generating docs"
+    COMMENT "Generating documentation"
     VERBATIM
 )
 add_custom_target(docs DEPENDS ${DOXYGEN_INDEX_FILE})

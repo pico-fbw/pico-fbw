@@ -1,7 +1,7 @@
-set(FBW_FORMAT OFF CACHE BOOL "Format code with clang-format")
+option(FBW_FORMAT "Format code with clang-format")
 
 if (NOT FBW_FORMAT)
-    message("Code will not be formatted (disabled)")
+    message("Code will NOT be formatted (disabled)")
     return()
 endif()
 
