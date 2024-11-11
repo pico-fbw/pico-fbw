@@ -11,7 +11,6 @@ if (NOT FBW_BUILD_WWW)
 endif()
 
 # Ensure yarn is installed
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/www")
 find_package(yarn REQUIRED)
 
 # Add mklittlefs as an external project so it will be built to be used later
@@ -29,24 +28,24 @@ ExternalProject_Add(mklittlefs
         GIT_SUBMODULES_RECURSE TRUE
     SOURCE_DIR ${MKLITTLEFS_DIR}
         BUILD_IN_SOURCE TRUE
-    # mklittlefs is not a CMake project, so we need to copy one in
-    PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/utils/mklittlefs/CMakeLists.txt <SOURCE_DIR>/CMakeLists.txt
+    # mklittlefs is not a CMake project, so we need to copy a CMakeLists in
+    PATCH_COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/cmake/mklittlefs/CMakeLists.txt <SOURCE_DIR>/CMakeLists.txt
     INSTALL_COMMAND ""
     COMMENT "Building mklittlefs"
 )
 
 # Add a target to build the web interface
 # It depends on all files in the www directory, so it will only rebuild if any of those files change
-file(GLOB_RECURSE WWW_FILES ${PROJECT_SOURCE_DIR}/www/*)
+file(GLOB_RECURSE WWW_FILES ${CMAKE_SOURCE_DIR}/www/*)
 if (NOT CMAKE_HOST_WIN32)
     # Invoke our custom wrapper script to ensure that nvm is sourced
     add_custom_command(
         # This command will also output an empty file whose modify timestamp can be used to check if/when the web interface has been built
         OUTPUT ${CMAKE_BINARY_DIR}/generated/www/built
-        COMMAND ${PROJECT_SOURCE_DIR}/www/www.sh ${PROJECT_SOURCE_DIR}/www ${YARN_EXE}
+        COMMAND ${CMAKE_SOURCE_DIR}/www/www.sh ${CMAKE_SOURCE_DIR}/www ${YARN_EXE}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/generated/www
         COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_BINARY_DIR}/generated/www/built
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/www
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/www
         DEPENDS ${WWW_FILES}
         USES_TERMINAL
         COMMENT "Building the web interface"
@@ -58,7 +57,7 @@ else()
         COMMAND ${YARN_EXE} install && ${YARN_EXE} build # nvm doesn't exist on windows so just attempt to run directly
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/generated/www
         COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_BINARY_DIR}/generated/www/built
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/www
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/www
         DEPENDS ${WWW_FILES}
         USES_TERMINAL
         COMMENT "Building the web interface"

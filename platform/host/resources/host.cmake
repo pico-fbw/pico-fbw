@@ -2,9 +2,10 @@
 add_compile_definitions(-DFBW_PLATFORM_HOST)
 
 function(setup_before_subdirs)
-    # If MSFS SimConnect SDK is installed, we can build extra features with it
-    set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/platform/host/resources")
-    find_package(SimConnect)
+    if (CMAKE_HOST_WIN32)
+        # If MSFS SimConnect SDK is installed, we can build extra features with it
+        find_package(SimConnect)
+    endif()
     if (SimConnect_FOUND)
         add_compile_definitions(-DSIMCONNECT=1)
         # Pass to parent scope
