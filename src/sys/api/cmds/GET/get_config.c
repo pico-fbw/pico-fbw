@@ -167,12 +167,12 @@ static char *get_entire_config() {
     return serialized;
 }
 
-i32 api_handle_get_config(const char *input, char **output) {
+i32 api_handle_get_config(const char *in, char **out) {
     char *serialized = NULL;
-    if (input) {
+    if (in) {
         // Arguments are present, parse them to figure out what config value to get
         char *section = NULL, *key = NULL;
-        if (!parse_args(input, &section, &key))
+        if (!parse_args(in, &section, &key))
             return 400;
         serialized = get_config_value(section, key);
         free(section);
@@ -183,7 +183,7 @@ i32 api_handle_get_config(const char *input, char **output) {
         // No arguments were given, return all config values
         serialized = get_entire_config();
     }
-    *output = serialized;
+    *out = serialized;
     return 200;
 }
 
@@ -191,7 +191,7 @@ i32 api_handle_get_config(const char *input, char **output) {
 // {"section":"","key":""}
 
 // Output:
-// {"sections":[{"name":"","keys":[number|""]}]}
+// {"sections":[{"name":"","values":[number|""]}]}
 
 i32 api_get_config(const char *args) {
     char *output = NULL;

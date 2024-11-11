@@ -12,7 +12,7 @@
 
 #include "get_info.h"
 
-i32 api_handle_get_info(char **output) {
+i32 api_handle_get_info(const char *in, char **out) {
     JSON_Value *root = json_value_init_object();
     JSON_Object *obj = json_value_get_object(root);
     json_object_set_string(obj, "version", PICO_FBW_VERSION);
@@ -22,15 +22,16 @@ i32 api_handle_get_info(char **output) {
     json_object_set_string(obj, "platform_version", PLATFORM_VERSION);
     char *serialized = json_serialize_to_string(root);
     json_value_free(root);
-    *output = serialized;
+    *out = serialized;
     return 200;
+    (void)in;
 }
 
 // {"version":"","version_api":"","version_flightplan":"","platform":"","platform_version":""}
 
 i32 api_get_info(const char *args) {
     char *output = NULL;
-    i32 res = api_handle_get_info(&output);
+    i32 res = api_handle_get_info(args, &output);
     if (!output)
         return 500;
     if (res != 200) {
@@ -40,5 +41,4 @@ i32 api_get_info(const char *args) {
     printraw("%s\n", output);
     json_free_serialized_string(output);
     return -1;
-    (void)args;
 }

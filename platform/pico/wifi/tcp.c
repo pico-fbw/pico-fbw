@@ -38,8 +38,6 @@
 #include "sys/api/cmds/SET/set_config.h"
 #include "sys/api/cmds/SET/set_flightplan.h"
 
-// TODO: this should probably be using lwip's httpd
-
 #define CHUNK_XFER_SIZE 1024 // Size of each chunk to send in a chunked transfer
 #define POLL_TIME_S 5 // Interval to poll a TCP connection for activity
 
@@ -89,6 +87,8 @@ static char *extract_uri(const char *req, char *method) {
  * @return the body of the request, or NULL if there is no body
  */
 static const char *get_request_body(const char *req) {
+    if (!req)
+        return NULL;
     const char *body = strstr(req, "\r\n\r\n");
     if (body && *(body + 4) != '\0')
         return body + 4;
@@ -166,20 +166,28 @@ static i32 send_file_chunk(TCPConnection *con_state, struct tcp_pcb *pcb, const 
     return bytesRead;
 }
 
-/* --- API GET handlers --- */
+/* --- Request handlers --- */
 
-static bool handle_api_v1_get_config(TCPConnection *con_state, struct tcp_pcb *pcb, const char *req) {
+/**
+ * Handles an API request by calling the appropriate API function, creating the HTTP response, and sending it.
+ * @param pcb the lwIP protocol control block for the connection
+ * @param req the HTTP request
+ * @param api_func the API function to call
+ * @return true if the request was handled successfully
+ */
+static bool handle_api_v1_request(struct tcp_pcb *pcb, const char *req, api_handler handler) {
     char *out = NULL;
-    // Perform the relavent API call using the request body and obtain its output
-    i32 res = api_handle_get_config(get_request_body(req), &out);
-    if (!out) {
-        tcp_write(pcb, HEADER_500, strlen(HEADER_500), 0);
-        return false;
+    i32 res = 200;
+    if (handler) {
+        const char *in = get_request_body(req); // Might be NULL
+        // Perform the relavent API call using the request body and obtain its output
+        res = handler(in, &out);
     }
     // Create and send the HTTP response
-    char *resp = create_response(api_res_to_http_status(res), TYPE_JSON, out);
+    char *resp = create_response(api_res_to_http_status(res), TYPE_JSON, out ? out : "{}");
     if (!resp) {
-        free(out);
+        if (out)
+            free(out);
         tcp_write(pcb, HEADER_500, strlen(HEADER_500), 0);
         return false;
     }
@@ -187,101 +195,9 @@ static bool handle_api_v1_get_config(TCPConnection *con_state, struct tcp_pcb *p
     // but lwIP may not have sent it yet
     tcp_write(pcb, resp, strlen(resp), TCP_WRITE_FLAG_COPY);
     free(resp);
-    free(out);
-    return res < 500 ? true : false;
-    (void)con_state;
-}
-
-static bool handle_api_v1_get_info(TCPConnection *con_state, struct tcp_pcb *pcb, const char *req) {
-    char *out = NULL;
-    i32 res = api_handle_get_info(&out);
-    if (!out) {
-        tcp_write(pcb, HEADER_500, strlen(HEADER_500), 0);
-        return false;
-    }
-    char *resp = create_response(api_res_to_http_status(res), TYPE_JSON, out);
-    if (!resp) {
+    if (out)
         free(out);
-        tcp_write(pcb, HEADER_500, strlen(HEADER_500), 0);
-        return false;
-    }
-    tcp_write(pcb, resp, strlen(resp), TCP_WRITE_FLAG_COPY);
-    free(resp);
-    free(out);
     return res < 500 ? true : false;
-    (void)con_state;
-    (void)req;
-}
-
-static bool handle_api_v1_get_logs(TCPConnection *con_state, struct tcp_pcb *pcb, const char *req) {
-    char *out = NULL;
-    i32 res = api_handle_get_logs(&out);
-    if (!out) {
-        tcp_write(pcb, HEADER_500, strlen(HEADER_500), 0);
-        return false;
-    }
-    char *resp = create_response(api_res_to_http_status(res), TYPE_JSON, out);
-    if (!resp) {
-        free(out);
-        tcp_write(pcb, HEADER_500, strlen(HEADER_500), 0);
-        return false;
-    }
-    tcp_write(pcb, resp, strlen(resp), TCP_WRITE_FLAG_COPY);
-    free(resp);
-    free(out);
-    return res < 500 ? true : false;
-    (void)con_state;
-    (void)req;
-}
-
-/* --- API SET handlers --- */
-
-static bool handle_api_v1_set_config(TCPConnection *con_state, struct tcp_pcb *pcb, const char *req) {
-    i32 res = api_handle_set_config(get_request_body(req));
-    char *resp = create_response(api_res_to_http_status(res), TYPE_JSON, "{}");
-    if (!resp) {
-        tcp_write(pcb, HEADER_500, strlen(HEADER_500), 0);
-        return false;
-    }
-    tcp_write(pcb, resp, strlen(resp), TCP_WRITE_FLAG_COPY);
-    free(resp);
-    return res < 500 ? true : false;
-    (void)con_state;
-}
-
-static bool handle_api_v1_set_flightplan(TCPConnection *con_state, struct tcp_pcb *pcb, const char *req) {
-    char *out = NULL;
-    i32 res = api_handle_set_flightplan(get_request_body(req), &out);
-    if (!out) {
-        tcp_write(pcb, HEADER_500, strlen(HEADER_500), 0);
-        return false;
-    }
-    char *resp = create_response(api_res_to_http_status(res), TYPE_JSON, out);
-    if (!resp) {
-        free(out);
-        tcp_write(pcb, HEADER_500, strlen(HEADER_500), 0);
-        return false;
-    }
-    tcp_write(pcb, resp, strlen(resp), TCP_WRITE_FLAG_COPY);
-    free(resp);
-    free(out);
-    return res < 500 ? true : false;
-    (void)con_state;
-}
-
-/* --- API MISC handlers --- */
-
-static bool handle_api_v1_ping(TCPConnection *con_state, struct tcp_pcb *pcb, const char *req) {
-    char *resp = create_response("200 OK", TYPE_JSON, "{}");
-    if (!resp) {
-        tcp_write(pcb, HEADER_500, strlen(HEADER_500), 0);
-        return false;
-    }
-    tcp_write(pcb, resp, strlen(resp), TCP_WRITE_FLAG_COPY);
-    free(resp);
-    return true;
-    (void)con_state;
-    (void)req;
 }
 
 // Generic GET handler.
@@ -369,6 +285,13 @@ static bool handle_common_get(TCPConnection *con_state, struct tcp_pcb *pcb, con
 
 /* --- High-level request handling --- */
 
+/**
+ * Handles an HTTP request by parsing it and calling the appropriate handler.
+ * @param con_state the connection state data
+ * @param pcb the lwIP protocol control block for the connection
+ * @param request the HTTP request
+ * @return true if the request was handled successfully
+ */
 static bool handle_request(TCPConnection *con_state, struct tcp_pcb *pcb, const char *request) {
     bool res = false;
     char *uri = NULL;
@@ -383,13 +306,13 @@ static bool handle_request(TCPConnection *con_state, struct tcp_pcb *pcb, const 
         LWIP_DEBUGF(TCP_DEBUG, ("handle_request: GET URI: %s\n", uri));
         if (strncmp(uri, API_V1_PATH, strlen(API_V1_PATH)) == 0) {
             if (strcmp(uri + strlen(API_V1_PATH), "get/config") == 0)
-                res = handle_api_v1_get_config(con_state, pcb, request);
+                res = handle_api_v1_request(pcb, request, api_handle_get_config);
             else if (strcmp(uri + strlen(API_V1_PATH), "get/info") == 0)
-                res = handle_api_v1_get_info(con_state, pcb, uri);
+                res = handle_api_v1_request(pcb, request, api_handle_get_info);
             else if (strcmp(uri + strlen(API_V1_PATH), "get/logs") == 0)
-                res = handle_api_v1_get_logs(con_state, pcb, uri);
+                res = handle_api_v1_request(pcb, request, api_handle_get_logs);
             else if (strcmp(uri + strlen(API_V1_PATH), "ping") == 0)
-                res = handle_api_v1_ping(con_state, pcb, request);
+                res = handle_api_v1_request(pcb, request, NULL);
         } else {
             // No other requests mathed, so it's probably a request for a file
             res = handle_common_get(con_state, pcb, request);
@@ -404,11 +327,11 @@ static bool handle_request(TCPConnection *con_state, struct tcp_pcb *pcb, const 
         if (strncmp(uri, API_V1_PATH, strlen(API_V1_PATH)) == 0) {
             if (strcmp(uri + strlen(API_V1_PATH), "get/config") == 0)
                 // GET_CONFIG can also be called with a POST request (in addition to a GET request, handled above)
-                res = handle_api_v1_get_config(con_state, pcb, request);
+                res = handle_api_v1_request(pcb, request, api_handle_get_config);
             else if (strcmp(uri + strlen(API_V1_PATH), "set/config") == 0)
-                res = handle_api_v1_set_config(con_state, pcb, request);
+                res = handle_api_v1_request(pcb, request, api_handle_set_config);
             else if (strcmp(uri + strlen(API_V1_PATH), "set/flightplan") == 0)
-                res = handle_api_v1_set_flightplan(con_state, pcb, request);
+                res = handle_api_v1_request(pcb, request, api_handle_set_flightplan);
         }
     }
     free(uri);

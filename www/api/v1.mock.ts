@@ -15,27 +15,27 @@ const configData = {
     sections: [
         {
             name: "General",
-            keys: [2, 1, 20, 50, 50, 1, 0, 0, 0],
+            values: [2, 1, 20, 50, 50, 1, 0, 0, 0],
         },
         {
             name: "Control",
-            keys: [25, 15, 1.5, 2, 10, 30, 0.015, 180, 0, 33, 67, -15, 30, 25, 15, 20, 20, 0.5, 1, 1],
+            values: [25, 15, 1.5, 2, 10, 30, 0.015, 180, 0, 33, 67, -15, 30, 25, 15, 20, 20, 0.5, 1, 1],
         },
         {
             name: "Pins",
-            keys: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            values: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         },
         {
             name: "Sensors",
-            keys: [1, 0, 400, 1, 9600],
+            values: [1, 0, 400, 1, 9600],
         },
         {
             name: "System",
-            keys: [1, 1, 0, 0, 0, 0],
+            values: [1, 1, 0, 0, 0, 0],
         },
         {
             name: "WiFi",
-            keys: ["pico-fbw", "picodashfbw"],
+            values: ["pico-fbw", "picodashfbw"],
         },
     ],
 };
@@ -50,13 +50,13 @@ export default (): MockHandler[] => [
                 const body = JSON.parse(bodyString) as { section: string; key: number };
                 const section = configData.sections.find(s => s.name === body.section);
                 if (section) {
-                    const key = section.keys[body.key];
+                    const key = section.values[body.key];
                     if (key !== undefined) {
                         send_data(res, {
                             sections: [
                                 {
                                     name: body.section,
-                                    keys: [key],
+                                    values: [key],
                                 },
                             ],
                         });
@@ -108,11 +108,11 @@ export default (): MockHandler[] => [
                 body.changes.forEach(change => {
                     const section = configData.sections.find(s => s.name === change.section);
                     if (section) {
-                        const currentValue = section.keys[change.key];
+                        const currentValue = section.values[change.key];
                         if (typeof currentValue === "number") {
-                            section.keys[change.key] = parseFloat(change.value);
+                            section.values[change.key] = parseFloat(change.value);
                         } else {
-                            section.keys[change.key] = change.value;
+                            section.values[change.key] = change.value;
                         }
                     }
                 });

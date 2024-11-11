@@ -1,5 +1,8 @@
 #pragma once
 
+// Type for internal API command handler functions.
+typedef i32 (*api_handler)(const char *in, char **out);
+
 /**
  * Polls the API for new data (incoming commands) and responds if necessary.
  * @return the status code of the executed command, or 0 if no command was executed

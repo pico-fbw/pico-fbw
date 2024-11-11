@@ -55,9 +55,9 @@ bool fusion_magnetometer_find(IMU *imu, const MagnetometerOptions *opts) {
                 byte addr = magnetometers[i].addr[a];
                 if (addr == NOADDR)
                     continue;
-                printfbw(aahrs, "Scanning for magnetometer \"%s\" at I2C 0x%02x", magnetometers[i].name, addr);
+                printfbw(aahrs, "scanning for magnetometer \"%s\" at I2C 0x%02x", magnetometers[i].name, addr);
                 if (magnetometers[i].detect(addr, imu->state)) {
-                    printfbw(aahrs, "Detected magnetometer \"%s\" at I2C 0x%02x", magnetometers[i].name, addr);
+                    printfbw(aahrs, "detected magnetometer \"%s\" at I2C 0x%02x", magnetometers[i].name, addr);
                     imu->mag->addr = addr;
                     detected = true;
                     break;
@@ -77,7 +77,7 @@ bool fusion_magnetometer_find(IMU *imu, const MagnetometerOptions *opts) {
                     imu->state = NULL;
                     return false;
                 } else {
-                    printfbw(aahrs, "Successfully created magnetometer \"%s\" at I2C 0x%02x", magnetometers[i].name,
+                    printfbw(aahrs, "successfully created magnetometer \"%s\" at I2C 0x%02x", magnetometers[i].name,
                              imu->mag->addr);
                 }
             }

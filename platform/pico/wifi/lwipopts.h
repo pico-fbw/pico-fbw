@@ -4,6 +4,7 @@
 
 #define NO_SYS 1 // pico-fbw is bare-metal (at least on the Pico)
 
+/* Memory configuration */
 #define MEM_LIBC_MALLOC 0
 #define MEM_ALIGNMENT 4
 #define MEM_SIZE 16384 // 16K
@@ -11,18 +12,21 @@
 #define MEMP_NUM_ARP_QUEUE 10
 #define PBUF_POOL_SIZE 24
 
+/* TCP configuration */
 #define TCP_MSS 1460
 #define TCP_WND (8 * TCP_MSS)
 #define TCP_SND_BUF TCP_WND
 #define TCP_SND_QUEUELEN ((4 * (TCP_SND_BUF) + (TCP_MSS - 1)) / (TCP_MSS))
 
-#define LWIP_STATS 1
-#define LWIP_STATS_DISPLAY 1
+/* Statistics configuration */
+#define LWIP_STATS 0
+#define LWIP_STATS_DISPLAY 0
 #define MEM_STATS 0
 #define SYS_STATS 0
 #define MEMP_STATS 0
 #define LINK_STATS 0
 
+/* Interface configuration */
 #define LWIP_ARP 1
 #define LWIP_ETHERNET 1
 #define LWIP_ICMP 1
@@ -43,12 +47,15 @@
 #define DHCP_DOES_ARP_CHECK 0
 #define LWIP_DHCP_DOES_ACD_CHECK 0
 
+/* Debug configuration */
 #ifndef NDEBUG
+    // Debug build
     #define LWIP_DEBUG 1
+    #undef LWIP_STATS
     #define LWIP_STATS 1
+    #undef LWIP_STATS_DISPLAY
     #define LWIP_STATS_DISPLAY 1
 #endif
-
 #define DHCP_DEBUG LWIP_DBG_OFF
 #define DNS_DEBUG LWIP_DBG_OFF
 #define ETHARP_DEBUG LWIP_DBG_OFF

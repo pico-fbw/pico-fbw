@@ -12,11 +12,11 @@
 
 #include "set_config.h"
 
-i32 api_handle_set_config(const char *input) {
-    if (!input)
+i32 api_handle_set_config(const char *in, char **out) {
+    if (!in)
         goto save; // No input, trigger a save to flash
 
-    JSON_Value *root = json_parse_string(input);
+    JSON_Value *root = json_parse_string(in);
     if (!root)
         return 400;
     JSON_Object *obj = json_value_get_object(root);
@@ -51,6 +51,7 @@ i32 api_handle_set_config(const char *input) {
     if (save)
         goto save;
     return 200;
+    (void)out;
 
 save:
     // Validate before saving
@@ -68,5 +69,5 @@ save:
 // and save the changes to flash
 
 i32 api_set_config(const char *args) {
-    return api_handle_set_config(args);
+    return api_handle_set_config(args, NULL);
 }

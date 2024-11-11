@@ -65,99 +65,30 @@ static esp_err_t get_request_body(httpd_req_t *req, char **response) {
     return ESP_OK;
 }
 
-// GET handlers
-
-static esp_err_t handle_api_v1_get_config(httpd_req_t *req) {
-    // Get the request body
-    char *in = NULL;
-    esp_err_t err = get_request_body(req, &in);
-    if (err != ESP_OK)
-        return err;
+static esp_err_t handle_api_v1_request(httpd_req_t *req) {
+    // API handler function that was registered with the URI
+    api_handler handler = (api_handler)req->user_ctx;
     char *out = NULL;
-    // Perform the relavent API call and obtain its output
-    i32 res = api_handle_get_config(in, &out);
+    i32 res = 200;
+    if (handler) {
+        // Get the request body
+        char *in = NULL;
+        esp_err_t err = get_request_body(req, &in); // Might be NULL
+        if (err != ESP_OK)
+            return err;
+        // Perform the relavent API call and obtain its output
+        res = handler(in, &out);
+        if (in)
+            free(in);
+    }
     // Set the status of the HTTP response to the status of the API response
     httpd_resp_set_status(req, api_res_to_http_status(res));
-    if (!out) {
-        httpd_resp_send_500(req);
-        return ESP_ERR_NO_MEM;
-    }
-    free(in);
     // Set the content type of the HTTP response to JSON and send the output
     httpd_resp_set_type(req, HTTPD_TYPE_JSON);
-    httpd_resp_sendstr(req, out);
-    free(out);
+    httpd_resp_sendstr(req, out ? out : "{}");
+    if (out)
+        free(out);
     return res < 500 ? ESP_OK : ESP_FAIL;
-}
-
-static esp_err_t handle_api_v1_get_info(httpd_req_t *req) {
-    char *out = NULL;
-    i32 res = api_handle_get_info(&out);
-    httpd_resp_set_status(req, api_res_to_http_status(res));
-    if (!out) {
-        httpd_resp_send_500(req);
-        return ESP_ERR_NO_MEM;
-    }
-    httpd_resp_set_type(req, HTTPD_TYPE_JSON);
-    httpd_resp_sendstr(req, out);
-    free(out);
-    return res < 500 ? ESP_OK : ESP_FAIL;
-}
-
-static esp_err_t handle_api_v1_get_logs(httpd_req_t *req) {
-    char *out = NULL;
-    i32 res = api_handle_get_logs(&out);
-    httpd_resp_set_status(req, api_res_to_http_status(res));
-    if (!out) {
-        httpd_resp_send_500(req);
-        return ESP_ERR_NO_MEM;
-    }
-    httpd_resp_set_type(req, HTTPD_TYPE_JSON);
-    httpd_resp_sendstr(req, out);
-    free(out);
-    return res < 500 ? ESP_OK : ESP_FAIL;
-}
-
-// SET handlers
-
-static esp_err_t handle_api_v1_set_config(httpd_req_t *req) {
-    char *in = NULL;
-    esp_err_t err = get_request_body(req, &in);
-    if (err != ESP_OK)
-        return err;
-    i32 res = api_handle_set_config(in);
-    httpd_resp_set_status(req, api_res_to_http_status(res));
-    free(in);
-    httpd_resp_set_type(req, HTTPD_TYPE_JSON);
-    httpd_resp_sendstr(req, "{}");
-    return res < 500 ? ESP_OK : ESP_FAIL;
-}
-
-static esp_err_t handle_api_v1_set_flightplan(httpd_req_t *req) {
-    char *in = NULL;
-    esp_err_t err = get_request_body(req, &in);
-    if (err != ESP_OK)
-        return err;
-    char *out = NULL;
-    i32 res = api_handle_set_flightplan(in, &out);
-    httpd_resp_set_status(req, api_res_to_http_status(res));
-    if (!out) {
-        httpd_resp_send_500(req);
-        return ESP_ERR_NO_MEM;
-    }
-    free(in);
-    httpd_resp_set_type(req, HTTPD_TYPE_JSON);
-    httpd_resp_sendstr(req, out);
-    free(out);
-    return res < 500 ? ESP_OK : ESP_FAIL;
-}
-
-// MISC handlers
-
-static esp_err_t handle_api_v1_ping(httpd_req_t *req) {
-    httpd_resp_set_type(req, HTTPD_TYPE_JSON);
-    httpd_resp_sendstr(req, "{}");
-    return ESP_OK;
 }
 
 // Fetches the content requested by a GET request from littlefs and responds with the content.
@@ -245,12 +176,14 @@ esp_err_t http_server_open(httpd_handle_t *server) {
     httpd_uri_t apiV1GetConfigURIGet = {
         .uri = "/api/v1/get/config",
         .method = HTTP_GET,
-        .handler = handle_api_v1_get_config,
+        .handler = handle_api_v1_request,
+        .user_ctx = api_handle_get_config,
     };
     httpd_uri_t apiV1GetConfigURIPost = {
         .uri = "/api/v1/get/config",
         .method = HTTP_POST,
-        .handler = handle_api_v1_get_config,
+        .handler = handle_api_v1_request,
+        .user_ctx = api_handle_get_config,
     };
     // get/config supports both GET and POST
     httpd_register_uri_handler(*server, &apiV1GetConfigURIGet);
@@ -258,31 +191,36 @@ esp_err_t http_server_open(httpd_handle_t *server) {
     httpd_uri_t apiV1GetInfoURI = {
         .uri = "/api/v1/get/info",
         .method = HTTP_GET,
-        .handler = handle_api_v1_get_info,
+        .handler = handle_api_v1_request,
+        .user_ctx = api_handle_get_info,
     };
     httpd_register_uri_handler(*server, &apiV1GetInfoURI);
     httpd_uri_t apiV1GetLogsURI = {
         .uri = "/api/v1/get/logs",
         .method = HTTP_GET,
-        .handler = handle_api_v1_get_logs,
+        .handler = handle_api_v1_request,
+        .user_ctx = api_handle_get_logs,
     };
     httpd_register_uri_handler(*server, &apiV1GetLogsURI);
     httpd_uri_t apiV1SetConfigURI = {
         .uri = "/api/v1/set/config",
         .method = HTTP_POST,
-        .handler = handle_api_v1_set_config,
+        .handler = handle_api_v1_request,
+        .user_ctx = api_handle_set_config,
     };
     httpd_register_uri_handler(*server, &apiV1SetConfigURI);
     httpd_uri_t apiV1SetFlightplanURI = {
         .uri = "/api/v1/set/flightplan",
         .method = HTTP_POST,
-        .handler = handle_api_v1_set_flightplan,
+        .handler = handle_api_v1_request,
+        .user_ctx = api_handle_set_flightplan,
     };
     httpd_register_uri_handler(*server, &apiV1SetFlightplanURI);
     httpd_uri_t apiV1PingURI = {
         .uri = "/api/v1/ping",
         .method = HTTP_GET,
-        .handler = handle_api_v1_ping,
+        .handler = handle_api_v1_request,
+        .user_ctx = NULL,
     };
     httpd_register_uri_handler(*server, &apiV1PingURI);
 

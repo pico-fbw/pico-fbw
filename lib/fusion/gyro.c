@@ -57,9 +57,9 @@ bool fusion_gyroscope_find(IMU *imu, const GyroscopeOptions *opts) {
                 byte addr = gyroscopes[i].addr[a];
                 if (addr == NOADDR)
                     continue;
-                printfbw(aahrs, "Scanning for gyroscope \"%s\" at I2C 0x%02x", gyroscopes[i].name, addr);
+                printfbw(aahrs, "scanning for gyroscope \"%s\" at I2C 0x%02x", gyroscopes[i].name, addr);
                 if (gyroscopes[i].detect(addr, imu->state)) {
-                    printfbw(aahrs, "Detected gyroscope \"%s\" at I2C 0x%02x", gyroscopes[i].name, addr);
+                    printfbw(aahrs, "detected gyroscope \"%s\" at I2C 0x%02x", gyroscopes[i].name, addr);
                     imu->gyro->addr = addr;
                     detected = true;
                     break;
@@ -79,7 +79,7 @@ bool fusion_gyroscope_find(IMU *imu, const GyroscopeOptions *opts) {
                     imu->state = NULL;
                     return false;
                 } else {
-                    printfbw(aahrs, "Successfully created gyroscope \"%s\" at I2C 0x%02x", gyroscopes[i].name, imu->gyro->addr);
+                    printfbw(aahrs, "successfully created gyroscope \"%s\" at I2C 0x%02x", gyroscopes[i].name, imu->gyro->addr);
                 }
             }
             if (imu->gyro->set_scale)

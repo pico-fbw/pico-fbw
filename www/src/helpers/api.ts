@@ -11,7 +11,7 @@ type EmptyResponse = Record<string, never>;
 export type GET_CONFIG = {
     sections: {
         name: string;
-        keys: (number | string)[];
+        values: (number | string)[];
     }[];
 };
 export type GET_INFO = {

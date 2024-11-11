@@ -12,15 +12,15 @@
 
 #include "set_flightplan.h"
 
-i32 api_handle_set_flightplan(const char *input, char **output) {
-    if (!input)
+i32 api_handle_set_flightplan(const char *in, char **out) {
+    if (!in)
         return 400;
     if (aircraft.mode == MODE_AUTO)
         return 403;
     JSON_Value *root = json_value_init_object();
     JSON_Object *obj = json_value_get_object(root);
     i32 res;
-    FlightplanError err = flightplan_parse(input, true);
+    FlightplanError err = flightplan_parse(in, true);
     switch (err) {
         case FLIGHTPLAN_STATUS_OK:
             res = 200;
@@ -45,7 +45,7 @@ i32 api_handle_set_flightplan(const char *input, char **output) {
         json_object_set_string(obj, "message", "");
     char *serialized = json_serialize_to_string(root);
     json_value_free(root);
-    *output = serialized;
+    *out = serialized;
     return res;
 }
 

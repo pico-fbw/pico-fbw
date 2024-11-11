@@ -10,7 +10,7 @@
 
 #include "get_logs.h"
 
-i32 api_handle_get_logs(char **output) {
+i32 api_handle_get_logs(const char *in, char **out) {
     u32 logCount = log_count();
     if (logCount == 0)
         return 204;
@@ -31,15 +31,16 @@ i32 api_handle_get_logs(char **output) {
     json_object_set_value(obj, "logs", logs);
     char *serialized = json_serialize_to_string(root);
     json_value_free(root);
-    *output = serialized;
+    *out = serialized;
     return 200;
+    (void)in;
 }
 
 // {"logs":[{"type":number,"msg":"","code":number,"timestamp":number}]}
 
 i32 api_get_logs(const char *args) {
     char *output = NULL;
-    i32 res = api_handle_get_logs(&output);
+    i32 res = api_handle_get_logs(args, &output);
     if (!output)
         return 500;
     if (res != 200) {
@@ -49,5 +50,4 @@ i32 api_get_logs(const char *args) {
     printraw("%s\n", output);
     json_free_serialized_string(output);
     return -1;
-    (void)args;
 }

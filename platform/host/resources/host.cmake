@@ -1,6 +1,8 @@
 # See platform/example/resources/example.cmake for comments regarding the structure of this file
 add_definitions(-DFBW_PLATFORM_HOST)
 
+# TODO: msfs simconnect integration
+
 function(setup_before_subdirs)
     add_executable(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/src/main.c)
 endfunction()

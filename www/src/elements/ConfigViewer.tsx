@@ -434,14 +434,14 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
      * Handle a change in the configuration.
      * @param sectionName the name of the section where the change occurred
      * @param sectionIndex the index of the section where the change occurred
-     * @param keyIndex the index of the key where the change occurred
-     * @param value the new value of the key
+     * @param valueIndex the index of the value where the change occurred
+     * @param value the new value
      * @param write whether or not to write the change to the API
      */
     const handleConfigChange = async (
         sectionName: string,
         sectionIndex: number,
-        keyIndex: number,
+        valueIndex: number,
         value: string,
         write = true,
     ) => {
@@ -465,7 +465,7 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
                 return null;
             }
             const updatedData = { ...prevData };
-            updatedData.sections[sectionIndex].keys[keyIndex] = toSet;
+            updatedData.sections[sectionIndex].values[valueIndex] = toSet;
             return updatedData;
         });
 
@@ -475,7 +475,7 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
 
         // Send the new value to the API and verify it was set correctly
         try {
-            const key = config[sectionName as keyof typeof config][keyIndex].id;
+            const key = config[sectionName as keyof typeof config][valueIndex].id;
             const command = {
                 changes: [
                     {
@@ -491,7 +491,7 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
 
             const getConfigCommand = { section: sectionName, key };
             const response = await api("get/config", getConfigCommand);
-            const newc = response.sections[0].keys[0];
+            const newc = response.sections[0].values[0];
 
             if ((!newc || String(newc) !== String(toSet)) && toSetNum !== 0) {
                 console.warn(`Value read back was ${newc}, should have been ${toSet}`);
@@ -556,23 +556,23 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
                         {sectionVisibility[sectionIndex] && (
                             <ul className="mt-4 space-y-4">
                                 {/* Each key will get its id looked up and matched with more information from the database to create its box */}
-                                {section.keys.map(
-                                    (value, keyIndex) =>
+                                {section.values.map(
+                                    (value, valueIndex) =>
                                         value !== null && (
-                                            <li key={keyIndex} className="bg-gray-800 p-4 rounded-md shadow-md">
+                                            <li key={valueIndex} className="bg-gray-800 p-4 rounded-md shadow-md">
                                                 <div className="text-xl font-semibold text-white">
-                                                    {config[section.name as keyof typeof config]?.[keyIndex]?.name}
+                                                    {config[section.name as keyof typeof config]?.[valueIndex]?.name}
                                                 </div>
                                                 <div className="text-xs text-gray-400 mt-2">
-                                                    {config[section.name as keyof typeof config]?.[keyIndex]?.desc}
+                                                    {config[section.name as keyof typeof config]?.[valueIndex]?.desc}
                                                 </div>
                                                 <div className="mt-3">
-                                                    {config[section.name as keyof typeof config]?.[keyIndex]?.enumMap ? (
+                                                    {config[section.name as keyof typeof config]?.[valueIndex]?.enumMap ? (
                                                         // Dropdown for enums
                                                         <select
                                                             className="block w-full border-gray-300 rounded-md shadow-sm p-2 focus:ring focus:ring-opacity-50"
                                                             disabled={
-                                                                config[section.name as keyof typeof config][keyIndex].readOnly
+                                                                config[section.name as keyof typeof config][valueIndex].readOnly
                                                             }
                                                             value={value.toString()}
                                                             // eslint complains here about handleConfigChange returning a promise.
@@ -583,7 +583,7 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
                                                                 handleConfigChange(
                                                                     section.name,
                                                                     sectionIndex,
-                                                                    keyIndex,
+                                                                    valueIndex,
                                                                     (e.target as HTMLInputElement).value,
                                                                     false,
                                                                 )
@@ -593,14 +593,14 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
                                                                 handleConfigChange(
                                                                     section.name,
                                                                     sectionIndex,
-                                                                    keyIndex,
+                                                                    valueIndex,
                                                                     (e.target as HTMLInputElement).value,
                                                                     true,
                                                                 )
                                                             }
                                                         >
                                                             {Object.entries(
-                                                                config[section.name as keyof typeof config][keyIndex].enumMap,
+                                                                config[section.name as keyof typeof config][valueIndex].enumMap,
                                                             ).map(([enumKey, enumValue]) => (
                                                                 <option key={enumKey} value={enumKey}>
                                                                     {enumValue}
@@ -620,7 +620,7 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
                                                                 handleConfigChange(
                                                                     section.name,
                                                                     sectionIndex,
-                                                                    keyIndex,
+                                                                    valueIndex,
                                                                     (e.target as HTMLInputElement).value,
                                                                     false,
                                                                 )
@@ -630,7 +630,7 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
                                                                 handleConfigChange(
                                                                     section.name,
                                                                     sectionIndex,
-                                                                    keyIndex,
+                                                                    valueIndex,
                                                                     (e.target as HTMLInputElement).value,
                                                                     true,
                                                                 )

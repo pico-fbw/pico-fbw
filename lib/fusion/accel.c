@@ -62,9 +62,9 @@ bool fusion_accelerometer_find(IMU *imu, const AccelerometerOptions *opts) {
                 byte addr = accelerometers[i].addr[a];
                 if (addr == NOADDR)
                     continue;
-                printfbw(aahrs, "Scanning for accelerometer \"%s\" at I2C 0x%02x", accelerometers[i].name, addr);
+                printfbw(aahrs, "scanning for accelerometer \"%s\" at I2C 0x%02x", accelerometers[i].name, addr);
                 if (accelerometers[i].detect(addr, imu->state)) {
-                    printfbw(aahrs, "Detected accelerometer \"%s\" at I2C 0x%02x", accelerometers[i].name, addr);
+                    printfbw(aahrs, "detected accelerometer \"%s\" at I2C 0x%02x", accelerometers[i].name, addr);
                     imu->acc->addr = addr;
                     detected = true;
                     break;
@@ -85,7 +85,7 @@ bool fusion_accelerometer_find(IMU *imu, const AccelerometerOptions *opts) {
                     imu->state = NULL;
                     return false;
                 } else {
-                    printfbw(aahrs, "Successfully created accelerometer \"%s\" at I2C 0x%02x", accelerometers[i].name,
+                    printfbw(aahrs, "successfully created accelerometer \"%s\" at I2C 0x%02x", accelerometers[i].name,
                              imu->acc->addr);
                 }
             }
