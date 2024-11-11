@@ -5,7 +5,7 @@
 # This will be used within the code to determine which platform is being used (see defs.h for more information).
 # Although it isn't required to be, we strongly recommend that you use the same name as the directory name you choose (but in all caps).
 # For example, if your directory is called "lipsum", you should set this to "-DFBW_PLATFORM_LIPSUM".
-add_definitions(-DFBW_PLATFORM_EXAMPLE)
+add_compile_definitions(-DFBW_PLATFORM_EXAMPLE)
 
 # If your platform supports Wi-Fi, pico-fbw will automatically build a littlefs binary image for the webserver,
 # and it is your responsibility to provide the following variables to define how the image is built.

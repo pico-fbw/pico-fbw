@@ -1,9 +1,17 @@
 # See platform/example/resources/example.cmake for comments regarding the structure of this file
-add_definitions(-DFBW_PLATFORM_HOST)
-
-# TODO: msfs simconnect integration
+add_compile_definitions(-DFBW_PLATFORM_HOST)
 
 function(setup_before_subdirs)
+    # If MSFS SimConnect SDK is installed, we can build extra features with it
+    set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/platform/host/resources")
+    find_package(SimConnect)
+    if (SimConnect_FOUND)
+        add_compile_definitions(-DSIMCONNECT=1)
+        # Pass to parent scope
+        set(SimConnect_FOUND ${SimConnect_FOUND} PARENT_SCOPE)
+        set(SimConnect_INCLUDE_DIRS ${SimConnect_INCLUDE_DIRS} PARENT_SCOPE)
+        set(SimConnect_LIBRARIES ${SimConnect_LIBRARIES} PARENT_SCOPE)
+    endif()
     add_executable(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/src/main.c)
 endfunction()
 

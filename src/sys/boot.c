@@ -24,7 +24,8 @@ bool isBooted = false;
 void boot_begin() {
     sys_boot_begin();
     stdio_setup();
-    assert(flash_setup());
+    bool flashOk = flash_setup();
+    assert(flashOk);
     log_init();
     display_init();
     sleep_ms_blocking(BOOT_WAIT_MS); // Wait for peripherals to power up

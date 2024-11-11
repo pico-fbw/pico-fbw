@@ -34,7 +34,11 @@ typedef timer_t __callback_id_t;
 #define PIN_GPS_RX 0
 
 #if defined(_WIN32)
-    #define PLATFORM "Windows"
+    #if SIMCONNECT
+        #define PLATFORM "Windows+SimConnect"
+    #else
+        #define PLATFORM "Windows"
+    #endif
 #elif defined(__APPLE__)
     #define PLATFORM "macOS"
 #elif defined(__linux__)

@@ -1,7 +1,5 @@
-include(CMakeDependentOption)
-include(ExternalProject)
-
 # We need LFS_ variables to be defined in order to run mklittlefs later (and therefore to build the web interface)
+include(CMakeDependentOption)
 cmake_dependent_option(FBW_BUILD_WWW "Build the web interface" ON "DEFINED LFS_BLOCK_SIZE;DEFINED LFS_PROG_SIZE;DEFINED LFS_IMG_SIZE" OFF)
 if (NOT FBW_BUILD_WWW)
     if (DEFINED LFS_BLOCK_SIZE AND DEFINED LFS_PROG_SIZE AND DEFINED LFS_IMG_SIZE)
@@ -12,27 +10,12 @@ if (NOT FBW_BUILD_WWW)
     return()
 endif()
 
-# Check to ensure yarn is installed
-if (EXISTS "$ENV{NVM_DIR}/nvm.sh")
-    message("nvm detected, using it to find yarn")
-    set(USING_NVM ON)
-    execute_process(
-        COMMAND bash -c "source $ENV{NVM_DIR}/nvm.sh && which yarn"
-        OUTPUT_VARIABLE YARN_EXE
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-else()
-    # Not using nvm, leave it to cmake to find yarn
-    find_program(YARN_EXE yarn)
-endif()
-
-if (NOT YARN_EXE)
-    message(FATAL_ERROR "yarn was not found, but is required to build the web interface!
-    yarn can be installed from https://yarnpkg.com/getting-started/install.")
-endif()
-message("yarn found at ${YARN_EXE}")
+# Ensure yarn is installed
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/www")
+find_package(YARN_EXE yarn REQUIRED)
 
 # Add mklittlefs as an external project so it will be built to be used later
+include(ExternalProject)
 set(MKLITTLEFS_DIR ${CMAKE_BINARY_DIR}/mklittlefs)
 if (CMAKE_HOST_WIN32)
     set(MKLITTLEFS_EXE_NAME mklittlefs.exe)

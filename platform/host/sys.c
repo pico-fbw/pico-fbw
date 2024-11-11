@@ -8,6 +8,7 @@
 #include "platform/types.h"
 #if defined(_WIN32)
     #include <windows.h>
+    #include "simconnect.h"
 LARGE_INTEGER tStart, tFreq;
 #elif defined(__APPLE__) || defined(__linux__)
     #include <signal.h>
@@ -46,7 +47,11 @@ void sys_boot_begin() {
 }
 
 void sys_boot_end() {
+#if SIMCONNECT
+    simconnect_init();
+#else
     return;
+#endif
 }
 
 void sys_periodic() {
@@ -54,6 +59,9 @@ void sys_periodic() {
 }
 
 void __attribute__((noreturn)) sys_shutdown() {
+#if SIMCONNECT
+    simconnect_deinit();
+#endif
     printf("\n");
     exit(0);
 }
