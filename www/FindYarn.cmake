@@ -1,6 +1,6 @@
 # Try to find Yarn using nvm if it's being used
 if (EXISTS "$ENV{NVM_DIR}/nvm.sh")
-    message(STATUS "nvm detected, using it to find yarn")
+    message("nvm detected, using it to find yarn")
     execute_process(
         COMMAND bash -c "source $ENV{NVM_DIR}/nvm.sh && which yarn"
         OUTPUT_VARIABLE YARN_EXE

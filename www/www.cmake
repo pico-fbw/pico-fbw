@@ -12,7 +12,7 @@ endif()
 
 # Ensure yarn is installed
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/www")
-find_package(YARN_EXE yarn REQUIRED)
+find_package(yarn REQUIRED)
 
 # Add mklittlefs as an external project so it will be built to be used later
 include(ExternalProject)
