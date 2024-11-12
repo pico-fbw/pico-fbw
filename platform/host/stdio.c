@@ -13,6 +13,7 @@
     #include "stdio_windows.h"
 #else
     #include <fcntl.h>
+    #include <unistd.h>
 #endif
 
 #include "platform/stdio.h"
