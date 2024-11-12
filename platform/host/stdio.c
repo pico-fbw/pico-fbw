@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #if defined(_WIN32)
+    #include <conio.h>
     #include <windows.h>
     #include "stdio_windows.h"
 #endif
@@ -27,11 +28,17 @@ void stdio_setup() {
     if (!SetConsoleMode(hOut, dwMode))
         return;
 #else
-    return;
+    // Set stdin to be non-blocking
+    int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
+    fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
 #endif
 }
 
 char *stdin_read() {
+#if defined(_WIN32)
+    if (!_kbhit())
+        return NULL; // No input available
+#endif
     char *line = NULL;
     size_t len = 0;
     ssize_t read = getline(&line, &len, stdin);

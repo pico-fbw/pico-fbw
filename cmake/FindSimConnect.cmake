@@ -14,22 +14,13 @@ find_library(SimConnect_LIBRARY SimConnect
         "C:\\MSFS\\SDK\\SimConnect SDK\\lib"
         "C:\\Program Files\\Microsoft Flight Simulator SDK\\SimConnect SDK\\lib"
         "C:\\SimConnect SDK\\lib"
-    DOC "Path to SimConnect dynamic library"
-)
-find_library(SimConnect_LIBRARY_STATIC SimConnect
-    PATHS
-        "$ENV{MSFS_SDK}\\SimConnect SDK\\lib\\static"
-        "C:\\MSFS\\SDK\\SimConnect SDK\\lib\\static"
-        "C:\\Program Files\\Microsoft Flight Simulator SDK\\SimConnect SDK\\lib\\static"
-        "C:\\SimConnect SDK\\lib\\static"
-    DOC "Path to SimConnect static library"
+    DOC "Path to SimConnect library"
 )
 
-if (SimConnect_INCLUDE_DIR AND SimConnect_LIBRARY AND SimConnect_LIBRARY_STATIC)
+if (SimConnect_INCLUDE_DIR AND SimConnect_LIBRARY)
     # Provide variables for consumers
     set(SimConnect_INCLUDE_DIRS ${SimConnect_INCLUDE_DIR})
     set(SimConnect_LIBRARIES ${SimConnect_LIBRARY})
-    set(SimConnect_LIBRARIES_STATIC ${SimConnect_LIBRARY_STATIC})
     # Get version from version.txt
     get_filename_component(SimConnect_BASE_DIR ${SimConnect_INCLUDE_DIR} DIRECTORY)
     get_filename_component(SimConnect_SDK_ROOT ${SimConnect_BASE_DIR} DIRECTORY)
@@ -42,6 +33,6 @@ endif()
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(SimConnect
-    REQUIRED_VARS SimConnect_INCLUDE_DIR SimConnect_LIBRARY SimConnect_LIBRARY_STATIC
+    REQUIRED_VARS SimConnect_INCLUDE_DIR SimConnect_LIBRARY
     VERSION_VAR SimConnect_VERSION
 )

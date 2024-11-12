@@ -18,6 +18,7 @@ file(GLOB_RECURSE ALL_SOURCE_FILES
     ${CMAKE_SOURCE_DIR}/lib/fusion/drivers/*.c
     ${CMAKE_SOURCE_DIR}/lib/fusion/drivers/*.h
     ${CMAKE_SOURCE_DIR}/platform/*.c
+    ${CMAKE_SOURCE_DIR}/platform/*.cpp
     ${CMAKE_SOURCE_DIR}/platform/*.h
     ${CMAKE_SOURCE_DIR}/src/*.c
     ${CMAKE_SOURCE_DIR}/src/*.h

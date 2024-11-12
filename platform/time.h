@@ -43,7 +43,7 @@ CallbackData *callback_in_ms(u32 ms, Callback callback, void *data);
 void cancel_callback(CallbackData *data);
 
 /**
- * Sleeps for `us` microseconds, blocking the current core.
+ * Sleeps for `us` microseconds, blocking execution.
  * @param us the number of microseconds to sleep
  */
 void sleep_us_blocking(u64 us);
@@ -63,7 +63,7 @@ static inline f32 time_s() {
 }
 
 /**
- * Sleeps for `ms` milliseconds, blocking the current thread.
+ * Sleeps for `ms` milliseconds, blocking execution.
  * @param ms the number of milliseconds to sleep
  */
 static inline void sleep_ms_blocking(u32 ms) {

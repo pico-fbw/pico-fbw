@@ -3,15 +3,16 @@
  * Licensed under the GNU GPL-3.0
  */
 
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "platform/time.h"
 #include "platform/types.h"
 #if defined(_WIN32)
     #include <windows.h>
     #include "simconnect.h"
 LARGE_INTEGER tStart, tFreq;
 #elif defined(__APPLE__) || defined(__linux__)
-    #include <signal.h>
     #include <sys/time.h>
 u64 tStart;
 #endif
@@ -19,30 +20,23 @@ u64 tStart;
 #include "platform/sys.h"
 
 // The term_handler function catches termination signals by the OS and calls sys_shutdown.
-#if defined(_WIN32)
-BOOL WINAPI term_handler(DWORD dwCtrlType) {
-    sys_shutdown();
-    return TRUE;
-    (void)dwCtrlType;
-}
-#elif defined(__APPLE__) || defined(__linux__)
 void term_handler(int signum) {
     sys_shutdown();
     (void)signum;
 }
-#endif
 
 void sys_boot_begin() {
+    signal(SIGINT, term_handler);
 #if defined(_WIN32)
+    signal(SIGBREAK, term_handler);
+    // Get time at which program was called, this is our "power-on time"
     QueryPerformanceFrequency(&tFreq);
     QueryPerformanceCounter(&tStart);
-    SetConsoleCtrlHandler(term_handler, TRUE);
 #elif defined(__APPLE__) || defined(__linux__)
-    // Get time at which program was called, this is our "power-on time"
+    signal(SIGTERM, term_handler);
     struct timeval tv;
     gettimeofday(&tv, NULL);
     tStart = tv.tv_sec * 1000000 + tv.tv_usec;
-    signal(SIGINT, term_handler);
 #endif
 }
 
@@ -55,7 +49,10 @@ void sys_boot_end() {
 }
 
 void sys_periodic() {
-    return;
+#if SIMCONNECT
+    simconnect_poll();
+#endif
+    sleep_ms_blocking(2); // Sadly we do not want to create pico-fbw OS 
 }
 
 void __attribute__((noreturn)) sys_shutdown() {
