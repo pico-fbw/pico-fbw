@@ -52,7 +52,7 @@ void sys_periodic() {
 #if SIMCONNECT
     simconnect_poll();
 #endif
-    sleep_ms_blocking(2); // Sadly we do not want to create pico-fbw OS 
+    sleep_ms_blocking(2); // Sadly we do not want to create pico-fbw OS
 }
 
 void __attribute__((noreturn)) sys_shutdown() {

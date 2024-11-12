@@ -39,17 +39,17 @@ EmuAAHRS emuAAHRS;
 EmuGPS emuGPS;
 
 // SimConnect callback. Will be called on a SIMCONNECT_RECV_OPEN message.
-static void on_SIMCONNECT_RECV_OPEN(SIMCONNECT_RECV_OPEN* pData, void* pContext) {
+static void on_SIMCONNECT_RECV_OPEN(SIMCONNECT_RECV_OPEN *pData, void *pContext) {
     printmsfs("sim accepted connection");
     printmsfs("sim version: %lu.%lu.%lu.%lu", pData->dwApplicationVersionMajor, pData->dwApplicationVersionMinor,
-           pData->dwApplicationBuildMajor, pData->dwApplicationBuildMinor);
+              pData->dwApplicationBuildMajor, pData->dwApplicationBuildMinor);
     printmsfs("simconnect version: %lu.%lu.%lu.%lu", pData->dwSimConnectVersionMajor, pData->dwSimConnectVersionMinor,
-           pData->dwSimConnectBuildMajor, pData->dwSimConnectBuildMinor);
+              pData->dwSimConnectBuildMajor, pData->dwSimConnectBuildMinor);
     (void)pContext;
 }
 
 // SimConnect callback. Will be called on a SIMCONNECT_RECV_SIMOBJECT_DATA message.
-static void on_SIMCONNECT_RECV_SIMOBJECT_DATA(SIMCONNECT_RECV_SIMOBJECT_DATA* pData, void* pContext) {
+static void on_SIMCONNECT_RECV_SIMOBJECT_DATA(SIMCONNECT_RECV_SIMOBJECT_DATA *pData, void *pContext) {
     switch (pData->dwRequestID) {
         case EMU_AAHRS: {
             memcpy(&emuAAHRS, &pData->dwData, sizeof(EmuAAHRS));
@@ -79,11 +79,14 @@ BOOL simconnect_init() {
     // Configure data definitions for emulated AAHRS
     SimConnect_AddToDataDefinition(hSimConnect, EMU_AAHRS, "PLANE BANK DEGREES", "degrees", SIMCONNECT_DATATYPE_FLOAT32);
     SimConnect_AddToDataDefinition(hSimConnect, EMU_AAHRS, "PLANE PITCH DEGREES", "degrees", SIMCONNECT_DATATYPE_FLOAT32);
-    SimConnect_AddToDataDefinition(hSimConnect, EMU_AAHRS, "PLANE HEADING DEGREES MAGNETIC", "degrees", SIMCONNECT_DATATYPE_FLOAT32);
+    SimConnect_AddToDataDefinition(hSimConnect, EMU_AAHRS, "PLANE HEADING DEGREES MAGNETIC", "degrees",
+                                   SIMCONNECT_DATATYPE_FLOAT32);
     SimConnect_AddToDataDefinition(hSimConnect, EMU_AAHRS, "STRUCT WORLD ACCELERATION", "Gforce", SIMCONNECT_DATATYPE_XYZ);
-    SimConnect_AddToDataDefinition(hSimConnect, EMU_AAHRS, "STRUCT BODY ROTATION VELOCITY", "degrees per second", SIMCONNECT_DATATYPE_XYZ);
+    SimConnect_AddToDataDefinition(hSimConnect, EMU_AAHRS, "STRUCT BODY ROTATION VELOCITY", "degrees per second",
+                                   SIMCONNECT_DATATYPE_XYZ);
     SimConnect_AddToDataDefinition(hSimConnect, EMU_AAHRS, "INDICATED ALTITUDE", "feet", SIMCONNECT_DATATYPE_FLOAT32);
-    SimConnect_RequestDataOnSimObject(hSimConnect, EMU_AAHRS, EMU_AAHRS, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_SIM_FRAME);
+    SimConnect_RequestDataOnSimObject(hSimConnect, EMU_AAHRS, EMU_AAHRS, SIMCONNECT_OBJECT_ID_USER,
+                                      SIMCONNECT_PERIOD_SIM_FRAME);
     // Configure for emulated GPS
     SimConnect_AddToDataDefinition(hSimConnect, EMU_GPS, "PLANE LATITUDE", "degrees");
     SimConnect_AddToDataDefinition(hSimConnect, EMU_GPS, "PLANE LONGITUDE", "degrees");
@@ -98,21 +101,24 @@ BOOL simconnect_init() {
 void simconnect_poll() {
     if (!hSimConnect)
         return;
-    SimConnect_CallDispatch(hSimConnect, [](SIMCONNECT_RECV* pData, DWORD cbData, void* pContext) -> void {
-        switch (pData->dwID) {
-            case SIMCONNECT_RECV_ID_OPEN:
-                on_SIMCONNECT_RECV_OPEN((SIMCONNECT_RECV_OPEN*)pData, pContext);
-                break;
-            case SIMCONNECT_RECV_ID_SIMOBJECT_DATA:
-                on_SIMCONNECT_RECV_SIMOBJECT_DATA((SIMCONNECT_RECV_SIMOBJECT_DATA*)pData, pContext);
-                break;
-            default:
-                printmsfs("WARNING: unhandled message %lu", pData->dwID);
-                break;
-        }
-        (void)cbData;
-        (void)pContext;
-    }, nullptr);
+    SimConnect_CallDispatch(
+        hSimConnect,
+        [](SIMCONNECT_RECV *pData, DWORD cbData, void *pContext) -> void {
+            switch (pData->dwID) {
+                case SIMCONNECT_RECV_ID_OPEN:
+                    on_SIMCONNECT_RECV_OPEN((SIMCONNECT_RECV_OPEN *)pData, pContext);
+                    break;
+                case SIMCONNECT_RECV_ID_SIMOBJECT_DATA:
+                    on_SIMCONNECT_RECV_SIMOBJECT_DATA((SIMCONNECT_RECV_SIMOBJECT_DATA *)pData, pContext);
+                    break;
+                default:
+                    printmsfs("WARNING: unhandled message %lu", pData->dwID);
+                    break;
+            }
+            (void)cbData;
+            (void)pContext;
+        },
+        nullptr);
 }
 
 void simconnect_deinit() {

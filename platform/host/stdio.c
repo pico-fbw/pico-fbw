@@ -11,6 +11,8 @@
     #include <conio.h>
     #include <windows.h>
     #include "stdio_windows.h"
+#else
+    #include <fcntl.h>
 #endif
 
 #include "platform/stdio.h"
