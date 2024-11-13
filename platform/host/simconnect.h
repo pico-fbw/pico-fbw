@@ -4,6 +4,8 @@
 extern "C" {
 #endif
 
+#include "platform/types.h"
+
 #if SIMCONNECT
 
 /**
@@ -14,6 +16,7 @@ BOOL simconnect_init();
 
 /**
  * Polls the MSFS SimConnect API for new messages.
+ * Also updates scIMU and scGPS with the latest data.
  */
 void simconnect_poll();
 
@@ -23,28 +26,30 @@ void simconnect_poll();
 void simconnect_deinit();
 
     #pragma pack(push, 1) // Pack structs for compatibility with SimConnect
-// Emulated (SimConnect) AAHRS data definition
-typedef struct EmuAAHRS {
-    f32 roll;     // deg
-    f32 pitch;    // deg
-    f32 yaw;      // deg
-    f64 accel[3]; // [X, Y, Z], g
-    f64 gyro[3];  // [X, Y, Z], deg/s
-    f32 alt;      // ft
-} EmuAAHRS;
+// SimConnect (emulated) IMU data definition
+typedef struct SC_IMU {
+    f64 roll;         // deg
+    f64 pitch;        // deg
+    f64 yaw;          // deg
+    f64 bodyAccel[3]; // [X, Y, Z], m/s^2, mainly for internal use
+    f64 gyro[3];      // [X, Y, Z], deg/s
+    f32 alt;          // ft
+    // Not populated by SimConnect, but computed from other data
+    f64 accel[3];     // [X, Y, Z], g
+} SC_IMU;
 
-// Emulated (SimConnect) GPS data definition
-typedef struct EmuGPS {
+// SimConnect (emulated) GPS data definition
+typedef struct SC_GPS {
     f64 lat;   // deg
     f64 lng;   // deg
     f32 alt;   // ft
     f32 speed; // kts
     f32 track; // deg
-} EmuGPS;
+} SC_GPS;
     #pragma pack(pop)
 
-extern EmuAAHRS emuAAHRS;
-extern EmuGPS emuGPS;
+extern SC_IMU scIMU;
+extern SC_GPS scGPS;
 
 // clang-format off
 #ifdef __cplusplus

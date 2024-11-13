@@ -19,6 +19,8 @@ u64 tStart;
 
 #include "platform/sys.h"
 
+#define THREAD_SLEEP_MS 2 // The delay between each iteration of the main loop to reduce CPU usage
+
 // The term_handler function catches termination signals by the OS and calls sys_shutdown.
 void term_handler(int signum) {
     sys_shutdown();
@@ -52,7 +54,7 @@ void sys_periodic() {
 #if SIMCONNECT
     simconnect_poll();
 #endif
-    sleep_ms_blocking(2); // Sadly we do not want to create pico-fbw OS
+    sleep_ms_blocking(THREAD_SLEEP_MS); // Sadly we do not want to create pico-fbw OS
 }
 
 void __attribute__((noreturn)) sys_shutdown() {
@@ -65,7 +67,7 @@ void __attribute__((noreturn)) sys_shutdown() {
 
 void __attribute__((noreturn)) sys_reboot(bool bootloader) {
     printf("\npico-fbw is running in host mode. Rebooting is not supported, terminating instead.\n");
-    exit(0);
+    sys_shutdown();
     (void)bootloader;
 }
 

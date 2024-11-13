@@ -7,12 +7,13 @@
 
 // clang-format off
 
+#include <math.h>
 #include <windows.h>
 #include <SimConnect.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "platform/types.h"
+#include "platform/helpers.h"
 
 #include "simconnect.h"
 
@@ -26,17 +27,37 @@
     printf(__VA_ARGS__);                                                                                                       \
     printf("\n");
 
+#define GRAVITY 9.81
+
 // clang-format on
 
 // SimConnect definition/request IDs for our custom data requests (will be created on connection)
-enum DataRequestID {
-    EMU_AAHRS = 1,
-    EMU_GPS,
+enum DataDefinitionRequestID {
+    ID_SC_IMU = 1,
+    ID_SC_GPS,
 };
 
 HANDLE hSimConnect = nullptr;
-EmuAAHRS emuAAHRS;
-EmuGPS emuGPS;
+SC_IMU scIMU;
+SC_GPS scGPS;
+
+/**
+ * Simulates readings from a MEMS accelerometer based on available SimConnect data.
+ * @param imu the IMU data to simulate/modify
+ */
+static void simulate_accel(SC_IMU *imu) {
+    f64 roll = radians(imu->roll);
+    f64 pitch = radians(imu->pitch);
+    // Compute gravity vector in aircraft body frame
+    f64 g[3] = {
+        GRAVITY * sin(pitch),
+        -GRAVITY * sin(roll) * cos(pitch),
+        -GRAVITY * cos(roll) * cos(pitch),
+    };
+    // Combine linear (body) acceleration with gravity and convert to G-force
+    for (u32 i = 0; i < count_of(imu->accel); i++)
+        imu->accel[i] = (imu->bodyAccel[i] + g[i]) / GRAVITY;
+}
 
 // SimConnect callback. Will be called on a SIMCONNECT_RECV_OPEN message.
 static void on_SIMCONNECT_RECV_OPEN(SIMCONNECT_RECV_OPEN *pData, void *pContext) {
@@ -51,17 +72,15 @@ static void on_SIMCONNECT_RECV_OPEN(SIMCONNECT_RECV_OPEN *pData, void *pContext)
 // SimConnect callback. Will be called on a SIMCONNECT_RECV_SIMOBJECT_DATA message.
 static void on_SIMCONNECT_RECV_SIMOBJECT_DATA(SIMCONNECT_RECV_SIMOBJECT_DATA *pData, void *pContext) {
     switch (pData->dwRequestID) {
-        case EMU_AAHRS: {
-            memcpy(&emuAAHRS, &pData->dwData, sizeof(EmuAAHRS));
-            // Invert roll and pitch because MSFS uses a different convention than pico-fbw
-            emuAAHRS.roll = -emuAAHRS.roll;
-            emuAAHRS.pitch = -emuAAHRS.pitch;
+        case ID_SC_IMU:
+            // Don't copy accel[] as that will be simulated
+            memcpy(&scIMU, &pData->dwData, sizeof(SC_IMU) - sizeof(scIMU.accel));
+            // Simulate accelerometer readings as the fusion system expects them
+            simulate_accel(&scIMU);
             break;
-        }
-        case EMU_GPS: {
-            memcpy(&emuGPS, &pData->dwData, sizeof(EmuGPS));
+        case ID_SC_GPS:
+            memcpy(&scGPS, &pData->dwData, sizeof(SC_GPS));
             break;
-        }
         default:
             break;
     }
@@ -76,24 +95,35 @@ BOOL simconnect_init() {
         return false;
     }
     printmsfs("connection established, now configuring");
-    // Configure data definitions for emulated AAHRS
-    SimConnect_AddToDataDefinition(hSimConnect, EMU_AAHRS, "PLANE BANK DEGREES", "degrees", SIMCONNECT_DATATYPE_FLOAT32);
-    SimConnect_AddToDataDefinition(hSimConnect, EMU_AAHRS, "PLANE PITCH DEGREES", "degrees", SIMCONNECT_DATATYPE_FLOAT32);
-    SimConnect_AddToDataDefinition(hSimConnect, EMU_AAHRS, "PLANE HEADING DEGREES MAGNETIC", "degrees",
-                                   SIMCONNECT_DATATYPE_FLOAT32);
-    SimConnect_AddToDataDefinition(hSimConnect, EMU_AAHRS, "STRUCT WORLD ACCELERATION", "Gforce", SIMCONNECT_DATATYPE_XYZ);
-    SimConnect_AddToDataDefinition(hSimConnect, EMU_AAHRS, "STRUCT BODY ROTATION VELOCITY", "degrees per second",
+    // Configure data definitions for emulated IMU
+    SimConnect_AddToDataDefinition(hSimConnect, ID_SC_IMU, "PLANE BANK DEGREES", "degrees");
+    SimConnect_AddToDataDefinition(hSimConnect, ID_SC_IMU, "PLANE PITCH DEGREES", "degrees");
+    SimConnect_AddToDataDefinition(hSimConnect, ID_SC_IMU, "PLANE HEADING DEGREES MAGNETIC", "degrees");
+    SimConnect_AddToDataDefinition(hSimConnect, ID_SC_IMU, "ACCELERATION BODY X", "meters per second squared");
+    SimConnect_AddToDataDefinition(hSimConnect, ID_SC_IMU, "ACCELERATION BODY Y", "meters per second squared");
+    SimConnect_AddToDataDefinition(hSimConnect, ID_SC_IMU, "ACCELERATION BODY Z", "meters per second squared");
+    SimConnect_AddToDataDefinition(hSimConnect, ID_SC_IMU, "STRUCT BODY ROTATION VELOCITY", "degrees per second",
                                    SIMCONNECT_DATATYPE_XYZ);
-    SimConnect_AddToDataDefinition(hSimConnect, EMU_AAHRS, "INDICATED ALTITUDE", "feet", SIMCONNECT_DATATYPE_FLOAT32);
-    SimConnect_RequestDataOnSimObject(hSimConnect, EMU_AAHRS, EMU_AAHRS, SIMCONNECT_OBJECT_ID_USER,
-                                      SIMCONNECT_PERIOD_SIM_FRAME);
+    SimConnect_AddToDataDefinition(hSimConnect, ID_SC_IMU, "INDICATED ALTITUDE", "feet", SIMCONNECT_DATATYPE_FLOAT32);
+    hr = SimConnect_RequestDataOnSimObject(hSimConnect, ID_SC_IMU, ID_SC_IMU, SIMCONNECT_OBJECT_ID_USER,
+                                           SIMCONNECT_PERIOD_SIM_FRAME);
+    if (hr != S_OK) {
+        printmsfs("WARNING: failed to configure SC_IMU data! (%ld)", hr);
+        return false;
+    }
     // Configure for emulated GPS
-    SimConnect_AddToDataDefinition(hSimConnect, EMU_GPS, "PLANE LATITUDE", "degrees");
-    SimConnect_AddToDataDefinition(hSimConnect, EMU_GPS, "PLANE LONGITUDE", "degrees");
-    SimConnect_AddToDataDefinition(hSimConnect, EMU_GPS, "PLANE ALTITUDE", "feet", SIMCONNECT_DATATYPE_FLOAT32);
-    SimConnect_AddToDataDefinition(hSimConnect, EMU_GPS, "GPS GROUND SPEED", "knots", SIMCONNECT_DATATYPE_FLOAT32);
-    SimConnect_AddToDataDefinition(hSimConnect, EMU_GPS, "GPS GROUND TRUE HEADING", "degrees", SIMCONNECT_DATATYPE_FLOAT32);
-    SimConnect_RequestDataOnSimObject(hSimConnect, EMU_GPS, EMU_GPS, SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD_SIM_FRAME);
+    SimConnect_AddToDataDefinition(hSimConnect, ID_SC_GPS, "PLANE LATITUDE", "degrees");
+    SimConnect_AddToDataDefinition(hSimConnect, ID_SC_GPS, "PLANE LONGITUDE", "degrees");
+    SimConnect_AddToDataDefinition(hSimConnect, ID_SC_GPS, "PLANE ALTITUDE", "feet", SIMCONNECT_DATATYPE_FLOAT32);
+    SimConnect_AddToDataDefinition(hSimConnect, ID_SC_GPS, "GPS GROUND SPEED", "knots", SIMCONNECT_DATATYPE_FLOAT32);
+    SimConnect_AddToDataDefinition(hSimConnect, ID_SC_GPS, "GPS GROUND TRUE HEADING", "degrees", SIMCONNECT_DATATYPE_FLOAT32);
+    // GPS data is updated every second (to simulate real GPS modules being somewhat slow)
+    hr = SimConnect_RequestDataOnSimObject(hSimConnect, ID_SC_GPS, ID_SC_GPS, SIMCONNECT_OBJECT_ID_USER,
+                                           SIMCONNECT_PERIOD_SECOND);
+    if (hr != S_OK) {
+        printmsfs("WARNING: failed to configure SC_GPS data! (%ld)", hr);
+        return false;
+    }
     printmsfs("configured all data requests");
     return true;
 }

@@ -24,8 +24,8 @@
 
 #if defined(_WIN32)
 
-VOID CALLBACK callback_to_WAITORTIMERCALLBACK(PVOID lp_param, BOOLEAN timer_or_wait_fired) {
-    CallbackData *data = (CallbackData *)lp_param;
+VOID CALLBACK callback_to_WAITORTIMERCALLBACK(PVOID lpParameter, BOOLEAN TimerOrWaitFired) {
+    CallbackData *data = (CallbackData *)lpParameter;
     if (!data)
         return;
     i32 reschedule = data->callback(data->data);
@@ -33,7 +33,7 @@ VOID CALLBACK callback_to_WAITORTIMERCALLBACK(PVOID lp_param, BOOLEAN timer_or_w
         DeleteTimerQueueTimer(NULL, data->id, NULL);
         free(data);
     }
-    (void)timer_or_wait_fired;
+    (void)TimerOrWaitFired;
 }
 
 #elif defined(__APPLE__) || defined(__linux__)
