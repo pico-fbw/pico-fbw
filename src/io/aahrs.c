@@ -62,7 +62,7 @@ bool aahrs_init() {
     }
 
     AccelerometerOptions accOpts;
-    accOpts.scale = ACC_SCALE;
+    accOpts.scale = ACC_SCALE; // G
     accOpts.odr = ACC_ODR;
     accOpts.no_rst = false;
     if (!fusion_accelerometer_find(imu, &accOpts)) {
@@ -81,10 +81,9 @@ bool aahrs_init() {
     MagnetometerOptions magOpts;
     magOpts.scale = MAG_SCALE; // gauss
     magOpts.odr = MAG_ODR;
-    if (!fusion_magnetometer_find(imu, &magOpts)) {
+    if (!fusion_magnetometer_find(imu, &magOpts))
         printfbw(aahrs, "failed to create magnetometer instance");
-        return false;
-    }
+    // Not a critical failure, magnetometer is not required for the filter to operate
 
     // Set up the Madgwick filter
     filter = madgwick_create();

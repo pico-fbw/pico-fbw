@@ -15,7 +15,7 @@
 
 #include "platform/helpers.h"
 
-#include "simconnect.h"
+#include "platform/simconnect.h"
 
 /**
  * printf wrapper with a [MSFS] prefix
@@ -35,11 +35,17 @@
 enum DataDefinitionRequestID {
     ID_SC_IMU = 1,
     ID_SC_GPS,
+    ID_SC_AIL,
+    ID_SC_ELE,
+    ID_SC_RUD,
+    ID_SC_NUM_ENG,
+    // More data definitions will be created at runtime for engine throttle levels
 };
 
 HANDLE hSimConnect = nullptr;
 SC_IMU scIMU;
 SC_GPS scGPS;
+i32 numEngines = 0; // Will be filled in later
 
 /**
  * Simulates readings from a MEMS accelerometer based on available SimConnect data.
@@ -57,6 +63,29 @@ static void simulate_accel(SC_IMU *imu) {
     // Combine linear (body) acceleration with gravity and convert to G-force
     for (u32 i = 0; i < count_of(imu->accel); i++)
         imu->accel[i] = (imu->bodyAccel[i] + g[i]) / GRAVITY;
+}
+
+/**
+ * Converts a servo degree range (0-180) to a SimConnect `position` range (-1.0 to 1.0).
+ * @param deg the servo degree value
+ * @return the equivalent SimConnect `position` value
+ */
+static inline f32 deg_to_position(f32 deg) {
+    return mapf(deg, 0.f, 180.f, -1.f, 1.f);
+}
+
+/**
+ * Sets a control surface position.
+ * @param deg the desired position in degrees (0-180)
+ * @param id the SimConnect data definition ID to set
+ * @return true if the data was sent successfully
+ */
+static bool set_control_surface(f32 deg, DataDefinitionRequestID id) {
+    if (!hSimConnect)
+        return false;
+    f32 pos = deg_to_position(deg);
+    HRESULT hr = SimConnect_SetDataOnSimObject(hSimConnect, id, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(pos), &pos);
+    return hr == S_OK;
 }
 
 // SimConnect callback. Will be called on a SIMCONNECT_RECV_OPEN message.
@@ -81,13 +110,24 @@ static void on_SIMCONNECT_RECV_SIMOBJECT_DATA(SIMCONNECT_RECV_SIMOBJECT_DATA *pD
         case ID_SC_GPS:
             memcpy(&scGPS, &pData->dwData, sizeof(SC_GPS));
             break;
+        case ID_SC_NUM_ENG:
+            numEngines = *(i32 *)&pData->dwData;
+            printmsfs("detected %d %s", numEngines, numEngines == 1 ? "engine" : "engines");
+            // Now we can add all engine throttle level positions to the data definition
+            for (i32 i = 1; i <= numEngines; i++) {
+                char name[64];
+                snprintf(name, sizeof(name), "GENERAL ENG THROTTLE LEVER POSITION:%d", i);
+                SimConnect_AddToDataDefinition(hSimConnect, ID_SC_NUM_ENG + i, name, "percent", SIMCONNECT_DATATYPE_FLOAT32);
+            }
+            break;
         default:
+            printmsfs("WARNING: unhandled SIMCONNECT_RECV_SIMOBJECT_DATA request ID %lu", pData->dwRequestID);
             break;
     }
     (void)pContext;
 }
 
-BOOL simconnect_init() {
+bool simconnect_init() {
     printmsfs("attempting to connect to simulator...");
     HRESULT hr = SimConnect_Open(&hSimConnect, "pico-fbw", nullptr, 0, 0, 0);
     if (hr != S_OK) {
@@ -124,8 +164,24 @@ BOOL simconnect_init() {
         printmsfs("WARNING: failed to configure SC_GPS data! (%ld)", hr);
         return false;
     }
+    // Configure for control surface signals
+    SimConnect_AddToDataDefinition(hSimConnect, ID_SC_AIL, "AILERON POSITION", "position", SIMCONNECT_DATATYPE_FLOAT32);
+    SimConnect_AddToDataDefinition(hSimConnect, ID_SC_ELE, "ELEVATOR POSITION", "position", SIMCONNECT_DATATYPE_FLOAT32);
+    SimConnect_AddToDataDefinition(hSimConnect, ID_SC_RUD, "RUDDER POSITION", "position", SIMCONNECT_DATATYPE_FLOAT32);
+    // Request how many engines are present, SimConnect will get back to us with the number
+    SimConnect_AddToDataDefinition(hSimConnect, ID_SC_NUM_ENG, "NUMBER OF ENGINES", "number", SIMCONNECT_DATATYPE_INT32);
+    hr = SimConnect_RequestDataOnSimObject(hSimConnect, ID_SC_NUM_ENG, ID_SC_NUM_ENG, SIMCONNECT_OBJECT_ID_USER,
+                                           SIMCONNECT_PERIOD_ONCE);
+    if (hr != S_OK) {
+        printmsfs("WARNING: failed to configure SC_NUM_ENG data! (%ld)", hr);
+        return false;
+    }
     printmsfs("configured all data requests");
     return true;
+}
+
+bool simconnect_ready() {
+    return hSimConnect != nullptr;
 }
 
 void simconnect_poll() {
@@ -149,6 +205,33 @@ void simconnect_poll() {
             (void)pContext;
         },
         nullptr);
+}
+
+bool simconnect_set_ail(f32 ail) {
+    return set_control_surface(ail, ID_SC_AIL);
+}
+
+bool simconnect_set_ele(f32 ele) {
+    return set_control_surface(ele, ID_SC_ELE);
+}
+
+bool simconnect_set_rud(f32 rud) {
+    return set_control_surface(rud, ID_SC_RUD);
+}
+
+bool simconnect_set_thr(f32 thr) {
+    if (!hSimConnect || numEngines < 1)
+        return false;
+    // Set throttle positions for all engines
+    for (i32 i = 1; i <= numEngines; i++) {
+        char name[64];
+        snprintf(name, sizeof(name), "GENERAL ENG THROTTLE LEVER POSITION:%d", i);
+        HRESULT hr =
+            SimConnect_SetDataOnSimObject(hSimConnect, ID_SC_NUM_ENG + i, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(thr), &thr);
+        if (hr != S_OK)
+            return false;
+    }
+    return true;
 }
 
 void simconnect_deinit() {

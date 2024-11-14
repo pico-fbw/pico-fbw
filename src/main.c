@@ -139,7 +139,9 @@ int main() {
 
     // AAHRS
     boot_set_progress(45, "Initializing AAHRS");
-    if (!aahrs.init()) {
+    if (aahrs.init()) {
+        printpre("boot", "AAHRS ok");
+    } else {
         // If AAHRS is calibrated: severity level is only an error as we could be in flight and we want to finish the boot,
         // If AAHRS is not calibrated: severity level is a fatal error to help point the user in the right direction
         LogType severity = aahrs.isCalibrated ? TYPE_ERROR : TYPE_FATAL;
@@ -165,13 +167,13 @@ int main() {
 
     // GPS
     if (gps.is_supported()) {
+        // Wait for GPS module to initialize before we try to use it
         while (time_ms() < 1000)
             ;
         boot_set_progress(65, "Initializing GPS");
         if (gps.init()) {
             printpre("boot", "GPS ok");
             // We don't set the GPS safe just yet, comms are good but we are still unsure if the data is good
-            log_message(TYPE_INFO, "GPS has no signal.", 5000, 150, false);
         } else {
             log_message(TYPE_ERROR, "GPS not found!", 1000, 0, false);
         }

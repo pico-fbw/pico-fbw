@@ -18,20 +18,20 @@ typedef timer_t __callback_id_t;
 
 // Not implemented
 #define PIN_INPUT_AIL 0
-#define PIN_SERVO_AIL 0
-#define PIN_INPUT_ELE 0
-#define PIN_SERVO_ELE 0
-#define PIN_INPUT_RUD 0
-#define PIN_SERVO_RUD 0
-#define PIN_INPUT_THR 0
-#define PIN_ESC_THR 0
-#define PIN_INPUT_SWITCH 0
-#define PIN_SERVO_BAY 0
+#define PIN_SERVO_AIL 1
+#define PIN_INPUT_ELE 2
+#define PIN_SERVO_ELE 3
+#define PIN_INPUT_RUD 4
+#define PIN_SERVO_RUD 5
+#define PIN_INPUT_THR 6
+#define PIN_ESC_THR 7
+#define PIN_INPUT_SWITCH 8
+#define PIN_SERVO_BAY 9
 
-#define PIN_AAHRS_SDA 0
-#define PIN_AAHRS_SCL 0
-#define PIN_GPS_TX 0
-#define PIN_GPS_RX 0
+#define PIN_AAHRS_SDA 10
+#define PIN_AAHRS_SCL 11
+#define PIN_GPS_TX 12
+#define PIN_GPS_RX 13
 
 #if defined(_WIN32)
     #if SIMCONNECT

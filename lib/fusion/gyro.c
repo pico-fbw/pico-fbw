@@ -19,6 +19,7 @@
 
 #include "drivers/drivers.h"
 #include "drivers/icm20948.h"
+#include "drivers/simconnect.h"
 
 #include "sys/print.h"
 
@@ -36,12 +37,16 @@ GyroscopeDetails gyroscopes[] = {
      icm20948_gyro_detect,
      icm20948_state_create,
      icm20948_state_destroy},
+#if SIMCONNECT
+    {"SimConnect", {0x00}, {.read = simconnect_gyro_read}, simconnect_detect, NULL, NULL},
+#endif
 };
 
 bool fusion_gyroscope_find(IMU *imu, const GyroscopeOptions *opts) {
     if (!imu)
         return false;
 
+    // See accel.c for comments on this loop
     for (u32 i = 0; i < count_of(gyroscopes); i++) {
         imu->gyro = &(gyroscopes[i].device);
         bool detected = false;
@@ -95,15 +100,14 @@ bool fusion_gyroscope_find(IMU *imu, const GyroscopeOptions *opts) {
             imu->gyro->orientation[6] = 0.f;
             imu->gyro->orientation[7] = 0.f;
             imu->gyro->orientation[8] = 1.f;
+            printfbw(aahrs, "done initializing, gyroscope \"%s\" will be used", gyroscopes[i].name);
             return true;
         } else {
-            // Nothing detected, clean up state if created
             if (imu->state && gyroscopes[i].create_state && gyroscopes[i].destroy_state)
                 imu->state = gyroscopes[i].destroy_state(imu->state);
             memset(imu->gyro, 0, sizeof(Gyroscope));
         }
     }
-    // Nothing was detected
     imu->gyro = NULL;
     return false;
 }
@@ -116,7 +120,6 @@ bool fusion_gyroscope_get(IMU *imu, f32 *x, f32 *y, f32 *z) {
         return false;
     }
 
-    // LOG(LL_DEBUG, ("Raw: gx=%d gy=%d gz=%d", imu->gyro->gx, imu->gyro->gy, imu->gyro->gz));
     if (x) {
         *x = (imu->gyro->scale * (imu->gyro->gx * imu->gyro->orientation[0] + imu->gyro->gy * imu->gyro->orientation[1] +
                                   imu->gyro->gz * imu->gyro->orientation[2])) +

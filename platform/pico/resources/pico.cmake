@@ -35,13 +35,13 @@ function(setup_after_subdirs)
     if (${FBW_BUILD_WWW})
         # Compile our custom assembly file that includes the littlefs binary data into the final executable
         target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_BINARY_DIR}/generated/www) # So lfs.S can find the binary data
-        target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/platform/pico/resources/lfs.S)
+        target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/lfs.S)
         # If any of the files in the www directory have been changed, we "touch" the lfs.S file to force it to be recompiled
         # This means that if the web interface is changed, linking will be re-run and the new files will be included
         file(GLOB_RECURSE WWW_FILES ${CMAKE_SOURCE_DIR}/www/*)
         add_custom_command(
-            OUTPUT ${CMAKE_SOURCE_DIR}/platform/pico/resources/lfs.S
-            COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_SOURCE_DIR}/platform/pico/resources/lfs.S
+            OUTPUT ${CMAKE_CURRENT_LIST_DIR}/lfs.S
+            COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_CURRENT_LIST_DIR}/lfs.S
             DEPENDS ${WWW_FILES}
         )
     endif()
@@ -50,11 +50,11 @@ function(setup_after_subdirs)
     math(EXPR MEMMAP_FLASH_SIZE "${PICO_FLASH_SIZE_BYTES} - 0x80000") # 512KB
     math(EXPR MEMMAP_LFS_ORIGIN "0x10000000 + ${MEMMAP_FLASH_SIZE}")
     set(MEMMAP_FILE "memmap_${PICO_PLATFORM}")
-    if (NOT EXISTS ${CMAKE_SOURCE_DIR}/platform/pico/resources/${MEMMAP_FILE}.ld.in)
+    if (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/${MEMMAP_FILE}.ld.in)
         message(FATAL_ERROR "Unsupported Pico platform (${PICO_PLATFORM})")
     endif()
     message("Linking with custom ${MEMMAP_FILE}.ld")
-    configure_file(${CMAKE_SOURCE_DIR}/platform/pico/resources/${MEMMAP_FILE}.ld.in ${CMAKE_BINARY_DIR}/memmap.ld)
+    configure_file(${CMAKE_CURRENT_LIST_DIR}/${MEMMAP_FILE}.ld.in ${CMAKE_BINARY_DIR}/memmap.ld)
     # Always use our custom linker script regardless of the web interface, this is so littlefs can always be in the same place
     pico_set_linker_script(${PROJECT_NAME} ${CMAKE_BINARY_DIR}/memmap.ld)
 endfunction()

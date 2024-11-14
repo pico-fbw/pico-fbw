@@ -473,6 +473,8 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
             return; // No need to continue if we're not writing
         }
 
+        // Store the original value in case we need to revert
+        const originalValue = data?.sections[sectionIndex].values[valueIndex];
         // Send the new value to the API and verify it was set correctly
         try {
             const key = config[sectionName as keyof typeof config][valueIndex].id;
@@ -498,6 +500,15 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
                 throw new Error("Failed to verify config change, please try again");
             }
         } catch (e) {
+            // Revert the change if it failed
+            setData(prevData => {
+                if (!prevData) {
+                    return null;
+                }
+                const updatedData = { ...prevData };
+                updatedData.sections[sectionIndex].values[valueIndex] = originalValue;
+                return updatedData;
+            });
             setError(`Failed to set new config value: ${(e as Error).message}`);
         }
     };

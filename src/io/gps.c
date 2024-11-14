@@ -6,6 +6,9 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#if SIMCONNECT
+    #include "platform/simconnect.h"
+#endif
 #include "platform/time.h"
 #include "platform/uart.h"
 
@@ -17,6 +20,7 @@
 #include "sys/configuration.h"
 #include "sys/log.h"
 #include "sys/print.h"
+#include "sys/runtime.h"
 
 #include "gps.h"
 
@@ -54,6 +58,7 @@ static inline bool data_valid(f32 lat, f32 lng, i32 alt, f32 speed, f32 track, f
 }
 
 bool gps_init() {
+#if !SIMCONNECT
     printfbw(gps, "initializing uart at baudrate %lu, on pins %lu (tx) and %lu (rx)", (u32)config.sensors[SENSORS_GPS_BAUDRATE],
              (u32)config.pins[PINS_GPS_TX], (u32)config.pins[PINS_GPS_RX]);
     uart_setup((u32)config.pins[PINS_GPS_TX], (u32)config.pins[PINS_GPS_RX], (u32)config.sensors[SENSORS_GPS_BAUDRATE]);
@@ -92,9 +97,15 @@ bool gps_init() {
         default:
             return false;
     }
+#else
+    if (simconnect_ready())
+        return true;
+    return false;
+#endif // !SIMCONNECT
 }
 
 void gps_update() {
+#if !SIMCONNECT
     // Read line(s) from the GPS and parse them until there are none remaining
     char *line = uart_read((u32)config.pins[PINS_GPS_TX], (u32)config.pins[PINS_GPS_RX]);
     while (line) {
@@ -150,52 +161,47 @@ void gps_update() {
         free(line);
         line = uart_read((u32)config.pins[PINS_GPS_TX], (u32)config.pins[PINS_GPS_RX]);
     }
+#else
+    gps.lat = scGPS.lat;
+    gps.lng = scGPS.lng;
+    gps.alt = (i32)scGPS.alt;
+    gps.speed = scGPS.speed;
+    gps.track = scGPS.track;
+    // Not simulated
+    gps.pdop = 0.f;
+    gps.hdop = 0.f;
+    gps.vdop = 0.f;
+    gps.sats = 0;
+#endif // !SIMCONNECT
     aircraft.set_gps_safe(data_valid(gps.lat, gps.lng, gps.alt, gps.speed, gps.track, gps.pdop, gps.hdop, gps.vdop));
 }
 
 i32 gps_calibrate_alt_offset(u32 num_samples) {
     log_message(TYPE_INFO, "Calibrating altitude", 1000, 100, false);
-    // GPS updates should be at 1Hz (give or take 2s) so if the calibration takes longer we cut it short
+    // GPS updates should be at 1Hz (+ an extra 2s just in case) so if the calibration takes longer we cut it short
     Timestamp calibrationTimeout = timestamp_in_ms((num_samples * 1000) + 2000);
     u32 samples = 0;
     i64 alts = 0;
+    i32 prevAlt = gps.alt;
     while (samples < num_samples && !timestamp_reached(&calibrationTimeout)) {
-        char *line = uart_read((u32)config.pins[PINS_GPS_TX], (u32)config.pins[PINS_GPS_RX]);
-        if (line) {
-            switch (minmea_sentence_id(line, false)) {
-                case MINMEA_SENTENCE_GGA: {
-                    struct minmea_sentence_gga gga;
-                    if (minmea_parse_gga(&gga, line)) {
-                        if (strncmp(&gga.altitude_units, "M", 1) == 0) {
-                            i32 cAlt = (i32)(minmea_tofloat(&gga.altitude) * 3.28084f);
-                            alts += cAlt;
-                            printfbw(gps, "altitude: %ld (%lu of %lu)", cAlt, samples + 1, num_samples);
-                        } else {
-                            printfbw(gps, "ERROR: invalid altitude units during calibration");
-                            return -2;
-                        }
-                    } else {
-                        printfbw(gps, "ERROR: failed parsing $xxGGA sentence during calibration");
-                    }
-                    samples++;
-                }
-                default: {
-                    break;
-                }
-            }
-            free(line);
+        // GPS will be updated by runtime, we will check back in every 250ms for a new altitude
+        runtime_sleep_ms(250, false);
+        if (gps.alt != prevAlt) {
+            alts += gps.alt;
+            samples++;
+            prevAlt = gps.alt;
         }
     }
     log_clear(TYPE_INFO);
+
     if (timestamp_reached(&calibrationTimeout)) {
         printfbw(gps, "ERROR: altitude calibration timed out");
         return -1;
-    } else {
-        gps.altOffset = (i32)(alts / samples);
-        printfbw(gps, "altitude offset calculated as: %ld", gps.altOffset);
-        gps.altOffsetCalibrated = true;
-        return 0;
     }
+    gps.altOffset = (i32)(alts / samples);
+    printfbw(gps, "altitude offset calculated as: %ld", gps.altOffset);
+    gps.altOffsetCalibrated = true;
+    return 0;
 }
 
 bool gps_is_supported() {
@@ -212,6 +218,7 @@ GPS gps = {
     .pdop = -1.0f,
     .hdop = -1.0f,
     .vdop = -1.0f,
+    .sats = -1,
     .altOffset = 0,
     .altOffsetCalibrated = false,
     .init = gps_init,

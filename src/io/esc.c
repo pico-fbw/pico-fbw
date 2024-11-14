@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include "platform/helpers.h"
 #include "platform/pwm.h"
+#if SIMCONNECT
+    #include "platform/simconnect.h"
+#endif
 #include "platform/time.h"
 
 #include "io/display.h"
@@ -66,6 +69,7 @@ void esc_enable(u32 pin) {
 }
 
 void esc_set(u32 pin, f32 speed) {
+#if !SIMCONNECT
     // Ensure speed is within range 0-100% and convert from percentage to duty cycle
     // See servo.c for more information on how the duty cycle is calculated
     speed = clampf(speed, 0, 100);
@@ -73,6 +77,9 @@ void esc_set(u32 pin, f32 speed) {
     f32 period = 1E6f / config.general[GENERAL_ESC_HZ];
     u16 duty = (u16)((pulsewidth / period) * UINT16_MAX);
     pwm_write_raw(pin, duty);
+#else
+    simconnect_set_thr(speed);
+#endif
 }
 
 bool esc_calibrate(u32 pin) {

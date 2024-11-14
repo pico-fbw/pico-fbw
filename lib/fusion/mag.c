@@ -40,6 +40,7 @@ bool fusion_magnetometer_find(IMU *imu, const MagnetometerOptions *opts) {
     if (!imu)
         return false;
 
+    // See accel.c for comments on this loop
     for (u32 i = 0; i < count_of(magnetometers); i++) {
         imu->mag = &(magnetometers[i].device);
         bool detected = false;
@@ -94,15 +95,14 @@ bool fusion_magnetometer_find(IMU *imu, const MagnetometerOptions *opts) {
             imu->mag->orientation[6] = 0.f;
             imu->mag->orientation[7] = 0.f;
             imu->mag->orientation[8] = 1.f;
+            printfbw(aahrs, "done initializing, magnetometer \"%s\" will be used", magnetometers[i].name);
             return true;
         } else {
-            // Nothing detected, clean up state if created
             if (imu->state && magnetometers[i].create_state && magnetometers[i].destroy_state)
                 imu->state = magnetometers[i].destroy_state(imu->state);
             memset(imu->mag, 0, sizeof(Magnetometer));
         }
     }
-    // Nothing was detected
     imu->mag = NULL;
     return false;
 }
@@ -117,7 +117,6 @@ bool fusion_magnetometer_get(IMU *imu, f32 *x, f32 *y, f32 *z) {
         return false;
     }
 
-    // LOG(LL_DEBUG, ("Raw: mx=%d my=%d mz=%d", imu->mag->mx, imu->mag->my, imu->mag->mz));
     mxb = imu->mag->bias[0] * imu->mag->mx * imu->mag->scale;
     myb = imu->mag->bias[1] * imu->mag->my * imu->mag->scale;
     mzb = imu->mag->bias[2] * imu->mag->mz * imu->mag->scale;

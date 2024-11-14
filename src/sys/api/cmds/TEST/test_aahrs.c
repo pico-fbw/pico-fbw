@@ -10,6 +10,8 @@
 
 #include "io/aahrs.h"
 
+#include "modes/aircraft.h"
+
 #include "sys/print.h"
 #include "sys/runtime.h"
 
@@ -62,6 +64,8 @@ static bool wait_for_axis(IMUAxis axis, u32 breakpoint, u32 timeout_ms) {
 }
 
 i32 api_test_aahrs(const char *args) {
+    if (aircraft.aahrsSafe)
+        return 500;
     printpre("test", "awaiting right roll...");
     if (!wait_for_axis(IMU_AXIS_ROLL, 20, 10000))
         return 500;

@@ -47,7 +47,7 @@ target_link_libraries(platform_pico
 )
 
 # Include the wifi directory so the lwipopts.h file can be found by lwIP
-target_include_directories(platform_pico PUBLIC ${CMAKE_SOURCE_DIR}/platform/pico/wifi)
+target_include_directories(platform_pico PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/wifi)
 # Extra libraries for web interface support
 if (FBW_PLATFORM STREQUAL "pico_w")
     # Link to stdlib (cyw43 driver uses it), and the cyw43 driver/lwIP
@@ -65,7 +65,7 @@ else()
         tinyusb_device
     )
     # Include the tinyusb directory so tusb_config.h can be found by tinyusb
-    target_include_directories(platform_pico PUBLIC ${CMAKE_SOURCE_DIR}/platform/pico/tinyusb)
+    target_include_directories(platform_pico PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/tinyusb)
     # Add tinyusb's RNDIS support for USB networking
     if (NOT PICO_TINYUSB_PATH)
         set(PICO_TINYUSB_PATH ${PICO_SDK_PATH}/lib/tinyusb)

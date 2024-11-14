@@ -9,6 +9,11 @@
  * Check it out at https://github.com/mongoose-os-libs/imu
  */
 
+/**
+ * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
+ * Licensed under the GNU GPL-3.0
+ */
+
 #include <stdlib.h>
 
 #include "compat.h"

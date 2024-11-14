@@ -14,6 +14,10 @@ add_library(fbw_lib
     semver.c
 )
 
+if (SimConnect_FOUND)
+    target_sources(fbw_lib PRIVATE fusion/drivers/simconnect.c)
+endif()
+
 # fbw_sys is not included here
 # Even though it does make use of sys/configuration and sys/print.h, this merely replaces code with macros and variable locations,
 # and thus compilation is not necessary

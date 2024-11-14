@@ -19,6 +19,7 @@
 
 #include "drivers/drivers.h"
 #include "drivers/icm20948.h"
+#include "drivers/simconnect.h"
 
 #include "sys/print.h"
 
@@ -38,6 +39,16 @@ AccelerometerDetails accelerometers[] = {
         icm20948_state_create,
         icm20948_state_destroy,
     },
+#if SIMCONNECT
+    {
+        "SimConnect",
+        {0x00},
+        {.read = simconnect_acc_read},
+        simconnect_detect,
+        NULL,
+        NULL,
+    },
+#endif
 };
 
 bool fusion_accelerometer_find(IMU *imu, const AccelerometerOptions *opts) {
@@ -45,7 +56,8 @@ bool fusion_accelerometer_find(IMU *imu, const AccelerometerOptions *opts) {
         return false;
 
     for (u32 i = 0; i < count_of(accelerometers); i++) {
-        // (possibly) Temporarily assign the current accelerometer's device driver into the global imu struct
+        // Assign the current accelerometer's device driver into the global imu struct
+        // This will later be unassigned if the accelerometer is not detected
         imu->acc = &(accelerometers[i].device);
         bool detected = false;
         // If we need to create a state for the accelerometer, do so now
@@ -93,6 +105,7 @@ bool fusion_accelerometer_find(IMU *imu, const AccelerometerOptions *opts) {
                 imu->acc->set_scale(imu->acc, imu->state, opts->scale);
             if (imu->acc->set_odr)
                 imu->acc->set_odr(imu->acc, imu->state, opts->odr);
+            printfbw(aahrs, "done initializing, accelerometer \"%s\" will be used", accelerometers[i].name);
             return true;
         } else {
             // Nothing detected, clean up state if created

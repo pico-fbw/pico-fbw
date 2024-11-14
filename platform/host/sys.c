@@ -10,7 +10,7 @@
 #include "platform/types.h"
 #if defined(_WIN32)
     #include <windows.h>
-    #include "simconnect.h"
+    #include "platform/simconnect.h"
 LARGE_INTEGER tStart, tFreq;
 #elif defined(__APPLE__) || defined(__linux__)
     #include <sys/time.h>
@@ -19,7 +19,7 @@ u64 tStart;
 
 #include "platform/sys.h"
 
-#define THREAD_SLEEP_MS 2 // The delay between each iteration of the main loop to reduce CPU usage
+#define THREAD_SLEEP_MS 4 // The delay between each iteration of the main loop to reduce CPU usage
 
 // The term_handler function catches termination signals by the OS and calls sys_shutdown.
 void term_handler(int signum) {
@@ -40,14 +40,13 @@ void sys_boot_begin() {
     gettimeofday(&tv, NULL);
     tStart = tv.tv_sec * 1000000 + tv.tv_usec;
 #endif
+#if SIMCONNECT
+    simconnect_init();
+#endif
 }
 
 void sys_boot_end() {
-#if SIMCONNECT
-    simconnect_init();
-#else
     return;
-#endif
 }
 
 void sys_periodic() {
@@ -66,7 +65,7 @@ void __attribute__((noreturn)) sys_shutdown() {
 }
 
 void __attribute__((noreturn)) sys_reboot(bool bootloader) {
-    printf("\npico-fbw is running in host mode. Rebooting is not supported, terminating instead.\n");
+    // Reboot not supported
     sys_shutdown();
     (void)bootloader;
 }

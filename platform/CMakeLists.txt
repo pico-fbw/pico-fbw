@@ -1,4 +1,3 @@
-# Will automatically link the selected platform to the rest of the project so it can be used
 function(configure_libraries target_library)
     target_link_libraries(${PROJECT_NAME} ${target_library})
     target_link_libraries(fbw_api ${target_library})
@@ -8,6 +7,22 @@ function(configure_libraries target_library)
     target_link_libraries(fbw_sys ${target_library})
 endfunction()
 
+function(configure_includes target_include_dir)
+    # Platforms may optionally provide an include directory
+    if (EXISTS ${target_include_dir})
+        message("Using platform include directory: ${target_include_dir}")
+        target_include_directories(platform_${PLATFORM_DIR} PUBLIC ${target_include_dir})
+        target_include_directories(${PROJECT_NAME} PUBLIC ${target_include_dir})
+        target_include_directories(fbw_api PUBLIC ${target_include_dir})
+        target_include_directories(fbw_io PUBLIC ${target_include_dir})
+        target_include_directories(fbw_lib PUBLIC ${target_include_dir})
+        target_include_directories(fbw_modes PUBLIC ${target_include_dir})
+        target_include_directories(fbw_sys PUBLIC ${target_include_dir})
+    endif()
+endfunction()
+
 add_subdirectory(${PLATFORM_DIR})
 message("Target platform library is: platform_${PLATFORM_DIR}")
+# Link the target platform to the rest of the project so it can be used
 configure_libraries(platform_${PLATFORM_DIR})
+configure_includes(${CMAKE_CURRENT_SOURCE_DIR}/${PLATFORM_DIR}/include)

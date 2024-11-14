@@ -23,13 +23,13 @@ typedef struct GPS {
     f32 speed;            // Groundspeed, kts. (Read-only)
     f32 track;            // True (NOT magnetic) heading, 0 to 360 deg. (Read-only)
     f32 pdop, hdop, vdop; // GPS DOP (dilution of precision) measurements for position, horizontal, and vertical (Read-only)
-    int sats;             // Number of satellites in view (Read-only)
+    i32 sats;             // Number of satellites in view (Read-only)
     i32 altOffset; // This is a positive value (basically where the GPS is MSL) or possibly zero if no calibration has been
                    // performed. (Read-only)
     bool altOffsetCalibrated; // (Read-only)
     /**
      * Initializes the GPS module.
-     * @return true if successful, false if not.
+     * @return true if successful
      */
     gps_init_t init;
     /**
@@ -39,11 +39,11 @@ typedef struct GPS {
     /**
      * Calibrates the altitude offset from the GPS.
      * @param num_samples the number of samples to take.
-     * @return 0 if successful, -1 if a timeout occured, or -2 otherwise.
+     * @return 0 if successful or -1 if a timeout occured
      */
     gps_calibrate_alt_offset_t calibrate_alt_offset;
     /**
-     * @return whether or not the GPS sensor is supported in the current system configuration.
+     * @return whether or not the GPS sensor is supported in the current system configuration
      */
     gps_is_supported_t is_supported;
 } GPS;
