@@ -25,4 +25,4 @@ add_subdirectory(${PLATFORM_DIR})
 message("Target platform library is: platform_${PLATFORM_DIR}")
 # Link the target platform to the rest of the project so it can be used
 configure_libraries(platform_${PLATFORM_DIR})
-configure_includes(${CMAKE_CURRENT_SOURCE_DIR}/${PLATFORM_DIR}/include)
+configure_includes(${PLATFORM_PATH}/include)

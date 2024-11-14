@@ -39,7 +39,7 @@ void servo_set(u32 pin, f32 degree) {
         simconnect_set_ele(degree);
     else if (pin == (u32)config.pins[PINS_SERVO_RUD])
         simconnect_set_rud(degree);
-        // All other servos are not simulated
+    // All other servos are not simulated
 #endif // !SIMCONNECT
 }
 

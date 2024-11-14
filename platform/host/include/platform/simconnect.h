@@ -85,7 +85,7 @@ typedef struct SC_GPS {
 extern SC_IMU scIMU;
 extern SC_GPS scGPS;
 
-    // clang-format off
+// clang-format off
 #ifdef __cplusplus
 }
 #endif

@@ -28,6 +28,7 @@ if (NOT EXISTS "${CMAKE_SOURCE_DIR}/platform/${PLATFORM_DIR}/resources/${PLATFOR
 endif()
 message("Building for platform '${FBW_PLATFORM}'")
 message("Using platform directory 'platform/${PLATFORM_DIR}'")
+set(PLATFORM_PATH "${CMAKE_SOURCE_DIR}/platform/${PLATFORM_DIR}")
 include(platform/${PLATFORM_DIR}/resources/${PLATFORM_DIR}.cmake)
 
 # Define the project, the languages it uses, and the version
