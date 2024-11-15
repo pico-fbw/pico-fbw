@@ -9,56 +9,6 @@ extern "C" {
 
 #if SIMCONNECT
 
-/**
- * Initializes a connection to SimConnect.
- * @return true if the connection was successful
- */
-bool simconnect_init();
-
-/**
- * @return true if a connection to SimConnect is active
- */
-bool simconnect_ready();
-
-/**
- * Polls SimConnect for new messages.
- * Also updates scIMU and scGPS with the latest data.
- */
-void simconnect_poll();
-
-/**
- * Sets the aileron position in SimConnect.
- * @param ail the desired position in degrees (0-180)
- * @return true if the data was sent successfully
- */
-bool simconnect_set_ail(f32 ail);
-
-/**
- * Sets the elevator position in SimConnect.
- * @param ele the desired position in degrees (0-180)
- * @return true if the data was sent successfully
- */
-bool simconnect_set_ele(f32 ele);
-
-/**
- * Sets the rudder position in SimConnect.
- * @param rud the desired position in degrees (0-180)
- * @return true if the data was sent successfully
- */
-bool simconnect_set_rud(f32 rud);
-
-/**
- * Sets the throttle position in SimConnect.
- * @param thr the desired position in percent (0-100)
- * @return true if the data was sent successfully
- */
-bool simconnect_set_thr(f32 thr);
-
-/**
- * Closes an active connection to SimConnect if one exists.
- */
-void simconnect_deinit();
-
     #pragma pack(push, 1) // Pack structs for compatibility with SimConnect
 // SimConnect (emulated) IMU data definition
 typedef struct SC_IMU {
@@ -82,10 +32,54 @@ typedef struct SC_GPS {
 } SC_GPS;
     #pragma pack(pop)
 
+typedef enum SCFlightControl {
+    FCTRL_AIL,
+    FCTRL_ELE,
+    FCTRL_RUD,
+    FCTRL_THR,
+} SCFlightControl;
+
+/**
+ * Initializes a connection to SimConnect.
+ * @return true if the connection was successful
+ */
+bool simconnect_init();
+
+/**
+ * @return true if a connection to SimConnect is active
+ */
+bool simconnect_ready();
+
+/**
+ * Polls SimConnect for new messages.
+ * Also updates scIMU and scGPS with the latest data.
+ */
+void simconnect_poll();
+
+/**
+ * Sets the requested flight control position, either in degrees (0-180) or percent (0-100)
+ * @param fctrl the flight control to set
+ * @param val the desired position
+ * @return true if the data was sent successfully
+ */
+bool simconnect_set(SCFlightControl fctrl, f32 val);
+
+/**
+ * Gets a flight control position from SimConnect.
+ * @param fctrl the flight control to get
+ * @return the requested current flight control position, either in degrees (0-180) or percent (0-100)
+ */
+f32 simconnect_get(SCFlightControl fctrl);
+
+/**
+ * Closes an active connection to SimConnect if one exists.
+ */
+void simconnect_deinit();
+
 extern SC_IMU scIMU;
 extern SC_GPS scGPS;
 
-// clang-format off
+    // clang-format off
 #ifdef __cplusplus
 }
 #endif

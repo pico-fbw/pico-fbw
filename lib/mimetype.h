@@ -42,14 +42,14 @@ const MimeEntry mimeTable[] = {
  * @param path path to/filename of the file
  * @return the content type of the file
  */
-static inline const char *get_content_type(const char *path) {
+static const char *get_content_type(const char *path) {
     for (u32 i = 0; i < count_of(mimeTable); i++) {
         const char *suffix = mimeTable[i].endsWith;
         size_t lenpath = strlen(path);
         size_t lensuffix = strlen(suffix);
         if (lenpath >= lensuffix) {
             const char *check = strstr(path + lenpath - lensuffix, suffix);
-            if (check != NULL)
+            if (check)
                 return mimeTable[i].mimeType;
         }
     }

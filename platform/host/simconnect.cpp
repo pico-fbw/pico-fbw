@@ -35,17 +35,34 @@
 enum DataDefinitionRequestID {
     ID_SC_IMU = 1,
     ID_SC_GPS,
-    ID_SC_AIL,
-    ID_SC_ELE,
-    ID_SC_RUD,
-    ID_SC_NUM_ENG,
+    ID_AIL_OUT,
+    ID_ELE_OUT,
+    ID_RUD_OUT,
+    ID_INPUT_ENABLED,
+    ID_NUM_ENG,
     // More data definitions will be created at runtime for engine throttle levels
+};
+
+// SimConnect notification group IDs
+enum NotificationGroup {
+    GROUP_FCTRL = 1,
+};
+
+// SimConnect event IDs
+enum EventID {
+    EVENT_AIL_SET = 1,
+    EVENT_ELE_SET,
+    EVENT_RUD_SET,
+    EVENT_THR_SET,
 };
 
 HANDLE hSimConnect = nullptr;
 SC_IMU scIMU;
 SC_GPS scGPS;
 i32 numEngines = 0; // Will be filled in later
+
+f32 ailPos = 0.f, elePos = 0.f, rudPos = 0.f, thrPos = 0.f;                 // Last retrieved control surface positions
+f32 lastAilSet = 0.f, lastEleSet = 0.f, lastRudSet = 0.f, lastThrSet = 0.f; // Last set control surface positions
 
 /**
  * Simulates readings from a MEMS accelerometer based on available SimConnect data.
@@ -75,6 +92,25 @@ static inline f32 deg_to_position(f32 deg) {
 }
 
 /**
+ * Converts a SimConnect `position` range (-1.0 to 1.0) to a servo degree range (0-180).
+ * @param pos the SimConnect `position` value
+ * @return the equivalent servo degree value
+ */
+static inline f32 position_to_deg(f32 pos) {
+    return mapf(pos, -1.f, 1.f, 0.f, 180.f);
+}
+
+/**
+ * Converts a SimConnect `position` range returned by an event (-16383 to 16384) to an `f32` normalized position range (-1.0
+ * to 1.0).
+ * @param data the event data to convert
+ * @return the equivalent normalized position value
+ */
+static inline f32 eventdata_to_position(DWORD data) {
+    return (f32)((i32)data) / 16384.0f;
+}
+
+/**
  * Sets a control surface position.
  * @param deg the desired position in degrees (0-180)
  * @param id the SimConnect data definition ID to set
@@ -86,6 +122,26 @@ static bool set_control_surface(f32 deg, DataDefinitionRequestID id) {
     f32 pos = deg_to_position(deg);
     HRESULT hr = SimConnect_SetDataOnSimObject(hSimConnect, id, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(pos), &pos);
     return hr == S_OK;
+}
+
+/**
+ * Sets the throttle level for all engines.
+ * @param thr the desired throttle level (0-100)
+ * @return true if the data was sent successfully
+ */
+static bool set_throttle(f32 thr) {
+    if (!hSimConnect || numEngines < 1)
+        return false;
+    // Set throttle positions for all engines
+    for (i32 i = 1; i <= numEngines; i++) {
+        char name[64];
+        snprintf(name, sizeof(name), "GENERAL ENG THROTTLE LEVER POSITION:%d", i);
+        HRESULT hr =
+            SimConnect_SetDataOnSimObject(hSimConnect, ID_NUM_ENG + i, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(thr), &thr);
+        if (FAILED(hr))
+            return false;
+    }
+    return true;
 }
 
 // SimConnect callback. Will be called on a SIMCONNECT_RECV_OPEN message.
@@ -110,14 +166,14 @@ static void on_SIMCONNECT_RECV_SIMOBJECT_DATA(SIMCONNECT_RECV_SIMOBJECT_DATA *pD
         case ID_SC_GPS:
             memcpy(&scGPS, &pData->dwData, sizeof(SC_GPS));
             break;
-        case ID_SC_NUM_ENG:
+        case ID_NUM_ENG:
             numEngines = *(i32 *)&pData->dwData;
             printmsfs("detected %d %s", numEngines, numEngines == 1 ? "engine" : "engines");
             // Now we can add all engine throttle level positions to the data definition
             for (i32 i = 1; i <= numEngines; i++) {
                 char name[64];
                 snprintf(name, sizeof(name), "GENERAL ENG THROTTLE LEVER POSITION:%d", i);
-                SimConnect_AddToDataDefinition(hSimConnect, ID_SC_NUM_ENG + i, name, "percent", SIMCONNECT_DATATYPE_FLOAT32);
+                SimConnect_AddToDataDefinition(hSimConnect, ID_NUM_ENG + i, name, "percent", SIMCONNECT_DATATYPE_FLOAT32);
             }
             break;
         default:
@@ -127,15 +183,43 @@ static void on_SIMCONNECT_RECV_SIMOBJECT_DATA(SIMCONNECT_RECV_SIMOBJECT_DATA *pD
     (void)pContext;
 }
 
-bool simconnect_init() {
-    printmsfs("attempting to connect to simulator...");
-    HRESULT hr = SimConnect_Open(&hSimConnect, "pico-fbw", nullptr, 0, 0, 0);
-    if (hr != S_OK) {
-        printmsfs("WARNING: failed to connect! (%ld)", hr);
-        return false;
+static void on_SIMCONNECT_RECV_EVENT(SIMCONNECT_RECV_EVENT *pData, void *pContext) {
+    switch (pData->uEventID) {
+        case EVENT_AIL_SET: {
+            ailPos = -eventdata_to_position(pData->dwData); // Reverse sign for some reason?
+            // Set the position back to the last set value, therefore cancelling the event
+            // This is done to mimic the behavior of pico-fbw in a real RC plane, where everything has to go through code first
+            // (no direct control)
+            set_control_surface(lastAilSet, ID_AIL_OUT);
+            break;
+        }
+        case EVENT_ELE_SET: {
+            elePos = eventdata_to_position(pData->dwData);
+            set_control_surface(lastEleSet, ID_ELE_OUT);
+            break;
+        }
+        case EVENT_RUD_SET: {
+            rudPos = eventdata_to_position(pData->dwData);
+            set_control_surface(lastRudSet, ID_RUD_OUT);
+            break;
+        }
+        case EVENT_THR_SET: {
+            // Throttle is from 0 to 16383 for some reason
+            thrPos = mapf((f32)pData->dwData, 0.f, 16383.f, 0.f, 100.f);
+            set_throttle(lastThrSet);
+            break;
+        }
+        default:
+            printmsfs("WARNING: unhandled event ID %lu", pData->uEventID);
+            break;
     }
-    printmsfs("connection established, now configuring");
-    // Configure data definitions for emulated IMU
+    (void)pContext;
+}
+
+/**
+ * Configures the data definition for the emulated IMU.
+ */
+static bool configure_datadef_sc_imu() {
     SimConnect_AddToDataDefinition(hSimConnect, ID_SC_IMU, "PLANE BANK DEGREES", "degrees");
     SimConnect_AddToDataDefinition(hSimConnect, ID_SC_IMU, "PLANE PITCH DEGREES", "degrees");
     SimConnect_AddToDataDefinition(hSimConnect, ID_SC_IMU, "PLANE HEADING DEGREES MAGNETIC", "degrees");
@@ -145,35 +229,85 @@ bool simconnect_init() {
     SimConnect_AddToDataDefinition(hSimConnect, ID_SC_IMU, "STRUCT BODY ROTATION VELOCITY", "degrees per second",
                                    SIMCONNECT_DATATYPE_XYZ);
     SimConnect_AddToDataDefinition(hSimConnect, ID_SC_IMU, "INDICATED ALTITUDE", "feet", SIMCONNECT_DATATYPE_FLOAT32);
-    hr = SimConnect_RequestDataOnSimObject(hSimConnect, ID_SC_IMU, ID_SC_IMU, SIMCONNECT_OBJECT_ID_USER,
-                                           SIMCONNECT_PERIOD_SIM_FRAME);
-    if (hr != S_OK) {
-        printmsfs("WARNING: failed to configure SC_IMU data! (%ld)", hr);
-        return false;
-    }
-    // Configure for emulated GPS
+    return SUCCEEDED(SimConnect_RequestDataOnSimObject(hSimConnect, ID_SC_IMU, ID_SC_IMU, SIMCONNECT_OBJECT_ID_USER,
+                                                       SIMCONNECT_PERIOD_SIM_FRAME));
+}
+
+/**
+ * Configures the data definition for the emulated GPS.
+ */
+static bool configure_datadef_sc_gps() {
     SimConnect_AddToDataDefinition(hSimConnect, ID_SC_GPS, "PLANE LATITUDE", "degrees");
     SimConnect_AddToDataDefinition(hSimConnect, ID_SC_GPS, "PLANE LONGITUDE", "degrees");
     SimConnect_AddToDataDefinition(hSimConnect, ID_SC_GPS, "PLANE ALTITUDE", "feet", SIMCONNECT_DATATYPE_FLOAT32);
     SimConnect_AddToDataDefinition(hSimConnect, ID_SC_GPS, "GPS GROUND SPEED", "knots", SIMCONNECT_DATATYPE_FLOAT32);
     SimConnect_AddToDataDefinition(hSimConnect, ID_SC_GPS, "GPS GROUND TRUE HEADING", "degrees", SIMCONNECT_DATATYPE_FLOAT32);
     // GPS data is updated every second (to simulate real GPS modules being somewhat slow)
-    hr = SimConnect_RequestDataOnSimObject(hSimConnect, ID_SC_GPS, ID_SC_GPS, SIMCONNECT_OBJECT_ID_USER,
-                                           SIMCONNECT_PERIOD_SECOND);
-    if (hr != S_OK) {
-        printmsfs("WARNING: failed to configure SC_GPS data! (%ld)", hr);
+    return SUCCEEDED(SimConnect_RequestDataOnSimObject(hSimConnect, ID_SC_GPS, ID_SC_GPS, SIMCONNECT_OBJECT_ID_USER,
+                                                       SIMCONNECT_PERIOD_SECOND));
+}
+
+/**
+ * Configures the data definitions for the control surface signals.
+ */
+static bool configure_datadef_control_surfaces() {
+    SimConnect_AddToDataDefinition(hSimConnect, ID_AIL_OUT, "AILERON POSITION", "position", SIMCONNECT_DATATYPE_FLOAT32);
+    SimConnect_AddToDataDefinition(hSimConnect, ID_ELE_OUT, "ELEVATOR POSITION", "position", SIMCONNECT_DATATYPE_FLOAT32);
+    SimConnect_AddToDataDefinition(hSimConnect, ID_RUD_OUT, "RUDDER POSITION", "position", SIMCONNECT_DATATYPE_FLOAT32);
+    // Disable user input
+    // TODO: does this even do anything?
+    SimConnect_AddToDataDefinition(hSimConnect, ID_INPUT_ENABLED, "USER INPUT ENABLED", "bool", SIMCONNECT_DATATYPE_INT32);
+    i32 enabled = 0;
+    return SUCCEEDED(
+        SimConnect_SetDataOnSimObject(hSimConnect, ID_INPUT_ENABLED, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(i32), &enabled));
+}
+
+/**
+ * Configures the event mapping for the flight control surfaces.
+ */
+static bool configure_event_fctrl() {
+    SimConnect_MapClientEventToSimEvent(hSimConnect, EVENT_AIL_SET, "AXIS_AILERONS_SET");
+    SimConnect_MapClientEventToSimEvent(hSimConnect, EVENT_ELE_SET, "AXIS_ELEVATOR_SET");
+    SimConnect_MapClientEventToSimEvent(hSimConnect, EVENT_RUD_SET, "AXIS_RUDDER_SET");
+    SimConnect_MapClientEventToSimEvent(hSimConnect, EVENT_THR_SET, "AXIS_THROTTLE_SET");
+    SimConnect_AddClientEventToNotificationGroup(hSimConnect, GROUP_FCTRL, EVENT_AIL_SET, true);
+    SimConnect_AddClientEventToNotificationGroup(hSimConnect, GROUP_FCTRL, EVENT_ELE_SET, true);
+    return SUCCEEDED(SimConnect_SetNotificationGroupPriority(hSimConnect, GROUP_FCTRL, SIMCONNECT_GROUP_PRIORITY_HIGHEST));
+}
+
+bool simconnect_init() {
+    printmsfs("attempting to connect to simulator...");
+    HRESULT hr = SimConnect_Open(&hSimConnect, "pico-fbw", nullptr, 0, 0, 0);
+    if (FAILED(hr)) {
+        printmsfs("WARNING: failed to connect! (%ld)", hr);
         return false;
     }
-    // Configure for control surface signals
-    SimConnect_AddToDataDefinition(hSimConnect, ID_SC_AIL, "AILERON POSITION", "position", SIMCONNECT_DATATYPE_FLOAT32);
-    SimConnect_AddToDataDefinition(hSimConnect, ID_SC_ELE, "ELEVATOR POSITION", "position", SIMCONNECT_DATATYPE_FLOAT32);
-    SimConnect_AddToDataDefinition(hSimConnect, ID_SC_RUD, "RUDDER POSITION", "position", SIMCONNECT_DATATYPE_FLOAT32);
+    printmsfs("connection established, now configuring");
+    // Configure data definitions
+    if (!configure_datadef_sc_imu()) {
+        printmsfs("WARNING: failed to configure SC_IMU data!");
+        return false;
+    }
+    if (!configure_datadef_sc_gps()) {
+        printmsfs("WARNING: failed to configure SC_GPS data!");
+        return false;
+    }
+    if (!configure_datadef_control_surfaces()) {
+        printmsfs("WARNING: failed to configure control surface data!");
+        return false;
+    }
+    // Configure events
+    if (!configure_event_fctrl()) {
+        printmsfs("WARNING: failed to configure flight control events!");
+        return false;
+    }
     // Request how many engines are present, SimConnect will get back to us with the number
-    SimConnect_AddToDataDefinition(hSimConnect, ID_SC_NUM_ENG, "NUMBER OF ENGINES", "number", SIMCONNECT_DATATYPE_INT32);
-    hr = SimConnect_RequestDataOnSimObject(hSimConnect, ID_SC_NUM_ENG, ID_SC_NUM_ENG, SIMCONNECT_OBJECT_ID_USER,
+    // This is needed to later set throttle levels for all engines
+    SimConnect_AddToDataDefinition(hSimConnect, ID_NUM_ENG, "NUMBER OF ENGINES", "number", SIMCONNECT_DATATYPE_INT32);
+    hr = SimConnect_RequestDataOnSimObject(hSimConnect, ID_NUM_ENG, ID_NUM_ENG, SIMCONNECT_OBJECT_ID_USER,
                                            SIMCONNECT_PERIOD_ONCE);
-    if (hr != S_OK) {
-        printmsfs("WARNING: failed to configure SC_NUM_ENG data! (%ld)", hr);
+    if (FAILED(hr)) {
+        printmsfs("WARNING: failed to get number of engines!)");
         return false;
     }
     printmsfs("configured all data requests");
@@ -197,6 +331,9 @@ void simconnect_poll() {
                 case SIMCONNECT_RECV_ID_SIMOBJECT_DATA:
                     on_SIMCONNECT_RECV_SIMOBJECT_DATA((SIMCONNECT_RECV_SIMOBJECT_DATA *)pData, pContext);
                     break;
+                case SIMCONNECT_RECV_ID_EVENT:
+                    on_SIMCONNECT_RECV_EVENT((SIMCONNECT_RECV_EVENT *)pData, pContext);
+                    break;
                 default:
                     printmsfs("WARNING: unhandled message %lu", pData->dwID);
                     break;
@@ -207,31 +344,40 @@ void simconnect_poll() {
         nullptr);
 }
 
-bool simconnect_set_ail(f32 ail) {
-    return set_control_surface(ail, ID_SC_AIL);
-}
-
-bool simconnect_set_ele(f32 ele) {
-    return set_control_surface(ele, ID_SC_ELE);
-}
-
-bool simconnect_set_rud(f32 rud) {
-    return set_control_surface(rud, ID_SC_RUD);
-}
-
-bool simconnect_set_thr(f32 thr) {
-    if (!hSimConnect || numEngines < 1)
-        return false;
-    // Set throttle positions for all engines
-    for (i32 i = 1; i <= numEngines; i++) {
-        char name[64];
-        snprintf(name, sizeof(name), "GENERAL ENG THROTTLE LEVER POSITION:%d", i);
-        HRESULT hr =
-            SimConnect_SetDataOnSimObject(hSimConnect, ID_SC_NUM_ENG + i, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(thr), &thr);
-        if (hr != S_OK)
-            return false;
+bool simconnect_set(SCFlightControl fctrl, f32 val) {
+    switch (fctrl) {
+        case FCTRL_AIL: {
+            lastAilSet = val;
+            return set_control_surface(val, ID_AIL_OUT);
+        }
+        case FCTRL_ELE: {
+            lastEleSet = val;
+            return set_control_surface(val, ID_ELE_OUT);
+        }
+        case FCTRL_RUD: {
+            lastRudSet = val;
+            return set_control_surface(val, ID_RUD_OUT);
+        }
+        case FCTRL_THR: {
+            lastThrSet = val;
+            return set_throttle(val);
+        }
     }
-    return true;
+    return false;
+}
+
+f32 simconnect_get(SCFlightControl fctrl) {
+    switch (fctrl) {
+        case FCTRL_AIL:
+            return position_to_deg(ailPos);
+        case FCTRL_ELE:
+            return position_to_deg(elePos);
+        case FCTRL_RUD:
+            return position_to_deg(rudPos);
+        case FCTRL_THR:
+            return thrPos;
+    }
+    return 0.f;
 }
 
 void simconnect_deinit() {

@@ -186,13 +186,13 @@ void flight_params_get(Axis axis, f64 *kP, f64 *kI, f64 *kD) {
             axisC = &pitchC;
             break;
     }
-    if (axisC == NULL)
+    if (!axisC)
         return;
-    if (kP != NULL)
+    if (kP)
         *kP = axisC->Kp;
-    if (kI != NULL)
+    if (kI)
         *kI = axisC->Ki;
-    if (kD != NULL)
+    if (kD)
         *kD = axisC->Kd;
 }
 

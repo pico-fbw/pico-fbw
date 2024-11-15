@@ -33,13 +33,16 @@ void servo_set(u32 pin, f32 degree) {
     // Almost all servos expect a pulsewidth of 500-2500μs (500μs is 0deg, 2500μs is 180deg)
     pwm_write_raw(pin, mapf(degree, 0.f, 180.f, 500.f, 2500.f));
 #else
+    SCFlightControl control;
     if (pin == (u32)config.pins[PINS_SERVO_AIL])
-        simconnect_set_ail(degree);
+        control = FCTRL_AIL;
     else if (pin == (u32)config.pins[PINS_SERVO_ELE])
-        simconnect_set_ele(degree);
+        control = FCTRL_ELE;
     else if (pin == (u32)config.pins[PINS_SERVO_RUD])
-        simconnect_set_rud(degree);
-    // All other servos are not simulated
+        control = FCTRL_RUD;
+    else
+        return; // Not simulated
+    simconnect_set(control, degree);
 #endif // !SIMCONNECT
 }
 

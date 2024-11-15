@@ -78,7 +78,7 @@ void esc_set(u32 pin, f32 speed) {
     u16 duty = (u16)((pulsewidth / period) * UINT16_MAX);
     pwm_write_raw(pin, duty);
 #else
-    simconnect_set_thr(speed);
+    simconnect_set(FCTRL_THR, speed);
 #endif
 }
 

@@ -5,6 +5,9 @@
 
 #include <math.h>
 #include "platform/pwm.h"
+#if SIMCONNECT
+    #include "platform/simconnect.h"
+#endif
 #include "platform/time.h"
 
 #include "io/display.h"
@@ -57,9 +60,24 @@ void receiver_enable(const u32 pins[], u32 num_pins) {
 }
 
 f32 receiver_get(u32 pin, ReceiverMode mode) {
+#if !SIMCONNECT
     f32 raw = read_raw(pin, mode);
     if (raw < 0)
         return raw;
+#else
+    SCFlightControl control;
+    if (pin == (u32)config.pins[PINS_INPUT_AIL])
+        control = FCTRL_AIL;
+    else if (pin == (u32)config.pins[PINS_INPUT_ELE])
+        control = FCTRL_ELE;
+    else if (pin == (u32)config.pins[PINS_INPUT_RUD])
+        control = FCTRL_RUD;
+    else if (pin == (u32)config.pins[PINS_INPUT_THROTTLE])
+        control = FCTRL_THR;
+    else
+        return 0; // Not simulated
+    f32 raw = simconnect_get(control);
+#endif // !SIMCONNECT
     return raw + offset_of(pin);
 }
 

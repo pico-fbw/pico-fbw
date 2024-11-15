@@ -70,11 +70,11 @@ typedef struct FileState {
 static char *extract_uri(const char *req, char *method) {
     const char *request = req + strlen(method) + 1; // +1 to skip the space
     char *end = strchr(request, ' ');
-    if (end == NULL)
+    if (!end)
         return NULL;
     size_t uri_length = end - request;
     char *uri = malloc(uri_length + 1);
-    if (uri != NULL) {
+    if (uri) {
         strncpy(uri, request, uri_length);
         uri[uri_length] = '\0';
     }
