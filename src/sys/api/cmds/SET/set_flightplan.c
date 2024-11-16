@@ -27,7 +27,7 @@ i32 api_handle_set_flightplan(const char *in, char **out) {
             break;
         case FLIGHTPLAN_STATUS_GPS_OFFSET:
             json_object_set_string(obj, "message", FLIGHTPLAN_MSG_STATUS_GPS_OFFSET);
-            res = -1;
+            res = 200;
             break;
         case FLIGHTPLAN_WARN_FW_VERSION:
             json_object_set_string(obj, "message", FLIGHTPLAN_MSG_WARN_FW_VERSION);
@@ -53,15 +53,11 @@ i32 api_handle_set_flightplan(const char *in, char **out) {
 // {"message":""}
 
 i32 api_set_flightplan(const char *args) {
-    char *output = NULL;
-    i32 res = api_handle_set_flightplan(args, &output);
-    if (!output)
-        return 500;
-    if (res != 200 && res != -1) {
-        json_free_serialized_string(output);
-        return res;
+    char *out = NULL;
+    i32 res = api_handle_set_flightplan(args, &out);
+    if (out) {
+        printraw("%s\n", out);
+        json_free_serialized_string(out);
     }
-    printraw("%s\n", output);
-    json_free_serialized_string(output);
-    return res;
+    return out ? -1 : res;
 }

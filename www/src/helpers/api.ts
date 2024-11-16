@@ -31,7 +31,9 @@ export type GET_LOGS = {
 };
 
 // SET endpoints
-export type SET_CONFIG = EmptyResponse;
+export type SET_CONFIG = {
+    error?: string;
+};
 export type SET_FLIGHTPLAN = {
     message: string;
 };

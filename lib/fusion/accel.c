@@ -29,12 +29,14 @@ AccelerometerDetails accelerometers[] = {
     {
         "ICM20948",
         {0x69, 0x68},
-        {.create = icm20948_acc_create,
-         .read = icm20948_acc_read,
-         .get_odr = icm20948_acc_get_odr,
-         .set_odr = icm20948_acc_set_odr,
-         .get_scale = icm20948_acc_get_scale,
-         .set_scale = icm20948_acc_set_scale},
+        {
+            .create = icm20948_acc_create,
+            .read = icm20948_acc_read,
+            .get_odr = icm20948_acc_get_odr,
+            .set_odr = icm20948_acc_set_odr,
+            .get_scale = icm20948_acc_get_scale,
+            .set_scale = icm20948_acc_set_scale,
+        },
         icm20948_acc_detect,
         icm20948_state_create,
         icm20948_state_destroy,
@@ -43,7 +45,10 @@ AccelerometerDetails accelerometers[] = {
     {
         "SimConnect",
         {0x00},
-        {.read = simconnect_acc_read},
+        {
+            .read = simconnect_acc_read,
+            .scale = 1.f / SC_SCALE_FACTOR,
+        },
         simconnect_detect,
         NULL,
         NULL,

@@ -9,6 +9,9 @@ extern "C" {
 
 #if SIMCONNECT
 
+    // Set to 1 to skip AAHRS fusion/IMU simulation and instead directly pull RPY from the sim
+    #define SIMCONNECT_AAHRS_SKIP_FUSION 0
+
     #pragma pack(push, 1) // Pack structs for compatibility with SimConnect
 // SimConnect (emulated) IMU data definition
 typedef struct SC_IMU {
@@ -79,7 +82,7 @@ void simconnect_deinit();
 extern SC_IMU scIMU;
 extern SC_GPS scGPS;
 
-    // clang-format off
+// clang-format off
 #ifdef __cplusplus
 }
 #endif

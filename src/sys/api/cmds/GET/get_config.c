@@ -194,14 +194,14 @@ i32 api_handle_get_config(const char *in, char **out) {
 // {"sections":[{"name":"","values":[number|""]}]}
 
 i32 api_get_config(const char *args) {
-    char *output = NULL;
-    i32 res = api_handle_get_config(args, &output);
-    if (res != 200 || !output) {
-        if (output)
-            json_free_serialized_string(output);
+    char *out = NULL;
+    i32 res = api_handle_get_config(args, &out);
+    if (res != 200 || !out) {
+        if (out)
+            json_free_serialized_string(out);
         return res;
     }
-    printraw("%s\n", output);
-    json_free_serialized_string(output);
+    printraw("%s\n", out);
+    json_free_serialized_string(out);
     return -1;
 }

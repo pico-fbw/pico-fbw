@@ -208,6 +208,12 @@ typedef enum ConfigSection {
 
 // -- Config functions --
 
+typedef enum ConfigSetResult {
+    CONFIG_SET_OK,
+    CONFIG_SET_DOES_NOT_EXIST, // Given section/key does not exist
+    CONFIG_SET_INVALID,        // Validation failed and config was not set, run config_validate() to get the error message
+} ConfigSetResult;
+
 /**
  * Loads the config from flash memory into the config struct.
  * If the config is invalid/nonexistant, it will be reset to default values.
@@ -216,6 +222,7 @@ void config_load();
 
 /**
  * Saves the current config to flash memory.
+ * @note This function does no validation, use `config_validate` to first check that the config is valid.
  */
 void config_save();
 
@@ -227,9 +234,12 @@ void config_save();
 void config_reset();
 
 /**
- * @return Whether the current config is valid.
+ * @param error a buffer to store a possible error message in
+ * @param error_size the size of the error buffer
+ * @return whether the current config is valid
+ * @note The buffer should be at least 128 bytes long
  */
-bool config_validate();
+bool config_validate(char *error, size_t error_size);
 
 /**
  * Gets a value from the config based on its string representation.
@@ -246,9 +256,19 @@ ConfigSectionType config_get(const char *section, const char *key, void **value)
  * @param section the name of the section to look in
  * @param key the name of the key to look up
  * @param value the string represenation to the value to store, will be parsed into other formats as needed
- * @return Whether the value was successfully set.
+ * @return whether the value was successfully set.
  */
-bool config_set(const char *section, const char *key, const char *value);
+ConfigSetResult config_set(const char *section, const char *key, const char *value);
+
+/**
+ * Backs up the current config to be restored later.
+ */
+void config_backup();
+
+/**
+ * Restores the backed up config.
+ */
+void config_restore();
 
 /**
  * Gets a string representation of a config section based on its (enum) index, as well as its type.

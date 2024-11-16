@@ -39,15 +39,14 @@ i32 api_handle_get_logs(const char *in, char **out) {
 // {"logs":[{"type":number,"msg":"","code":number,"timestamp":number}]}
 
 i32 api_get_logs(const char *args) {
-    char *output = NULL;
-    i32 res = api_handle_get_logs(args, &output);
-    if (!output)
-        return 500;
+    char *out = NULL;
+    i32 res = api_handle_get_logs(args, &out);
     if (res != 200) {
-        json_free_serialized_string(output);
+        if (out)
+            json_free_serialized_string(out);
         return res;
     }
-    printraw("%s\n", output);
-    json_free_serialized_string(output);
+    printraw("%s\n", out);
+    json_free_serialized_string(out);
     return -1;
 }

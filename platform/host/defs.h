@@ -10,9 +10,9 @@
     #warning "Unknown host platform, things may not work as expected."
 #endif
 
-#if defined(_WIN32)
+#ifdef _WIN32
 typedef HANDLE __callback_id_t;
-#elif defined(__APPLE__) || defined(__linux__)
+#else
 typedef timer_t __callback_id_t;
 #endif
 
@@ -67,7 +67,7 @@ typedef timer_t __callback_id_t;
 #define PLATFORM_SUPPORTS_WIFI 0
 
 // printf format checking
-#if defined(__APPLE__)
+#ifdef __APPLE__
     #include <sys/cdefs.h>
 #endif
 #ifndef __printflike

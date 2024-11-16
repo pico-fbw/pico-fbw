@@ -6,6 +6,9 @@
 #include <string.h>
 #include "platform/helpers.h"
 #include "platform/i2c.h"
+#if SIMCONNECT
+    #include "platform/simconnect.h"
+#endif
 #include "platform/time.h"
 
 #include "lib/fusion/fusion.h"
@@ -106,6 +109,7 @@ void aahrs_deinit() {
 }
 
 void aahrs_update() {
+#if !SIMCONNECT_AAHRS_SKIP_FUSION
     static Timestamp lastUpdate;
     // Throttle the update rate
     if (time_since_s(&lastUpdate) < (1.f / FUSION_RATE))
@@ -136,6 +140,16 @@ void aahrs_update() {
     aahrs.pitchRate = gyro[1];
     aahrs.yawRate = gyro[2];
     memcpy(aahrs.accel, acc, sizeof(aahrs.accel));
+#else
+    aahrs.roll = (f32)scIMU.roll;
+    aahrs.pitch = (f32)scIMU.pitch;
+    aahrs.yaw = (f32)scIMU.yaw;
+    aahrs.rollRate = (f32)scIMU.gyro[0];
+    aahrs.pitchRate = (f32)scIMU.gyro[1];
+    aahrs.yawRate = (f32)scIMU.gyro[2];
+    for (u32 i = 0; i < count_of(aahrs.accel); i++)
+        aahrs.accel[i] = (f32)scIMU.accel[i];
+#endif // !SIMCONNECT_AAHRS_SKIP_FUSION
 }
 
 bool aahrs_calibrate() {

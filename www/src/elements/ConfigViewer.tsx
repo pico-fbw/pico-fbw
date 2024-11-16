@@ -475,7 +475,7 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
 
         // Store the original value in case we need to revert
         const originalValue = data?.sections[sectionIndex].values[valueIndex];
-        // Send the new value to the API and verify it was set correctly
+        // Send the new value to the API
         try {
             const key = config[sectionName as keyof typeof config][valueIndex].id;
             const command = {
@@ -489,18 +489,20 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
                 save: true,
             };
 
-            await api("set/config", command);
+            const response = await api("set/config", command);
+            if (response.error) {
+                throw new Error(response.error);
+            }
+            // Verify it was set correctly
+            const newConfig = await api("get/config", { section: sectionName, key });
+            const newValue = newConfig.sections[0].values[0];
 
-            const getConfigCommand = { section: sectionName, key };
-            const response = await api("get/config", getConfigCommand);
-            const newc = response.sections[0].values[0];
-
-            if ((!newc || String(newc) !== String(toSet)) && toSetNum !== 0) {
-                console.warn(`Value read back was ${newc}, should have been ${toSet}`);
+            if ((!newValue || String(newValue) !== String(toSet)) && toSetNum !== 0) {
+                console.warn(`Value read back was ${newValue}, should have been ${toSet}`);
                 throw new Error("Failed to verify config change, please try again");
             }
         } catch (e) {
-            // Revert the change if it failed
+            // Revert the change if setting failed
             setData(prevData => {
                 if (!prevData) {
                     return null;

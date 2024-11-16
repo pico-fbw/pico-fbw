@@ -7,6 +7,7 @@ export default defineConfig({
     plugins: [
         mockServer({
             mockRootDir: "api",
+            printStartupLog: false,
         }),
         preact(),
     ],

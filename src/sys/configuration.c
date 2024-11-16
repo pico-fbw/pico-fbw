@@ -26,6 +26,8 @@
 
 // clang-format off
 
+static Config backedUpConfig;
+
 // Default configuration values
 
 Config config = {
@@ -482,32 +484,32 @@ static bool set_to_wifi(const char *key, const char *value) {
     return true;
 }
 
-bool config_validate() {
+bool config_validate(char *error, size_t error_size) {
     // Enum limit validation
     // Don't cast to the enum type, it will break the comparison
     if (config.general[GENERAL_CONTROL_MODE] < CTRLMODE_MIN || config.general[GENERAL_CONTROL_MODE] > CTRLMODE_MAX) {
-        print("ERROR: Control mode must be between %d and %d.", CTRLMODE_MIN, CTRLMODE_MAX);
+        snprintf(error, error_size, "Control mode must be between %d and %d.", CTRLMODE_MIN, CTRLMODE_MAX);
         return false;
     }
     if (config.general[GENERAL_SWITCH_TYPE] < SWITCH_TYPE_MIN || config.general[GENERAL_SWITCH_TYPE] > SWITCH_TYPE_MAX) {
-        print("ERROR: Switch type must be between %d and %d.", SWITCH_TYPE_MIN, SWITCH_TYPE_MAX);
+        snprintf(error, error_size, "Switch type must be between %d and %d.", SWITCH_TYPE_MIN, SWITCH_TYPE_MAX);
         return false;
     }
     if (config.general[GENERAL_WIFI_ENABLED] < WIFI_ENABLED_MIN || config.general[GENERAL_WIFI_ENABLED] > WIFI_ENABLED_MAX) {
-        print("ERROR: Wi-Fi enable status must be between %d and %d.", WIFI_ENABLED_MIN, WIFI_ENABLED_MAX);
+        snprintf(error, error_size, "Wi-Fi enable status must be between %d and %d.", WIFI_ENABLED_MIN, WIFI_ENABLED_MAX);
         return false;
     }
     if (config.sensors[SENSORS_IMU_MODEL] < IMU_MODEL_MIN || config.sensors[SENSORS_IMU_MODEL] > IMU_MODEL_MAX) {
-        print("ERROR: IMU model must be between %d and %d.", IMU_MODEL_MIN, IMU_MODEL_MAX);
+        snprintf(error, error_size, "IMU model must be between %d and %d.", IMU_MODEL_MIN, IMU_MODEL_MAX);
         return false;
     }
     if (config.sensors[SENSORS_BARO_MODEL] < BARO_MODEL_MIN || config.sensors[SENSORS_BARO_MODEL] > BARO_MODEL_MAX) {
-        print("ERROR: Barometer model must be between %d and %d.", BARO_MODEL_MIN, BARO_MODEL_MAX);
+        snprintf(error, error_size, "Barometer model must be between %d and %d.", BARO_MODEL_MIN, BARO_MODEL_MAX);
         return false;
     }
     if (config.sensors[SENSORS_GPS_COMMAND_TYPE] < GPS_COMMAND_TYPE_MIN ||
         config.sensors[SENSORS_GPS_COMMAND_TYPE] > GPS_COMMAND_TYPE_MAX) {
-        print("ERROR: GPS command type must be between %d and %d.", GPS_COMMAND_TYPE_MIN, GPS_COMMAND_TYPE_MAX);
+        snprintf(error, error_size, "GPS command type must be between %d and %d.", GPS_COMMAND_TYPE_MIN, GPS_COMMAND_TYPE_MAX);
         return false;
     }
     // Unique pin validation
@@ -547,38 +549,38 @@ bool config_validate() {
             }
             break;
         invalid:
-            print("ERROR: A pin may only be used once.");
+            snprintf(error, error_size, "A pin may only be used once.");
             return false;
     }
     // Limit validation
     if (config.control[CONTROL_ROLL_LIMIT] > 72 || config.control[CONTROL_ROLL_LIMIT] < 0) {
-        print("ERROR: Roll limit must be between 0 and 72 degrees.");
+        snprintf(error, error_size, "Roll limit must be between 0 and 72 degrees.");
         return false;
     }
     if (config.control[CONTROL_ROLL_LIMIT_HOLD] > 72 || config.control[CONTROL_ROLL_LIMIT_HOLD] < 0) {
-        print("ERROR: Roll limit hold must be between 0 and 72 degrees.");
+        snprintf(error, error_size, "Roll limit hold must be between 0 and 72 degrees.");
         return false;
     }
     if (config.control[CONTROL_PITCH_UPPER_LIMIT] > 35 || config.control[CONTROL_PITCH_UPPER_LIMIT] < 0) {
-        print("ERROR: Upper pitch limit must be between 0 and 35 degrees.");
+        snprintf(error, error_size, "Upper pitch limit must be between 0 and 35 degrees.");
         return false;
     }
     if (config.control[CONTROL_PITCH_LOWER_LIMIT] < -20 || config.control[CONTROL_PITCH_LOWER_LIMIT] > 0) {
-        print("ERROR: Lower pitch limit must be between -20 and 0 degrees.");
+        snprintf(error, error_size, "Lower pitch limit must be between -20 and 0 degrees.");
         return false;
     }
     // Throttle configuration validation
     if (config.control[CONTROL_THROTTLE_SENSITIVITY] < 0.0f || config.control[CONTROL_THROTTLE_SENSITIVITY] > 1.0f) {
-        print("ERROR: Throttle sensitivity must be between 0.0 and 1.0.");
+        snprintf(error, error_size, "Throttle sensitivity must be between 0.0 and 1.0.");
         return false;
     }
     // Drop (servo position) validation
     if (config.control[CONTROL_DROP_DETENT_CLOSED] < 0 || config.control[CONTROL_DROP_DETENT_OPEN] > 180) {
-        print("ERROR: Drop detent (closed) must be between 0 and 180 degrees.");
+        snprintf(error, error_size, "Drop detent (closed) must be between 0 and 180 degrees.");
         return false;
     }
     if (config.control[CONTROL_DROP_DETENT_OPEN] < 0 || config.control[CONTROL_DROP_DETENT_OPEN] > 180) {
-        print("ERROR: Drop detent (open) must be between 0 and 180 degrees.");
+        snprintf(error, error_size, "Drop detent (open) must be between 0 and 180 degrees.");
         return false;
     }
     // Control limit validation
@@ -588,34 +590,35 @@ bool config_validate() {
         case CTRLMODE_2AXIS_ATHR:
         case CTRLMODE_2AXIS:
             if (config.control[CONTROL_MAX_AIL_DEFLECTION] > 90 || config.control[CONTROL_MAX_AIL_DEFLECTION] < 0) {
-                print("ERROR: Max aileron deflection must be between 0 and 90 degrees.");
+                snprintf(error, error_size, "Max aileron deflection must be between 0 and 90 degrees.");
                 return false;
             }
             if (config.control[CONTROL_MAX_ELE_DEFLECTION] > 90 || config.control[CONTROL_MAX_ELE_DEFLECTION] < 0) {
-                print("ERROR: Max elevator deflection must be between 0 and 90 degrees.");
+                snprintf(error, error_size, "Max elevator deflection must be between 0 and 90 degrees.");
                 return false;
             }
             if (config.control[CONTROL_MAX_RUD_DEFLECTION] > 90 || config.control[CONTROL_MAX_RUD_DEFLECTION] < 0) {
-                print("ERROR: Max rudder deflection must be between 0 and 90 degrees.");
+                snprintf(error, error_size, "Max rudder deflection must be between 0 and 90 degrees.");
                 return false;
             }
             break;
         case CTRLMODE_FLYINGWING_ATHR:
         case CTRLMODE_FLYINGWING:
             if (config.control[CONTROL_MAX_ELEVON_DEFLECTION] > 90 || config.control[CONTROL_MAX_ELEVON_DEFLECTION] < 0) {
-                print("ERROR: Max elevon deflection must be between 0 and 90 degrees.");
+                snprintf(error, error_size, "Max elevon deflection must be between 0 and 90 degrees.");
                 return false;
             }
             break;
     }
     // Wi-Fi ssid/password validation
     if (strlen(config.wifi.ssid) < WIFI_SSID_MIN_LEN || strlen(config.wifi.ssid) > WIFI_SSID_MAX_LEN) {
-        print("ERROR: Wi-Fi SSID must be between %d and %d characters.", WIFI_SSID_MIN_LEN, WIFI_SSID_MAX_LEN);
+        snprintf(error, error_size, "Wi-Fi SSID must be between %d and %d characters.", WIFI_SSID_MIN_LEN, WIFI_SSID_MAX_LEN);
         return false;
     }
     if (strlen(config.wifi.pass) > 0 &&
         (strlen(config.wifi.pass) < WIFI_PASS_MIN_LEN || strlen(config.wifi.pass) > WIFI_SSID_MAX_LEN)) {
-        print("ERROR: Wi-Fi password must be between %d and %d characters.", WIFI_PASS_MIN_LEN, WIFI_PASS_MAX_LEN);
+        snprintf(error, error_size, "Wi-Fi password must be between %d and %d characters.", WIFI_PASS_MIN_LEN,
+                 WIFI_PASS_MAX_LEN);
         return false;
     }
     return true;
@@ -657,28 +660,38 @@ ConfigSectionType config_get(const char *section, const char *key, void **value)
     }
 }
 
-bool config_set(const char *section, const char *key, const char *value) {
+ConfigSetResult config_set(const char *section, const char *key, const char *value) {
     if (strcasecmp(section, CONFIG_GENERAL_STR) == 0) {
         if (!set_to_general(key, (f32)atof(value)))
-            return false;
+            return CONFIG_SET_DOES_NOT_EXIST;
     } else if (strcasecmp(section, CONFIG_CONTROL_STR) == 0) {
         if (!set_to_control(key, (f32)atof(value)))
-            return false;
+            return CONFIG_SET_DOES_NOT_EXIST;
     } else if (strcasecmp(section, CONFIG_PINS_STR) == 0) {
         if (!set_to_pins(key, (f32)atof(value)))
-            return false;
+            return CONFIG_SET_DOES_NOT_EXIST;
     } else if (strcasecmp(section, CONFIG_SENSORS_STR) == 0) {
         if (!set_to_sensors(key, (f32)atof(value)))
-            return false;
+            return CONFIG_SET_DOES_NOT_EXIST;
     } else if (strcasecmp(section, CONFIG_WIFI_STR) == 0) {
         if (!set_to_wifi(key, value))
-            return false;
+            return CONFIG_SET_DOES_NOT_EXIST;
     } else if (strcasecmp(section, CONFIG_SYSTEM_STR) == 0) {
         if (!set_to_system(key, (f32)atof(value)))
-            return false;
+            return CONFIG_SET_DOES_NOT_EXIST;
     } else
-        return false;
-    return config_validate();
+        return CONFIG_SET_DOES_NOT_EXIST;
+    char error[128];
+    bool valid = config_validate(error, sizeof(error));
+    return valid ? CONFIG_SET_OK : CONFIG_SET_INVALID;
+}
+
+void config_backup() {
+    backedUpConfig = config;
+}
+
+void config_restore() {
+    config = backedUpConfig;
 }
 
 ConfigSectionType config_to_string(ConfigSection section, const char **str) {

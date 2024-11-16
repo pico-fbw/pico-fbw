@@ -25,17 +25,17 @@ bool simconnect_detect(byte addr, void *state) {
 }
 
 bool simconnect_acc_read(Accelerometer *dev, void *state) {
-    dev->ax = scIMU.accel[0];
-    dev->ay = scIMU.accel[1];
-    dev->az = scIMU.accel[2];
+    dev->ax = (i16)(scIMU.accel[0] * SC_SCALE_FACTOR);
+    dev->ay = (i16)(scIMU.accel[1] * SC_SCALE_FACTOR);
+    dev->az = (i16)(scIMU.accel[2] * SC_SCALE_FACTOR);
     return true;
     (void)state;
 }
 
 bool simconnect_gyro_read(Gyroscope *dev, void *state) {
-    dev->gx = scIMU.gyro[0];
-    dev->gy = scIMU.gyro[1];
-    dev->gz = scIMU.gyro[2];
+    dev->gx = (i16)(scIMU.gyro[0] * SC_SCALE_FACTOR);
+    dev->gy = (i16)(scIMU.gyro[1] * SC_SCALE_FACTOR);
+    dev->gz = (i16)(scIMU.gyro[2] * SC_SCALE_FACTOR);
     return true;
     (void)state;
 }

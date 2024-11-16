@@ -8,11 +8,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#if defined(_WIN32)
+#ifdef _WIN32
     #include <direct.h>
     #define SEP "\\"
     #define mkdir(path, mode) _mkdir(path) // Compatibility with *nix mkdir
-#elif defined(__APPLE__) || defined(__linux__)
+#else
     #include <sys/stat.h>
     #include <sys/types.h>
     #define SEP "/"

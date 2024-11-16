@@ -30,15 +30,15 @@ i32 api_handle_get_info(const char *in, char **out) {
 // {"version":"","version_api":"","version_flightplan":"","platform":"","platform_version":""}
 
 i32 api_get_info(const char *args) {
-    char *output = NULL;
-    i32 res = api_handle_get_info(args, &output);
-    if (!output)
+    char *out = NULL;
+    i32 res = api_handle_get_info(args, &out);
+    if (!out)
         return 500;
     if (res != 200) {
-        json_free_serialized_string(output);
+        json_free_serialized_string(out);
         return res;
     }
-    printraw("%s\n", output);
-    json_free_serialized_string(output);
+    printraw("%s\n", out);
+    json_free_serialized_string(out);
     return -1;
 }

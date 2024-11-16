@@ -8,11 +8,11 @@
 #include <stdlib.h>
 #include "platform/time.h"
 #include "platform/types.h"
-#if defined(_WIN32)
+#ifdef _WIN32
     #include <windows.h>
     #include "platform/simconnect.h"
 LARGE_INTEGER tStart, tFreq;
-#elif defined(__APPLE__) || defined(__linux__)
+#else
     #include <sys/time.h>
 u64 tStart;
 #endif
@@ -29,12 +29,12 @@ void term_handler(int signum) {
 
 void sys_boot_begin() {
     signal(SIGINT, term_handler);
-#if defined(_WIN32)
+#ifdef _WIN32
     signal(SIGBREAK, term_handler);
     // Get time at which program was called, this is our "power-on time"
     QueryPerformanceFrequency(&tFreq);
     QueryPerformanceCounter(&tStart);
-#elif defined(__APPLE__) || defined(__linux__)
+#else
     signal(SIGTERM, term_handler);
     struct timeval tv;
     gettimeofday(&tv, NULL);

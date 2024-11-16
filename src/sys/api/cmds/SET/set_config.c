@@ -4,18 +4,17 @@
  */
 
 #include <stdbool.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "lib/parson.h"
 
 #include "sys/configuration.h"
+#include "sys/print.h"
 
 #include "set_config.h"
 
 i32 api_handle_set_config(const char *in, char **out) {
-    if (!in)
-        goto save; // No input, trigger a save to flash
-
     JSON_Value *root = json_parse_string(in);
     if (!root)
         return 400;
@@ -35,6 +34,9 @@ i32 api_handle_set_config(const char *in, char **out) {
         return 400;
     }
     bool save = json_value_get_boolean(saveVal);
+    // Back up the current config in case of validation failure
+    config_backup();
+    char error[128] = "";
     // There may be multiple config changes in one request
     for (u32 i = 0; i < json_array_get_count(arr); i++) {
         // For each config change, get the requested config section, key, and new value
@@ -42,26 +44,43 @@ i32 api_handle_set_config(const char *in, char **out) {
         const char *section = json_object_get_string(obj, "section");
         const char *key = json_object_get_string(obj, "key");
         const char *value = json_object_get_string(obj, "value");
-        if (!section || !key || !value || !config_set(section, key, value)) {
+        if (!section || !key || !value) {
             json_value_free(root);
             return 400;
         }
+        ConfigSetResult res = config_set(section, key, value);
+        if (res == CONFIG_SET_DOES_NOT_EXIST) {
+            snprintf(error, sizeof(error), "Section '%s' or key '%s' does not exist.", section, key);
+            goto err;
+        }
     }
     json_value_free(root);
-    if (save)
-        goto save;
-    return 200;
-    (void)out;
-
-save:
-    // Validate before saving
-    if (!config_validate())
-        return 400;
-    config_save();
-    return 200;
+    // Validate to obtain any errors made in config and save if requested
+    bool valid = config_validate(error, sizeof(error));
+    if (save && valid)
+        config_save();
+err: {
+    bool wasError = strlen(error) > 0;
+    if (wasError) {
+        // Validation failure, restore the prior config and return the error
+        config_restore();
+        root = json_value_init_object();
+        obj = json_value_get_object(root);
+        json_object_set_string(obj, "error", error);
+        char *serialized = json_serialize_to_string(root);
+        json_value_free(root);
+        *out = serialized;
+        return 200; // Although an error occurred, the request was technically successful
+    }
+}
+    return valid ? 200 : 400;
 }
 
+// Input:
 // {"changes":[{"section":"","key":"","value":""}, ...], "save":boolean}
+
+// Output:
+// {"error":""}
 
 // For example:
 // {"changes":[{"section":"GENERAL","key":"skipCalibration","value":"1"},{"section":"WIFI","key":"ssid","value":"coolwifiname"}],"save":true}
@@ -69,5 +88,11 @@ save:
 // and save the changes to flash
 
 i32 api_set_config(const char *args) {
-    return api_handle_set_config(args, NULL);
+    char *out = NULL;
+    i32 res = api_handle_set_config(args, &out);
+    if (out) {
+        printraw("%s\n", out);
+        json_free_serialized_string(out);
+    }
+    return out ? -1 : res;
 }
