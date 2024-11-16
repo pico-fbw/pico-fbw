@@ -121,7 +121,12 @@ jobs:
       run: echo "D:/a/_temp/msys64/mingw64/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
     - name: Enable Corepack
+      if: matrix.OS != 'windows-latest'
       run: corepack enable
+
+    - name: Enable Corepack (windows)
+      if: matrix.OS == 'windows-latest'
+      run: corepack enable --install-directory "%appdata%\\corepack"
 
     - name: Set up web build environment
       uses: actions/setup-node@v4.0.4
