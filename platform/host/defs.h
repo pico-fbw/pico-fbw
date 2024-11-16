@@ -64,7 +64,7 @@ typedef timer_t __callback_id_t;
 // Platform features
 #define PLATFORM_SUPPORTS_ADC 0
 #define PLATFORM_SUPPORTS_DISPLAY 0
-#define PLATFORM_SUPPORTS_WIFI 0
+#define PLATFORM_SUPPORTS_WIFI 1
 
 // printf format checking
 #ifdef __APPLE__

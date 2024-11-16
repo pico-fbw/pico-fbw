@@ -1,0 +1,3 @@
+# External libraries
+platform/host/wifi/mongoose.c
+platform/host/wifi/mongoose.h

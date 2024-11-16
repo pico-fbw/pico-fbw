@@ -7,13 +7,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #ifdef _WIN32
     #include <conio.h>
     #include <windows.h>
-    #include "stdio_windows.h"
 #else
     #include <fcntl.h>
-    #include <unistd.h>
 #endif
 
 #include "platform/stdio.h"

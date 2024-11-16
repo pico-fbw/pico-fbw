@@ -179,4 +179,22 @@ struct lfs_config lfs_cfg = {
     .block_cycles = BLOCK_CYCLES,
 };
 
+#if PLATFORM_SUPPORTS_WIFI
+// Defined in this case to make the compiler happy, not actually used
+lfs_t wwwfs;
+struct lfs_config wwwfs_cfg = {
+    .read = flash_read,
+    .prog = flash_prog,
+    .erase = flash_erase,
+    .sync = flash_sync,
+    .read_size = READ_SIZE,
+    .prog_size = WRITE_SIZE,
+    .block_size = BLOCK_SIZE,
+    .block_count = (FS_SIZE / BLOCK_SIZE),
+    .cache_size = CACHE_SIZE,
+    .lookahead_size = LOOKAHEAD_SIZE,
+    .block_cycles = BLOCK_CYCLES,
+};
+#endif
+
 // clang-format on

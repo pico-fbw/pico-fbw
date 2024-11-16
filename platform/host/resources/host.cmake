@@ -1,5 +1,9 @@
 # See platform/example/resources/example.cmake for comments regarding the structure of this file
 add_compile_definitions(-DFBW_PLATFORM_HOST)
+# littlefs generation parameters -- these don't actually matter as the host webserver doesn't use littlefs
+set(LFS_BLOCK_SIZE 1024)
+set(LFS_PROG_SIZE 1)
+set(LFS_IMG_SIZE 262144) # 256KB
 
 function(setup_before_subdirs)
     if (CMAKE_HOST_WIN32)

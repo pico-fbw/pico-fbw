@@ -1,5 +1,7 @@
 #pragma once
 
+#include "platform/types.h"
+
 // Type for internal API command handler functions.
 typedef i32 (*api_handler)(const char *in, char **out);
 

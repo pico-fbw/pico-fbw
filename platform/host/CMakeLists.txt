@@ -7,6 +7,8 @@ add_library(platform_host
     sys.c
     time.c
     uart.c
+    wifi/mongoose.c
+    wifi/wifi.c
 )
 
 if (SimConnect_FOUND)
@@ -19,4 +21,8 @@ if (SimConnect_FOUND)
     target_link_libraries(platform_host PRIVATE ${SimConnect_LIBRARIES})
 endif()
 
-target_include_directories(platform_host PRIVATE ${CMAKE_SOURCE_DIR})
+if (CMAKE_HOST_WIN32)
+    target_link_libraries(platform_host PRIVATE ws2_32) # For mongoose
+endif()
+
+target_include_directories(platform_host PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/src)
