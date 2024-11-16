@@ -57,8 +57,22 @@ enum EventID {
 };
 
 HANDLE hSimConnect = nullptr;
-SC_IMU scIMU;
-SC_GPS scGPS;
+SC_IMU scIMU = {
+    .roll = INFINITY,
+    .pitch = INFINITY,
+    .yaw = INFINITY,
+    .bodyAccel = {0.0, 0.0, 0.0},
+    .gyro = {0.0, 0.0, 0.0},
+    .alt = -1.f,
+    .accel = {0.0, 0.0, 0.0},
+};
+SC_GPS scGPS = {
+    .lat = -200.0,
+    .lng = -200.0,
+    .alt = -1.f,
+    .speed = -1.f,
+    .track = -1.f,
+};
 i32 numEngines = 0; // Will be filled in later
 
 f32 ailPos = 0.f, elePos = 0.f, rudPos = 0.f, thrPos = 0.f;                 // Last retrieved control surface positions

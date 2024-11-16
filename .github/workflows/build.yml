@@ -37,7 +37,7 @@ jobs:
       uses: seanmiddleditch/gha-setup-ninja@v4
 
     - name: Enable Corepack
-      run: corepack enable && corepack prepare yarn@4.5.0 --activate
+      run: corepack enable
 
     - name: Set up web build environment
       uses: actions/setup-node@v4.0.4
@@ -121,7 +121,7 @@ jobs:
       run: echo "D:/a/_temp/msys64/mingw64/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
     - name: Enable Corepack
-      run: corepack enable && corepack prepare yarn@4.5.0 --activate
+      run: corepack enable
 
     - name: Set up web build environment
       uses: actions/setup-node@v4.0.4
@@ -131,12 +131,15 @@ jobs:
         cache-dependency-path: '${{github.workspace}}/www/yarn.lock'
 
     - name: Configure CMake
-      shell: bash
       run: cmake -B "${{github.workspace}}/build" -DFBW_PLATFORM=host -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -GNinja
 
     - name: Build
-      shell: bash
+      if: matrix.OS != 'windows-latest'
       run: cmake --build "${{github.workspace}}/build" --config ${{env.BUILD_TYPE}}
+
+    - name: Build (windows)
+      if: matrix.OS == 'windows-latest'
+      run: cmake --build "${{github.workspace}}/build" --config ${{env.BUILD_TYPE}} -DHOST_SKIP_WWW=1
 
     - name: Upload binaries
       uses: actions/upload-artifact@v4

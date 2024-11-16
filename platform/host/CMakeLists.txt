@@ -7,9 +7,11 @@ add_library(platform_host
     sys.c
     time.c
     uart.c
-    wifi/mongoose.c
-    wifi/wifi.c
 )
+
+if (NOT HOST_SKIP_WWW)
+    target_sources(platform_host PRIVATE wifi/mongoose.c wifi/wifi.c)
+endif()
 
 if (SimConnect_FOUND)
     message("Enabling build support for MSFS SimConnect")
