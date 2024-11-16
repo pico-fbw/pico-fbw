@@ -120,6 +120,9 @@ jobs:
       if: matrix.OS == 'windows-latest'
       run: echo "D:/a/_temp/msys64/mingw64/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
+    - name: Enable Corepack
+      run: corepack enable
+
     - name: Configure CMake
       shell: bash
       run: cmake -B "${{github.workspace}}/build" -DFBW_PLATFORM=host -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -GNinja
