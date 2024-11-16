@@ -36,8 +36,15 @@ jobs:
     - name: Set up C build environment
       uses: seanmiddleditch/gha-setup-ninja@v4
 
+    - name: Enable Corepack
+      run: corepack enable && corepack prepare yarn@4.5.0 --activate
+
     - name: Set up web build environment
-      uses: threeal/setup-yarn-action@v2.0.0
+      uses: actions/setup-node@v4.0.4
+      with:
+        node-version: '22'
+        cache: 'yarn'
+        cache-dependency-path: '${{github.workspace}}/www/yarn.lock'
 
     - name: Check cache (esp)
       if: matrix.PLATFORM == 'esp32'
@@ -113,8 +120,15 @@ jobs:
       if: matrix.OS == 'windows-latest'
       run: echo "D:/a/_temp/msys64/mingw64/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
+    - name: Enable Corepack
+      run: corepack enable && corepack prepare yarn@4.5.0 --activate
+
     - name: Set up web build environment
-      uses: threeal/setup-yarn-action@v2.0.0
+      uses: actions/setup-node@v4.0.4
+      with:
+        node-version: '22'
+        cache: 'yarn'
+        cache-dependency-path: '${{github.workspace}}/www/yarn.lock'
 
     - name: Configure CMake
       shell: bash
