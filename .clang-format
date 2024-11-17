@@ -3,8 +3,9 @@ Language:        Cpp
 BasedOnStyle:    LLVM
 ColumnLimit:     128
 AllowShortBlocksOnASingleLine: false
-AllowShortIfStatementsOnASingleLine: Never
+AllowShortEnumsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
 BreakBeforeBraces: Attach
 IncludeCategories:
   - Regex:    '^<'

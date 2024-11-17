@@ -133,15 +133,15 @@ jobs:
         cache-dependency-path: '${{github.workspace}}/www/yarn.lock'
 
     - name: Configure CMake
+      if: matrix.OS != 'windows-latest'
       run: cmake -B "${{github.workspace}}/build" -DFBW_PLATFORM=host -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -GNinja
 
-    - name: Build
-      if: matrix.OS != 'windows-latest'
-      run: cmake --build "${{github.workspace}}/build" --config ${{env.BUILD_TYPE}}
-
-    - name: Build (windows)
+    - name: Configure CMake (windows)
       if: matrix.OS == 'windows-latest'
-      run: cmake --build "${{github.workspace}}/build" --config ${{env.BUILD_TYPE}} -DHOST_SKIP_WWW=1
+      run: cmake -B "${{github.workspace}}/build" -DFBW_PLATFORM=host -DHOST_SKIP_WWW=1 -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -GNinja
+
+    - name: Build
+      run: cmake --build "${{github.workspace}}/build" --config ${{env.BUILD_TYPE}}
 
     - name: Upload binaries
       uses: actions/upload-artifact@v4

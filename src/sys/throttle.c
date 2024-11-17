@@ -16,7 +16,12 @@
 
 #include "throttle.h"
 
-typedef enum ThrottleState { THRSTATE_NORMAL, THRSTATE_MCT_EXCEEDED, THRSTATE_MCT_LOCK, THRSTATE_MCT_COOLDOWN } ThrottleState;
+typedef enum ThrottleState {
+    THRSTATE_NORMAL,
+    THRSTATE_MCT_EXCEEDED,
+    THRSTATE_MCT_LOCK,
+    THRSTATE_MCT_COOLDOWN
+} ThrottleState;
 
 static PIDController athr_c;
 
@@ -60,13 +65,14 @@ void throttle_update() {
         }
         // MCT is still being exceeded (within this if block), what to do here depends on the specific state
         switch (state) {
-            case THRSTATE_MCT_EXCEEDED:
-                u64 mctTime = (u64)(config.control[CONTROL_THROTTLE_MAX_TIME]);
+            case THRSTATE_MCT_EXCEEDED: {
+                u64 mctTime = (u64)config.control[CONTROL_THROTTLE_MAX_TIME];
                 if ((time_s() - stateChangeAt) > mctTime && mctTime != 0) {
                     // MCT has been exceeded for too long, lock
                     state = THRSTATE_MCT_LOCK;
                 }
                 break;
+            }
             case THRSTATE_MCT_LOCK:
             case THRSTATE_MCT_COOLDOWN:
                 // Lock back to MCT if being exceeded (for both lock and cooldown states)

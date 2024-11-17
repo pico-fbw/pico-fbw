@@ -18,7 +18,7 @@
 #define VERTGD_KD 0
 #define VERTGD_TAU 1
 #define VERTGD_LIM_MIN -5 // The minimum pitch angle the autopilot can command
-#define VERTGD_LIM_MAX 10  // The maximum pitch angle the autopilot can command
+#define VERTGD_LIM_MAX 10 // The maximum pitch angle the autopilot can command
 
 typedef struct Waypoint {
     f64 lat, lng;

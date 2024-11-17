@@ -40,7 +40,7 @@ static f64 distance;
 static f64 bearing;
 static i32 alt;
 
-static PIDController latGuid; // lateral guidance
+static PIDController latGuid;  // lateral guidance
 static PIDController vertGuid; // vertical guidance
 
 // Allows auto mode to be externally controlled (by API setting a custom Waypoint and callback)
@@ -142,7 +142,7 @@ void auto_update() {
     // Nested PIDs; latGuid and vertGuid use gps data to command bank/pitch angles which the flight PIDs then use to actuate
     // servos
     // Don't use IMU heading because that's not always going to be navigational (more likely magnetic)
-    pid_update(&latGuid, bearing, gps.track); 
+    pid_update(&latGuid, bearing, gps.track);
     pid_update(&vertGuid, alt, gps.alt);
     flight_update(latGuid.out, vertGuid.out, 0, false);
     throttle.update();
