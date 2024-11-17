@@ -1,66 +1,63 @@
 # pico-fbw
 
-A fly-by-wire system designed for RC airplanes, for the Rasperry Pi Pico microcontroller.
+A cost-effective, intuitive, and reliable remote control autopilot solution built for the future.
 
-## **DISCLAIMER**
+## Why (not) pico-fbw?
 
-This system is able to control most aspects of your aircraft. Even though there are limitations in place, *please* exercise extra caution when operating the aicraft so as not to harm yourself, others, or your aircraft! I have gone through extensive testing to make the system as safe as possible, but be aware that at the end of the day *you* are responsible for your own aircraft and any damages caused by it.
+pico-fbw was created to serve as a cheap and simple entry into the world of electronically controlled model aircraft, whether that be fly-by-wire control assistance or a complete autopilot solution.
 
-Now, with that out of the way, let's get into the features of the system!
+The goal of this project is to make RC fly-by-wire and autopilot technology more accessible, mainly through means of cost and ease-of-use.
+Keeping this in mind, pico-fbw is not extremely advanced, very feature-dense, or well-established. Other projects, including the likes of [Ardupilot](https://github.com/ArduPilot/ardupilot), [INAV](https://github.com/iNavFlight/inav), [BetaFlight](https://github.com/betaflight/betaflight), and many more serve that purpose well.
+
+That being said, pico-fbw is nonetheless quite a capable and robust flight controller, introducing features such as:
 
 ## Features
 
-- Typical features of a real-world fly-by-wire aircraft, such as:
-  - Limiting of pitch and bank angles
-  - Automatic in-flight stabilization using an onboard sensor unit
-  - Holding of requested angles
-  - Auto-coordinated turns using a yaw damper
-- Implementation of direct mode (user inputs are transmitted directly to flight controls)
-  - It can be easily activated with the use of a switch on the transmitter
-- Wi-Fly allows you to easily upload flight plans over Wi-Fi to be automatically flown using the:
-- Primitive autopilot/autothrottle system (although quickly advancing!)
+- Safe and tested; automatic safety checks throughout the software + always-active manual overrides
+- Real-world fly-by-wire-like stabilization
+- Simple autopilot/autothrottle and accompanying flight planner
+- Easily plan flights, modify configuration, diagnose faults, and more, with just a smartphone/tablet/computer
+- Good out-of-box performance, with optional automatic tuning to further improve performance
+- Utilizes common and low-cost off-the-shelf microcontrollers and sensors
+- Easy hardware and software setup
 - Extensive documentation to make setup and usage easy
-- Easy configuration of all system options
-- Very cheap to get started; an easy entrypoint to automated RC flight
-- Engineered and tested for safety all-around  
+- Versatile; well-supported ability to retrofit into many existing aircraft + their equipment
 - Built-in API allows for external control using another device
-- Support for both standard and Pico W models
 - Fully open-source
+- And more!
 
-## Materials
+## Requirements
 
-You will need a few materials in addition to your current RC plane setup. They are as follows:
+- An existing RC aircraft setup
+  - This must include (but is not limited to): a fixed-wing aircraft (airplane or flying wing), receiver/transmitter with one spare switch channel, motor controller + battery, etc.
+- A microcontroller capable of running pico-fbw
+  - See the [supported platforms list]() to determine which is the bet fit for you.
+- The necessary sensors (IMU, barometer, GPS)
+  - Again, take a look at the [supported sensors list]() to determine which to utilize or purchase.
+- A handful of female-to-female and male-to-female jumper wires
 
-- Raspberry Pi Pico [W] microcontroller (with data-capable micro-USB cable to flash the program)
-- IMU sensor (either BNO055 or MPU6050)
-- GPS sensor (optional)
-- ~7-11 female-to-female jumper wires (depending if you are using GPS or not)
-- ~10 male-to-female jumper wires
-- A switch on your transmitter and corresponding channel on your receiver
-
-You can find a guide to sourcing these parts as well as my tested/preferred sources on our [materials wiki page](https://github.com/MylesAndMore/pico-fbw/wiki/Materials).
-
-## Download
-
-You can always find the latest stable release of the software on our releases page [here](https://github.com/MylesAndMore/pico-fbw/releases/latest).
-
-This binary is pre-built so you can drag and drop it onto your Pico as-is, but be aware it only ships with recomended configuration values. These values may need to be altered in your case as different aircraft behave very differently, and the values that work for me may not work for you. So please, be careful, and test thoroughly! Do not hesitate to [reconfigure](https://github.com/MylesAndMore/pico-fbw/wiki/_Building-&-Configuring) if you need to.
+If there is enough interest, the pico-fbw project will consider producing dedicated pico-fbw hardware to reduce setup complexity and cost.
 
 ## Setup
 
-The Pico stands in the middle, between your radio receiver and output devices. Instead of your servos, ESC, and such being wired up directly to your receiver, instead, your receiver is wired up to the Pico so it can recieve and compute those inputs, and your output devices are also wired up to the Pico so it can control them.
+pico-fbw stands in the middle between your radio receiver and output devices.
 
-It may seem daunting to to modify your existing setup to incorporate this, but rest assured, it is relatively simple and will not take you long. I've created a guide for you to check out [here](https://github.com/MylesAndMore/pico-fbw/wiki/_Setup) that outlines exactly how to wire things up and get going with the project!
+It may seem daunting to to modify your existing setup to incorporate this, but rest assured, it is relatively simple and won't take long. A [step-by-step guide](https://github.com/pico-fbw/pico-fbw/wiki/_Setup) has been created that outlines exactly how to wire things up and get going with pico-fbw!
 
-## Building & Configuring
+### Download
 
-You can find all of the information about building and configuring the project on our wiki page [here](https://github.com/MylesAndMore/pico-fbw/wiki/_Building-&-Configuring).
+You can always find the latest stable release of pico-fbw for all supported platforms on the [Releases page](https://github.com/pico-fbw/pico-fbw/releases/latest).
+
+## Building & Contributing
+
+See [the wiki](https://github.com/pico-fbw/pico-fbw/wiki/Contributing) for more details.
 
 ## Issues, Feedback, and Features
 
-If you experience any issues, have any ideas for new features, or just any general feedback about the project in general, don't hesitate to reach out! You can submit an issue on our [issues page](https://github.com/MylesAndMore/pico-fbw/issues/new)--just please be sure to label your issure accordingly. And if you are a developer looking to suggest or improve on our code, feel free to leave me an issue or [pull request](https://github.com/MylesAndMore/pico-fbw/compare)!
+If you experience any issues, have any ideas for new features, or just have any general feedback about pico-fbw, don't hesitate to reach out! You can submit an issue on the [issues page](https://github.com/pico-fbw/pico-fbw/issues/new)--just please be sure to label your issure accordingly.
 
-TODO: update/restucture, more technical info, summary at top etc
-TODO: check license info before release, ensure all files referenced exist and are true
+If you are a developer looking to improve on pico-fbw's code, feel free to leave an issue or [pull request](https://github.com/pico-fbw/pico-fbw/compare)!
 
-## Technical Overview
+## **DISCLAIMER**
+
+pico-fbw has the ability to control your aircraft. Despite the thorough limitations in place, please exercise extensive caution when operating the aicraft so as not to harm yourself, others, or your aircraft. You, not pico-fbw's authors, are responsible for your own aircraft and any damages caused by it.

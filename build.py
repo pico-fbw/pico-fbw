@@ -65,11 +65,11 @@ dependencies = {
         'add_to_path': 'bin',
     },
     'cmake': {
-        'version': '3.30.5',
+        'version': '3.31.0',
         'url': {
-            'linux': 'https://github.com/Kitware/CMake/releases/download/v3.30.5/cmake-3.30.5-linux-x86_64.tar.gz',
-            'win32': 'https://github.com/Kitware/CMake/releases/download/v3.30.5/cmake-3.30.5-windows-x86_64.zip',
-            'darwin': 'https://github.com/Kitware/CMake/releases/download/v3.30.5/cmake-3.30.5-macos-universal.tar.gz',
+            'linux': 'https://github.com/Kitware/CMake/releases/download/v3.31.0/cmake-3.31.0-linux-x86_64.tar.gz',
+            'win32': 'https://github.com/Kitware/CMake/releases/download/v3.31.0/cmake-3.31.0-windows-x86_64.zip',
+            'darwin': 'https://github.com/Kitware/CMake/releases/download/v3.31.0/cmake-3.31.0-macos-universal.tar.gz',
         },
     },
     'ESP-IDF': {
@@ -211,7 +211,6 @@ def install_dependency(dep: str):
         dependencies[dep]['install']()
     os.chdir("..")
 
-# TODO: check version of installed dependencies and update if necessary
 def find_dependency(program: str) -> Path | None:
     """Find the path to the specified dependency.
     :param program: the name of the dependency to find
@@ -221,34 +220,32 @@ def find_dependency(program: str) -> Path | None:
         path = Path(path)
         if (path / program).exists():
             return path / program
-    # Not found in PATH, handle some special cases
+    # Not immediately found in PATH, handle some special cases
     if program == "pico-sdk" and os.environ.get("PICO_SDK_PATH") is not None:
         return Path(os.environ["PICO_SDK_PATH"])
     if program == "ESP-IDF" and os.environ.get("IDF_PATH") is not None:
         return Path(os.environ["IDF_PATH"])
 
-    # Dependency isn't already installed, now check the deps directory
-    try:
-        for path in (root_dir / "build" / "deps").iterdir():
-            if path.name.startswith(program):
-                if program == "arm-none-eabi-gcc":
-                    return path / "bin" # Return the entire bin directory to have access to all tools
-                elif program == "cmake":
-                    if host == "win32":
-                        return path / "bin" / "cmake.exe"
-                    return path / "bin" / "cmake"
-                elif program == "ninja":
-                    if host == "win32":
-                        return path / "ninja.exe"
-                    return path / "ninja"
-                elif program == "node":
-                    if host == "win32":
-                        return path / "node.exe"
-                    return path / "bin" / "node"
-                return path
-    except FileNotFoundError:
-        pass
-    # Couldn't find the dependency
+    # Dependency isn't already installed by the user, now check the deps directory
+    path = get_dependency_dir(program)
+    if path.exists():
+        # Handle some more edge cases
+        if program == "arm-none-eabi-gcc":
+            return path / "bin" # Return the entire bin directory to have access to all tools
+        elif program == "cmake":
+            if host == "win32":
+                return path / "bin" / "cmake.exe"
+            return path / "bin" / "cmake"
+        elif program == "ninja":
+            if host == "win32":
+                return path / "ninja.exe"
+            return path / "ninja"
+        elif program == "node":
+            if host == "win32":
+                return path / "node.exe"
+            return path / "bin" / "node"
+        
+        return path
     return None
 
 def setup_host_tools():
