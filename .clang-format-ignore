@@ -1,3 +1,13 @@
 # External libraries
+lib/lfs_util.c
+lib/lfs_util.h
+lib/lfs.c
+lib/lfs.h
+lib/minmea.c
+lib/minmea.h
+lib/parson.c
+lib/parson.h
+lib/semver.c
+lib/semver.h
 platform/host/wifi/mongoose.c
 platform/host/wifi/mongoose.h

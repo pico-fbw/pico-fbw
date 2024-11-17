@@ -13,7 +13,8 @@ endif()
 
 message("clang-format found at ${CLANG_FORMAT_EXE}")
 file(GLOB_RECURSE ALL_SOURCE_FILES
-    # Source files in the root /lib directory are not formatted
+    ${CMAKE_SOURCE_DIR}/lib/*.c
+    ${CMAKE_SOURCE_DIR}/lib/*.h
     ${CMAKE_SOURCE_DIR}/lib/fusion/*.c
     ${CMAKE_SOURCE_DIR}/lib/fusion/*.h
     ${CMAKE_SOURCE_DIR}/lib/fusion/drivers/*.c

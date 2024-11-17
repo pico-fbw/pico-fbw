@@ -3,25 +3,25 @@
 #include "platform/types.h"
 
 typedef struct PIDController {
-	f64 kp; // Proportional gain (read-only)
-	f64 ki; // Integral gain (read-only)
-	f64 kd; // Derivative gain (read-only)
+    f64 kp; // Proportional gain (read-only)
+    f64 ki; // Integral gain (read-only)
+    f64 kd; // Derivative gain (read-only)
 
-	f64 tau; // Derivative low-pass filter time constant (read-only)
+    f64 tau; // Derivative low-pass filter time constant (read-only)
 
-	f64 limMin; // Minimum output value (read-only)
-	f64 limMax; // Maximum output value (read-only)
+    f64 limMin; // Minimum output value (read-only)
+    f64 limMax; // Maximum output value (read-only)
 
-	f64 out; // Controller output (read-only)
+    f64 out; // Controller output (read-only)
 
-	/* private */
-	
-	f64 T;
-	f64 integrator;
-	f64 prevError;
-	f64 differentiator;
-	f64 prevMeasurement;
-	f64 prevT;
+    /* private */
+
+    f64 T;
+    f64 integrator;
+    f64 prevError;
+    f64 differentiator;
+    f64 prevMeasurement;
+    f64 prevT;
 } PIDController;
 
 /**

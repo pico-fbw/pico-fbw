@@ -28,8 +28,7 @@ f64 calculate_distance(f64 latA, f64 lngA, f64 latB, f64 lngB) {
     f64 deltaT = radians(latB - latA);
     f64 deltaL = radians(lngB - lngA);
 
-    f64 a = sin(deltaT / 2) * sin(deltaT / 2) +
-            cos(thetaA) * cos(thetaB) * sin(deltaL / 2) * sin(deltaL / 2);
+    f64 a = sin(deltaT / 2) * sin(deltaT / 2) + cos(thetaA) * cos(thetaB) * sin(deltaL / 2) * sin(deltaL / 2);
     f64 c = 2 * atan2(sqrt(a), sqrt(1 - a));
 
     return EARTH_RADIUS_M * c;

@@ -139,10 +139,17 @@ void auto_update() {
             break;
     }
 
+    // Calculate difference between track and bearing, normalized between -180 and 180
+    // Use GPS track instead of IMU heading because heading isn't always going to be navigational (more likely magnetic)
+    f64 diff = gps.track - bearing;
+    if (diff > 180.0)
+        diff -= 360.0;
+    else if (diff < -180.0)
+        diff += 360.0;
+
     // Nested PIDs; latGuid and vertGuid use gps data to command bank/pitch angles which the flight PIDs then use to actuate
     // servos
-    // Don't use IMU heading because that's not always going to be navigational (more likely magnetic)
-    pid_update(&latGuid, bearing, gps.track);
+    pid_update(&latGuid, 0.0, diff);
     pid_update(&vertGuid, alt, gps.alt);
     flight_update(latGuid.out, vertGuid.out, 0, false);
     throttle.update();

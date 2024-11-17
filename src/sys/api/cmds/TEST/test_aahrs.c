@@ -32,7 +32,7 @@ static bool wait_for_axis(IMUAxis axis, u32 breakpoint, u32 timeout_ms) {
         i32 diff_roll = ANGLE_DIFFERENCE((i32)original.roll, (i32)aahrs.roll);
         i32 diff_pitch = ANGLE_DIFFERENCE((i32)original.pitch, (i32)aahrs.pitch);
         i32 diff_yaw = ANGLE_DIFFERENCE((i32)original.yaw, (i32)aahrs.yaw);
-        if (abs(diff_roll) > breakpoint) {
+        if ((u32)abs(diff_roll) > breakpoint) {
             printpre("test", "detected roll axis");
             if (diff_roll < 0) {
                 printpre("test", "incorrect direction detected!");
@@ -40,7 +40,7 @@ static bool wait_for_axis(IMUAxis axis, u32 breakpoint, u32 timeout_ms) {
             }
             moved = IMU_AXIS_ROLL;
             break;
-        } else if (abs(diff_pitch) > breakpoint) {
+        } else if ((u32)abs(diff_pitch) > breakpoint) {
             printpre("test", "detected pitch axis");
             if (diff_pitch < 0) {
                 printpre("test", "incorrect direction detected!");
@@ -48,7 +48,7 @@ static bool wait_for_axis(IMUAxis axis, u32 breakpoint, u32 timeout_ms) {
             }
             moved = IMU_AXIS_PITCH;
             break;
-        } else if (abs(diff_yaw) > breakpoint) {
+        } else if ((u32)abs(diff_yaw) > breakpoint) {
             printpre("test", "detected yaw axis");
             if ((diff_yaw) < 0) {
                 printpre("test", "incorrect direction detected!");
