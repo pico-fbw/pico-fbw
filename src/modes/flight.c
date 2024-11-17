@@ -33,22 +33,22 @@ static bool yawDamperOn;
 
 static void flight_roll_params_update(f64 kP, f64 kI, f64 kD, bool reset) {
     if (kP != INFINITY)
-        rollC.Kp = kP;
+        rollC.kp = kP;
     if (kI != INFINITY)
-        rollC.Ki = kI;
+        rollC.ki = kI;
     if (kD != INFINITY)
-        rollC.Kd = kD;
+        rollC.kd = kD;
     if (reset)
         pid_init(&rollC);
 }
 
 static void flight_pitch_params_update(f64 kP, f64 kI, f64 kD, bool reset) {
     if (kP != INFINITY)
-        pitchC.Kp = kP;
+        pitchC.kp = kP;
     if (kI != INFINITY)
-        pitchC.Ki = kI;
+        pitchC.ki = kI;
     if (kD != INFINITY)
-        pitchC.Kd = kD;
+        pitchC.kd = kD;
     if (reset)
         pid_init(&pitchC);
 }
@@ -74,39 +74,37 @@ void flight_init() {
             aircraft.change_to(MODE_DIRECT);
             return;
     }
-// Create PID controllers for the roll and pitch axes and initialize (also clear) them
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-    rollC = (PIDController){calibration.pid[PID_ROLL_KP],
-                            calibration.pid[PID_ROLL_KI],
-                            calibration.pid[PID_ROLL_KD],
-                            calibration.pid[PID_ROLL_TAU],
-                            -rollLimit,
-                            rollLimit,
-                            calibration.pid[PID_ROLL_INTEGMIN],
-                            calibration.pid[PID_ROLL_INTEGMAX]};
-    pitchC = (PIDController){calibration.pid[PID_PITCH_KP],
-                             calibration.pid[PID_PITCH_KI],
-                             calibration.pid[PID_PITCH_KD],
-                             calibration.pid[PID_PITCH_TAU],
-                             -pitchLimit,
-                             pitchLimit,
-                             calibration.pid[PID_PITCH_INTEGMIN],
-                             calibration.pid[PID_PITCH_INTEGMAX]};
+    // Create PID controllers for the roll and pitch axes and initialize them
+    rollC = (PIDController){
+        .kp = calibration.pid[PID_ROLL_KP],
+        .ki = calibration.pid[PID_ROLL_KI],
+        .kd = calibration.pid[PID_ROLL_KD],
+        .tau = calibration.pid[PID_TAU],
+        .limMin = -rollLimit,
+        .limMax = rollLimit,
+    };
+    pitchC = (PIDController){
+        .kp = calibration.pid[PID_PITCH_KP],
+        .ki = calibration.pid[PID_PITCH_KI],
+        .kd = calibration.pid[PID_PITCH_KD],
+        .tau = calibration.pid[PID_TAU],
+        .limMin = -pitchLimit,
+        .limMax = pitchLimit,
+    };
     pid_init(&rollC);
     pid_init(&pitchC);
+    // Create yaw axis controller if applicable
     if (receiver_has_rud()) {
-        yawC = (PIDController){calibration.pid[PID_YAW_KP],
-                               calibration.pid[PID_YAW_KI],
-                               calibration.pid[PID_YAW_KD],
-                               calibration.pid[PID_YAW_TAU],
-                               -config.control[CONTROL_MAX_RUD_DEFLECTION],
-                               config.control[CONTROL_MAX_RUD_DEFLECTION],
-                               calibration.pid[PID_YAW_INTEGMIN],
-                               calibration.pid[PID_YAW_INTEGMAX]};
+        yawC = (PIDController){
+            .kp = calibration.pid[PID_YAW_KP],
+            .ki = calibration.pid[PID_YAW_KI],
+            .kd = calibration.pid[PID_YAW_KD],
+            .tau = calibration.pid[PID_TAU],
+            .limMin = -config.control[CONTROL_MAX_RUD_DEFLECTION],
+            .limMax = config.control[CONTROL_MAX_RUD_DEFLECTION],
+        };
         pid_init(&yawC);
     }
-#pragma GCC diagnostic pop
 }
 
 void flight_update(f64 roll, f64 pitch, f64 yaw, bool override) {
@@ -189,11 +187,11 @@ void flight_params_get(Axis axis, f64 *kP, f64 *kI, f64 *kD) {
     if (!axisC)
         return;
     if (kP)
-        *kP = axisC->Kp;
+        *kP = axisC->kp;
     if (kI)
-        *kI = axisC->Ki;
+        *kI = axisC->ki;
     if (kD)
-        *kD = axisC->Kd;
+        *kD = axisC->kd;
 }
 
 void flight_params_update(Axis axis, f64 kP, f64 kI, f64 kD, bool reset) {

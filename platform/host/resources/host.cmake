@@ -21,6 +21,11 @@ function(setup_before_subdirs)
             set(SimConnect_LIBRARIES ${SimConnect_LIBRARIES} PARENT_SCOPE)
         endif()
     endif()
+    # Disable printf format warnings for host
+    # This is because most host platforms are 64-bit and the format specifiers are meant for 32-bit,
+    # so we would get a lot of warnings
+    # Things still seem to work fine, so warnings are disabled
+    add_compile_options(-Wno-format)
     add_executable(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/src/main.c)
 endfunction()
 

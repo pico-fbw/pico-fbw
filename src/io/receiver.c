@@ -77,6 +77,7 @@ f32 receiver_get(u32 pin, ReceiverMode mode) {
     else
         return 0; // Not simulated
     f32 raw = simconnect_get(control);
+    (void)mode;
 #endif // !SIMCONNECT
     return raw + offset_of(pin);
 }

@@ -85,7 +85,8 @@ Config config = {
 };
 
 Calibration calibration = {
-    .pwm = {false,
+    .pwm = {
+        false,
         CTRLMODE_2AXIS_ATHR,
         0, 0, 0, 0, 0 // Default PWM offsets
     },
@@ -96,11 +97,13 @@ Calibration calibration = {
     .aahrs = {false},
     .pid = {
         false,
-        // TODO: find good defaults!
-        0.01f, 0, 0.01f, 0.001f, -50, 50, // Default roll PID parameters
-        0.01f, 0, 0.01f, 0.001f, -50, 50, // Default pitch PID parameters
-        0.01f, 0, 0.01f, 0.001f, -50, 50, // Default yaw PID parameters
-        0.01f, 0, 0.01f, 0.001f, -50, 50, // Default autothrottle PID parameters
+        // TODO: tune throttle pid, keep checking others (they're mostly tuned already)
+        1.5f, 0.4f, 8.f, // Default roll PID parameters
+        1.5f, 0.4f, 8.f, // Default pitch PID parameters
+        2.f, 0.05f, 3.f, // Default yaw PID parameters
+        25.f, 0.11f, 40.f, // Default autothrottle PID parameters
+        // TODO: find working tau
+        1.f, // Default PID tau
     }
 };
 

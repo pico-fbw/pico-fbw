@@ -94,6 +94,7 @@ bool aahrs_init() {
     // TODO: load calibration data once saving works
 
     aahrs.isInitialized = true;
+    aircraft.set_aahrs_safe(true);
     return true;
 }
 
@@ -106,6 +107,7 @@ void aahrs_deinit() {
     madgwick_destroy(&filter);
     fusion_imu_destroy(&imu);
     aahrs.isInitialized = false;
+    aircraft.set_aahrs_safe(false);
 }
 
 void aahrs_update() {
@@ -141,11 +143,12 @@ void aahrs_update() {
     aahrs.yawRate = gyro[2];
     memcpy(aahrs.accel, acc, sizeof(aahrs.accel));
 #else
-    aahrs.roll = (f32)scIMU.roll;
-    aahrs.pitch = (f32)scIMU.pitch;
+    // Roll and pitch must be inverted as MSFS uses a different convention than pico-fbw
+    aahrs.roll = -(f32)scIMU.roll;
+    aahrs.pitch = -(f32)scIMU.pitch;
     aahrs.yaw = (f32)scIMU.yaw;
-    aahrs.rollRate = (f32)scIMU.gyro[0];
-    aahrs.pitchRate = (f32)scIMU.gyro[1];
+    aahrs.rollRate = -(f32)scIMU.gyro[0];
+    aahrs.pitchRate = -(f32)scIMU.gyro[1];
     aahrs.yawRate = (f32)scIMU.gyro[2];
     for (u32 i = 0; i < count_of(aahrs.accel); i++)
         aahrs.accel[i] = (f32)scIMU.accel[i];

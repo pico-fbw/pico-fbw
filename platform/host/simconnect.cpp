@@ -283,9 +283,9 @@ static bool configure_event_fctrl() {
     SimConnect_MapClientEventToSimEvent(hSimConnect, EVENT_AIL_SET, "AXIS_AILERONS_SET");
     SimConnect_MapClientEventToSimEvent(hSimConnect, EVENT_ELE_SET, "AXIS_ELEVATOR_SET");
     SimConnect_MapClientEventToSimEvent(hSimConnect, EVENT_RUD_SET, "AXIS_RUDDER_SET");
-    SimConnect_MapClientEventToSimEvent(hSimConnect, EVENT_THR_SET, "AXIS_THROTTLE_SET");
-    SimConnect_AddClientEventToNotificationGroup(hSimConnect, GROUP_FCTRL, EVENT_AIL_SET, true);
-    SimConnect_AddClientEventToNotificationGroup(hSimConnect, GROUP_FCTRL, EVENT_ELE_SET, true);
+    SimConnect_MapClientEventToSimEvent(hSimConnect, EVENT_THR_SET, "THROTTLE1_SET");
+    for (u32 event = EVENT_AIL_SET; event <= EVENT_THR_SET; event++)
+        SimConnect_AddClientEventToNotificationGroup(hSimConnect, GROUP_FCTRL, event, true);
     return SUCCEEDED(SimConnect_SetNotificationGroupPriority(hSimConnect, GROUP_FCTRL, SIMCONNECT_GROUP_PRIORITY_HIGHEST));
 }
 

@@ -152,30 +152,20 @@ typedef enum CalibrationPID {
     PID_ROLL_KP,
     PID_ROLL_KI,
     PID_ROLL_KD,
-    PID_ROLL_TAU,
-    PID_ROLL_INTEGMIN,
-    PID_ROLL_INTEGMAX,
     // Pitch PID parameters
     PID_PITCH_KP,
     PID_PITCH_KI,
     PID_PITCH_KD,
-    PID_PITCH_TAU,
-    PID_PITCH_INTEGMIN,
-    PID_PITCH_INTEGMAX,
     // Yaw PID parameters
     PID_YAW_KP,
     PID_YAW_KI,
     PID_YAW_KD,
-    PID_YAW_TAU,
-    PID_YAW_INTEGMIN,
-    PID_YAW_INTEGMAX,
     // Throttle PID parameters
     PID_THROTTLE_KP,
     PID_THROTTLE_KI,
     PID_THROTTLE_KD,
-    PID_THROTTLE_TAU,
-    PID_THROTTLE_INTEGMIN,
-    PID_THROTTLE_INTEGMAX,
+    // tau constant for all PIDs
+    PID_TAU,
 } CalibrationPID;
 
 typedef struct Calibration {

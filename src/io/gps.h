@@ -13,7 +13,7 @@ typedef enum GPSCommandType {
 
 typedef bool (*gps_init_t)();
 typedef void (*gps_update_t)();
-typedef i32 (*gps_calibrate_alt_offset_t)(u32);
+typedef void (*gps_calibrate_alt_offset_t)(u32);
 typedef bool (*gps_is_supported_t)();
 
 typedef struct GPS {
@@ -38,8 +38,7 @@ typedef struct GPS {
     gps_update_t update;
     /**
      * Calibrates the altitude offset from the GPS.
-     * @param num_samples the number of samples to take.
-     * @return 0 if successful or -1 if a timeout occured
+     * @param num_samples number of samples to take
      */
     gps_calibrate_alt_offset_t calibrate_alt_offset;
     /**

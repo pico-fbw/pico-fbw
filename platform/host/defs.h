@@ -65,9 +65,9 @@ typedef timer_t __callback_id_t;
 #define PLATFORM_SUPPORTS_ADC 0
 #define PLATFORM_SUPPORTS_DISPLAY 0
 #if HOST_SKIP_WWW
-#define PLATFORM_SUPPORTS_WIFI 0
+    #define PLATFORM_SUPPORTS_WIFI 0
 #else
-#define PLATFORM_SUPPORTS_WIFI 1
+    #define PLATFORM_SUPPORTS_WIFI 1
 #endif
 
 // printf format checking

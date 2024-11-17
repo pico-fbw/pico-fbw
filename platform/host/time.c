@@ -9,14 +9,13 @@
     #include <windows.h>
 #elif defined(__APPLE__)
     #include <sys/time.h>
-    #include <unistd.h>
     #include "time_apple.h" // Compatibility layer for <time.h> on macOS
 #elif defined(__linux__)
     #include <signal.h>
     #include <sys/time.h>
     #include <time.h>
-    #include <unistd.h>
 #endif
+#include <unistd.h>
 
 #include "sys_shared.h"
 
@@ -132,9 +131,5 @@ void cancel_callback(CallbackData *data) {
 }
 
 void sleep_us_blocking(u64 us) {
-#if defined(_WIN32)
-    Sleep(us / 1000);
-#elif defined(__APPLE__) || defined(__linux__)
     usleep(us);
-#endif
 }

@@ -1,36 +1,27 @@
 #pragma once
 
+#include "platform/types.h"
+
 typedef struct PIDController {
+	f64 kp; // Proportional gain (read-only)
+	f64 ki; // Integral gain (read-only)
+	f64 kd; // Derivative gain (read-only)
 
-	/* Controller gains */
-	double Kp;
-	double Ki;
-	double Kd;
+	f64 tau; // Derivative low-pass filter time constant (read-only)
 
-	/* Derivative low-pass filter time constant */
-	double tau;
+	f64 limMin; // Minimum output value (read-only)
+	f64 limMax; // Maximum output value (read-only)
 
-	/* Output limits */
-	double limMin;
-	double limMax;
+	f64 out; // Controller output (read-only)
+
+	/* private */
 	
-	/* Integrator limits */
-	double limMinInt;
-	double limMaxInt;
-
-	/* Sample time (in seconds) */
-	double T;
-
-	/* Controller "memory" */
-	double integrator;
-	double prevError;			/* Required for integrator */
-	double differentiator;
-	double prevMeasurement;		/* Required for differentiator */
-	double prevT;
-
-	/* Controller output */
-	double out;
-
+	f64 T;
+	f64 integrator;
+	f64 prevError;
+	f64 differentiator;
+	f64 prevMeasurement;
+	f64 prevT;
 } PIDController;
 
 /**
@@ -45,4 +36,4 @@ void pid_init(PIDController *pid);
  * @param setpoint The target value.
  * @param measurement The measured value.
  */
-void pid_update(PIDController *pid, double setpoint, double measurement);
+void pid_update(PIDController *pid, f64 setpoint, f64 measurement);

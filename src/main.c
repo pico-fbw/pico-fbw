@@ -184,24 +184,27 @@ int main() {
 #if PLATFORM_SUPPORTS_WIFI
     boot_set_progress(85, "Initializing Wi-Fi");
     bool setup = false;
-#ifndef FBW_PLATFORM_HOST // Host platforms don't utilize the wwwfs
+    #ifndef FBW_PLATFORM_HOST // Host platforms don't utilize the wwwfs
     if (lfs_mount(&wwwfs, &wwwfs_cfg) != LFS_ERR_OK)
         goto fail;
-#endif
+    #endif
+    printfbw(network, "successfully mounted wifi filesystem");
     switch ((WifiEnabled)config.general[GENERAL_WIFI_ENABLED]) {
         case WIFI_ENABLED_OPEN:
+            printfbw(network, "setting up open wifi with ssid \"%s\"", config.wifi.ssid);
             setup = wifi_setup(config.wifi.ssid, NULL);
             break;
         case WIFI_ENABLED_PASS:
+            printfbw(network, "setting up wifi with ssid \"%s\" and password \"%s\"", config.wifi.ssid, config.wifi.pass);
             setup = wifi_setup(config.wifi.ssid, config.wifi.pass);
         /* fall through */
         default:
             break;
     }
     if (!setup)
-#ifndef FBW_PLATFORM_HOST
+    #ifndef FBW_PLATFORM_HOST
     fail:
-#endif
+    #endif
         log_message(TYPE_ERROR, "Wi-Fi setup failed!", 2000, 0, false);
 #endif
 

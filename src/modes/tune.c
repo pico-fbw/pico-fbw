@@ -77,7 +77,7 @@ void tune_init() {
 
 void tune_update() {
     normal_update();
-    if (calibration.pid[PID_TUNED])
+    if (tune_is_tuned())
         return;
 
     f32 rollInput = receiver_get((u32)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE) - 90.f;

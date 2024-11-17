@@ -77,13 +77,16 @@ bool hold_init() {
     throttle.mode = THRMODE_SPEED;
     // We try to maintain the speed of the aircraft as it was entering the holding pattern
     throttle.target = gps.speed;
-// We use a vertical guidance PID here so that we can keep the aircraft level; 0deg pitch does not equal 0 altitude change
-// (sadly)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-    vertGuid = (PIDController){VERTGD_KP,    VERTGD_KI,    VERTGD_KD,        VERTGD_TAU,
-                               VERTGD_LOLIM, VERTGD_HILIM, -VERTGD_INTEGLIM, VERTGD_INTEGLIM};
-#pragma GCC diagnostic pop
+    // We use a vertical guidance PID here so that we can keep the aircraft level; 0deg pitch does not equal 0 altitude
+    // change (sadly)
+    vertGuid = (PIDController){
+        .kp = VERTGD_KP,
+        .ki = VERTGD_KI,
+        .kd = VERTGD_KD,
+        .tau = VERTGD_TAU,
+        .limMin = VERTGD_LIM_MIN,
+        .limMax = VERTGD_LIM_MAX,
+    };
     pid_init(&vertGuid);
     targetAlt = gps.alt; // targetAlt is just the current alt from whenever we enter the mode
     return true;

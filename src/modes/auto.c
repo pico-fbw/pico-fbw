@@ -39,8 +39,9 @@ static u32 currentWaypoint = 0;
 static f64 distance;
 static f64 bearing;
 static i32 alt;
-static PIDController latGuid;
-static PIDController vertGuid;
+
+static PIDController latGuid; // lateral guidance
+static PIDController vertGuid; // vertical guidance
 
 // Allows auto mode to be externally controlled (by API setting a custom Waypoint and callback)
 static GuidanceSource guidanceSource = SOURCE_FLIGHTPLAN;
@@ -91,14 +92,23 @@ bool auto_init() {
         return false;
     }
     throttle.mode = THRMODE_SPEED;
-// Initialize (clear) PIDs
-// The PIDController struct contains some internal variables that we don't initialize, so we suppress the warning
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-    latGuid = (PIDController){LATGD_KP, LATGD_KI, LATGD_KD, LATGD_TAU, -LATGD_LIM, LATGD_LIM, -LATGD_INTEGLIM, LATGD_INTEGLIM};
-    vertGuid = (PIDController){VERTGD_KP,    VERTGD_KI,    VERTGD_KD,        VERTGD_TAU,
-                               VERTGD_LOLIM, VERTGD_HILIM, -VERTGD_INTEGLIM, VERTGD_INTEGLIM};
-#pragma GCC diagnostic pop
+    // Initialize (clear) PIDs
+    latGuid = (PIDController){
+        .kp = LATGD_KP,
+        .ki = LATGD_KI,
+        .kd = LATGD_KD,
+        .tau = LATGD_TAU,
+        .limMin = -LATGD_LIM,
+        .limMax = LATGD_LIM,
+    };
+    vertGuid = (PIDController){
+        .kp = VERTGD_KP,
+        .ki = VERTGD_KI,
+        .kd = VERTGD_KD,
+        .tau = VERTGD_TAU,
+        .limMin = VERTGD_LIM_MIN,
+        .limMax = VERTGD_LIM_MAX,
+    };
     pid_init(&latGuid);
     pid_init(&vertGuid);
     // Load the first Waypoint from the flightplan (subsequent waypoints will be loaded on waypoint interception)
@@ -131,8 +141,8 @@ void auto_update() {
 
     // Nested PIDs; latGuid and vertGuid use gps data to command bank/pitch angles which the flight PIDs then use to actuate
     // servos
-    pid_update(&latGuid, bearing,
-               gps.track); // Don't use IMU heading because that's not always going to be navigational (more likely magnetic)
+    // Don't use IMU heading because that's not always going to be navigational (more likely magnetic)
+    pid_update(&latGuid, bearing, gps.track); 
     pid_update(&vertGuid, alt, gps.alt);
     flight_update(latGuid.out, vertGuid.out, 0, false);
     throttle.update();

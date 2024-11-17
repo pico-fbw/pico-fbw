@@ -79,6 +79,7 @@ void esc_set(u32 pin, f32 speed) {
     pwm_write_raw(pin, duty);
 #else
     simconnect_set(FCTRL_THR, speed);
+    (void)pin;
 #endif
 }
 

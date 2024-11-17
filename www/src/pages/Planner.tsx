@@ -12,6 +12,7 @@ import Map from "../elements/Map";
 import hasInternet from "../helpers/hasInternet";
 
 // [ ] Allow saving flightplans to the server (in littlefs)
+// [ ] Automatically load the active flightplan (if it exists) when the planner is opened
 
 export default function Planner() {
     const [hasConnection, setHasConnection] = useState<boolean | null>(null);

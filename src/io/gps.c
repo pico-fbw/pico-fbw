@@ -176,32 +176,21 @@ void gps_update() {
     aircraft.set_gps_safe(data_valid(gps.lat, gps.lng, gps.alt, gps.speed, gps.track, gps.pdop, gps.hdop, gps.vdop));
 }
 
-i32 gps_calibrate_alt_offset(u32 num_samples) {
+void gps_calibrate_alt_offset(u32 num_samples) {
     log_message(TYPE_INFO, "Calibrating altitude", 1000, 100, false);
-    // GPS updates should be at 1Hz (+ an extra 2s just in case) so if the calibration takes longer we cut it short
-    Timestamp calibrationTimeout = timestamp_in_ms((num_samples * 1000) + 2000);
     u32 samples = 0;
     i64 alts = 0;
-    i32 prevAlt = gps.alt;
-    while (samples < num_samples && !timestamp_reached(&calibrationTimeout)) {
-        // GPS will be updated by runtime, we will check back in every 250ms for a new altitude
-        runtime_sleep_ms(250, false);
-        if (gps.alt != prevAlt) {
-            alts += gps.alt;
-            samples++;
-            prevAlt = gps.alt;
-        }
+    while (samples < num_samples) {
+        // GPS will be updated by runtime, we will check back in every second for a new altitude
+        runtime_sleep_ms(1000, false);
+        alts += gps.alt;
+        samples++;
     }
     log_clear(TYPE_INFO);
 
-    if (timestamp_reached(&calibrationTimeout)) {
-        printfbw(gps, "ERROR: altitude calibration timed out");
-        return -1;
-    }
     gps.altOffset = (i32)(alts / samples);
     printfbw(gps, "altitude offset calculated as: %ld", gps.altOffset);
     gps.altOffsetCalibrated = true;
-    return 0;
 }
 
 bool gps_is_supported() {

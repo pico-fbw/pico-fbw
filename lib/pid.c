@@ -18,46 +18,44 @@
 
 void pid_init(PIDController *pid) {
 	// Clear controller variables
-	pid->integrator = 0.0f;
-	pid->prevError  = 0.0f;
-	pid->differentiator  = 0.0f;
-	pid->prevMeasurement = 0.0f;
-	pid->out = 0.0f;
+	pid->integrator = 0.0;
+	pid->prevError  = 0.0;
+	pid->differentiator  = 0.0;
+	pid->prevMeasurement = 0.0;
+	pid->out = 0.0;
+	// Set time
+	pid->prevT = time_s();
 }
 
-void pid_update(PIDController *pid, double setpoint, double measurement) {
-	// Time
-	pid->T = time_s() - pid->prevT;
-
-	// Error signal
-	double error = setpoint - measurement;
-
-	// Proportional
-	double proportional = pid->Kp * error;
-
-	// Integral
-	pid->integrator = pid->integrator + 0.5f * pid->Ki * pid->T * (error + pid->prevError);
-
+void pid_update(PIDController *pid, f64 setpoint, f64 measurement) {
+	pid->T = time_s() - pid->prevT; // Time
+	f64 error = setpoint - measurement; // Error signal
+	// Compute PID components
+	f64 proportional = pid->kp * error; // Proportional
+	pid->integrator = pid->integrator + 0.5f * pid->ki * pid->T * (error + pid->prevError); // Integral
 	// Derivative (band-limited differentiator)
-	pid->differentiator = -(2.0f * pid->Kd * (measurement - pid->prevMeasurement) // Derivative on measurement, therefore minus sign in front of equation
+	// Derivative on measurement, therefore minus sign in front of equation
+	pid->differentiator = -(2.0f * pid->kd * (measurement - pid->prevMeasurement)
     					  + (2.0f * pid->tau - pid->T) * pid->differentiator)
     					  / (2.0f * pid->tau + pid->T);
 
-
 	// Compute output and apply limits
-	pid->out = proportional + pid->integrator + pid->differentiator;
-	if (pid->out > pid->limMax) {
+	f64 out = proportional + pid->integrator + pid->differentiator;
+	if (out > pid->limMax) {
 		// Anti-wind-up for over-saturated output
-		pid->integrator += pid->limMax - pid->out;
-		pid->out = pid->limMax;
-	} else if (pid->out < pid->limMin) {
+		if (pid->integrator != 0.0)
+			pid->integrator += pid->limMax - out;
+		out = pid->limMax;
+	} else if (out < pid->limMin) {
 		// Anti-wind-up for under-saturated output
-		pid->integrator += pid->limMin - pid->out;
-		pid->out = pid->limMin;
+		if (pid->integrator != 0.0)
+			pid->integrator += pid->limMin - out;
+		out = pid->limMin;
 	}
 
-	// Store error, measurement, and time for later use
-	pid->prevError       = error;
+	// Store output, error, measurement, and time for later use
+	pid->out = out;
+	pid->prevError = error;
 	pid->prevMeasurement = measurement;
 	pid->prevT = time_s();
 }

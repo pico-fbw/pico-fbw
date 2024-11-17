@@ -24,14 +24,15 @@ void throttle_init() {
     // GPS is required for speed mode, as we need to know the aircraft's current speed
     throttle.supportedMode = gps.is_supported() ? THRMODE_SPEED : THRMODE_THRUST;
     if (throttle.supportedMode == THRMODE_SPEED) {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-        athr_c = (PIDController){calibration.pid[PID_THROTTLE_KP],       calibration.pid[PID_THROTTLE_KI],
-                                 calibration.pid[PID_THROTTLE_KD],       calibration.pid[PID_THROTTLE_TAU],
-                                 calibration.esc[ESC_DETENT_IDLE],       calibration.esc[ESC_DETENT_MAX],
-                                 calibration.pid[PID_THROTTLE_INTEGMIN], calibration.pid[PID_THROTTLE_INTEGMAX]};
+        athr_c = (PIDController){
+            .kp = calibration.pid[PID_THROTTLE_KP],
+            .ki = calibration.pid[PID_THROTTLE_KI],
+            .kd = calibration.pid[PID_THROTTLE_KD],
+            .tau = calibration.pid[PID_TAU],
+            .limMin = calibration.esc[ESC_DETENT_IDLE],
+            .limMax = calibration.esc[ESC_DETENT_MAX],
+        };
         pid_init(&athr_c);
-#pragma GCC diagnostic pop
     }
 }
 
@@ -60,7 +61,8 @@ void throttle_update() {
         // MCT is still being exceeded (within this if block), what to do here depends on the specific state
         switch (state) {
             case THRSTATE_MCT_EXCEEDED:
-                if ((time_s() - stateChangeAt) > (u64)(config.control[CONTROL_THROTTLE_MAX_TIME])) {
+                u64 mctTime = (u64)(config.control[CONTROL_THROTTLE_MAX_TIME]);
+                if ((time_s() - stateChangeAt) > mctTime && mctTime != 0) {
                     // MCT has been exceeded for too long, lock
                     state = THRSTATE_MCT_LOCK;
                 }

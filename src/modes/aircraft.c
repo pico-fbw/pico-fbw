@@ -137,8 +137,10 @@ void change_to(Mode new_mode) {
                 goto LAUNCH;
             // Check to see if we should calibrate the altitude offset
             if (flightplan_was_parsed()) {
-                if (flightplan_get()->alt_samples > 0)
+                if (flightplan_get()->alt_samples > 0 && !gps.altOffsetCalibrated) {
                     gps.calibrate_alt_offset(flightplan_get()->alt_samples);
+                    goto NORMAL; // Enter normal for user to takeoff; they can re-enter auto mode after takeoff
+                }
             }
             printfbw(aircraft, "entering auto mode");
             if (auto_init()) {
@@ -169,6 +171,7 @@ void change_to(Mode new_mode) {
         // We're now airborne, so wifi is no longer needed
         if (!wifi_disable())
             printfbw(network, "WARNING: failed to disable wifi!");
+        printfbw(network, "wifi disabled");
         aircraft.wifiDeinitialized = true;
     }
 #endif
