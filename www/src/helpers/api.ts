@@ -3,6 +3,8 @@
  * Licensed under the GNU GPL-3.0
  */
 
+import { Flightplan } from "./flightplan";
+
 const timeout = 2000; // Timeout for an API request in ms
 
 type EmptyResponse = Record<string, never>;
@@ -14,6 +16,7 @@ export type GET_CONFIG = {
         values: (number | string)[];
     }[];
 };
+export type GET_FLIGHTPLAN = Flightplan;
 export type GET_INFO = {
     version: string;
     version_api: string;
@@ -44,6 +47,7 @@ export type PING = EmptyResponse;
 // Maps API URIs to their respective response types
 type EndpointMap = {
     "get/config": GET_CONFIG;
+    "get/flightplan": GET_FLIGHTPLAN;
     "get/info": GET_INFO;
     "get/logs": GET_LOGS;
     "set/config": SET_CONFIG;
@@ -77,6 +81,9 @@ export async function api<E extends keyof EndpointMap>(endpoint: E, data?: objec
     const response = fetch(`/api/v1/${endpoint}`, options).then(res => {
         if (!res.ok) {
             throw new Error(res.status.toString());
+        }
+        if (res.status === 204) {
+            return {};
         }
         return res.json();
     }) as Promise<EndpointMap[E]>;

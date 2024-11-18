@@ -379,7 +379,7 @@ def get_platform() -> str:
     if len(os.sys.argv) > 1:
         # If the cache and current argument disagree, clean before 
         platform_arg = str(os.sys.argv[1])
-        if platform_arg != platform:
+        if platform_arg != platform and Path(root_dir / "build").exists():
             clean_build_dir()
         platform = platform_arg
     # No platform could be found; prompt the user to select one

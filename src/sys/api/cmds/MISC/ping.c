@@ -10,7 +10,6 @@
 // I know, this file is crazy, you can thank me later :)
 
 i32 api_ping(const char *args) {
-    printraw("PONG\n");
-    return -1;
+    return 200;
     (void)args;
 }

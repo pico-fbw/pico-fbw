@@ -117,6 +117,23 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
         }
     };
 
+    /**
+     * Syncs the flightplan with the server.
+     * This will replace any existing local flightplan with the active flightplan on the server.
+     */
+    const syncFlightplan = async () => {
+        try {
+            const flightplan = await api("get/flightplan");
+            if (Object.keys(flightplan).length === 0) {
+                return; // No existing flightplan
+            }
+            setMarkers(flightplanToMarkers(JSON.stringify(flightplan)));
+            setUploaded(true);
+        } catch (e) {
+            setError(`Server error whilst syncing: ${(e as Error).message}`);
+        }
+    };
+
     // Configure file upload and download hooks
 
     const { downloadFile } = useFileDownload({
@@ -283,6 +300,9 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
         const index = Number(settings.get("defaultMap"));
         setMapLink(layers[index].link);
         setMapAttribution(layers[index].attribution);
+
+        // Load the active flightplan from the server (if available)
+        syncFlightplan().catch(console.error);
 
         if (settings.get("lastMapPosition") !== "") {
             const [lat, lng] = settings.get("lastMapPosition").split(",").map(Number);

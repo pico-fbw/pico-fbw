@@ -90,7 +90,7 @@ export default (): MockHandler[] => [
         handle: (req, res) => {
             send_data(res, {
                 logs: [
-                    { type: 1, msg: "This is an info message", code: 250, timestamp: 0 },
+                    { type: 1, msg: "This is an info message", code: -1, timestamp: 0 },
                     { type: 2, msg: "This is a warning message", code: 500, timestamp: 30000 },
                     { type: 3, msg: "This is an error message", code: 1000, timestamp: 100000 },
                 ],

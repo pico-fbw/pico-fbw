@@ -22,6 +22,7 @@
 
 #include "sys/api/api.h"
 #include "sys/api/cmds/GET/get_config.h"
+#include "sys/api/cmds/GET/get_flightplan.h"
 #include "sys/api/cmds/GET/get_info.h"
 #include "sys/api/cmds/GET/get_logs.h"
 #include "sys/api/cmds/SET/set_config.h"
@@ -188,6 +189,12 @@ esp_err_t http_server_open(httpd_handle_t *server) {
     // get/config supports both GET and POST
     httpd_register_uri_handler(*server, &apiV1GetConfigURIGet);
     httpd_register_uri_handler(*server, &apiV1GetConfigURIPost);
+    httpd_uri_t apiV1GetFlightplanURI = {
+        .uri = "/api/v1/get/flightplan",
+        .method = HTTP_GET,
+        .handler = handle_api_v1_request,
+        .user_ctx = api_handle_get_flightplan,
+    } httpd_register_uri_handler(*server, &apiV1GetFlightplanURI);
     httpd_uri_t apiV1GetInfoURI = {
         .uri = "/api/v1/get/info",
         .method = HTTP_GET,

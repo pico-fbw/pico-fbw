@@ -37,7 +37,7 @@ export default ({ accept, multiple, maxSize, onFileChange }: UseFileUploadInput)
             const selectedFile = inputElement.files?.[0];
             if (selectedFile) {
                 if (maxSize && selectedFile.size > maxSize) {
-                    console.log("File too large");
+                    console.error("File too large");
                     return;
                 }
                 setFile(selectedFile);

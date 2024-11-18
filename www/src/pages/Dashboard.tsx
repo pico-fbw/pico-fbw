@@ -4,7 +4,6 @@
  */
 
 // [ ] General dashboard layout with recomended actions to take based on current state
-// [ ] Any current alerts or warnings
 // [ ] It also might be fun to have a plane visualization of some sort, and be able to click on parts to see details or control things
 
 import { useEffect, useState } from "preact/hooks";
@@ -52,7 +51,8 @@ export default function Dashboard() {
                             onClose={() => {}}
                             className="flex mx-4 sm:mx-8 lg:mx-0 mb-2"
                         >
-                            <strong>{log.msg}</strong>&nbsp;(FBW-{log.code})
+                            <strong>{log.msg}</strong>
+                            {log.code > 0 && <>&nbsp;(FBW-{log.code})</>}
                         </Alert>
                     ))}
                 </div>

@@ -33,6 +33,7 @@
 
 #include "sys/api/api.h"
 #include "sys/api/cmds/GET/get_config.h"
+#include "sys/api/cmds/GET/get_flightplan.h"
 #include "sys/api/cmds/GET/get_info.h"
 #include "sys/api/cmds/GET/get_logs.h"
 #include "sys/api/cmds/SET/set_config.h"
@@ -307,6 +308,8 @@ static bool handle_request(TCPConnection *con_state, struct tcp_pcb *pcb, const 
         if (strncmp(uri, API_V1_PATH, strlen(API_V1_PATH)) == 0) {
             if (strcmp(uri + strlen(API_V1_PATH), "get/config") == 0)
                 res = handle_api_v1_request(pcb, request, api_handle_get_config);
+            else if (strcmp(uri + strlen(API_V1_PATH), "get/flightplan") == 0)
+                res = handle_api_v1_request(pcb, request, api_handle_get_flightplan);
             else if (strcmp(uri + strlen(API_V1_PATH), "get/info") == 0)
                 res = handle_api_v1_request(pcb, request, api_handle_get_info);
             else if (strcmp(uri + strlen(API_V1_PATH), "get/logs") == 0)
