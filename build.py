@@ -252,9 +252,9 @@ def find_dependency(program: str) -> Path | None:
 def setup_host_tools():
     """Install any necessary build tools for the host platform."""
     if host == "linux":
-        gcc = shutil.which("gcc")
-        if gcc:
-            print(f"Dependency 'gcc' found at '{gcc}'")
+        gpp = shutil.which("g++")
+        if gpp:
+            print(f"Dependency 'g++' found at '{gpp}'")
         else:
             print("-- Installing build tools")
             # Try to install build-essential (or equivalent) via the system's package manager
