@@ -194,7 +194,8 @@ esp_err_t http_server_open(httpd_handle_t *server) {
         .method = HTTP_GET,
         .handler = handle_api_v1_request,
         .user_ctx = api_handle_get_flightplan,
-    } httpd_register_uri_handler(*server, &apiV1GetFlightplanURI);
+    };
+    httpd_register_uri_handler(*server, &apiV1GetFlightplanURI);
     httpd_uri_t apiV1GetInfoURI = {
         .uri = "/api/v1/get/info",
         .method = HTTP_GET,
