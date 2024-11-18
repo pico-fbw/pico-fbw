@@ -257,15 +257,15 @@ def setup_host_tools():
             print(f"Dependency 'g++' found at '{gpp}'")
         else:
             print("-- Installing build tools")
-            # Try to install build-essential (or equivalent) via the system's package manager
+            # Try to install g++ via the system's package manager
             if shutil.which("apt"):
-                subprocess.check_call(["sudo", "apt", "install", "build-essential", "-y"])
+                subprocess.check_call(["sudo", "apt", "install", "g++", "-y"])
             elif shutil.which("dnf"):
-                subprocess.check_call(["sudo", "dnf", "groupinstall", "development-tools", "-y"])
+                subprocess.check_call(["sudo", "dnf", "install", "gcc-c++", "-y"])
             elif shutil.which("pacman"):
-                subprocess.check_call(["sudo", "pacman", "-S", "base-devel", "--noconfirm"])
+                subprocess.check_call(["sudo", "pacman", "-S", "gcc", "gcc-libs", "--noconfirm"])
             elif shutil.which("zypper"):
-                subprocess.check_call(["sudo", "zypper", "install", "-t", "pattern", "devel_basis"])
+                subprocess.check_call(["sudo", "zypper", "install", "gcc-c++"])
             else:
                 print("Unable to install build tools, please install them manually.")
                 exit(1)
