@@ -3,8 +3,6 @@
  * Licensed under the GNU GPL-3.0
  */
 
-#include "sys/print.h"
-
 #include "ping.h"
 
 // I know, this file is crazy, you can thank me later :)

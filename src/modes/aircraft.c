@@ -26,8 +26,6 @@
 
 #include "aircraft.h"
 
-// TODO: make tune mode optional (a config option?)
-
 // Speed threshold to determine if the aircraft is flying (kts)
 #define SPEED_FLYING_THRESHOLD 5
 // The highest amount of time that the aircraft can still be considered flying after the last control input (s)
@@ -131,7 +129,7 @@ void change_to(Mode new_mode) {
             aircraft.mode = MODE_NORMAL;
             break;
         case MODE_AUTO:
-            if (!tune_is_tuned())
+            if (!tune_is_tuned() && (bool)config.general[GENERAL_AUTOTUNE_ENABLED])
                 goto TUNE; // Automatically enter tune mode if necessary
             if (!GPS_OK())
                 goto NORMAL; // GPS is required to be safe for auto and hold modes, fallback to normal mode

@@ -100,6 +100,7 @@ dependencies = {
     },
     'pico-sdk': {
         'version': '2.0.0',
+        'independent': True,
         'cmd': 'git clone https://github.com/raspberrypi/pico-sdk.git --branch 2.0.0 --depth 1',
         'install': install_pico_sdk,
     },
@@ -107,20 +108,20 @@ dependencies = {
 
 # Platforms that can be built for
 platforms = [
-    "esp32",
     "host",
     "pico",
     "pico2",
     "pico_w",
+    "esp32",
 ]
 
 # Dependencies needed for each platform
 platform_dependencies = {
-    "esp32": ["ninja", "cmake", "node", "ESP-IDF"],
-    "host": ["ninja", "cmake"],
+    "host": ["ninja", "cmake", "node"],
     "pico": ["ninja", "cmake", "node", "arm-none-eabi-gcc", "pico-sdk"],
     "pico2": ["ninja", "cmake", "node", "arm-none-eabi-gcc", "pico-sdk"],
     "pico_w": ["ninja", "cmake", "node", "arm-none-eabi-gcc", "pico-sdk"],
+    "esp32": ["ninja", "cmake", "node", "ESP-IDF"],
 }
 
 def find_innermost_subdir(path: Path) -> Path:

@@ -41,6 +41,7 @@ Config config = {
             WIFI_DISABLED,
         #endif
         false,
+        true,
         // Host platforms don't have the necessary hardware to pass calibration, so skip it by default
         #if FBW_PLATFORM_HOST
             true,
@@ -197,6 +198,8 @@ static void get_from_general(const char *key, f32 **value) {
         *value = &config.general[GENERAL_WIFI_ENABLED];
     } else if (strcasecmp(key, "launchAssistEnabled") == 0) {
         *value = &config.general[GENERAL_LAUNCHASSIST_ENABLED];
+    } else if (strcasecmp(key, "autoTuneEnabled") == 0) {
+        *value = &config.general[GENERAL_AUTOTUNE_ENABLED];
     } else if (strcasecmp(key, "skipCalibration") == 0) {
         *value = &config.general[GENERAL_SKIP_CALIBRATION];
     } else {
@@ -221,6 +224,8 @@ static bool set_to_general(const char *key, f32 value) {
         config.general[GENERAL_WIFI_ENABLED] = value;
     } else if (strcasecmp(key, "launchAssistEnabled") == 0) {
         config.general[GENERAL_LAUNCHASSIST_ENABLED] = value;
+    } else if (strcasecmp(key, "autoTuneEnabled") == 0) {
+        config.general[GENERAL_AUTOTUNE_ENABLED] = value;
     } else if (strcasecmp(key, "skipCalibration") == 0) {
         config.general[GENERAL_SKIP_CALIBRATION] = value;
     } else

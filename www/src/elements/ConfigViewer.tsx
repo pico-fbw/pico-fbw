@@ -96,6 +96,15 @@ const config: ConfigDatabase = {
             },
         },
         {
+            name: "Auto-tune Enabled",
+            id: "autoTuneEnabled",
+            desc: "Whether or not to enable auto-tuning of the aircraft. This will automatically tune the aircraft upon engagement of `Auto` mode if tuning has not yet been completed.",
+            enumMap: {
+                0: "Disabled",
+                1: "Enabled",
+            },
+        },
+        {
             name: "Skip Calibration",
             id: "skipCalibration",
             desc: "Whether or not to skip calibration of critical systems on bootup. If skipped, no calibration will be performed and thus the skipped systems will be disabled.",
