@@ -36,6 +36,7 @@ i32 api_handle_set_config(const char *in, char **out) {
     bool save = json_value_get_boolean(saveVal);
     // Back up the current config in case of validation failure
     config_backup();
+    bool valid = false;
     char error[128] = "";
     // There may be multiple config changes in one request
     for (u32 i = 0; i < json_array_get_count(arr); i++) {
@@ -56,7 +57,7 @@ i32 api_handle_set_config(const char *in, char **out) {
     }
     json_value_free(root);
     // Validate to obtain any errors made in config and save if requested
-    bool valid = config_validate(error, sizeof(error));
+    valid = config_validate(error, sizeof(error));
     if (save && valid)
         config_save();
 err: {

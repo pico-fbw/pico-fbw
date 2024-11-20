@@ -1,5 +1,5 @@
 # See platform/example/resources/example.cmake for comments regarding the structure of this file
-add_compile_definitions(-DFBW_PLATFORM_PICO)
+add_compile_definitions(FBW_PLATFORM_PICO=1)
 
 # Forward the user-set platform (Pico, Pico 2, Pico W, etc.) to the pico-sdk
 set(PICO_BOARD ${FBW_PLATFORM})

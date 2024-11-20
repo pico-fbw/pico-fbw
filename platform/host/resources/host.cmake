@@ -1,5 +1,5 @@
 # See platform/example/resources/example.cmake for comments regarding the structure of this file
-add_compile_definitions(-DFBW_PLATFORM_HOST)
+add_compile_definitions(FBW_PLATFORM_HOST=1)
 if (HOST_SKIP_WWW)
     add_compile_definitions(-DHOST_SKIP_WWW=1)
 else()

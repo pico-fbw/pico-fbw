@@ -1,5 +1,5 @@
 # See platform/example/resources/example.cmake for comments regarding the structure of this file
-add_compile_definitions(-DFBW_PLATFORM_ESP)
+add_compile_definitions(FBW_PLATFORM_ESP=1)
 
 include(${CMAKE_CURRENT_LIST_DIR}/esp_idf_import.cmake) # Import ESP-IDF build system
 # Misc CMake/compiler setup
