@@ -9,10 +9,22 @@ extern "C" {
 
 #if SIMCONNECT
 
-    // Set to 1 to skip AAHRS fusion/IMU simulation and instead directly pull RPY from the sim
-    #define SIMCONNECT_AAHRS_SKIP_FUSION 0
+// clang-format off
 
-    #pragma pack(push, 1) // Pack structs for compatibility with SimConnect
+// Set to 1 to skip AAHRS fusion/IMU simulation and instead directly pull RPY from the sim
+#define SIMCONNECT_AAHRS_SKIP_FUSION 0
+
+typedef enum SCFlightControl {
+    FCTRL_AIL,
+    FCTRL_ELE,
+    FCTRL_RUD,
+    FCTRL_THR,
+} SCFlightControl;
+
+#pragma pack(push, 1) // Pack structs for compatibility with SimConnect
+
+// clang-format on
+
 // SimConnect (emulated) IMU data definition
 typedef struct SC_IMU {
     f64 roll;         // deg
@@ -33,14 +45,9 @@ typedef struct SC_GPS {
     f32 speed; // kts
     f32 track; // deg
 } SC_GPS;
-    #pragma pack(pop)
-
-typedef enum SCFlightControl {
-    FCTRL_AIL,
-    FCTRL_ELE,
-    FCTRL_RUD,
-    FCTRL_THR,
-} SCFlightControl;
+// clang-format off
+#pragma pack(pop)
+// clang-format on
 
 /**
  * Initializes a connection to SimConnect.

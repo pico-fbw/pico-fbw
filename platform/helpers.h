@@ -31,13 +31,13 @@ static inline f32 mapf(f32 f, f32 in_min, f32 in_max, f32 out_min, f32 out_max) 
 #if !defined(radians) || FORCE_DEFINE_HELPERS
     #undef radians
     // Converts degrees to radians.
-    #define radians(deg) (deg * M_PI / 180.0)
+    #define radians(deg) ((deg) * M_PI / 180.0)
 #endif
 
 #if !defined(degrees) || FORCE_DEFINE_HELPERS
     #undef degrees
     // Converts radians to degrees.
-    #define degrees(rad) (rad * 180.0 / M_PI)
+    #define degrees(rad) ((rad) * 180.0 / M_PI)
 #endif
 
 #if !defined(lerp) || FORCE_DEFINE_HELPERS

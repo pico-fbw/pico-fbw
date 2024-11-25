@@ -71,8 +71,9 @@ interface MapProps {
 }
 
 const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
-    const [currentAlt, setCurrentAlt] = useState(50);
-    const [currentSpeed] = useState(Number(settings.get("defaultSpeed")));
+    const [currentAlt, setCurrentAlt] = useState(100);
+    const altRef = useRef(currentAlt);
+    const speed = useRef(Number(settings.get("defaultSpeed")));
 
     const [markers, setMarkers] = useState<Marker[]>([]);
     const [editing, setEditing] = useState(-1); // Marker currently being edited
@@ -178,8 +179,8 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
             const newMarker = {
                 id: prevMarkers.length + 1,
                 position: latlng,
-                alt: currentAlt,
-                speed: currentSpeed,
+                alt: altRef.current,
+                speed: speed.current,
                 drop: false,
             };
             return [...prevMarkers, newMarker];
@@ -223,6 +224,12 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
     useEffect(() => {
         setError("");
     }, [uploaded]);
+
+    // Sync altitude ref with state
+    // The ref is needed so that the Leaflet event handlers can access the current altitude value
+    useEffect(() => {
+        altRef.current = currentAlt;
+    }, [currentAlt]);
 
     // Rerenders markers and polyline when markers are updated
     useEffect(() => {
@@ -379,7 +386,7 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
                                     id: markers.length + 1,
                                     position: map.current.getCenter(),
                                     alt: currentAlt,
-                                    speed: currentSpeed,
+                                    speed: speed.current,
                                     drop: false,
                                 };
                                 setMarkers([...markers, newMarker]);

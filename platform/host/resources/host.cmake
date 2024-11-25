@@ -1,7 +1,7 @@
 # See platform/example/resources/example.cmake for comments regarding the structure of this file
 add_compile_definitions(FBW_PLATFORM_HOST=1)
 if (HOST_SKIP_WWW)
-    add_compile_definitions(-DHOST_SKIP_WWW=1)
+    add_compile_definitions(HOST_SKIP_WWW=1)
 else()
     # littlefs generation parameters -- these don't actually matter as the host webserver doesn't use littlefs
     set(LFS_BLOCK_SIZE 1024)
@@ -14,7 +14,7 @@ function(setup_before_subdirs)
         # If MSFS SimConnect SDK is installed, we can build extra features with it
         find_package(SimConnect)
         if (SimConnect_FOUND)
-            add_compile_definitions(-DSIMCONNECT=1)
+            add_compile_definitions(SIMCONNECT=1)
             # Pass to parent scope
             set(SimConnect_FOUND ${SimConnect_FOUND} PARENT_SCOPE)
             set(SimConnect_INCLUDE_DIRS ${SimConnect_INCLUDE_DIRS} PARENT_SCOPE)

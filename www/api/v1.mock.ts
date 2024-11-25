@@ -74,6 +74,13 @@ export default (): MockHandler[] => [
         },
     },
     {
+        pattern: "/api/v1/get/flightplan",
+        handle: (req, res) => {
+            res.statusCode = 204;
+            res.end();
+        },
+    },
+    {
         pattern: "/api/v1/get/info",
         handle: (req, res) => {
             send_data(res, {

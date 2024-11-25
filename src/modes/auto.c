@@ -5,6 +5,7 @@
 
 #include "platform/time.h"
 
+#include "io/aahrs.h"
 #include "io/gps.h"
 #include "io/servo.h"
 
@@ -27,6 +28,11 @@
 #define INTERCEPT_BASE_SPEED 50  // INTERCEPT_BASE_RADIUS will apply at this speed, kts
 #define MIN_RADIUS 5             // The minimum radius that is possible (after being calculated), in meters
 
+#define ROLL_OVERSHOOT_THRESHOLD 8.0 // The threshold at which to apply reverse input to dampen roll overshoot, deg
+// The aircraft's current roll rate will be divided by this value and subsequently multiplied by
+// the reverse output of the lateral guidance controller
+#define ROLL_OVERSHOOT_DAMPEN 70.0 // The factor at which to dampen roll overshoot, deg/s
+
 typedef enum GuidanceSource {
     SOURCE_FLIGHTPLAN,
     SOURCE_EXTERNAL,
@@ -34,11 +40,9 @@ typedef enum GuidanceSource {
 
 static bool autoComplete = false;
 
-// Details of the current Waypoint we're tracking to
-static u32 currentWaypoint = 0;
-static f64 distance;
-static f64 bearing;
-static i32 alt;
+// Current Waypoint we're tracking to
+static Waypoint currentWpt;
+static u32 currentWptIndex;
 
 static PIDController latGuid;  // lateral guidance
 static PIDController vertGuid; // vertical guidance
@@ -59,13 +63,11 @@ static i32 callback_drop(void *data) {
  * Load the given Waypoint and begin tracking to it.
  * @param wpt the Waypoint to load
  */
-static inline void load_waypoint(Waypoint *wpt) {
-    // Load the next altitude
-    if (gps.altOffsetCalibrated) {
-        // Factor in the altitude offset calculated earlier
-        alt = wpt->alt + gps.altOffset;
-    } else
-        alt = wpt->alt;
+static void load_waypoint(Waypoint *wpt) {
+    currentWpt = *wpt;
+    // Factor in the altitude offset if calculated earlier
+    if (gps.altOffsetCalibrated)
+        currentWpt.alt = wpt->alt + gps.altOffset;
     // Set the (possibly new) target speed
     throttle.target = wpt->speed;
     // Initiate a drop if applicable
@@ -76,6 +78,13 @@ static inline void load_waypoint(Waypoint *wpt) {
     }
 }
 
+/**
+ * Load the next Waypoint in the flightplan.
+ */
+static inline void load_next_waypoint() {
+    load_waypoint(&(flightplan_get()->waypoints[currentWptIndex]));
+}
+
 bool auto_init() {
     // Import flightplan data
     if (!flightplan_was_parsed()) {
@@ -83,7 +92,7 @@ bool auto_init() {
         return false;
     }
     guidanceSource = SOURCE_FLIGHTPLAN;
-    currentWaypoint = 0;
+    currentWptIndex = 0;
     flight_init();
     throttle.init();
     // Check if SPEED mode is supported, which we need for autopilot
@@ -112,7 +121,7 @@ bool auto_init() {
     pid_init(&latGuid);
     pid_init(&vertGuid);
     // Load the first Waypoint from the flightplan (subsequent waypoints will be loaded on waypoint interception)
-    load_waypoint(&(flightplan_get()->waypoints[currentWaypoint]));
+    load_next_waypoint();
     return true;
 }
 
@@ -123,21 +132,19 @@ void auto_update() {
         return;
     }
 
-    // Calculate the bearing and distance...
+    // Calculate the bearing and distance to either the current Waypoint in the flightplan or an externally set Waypoint
+    f64 bearing, distance;
+    Waypoint target;
     switch (guidanceSource) {
         case SOURCE_FLIGHTPLAN:
-            // ...to the current Waypoint in the flightplan
-            bearing = calculate_bearing(gps.lat, gps.lng, flightplan_get()->waypoints[currentWaypoint].lat,
-                                        flightplan_get()->waypoints[currentWaypoint].lng);
-            distance = calculate_distance(gps.lat, gps.lng, flightplan_get()->waypoints[currentWaypoint].lat,
-                                          flightplan_get()->waypoints[currentWaypoint].lng);
+            target = currentWpt;
             break;
         case SOURCE_EXTERNAL:
-            // ...to the current Waypoint (temporarily set)
-            bearing = calculate_bearing(gps.lat, gps.lng, externWpt.lat, externWpt.lng);
-            distance = calculate_distance(gps.lat, gps.lng, externWpt.lat, externWpt.lng);
+            target = externWpt;
             break;
     }
+    bearing = calculate_bearing(gps.lat, gps.lng, target.lat, target.lng);
+    distance = calculate_distance(gps.lat, gps.lng, target.lat, target.lng);
 
     // Calculate difference between track and bearing, normalized between -180 and 180
     // Use GPS track instead of IMU heading because heading isn't always going to be navigational (more likely magnetic)
@@ -147,10 +154,14 @@ void auto_update() {
     else if (diff < -180.0)
         diff += 360.0;
 
-    // Nested PIDs; latGuid and vertGuid use gps data to command bank/pitch angles which the flight PIDs then use to actuate
-    // servos
+    // Predictive roll control adjustment to avoid overshooting
+    if (fabs(diff) < ROLL_OVERSHOOT_THRESHOLD)
+        // Apply reverse input to dampen overshoot
+        latGuid.out = -latGuid.out * (aahrs.rollRate / ROLL_OVERSHOOT_DAMPEN);
+
+    // Nested PIDs to command bank/pitch angles
     pid_update(&latGuid, 0.0, diff);
-    pid_update(&vertGuid, alt, gps.alt);
+    pid_update(&vertGuid, target.alt, gps.alt);
     flight_update(latGuid.out, vertGuid.out, 0, false);
     throttle.update();
 
@@ -163,15 +174,15 @@ void auto_update() {
         switch (guidanceSource) {
             case SOURCE_FLIGHTPLAN:
                 // then advance to the next one
-                currentWaypoint++;
+                currentWptIndex++;
                 // Check if the flightplan is over
-                if (currentWaypoint > flightplan_get()->waypoint_count) {
+                if (currentWptIndex >= flightplan_get()->waypoint_count) {
                     // Auto mode ends here, we enter a holding pattern
                     autoComplete = true;
                     aircraft.change_to(MODE_HOLD);
                 } else
                     // More waypoints to go, load the next one
-                    load_waypoint(&flightplan_get()->waypoints[currentWaypoint]);
+                    load_next_waypoint();
                 break;
             case SOURCE_EXTERNAL:
                 // then execute the callback function and enter a holding pattern

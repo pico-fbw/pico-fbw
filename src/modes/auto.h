@@ -6,11 +6,11 @@
 // TODO: finish tuning these
 
 /* PID constants for the autopilot's lateral guidance. */
-#define LATGD_KP 0.1
+#define LATGD_KP 0.8
 #define LATGD_KI 0
 #define LATGD_KD 0
 #define LATGD_TAU 1
-#define LATGD_LIM 15 // The maximum roll angle the autopilot can command
+#define LATGD_LIM 20 // The maximum roll angle the autopilot can command
 
 /* PID constants for the autopilot's vertical guidance. */
 #define VERTGD_KP 0.1
@@ -26,7 +26,6 @@ typedef struct Waypoint {
     f32 speed;
     i32 drop;
 } Waypoint;
-#define WAYPOINT_NUM_FIELDS 5
 
 typedef enum BayPosition {
     POS_INVALID,
