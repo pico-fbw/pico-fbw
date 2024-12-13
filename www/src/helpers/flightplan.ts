@@ -6,9 +6,9 @@
 import { LatLng } from "leaflet";
 import { Marker } from "../elements/Map";
 import settings from "./settings";
+import { firmwareVersion } from "./version";
 
 const generatorVersion = "1.0";
-const firmwareVersion = "1.0.0"; // This should match PICO_FBW_VERSION in the root CMakelists.txt
 
 // Copy of Waypoint struct in src/modes/auto.h
 export interface Waypoint {

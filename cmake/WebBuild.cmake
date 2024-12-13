@@ -85,3 +85,6 @@ message("Web interface will be built")
 add_custom_target(www DEPENDS ${CMAKE_BINARY_DIR}/generated/www/built)
 add_custom_target(wwwfs DEPENDS ${CMAKE_BINARY_DIR}/generated/www/lfs.bin)
 add_dependencies(${PROJECT_NAME} wwwfs)
+
+# Configure www-accessible version file
+configure_file(${CMAKE_SOURCE_DIR}/www/src/helpers/version.ts.in ${CMAKE_SOURCE_DIR}/www/src/helpers/version.ts @ONLY)
