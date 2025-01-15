@@ -73,9 +73,9 @@ dependencies = {
         },
     },
     'ESP-IDF': {
-        'version': '5.3.1',
+        'version': '5.4.0',
         'independent': True,
-        'url': 'https://github.com/espressif/esp-idf/releases/download/v5.3.1/esp-idf-v5.3.1.zip',
+        'url': 'https://github.com/espressif/esp-idf/releases/download/v5.4/esp-idf-v5.4.zip',
         'install': install_esp_idf,
     },
     'ninja': {
@@ -89,19 +89,19 @@ dependencies = {
         'add_to_path': '',
     },
     'node': {
-        'version': '20.18.0',
+        'version': '22.13.0',
         'url': {
-            'linux': 'https://nodejs.org/dist/v20.18.0/node-v20.18.0-linux-x64.tar.xz',
-            'win32': 'https://nodejs.org/dist/v20.18.0/node-v20.18.0-win-x64.zip',
-            'darwin': 'https://nodejs.org/dist/v20.18.0/node-v20.18.0-darwin-x64.tar.gz',
+            'linux': 'https://nodejs.org/dist/v22.13.0/node-v22.13.0-linux-x64.tar.xz',
+            'win32': 'https://nodejs.org/dist/v22.13.0/node-v22.13.0-win-x64.zip',
+            'darwin': 'https://nodejs.org/dist/v22.13.0/node-v22.13.0-darwin-x64.tar.gz',
         },
         'install': install_node,
         # node is actually added to PATH but has to be handled as an edge case (in run_prebuild_tasks)
     },
     'pico-sdk': {
-        'version': '2.0.0',
+        'version': '2.1.0',
         'independent': True,
-        'cmd': 'git clone https://github.com/raspberrypi/pico-sdk.git --branch 2.0.0 --depth 1',
+        'cmd': 'git clone https://github.com/raspberrypi/pico-sdk.git --branch 2.1.0 --depth 1',
         'install': install_pico_sdk,
     },
 }

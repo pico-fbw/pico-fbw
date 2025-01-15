@@ -1,0 +1,66 @@
+Copyright (C) 2023-2025, pico-fbw
+
+======================================
+GNU General Public License, Version 3
+======================================
+
+pico-fbw, except where otherwise noted in the following information, is licensed under the GNU General Public License, Version 3.
+
+You can find a copy of the License in 'LICENSE' or at the following URL:
+<https://opensource.org/license/gpl-3-0>
+
+======================================
+MIT License
+======================================
+
+The following files (and their corresponding Header [.h] files, where applicable) of this project utilize code which is licensed under the MIT License:
+
+- lib/minmea.c
+- lib/parson.c
+- lib/pid.c
+- lib/semver.c
+- platform/esp/flash.c
+- platform/pico/pwm.c
+- platform/pico/pwm.pio
+- platform/pico/wifi/dhcp.c
+- .github/workflows/build.yml
+
+You can find a copy of the License in 'LICENSE.MIT' or at the following URL:
+<https://opensource.org/licenses/MIT>
+
+======================================
+BSD 3-Clause License
+======================================
+
+The following files (and their corresponding Header [.h] files, where applicable) of this project utilize code which is licensed under the BSD 3-Clause License:
+
+- lib/lfs_util.c
+- lib/lfs.c
+- platform/pico/flash.c
+- platform/pico/wifi/dns.c
+- platform/pico/wifi/tcp.c
+- io/display.c
+
+You can find a copy of the License in 'LICENSE.3-CLAUSE-BSD' or at the following URL:
+<https://opensource.org/licenses/BSD-3-Clause>
+
+======================================
+Apache-2.0 License
+======================================
+
+The following files (and their corresponding Header [.h] files, where applicable) of this project utilize code which is licensed under the Apache-2.0 License:
+
+- lib/fusion/accel.c
+- lib/fusion/fusion.c
+- lib/fusion/gyro.c
+- lib/fusion/madgwick.c
+- lib/fusion/mag.c
+- lib/fusion/drivers/drivers.h
+- lib/fusion/drivers/icm20948.c
+
+You can find a copy of the License in 'LICENSE.APACHE-2.0' or at the following URL:
+<https://opensource.org/license/apache-2-0>
+
+======================================
+
+pico-fbw would not be possible without the hard work and dedication of open-source software developers. Thank you!
