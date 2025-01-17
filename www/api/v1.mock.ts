@@ -40,6 +40,8 @@ const configData = {
     ],
 };
 
+let flightplan = "";
+
 export default (): MockHandler[] => [
     {
         pattern: "/api/v1/get/config",
@@ -76,8 +78,14 @@ export default (): MockHandler[] => [
     {
         pattern: "/api/v1/get/flightplan",
         handle: (req, res) => {
-            res.statusCode = 204;
-            res.end();
+            if (!flightplan) {
+                res.statusCode = 204;
+                res.end();
+                return;
+            }
+            res.statusCode = 200;
+            res.setHeader("Content-Type", "application/json");
+            res.end(flightplan.toString());
         },
     },
     {
@@ -130,8 +138,11 @@ export default (): MockHandler[] => [
     {
         pattern: "/api/v1/set/flightplan",
         handle: (req, res) => {
-            send_data(res, {
-                message: "",
+            req.on("data", (bodyString: string) => {
+                flightplan = bodyString;
+                send_data(res, {
+                    message: "",
+                });
             });
         },
     },
