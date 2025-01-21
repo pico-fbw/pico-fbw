@@ -1,4 +1,4 @@
-add_library(fbw_api
+target_sources(${PROJECT_NAME} PRIVATE
     api.c
     cmds/cmds.c
     cmds/GET/get_config.c
@@ -26,12 +26,3 @@ add_library(fbw_api
     cmds/TEST/test_servo.c
     cmds/TEST/test_throttle.c
 )
-
-target_link_libraries(fbw_api
-    fbw_io
-    fbw_lib
-    fbw_modes
-    fbw_sys
-)
-
-target_include_directories(fbw_api PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/src)

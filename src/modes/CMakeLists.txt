@@ -1,4 +1,4 @@
-add_library(fbw_modes
+target_sources(${PROJECT_NAME} PRIVATE
     aircraft.c
     auto.c
     direct.c
@@ -8,11 +8,3 @@ add_library(fbw_modes
     normal.c
     tune.c
 )
-
-target_link_libraries(fbw_modes
-    fbw_io
-    fbw_lib
-    fbw_sys
-)
-
-target_include_directories(fbw_modes PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/src)

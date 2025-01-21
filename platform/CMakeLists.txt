@@ -1,28 +1,9 @@
-function(configure_libraries target_library)
-    target_link_libraries(${PROJECT_NAME} ${target_library})
-    target_link_libraries(fbw_api ${target_library})
-    target_link_libraries(fbw_io ${target_library})
-    target_link_libraries(fbw_lib ${target_library})
-    target_link_libraries(fbw_modes ${target_library})
-    target_link_libraries(fbw_sys ${target_library})
-endfunction()
-
-function(configure_includes target_include_dir)
-    # Platforms may optionally provide an include directory
-    if (EXISTS ${target_include_dir})
-        message("Using platform include directory: ${target_include_dir}")
-        target_include_directories(platform_${PLATFORM_DIR} PUBLIC ${target_include_dir})
-        target_include_directories(${PROJECT_NAME} PUBLIC ${target_include_dir})
-        target_include_directories(fbw_api PUBLIC ${target_include_dir})
-        target_include_directories(fbw_io PUBLIC ${target_include_dir})
-        target_include_directories(fbw_lib PUBLIC ${target_include_dir})
-        target_include_directories(fbw_modes PUBLIC ${target_include_dir})
-        target_include_directories(fbw_sys PUBLIC ${target_include_dir})
-    endif()
-endfunction()
-
 add_subdirectory(${PLATFORM_DIR})
 message("Target platform library is: platform_${PLATFORM_DIR}")
-# Link the target platform to the rest of the project so it can be used
-configure_libraries(platform_${PLATFORM_DIR})
-configure_includes(${PLATFORM_PATH}/include)
+# Link the target platform to the rest of the project
+target_link_libraries(${PROJECT_NAME} platform_${PLATFORM_DIR})
+# Platforms may optionally provide an include directory
+if (EXISTS ${PLATFORM_PATH}/include)
+    message("Using platform include directory: ${PLATFORM_PATH}/include")
+    target_include_directories(platform_${PLATFORM_DIR} PUBLIC ${PLATFORM_PATH}/include)
+endif()

@@ -1,4 +1,4 @@
-add_library(fbw_lib
+target_sources(${PROJECT_NAME} PRIVATE
     fusion/accel.c
     fusion/fusion.c
     fusion/gyro.c
@@ -15,11 +15,5 @@ add_library(fbw_lib
 )
 
 if (SimConnect_FOUND)
-    target_sources(fbw_lib PRIVATE fusion/drivers/simconnect.c)
+    target_sources(${PROJECT_NAME} PRIVATE fusion/drivers/simconnect.c)
 endif()
-
-# fbw_sys is not included here
-# Even though it does make use of sys/configuration and sys/print.h, this merely replaces code with macros and variable locations,
-# and thus compilation is not necessary
-
-target_include_directories(fbw_lib PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/src)

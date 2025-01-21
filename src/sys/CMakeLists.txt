@@ -1,6 +1,4 @@
-add_subdirectory(api)
-
-add_library(fbw_sys
+target_sources(${PROJECT_NAME} PRIVATE
     boot.c
     configuration.c
     control.c
@@ -11,11 +9,4 @@ add_library(fbw_sys
     version.c
 )
 
-target_link_libraries(fbw_sys
-    fbw_api
-    fbw_io
-    fbw_lib
-    fbw_modes
-)
-
-target_include_directories(fbw_sys PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/src)
+add_subdirectory(api)
