@@ -1,8 +1,8 @@
 ---
 Language:        Cpp
 BasedOnStyle:    LLVM
-ColumnLimit:     128
-AllowShortBlocksOnASingleLine: false
+ColumnLimit:     120
+AllowShortBlocksOnASingleLine: Empty
 AllowShortEnumsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: None
 AllowShortIfStatementsOnASingleLine: Never
@@ -14,7 +14,8 @@ IncludeCategories:
     Priority: 1
 IndentPPDirectives: BeforeHash
 IndentCaseLabels: true
-IndentWidth:     4
-TabWidth:        4
-# UseTab:          AlignWithSpaces
+IndentWidth: 4
+InsertBraces: true
+TabWidth: 4
+UseTab: Never
 ...

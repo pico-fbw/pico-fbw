@@ -88,7 +88,8 @@ static int dns_socket_sendto(struct udp_pcb **udp, const void *buf, size_t len, 
     return len;
 }
 
-static void dns_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p, const ip_addr_t *src_addr, u16_t src_port) {
+static void dns_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p, const ip_addr_t *src_addr,
+                               u16_t src_port) {
     DNSServer *d = arg;
     LWIP_DEBUGF(DNS_DEBUG, ("dns_server_process %u\n", p->tot_len));
 

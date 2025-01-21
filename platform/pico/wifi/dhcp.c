@@ -110,7 +110,8 @@ static int dhcp_socket_bind(struct udp_pcb **udp, u32 ip, u16 port) {
     return udp_bind(*udp, &addr, port);
 }
 
-static int dhcp_socket_sendto(struct udp_pcb **udp, struct netif *netif, const void *buf, size_t len, u32 ip, u16 port) {
+static int dhcp_socket_sendto(struct udp_pcb **udp, struct netif *netif, const void *buf, size_t len, u32 ip,
+                              u16 port) {
     if (len > 0xffff) {
         len = 0xffff;
     }
@@ -177,7 +178,8 @@ static void opt_write_u32(u8 **opt, u8 cmd, u32 val) {
     *opt = o;
 }
 
-static void dhcp_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p, const ip_addr_t *src_addr, u16_t src_port) {
+static void dhcp_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p, const ip_addr_t *src_addr,
+                                u16_t src_port) {
     DHCPServer *d = arg;
     (void)upcb;
     (void)src_addr;
@@ -262,10 +264,10 @@ static void dhcp_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p,
             d->lease[yi].expiry = (time_ms() + DEFAULT_LEASE_TIME_S * 1000) >> 16;
             dhcp_msg.yiaddr[3] = DHCPS_BASE_IP + yi;
             opt_write_u8(&opt, DHCP_OPT_MSG_TYPE, DHCPACK);
-            LWIP_DEBUGF(DHCP_DEBUG,
-                        ("DHCPS: client connected: MAC=%02x:%02x:%02x:%02x:%02x:%02x IP=%u.%u.%u.%u\n", dhcp_msg.chaddr[0],
-                         dhcp_msg.chaddr[1], dhcp_msg.chaddr[2], dhcp_msg.chaddr[3], dhcp_msg.chaddr[4], dhcp_msg.chaddr[5],
-                         dhcp_msg.yiaddr[0], dhcp_msg.yiaddr[1], dhcp_msg.yiaddr[2], dhcp_msg.yiaddr[3]));
+            LWIP_DEBUGF(DHCP_DEBUG, ("DHCPS: client connected: MAC=%02x:%02x:%02x:%02x:%02x:%02x IP=%u.%u.%u.%u\n",
+                                     dhcp_msg.chaddr[0], dhcp_msg.chaddr[1], dhcp_msg.chaddr[2], dhcp_msg.chaddr[3],
+                                     dhcp_msg.chaddr[4], dhcp_msg.chaddr[5], dhcp_msg.yiaddr[0], dhcp_msg.yiaddr[1],
+                                     dhcp_msg.yiaddr[2], dhcp_msg.yiaddr[3]));
             break;
         }
 
@@ -290,8 +292,9 @@ bool dhcp_server_init(DHCPServer *d, const ip_addr_t *ip, const ip_addr_t *nm) {
     ip_addr_copy(d->ip, *ip);
     ip_addr_copy(d->nm, *nm);
     memset(d->lease, 0, sizeof(d->lease));
-    if (dhcp_socket_new_dgram(&d->udp, d, dhcp_server_process) != 0)
+    if (dhcp_socket_new_dgram(&d->udp, d, dhcp_server_process) != 0) {
         return false;
+    }
     return (dhcp_socket_bind(&d->udp, 0, PORT_DHCP_SERVER) == 0);
 }
 

@@ -26,35 +26,36 @@ static i32 api_exec(const char *cmd, const char *args) {
         status = api_handle_set(cmd, args);
     } else if (strncasecmp(cmd, "TEST_", 5) == 0) {
         status = api_handle_test(cmd, args);
-    } else
+    } else {
         status = api_handle_misc(cmd, args);
+    }
     return status;
 }
 
 i32 api_poll() {
     char *line = stdin_read();
-    if (line) {
-        if (strlen(line) < 1) {
-            free(line);
-            return 0;
-        }
-        // Seperate the command and arguments
-        char *cmd = strtok(line, " ");
-        char *args = strtok(NULL, "");
-        if (!cmd) {
-            // Out of memory?
-            printraw("pico-fbw 500\n");
-            free(line);
-            return 500;
-        }
-
-        i32 status = api_exec(cmd, args);
-        if (status != -1)
-            printraw("pico-fbw %ld\n", status);
-        free(line);
-        return status;
+    if (!line) {
+        return 0;
     }
-    return 0;
+    if (strlen(line) < 1) {
+        free(line);
+        return 0;
+    }
+    // Seperate the command and arguments
+    char *cmd = strtok(line, " ");
+    char *args = strtok(NULL, "");
+    if (!cmd) {
+        // Out of memory?
+        printraw("pico-fbw 500\n");
+        free(line);
+        return 500;
+    }
+    i32 status = api_exec(cmd, args);
+    if (status != -1) {
+        printraw("pico-fbw %ld\n", status);
+    }
+    free(line);
+    return status;
 }
 
 const char *api_res_to_http_status(i32 res) {

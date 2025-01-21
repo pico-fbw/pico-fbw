@@ -44,8 +44,9 @@ static bool is_flying() {
         return gps.speed >= SPEED_FLYING_THRESHOLD;
     } else {
         // Have there been any recent control inputs?
-        if (USER_INPUTTING())
+        if (USER_INPUTTING()) {
             lastNonzeroInput = timestamp_now();
+        }
         return time_since_s(&lastNonzeroInput) < STILL_FLYING_TIMEOUT;
     }
 }
@@ -80,29 +81,29 @@ void change_to(Mode new_mode) {
     switch (aircraft.mode) {
         default:
         case MODE_DIRECT:
-            printfbw(aircraft, "exiting direct mode");
+            printsys(aircraft, "exiting direct mode");
             break;
         case MODE_LAUNCH:
-            printfbw(aircraft, "exiting launch mode");
+            printsys(aircraft, "exiting launch mode");
             break;
         case MODE_NORMAL:
-            printfbw(aircraft, "exiting normal mode");
+            printsys(aircraft, "exiting normal mode");
             normal_deinit();
             break;
         case MODE_AUTO:
-            printfbw(aircraft, "exiting auto mode");
+            printsys(aircraft, "exiting auto mode");
             break;
         case MODE_TUNE:
             tune_deinit();
-            printfbw(aircraft, "exiting tune mode");
+            printsys(aircraft, "exiting tune mode");
             break;
         case MODE_HOLD:
-            printfbw(aircraft, "exiting hold mode");
+            printsys(aircraft, "exiting hold mode");
             break;
     }
     // All modes (except for direct) require AAHRS so make sure that's all good
     if (!aircraft.aahrsSafe) {
-        printfbw(aircraft, "AAHRS has failed, entering direct mode!");
+        printsys(aircraft, "AAHRS has failed, entering direct mode!");
         log_message(TYPE_ERROR, "AAHRS has failed!", 250, 0, true);
         aircraft.mode = MODE_DIRECT;
         return;
@@ -111,30 +112,34 @@ void change_to(Mode new_mode) {
     switch (new_mode) {
         default:
         case MODE_DIRECT:
-            printfbw(aircraft, "entering direct mode");
+            printsys(aircraft, "entering direct mode");
             aircraft.mode = MODE_DIRECT;
             break;
         LAUNCH:
         case MODE_LAUNCH:
-            printfbw(aircraft, "entering launch mode");
+            printsys(aircraft, "entering launch mode");
             launch_init(new_mode);
             aircraft.mode = MODE_LAUNCH;
             break;
         NORMAL:
         case MODE_NORMAL:
-            if ((bool)config.general[GENERAL_LAUNCHASSIST_ENABLED])
+            if ((bool)config.general[GENERAL_LAUNCHASSIST_ENABLED]) {
                 goto LAUNCH; // Initiate an autolaunch if necessary
-            printfbw(aircraft, "entering normal mode");
+            }
+            printsys(aircraft, "entering normal mode");
             normal_init();
             aircraft.mode = MODE_NORMAL;
             break;
         case MODE_AUTO:
-            if (!tune_is_tuned() && (bool)config.general[GENERAL_AUTOTUNE_ENABLED])
+            if (!tune_is_tuned() && (bool)config.general[GENERAL_AUTOTUNE_ENABLED]) {
                 goto TUNE; // Automatically enter tune mode if necessary
-            if (!GPS_OK())
+            }
+            if (!GPS_OK()) {
                 goto NORMAL; // GPS is required to be safe for auto and hold modes, fallback to normal mode
-            if ((bool)config.general[GENERAL_LAUNCHASSIST_ENABLED])
+            }
+            if ((bool)config.general[GENERAL_LAUNCHASSIST_ENABLED]) {
                 goto LAUNCH;
+            }
             // Check to see if we should calibrate the altitude offset
             if (flightplan_was_parsed()) {
                 if (flightplan_get()->alt_samples > 0 && !gps.altOffsetCalibrated) {
@@ -142,44 +147,50 @@ void change_to(Mode new_mode) {
                     goto NORMAL; // Enter normal for user to takeoff; they can re-enter auto mode after takeoff
                 }
             }
-            printfbw(aircraft, "entering auto mode");
+            printsys(aircraft, "entering auto mode");
             if (auto_init()) {
                 aircraft.mode = MODE_AUTO;
-            } else
+            } else {
                 goto NORMAL;
+            }
             break;
         TUNE:
         case MODE_TUNE:
-            if (tune_is_tuned())
+            if (tune_is_tuned()) {
                 goto NORMAL;
-            printfbw(aircraft, "entering tune mode");
+            }
+            printsys(aircraft, "entering tune mode");
             tune_init();
             aircraft.mode = MODE_TUNE;
             break;
         case MODE_HOLD:
-            if (!GPS_OK())
+            if (!GPS_OK()) {
                 goto NORMAL;
-            printfbw(aircraft, "entering hold mode");
-            if (hold_init())
+            }
+            printsys(aircraft, "entering hold mode");
+            if (hold_init()) {
                 aircraft.mode = MODE_HOLD;
-            else
+            } else {
                 goto NORMAL;
+            }
             break;
     }
 #if PLATFORM_SUPPORTS_WIFI
     if (!aircraft.wifiDeinitialized && aircraft.isFlying) {
         // We're now airborne, so wifi is no longer needed
-        if (!wifi_disable())
-            printfbw(network, "WARNING: failed to disable wifi!");
-        printfbw(network, "wifi disabled");
+        if (!wifi_disable()) {
+            printsys(network, "WARNING: failed to disable wifi!");
+        }
+        printsys(network, "wifi disabled");
         aircraft.wifiDeinitialized = true;
     }
 #endif
 }
 
 void set_aahrs_safe(bool state) {
-    if (state == aircraft.aahrsSafe)
+    if (state == aircraft.aahrsSafe) {
         return;
+    }
     aircraft.aahrsSafe = state;
     if (state) {
         if (!aahrs.isInitialized) {
@@ -189,26 +200,28 @@ void set_aahrs_safe(bool state) {
                 return;
             }
         }
-        printfbw(aircraft, "AAHRS set as safe");
+        printsys(aircraft, "AAHRS set as safe");
     } else {
         // Change to direct mode as it doesn't require AAHRS, and deinit
         change_to(MODE_DIRECT);
         aahrs.deinit();
-        printfbw(aircraft, "AAHRS set as unsafe");
+        printsys(aircraft, "AAHRS set as unsafe");
     }
 }
 
 void set_gps_safe(bool state) {
-    if (state == aircraft.gpsSafe)
+    if (state == aircraft.gpsSafe) {
         return;
+    }
     aircraft.gpsSafe = state;
     if (state) {
-        printfbw(aircraft, "GPS set as safe");
+        printsys(aircraft, "GPS set as safe");
         log_clear(TYPE_INFO);
     } else {
-        printfbw(aircraft, "GPS set as unsafe");
-        if (aircraft.mode == MODE_AUTO || aircraft.mode == MODE_HOLD)
+        printsys(aircraft, "GPS set as unsafe");
+        if (aircraft.mode == MODE_AUTO || aircraft.mode == MODE_HOLD) {
             change_to(MODE_NORMAL); // Return to normal mode if GPS is deemed unsafe in Auto or Hold modes (require GPS)
+        }
     }
 }
 

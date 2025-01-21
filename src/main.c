@@ -40,8 +40,9 @@ int main() {
         // Failed to mount, try formatting
         printpre("boot", "filesystem corrupt, attempting to format...");
         lfs_format(&lfs, &lfs_cfg);
-        if (lfs_mount(&lfs, &lfs_cfg) != LFS_ERR_OK)
+        if (lfs_mount(&lfs, &lfs_cfg) != LFS_ERR_OK) {
             log_message(TYPE_FATAL, "Failed to mount filesystem!", 250, 0, true);
+        }
     }
     boot_set_progress(5, "Loading configuration");
     config_load();
@@ -129,12 +130,13 @@ int main() {
         log_message(TYPE_ERROR, "Watchdog rebooted!", 500, 150, true);
         print("\nPlease report this error! Only direct mode is available until the next reboot.\n");
         // Lock into direct mode for safety reasons
-        // This is done now because minimum peripherals have been initialized, but not more complex ones that could be causing
-        // the watchdog reboots
+        // This is done now because minimum peripherals have been initialized, but not more complex ones that could be
+        // causing the watchdog reboots
         sys_boot_end();
         aircraft.change_to(MODE_DIRECT);
-        while (true)
+        while (true) {
             runtime_loop_minimal();
+        }
     }
 
     // AAHRS
@@ -142,8 +144,9 @@ int main() {
     if (aahrs.init()) {
         printpre("boot", "AAHRS ok");
     } else {
-        // If AAHRS is calibrated: severity level is only an error as we could be in flight and we want to finish the boot,
-        // If AAHRS is not calibrated: severity level is a fatal error to help point the user in the right direction
+        // If AAHRS is calibrated: severity level is only an error as we could be in flight and we want to finish the
+        // boot, If AAHRS is not calibrated: severity level is a fatal error to help point the user in the right
+        // direction
         LogType severity = aahrs.isCalibrated ? TYPE_ERROR : TYPE_FATAL;
         // Host platforms are the only exception, as AAHRS will always fail to initialize
 #ifdef FBW_PLATFORM_HOST
@@ -185,17 +188,19 @@ int main() {
     boot_set_progress(85, "Initializing Wi-Fi");
     bool setup = false;
     #ifndef FBW_PLATFORM_HOST // Host platforms don't utilize the wwwfs
-    if (lfs_mount(&wwwfs, &wwwfs_cfg) != LFS_ERR_OK)
+    if (lfs_mount(&wwwfs, &wwwfs_cfg) != LFS_ERR_OK) {
         goto fail;
+    }
     #endif
-    printfbw(network, "successfully mounted wifi filesystem");
+    printsys(network, "successfully mounted wifi filesystem");
     switch ((WifiEnabled)config.general[GENERAL_WIFI_ENABLED]) {
         case WIFI_ENABLED_OPEN:
-            printfbw(network, "setting up open wifi with ssid \"%s\"", config.wifi.ssid);
+            printsys(network, "setting up open wifi with ssid \"%s\"", config.wifi.ssid);
             setup = wifi_setup(config.wifi.ssid, NULL);
             break;
         case WIFI_ENABLED_PASS:
-            printfbw(network, "setting up wifi with ssid \"%s\" and password \"%s\"", config.wifi.ssid, config.wifi.pass);
+            printsys(network, "setting up wifi with ssid \"%s\" and password \"%s\"", config.wifi.ssid,
+                     config.wifi.pass);
             setup = wifi_setup(config.wifi.ssid, config.wifi.pass);
         /* fall through */
         default:
@@ -217,8 +222,9 @@ int main() {
     // Final platform-specific setup tasks
     boot_complete();
     // Main program loop
-    while (true)
+    while (true) {
         runtime_loop(true);
+    }
 
     return 0; // How did we get here?
 }

@@ -11,7 +11,8 @@
 
 #include "platform/i2c.h"
 
-#define I2C_TIMEOUT_MS 50 // Interrupt WDT had to be increased in sdkconfig to prevent it from triggering during long timeouts
+// Interrupt WDT had to be increased in sdkconfig to prevent it from triggering during long timeouts
+#define I2C_TIMEOUT_MS 50
 
 typedef struct I2CDevice {
     byte addr;
@@ -50,8 +51,9 @@ static bool add_device(I2CBus *bus, byte addr) {
         .scl_speed_hz = bus->freq,
     };
     i2c_master_dev_handle_t deviceHandle;
-    if (i2c_master_bus_add_device(bus->handle, &deviceConfig, &deviceHandle) != ESP_OK)
+    if (i2c_master_bus_add_device(bus->handle, &deviceConfig, &deviceHandle) != ESP_OK) {
         return false;
+    }
     bus->devices[bus->numDevices - 1] = (I2CDevice){addr, deviceHandle};
     return true;
 }
@@ -61,7 +63,8 @@ static bool add_device(I2CBus *bus, byte addr) {
  * @param sda the SDA pin that the device is connected to
  * @param scl the SCL pin that the device is connected to
  * @param addr the I2C address of the device
- * @return the `I2CDevice` that matches the given details, or NULL if no such bus exists matching the given SDA and SCL pins
+ * @return the `I2CDevice` that matches the given details, or NULL if no such bus exists matching the given SDA and SCL
+ * pins
  * @note If no such device exists, it will be automatically added to the bus.
  */
 static I2CDevice *i2c_device_from_details(u32 sda, u32 scl, byte addr) {
@@ -73,8 +76,9 @@ static I2CDevice *i2c_device_from_details(u32 sda, u32 scl, byte addr) {
             break;
         }
     }
-    if (!bus)
+    if (!bus) {
         return NULL; // No bus found
+    }
     // Now, find the device that matches the given address
     I2CDevice *device = NULL;
     for (size_t i = 0; i < bus->numDevices; i++) {
@@ -85,8 +89,9 @@ static I2CDevice *i2c_device_from_details(u32 sda, u32 scl, byte addr) {
     }
     if (!device) {
         // Device has not yet been added to the bus, do that now
-        if (!add_device(bus, addr))
+        if (!add_device(bus, addr)) {
             return NULL;
+        }
     }
     return device;
 }
@@ -102,8 +107,9 @@ bool i2c_setup(u32 sda, u32 scl, u32 freq) {
         .flags.enable_internal_pullup = true,
     };
     i2c_master_bus_handle_t handle;
-    if (i2c_new_master_bus(&config, &handle) != ESP_OK)
+    if (i2c_new_master_bus(&config, &handle) != ESP_OK) {
         return false;
+    }
     // Add the initialized bus to the array
     for (size_t i = 0; i < count_of(buses); i++) {
         if (!buses[i].handle) {
@@ -119,16 +125,18 @@ bool i2c_setup(u32 sda, u32 scl, u32 freq) {
 
 bool i2c_read(u32 sda, u32 scl, byte addr, byte reg, byte dest[], size_t len) {
     I2CDevice *device = i2c_device_from_details(sda, scl, addr);
-    if (!device)
+    if (!device) {
         return false;
+    }
     // The ESP-IDF function subtracts 1 from the read length and I have no clue why...
     return i2c_master_transmit_receive(device->handle, &reg, sizeof(reg), dest, len + 1, I2C_TIMEOUT_MS) == ESP_OK;
 }
 
 bool i2c_write(u32 sda, u32 scl, byte addr, byte reg, const byte src[], size_t len) {
     I2CDevice *device = i2c_device_from_details(sda, scl, addr);
-    if (!device)
+    if (!device) {
         return false;
+    }
     // Prefix the register to the source data
     byte cmd[len + 1];
     cmd[0] = reg;

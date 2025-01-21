@@ -105,7 +105,8 @@ static char *parse_dns_name(char *raw_name, char *parsed_name, size_t parsed_nam
 }
 
 // Parses the DNS request and prepares a DNS response with the IP of the softAP
-static int parse_dns_request(char *req, size_t req_len, char *dns_reply, size_t dns_reply_max_len, dns_server_handle_t h) {
+static int parse_dns_request(char *req, size_t req_len, char *dns_reply, size_t dns_reply_max_len,
+                             dns_server_handle_t h) {
     if (req_len > dns_reply_max_len) {
         return -1;
     }
@@ -181,7 +182,8 @@ static int parse_dns_request(char *req, size_t req_len, char *dns_reply, size_t 
             answer->class = htons(qd_class);
             answer->ttl = htonl(ANS_TTL_SEC);
 
-            ESP_LOGD(TAG, "Answer with PTR offset: 0x%" PRIX16 " and IP 0x%" PRIX32, ntohs(answer->ptr_offset), ip.addr);
+            ESP_LOGD(TAG, "Answer with PTR offset: 0x%" PRIX16 " and IP 0x%" PRIX32, ntohs(answer->ptr_offset),
+                     ip.addr);
 
             answer->addr_len = htons(sizeof(ip.addr));
             answer->ip_addr = ip.addr;
@@ -287,8 +289,9 @@ dns_server_handle_t dns_server_start(dns_server_config_t *config) {
 }
 
 esp_err_t dns_server_stop(dns_server_handle_t handle) {
-    if (!handle)
+    if (!handle) {
         return ESP_ERR_INVALID_ARG;
+    }
     ESP_LOGI(TAG, "Stopping DNS server");
     handle->started = false;
     vTaskDelete(handle->task);

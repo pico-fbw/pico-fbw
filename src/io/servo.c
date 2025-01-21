@@ -20,10 +20,12 @@
 
 void servo_enable(const u32 pins[], u32 num_pins) {
     printpre("servo", "setting up %lu servos", num_pins);
-    if (!pwm_setup_write(pins, num_pins, config.general[GENERAL_SERVO_HZ]))
+    if (!pwm_setup_write(pins, num_pins, config.general[GENERAL_SERVO_HZ])) {
         log_message(TYPE_FATAL, "Failed to enable PWM output!", 500, 0, true);
-    for (u32 i = 0; i < num_pins; i++)
+    }
+    for (u32 i = 0; i < num_pins; i++) {
         servo_set(pins[i], 90.f); // Set initial position to 90 degrees
+    }
 }
 
 void servo_set(u32 pin, f32 degree) {
@@ -34,14 +36,15 @@ void servo_set(u32 pin, f32 degree) {
     pwm_write_raw(pin, mapf(degree, 0.f, 180.f, 500.f, 2500.f));
 #else
     SCFlightControl control;
-    if (pin == (u32)config.pins[PINS_SERVO_AIL])
+    if (pin == (u32)config.pins[PINS_SERVO_AIL]) {
         control = FCTRL_AIL;
-    else if (pin == (u32)config.pins[PINS_SERVO_ELE])
+    } else if (pin == (u32)config.pins[PINS_SERVO_ELE]) {
         control = FCTRL_ELE;
-    else if (pin == (u32)config.pins[PINS_SERVO_RUD])
+    } else if (pin == (u32)config.pins[PINS_SERVO_RUD]) {
         control = FCTRL_RUD;
-    else
+    } else {
         return; // Not simulated
+    }
     simconnect_set(control, degree);
 #endif // !SIMCONNECT
 }
@@ -51,10 +54,11 @@ void servo_test(u32 servos[], u32 num_servos, const f32 degrees[], u32 num_degre
         for (u32 s = 0; s < num_servos; s++) {
             if (servos[s] == (u32)config.pins[PINS_SERVO_BAY]) {
                 // The drop servo will be set to the configured detents so as not to possibly break it
-                if (d < (num_degrees / 2))
+                if (d < (num_degrees / 2)) {
                     servo_set(servos[s], config.control[CONTROL_DROP_DETENT_OPEN]);
-                else
+                } else {
                     servo_set(servos[s], config.control[CONTROL_DROP_DETENT_CLOSED]);
+                }
             } else {
                 servo_set(servos[s], degrees[d]);
             }

@@ -40,8 +40,9 @@ static void wait_for(u32 s) {
  */
 static bool parse_args(const char *args, f32 *t_idle, f32 *t_mct, f32 *t_max) {
     JSON_Value *root = json_parse_string(args);
-    if (!root)
+    if (!root) {
         return false;
+    }
     JSON_Object *obj = json_value_get_object(root);
     if (!obj) {
         json_value_free(root);
@@ -57,16 +58,19 @@ static bool parse_args(const char *args, f32 *t_idle, f32 *t_mct, f32 *t_max) {
 // {"idle":number,"mct":number,"max":number}
 
 i32 api_test_throttle(const char *args) {
-    if (aircraft.mode != MODE_DIRECT)
+    if (aircraft.mode != MODE_DIRECT) {
         return 403;
+    }
 
     f32 *idle = &calibration.esc[ESC_DETENT_IDLE];
     f32 *mct = &calibration.esc[ESC_DETENT_MCT];
     f32 *max = &calibration.esc[ESC_DETENT_MAX];
     f32 t_idle = 4, t_mct = 2, t_max = 1;
-    if (args)
-        if (!parse_args(args, &t_idle, &t_mct, &t_max))
+    if (args) {
+        if (!parse_args(args, &t_idle, &t_mct, &t_max)) {
             return 400;
+        }
+    }
     // Transition into thrust mode to set thrust percentages
     throttle.mode = THRMODE_THRUST;
     printpre("test", "setting IDLE (%.1f%%) for %.1fs", *idle, t_idle);

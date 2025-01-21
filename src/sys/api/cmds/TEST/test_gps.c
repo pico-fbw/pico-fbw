@@ -13,10 +13,12 @@
 #include "test_gps.h"
 
 i32 api_test_gps(const char *args) {
-    if (!gps.is_supported())
+    if (!gps.is_supported()) {
         return 403;
-    if (!aircraft.gpsSafe)
+    }
+    if (!aircraft.gpsSafe) {
         return 500;
+    }
     printpre("test",
              "dumping GPS data, check for validity!\n"
              "==================================\n"

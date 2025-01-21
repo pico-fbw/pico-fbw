@@ -38,8 +38,9 @@ static f32 rand_180() {
  */
 static u32 parse_args(const char *args, u32 in[], u32 out[]) {
     JSON_Value *root = json_parse_string(args);
-    if (!root)
+    if (!root) {
         return 0;
+    }
     JSON_Object *obj = json_value_get_object(root);
     if (!obj) {
         json_value_free(root);
@@ -71,8 +72,9 @@ static u32 parse_args(const char *args, u32 in[], u32 out[]) {
 // {"bridges":[[number,number],...]}
 
 i32 api_test_pwm(const char *args) {
-    if (aircraft.mode != MODE_DIRECT)
+    if (aircraft.mode != MODE_DIRECT) {
         return 403;
+    }
 
     // These pins should be bridged by the user
     u32 in[] = {config.pins[PINS_INPUT_AIL], config.pins[PINS_INPUT_ELE], config.pins[PINS_INPUT_RUD],
@@ -83,8 +85,9 @@ i32 api_test_pwm(const char *args) {
     if (args) {
         // If the user specified any bridges, use those instead
         numBridges = parse_args(args, in, out);
-        if (numBridges == 0)
+        if (numBridges == 0) {
             return 400;
+        }
     }
     // Generate some "random" degree values to test with
     f32 testDegrees[numBridges];

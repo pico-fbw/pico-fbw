@@ -42,7 +42,8 @@ int __printflike(1, 2) wrap_printf(const char *fmt, ...);
  */
 static inline char *try_realloc(char *buf, size_t size) {
     char *nbuf = (char *)realloc((void *)buf, size);
-    if (!nbuf)
+    if (!nbuf) {
         free(buf);
+    }
     return nbuf;
 }

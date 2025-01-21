@@ -43,8 +43,9 @@ static inline void _timer_handler(void *arg) {
 
     sv.sival_ptr = tim->tim_arg;
 
-    if (tim->tim_func != NULL)
+    if (tim->tim_func != NULL) {
         tim->tim_func(sv);
+    }
 }
 
 static inline int timer_create(clockid_t clockid, struct sigevent *sevp, timer_t *timerid) {
@@ -100,7 +101,8 @@ static inline int timer_settime(timer_t tim, int flags, const struct itimerspec 
 
         dispatch_time_t start;
         start = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * its->it_value.tv_sec + its->it_value.tv_nsec);
-        dispatch_source_set_timer(tim->tim_timer, start, NSEC_PER_SEC * its->it_value.tv_sec + its->it_value.tv_nsec, 0);
+        dispatch_source_set_timer(tim->tim_timer, start, NSEC_PER_SEC * its->it_value.tv_sec + its->it_value.tv_nsec,
+                                  0);
         dispatch_resume(tim->tim_timer);
     }
     return (0);
@@ -110,8 +112,9 @@ static inline int timer_settime(timer_t tim, int flags, const struct itimerspec 
 
 static inline int timer_delete(timer_t tim) {
     /* Calls _timer_cancel() */
-    if (tim != NULL)
+    if (tim != NULL) {
         dispatch_source_cancel(tim->tim_timer);
+    }
 
     return (0);
 }

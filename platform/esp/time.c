@@ -14,8 +14,9 @@
 static void callback_to_esp_timer_cb_t(void *arg) {
     // Derive the original callback function and its id from the data (passed in when creating the timer)
     CallbackData *data = (CallbackData *)arg;
-    if (!data)
+    if (!data) {
         return;
+    }
     // Run the specified callback function which should return either zero or a number of milliseconds to reschedule the
     // callback
     i32 reschedule = data->callback(data->data);
@@ -32,11 +33,12 @@ u64 time_us() {
 }
 
 CallbackData *callback_in_ms(u32 ms, Callback callback, void *data) {
-    // Create a new CallbackData to store the callback with its corresponding id (so it can be used later to reschedule/cancel
-    // the callback)
+    // Create a new CallbackData to store the callback with its corresponding id (so it can be used later to
+    // reschedule/cancel the callback)
     CallbackData *cbData = malloc(sizeof(CallbackData));
-    if (!cbData)
+    if (!cbData) {
         return NULL;
+    }
     cbData->callback = callback;
     cbData->data = data;
     // Use esp_timer to schedule the callback and return its id
@@ -61,9 +63,11 @@ CallbackData *callback_in_ms(u32 ms, Callback callback, void *data) {
 }
 
 void cancel_callback(CallbackData *data) {
-    // Check if the data is valid (it is possible that the callback has been automatically deleted); this prevents a double free
-    if (!data)
+    // Check if the data is valid (it is possible that the callback has been automatically deleted); this prevents a
+    // double free
+    if (!data) {
         return;
+    }
     esp_timer_stop(data->id);
     esp_timer_delete(data->id);
     free(data);
@@ -71,10 +75,10 @@ void cancel_callback(CallbackData *data) {
 
 void sleep_us_blocking(u64 us) {
     const TickType_t delay = pdMS_TO_TICKS(us / 1000);
-    if (delay > 0 && xTaskGetSchedulerState() == taskSCHEDULER_RUNNING)
+    if (delay > 0 && xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
         // Delay the current task by allowing other tasks to run
         vTaskDelay(delay);
-    else {
+    } else {
         // Too short to use FreeRTOS, use hardware sleep instead
         esp_sleep_enable_timer_wakeup(us);
         esp_light_sleep_start();

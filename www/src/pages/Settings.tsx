@@ -9,7 +9,8 @@ import Alert from "../elements/Alert";
 import ContentBlock from "../elements/ContentBlock";
 import ConfigViewer from "../elements/ConfigViewer";
 
-import { api, GET_INFO } from "../helpers/api";
+import { api } from "../helpers/api";
+import { GET_INFO } from "../helpers/apiTypes";
 import settings from "../helpers/settings";
 
 function ConfigUI() {

@@ -16,8 +16,9 @@
 
 i32 api_reboot(const char *args) {
     JSON_Value *root = json_parse_string(args);
-    if (!root)
+    if (!root) {
         return 400;
+    }
     JSON_Object *obj = json_value_get_object(root);
     if (!obj) {
         json_value_free(root);

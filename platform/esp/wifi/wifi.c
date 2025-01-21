@@ -25,23 +25,28 @@ httpd_handle_t httpServer = NULL;
 dns_server_handle_t dnsServer = NULL;
 
 bool wifi_setup(const char *ssid, const char *pass) {
-    if (!ssid || strlen(ssid) < WIFI_SSID_MIN_LEN || strlen(ssid) > WIFI_SSID_MAX_LEN)
+    if (!ssid || strlen(ssid) < WIFI_SSID_MIN_LEN || strlen(ssid) > WIFI_SSID_MAX_LEN) {
         return false;
-    if (pass && (strlen(pass) < WIFI_PASS_MIN_LEN || strlen(pass) > WIFI_PASS_MAX_LEN))
+    }
+    if (pass && (strlen(pass) < WIFI_PASS_MIN_LEN || strlen(pass) > WIFI_PASS_MAX_LEN)) {
         return false;
+    }
 
     // Initialize underlying network stack
     // NVS is initialized in sys_boot_begin()
-    if (esp_netif_init() != ESP_OK)
+    if (esp_netif_init() != ESP_OK) {
         return false;
-    if (esp_event_loop_create_default() != ESP_OK)
+    }
+    if (esp_event_loop_create_default() != ESP_OK) {
         return false;
+    }
     netif = esp_netif_create_default_wifi_ap();
 
     // Initialize wifi access point
     wifi_init_config_t initConfig = WIFI_INIT_CONFIG_DEFAULT();
-    if (esp_wifi_init(&initConfig) != ESP_OK)
+    if (esp_wifi_init(&initConfig) != ESP_OK) {
         return false;
+    }
     // clang-format off
     wifi_config_t wifiConfig = {
         .ap = {
@@ -57,18 +62,23 @@ bool wifi_setup(const char *ssid, const char *pass) {
     };
     // clang-format on
     strncpy((char *)wifiConfig.ap.ssid, ssid, sizeof(wifiConfig.ap.ssid));
-    if (pass)
+    if (pass) {
         strncpy((char *)wifiConfig.ap.password, pass, sizeof(wifiConfig.ap.password));
-    if (esp_wifi_set_mode(WIFI_MODE_AP) != ESP_OK)
+    }
+    if (esp_wifi_set_mode(WIFI_MODE_AP) != ESP_OK) {
         return false;
-    if (esp_wifi_set_config(WIFI_IF_AP, &wifiConfig) != ESP_OK)
+    }
+    if (esp_wifi_set_config(WIFI_IF_AP, &wifiConfig) != ESP_OK) {
         return false;
-    if (esp_wifi_start() != ESP_OK)
+    }
+    if (esp_wifi_start() != ESP_OK) {
         return false;
+    }
 
     // Initialize the HTTP and DNS servers
-    if (http_server_open(&httpServer) != ESP_OK)
+    if (http_server_open(&httpServer) != ESP_OK) {
         return false;
+    }
     dns_server_config_t dnsConfig = DNS_SERVER_CONFIG_SINGLE("*", "WIFI_AP_DEF");
     dnsServer = dns_server_start(&dnsConfig);
     return dnsServer != NULL;
@@ -79,21 +89,28 @@ void wifi_periodic() {
 }
 
 bool wifi_disable() {
-    if (dns_server_stop(dnsServer) != ESP_OK)
+    if (dns_server_stop(dnsServer) != ESP_OK) {
         return false;
-    if (http_server_close(&httpServer) != ESP_OK)
+    }
+    if (http_server_close(&httpServer) != ESP_OK) {
         return false;
-    if (esp_wifi_stop() != ESP_OK)
+    }
+    if (esp_wifi_stop() != ESP_OK) {
         return false;
-    if (esp_wifi_set_mode(WIFI_MODE_NULL) != ESP_OK)
+    }
+    if (esp_wifi_set_mode(WIFI_MODE_NULL) != ESP_OK) {
         return false;
-    if (esp_wifi_deinit() != ESP_OK)
+    }
+    if (esp_wifi_deinit() != ESP_OK) {
         return false;
-    if (esp_event_loop_delete_default() != ESP_OK)
+    }
+    if (esp_event_loop_delete_default() != ESP_OK) {
         return false;
+    }
     esp_netif_destroy_default_wifi(netif);
     esp_err_t deinit = esp_netif_deinit();
-    return deinit == ESP_OK || deinit == ESP_ERR_NOT_SUPPORTED; // Deinit may not be supported, so this is the best we can do
+    return deinit == ESP_OK ||
+           deinit == ESP_ERR_NOT_SUPPORTED; // Deinit may not be supported, so this is the best we can do
 }
 
 #endif // PLATFORM_SUPPORTS_WIFI

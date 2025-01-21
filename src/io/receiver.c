@@ -10,8 +10,6 @@
 #endif
 #include "platform/time.h"
 
-#include "io/display.h"
-
 #include "sys/configuration.h"
 #include "sys/log.h"
 #include "sys/print.h"
@@ -46,8 +44,9 @@ static inline f32 offset_of(u32 pin) {
 
 static inline f32 read_raw(u32 pin, ReceiverMode mode) {
     f32 pulsewidth = pwm_read_raw(pin);
-    if (pulsewidth < 0)
+    if (pulsewidth < 0) {
         return 0; // Invalid pin
+    }
     // Map pulsewidth to either 0-180.f (degree) or 0-100.f (percent)
     // Pulsewidths should be between 1000-2000μs for servos
     return mode == RECEIVER_MODE_DEGREE ? (pulsewidth - 1000.0f) * 0.18f : (pulsewidth - 1000.0f) * 0.10f;
@@ -55,40 +54,43 @@ static inline f32 read_raw(u32 pin, ReceiverMode mode) {
 
 void receiver_enable(const u32 pins[], u32 num_pins) {
     printpre("receiver", "enabling PWM input on %lu pins", num_pins);
-    if (!pwm_setup_read(pins, num_pins))
+    if (!pwm_setup_read(pins, num_pins)) {
         log_message(TYPE_FATAL, "Failed to enable PWM input!", 500, 0, true);
+    }
 }
 
 f32 receiver_get(u32 pin, ReceiverMode mode) {
 #if !SIMCONNECT
     f32 raw = read_raw(pin, mode);
-    if (raw < 0)
+    if (raw < 0) {
         return raw;
+    }
 #else
     SCFlightControl control;
-    if (pin == (u32)config.pins[PINS_INPUT_AIL])
+    if (pin == (u32)config.pins[PINS_INPUT_AIL]) {
         control = FCTRL_AIL;
-    else if (pin == (u32)config.pins[PINS_INPUT_ELE])
+    } else if (pin == (u32)config.pins[PINS_INPUT_ELE]) {
         control = FCTRL_ELE;
-    else if (pin == (u32)config.pins[PINS_INPUT_RUD])
+    } else if (pin == (u32)config.pins[PINS_INPUT_RUD]) {
         control = FCTRL_RUD;
-    else if (pin == (u32)config.pins[PINS_INPUT_THROTTLE])
+    } else if (pin == (u32)config.pins[PINS_INPUT_THROTTLE]) {
         control = FCTRL_THR;
-    else
+    } else {
         return 0; // Not simulated
+    }
     f32 raw = simconnect_get(control);
     (void)mode;
 #endif // !SIMCONNECT
     return raw + offset_of(pin);
 }
 
-bool receiver_calibrate(const u32 pins[], u32 num_pins, f32 deviations[], u32 num_samples, u32 sample_delay_ms, u32 run_times) {
+bool receiver_calibrate(const u32 pins[], u32 num_pins, f32 deviations[], u32 num_samples, u32 sample_delay_ms,
+                        u32 run_times) {
     log_message(TYPE_INFO, "Calibrating receiver", 100, 0, true);
     sleep_ms_blocking(2000); // Wait a few moments for tx/rx to set itself up
     for (u32 i = 0; i < num_pins; i++) {
         u32 pin = pins[i];
         printpre("receiver", "calibrating pin %lu (%lu/%lu)", pin, i + 1, num_pins);
-        display_string("Please do not touch the transmitter!", ((i + 1) * 100) / num_pins);
         f32 deviation = deviations[i];
         f32 finalDifference = 0.0f;
         bool isThrottle = pins[i] == (u32)config.pins[PINS_INPUT_THROTTLE];
@@ -132,14 +134,17 @@ bool receiver_calibrate(const u32 pins[], u32 num_pins, f32 deviations[], u32 nu
             return false;
         }
         // Check to ensure the value is within limits before adding it to be written
-        if (!WITHIN_MAX_CALIBRATION_OFFSET((finalDifference / run_times), config.general[GENERAL_MAX_CALIBRATION_OFFSET])) {
-            if (pin != (u32)config.pins[PINS_INPUT_SWITCH])
+        if (!WITHIN_MAX_CALIBRATION_OFFSET((finalDifference / run_times),
+                                           config.general[GENERAL_MAX_CALIBRATION_OFFSET])) {
+            if (pin != (u32)config.pins[PINS_INPUT_SWITCH]) {
                 goto error;
-            // The switch pin is a little special; it can have high offsets but only if they are negative, otherwise modes
-            // won't register properly
+            }
+            // The switch pin is a little special; it can have high offsets but only if they are negative, otherwise
+            // modes won't register properly
             if ((finalDifference / (f32)run_times) < -200.0f ||
-                (finalDifference / (f32)run_times) > config.general[GENERAL_MAX_CALIBRATION_OFFSET])
+                (finalDifference / (f32)run_times) > config.general[GENERAL_MAX_CALIBRATION_OFFSET]) {
                 goto error;
+            }
         error:
             printpre("receiver", "ERROR: (FBW-500) pin %lu's calibration value is too high!", pin);
             return false;
@@ -158,8 +163,9 @@ ReceiverCalibrationStatus receiver_is_calibrated() {
     // Read the calibration flag
     if ((bool)calibration.pwm[PWM_CALIBRATED]) {
         // Ensure that the control mode we are in is the same as the one in which we calibrated
-        if ((ControlMode)config.general[GENERAL_CONTROL_MODE] != (ControlMode)calibration.pwm[PWM_MODE])
+        if ((ControlMode)config.general[GENERAL_CONTROL_MODE] != (ControlMode)calibration.pwm[PWM_MODE]) {
             return RECEIVERCALIBRATION_INVALID;
+        }
         return RECEIVERCALIBRATION_OK;
     } else {
         return RECEIVERCALIBRATION_INCOMPLETE;

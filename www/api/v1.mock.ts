@@ -11,7 +11,8 @@ function send_data(res: http.ServerResponse<http.IncomingMessage>, data: object)
     res.end(JSON.stringify(data));
 }
 
-const configData = {
+// eslint-disable-next-line prefer-const
+let config = {
     sections: [
         {
             name: "General",
@@ -31,7 +32,7 @@ const configData = {
         },
         {
             name: "System",
-            values: [1, 1, 0, 0, 0, 0],
+            values: [1, 0, 0, 0, 0],
         },
         {
             name: "WiFi",
@@ -39,8 +40,8 @@ const configData = {
         },
     ],
 };
-
 let flightplan = "";
+let mode = "direct";
 
 export default (): MockHandler[] => [
     {
@@ -50,7 +51,7 @@ export default (): MockHandler[] => [
             req.on("data", (bodyString: string) => {
                 dataReceived = true;
                 const body = JSON.parse(bodyString) as { section: string; key: number };
-                const section = configData.sections.find(s => s.name === body.section);
+                const section = config.sections.find(s => s.name === body.section);
                 if (section) {
                     const key = section.values[body.key];
                     if (key !== undefined) {
@@ -70,7 +71,7 @@ export default (): MockHandler[] => [
             });
             req.on("end", () => {
                 if (!dataReceived) {
-                    send_data(res, configData);
+                    send_data(res, config);
                 }
             });
         },
@@ -101,6 +102,18 @@ export default (): MockHandler[] => [
         },
     },
     {
+        pattern: "/api/v1/get/input",
+        handle: (req, res) => {
+            send_data(res, {
+                ail: 0,
+                ele: 0,
+                rud: 0,
+                thr: 0,
+                switch: 0,
+            });
+        },
+    },
+    {
         pattern: "/api/v1/get/logs",
         handle: (req, res) => {
             send_data(res, {
@@ -113,6 +126,50 @@ export default (): MockHandler[] => [
         },
     },
     {
+        pattern: "/api/v1/get/mode",
+        handle: (req, res) => {
+            send_data(res, {
+                mode,
+            });
+        },
+    },
+    {
+        pattern: "/api/v1/get/sensor",
+        handle: (req, res) => {
+            send_data(res, {
+                aahrs: {
+                    roll: 0,
+                    pitch: 0,
+                    yaw: 0,
+                    roll_rate: 0,
+                    pitch_rate: 0,
+                    yaw_rate: 0,
+                    accel_x: 0,
+                    accel_y: 0,
+                    accel_z: 0,
+                },
+                gps: {
+                    lat: 0,
+                    lng: 0,
+                    alt: 0,
+                    speed: 0,
+                    track: 0,
+                    pdop: 0,
+                    hdop: 0,
+                    vdop: 0,
+                    sats: 0,
+                },
+                batt: [3.1, 3.1, 3.1, 3.1],
+            });
+        },
+    },
+    {
+        pattern: "/api/v1/set/bay",
+        handle: (req, res) => {
+            send_data(res, {});
+        },
+    },
+    {
         pattern: "/api/v1/set/config",
         handle: (req, res) => {
             req.on("data", (bodyString: string) => {
@@ -121,7 +178,7 @@ export default (): MockHandler[] => [
                     save: boolean;
                 };
                 body.changes.forEach(change => {
-                    const section = configData.sections.find(s => s.name === change.section);
+                    const section = config.sections.find(s => s.name === change.section);
                     if (section) {
                         const currentValue = section.values[change.key];
                         if (typeof currentValue === "number") {
@@ -131,7 +188,7 @@ export default (): MockHandler[] => [
                         }
                     }
                 });
-                send_data(res, {});
+                send_data(res, { error: "" });
             });
         },
     },
@@ -144,6 +201,28 @@ export default (): MockHandler[] => [
                     message: "",
                 });
             });
+        },
+    },
+    {
+        pattern: "/api/v1/set/mode",
+        handle: (req, res) => {
+            req.on("data", (bodyString: string) => {
+                const body = JSON.parse(bodyString) as { mode: string };
+                mode = body.mode;
+                send_data(res, {});
+            });
+        },
+    },
+    {
+        pattern: "/api/v1/set/target",
+        handle: (req, res) => {
+            send_data(res, {});
+        },
+    },
+    {
+        pattern: "/api/v1/set/waypoint",
+        handle: (req, res) => {
+            send_data(res, {});
         },
     },
     {

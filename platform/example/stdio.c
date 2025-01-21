@@ -20,6 +20,6 @@ char *stdin_read() {
 }
 
 int __printflike(1, 2) wrap_printf(const char *fmt, ...) {
-    // This function should work exactly like the C standard library printf() function, but output to all initialized stdout
-    // sources. See https://cplusplus.com/reference/cstdio/printf/ for more information on how printf() works.
+    // This function should work exactly like the C standard library printf() function, but output to all initialized
+    // stdout sources. See https://cplusplus.com/reference/cstdio/printf/ for more information on how printf() works.
 }

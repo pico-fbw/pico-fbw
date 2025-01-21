@@ -29,28 +29,36 @@ typedef enum SwitchPosition {
 
 static SwitchPosition lastPos;
 
+/**
+ * @return position of the mode switch based on the current switch type and "angle"
+ */
 static SwitchPosition deg_to_pos(f32 deg) {
     switch ((SwitchType)config.general[GENERAL_SWITCH_TYPE]) {
         case SWITCH_TYPE_2_POS:
-            if (deg < 90)
+            if (deg < 90) {
                 return SWITCH_POSITION_LOW;
-            else
+            } else {
                 return SWITCH_POSITION_HIGH;
+            }
         default:
         case SWITCH_TYPE_3_POS:
-            if (deg < 45)
+            if (deg < 45) {
                 return SWITCH_POSITION_LOW;
-            else if (deg > 135)
+            } else if (deg > 135) {
                 return SWITCH_POSITION_HIGH;
-            else
+            } else {
                 return SWITCH_POSITION_MID;
+            }
     }
 }
 
+/**
+ * Updates the mode switch's position and changes the aircraft's mode accordingly.
+ */
 static void switch_update() {
     SwitchPosition pos = deg_to_pos(receiver_get((u32)config.pins[PINS_INPUT_SWITCH], RECEIVER_MODE_DEGREE));
-    // The mode will only be changed when the user moves the switch; the system's mode changes can persist and won't instantly
-    // be overrided by the switch
+    // The mode will only be changed when the user moves the switch; the system's mode changes can persist and won't
+    // instantly be overrided by the switch
     if (lastPos != pos) {
         switch (pos) {
             case SWITCH_POSITION_LOW:
@@ -62,11 +70,13 @@ static void switch_update() {
             case SWITCH_POSITION_HIGH:
                 switch ((SwitchType)config.general[GENERAL_SWITCH_TYPE]) {
                     case SWITCH_TYPE_2_POS:
-                        // For 2-position switches, auto-select auto or normal mode based on if a flight plan is present or not
-                        if (flightplan_was_parsed())
+                        // For 2-position switches, auto-select auto or normal mode based on if a flight plan is present
+                        // or not
+                        if (flightplan_was_parsed()) {
                             aircraft.change_to(MODE_AUTO);
-                        else
+                        } else {
                             aircraft.change_to(MODE_NORMAL);
+                        }
                         break;
                     case SWITCH_TYPE_3_POS:
                         aircraft.change_to(MODE_AUTO);
@@ -79,32 +89,38 @@ static void switch_update() {
 }
 
 void runtime_loop(bool update_aircraft) {
-    // Update the mode switch's position, update sensors, run the current mode's code, respond to any new API calls, and run
-    // platform-specific system tasks
+    // Update the mode switch's position, update sensors, run the current mode's code, respond to any new API calls, and
+    // run platform-specific system tasks
     switch_update();
-    if (aahrs.isInitialized)
+    if (aahrs.isInitialized) {
         aahrs.update();
-    if (gps.is_supported())
+    }
+    if (gps.is_supported()) {
         gps.update();
-    if (update_aircraft)
+    }
+    if (update_aircraft) {
         aircraft.update();
-    if ((bool)config.general[GENERAL_API_ENABLED])
+    }
+    if ((bool)config.general[GENERAL_API_ENABLED]) {
         api_poll();
+    }
 #if PLATFORM_SUPPORTS_WIFI
-    if ((WifiEnabled)config.general[GENERAL_WIFI_ENABLED] != WIFI_DISABLED && !aircraft.wifiDeinitialized)
+    if ((WifiEnabled)config.general[GENERAL_WIFI_ENABLED] != WIFI_DISABLED && !aircraft.wifiDeinitialized) {
         wifi_periodic();
+    }
 #endif
     sys_periodic();
 }
 
 void runtime_loop_minimal() {
-    // Update the minimal amount of systems required to keep the plane in the air, this is usually called after a watchdog event
+    // Update the minimal amount of systems required to keep the plane in the air
     aircraft.update();
     sys_periodic();
 }
 
 void runtime_sleep_ms(u32 ms, bool update_aircraft) {
     Timestamp wakeup_time = timestamp_in_ms(ms);
-    while (!timestamp_reached(&wakeup_time))
+    while (!timestamp_reached(&wakeup_time)) {
         runtime_loop(update_aircraft);
+    }
 }

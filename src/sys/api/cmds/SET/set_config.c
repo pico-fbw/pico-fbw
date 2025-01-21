@@ -10,14 +10,25 @@
 #include "lib/parson.h"
 
 #include "sys/configuration.h"
-#include "sys/print.h"
 
 #include "set_config.h"
 
-i32 api_handle_set_config(const char *in, char **out) {
+// Input:
+// {"changes":[{"section":"","key":"","value":""}, ...], "save":boolean}
+
+// Output:
+// {"error":""}
+
+// For example:
+// {"changes":[{"section":"GENERAL","key":"skipCalibration","value":"1"},{"section":"WIFI","key":"ssid","value":"coolwifiname"}],"save":true}
+// will set the skipCalibration key in the GENERAL section to 1 (true) and the ssid key in the WIFI section to
+// "coolwifiname", and save the changes to flash
+
+i32 api_set_config(const char *in, char **out) {
     JSON_Value *root = json_parse_string(in);
-    if (!root)
+    if (!root) {
         return 400;
+    }
     JSON_Object *obj = json_value_get_object(root);
     if (!obj) {
         json_value_free(root);
@@ -58,42 +69,22 @@ i32 api_handle_set_config(const char *in, char **out) {
     json_value_free(root);
     // Validate to obtain any errors made in config and save if requested
     valid = config_validate(error, sizeof(error));
-    if (save && valid)
+    if (save && valid) {
         config_save();
+    }
 err: {
     bool wasError = strlen(error) > 0;
     if (wasError) {
-        // Validation failure, restore the prior config and return the error
+        // Validation failure, restore the prior config
         config_restore();
-        root = json_value_init_object();
-        obj = json_value_get_object(root);
-        json_object_set_string(obj, "error", error);
-        char *serialized = json_serialize_to_string(root);
-        json_value_free(root);
-        *out = serialized;
-        return 200; // Although an error occurred, the request was technically successful
     }
+    // Make the error JSON even if there was no error (empty string)
+    root = json_value_init_object();
+    obj = json_value_get_object(root);
+    json_object_set_string(obj, "error", error);
+    char *serialized = json_serialize_to_string(root);
+    json_value_free(root);
+    *out = serialized;
 }
-    return valid ? 200 : 400;
-}
-
-// Input:
-// {"changes":[{"section":"","key":"","value":""}, ...], "save":boolean}
-
-// Output:
-// {"error":""}
-
-// For example:
-// {"changes":[{"section":"GENERAL","key":"skipCalibration","value":"1"},{"section":"WIFI","key":"ssid","value":"coolwifiname"}],"save":true}
-// will set the skipCalibration key in the GENERAL section to 1 (true) and the ssid key in the WIFI section to "coolwifiname",
-// and save the changes to flash
-
-i32 api_set_config(const char *args) {
-    char *out = NULL;
-    i32 res = api_handle_set_config(args, &out);
-    if (out) {
-        printraw("%s\n", out);
-        json_free_serialized_string(out);
-    }
-    return out ? -1 : res;
+    return 200;
 }

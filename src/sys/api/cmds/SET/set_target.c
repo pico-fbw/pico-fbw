@@ -26,8 +26,9 @@
  */
 static bool parse_args(const char *args, f32 *roll, f32 *pitch, f32 *yaw, f32 *throttle) {
     JSON_Value *root = json_parse_string(args);
-    if (!root)
+    if (!root) {
         return false;
+    }
     JSON_Object *obj = json_value_get_object(root);
     if (!obj) {
         json_value_free(root);
@@ -63,19 +64,24 @@ static bool parse_args(const char *args, f32 *roll, f32 *pitch, f32 *yaw, f32 *t
 
 // {"roll":number,"pitch":number,"yaw":number,"throttle":number}
 
-i32 api_set_target(const char *args) {
-    if (aircraft.mode != MODE_NORMAL)
+i32 api_set_target(const char *in, char **out) {
+    if (aircraft.mode != MODE_NORMAL) {
         return 403;
-
+    }
     f32 roll, pitch, yaw, throttle;
-    if (!parse_args(args, &roll, &pitch, &yaw, &throttle))
+    if (!parse_args(in, &roll, &pitch, &yaw, &throttle)) {
         return 400;
+    }
     // Ensure setpoints are within limits
     if (fabsf(roll) > config.control[CONTROL_ROLL_LIMIT_HOLD] || pitch > config.control[CONTROL_PITCH_UPPER_LIMIT] ||
-        pitch < config.control[CONTROL_PITCH_LOWER_LIMIT] || fabsf(yaw) > config.control[CONTROL_MAX_RUD_DEFLECTION])
+        pitch < config.control[CONTROL_PITCH_LOWER_LIMIT] || fabsf(yaw) > config.control[CONTROL_MAX_RUD_DEFLECTION]) {
         return 400;
-    if (throttle < 0.f || throttle > 100.f)
+    }
+    if (throttle < 0.f || throttle > 100.f) {
         return 400;
-    // Pass the setpoints into normal mode, 423 will be returned if the mode rejects the code (user input takes priority)
+    }
+    // Pass the setpoints into normal mode
+    // 423 will be returned if the mode rejects the code (user input takes priority)
     return normal_set(roll, pitch, yaw, throttle) ? 200 : 423;
+    (void)out;
 }

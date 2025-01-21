@@ -44,9 +44,10 @@ bool aahrs_init() {
     // Check the state of any previous calibration
     aahrs.isCalibrated = (bool)calibration.aahrs[AAHRS_CALIBRATED];
     bool differentIMU = (IMUModel)calibration.aahrs[AAHRS_IMU_MODEL] != (IMUModel)config.sensors[SENSORS_IMU_MODEL];
-    bool differentBaro = (BaroModel)calibration.aahrs[AAHRS_BARO_MODEL] != (BaroModel)config.sensors[SENSORS_BARO_MODEL];
+    bool differentBaro =
+        (BaroModel)calibration.aahrs[AAHRS_BARO_MODEL] != (BaroModel)config.sensors[SENSORS_BARO_MODEL];
     if (aahrs.isCalibrated && (differentIMU || differentBaro)) {
-        printfbw(aahrs, "calibration was performed on different models, recalibration is necessary!");
+        printsys(aahrs, "calibration was performed on different models, recalibration is necessary!");
         // This ensures the system won't load any bad calibration into the fusion algorithms
         aahrs.isCalibrated = false;
     }
@@ -60,7 +61,7 @@ bool aahrs_init() {
     }
     imu = fusion_imu_create();
     if (!imu) {
-        printfbw(aahrs, "failed to create IMU instance");
+        printsys(aahrs, "failed to create IMU instance");
         return false;
     }
 
@@ -69,7 +70,7 @@ bool aahrs_init() {
     accOpts.odr = ACC_ODR;
     accOpts.no_rst = false;
     if (!fusion_accelerometer_find(imu, &accOpts)) {
-        printfbw(aahrs, "failed to create accelerometer instance");
+        printsys(aahrs, "failed to create accelerometer instance");
         return false;
     }
 
@@ -77,15 +78,16 @@ bool aahrs_init() {
     gyroOpts.scale = GYRO_SCALE; // deg/s
     gyroOpts.odr = GYRO_ODR;
     if (!fusion_gyroscope_find(imu, &gyroOpts)) {
-        printfbw(aahrs, "failed to create gyroscope instance");
+        printsys(aahrs, "failed to create gyroscope instance");
         return false;
     }
 
     MagnetometerOptions magOpts;
     magOpts.scale = MAG_SCALE; // gauss
     magOpts.odr = MAG_ODR;
-    if (!fusion_magnetometer_find(imu, &magOpts))
-        printfbw(aahrs, "failed to create magnetometer instance");
+    if (!fusion_magnetometer_find(imu, &magOpts)) {
+        printsys(aahrs, "failed to create magnetometer instance");
+    }
     // Not a critical failure, magnetometer is not required for the filter to operate
 
     // Set up the Madgwick filter
@@ -99,7 +101,7 @@ bool aahrs_init() {
 }
 
 void aahrs_deinit() {
-    printfbw(aahrs, "stopping!");
+    printsys(aahrs, "stopping!");
     aahrs.roll = INFINITY;
     aahrs.pitch = INFINITY;
     aahrs.yaw = INFINITY;
@@ -114,15 +116,17 @@ void aahrs_update() {
 #if !SIMCONNECT_AAHRS_SKIP_FUSION
     static Timestamp lastUpdate;
     // Throttle the update rate
-    if (time_since_s(&lastUpdate) < (1.f / FUSION_RATE))
+    if (time_since_s(&lastUpdate) < (1.f / FUSION_RATE)) {
         return;
+    }
 
     f32 acc[3], gyro[3], mag[3];
     fusion_accelerometer_get(imu, &acc[0], &acc[1], &acc[2]);
     fusion_gyroscope_get(imu, &gyro[0], &gyro[1], &gyro[2]);
     fusion_magnetometer_get(imu, &mag[0], &mag[1], &mag[2]);
 
-    madgwick_update(filter, radians(gyro[0]), radians(gyro[1]), radians(gyro[2]), acc[0], acc[1], acc[2], 0.f, 0.f, 0.f);
+    madgwick_update(filter, radians(gyro[0]), radians(gyro[1]), radians(gyro[2]), acc[0], acc[1], acc[2], 0.f, 0.f,
+                    0.f);
     // FIXME: For when magnetometer calibration is added:
     // madgwick_update(filter, radians(gyro[0]), radians(gyro[1]), radians(gyro[2]), acc[0], acc[1], acc[2], mag[0],
     //                          mag[1], mag[2]);
@@ -130,7 +134,7 @@ void aahrs_update() {
 
     f32 roll, pitch, yaw;
     if (!madgwick_get_angles(filter, &roll, &pitch, &yaw)) {
-        printfbw(aahrs, "failed to get angles");
+        printsys(aahrs, "failed to get angles");
         aircraft.set_aahrs_safe(false);
         return;
     }
@@ -150,8 +154,9 @@ void aahrs_update() {
     aahrs.rollRate = -(f32)scIMU.gyro[0];
     aahrs.pitchRate = -(f32)scIMU.gyro[1];
     aahrs.yawRate = (f32)scIMU.gyro[2];
-    for (u32 i = 0; i < count_of(aahrs.accel); i++)
+    for (u32 i = 0; i < count_of(aahrs.accel); i++) {
         aahrs.accel[i] = (f32)scIMU.accel[i];
+    }
 #endif // !SIMCONNECT_AAHRS_SKIP_FUSION
 }
 
@@ -178,8 +183,9 @@ bool aahrs_calibrate() {
     ao[2] /= FUSION_CALIBRATION_SAMPLES;
     for (u32 i = 0; i < 3; i++) {
         // Probably gravity?
-        if (ao[i] > 0.9)
+        if (ao[i] > 0.9) {
             ao[i] -= 1;
+        }
     }
     go[0] /= FUSION_CALIBRATION_SAMPLES;
     go[1] /= FUSION_CALIBRATION_SAMPLES;

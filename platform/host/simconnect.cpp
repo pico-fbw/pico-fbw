@@ -92,8 +92,9 @@ static void simulate_accel(SC_IMU *imu) {
         -GRAVITY * cos(roll) * cos(pitch),
     };
     // Combine linear (body) acceleration with gravity and convert to G-force
-    for (u32 i = 0; i < count_of(imu->accel); i++)
+    for (u32 i = 0; i < count_of(imu->accel); i++) {
         imu->accel[i] = (imu->bodyAccel[i] + g[i]) / GRAVITY;
+    }
 }
 
 /**
@@ -115,8 +116,8 @@ static inline f32 position_to_deg(f32 pos) {
 }
 
 /**
- * Converts a SimConnect `position` range returned by an event (-16383 to 16384) to an `f32` normalized position range (-1.0
- * to 1.0).
+ * Converts a SimConnect `position` range returned by an event (-16383 to 16384) to an `f32` normalized position range
+ * (-1.0 to 1.0).
  * @param data the event data to convert
  * @return the equivalent normalized position value
  */
@@ -131,8 +132,9 @@ static inline f32 eventdata_to_position(DWORD data) {
  * @return true if the data was sent successfully
  */
 static bool set_control_surface(f32 deg, DataDefinitionRequestID id) {
-    if (!hSimConnect)
+    if (!hSimConnect) {
         return false;
+    }
     f32 pos = deg_to_position(deg);
     HRESULT hr = SimConnect_SetDataOnSimObject(hSimConnect, id, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(pos), &pos);
     return hr == S_OK;
@@ -144,16 +146,18 @@ static bool set_control_surface(f32 deg, DataDefinitionRequestID id) {
  * @return true if the data was sent successfully
  */
 static bool set_throttle(f32 thr) {
-    if (!hSimConnect || numEngines < 1)
+    if (!hSimConnect || numEngines < 1) {
         return false;
+    }
     // Set throttle positions for all engines
     for (i32 i = 1; i <= numEngines; i++) {
         char name[64];
         snprintf(name, sizeof(name), "GENERAL ENG THROTTLE LEVER POSITION:%d", i);
-        HRESULT hr =
-            SimConnect_SetDataOnSimObject(hSimConnect, ID_NUM_ENG + i, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(thr), &thr);
-        if (FAILED(hr))
+        HRESULT hr = SimConnect_SetDataOnSimObject(hSimConnect, ID_NUM_ENG + i, SIMCONNECT_OBJECT_ID_USER, 0, 0,
+                                                   sizeof(thr), &thr);
+        if (FAILED(hr)) {
             return false;
+        }
     }
     return true;
 }
@@ -187,7 +191,8 @@ static void on_SIMCONNECT_RECV_SIMOBJECT_DATA(SIMCONNECT_RECV_SIMOBJECT_DATA *pD
             for (i32 i = 1; i <= numEngines; i++) {
                 char name[64];
                 snprintf(name, sizeof(name), "GENERAL ENG THROTTLE LEVER POSITION:%d", i);
-                SimConnect_AddToDataDefinition(hSimConnect, ID_NUM_ENG + i, name, "percent", SIMCONNECT_DATATYPE_FLOAT32);
+                SimConnect_AddToDataDefinition(hSimConnect, ID_NUM_ENG + i, name, "percent",
+                                               SIMCONNECT_DATATYPE_FLOAT32);
             }
             break;
         default:
@@ -202,8 +207,8 @@ static void on_SIMCONNECT_RECV_EVENT(SIMCONNECT_RECV_EVENT *pData, void *pContex
         case EVENT_AIL_SET: {
             ailPos = -eventdata_to_position(pData->dwData); // Reverse sign for some reason?
             // Set the position back to the last set value, therefore cancelling the event
-            // This is done to mimic the behavior of pico-fbw in a real RC plane, where everything has to go through code first
-            // (no direct control)
+            // This is done to mimic the behavior of pico-fbw in a real RC plane, where everything has to go through
+            // code first (no direct control)
             set_control_surface(lastAilSet, ID_AIL_OUT);
             break;
         }
@@ -255,7 +260,8 @@ static bool configure_datadef_sc_gps() {
     SimConnect_AddToDataDefinition(hSimConnect, ID_SC_GPS, "PLANE LONGITUDE", "degrees");
     SimConnect_AddToDataDefinition(hSimConnect, ID_SC_GPS, "PLANE ALTITUDE", "feet", SIMCONNECT_DATATYPE_FLOAT32);
     SimConnect_AddToDataDefinition(hSimConnect, ID_SC_GPS, "GPS GROUND SPEED", "knots", SIMCONNECT_DATATYPE_FLOAT32);
-    SimConnect_AddToDataDefinition(hSimConnect, ID_SC_GPS, "GPS GROUND TRUE HEADING", "degrees", SIMCONNECT_DATATYPE_FLOAT32);
+    SimConnect_AddToDataDefinition(hSimConnect, ID_SC_GPS, "GPS GROUND TRUE HEADING", "degrees",
+                                   SIMCONNECT_DATATYPE_FLOAT32);
     // GPS data is updated every second (to simulate real GPS modules being somewhat slow)
     return SUCCEEDED(SimConnect_RequestDataOnSimObject(hSimConnect, ID_SC_GPS, ID_SC_GPS, SIMCONNECT_OBJECT_ID_USER,
                                                        SIMCONNECT_PERIOD_SECOND));
@@ -265,15 +271,18 @@ static bool configure_datadef_sc_gps() {
  * Configures the data definitions for the control surface signals.
  */
 static bool configure_datadef_control_surfaces() {
-    SimConnect_AddToDataDefinition(hSimConnect, ID_AIL_OUT, "AILERON POSITION", "position", SIMCONNECT_DATATYPE_FLOAT32);
-    SimConnect_AddToDataDefinition(hSimConnect, ID_ELE_OUT, "ELEVATOR POSITION", "position", SIMCONNECT_DATATYPE_FLOAT32);
+    SimConnect_AddToDataDefinition(hSimConnect, ID_AIL_OUT, "AILERON POSITION", "position",
+                                   SIMCONNECT_DATATYPE_FLOAT32);
+    SimConnect_AddToDataDefinition(hSimConnect, ID_ELE_OUT, "ELEVATOR POSITION", "position",
+                                   SIMCONNECT_DATATYPE_FLOAT32);
     SimConnect_AddToDataDefinition(hSimConnect, ID_RUD_OUT, "RUDDER POSITION", "position", SIMCONNECT_DATATYPE_FLOAT32);
     // Disable user input
     // TODO: does this even do anything?
-    SimConnect_AddToDataDefinition(hSimConnect, ID_INPUT_ENABLED, "USER INPUT ENABLED", "bool", SIMCONNECT_DATATYPE_INT32);
+    SimConnect_AddToDataDefinition(hSimConnect, ID_INPUT_ENABLED, "USER INPUT ENABLED", "bool",
+                                   SIMCONNECT_DATATYPE_INT32);
     i32 enabled = 0;
-    return SUCCEEDED(
-        SimConnect_SetDataOnSimObject(hSimConnect, ID_INPUT_ENABLED, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(i32), &enabled));
+    return SUCCEEDED(SimConnect_SetDataOnSimObject(hSimConnect, ID_INPUT_ENABLED, SIMCONNECT_OBJECT_ID_USER, 0, 0,
+                                                   sizeof(i32), &enabled));
 }
 
 /**
@@ -284,9 +293,11 @@ static bool configure_event_fctrl() {
     SimConnect_MapClientEventToSimEvent(hSimConnect, EVENT_ELE_SET, "AXIS_ELEVATOR_SET");
     SimConnect_MapClientEventToSimEvent(hSimConnect, EVENT_RUD_SET, "AXIS_RUDDER_SET");
     SimConnect_MapClientEventToSimEvent(hSimConnect, EVENT_THR_SET, "THROTTLE1_SET");
-    for (u32 event = EVENT_AIL_SET; event <= EVENT_THR_SET; event++)
+    for (u32 event = EVENT_AIL_SET; event <= EVENT_THR_SET; event++) {
         SimConnect_AddClientEventToNotificationGroup(hSimConnect, GROUP_FCTRL, event, true);
-    return SUCCEEDED(SimConnect_SetNotificationGroupPriority(hSimConnect, GROUP_FCTRL, SIMCONNECT_GROUP_PRIORITY_HIGHEST));
+    }
+    return SUCCEEDED(
+        SimConnect_SetNotificationGroupPriority(hSimConnect, GROUP_FCTRL, SIMCONNECT_GROUP_PRIORITY_HIGHEST));
 }
 
 bool simconnect_init() {
@@ -333,8 +344,9 @@ bool simconnect_ready() {
 }
 
 void simconnect_poll() {
-    if (!hSimConnect)
+    if (!hSimConnect) {
         return;
+    }
     SimConnect_CallDispatch(
         hSimConnect,
         [](SIMCONNECT_RECV *pData, DWORD cbData, void *pContext) -> void {
@@ -395,8 +407,9 @@ f32 simconnect_get(SCFlightControl fctrl) {
 }
 
 void simconnect_deinit() {
-    if (!hSimConnect)
+    if (!hSimConnect) {
         return;
+    }
     printmsfs("closing connection");
     SimConnect_Close(hSimConnect);
     hSimConnect = nullptr;

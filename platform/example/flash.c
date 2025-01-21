@@ -5,16 +5,17 @@
 
 #include "platform/flash.h"
 
-// This file contains block device I/O functions for the littlefs file system, which is mainly used to store configuration
-// files. Many popular platforms already have a littlefs driver, so look around online first! If not, writing your own driver
-// isn't too hard, you just need to implement the following functions and configure the lfs_config struct. See
-// https://github.com/littlefs-project/littlefs/issues/448 and https://github.com/littlefs-project/littlefs/blob/master/lfs.h
-// for more information.
+// This file contains block device I/O functions for the littlefs file system, which is mainly used to store
+// configuration files. Many popular platforms already have a littlefs driver, so look around online first! If not,
+// writing your own driver isn't too hard, you just need to implement the following functions and configure the
+// lfs_config struct. See https://github.com/littlefs-project/littlefs/issues/448 and
+// https://github.com/littlefs-project/littlefs/blob/master/lfs.h for more information.
 
 static int flash_read(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, void *buffer, lfs_size_t size) {
 }
 
-static int flash_prog(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size) {
+static int flash_prog(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, const void *buffer,
+                      lfs_size_t size) {
 }
 
 static int flash_erase(const struct lfs_config *c, lfs_block_t block) {

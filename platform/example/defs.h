@@ -34,10 +34,12 @@ typedef x __callback_id_t;
 // Platform details
 // These are purely informational for the user, and can really be whatever you want.
 #define PLATFORM_NAME "Example Platform"
-#define PLATFORM_VERSION "1.0.0" // If you ever make any changes to the platform code, it's a nice courtesy to increment this.
+// If you ever make any changes to the platform code, it's a nice courtesy to increment this.
+#define PLATFORM_VERSION "1.0.0"
 // Platform features
 // These are extra features that while aren't required to run pico-fbw, can be useful to have.
-// If your platform supports them in hardware and you're willing to write extra code, pico-fbw will automatically use them.
+// If your platform supports them in hardware and you're willing to write extra code,
+// pico-fbw will automatically make use of them.
 
 // Here are all of the possible features:
 
@@ -52,23 +54,6 @@ typedef x __callback_id_t;
     #define PIN_ADC_0 x        // First pin your ADC supports
 // Add more as needed...
 static const u32 ADC_PINS[] = {PIN_ADC_0}; // Array of all ADC pins you've defined
-#endif
-
-// Display
-#define PLATFORM_SUPPORTS_DISPLAY 0
-#if PLATFORM_SUPPORTS_DISPLAY
-                                           // Note that that this assumes an I2C display with a driver such as the SSD1306.
-    // This feature actually doesn't require any extra code; all you need to do is define these details.
-    // Display information
-    #define DISPLAY_WIDTH x  // Width of the display in pixels (typically 128)
-    #define DISPLAY_HEIGHT x // Height of the display in pixels (typically 32 or 64, pico-fbw currently only uses 32)
-    #define DISPLAY_MAX_LINE_LEN                                                                                               \
-        x                      // Maximum number of characters per line (typically 15 or 16, each character is 8x8 pixels)
-                               // Display i2c bus details
-    #define DISPLAY_FREQ_KHZ x // Frequency of I2C i2c bus in kHz (typically 100-400)
-    #define DISPLAY_ADDR 0xxx  // I2C address of the display
-    #define PIN_DISPLAY_SDA x  // SDA pin of the display
-    #define PIN_DISPLAY_SCL x  // SCL pin of the display
 #endif
 
 // Wi-Fi

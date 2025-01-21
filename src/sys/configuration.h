@@ -94,7 +94,6 @@ typedef enum ConfigSensors {
 } ConfigSensors;
 
 typedef enum ConfigSystem {
-    SYSTEM_USE_DISPLAY,
     SYSTEM_PRINT_FBW,
     SYSTEM_PRINT_AAHRS,
     SYSTEM_PRINT_AIRCRAFT,
@@ -202,7 +201,7 @@ typedef enum ConfigSection {
 typedef enum ConfigSetResult {
     CONFIG_SET_OK,
     CONFIG_SET_DOES_NOT_EXIST, // Given section/key does not exist
-    CONFIG_SET_INVALID,        // Validation failed and config was not set, run config_validate() to get the error message
+    CONFIG_SET_INVALID, // Validation failed and config was not set, run config_validate() to get the error message
 } ConfigSetResult;
 
 /**
@@ -238,7 +237,8 @@ bool config_validate(char *error, size_t error_size);
  * @param key the name of the key to look up
  * @param value the pointer to the value to store the result in
  * @return type of the value stored
- * @note Value will store either an `f32` or `const char*` depending on the type of section and should be cast accordingly.
+ * @note Value will store either an `f32` or `const char*` depending on the type of section and should be cast
+ * accordingly.
  */
 ConfigSectionType config_get(const char *section, const char *key, void **value);
 

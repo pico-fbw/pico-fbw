@@ -72,10 +72,6 @@ Config config = {
         CONFIG_END_MAGIC,
     },
     .system = {
-        true, // Default display use status
-        // This is true because the display is initialized before the config is loaded,
-        // so setting it to true means the display will always be initialized on boot (if possible),
-        // because this is the initial state of the config before it becomes overwritten by config_load()
         true, false, false, false, false, // Default print settings, also found in PrintDefs below
         CONFIG_END_MAGIC,
     },
@@ -125,8 +121,9 @@ static bool load_file_to_struct(const char *file, void *strct, size_t size) {
     lfs_file_t f;
     if (lfs_file_open(&lfs, &f, file, LFS_O_RDONLY) != LFS_ERR_OK) {
         // File doesn't exist, create it and write default values which are present in the struct definition
-        if (lfs_file_open(&lfs, &f, file, LFS_O_RDWR | LFS_O_CREAT) != LFS_ERR_OK)
+        if (lfs_file_open(&lfs, &f, file, LFS_O_RDWR | LFS_O_CREAT) != LFS_ERR_OK) {
             return false;
+        }
         if (lfs_file_write(&lfs, &f, strct, size) != (lfs_ssize_t)size) {
             lfs_file_close(&lfs, &f);
             return false;
@@ -149,8 +146,9 @@ static bool load_file_to_struct(const char *file, void *strct, size_t size) {
  */
 static bool save_struct_to_file(const char *file, void *strct, size_t size) {
     lfs_file_t f;
-    if (lfs_file_open(&lfs, &f, file, LFS_O_WRONLY | LFS_O_TRUNC) != LFS_ERR_OK)
+    if (lfs_file_open(&lfs, &f, file, LFS_O_WRONLY | LFS_O_TRUNC) != LFS_ERR_OK) {
         return false;
+    }
     if (lfs_file_write(&lfs, &f, strct, size) != (lfs_ssize_t)size) {
         lfs_file_close(&lfs, &f);
         return false;
@@ -228,8 +226,9 @@ static bool set_to_general(const char *key, f32 value) {
         config.general[GENERAL_AUTOTUNE_ENABLED] = value;
     } else if (strcasecmp(key, "skipCalibration") == 0) {
         config.general[GENERAL_SKIP_CALIBRATION] = value;
-    } else
+    } else {
         return false;
+    }
     return true;
 }
 
@@ -320,8 +319,9 @@ static bool set_to_control(const char *key, f32 value) {
         config.control[CONTROL_AIL_MIXING_BIAS] = value;
     } else if (strcasecmp(key, "elevMixingBias") == 0) {
         config.control[CONTROL_ELEV_MIXING_BIAS] = value;
-    } else
+    } else {
         return false;
+    }
     return true;
 }
 
@@ -400,8 +400,9 @@ static bool set_to_pins(const char *key, f32 value) {
         config.pins[PINS_REVERSE_PITCH] = value;
     } else if (strcasecmp(key, "reverseYaw") == 0) {
         config.pins[PINS_REVERSE_YAW] = value;
-    } else
+    } else {
         return false;
+    }
     return true;
 }
 
@@ -432,15 +433,14 @@ static bool set_to_sensors(const char *key, f32 value) {
         config.sensors[SENSORS_GPS_COMMAND_TYPE] = value;
     } else if (strcasecmp(key, "gpsBaudrate") == 0) {
         config.sensors[SENSORS_GPS_BAUDRATE] = value;
-    } else
+    } else {
         return false;
+    }
     return true;
 }
 
 static void get_from_system(const char *key, f32 **value) {
-    if (strcasecmp(key, "useDisplay") == 0) {
-        *value = &config.system[SYSTEM_USE_DISPLAY];
-    } else if (strcasecmp(key, "printFBW") == 0) {
+    if (strcasecmp(key, "printsys") == 0) {
         *value = &config.system[SYSTEM_PRINT_FBW];
     } else if (strcasecmp(key, "printAAHRS") == 0) {
         *value = &config.system[SYSTEM_PRINT_AAHRS];
@@ -456,9 +456,7 @@ static void get_from_system(const char *key, f32 **value) {
 }
 
 static bool set_to_system(const char *key, f32 value) {
-    if (strcasecmp(key, "useDisplay") == 0) {
-        config.system[SYSTEM_USE_DISPLAY] = value;
-    } else if (strcasecmp(key, "printFBW") == 0) {
+    if (strcasecmp(key, "printsys") == 0) {
         config.system[SYSTEM_PRINT_FBW] = value;
     } else if (strcasecmp(key, "printAAHRS") == 0) {
         config.system[SYSTEM_PRINT_AAHRS] = value;
@@ -468,8 +466,9 @@ static bool set_to_system(const char *key, f32 value) {
         config.system[SYSTEM_PRINT_GPS] = value;
     } else if (strcasecmp(key, "printNetwork") == 0) {
         config.system[SYSTEM_PRINT_NETWORK] = value;
-    } else
+    } else {
         return false;
+    }
     return true;
 }
 
@@ -488,8 +487,9 @@ static bool set_to_wifi(const char *key, const char *value) {
         strcpy(config.wifi.ssid, value);
     } else if (strcasecmp(key, "pass") == 0) {
         strcpy(config.wifi.pass, value);
-    } else
+    } else {
         return false;
+    }
     return true;
 }
 
@@ -500,12 +500,15 @@ bool config_validate(char *error, size_t error_size) {
         snprintf(error, error_size, "Control mode must be between %d and %d.", CTRLMODE_MIN, CTRLMODE_MAX);
         return false;
     }
-    if (config.general[GENERAL_SWITCH_TYPE] < SWITCH_TYPE_MIN || config.general[GENERAL_SWITCH_TYPE] > SWITCH_TYPE_MAX) {
+    if (config.general[GENERAL_SWITCH_TYPE] < SWITCH_TYPE_MIN ||
+        config.general[GENERAL_SWITCH_TYPE] > SWITCH_TYPE_MAX) {
         snprintf(error, error_size, "Switch type must be between %d and %d.", SWITCH_TYPE_MIN, SWITCH_TYPE_MAX);
         return false;
     }
-    if (config.general[GENERAL_WIFI_ENABLED] < WIFI_ENABLED_MIN || config.general[GENERAL_WIFI_ENABLED] > WIFI_ENABLED_MAX) {
-        snprintf(error, error_size, "Wi-Fi enable status must be between %d and %d.", WIFI_ENABLED_MIN, WIFI_ENABLED_MAX);
+    if (config.general[GENERAL_WIFI_ENABLED] < WIFI_ENABLED_MIN ||
+        config.general[GENERAL_WIFI_ENABLED] > WIFI_ENABLED_MAX) {
+        snprintf(error, error_size, "Wi-Fi enable status must be between %d and %d.", WIFI_ENABLED_MIN,
+                 WIFI_ENABLED_MAX);
         return false;
     }
     if (config.sensors[SENSORS_IMU_MODEL] < IMU_MODEL_MIN || config.sensors[SENSORS_IMU_MODEL] > IMU_MODEL_MAX) {
@@ -518,7 +521,8 @@ bool config_validate(char *error, size_t error_size) {
     }
     if (config.sensors[SENSORS_GPS_COMMAND_TYPE] < GPS_COMMAND_TYPE_MIN ||
         config.sensors[SENSORS_GPS_COMMAND_TYPE] > GPS_COMMAND_TYPE_MAX) {
-        snprintf(error, error_size, "GPS command type must be between %d and %d.", GPS_COMMAND_TYPE_MIN, GPS_COMMAND_TYPE_MAX);
+        snprintf(error, error_size, "GPS command type must be between %d and %d.", GPS_COMMAND_TYPE_MIN,
+                 GPS_COMMAND_TYPE_MAX);
         return false;
     }
     // Unique pin validation
@@ -526,35 +530,42 @@ bool config_validate(char *error, size_t error_size) {
     switch ((ControlMode)config.general[GENERAL_CONTROL_MODE]) {
         case CTRLMODE_3AXIS_ATHR:
             for (u32 i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
-                if ((i32)config.pins[i] == lastPin)
+                if ((i32)config.pins[i] == lastPin) {
                     goto invalid;
+                }
             }
             break;
         case CTRLMODE_3AXIS:
             for (u32 i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
                 // Skip pins that aren't utilized in this mode
-                if (i == PINS_INPUT_THROTTLE || i == PINS_ESC_THROTTLE)
+                if (i == PINS_INPUT_THROTTLE || i == PINS_ESC_THROTTLE) {
                     break;
-                if ((i32)config.pins[i] == lastPin)
+                }
+                if ((i32)config.pins[i] == lastPin) {
                     goto invalid;
+                }
             }
             break;
         case CTRLMODE_2AXIS_ATHR:
         case CTRLMODE_FLYINGWING_ATHR:
             for (u32 i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
-                if (i == PINS_INPUT_RUD)
+                if (i == PINS_INPUT_RUD) {
                     break;
-                if ((i32)config.pins[i] == lastPin)
+                }
+                if ((i32)config.pins[i] == lastPin) {
                     goto invalid;
+                }
             }
             break;
         case CTRLMODE_2AXIS:
         case CTRLMODE_FLYINGWING:
             for (u32 i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
-                if (i == PINS_INPUT_RUD || i == PINS_INPUT_THROTTLE || i == PINS_ESC_THROTTLE)
+                if (i == PINS_INPUT_RUD || i == PINS_INPUT_THROTTLE || i == PINS_ESC_THROTTLE) {
                     break;
-                if ((i32)config.pins[i] == lastPin)
+                }
+                if ((i32)config.pins[i] == lastPin) {
                     goto invalid;
+                }
             }
             break;
         invalid:
@@ -613,7 +624,8 @@ bool config_validate(char *error, size_t error_size) {
             break;
         case CTRLMODE_FLYINGWING_ATHR:
         case CTRLMODE_FLYINGWING:
-            if (config.control[CONTROL_MAX_ELEVON_DEFLECTION] > 90 || config.control[CONTROL_MAX_ELEVON_DEFLECTION] < 0) {
+            if (config.control[CONTROL_MAX_ELEVON_DEFLECTION] > 90 ||
+                config.control[CONTROL_MAX_ELEVON_DEFLECTION] < 0) {
                 snprintf(error, error_size, "Max elevon deflection must be between 0 and 90 degrees.");
                 return false;
             }
@@ -621,7 +633,8 @@ bool config_validate(char *error, size_t error_size) {
     }
     // Wi-Fi ssid/password validation
     if (strlen(config.wifi.ssid) < WIFI_SSID_MIN_LEN || strlen(config.wifi.ssid) > WIFI_SSID_MAX_LEN) {
-        snprintf(error, error_size, "Wi-Fi SSID must be between %d and %d characters.", WIFI_SSID_MIN_LEN, WIFI_SSID_MAX_LEN);
+        snprintf(error, error_size, "Wi-Fi SSID must be between %d and %d characters.", WIFI_SSID_MIN_LEN,
+                 WIFI_SSID_MAX_LEN);
         return false;
     }
     if (strlen(config.wifi.pass) > 0 &&
@@ -671,25 +684,32 @@ ConfigSectionType config_get(const char *section, const char *key, void **value)
 
 ConfigSetResult config_set(const char *section, const char *key, const char *value) {
     if (strcasecmp(section, CONFIG_GENERAL_STR) == 0) {
-        if (!set_to_general(key, (f32)atof(value)))
+        if (!set_to_general(key, (f32)atof(value))) {
             return CONFIG_SET_DOES_NOT_EXIST;
+        }
     } else if (strcasecmp(section, CONFIG_CONTROL_STR) == 0) {
-        if (!set_to_control(key, (f32)atof(value)))
+        if (!set_to_control(key, (f32)atof(value))) {
             return CONFIG_SET_DOES_NOT_EXIST;
+        }
     } else if (strcasecmp(section, CONFIG_PINS_STR) == 0) {
-        if (!set_to_pins(key, (f32)atof(value)))
+        if (!set_to_pins(key, (f32)atof(value))) {
             return CONFIG_SET_DOES_NOT_EXIST;
+        }
     } else if (strcasecmp(section, CONFIG_SENSORS_STR) == 0) {
-        if (!set_to_sensors(key, (f32)atof(value)))
+        if (!set_to_sensors(key, (f32)atof(value))) {
             return CONFIG_SET_DOES_NOT_EXIST;
+        }
     } else if (strcasecmp(section, CONFIG_WIFI_STR) == 0) {
-        if (!set_to_wifi(key, value))
+        if (!set_to_wifi(key, value)) {
             return CONFIG_SET_DOES_NOT_EXIST;
+        }
     } else if (strcasecmp(section, CONFIG_SYSTEM_STR) == 0) {
-        if (!set_to_system(key, (f32)atof(value)))
+        if (!set_to_system(key, (f32)atof(value))) {
             return CONFIG_SET_DOES_NOT_EXIST;
-    } else
+        }
+    } else {
         return CONFIG_SET_DOES_NOT_EXIST;
+    }
     char error[128];
     bool valid = config_validate(error, sizeof(error));
     return valid ? CONFIG_SET_OK : CONFIG_SET_INVALID;

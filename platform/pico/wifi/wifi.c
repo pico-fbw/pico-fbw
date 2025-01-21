@@ -53,7 +53,7 @@ static DNSServer dns;
 static TCPServer server;
 static const ip_addr_t gateway = IP4(192, 168, 4, 1), netmask = IP4(255, 255, 255, 0);
 
-    // If we're not on the Pico W, we can use RNDIS/CDC-ECM to provide a virtual network interface when plugged in via USB
+    // If not on Pico W, we can use RNDIS/CDC-ECM to provide a virtual network interface when plugged in via USB
     #ifndef RASPBERRYPI_PICO_W
 
 static async_context_threadsafe_background_t lwip_async_context;
@@ -76,8 +76,9 @@ void generate_macaddr(u8 *mac) {
 // lwIP callback. Will be called to transmit packets over the USB network interface.
 static err_t usb_net_xmit_packet(struct netif *netif, struct pbuf *p) {
     while (true) {
-        if (!tud_ready())
+        if (!tud_ready()) {
             return ERR_USE; // tinyusb not ready
+        }
         if (tud_network_can_xmit(p->tot_len)) {
             tud_network_xmit(p, 0);
             return ERR_OK;
@@ -112,14 +113,17 @@ void tud_network_init_cb(void) {
 
 // tinyusb callback. Will be called when a packet is received over the USB network interface.
 bool tud_network_recv_cb(const u8 *src, u16 size) {
-    if (received_frame)
+    if (received_frame) {
         return false; // Haven't processed the previous packet yet, so we can't accept another
-    if (!size)
+    }
+    if (!size) {
         return true; // No data to copy
+    }
 
     struct pbuf *p = pbuf_alloc(PBUF_RAW, size, PBUF_POOL);
-    if (!p)
+    if (!p) {
         return false;
+    }
     // pbuf_alloc() has already initialized struct; all we need to do is copy the data
     memcpy(p->payload, src, size);
     // usb_net_process_packets() will handle this pbuf later
@@ -142,20 +146,23 @@ static bool usb_net_init() {
     // Initialize lwip stack
     async_context_threadsafe_background_config_t config = async_context_threadsafe_background_default_config();
     async_context_threadsafe_background_init(&lwip_async_context, &config);
-    if (!lwip_nosys_init(&lwip_async_context.core))
+    if (!lwip_nosys_init(&lwip_async_context.core)) {
         return false;
+    }
 
     struct netif *netif = &usb_net;
     // Generate MAC address
     generate_macaddr(tud_network_mac_address);
     netif->hwaddr_len = sizeof(tud_network_mac_address);
     memcpy(netif->hwaddr, tud_network_mac_address, sizeof(tud_network_mac_address));
-    LWIP_DEBUGF(NETIF_DEBUG, ("usb_net_init: generated MAC address %02X:%02X:%02X:%02X:%02X:%02X\n", netif->hwaddr[0],
-                              netif->hwaddr[1], netif->hwaddr[2], netif->hwaddr[3], netif->hwaddr[4], netif->hwaddr[5]));
+    LWIP_DEBUGF(NETIF_DEBUG,
+                ("usb_net_init: generated MAC address %02X:%02X:%02X:%02X:%02X:%02X\n", netif->hwaddr[0],
+                 netif->hwaddr[1], netif->hwaddr[2], netif->hwaddr[3], netif->hwaddr[4], netif->hwaddr[5]));
     // Add the usb network interface to lwip
     netif = netif_add(netif, &gateway, &netmask, &gateway, NULL, netif_init_cb, ip_input);
-    if (!netif)
+    if (!netif) {
         return false;
+    }
     netif_set_default(netif);
     netif_set_up(netif);
     return true;
@@ -165,8 +172,9 @@ static bool usb_net_init() {
  * Process any packets received by the USB network interface (tud_network_recv_cb()) through lwip.
  */
 static void usb_net_process_packets() {
-    if (!received_frame)
+    if (!received_frame) {
         return;
+    }
     // Process any packets received by the USB network interface (tud_network_recv_cb()) through lwip
     ethernet_input(received_frame, &usb_net);
     received_frame = NULL;
@@ -178,14 +186,17 @@ static void usb_net_process_packets() {
 bool wifi_setup(const char *ssid, const char *pass) {
     #ifdef RASPBERRYPI_PICO_W
     // Check credentials and set up the access point network
-    if (!ssid || strlen(ssid) < WIFI_SSID_MIN_LEN || strlen(ssid) > WIFI_SSID_MAX_LEN)
+    if (!ssid || strlen(ssid) < WIFI_SSID_MIN_LEN || strlen(ssid) > WIFI_SSID_MAX_LEN) {
         return false;
-    if (pass && (strlen(pass) < WIFI_PASS_MIN_LEN || strlen(pass) > WIFI_PASS_MAX_LEN))
+    }
+    if (pass && (strlen(pass) < WIFI_PASS_MIN_LEN || strlen(pass) > WIFI_PASS_MAX_LEN)) {
         return false;
+    }
     cyw43_arch_enable_ap_mode(ssid, pass, pass ? CYW43_AUTH_WPA3_WPA2_AES_PSK : CYW43_AUTH_OPEN);
     #else
-    if (!usb_net_init())
+    if (!usb_net_init()) {
         return false;
+    }
     // If a device is currently connected via USB...
     if (tud_ready()) {
         // ...force re-enumeration to make the virtual network interface available
@@ -197,10 +208,12 @@ bool wifi_setup(const char *ssid, const char *pass) {
     (void)ssid;
     (void)pass;
     #endif
-    if (!dhcp_server_init(&dhcp, &gateway, &netmask))
+    if (!dhcp_server_init(&dhcp, &gateway, &netmask)) {
         return false;
-    if (!dns_server_init(&dns, &gateway))
+    }
+    if (!dns_server_init(&dns, &gateway)) {
         return false;
+    }
     return tcp_server_open(&server, &gateway, TCP_PORT);
 }
 
@@ -213,8 +226,9 @@ void wifi_periodic() {
 }
 
 bool wifi_disable() {
-    if (!tcp_server_close(&server))
+    if (!tcp_server_close(&server)) {
         return false;
+    }
     dns_server_deinit(&dns);
     dhcp_server_deinit(&dhcp);
     #ifdef RASPBERRYPI_PICO_W

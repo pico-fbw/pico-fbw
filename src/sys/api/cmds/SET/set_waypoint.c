@@ -29,8 +29,9 @@ static void callback_intercept() {
  */
 static bool parse_args(const char *args, Waypoint *wpt) {
     JSON_Value *root = json_parse_string(args);
-    if (!root)
+    if (!root) {
         return false;
+    }
     JSON_Object *obj = json_value_get_object(root);
     if (!obj) {
         json_value_free(root);
@@ -72,13 +73,15 @@ static bool parse_args(const char *args, Waypoint *wpt) {
 
 // {"lat":number,"lng":number,"alt":number,"speed":number,"drop":number}
 
-i32 api_set_waypoint(const char *args) {
-    if (aircraft.mode != MODE_AUTO)
+i32 api_set_waypoint(const char *in, char **out) {
+    if (aircraft.mode != MODE_AUTO) {
         return 403;
-
+    }
     Waypoint wpt;
-    if (!parse_args(args, &wpt) || !waypoint_is_valid(&wpt))
+    if (!parse_args(in, &wpt) || !waypoint_is_valid(&wpt)) {
         return 400;
+    }
     auto_set(wpt, callback_intercept);
     return 202;
+    (void)out;
 }

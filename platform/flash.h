@@ -1,7 +1,7 @@
 #pragma once
 
-// littlefs header is required for lfs struct definitions, but fbw_lib is not included in CMake as we don't require any actual
-// littlefs code
+// littlefs header is required for lfs struct definitions,
+// but fbw_lib is not included in CMake as we don't require any actual littlefs code
 #include "lib/lfs.h"
 
 /**

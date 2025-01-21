@@ -6,7 +6,8 @@
 import { useEffect, useState } from "preact/hooks";
 import { MinusSolid, PlusSolid } from "preact-heroicons";
 
-import { api, GET_CONFIG } from "../helpers/api";
+import { api } from "../helpers/api";
+import { GET_CONFIG } from "../helpers/apiTypes";
 
 interface ConfigDatabaseItem {
     name: string;
@@ -372,17 +373,8 @@ const config: ConfigDatabase = {
 
     System: [
         {
-            name: "Use Display",
-            id: "useDisplay",
-            desc: "Whether or not to use the display, if supported.",
-            enumMap: {
-                0: "Disabled",
-                1: "Enabled",
-            },
-        },
-        {
             name: "Debug",
-            id: "printFBW",
+            id: "printsys",
             desc: "Enables miscellaneous logs, warnings, and error statements.",
             enumMap: {
                 0: "Disabled",

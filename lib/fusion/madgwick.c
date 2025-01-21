@@ -127,8 +127,10 @@ static bool madgwick_updateIMU(Madgwick *filter, f32 gx, f32 gy, f32 gz, f32 ax,
 
         // Gradient decent algorithm corrective step
         s0 = _4q0 * q2q2 + _2q2 * ax + _4q0 * q1q1 - _2q1 * ay;
-        s1 = _4q1 * q3q3 - _2q3 * ax + 4.0f * q0q0 * filter->q1 - _2q0 * ay - _4q1 + _8q1 * q1q1 + _8q1 * q2q2 + _4q1 * az;
-        s2 = 4.0f * q0q0 * filter->q2 + _2q0 * ax + _4q2 * q3q3 - _2q3 * ay - _4q2 + _8q2 * q1q1 + _8q2 * q2q2 + _4q2 * az;
+        s1 = _4q1 * q3q3 - _2q3 * ax + 4.0f * q0q0 * filter->q1 - _2q0 * ay - _4q1 + _8q1 * q1q1 + _8q1 * q2q2 +
+             _4q1 * az;
+        s2 = 4.0f * q0q0 * filter->q2 + _2q0 * ax + _4q2 * q3q3 - _2q3 * ay - _4q2 + _8q2 * q1q1 + _8q2 * q2q2 +
+             _4q2 * az;
         s3 = 4.0f * q1q1 * filter->q3 - _2q1 * ax + 4.0f * q2q2 * filter->q3 - _2q2 * ay;
         recipNorm = invSqrt(s0 * s0 + s1 * s1 + s2 * s2 + s3 * s3); // normalise step magnitude
         s0 *= recipNorm;
@@ -150,7 +152,8 @@ static bool madgwick_updateIMU(Madgwick *filter, f32 gx, f32 gy, f32 gz, f32 ax,
     filter->q3 += qDot4 * filter->inv_freq;
 
     // Normalise quaternion
-    recipNorm = invSqrt(filter->q0 * filter->q0 + filter->q1 * filter->q1 + filter->q2 * filter->q2 + filter->q3 * filter->q3);
+    recipNorm =
+        invSqrt(filter->q0 * filter->q0 + filter->q1 * filter->q1 + filter->q2 * filter->q2 + filter->q3 * filter->q3);
     filter->q0 *= recipNorm;
     filter->q1 *= recipNorm;
     filter->q2 *= recipNorm;
@@ -168,8 +171,8 @@ bool madgwick_update(Madgwick *filter, f32 gx, f32 gy, f32 gz, f32 ax, f32 ay, f
     f32 s0, s1, s2, s3;
     f32 qDot1, qDot2, qDot3, qDot4;
     f32 hx, hy;
-    f32 _2q0mx, _2q0my, _2q0mz, _2q1mx, _2bx, _2bz, _4bx, _4bz, _2q0, _2q1, _2q2, _2q3, _2q0q2, _2q2q3, q0q0, q0q1, q0q2, q0q3,
-        q1q1, q1q2, q1q3, q2q2, q2q3, q3q3;
+    f32 _2q0mx, _2q0my, _2q0mz, _2q1mx, _2bx, _2bz, _4bx, _4bz, _2q0, _2q1, _2q2, _2q3, _2q0q2, _2q2q3, q0q0, q0q1,
+        q0q2, q0q3, q1q1, q1q2, q1q3, q2q2, q2q3, q3q3;
 
     // Use IMU algorithm if magnetometer measurement invalid (avoids NaN in magnetometer normalisation)
     if ((mx == 0.0f) && (my == 0.0f) && (mz == 0.0f)) {
@@ -269,7 +272,8 @@ bool madgwick_update(Madgwick *filter, f32 gx, f32 gy, f32 gz, f32 ax, f32 ay, f
     filter->q3 += qDot4 * filter->inv_freq;
 
     // Normalise quaternion
-    recipNorm = invSqrt(filter->q0 * filter->q0 + filter->q1 * filter->q1 + filter->q2 * filter->q2 + filter->q3 * filter->q3);
+    recipNorm =
+        invSqrt(filter->q0 * filter->q0 + filter->q1 * filter->q1 + filter->q2 * filter->q2 + filter->q3 * filter->q3);
     filter->q0 *= recipNorm;
     filter->q1 *= recipNorm;
     filter->q2 *= recipNorm;
@@ -306,12 +310,12 @@ bool madgwick_get_angles(Madgwick *filter, f32 *roll, f32 *pitch, f32 *yaw) {
         *roll = asinf(-2.0f * (filter->q1 * filter->q3 - filter->q0 * filter->q2));
     }
     if (pitch) {
-        *pitch =
-            atan2f(filter->q0 * filter->q1 + filter->q2 * filter->q3, 0.5f - filter->q1 * filter->q1 - filter->q2 * filter->q2);
+        *pitch = atan2f(filter->q0 * filter->q1 + filter->q2 * filter->q3,
+                        0.5f - filter->q1 * filter->q1 - filter->q2 * filter->q2);
     }
     if (yaw) {
-        *yaw =
-            atan2f(filter->q1 * filter->q2 + filter->q0 * filter->q3, 0.5f - filter->q2 * filter->q2 - filter->q3 * filter->q3);
+        *yaw = atan2f(filter->q1 * filter->q2 + filter->q0 * filter->q3,
+                      0.5f - filter->q2 * filter->q2 - filter->q3 * filter->q3);
     }
     return true;
 }

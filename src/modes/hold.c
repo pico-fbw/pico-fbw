@@ -20,8 +20,8 @@
 
 #include "hold.h"
 
-// The amount of time (in seconds) that the aircraft will fly straight for in the holding pattern, before turning back around
-// 180 degrees.
+// The amount of time (in seconds) that the aircraft will fly straight for in the holding pattern, before turning back
+// around 180 degrees.
 #define HOLD_TIME_PER_LEG_S 30
 
 // The bank angle to turn at when making a 180 in the holding pattern--needs to be positive!
@@ -60,8 +60,9 @@ static i32 turn_around(void *data) {
     oldTrack = gps.track;
     // Set our target heading based on this (with wrap protection)
     targetTrack = (oldTrack + 180);
-    if (targetTrack > 360)
+    if (targetTrack > 360) {
         targetTrack -= 360;
+    }
     turnStatus = HOLD_TURN_INPROGRESS;
     return 0; // Don't reschedule, we will wait until the turn is complete to do that
     (void)data;
@@ -109,13 +110,15 @@ void hold_update() {
             break;
         case HOLD_TURN_INPROGRESS:
             // Wait until it is time to decrease the turn
-            if (fabsf(targetTrack - gps.track) <= HOLD_HEADING_DECREASE_WITHIN)
+            if (fabsf(targetTrack - gps.track) <= HOLD_HEADING_DECREASE_WITHIN) {
                 turnStatus = HOLD_TURN_ENDING;
+            }
             break;
         case HOLD_TURN_ENDING:
             // Slowly decrease the turn
-            if (rollSet >= HOLD_TURN_SLOW_BANK_ANGLE)
+            if (rollSet >= HOLD_TURN_SLOW_BANK_ANGLE) {
                 rollSet -= (HOLD_TURN_BANK_ANGLE * config.control[CONTROL_RUDDER_SENSITIVITY]);
+            }
             // Move on to stabilization once we've intercepted the target heading
             if (fabsf(targetTrack - gps.track) <= HOLD_HEADING_INTERCEPT_WITHIN) {
                 turnStatus = HOLD_TURN_STABILIZING;
@@ -123,8 +126,9 @@ void hold_update() {
             break;
         case HOLD_TURN_STABILIZING:
             // Stabilize the turn back to 0 degrees of bank, then mark it as completed (unscheduled)
-            if (rollSet >= 0)
+            if (rollSet >= 0) {
                 rollSet -= (HOLD_TURN_BANK_ANGLE * config.control[CONTROL_RUDDER_SENSITIVITY]);
+            }
             break;
         case HOLD_TURN_UNSCHEDULED:
             callback_in_ms((HOLD_TIME_PER_LEG_S * 1000), turn_around, NULL);

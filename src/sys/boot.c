@@ -10,8 +10,6 @@
 #include "platform/stdio.h"
 #include "platform/time.h"
 
-#include "io/display.h"
-
 #include "sys/configuration.h"
 #include "sys/log.h"
 #include "sys/print.h"
@@ -27,22 +25,19 @@ void boot_begin() {
     bool flashOk = flash_setup();
     assert(flashOk);
     log_init();
-    display_init();
     sleep_ms_blocking(BOOT_WAIT_MS); // Wait for peripherals to power up
 #ifndef NO_COLOR_OUTPUT
-    printraw(COLOR_RESET); // If we're using color output, reset color to default in case the previous output was colored
+    // If we're using color output, reset color to default in case the previous output was colored
+    printraw(COLOR_RESET);
 #endif
 }
 
 void boot_set_progress(f32 progress, const char *message) {
     printpre("boot", "%s(%.f%%)%s %s", COLOR_BLUE, progress, COLOR_RESET, message);
-    display_string(message, (i32)progress);
 }
 
 void boot_complete() {
     printpre("boot", "%s(100%%)%s Done!", COLOR_BLUE, COLOR_RESET);
-    if (log_count_errs() == 0)
-        display_anim();
     sys_boot_end();
     isBooted = true;
 }

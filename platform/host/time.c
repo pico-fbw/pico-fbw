@@ -25,8 +25,9 @@
 
 VOID CALLBACK callback_to_WAITORTIMERCALLBACK(PVOID lpParameter, BOOLEAN TimerOrWaitFired) {
     CallbackData *data = (CallbackData *)lpParameter;
-    if (!data)
+    if (!data) {
         return;
+    }
     i32 reschedule = data->callback(data->data);
     if (reschedule <= 0) {
         DeleteTimerQueueTimer(NULL, data->id, NULL);
@@ -72,13 +73,15 @@ static bool create_timer(CallbackData *data, u32 ms) {
 // Wrapper function to convert the callback signature from `i32 (*)()` to `void (*)(union sigval)`
 static void callback_to_sigevent(union sigval sv) {
     CallbackData *data = sv.sival_ptr;
-    if (!data)
+    if (!data) {
         return;
+    }
     i32 reschedule = data->callback(data->data);
     if (reschedule > 0) {
         timer_delete(data->id);
-        if (!create_timer(data, reschedule))
+        if (!create_timer(data, reschedule)) {
             free(data);
+        }
     } else {
         timer_delete(data->id);
         free(data);
@@ -101,8 +104,9 @@ u64 time_us() {
 
 CallbackData *callback_in_ms(u32 ms, Callback callback, void *data) {
     CallbackData *cbData = malloc(sizeof(CallbackData));
-    if (!cbData)
+    if (!cbData) {
         return NULL;
+    }
     cbData->callback = callback;
     cbData->data = data;
 #if defined(_WIN32)
@@ -120,8 +124,9 @@ CallbackData *callback_in_ms(u32 ms, Callback callback, void *data) {
 }
 
 void cancel_callback(CallbackData *data) {
-    if (!data)
+    if (!data) {
         return;
+    }
 #if defined(_WIN32)
     DeleteTimerQueueTimer(NULL, data->id, NULL);
 #elif defined(__APPLE__) || defined(__linux__)

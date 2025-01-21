@@ -1,6 +1,5 @@
 add_library(fbw_io
     aahrs.c
-    display.c
     esc.c
     gps.c
     receiver.c

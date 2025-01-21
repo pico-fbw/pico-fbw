@@ -45,16 +45,18 @@ static PWMInData inData[NUM_PIO_STATE_MACHINES * NUM_PIOS]; // (8)
 static u32 frequencies[NUM_PWM_SLICES]; // (8)
 
 // Handles PWM input from state machines in PIO0.
-// Called when an interrupt is raised by a state machine, and will read the pulsewidth and period from the state machine.
+// Called when an interrupt is raised by a state machine, and will read the pulsewidth and period from the state
+// machine.
 static void pio0Handler() {
     for (u32 i = 0; i < NUM_PIO_STATE_MACHINES; i++) {
         // Check if the IRQ has been raised for this state machine
         if (pio0_hw->irq & 1 << i) {
-            pio0_hw->irq = 1 << i;                                         // Clear interrupt
-            inData[i].pulsewidth = pio_sm_get(pio0, i);                    // Read pulsewidth from FIFO
-            inData[i].period = pio_sm_get(pio0, i) + inData[i].pulsewidth; // Read period from FIFO (PIO only stores low period
-                                                                           // so we add the pulsewidth to get the full period)
-            pio0_hw->irq = 1 << i;                                         // Clear interrupt
+            pio0_hw->irq = 1 << i;                      // Clear interrupt
+            inData[i].pulsewidth = pio_sm_get(pio0, i); // Read pulsewidth from FIFO
+            inData[i].period =
+                pio_sm_get(pio0, i) + inData[i].pulsewidth; // Read period from FIFO (PIO only stores low period
+                                                            // so we add the pulsewidth to get the full period)
+            pio0_hw->irq = 1 << i;                          // Clear interrupt
         }
     }
 }
@@ -65,15 +67,16 @@ static void pio1Handler() {
         if (pio1_hw->irq & 1 << i) {
             pio1_hw->irq = 1 << i;
             inData[i + NUM_PIO_STATE_MACHINES].pulsewidth = pio_sm_get(pio1, i);
-            inData[i + NUM_PIO_STATE_MACHINES].period = pio_sm_get(pio1, i) + inData[i + NUM_PIO_STATE_MACHINES].pulsewidth;
+            inData[i + NUM_PIO_STATE_MACHINES].period =
+                pio_sm_get(pio1, i) + inData[i + NUM_PIO_STATE_MACHINES].pulsewidth;
             pio1_hw->irq = 1 << i;
         }
     }
 }
 
 /* You may wonder why there is a limit of seven pins even though there are eight state machines.
-This is because the Pico W reserves one state machine for itself, and even though we could use the full eight on a regular Pico,
-this keeps compatability between models. */
+This is because the Pico W reserves one state machine for itself, and even though we could use the full eight on a
+regular Pico, this keeps compatability between models. */
 
 /**
  * Sets up a PWM state machine for a single pin.
@@ -102,8 +105,9 @@ static bool setup_sm(const PIO pio, const u32 offset, u32 pin) {
         // Set config and enable state machine
         pio_sm_init(pio, sm, offset, &cfg);
         pio_sm_set_enabled(pio, sm, true);
-    } else
+    } else {
         return false; // A state machine was not available
+    }
     return true;
 }
 
@@ -113,29 +117,35 @@ bool pwm_setup_read(const u32 pins[], u32 num_pins) {
         u32 offset = pio_add_program(pio0, &pwm_program);
         for (u32 i = 0; i < (num_pins > NUM_PIO_STATE_MACHINES ? NUM_PIO_STATE_MACHINES : num_pins); i++) {
             assert(pwm_gpio_to_channel(pins[i]) == PWM_CHAN_B); // Only PWM channel B can be used for input
-            if (!setup_sm(pio0, offset, pins[i]))
+            if (!setup_sm(pio0, offset, pins[i])) {
                 return false;
+            }
         }
         // Set up the interrupt handler
         irq_set_exclusive_handler(PIO0_IRQ_0, pio0Handler);
         irq_set_enabled(PIO0_IRQ_0, true);
-        pio0_hw->inte0 = PIO_IRQ0_INTE_SM0_BITS | PIO_IRQ0_INTE_SM1_BITS | PIO_IRQ0_INTE_SM2_BITS | PIO_IRQ0_INTE_SM3_BITS;
-    } else
+        pio0_hw->inte0 =
+            PIO_IRQ0_INTE_SM0_BITS | PIO_IRQ0_INTE_SM1_BITS | PIO_IRQ0_INTE_SM2_BITS | PIO_IRQ0_INTE_SM3_BITS;
+    } else {
         return false; // Failed to load into PIO0
+    }
     // If there are more than NUM_PIO_STATE_MACHINES (4) pins, PIO1 must also be used
     if (num_pins > NUM_PIO_STATE_MACHINES) {
         if (pio_can_add_program(pio1, &pwm_program)) {
             u32 offset = pio_add_program(pio1, &pwm_program);
             for (u32 i = NUM_PIO_STATE_MACHINES; i < num_pins; i++) {
                 assert(pwm_gpio_to_channel(pins[i]) == PWM_CHAN_B);
-                if (!setup_sm(pio1, offset, pins[i]))
+                if (!setup_sm(pio1, offset, pins[i])) {
                     return false;
+                }
             }
             irq_set_exclusive_handler(PIO1_IRQ_0, pio1Handler);
             irq_set_enabled(PIO1_IRQ_0, true);
-            pio1_hw->inte0 = PIO_IRQ0_INTE_SM0_BITS | PIO_IRQ0_INTE_SM1_BITS | PIO_IRQ0_INTE_SM2_BITS | PIO_IRQ0_INTE_SM3_BITS;
-        } else
+            pio1_hw->inte0 =
+                PIO_IRQ0_INTE_SM0_BITS | PIO_IRQ0_INTE_SM1_BITS | PIO_IRQ0_INTE_SM2_BITS | PIO_IRQ0_INTE_SM3_BITS;
+        } else {
             return false;
+        }
     }
     return true;
 }
@@ -164,10 +174,11 @@ bool pwm_setup_write(const u32 pins[], u32 num_pins, u32 freq) {
                 break;
             }
         }
-        if (div16_top < 16)
+        if (div16_top < 16) {
             return false; // Too large
-        else if (div16_top >= 256 * 16)
+        } else if (div16_top >= 256 * 16) {
             return false; // Too small
+        }
         pwm_hw->slice[slice].div = div16_top;
         pwm_hw->slice[slice].top = top;
         pwm_set_enabled(slice, true);

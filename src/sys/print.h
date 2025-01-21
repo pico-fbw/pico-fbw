@@ -31,7 +31,7 @@ typedef struct PrintDefs {
 /**
  * printf wrapper for raw output
  * @param ... the format string and arguments to print (same as printf)
- * @note This does not include a newline character and does not check the shouldPrint.
+ * @note This does not include a newline character and does not check whether printing is enabled.
  */
 #define printraw(...) wrap_printf(__VA_ARGS__)
 
@@ -40,10 +40,10 @@ typedef struct PrintDefs {
  * @param ... the format string and arguments to print (same as printf)
  * @note This function automatically appends a newline.
  */
-#define print(...)                                                                                                             \
-    if (shouldPrint.fbw) {                                                                                                     \
-        printraw(__VA_ARGS__);                                                                                                 \
-        printraw("\n");                                                                                                        \
+#define print(...)                                                                                                     \
+    if (shouldPrint.fbw) {                                                                                             \
+        printraw(__VA_ARGS__);                                                                                         \
+        printraw("\n");                                                                                                \
     }
 
 /**
@@ -52,11 +52,11 @@ typedef struct PrintDefs {
  * @param ... the format string and arguments to print (same as printf)
  * @note This function automatically appends a newline.
  */
-#define printpre(prefix, ...)                                                                                                  \
-    if (shouldPrint.fbw) {                                                                                                     \
-        printraw("%s[%s]%s ", COLOR_LIGHT_GREEN, prefix, COLOR_RESET);                                                         \
-        printraw(__VA_ARGS__);                                                                                                 \
-        printraw("\n");                                                                                                        \
+#define printpre(prefix, ...)                                                                                          \
+    if (shouldPrint.fbw) {                                                                                             \
+        printraw("%s[%s]%s ", COLOR_LIGHT_GREEN, prefix, COLOR_RESET);                                                 \
+        printraw(__VA_ARGS__);                                                                                         \
+        printraw("\n");                                                                                                \
     }
 
 /**
@@ -65,9 +65,9 @@ typedef struct PrintDefs {
  * @param ... the format string and arguments to print (same as printf)
  * @note This function automatically appends a newline.
  */
-#define printfbw(sys, ...)                                                                                                     \
-    if (shouldPrint.sys) {                                                                                                     \
-        printpre(#sys, __VA_ARGS__);                                                                                           \
+#define printsys(sys, ...)                                                                                             \
+    if (shouldPrint.sys) {                                                                                             \
+        printpre(#sys, __VA_ARGS__);                                                                                   \
     }
 
 // shouldPrint is defined in configuration.c

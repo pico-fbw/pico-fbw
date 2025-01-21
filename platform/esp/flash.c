@@ -38,17 +38,20 @@ static int flash_read(const struct lfs_config *c, lfs_block_t block, lfs_off_t o
     assert(partition);
     assert(block < c->block_count);
     assert(off + size <= c->block_size);
-    if (esp_partition_read(partition, (block * c->block_size) + off, buffer, size) != ESP_OK)
+    if (esp_partition_read(partition, (block * c->block_size) + off, buffer, size) != ESP_OK) {
         return LFS_ERR_IO;
+    }
     return LFS_ERR_OK;
 }
 
-static int flash_prog(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size) {
+static int flash_prog(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, const void *buffer,
+                      lfs_size_t size) {
     esp_partition_t *partition = (esp_partition_t *)c->context;
     assert(partition);
     assert(block < c->block_count);
-    if (esp_partition_write(partition, (block * c->block_size) + off, buffer, size) != ESP_OK)
+    if (esp_partition_write(partition, (block * c->block_size) + off, buffer, size) != ESP_OK) {
         return LFS_ERR_IO;
+    }
     return LFS_ERR_OK;
 }
 
@@ -56,8 +59,9 @@ static int flash_erase(const struct lfs_config *c, lfs_block_t block) {
     esp_partition_t *partition = (esp_partition_t *)c->context;
     assert(partition);
     assert(block < c->block_count);
-    if (esp_partition_erase_range(partition, block * c->block_size, c->block_size) != ESP_OK)
+    if (esp_partition_erase_range(partition, block * c->block_size, c->block_size) != ESP_OK) {
         return LFS_ERR_IO;
+    }
     return LFS_ERR_OK;
 }
 
@@ -71,22 +75,25 @@ static int flash_lock(const struct lfs_config *c) {
     if (!lfsLock) {
         static portMUX_TYPE lfsLock_mux = portMUX_INITIALIZER_UNLOCKED;
         portENTER_CRITICAL(&lfsLock_mux);
-        if (!lfsLock)
+        if (!lfsLock) {
             lfsLock = xSemaphoreCreateMutex();
+        }
         portEXIT_CRITICAL(&lfsLock_mux);
     }
-    if (xSemaphoreTake(lfsLock, portMAX_DELAY) == pdTRUE)
+    if (xSemaphoreTake(lfsLock, portMAX_DELAY) == pdTRUE) {
         return LFS_ERR_OK;
-    else
+    } else {
         return LFS_ERR_IO;
+    }
     (void)c;
 }
 
 static int flash_unlock(const struct lfs_config *c) {
-    if (xSemaphoreGive(lfsLock) == pdTRUE)
+    if (xSemaphoreGive(lfsLock) == pdTRUE) {
         return LFS_ERR_OK;
-    else
+    } else {
         return LFS_ERR_IO;
+    }
     (void)c;
 }
 
@@ -95,18 +102,22 @@ bool flash_setup() {
     // Find partitions defined in partitions.csv
     wwwfsPartition =
         esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_LITTLEFS, WWWFS_PARTITION_LABEL);
-    if (!wwwfsPartition)
+    if (!wwwfsPartition) {
         return false;
+    }
     // Pass partition as context so block operations know where to read/write
     wwwfs_cfg.context = (void *)wwwfsPartition;
     // Auto-detect block count based on partition size
     wwwfs_cfg.block_count = wwwfsPartition->size / wwwfs_cfg.block_size;
-    if (wwwfs_cfg.block_count <= 0)
+    if (wwwfs_cfg.block_count <= 0) {
         return false;
+    }
 #endif
-    lfsPartition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_LITTLEFS, LFS_PARTITION_LABEL);
-    if (!lfsPartition)
+    lfsPartition =
+        esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_LITTLEFS, LFS_PARTITION_LABEL);
+    if (!lfsPartition) {
         return false;
+    }
     lfs_cfg.context = (void *)lfsPartition;
     lfs_cfg.block_count = lfsPartition->size / lfs_cfg.block_size;
     return lfs_cfg.block_count > 0;

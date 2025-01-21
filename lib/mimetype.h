@@ -49,8 +49,9 @@ static const char *get_content_type(const char *path) {
         size_t lensuffix = strlen(suffix);
         if (lenpath >= lensuffix) {
             const char *check = strstr(path + lenpath - lensuffix, suffix);
-            if (check)
+            if (check) {
                 return mimeTable[i].mimeType;
+            }
         }
     }
     return mimeTable[count_of(mimeTable)].mimeType; // Default to octet-stream

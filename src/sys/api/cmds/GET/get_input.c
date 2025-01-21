@@ -8,14 +8,13 @@
 #include "lib/parson.h"
 
 #include "sys/configuration.h"
-#include "sys/print.h"
 
 #include "get_input.h"
 
 // {"ail":number,"ele":number,"rud":number,"thr":number,"switch":number}
 // Only "ail" and "ele" are guaranteed to be present
 
-i32 api_get_input(const char *args) {
+i32 api_get_input(const char *in, char **out) {
     JSON_Value *root = json_value_init_object();
     JSON_Object *obj = json_value_get_object(root);
     json_object_set_number(obj, "ail", receiver_get(config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE));
@@ -38,9 +37,8 @@ i32 api_get_input(const char *args) {
             break;
     }
     char *serialized = json_serialize_to_string(root);
-    printraw("%s\n", serialized);
-    json_free_serialized_string(serialized);
     json_value_free(root);
-    return -1;
-    (void)args;
+    *out = serialized;
+    return 200;
+    (void)in;
 }

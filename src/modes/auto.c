@@ -66,8 +66,9 @@ static i32 callback_drop(void *data) {
 static void load_waypoint(Waypoint *wpt) {
     currentWpt = *wpt;
     // Factor in the altitude offset if calculated earlier
-    if (gps.altOffsetCalibrated)
+    if (gps.altOffsetCalibrated) {
         currentWpt.alt = wpt->alt + gps.altOffset;
+    }
     // Set the (possibly new) target speed
     throttle.target = wpt->speed;
     // Initiate a drop if applicable
@@ -149,15 +150,17 @@ void auto_update() {
     // Calculate difference between track and bearing, normalized between -180 and 180
     // Use GPS track instead of IMU heading because heading isn't always going to be navigational (more likely magnetic)
     f64 diff = gps.track - bearing;
-    if (diff > 180.0)
+    if (diff > 180.0) {
         diff -= 360.0;
-    else if (diff < -180.0)
+    } else if (diff < -180.0) {
         diff += 360.0;
+    }
 
     // Predictive roll control adjustment to avoid overshooting
-    if (fabs(diff) < ROLL_OVERSHOOT_THRESHOLD)
+    if (fabs(diff) < ROLL_OVERSHOOT_THRESHOLD) {
         // Apply reverse input to dampen overshoot
         latGuid.out = -latGuid.out * (aahrs.rollRate / ROLL_OVERSHOOT_DAMPEN);
+    }
 
     // Nested PIDs to command bank/pitch angles
     pid_update(&latGuid, 0.0, diff);
@@ -180,14 +183,16 @@ void auto_update() {
                     // Auto mode ends here, we enter a holding pattern
                     autoComplete = true;
                     aircraft.change_to(MODE_HOLD);
-                } else
+                } else {
                     // More waypoints to go, load the next one
                     load_next_waypoint();
+                }
                 break;
             case SOURCE_EXTERNAL:
                 // then execute the callback function and enter a holding pattern
-                if (captureCallback)
+                if (captureCallback) {
                     (captureCallback)();
+                }
                 guidanceSource = SOURCE_FLIGHTPLAN;
                 aircraft.change_to(MODE_HOLD);
                 break;

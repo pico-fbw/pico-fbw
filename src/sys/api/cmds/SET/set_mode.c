@@ -18,8 +18,9 @@
  */
 static Mode parse_args(const char *args) {
     JSON_Value *root = json_parse_string(args);
-    if (!root)
+    if (!root) {
         return MODE_INVALID;
+    }
     JSON_Object *obj = json_value_get_object(root);
     if (!obj) {
         json_value_free(root);
@@ -31,13 +32,13 @@ static Mode parse_args(const char *args) {
         return MODE_INVALID;
     }
     Mode mode;
-    if (strcasecmp(modeStr, "direct") == 0)
+    if (strcasecmp(modeStr, "direct") == 0) {
         mode = MODE_DIRECT;
-    else if (strcasecmp(modeStr, "normal") == 0)
+    } else if (strcasecmp(modeStr, "normal") == 0) {
         mode = MODE_NORMAL;
-    else if (strcasecmp(modeStr, "auto") == 0)
+    } else if (strcasecmp(modeStr, "auto") == 0) {
         mode = MODE_AUTO;
-    else {
+    } else {
         json_value_free(root);
         return MODE_INVALID;
     }
@@ -47,10 +48,12 @@ static Mode parse_args(const char *args) {
 
 // {"mode":"direct|normal|auto"}
 
-i32 api_set_mode(const char *args) {
-    Mode newMode = parse_args(args);
-    if (newMode == MODE_INVALID)
+i32 api_set_mode(const char *in, char **out) {
+    Mode newMode = parse_args(in);
+    if (newMode == MODE_INVALID) {
         return 400;
+    }
     aircraft.change_to(newMode);
     return 200;
+    (void)out;
 }

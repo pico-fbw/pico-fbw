@@ -7,12 +7,12 @@
 
 #include "modes/aircraft.h"
 
-#include "sys/print.h"
-
 #include "get_mode.h"
 
-// {"mode":"launch|direct|normal|auto|tune|hold"}
-
+/**
+ * @param mode mode to convert to string
+ * @return string representation of the mode
+ */
 static const char *mode_to_string(Mode mode) {
     switch (mode) {
         case MODE_LAUNCH:
@@ -32,14 +32,15 @@ static const char *mode_to_string(Mode mode) {
     }
 }
 
-i32 api_get_mode(const char *args) {
+// {"mode":"launch|direct|normal|auto|tune|hold"}
+
+i32 api_get_mode(const char *in, char **out) {
     JSON_Value *root = json_value_init_object();
     JSON_Object *obj = json_value_get_object(root);
     json_object_set_string(obj, "mode", mode_to_string(aircraft.mode));
     char *serialized = json_serialize_to_string(root);
-    printraw("%s\n", serialized);
-    json_free_serialized_string(serialized);
     json_value_free(root);
-    return -1;
-    (void)args;
+    *out = serialized;
+    return 200;
+    (void)in;
 }

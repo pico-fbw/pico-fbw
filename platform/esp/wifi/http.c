@@ -21,12 +21,6 @@
 #include "platform/types.h"
 
 #include "sys/api/api.h"
-#include "sys/api/cmds/GET/get_config.h"
-#include "sys/api/cmds/GET/get_flightplan.h"
-#include "sys/api/cmds/GET/get_info.h"
-#include "sys/api/cmds/GET/get_logs.h"
-#include "sys/api/cmds/SET/set_config.h"
-#include "sys/api/cmds/SET/set_flightplan.h"
 
 #define CHUNK_XFER_SIZE 1024
 
@@ -75,20 +69,23 @@ static esp_err_t handle_api_v1_request(httpd_req_t *req) {
         // Get the request body
         char *in = NULL;
         esp_err_t err = get_request_body(req, &in); // Might be NULL
-        if (err != ESP_OK)
+        if (err != ESP_OK) {
             return err;
+        }
         // Perform the relavent API call and obtain its output
         res = handler(in, &out);
-        if (in)
+        if (in) {
             free(in);
+        }
     }
     // Set the status of the HTTP response to the status of the API response
     httpd_resp_set_status(req, api_res_to_http_status(res));
     // Set the content type of the HTTP response to JSON and send the output
     httpd_resp_set_type(req, HTTPD_TYPE_JSON);
     httpd_resp_sendstr(req, out ? out : "{}");
-    if (out)
+    if (out) {
         free(out);
+    }
     return res < 500 ? ESP_OK : ESP_FAIL;
 }
 
@@ -106,10 +103,11 @@ static esp_err_t handle_common_get(httpd_req_t *req) {
     strcpy(path, "/www"); // Prepend "/www" to the path since web assets are stored in "/www/..." in the filesystem
     // Append the URI to the path
     // If the request is for the root path, append "index.html"
-    if (req->uri[strlen(req->uri) - 1] == '/')
+    if (req->uri[strlen(req->uri) - 1] == '/') {
         strlcat(path, "/index.html", pathSize);
-    else
+    } else {
         strlcat(path, req->uri, pathSize);
+    }
 
     // Check littlefs for the file, both non-gzipped and gzipped variants
     bool gzipped = false;
@@ -149,8 +147,9 @@ static esp_err_t handle_common_get(httpd_req_t *req) {
     do {
         char chunk[CHUNK_XFER_SIZE];
         bytesRead = lfs_file_read(&wwwfs, &file, chunk, sizeof(chunk));
-        if (bytesRead == 0)
+        if (bytesRead == 0) {
             break;
+        }
         if (bytesRead < 0 || httpd_resp_send_chunk(req, chunk, bytesRead) != ESP_OK) {
             httpd_resp_sendstr_chunk(req, NULL);
             httpd_resp_send_500(req);
@@ -170,21 +169,22 @@ esp_err_t http_server_open(httpd_handle_t *server) {
     httpdConfig.uri_match_fn = httpd_uri_match_wildcard;
     httpdConfig.max_open_sockets = 13;
     httpdConfig.lru_purge_enable = true;
-    if (httpd_start(server, &httpdConfig) != ESP_OK)
+    if (httpd_start(server, &httpdConfig) != ESP_OK) {
         return ESP_FAIL;
+    }
 
     // API handlers
     httpd_uri_t apiV1GetConfigURIGet = {
         .uri = "/api/v1/get/config",
         .method = HTTP_GET,
         .handler = handle_api_v1_request,
-        .user_ctx = api_handle_get_config,
+        .user_ctx = api_get_config,
     };
     httpd_uri_t apiV1GetConfigURIPost = {
         .uri = "/api/v1/get/config",
         .method = HTTP_POST,
         .handler = handle_api_v1_request,
-        .user_ctx = api_handle_get_config,
+        .user_ctx = api_get_config,
     };
     // get/config supports both GET and POST
     httpd_register_uri_handler(*server, &apiV1GetConfigURIGet);
@@ -193,37 +193,86 @@ esp_err_t http_server_open(httpd_handle_t *server) {
         .uri = "/api/v1/get/flightplan",
         .method = HTTP_GET,
         .handler = handle_api_v1_request,
-        .user_ctx = api_handle_get_flightplan,
+        .user_ctx = api_get_flightplan,
     };
     httpd_register_uri_handler(*server, &apiV1GetFlightplanURI);
     httpd_uri_t apiV1GetInfoURI = {
         .uri = "/api/v1/get/info",
         .method = HTTP_GET,
         .handler = handle_api_v1_request,
-        .user_ctx = api_handle_get_info,
+        .user_ctx = api_get_info,
     };
     httpd_register_uri_handler(*server, &apiV1GetInfoURI);
+    httpd_uri_t apiV1GetInputURI = {
+        .uri = "/api/v1/get/input",
+        .method = HTTP_GET,
+        .handler = handle_api_v1_request,
+        .user_ctx = api_get_input,
+    };
+    httpd_register_uri_handler(*server, &apiV1GetInputURI);
     httpd_uri_t apiV1GetLogsURI = {
         .uri = "/api/v1/get/logs",
         .method = HTTP_GET,
         .handler = handle_api_v1_request,
-        .user_ctx = api_handle_get_logs,
+        .user_ctx = api_get_logs,
     };
     httpd_register_uri_handler(*server, &apiV1GetLogsURI);
+    httpd_uri_t apiV1GetModeURI = {
+        .uri = "/api/v1/get/mode",
+        .method = HTTP_GET,
+        .handler = handle_api_v1_request,
+        .user_ctx = api_get_mode,
+    };
+    httpd_register_uri_handler(*server, &apiV1GetModeURI);
+    httpd_uri_t apiV1GetSensorURI = {
+        .uri = "/api/v1/get/sensor",
+        .method = HTTP_GET,
+        .handler = handle_api_v1_request,
+        .user_ctx = api_get_sensor,
+    };
+    httpd_register_uri_handler(*server, &apiV1GetSensorURI);
+    httpd_uri_t apiV1SetBayURI = {
+        .uri = "/api/v1/set/bay",
+        .method = HTTP_POST,
+        .handler = handle_api_v1_request,
+        .user_ctx = api_set_bay,
+    };
+    httpd_register_uri_handler(*server, &apiV1SetBayURI);
     httpd_uri_t apiV1SetConfigURI = {
         .uri = "/api/v1/set/config",
         .method = HTTP_POST,
         .handler = handle_api_v1_request,
-        .user_ctx = api_handle_set_config,
+        .user_ctx = api_set_config,
     };
     httpd_register_uri_handler(*server, &apiV1SetConfigURI);
     httpd_uri_t apiV1SetFlightplanURI = {
         .uri = "/api/v1/set/flightplan",
         .method = HTTP_POST,
         .handler = handle_api_v1_request,
-        .user_ctx = api_handle_set_flightplan,
+        .user_ctx = api_set_flightplan,
     };
     httpd_register_uri_handler(*server, &apiV1SetFlightplanURI);
+    httpd_uri_t apiV1SetModeURI = {
+        .uri = "/api/v1/set/mode",
+        .method = HTTP_POST,
+        .handler = handle_api_v1_request,
+        .user_ctx = api_set_mode,
+    };
+    httpd_register_uri_handler(*server, &apiV1SetModeURI);
+    httpd_uri_t apiV1SetTargetURI = {
+        .uri = "/api/v1/set/target",
+        .method = HTTP_POST,
+        .handler = handle_api_v1_request,
+        .user_ctx = api_set_target,
+    };
+    httpd_register_uri_handler(*server, &apiV1SetTargetURI);
+    httpd_uri_t apiV1SetWaypointURI = {
+        .uri = "/api/v1/set/waypoint",
+        .method = HTTP_POST,
+        .handler = handle_api_v1_request,
+        .user_ctx = api_set_waypoint,
+    };
+    httpd_register_uri_handler(*server, &apiV1SetWaypointURI);
     httpd_uri_t apiV1PingURI = {
         .uri = "/api/v1/ping",
         .method = HTTP_GET,

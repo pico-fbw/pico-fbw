@@ -17,16 +17,16 @@
 
 #include "tune.h"
 
-// The difference (in deg) between the resquested and actual axis travel rates that can trigger a possible P gain increase
+// The difference between the resquested and actual axis travel rates that can trigger a possible P gain increase
 #define P_GAIN_DIFF_THRESHOLD 1.f
 // The time (in milliseconds) that P_GAIN_DIFF_THRESHOLD must be exceeded to trigger a P gain increase
 #define P_GAIN_DIFF_TIME_MS 250
 // The amount to increase/decrease the P gain by
 #define P_GAIN_STEP 0.1f
 
-// The difference (in deg) between the resquested and actual axis travel rates that can trigger a possible D gain increase
+// The difference between the resquested and actual axis travel rates that can trigger a possible D gain increase
 #define D_GAIN_REQ_RATE_THRESHOLD 1.f
-// The amount of overshoot (in deg) that must be exceeded (after D_GAIN_REQ_RATE_THRESHOLD is met) to trigger a D gain increase
+// The amount of overshoot that must be exceeded (after D_GAIN_REQ_RATE_THRESHOLD is met) to trigger a D gain increase
 #define D_GAIN_OVERSHOOT_THRESHOLD 0.5f
 // The amount to increase/decrease the D gain by
 #define D_GAIN_STEP 0.1f
@@ -47,11 +47,12 @@ static void update_gain(Axis axis, f32 req_rate, f32 act_rate) {
     static u32 tDiffPitch = 0;
     u32 *tDiff = (axis == AXIS_ROLL) ? &tDiffRoll : &tDiffPitch;
 
-    // If the difference between the requested and actual rates is greater than the threshold for longer than the set time,
-    // increase the P gain
+    // If the difference between the requested and actual rates is greater than the threshold for longer than the set
+    // time, increase the P gain
     if (fabsf(req_rate - act_rate) > P_GAIN_DIFF_THRESHOLD) {
-        if (*tDiff == 0)
+        if (*tDiff == 0) {
             *tDiff = time_ms();
+        }
         if (time_ms() - *tDiff > P_GAIN_DIFF_TIME_MS) {
             f64 kP;
             flight_params_get(axis, &kP, NULL, NULL);
@@ -77,8 +78,9 @@ void tune_init() {
 
 void tune_update() {
     normal_update();
-    if (tune_is_tuned())
+    if (tune_is_tuned()) {
         return;
+    }
 
     f32 rollInput = receiver_get((u32)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE) - 90.f;
     f32 pitchInput = receiver_get((u32)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEGREE) - 90.f;

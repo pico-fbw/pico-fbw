@@ -10,7 +10,6 @@
 #include "lib/parson.h"
 
 #include "sys/configuration.h"
-#include "sys/print.h"
 
 #include "get_config.h"
 
@@ -45,8 +44,9 @@ static f32 *get_section_mem(ConfigSection section) {
  */
 static bool parse_args(const char *args, char **section, char **key) {
     JSON_Value *root = json_parse_string(args);
-    if (!root)
+    if (!root) {
         return false;
+    }
     JSON_Object *obj = json_value_get_object(root);
     if (!obj) {
         json_value_free(root);
@@ -76,8 +76,9 @@ static bool parse_args(const char *args, char **section, char **key) {
 static char *get_config_value(const char *section_name, const char *key) {
     void *value = NULL;
     ConfigSectionType type = config_get(section_name, key, &value);
-    if (!value || type == SECTION_TYPE_NONE)
+    if (!value || type == SECTION_TYPE_NONE) {
         return NULL;
+    }
     // The requested config value exists and we now have it + its type
     // Now, generate our response
     JSON_Value *root = json_value_init_object();
@@ -131,8 +132,9 @@ static char *get_entire_config() {
         switch (type) {
             case SECTION_TYPE_FLOAT: {
                 f32 *section = get_section_mem(s);
-                if (!section)
+                if (!section) {
                     return NULL;
+                }
                 for (u32 v = 0; v < CONFIG_SECTION_SIZE; v++) {
                     if (section[v + 1] != CONFIG_END_MAGIC && v < CONFIG_SECTION_SIZE - 1) {
                         json_array_append_number(values, section[v]);
@@ -167,41 +169,30 @@ static char *get_entire_config() {
     return serialized;
 }
 
-i32 api_handle_get_config(const char *in, char **out) {
-    char *serialized = NULL;
-    if (in) {
-        // Arguments are present, parse them to figure out what config value to get
-        char *section = NULL, *key = NULL;
-        if (!parse_args(in, &section, &key))
-            return 400;
-        serialized = get_config_value(section, key);
-        free(section);
-        free(key);
-        if (!serialized)
-            return 400;
-    } else {
-        // No arguments were given, return all config values
-        serialized = get_entire_config();
-    }
-    *out = serialized;
-    return 200;
-}
-
 // Input:
 // {"section":"","key":""}
 
 // Output:
 // {"sections":[{"name":"","values":[number|""]}]}
 
-i32 api_get_config(const char *args) {
-    char *out = NULL;
-    i32 res = api_handle_get_config(args, &out);
-    if (res != 200 || !out) {
-        if (out)
-            json_free_serialized_string(out);
-        return res;
+i32 api_get_config(const char *in, char **out) {
+    char *serialized = NULL;
+    if (in) {
+        // Arguments are present, parse them to figure out what config value to get
+        char *section = NULL, *key = NULL;
+        if (!parse_args(in, &section, &key)) {
+            return 400;
+        }
+        serialized = get_config_value(section, key);
+        free(section);
+        free(key);
+        if (!serialized) {
+            return 400;
+        }
+    } else {
+        // No arguments were given, return all config values
+        serialized = get_entire_config();
     }
-    printraw("%s\n", out);
-    json_free_serialized_string(out);
-    return -1;
+    *out = serialized;
+    return 200;
 }

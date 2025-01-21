@@ -31,7 +31,8 @@
 #define FS_SIZE 262144  // 256 KB
 
 // To emulate flash memory on a microcontroller, we use a file on the host system.
-// The file (BINNAME) is stored inside a directory (BINDIR) in the user's home directory (*nix) or AppData directory (Windows).
+// The file (BINNAME) is stored inside a directory (BINDIR)
+// in the user's home directory(*nix) or AppData directory (Windows).
 #define BINDIR ".pico-fbw"
 #define BINNAME "lfs.bin"
 char *filepath; // Will store the full path to the file, set in flash_setup()
@@ -45,8 +46,9 @@ char *filepath; // Will store the full path to the file, set in flash_setup()
  */
 static FILE *open_and_seek(const struct lfs_config *c, const char *mode, long offset) {
     FILE *file = fopen((char *)c->context, mode);
-    if (!file)
+    if (!file) {
         return NULL;
+    }
     if (fseek(file, offset, SEEK_SET) != 0) {
         fclose(file);
         return NULL;
@@ -58,8 +60,9 @@ static int flash_read(const struct lfs_config *c, lfs_block_t block, lfs_off_t o
     assert(block < c->block_count);
     assert(off + size <= c->block_size);
     FILE *file = open_and_seek(c, "rb", block * c->block_size + off);
-    if (!file)
+    if (!file) {
         return LFS_ERR_IO;
+    }
     if (fread(buffer, size, 1, file) != 1) {
         fclose(file);
         return LFS_ERR_IO;
@@ -68,11 +71,13 @@ static int flash_read(const struct lfs_config *c, lfs_block_t block, lfs_off_t o
     return LFS_ERR_OK;
 }
 
-static int flash_prog(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size) {
+static int flash_prog(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, const void *buffer,
+                      lfs_size_t size) {
     assert(block < c->block_count);
     FILE *file = open_and_seek(c, "rb+", block * c->block_size + off);
-    if (!file)
+    if (!file) {
         return LFS_ERR_IO;
+    }
     if (fwrite(buffer, size, 1, file) != 1) {
         fclose(file);
         return LFS_ERR_IO;
@@ -84,8 +89,9 @@ static int flash_prog(const struct lfs_config *c, lfs_block_t block, lfs_off_t o
 static int flash_erase(const struct lfs_config *c, lfs_block_t block) {
     assert(block < c->block_count);
     FILE *file = open_and_seek(c, "rb+", block * c->block_size);
-    if (!file)
+    if (!file) {
         return LFS_ERR_IO;
+    }
     for (lfs_size_t i = 0; i < c->block_size; i++) {
         // On real flash memory, erasing a block sets all bits to 1 (0xFF)
         if (fputc(0xFF, file) == EOF) {
@@ -107,25 +113,30 @@ bool flash_setup() {
     // Determine the filepath and allocate memory for it
 #if defined(_WIN32)
     const char *appdata = getenv("APPDATA");
-    if (!appdata)
+    if (!appdata) {
         return false;
+    }
     filepath = (char *)malloc(strlen(appdata) + strlen(BINDIR) + strlen(BINNAME) + 2);
-    if (!filepath)
+    if (!filepath) {
         return false;
+    }
     sprintf(filepath, "%s%s%s", appdata, SEP, BINDIR);
 #elif defined(__APPLE__) || defined(__linux__)
     const char *home = getenv("HOME");
-    if (!home)
+    if (!home) {
         return false;
+    }
     filepath = (char *)malloc(strlen(home) + strlen(BINDIR) + strlen(BINNAME) + 2);
-    if (!filepath)
+    if (!filepath) {
         return false;
+    }
     sprintf(filepath, "%s%s%s", home, SEP, BINDIR);
 #else
     // Unknown platform, create the file in the current directory
     filepath = (char *)malloc(strlen(BINNAME));
-    if (!filepath)
+    if (!filepath) {
         return false;
+    }
     strcpy(filepath, BINNAME);
 #endif
 
@@ -142,8 +153,9 @@ bool flash_setup() {
     FILE *file = fopen(filepath, "rb");
     if (!file) {
         file = fopen(filepath, "wb");
-        if (!file)
+        if (!file) {
             return false;
+        }
         // Set the file size to the total filesystem size
         // This makes everything else much simpler, and the file will be quite small anyway
         if (fseek(file, FS_SIZE - 1, SEEK_SET) != 0) {

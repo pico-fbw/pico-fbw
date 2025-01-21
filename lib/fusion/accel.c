@@ -57,8 +57,9 @@ AccelerometerDetails accelerometers[] = {
 };
 
 bool fusion_accelerometer_find(IMU *imu, const AccelerometerOptions *opts) {
-    if (!imu)
+    if (!imu) {
         return false;
+    }
 
     for (u32 i = 0; i < count_of(accelerometers); i++) {
         // Assign the current accelerometer's device driver into the global imu struct
@@ -69,7 +70,7 @@ bool fusion_accelerometer_find(IMU *imu, const AccelerometerOptions *opts) {
         if (!imu->state && accelerometers[i].create_state) {
             imu->state = accelerometers[i].create_state();
             if (!imu->state) {
-                printfbw(aahrs, "ERROR: could not create user data for accelerometer \"%s\"", accelerometers[i].name);
+                printsys(aahrs, "ERROR: could not create user data for accelerometer \"%s\"", accelerometers[i].name);
                 return false;
             }
         }
@@ -77,11 +78,12 @@ bool fusion_accelerometer_find(IMU *imu, const AccelerometerOptions *opts) {
             // Go through all possible I2C addresses for the current accelerometer and try to detect it
             for (u32 a = 0; a < count_of(accelerometers[i].addr); a++) {
                 byte addr = accelerometers[i].addr[a];
-                if (addr == NOADDR)
+                if (addr == NOADDR) {
                     continue;
-                printfbw(aahrs, "scanning for accelerometer \"%s\" at I2C 0x%02x", accelerometers[i].name, addr);
+                }
+                printsys(aahrs, "scanning for accelerometer \"%s\" at I2C 0x%02x", accelerometers[i].name, addr);
                 if (accelerometers[i].detect(addr, imu->state)) {
-                    printfbw(aahrs, "detected accelerometer \"%s\" at I2C 0x%02x", accelerometers[i].name, addr);
+                    printsys(aahrs, "detected accelerometer \"%s\" at I2C 0x%02x", accelerometers[i].name, addr);
                     imu->acc->addr = addr;
                     detected = true;
                     break;
@@ -93,29 +95,34 @@ bool fusion_accelerometer_find(IMU *imu, const AccelerometerOptions *opts) {
             imu->acc->opts = *opts;
             if (imu->acc->create) {
                 if (!imu->acc->create(imu->acc, imu->state)) {
-                    printfbw(aahrs, "ERROR: could not create accelerometer \"%s\" at I2C 0x%02x", accelerometers[i].name,
-                             imu->acc->addr);
-                    if (imu->acc->destroy)
+                    printsys(aahrs, "ERROR: could not create accelerometer \"%s\" at I2C 0x%02x",
+                             accelerometers[i].name, imu->acc->addr);
+                    if (imu->acc->destroy) {
                         imu->acc->destroy(imu->acc, imu->state);
-                    if (imu->state)
+                    }
+                    if (imu->state) {
                         free(imu->state);
+                    }
                     imu->state = NULL;
                     return false;
                 } else {
-                    printfbw(aahrs, "successfully created accelerometer \"%s\" at I2C 0x%02x", accelerometers[i].name,
+                    printsys(aahrs, "successfully created accelerometer \"%s\" at I2C 0x%02x", accelerometers[i].name,
                              imu->acc->addr);
                 }
             }
-            if (imu->acc->set_scale)
+            if (imu->acc->set_scale) {
                 imu->acc->set_scale(imu->acc, imu->state, opts->scale);
-            if (imu->acc->set_odr)
+            }
+            if (imu->acc->set_odr) {
                 imu->acc->set_odr(imu->acc, imu->state, opts->odr);
-            printfbw(aahrs, "done initializing, accelerometer \"%s\" will be used", accelerometers[i].name);
+            }
+            printsys(aahrs, "done initializing, accelerometer \"%s\" will be used", accelerometers[i].name);
             return true;
         } else {
             // Nothing detected, clean up state if created
-            if (imu->state && accelerometers[i].create_state && accelerometers[i].destroy_state)
+            if (imu->state && accelerometers[i].create_state && accelerometers[i].destroy_state) {
                 imu->state = accelerometers[i].destroy_state(imu->state);
+            }
             memset(imu->acc, 0, sizeof(Accelerometer));
         }
     }
@@ -125,25 +132,30 @@ bool fusion_accelerometer_find(IMU *imu, const AccelerometerOptions *opts) {
 }
 
 bool fusion_accelerometer_get(IMU *imu, f32 *x, f32 *y, f32 *z) {
-    if (!imu->acc || !imu->acc->read)
+    if (!imu->acc || !imu->acc->read) {
         return false;
+    }
     if (!imu->acc->read(imu->acc, imu->state)) {
-        printfbw(aahrs, "ERROR: could not read from accelerometer");
+        printsys(aahrs, "ERROR: could not read from accelerometer");
         return false;
     }
 
-    if (x)
+    if (x) {
         *x = (imu->acc->scale * imu->acc->ax) + imu->acc->offset_ax;
-    if (y)
+    }
+    if (y) {
         *y = (imu->acc->scale * imu->acc->ay) + imu->acc->offset_ay;
-    if (z)
+    }
+    if (z) {
         *z = (imu->acc->scale * imu->acc->az) + imu->acc->offset_az;
+    }
     return true;
 }
 
 bool fusion_accelerometer_set_offset(IMU *imu, f32 x, f32 y, f32 z) {
-    if (!imu || !imu->acc)
+    if (!imu || !imu->acc) {
         return false;
+    }
 
     imu->acc->offset_ax = x;
     imu->acc->offset_ay = y;
@@ -152,42 +164,50 @@ bool fusion_accelerometer_set_offset(IMU *imu, f32 x, f32 y, f32 z) {
 }
 
 bool fusion_accelerometer_get_offset(IMU *imu, f32 *x, f32 *y, f32 *z) {
-    if (!imu || !imu->acc)
+    if (!imu || !imu->acc) {
         return false;
+    }
 
-    if (x)
+    if (x) {
         *x = imu->acc->offset_ax;
-    if (y)
+    }
+    if (y) {
         *y = imu->acc->offset_ay;
-    if (z)
+    }
+    if (z) {
         *z = imu->acc->offset_az;
+    }
     return true;
 }
 
 bool fusion_accelerometer_get_scale(IMU *imu, f32 *scale) {
-    if (!imu || !imu->acc || !imu->acc->get_scale || !scale)
+    if (!imu || !imu->acc || !imu->acc->get_scale || !scale) {
         return false;
+    }
 
     return imu->acc->get_scale(imu->acc, imu->state, scale);
 }
 
 bool fusion_accelerometer_set_scale(IMU *imu, f32 scale) {
-    if (!imu || !imu->acc || !imu->acc->set_scale)
+    if (!imu || !imu->acc || !imu->acc->set_scale) {
         return false;
+    }
 
     return imu->acc->set_scale(imu->acc, imu->state, scale);
 }
 
 bool fusion_accelerometer_get_odr(IMU *imu, f32 *hertz) {
-    if (!imu || !imu->acc || !imu->acc->get_odr || !hertz)
+    if (!imu || !imu->acc || !imu->acc->get_odr || !hertz) {
         return false;
+    }
 
     return imu->acc->get_odr(imu->acc, imu->state, hertz);
 }
 
 bool fusion_accelerometer_set_odr(IMU *imu, f32 hertz) {
-    if (!imu || !imu->acc || !imu->acc->set_odr)
+    if (!imu || !imu->acc || !imu->acc->set_odr) {
         return false;
+    }
 
     return imu->acc->set_odr(imu->acc, imu->state, hertz);
 }

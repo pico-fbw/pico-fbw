@@ -19,8 +19,9 @@
  */
 static BayPosition parse_args(const char *args) {
     JSON_Value *root = json_parse_string(args);
-    if (!root)
+    if (!root) {
         return POS_INVALID;
+    }
     JSON_Object *obj = json_value_get_object(root);
     if (!obj) {
         json_value_free(root);
@@ -32,11 +33,11 @@ static BayPosition parse_args(const char *args) {
         return POS_INVALID;
     }
     BayPosition pos;
-    if (strcasecmp(posStr, "closed") == 0)
+    if (strcasecmp(posStr, "closed") == 0) {
         pos = POS_CLOSED;
-    else if (strcasecmp(posStr, "open") == 0)
+    } else if (strcasecmp(posStr, "open") == 0) {
         pos = POS_OPEN;
-    else {
+    } else {
         json_value_free(root);
         return POS_INVALID;
     }
@@ -46,13 +47,15 @@ static BayPosition parse_args(const char *args) {
 
 // {"position":"open|closed"}
 
-i32 api_set_bay(const char *args) {
-    if (aircraft.mode != MODE_NORMAL)
+i32 api_set_bay(const char *in, char **out) {
+    if (aircraft.mode != MODE_NORMAL) {
         return 403;
-
-    BayPosition position = parse_args(args);
-    if (position == POS_INVALID)
+    }
+    BayPosition position = parse_args(in);
+    if (position == POS_INVALID) {
         return 400;
+    }
     auto_set_bay_position(position);
     return 200;
+    (void)out;
 }

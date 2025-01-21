@@ -33,8 +33,9 @@
 
 void adc_setup(const u32 pins[], u32 num_pins) {
     adc_init();
-    for (u32 i = 0; i < num_pins; i++)
+    for (u32 i = 0; i < num_pins; i++) {
         adc_gpio_init(pins[i]);
+    }
 }
 
 f64 adc_read_raw(u32 pin) {

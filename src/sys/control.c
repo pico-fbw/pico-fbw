@@ -21,16 +21,18 @@ static f32 get_pitch_dps(f32 pitch) {
 }
 
 static f32 calc_roll_adjust(f32 roll) {
-    if (lastRollUpdate == 0)
-        lastRollUpdate = time_s();          // Initialize lastUpdate to current time
+    if (lastRollUpdate == 0) {
+        lastRollUpdate = time_s(); // Initialize lastUpdate to current time
+    }
     f32 deltaT = time_s() - lastRollUpdate; // Time since last call to this function
     lastRollUpdate = time_s();
     return get_roll_dps(roll) * deltaT;
 }
 
 static f32 calc_pitch_adjust(f32 pitch) {
-    if (lastPitchUpdate == 0)
+    if (lastPitchUpdate == 0) {
         lastPitchUpdate = time_s();
+    }
     f32 deltaT = time_s() - lastPitchUpdate;
     lastPitchUpdate = time_s();
     return get_pitch_dps(pitch) * deltaT;
@@ -64,10 +66,13 @@ void control_reset() {
 }
 
 f32 control_mix_elevon(Elevon elevon, f64 roll, f64 pitch) {
-    f32 rollComponent = ((bool)config.pins[PINS_REVERSE_ROLL] ? -1 : 1) * roll * config.control[CONTROL_AIL_MIXING_BIAS];
-    f32 pitchComponent = ((bool)config.pins[PINS_REVERSE_PITCH] ? -1 : 1) * pitch * config.control[CONTROL_ELEV_MIXING_BIAS];
+    f32 rollComponent =
+        ((bool)config.pins[PINS_REVERSE_ROLL] ? -1 : 1) * roll * config.control[CONTROL_AIL_MIXING_BIAS];
+    f32 pitchComponent =
+        ((bool)config.pins[PINS_REVERSE_PITCH] ? -1 : 1) * pitch * config.control[CONTROL_ELEV_MIXING_BIAS];
     if (elevon == ELEVON_LEFT) {
         return (rollComponent + pitchComponent) * config.control[CONTROL_ELEVON_MIXING_GAIN] + 90.f;
-    } else
+    } else {
         return (rollComponent - pitchComponent) * config.control[CONTROL_ELEVON_MIXING_GAIN] + 90.f;
+    }
 }

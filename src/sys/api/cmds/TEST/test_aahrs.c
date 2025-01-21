@@ -64,21 +64,25 @@ static bool wait_for_axis(IMUAxis axis, u32 breakpoint, u32 timeout_ms) {
 }
 
 i32 api_test_aahrs(const char *args) {
-    if (aircraft.aahrsSafe)
+    if (aircraft.aahrsSafe) {
         return 500;
+    }
     printpre("test", "awaiting right roll...");
-    if (!wait_for_axis(IMU_AXIS_ROLL, 20, 10000))
+    if (!wait_for_axis(IMU_AXIS_ROLL, 20, 10000)) {
         return 500;
+    }
     printpre("test", "return to center.");
     runtime_sleep_ms(1500, false);
     printpre("test", "awaiting pitch up...");
-    if (!wait_for_axis(IMU_AXIS_PITCH, 20, 10000))
+    if (!wait_for_axis(IMU_AXIS_PITCH, 20, 10000)) {
         return 500;
+    }
     printpre("test", "return to center.\n");
     runtime_sleep_ms(1500, false);
     printpre("test", "awaiting right yaw...");
-    if (!wait_for_axis(IMU_AXIS_YAW, 20, 10000))
+    if (!wait_for_axis(IMU_AXIS_YAW, 20, 10000)) {
         return 500;
+    }
     return 200;
     // TODO: test baro when done implementing baro fusion
     (void)args;

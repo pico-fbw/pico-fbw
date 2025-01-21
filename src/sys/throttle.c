@@ -55,8 +55,8 @@ void throttle_update() {
             break;
     }
     // Validate against performance limits
-    // Below idle is valid--in THRUST mode this can be used to simply stop the electric motor,
-    // and the PID controller will never bring the output below idle in SPEED mode, so thrust being below IDLE isn't validated
+    // Below idle is valid--in THRUST mode this can be used to simply stop the electric motor, and the PID controller
+    // will never bring the output below idle in SPEED mode, so thrust being below IDLE isn't validated
     if (escTarget > calibration.esc[ESC_DETENT_MCT]) {
         if (state == THRSTATE_NORMAL) {
             // We've just exceeded max continuous thrust, note the current time

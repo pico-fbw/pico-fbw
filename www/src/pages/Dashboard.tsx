@@ -11,7 +11,8 @@ import { useEffect, useState } from "preact/hooks";
 import Alert from "../elements/Alert";
 import ContentBlock from "../elements/ContentBlock";
 
-import { api, GET_LOGS } from "../helpers/api";
+import { api } from "../helpers/api";
+import { GET_LOGS } from "../helpers/apiTypes";
 
 export default function Dashboard() {
     const [logs, setLogs] = useState<GET_LOGS | null>(null);

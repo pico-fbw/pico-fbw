@@ -15,7 +15,6 @@
 #include "modes/aircraft.h"
 
 #include "sys/configuration.h"
-#include "sys/print.h"
 
 #include "get_sensor.h"
 
@@ -32,8 +31,9 @@ typedef enum SensorData {
  */
 static JSON_Value *create_aahrs_obj() {
     JSON_Value *aahrsObj = json_value_init_object();
-    if (!aahrsObj)
+    if (!aahrsObj) {
         return NULL;
+    }
     JSON_Object *obj = json_value_get_object(aahrsObj);
     if (aircraft.aahrsSafe) {
         json_object_set_number(obj, "roll", aahrs.roll);
@@ -64,8 +64,9 @@ static JSON_Value *create_aahrs_obj() {
  */
 static JSON_Value *create_gps_obj() {
     JSON_Value *gpsObj = json_value_init_object();
-    if (!gpsObj)
+    if (!gpsObj) {
         return NULL;
+    }
     JSON_Object *obj = json_value_get_object(gpsObj);
     if (aircraft.gpsSafe && gps.is_supported()) {
         json_object_set_number(obj, "lat", gps.lat);
@@ -97,11 +98,13 @@ static JSON_Value *create_gps_obj() {
 static JSON_Value *create_batt_arr() {
 #if PLATFORM_SUPPORTS_ADC
     JSON_Value *battArr = json_value_init_array();
-    if (!battArr)
+    if (!battArr) {
         return NULL;
+    }
     JSON_Array *arr = json_value_get_array(battArr);
-    for (u32 i = 0; i < ADC_NUM_CHANNELS; i++)
+    for (u32 i = 0; i < ADC_NUM_CHANNELS; i++) {
         json_array_append_number(arr, adc_read_raw(ADC_PINS[i]));
+    }
     return battArr;
 #else
     return json_value_init_array();
@@ -110,8 +113,9 @@ static JSON_Value *create_batt_arr() {
 
 static SensorData parse_args(const char *args) {
     JSON_Value *root = json_parse_string(args);
-    if (!root)
+    if (!root) {
         return DATA_INVALID;
+    }
     JSON_Object *obj = json_value_get_object(root);
     if (!obj) {
         json_value_free(root);
@@ -123,14 +127,15 @@ static SensorData parse_args(const char *args) {
         return DATA_INVALID;
     }
     SensorData ret = DATA_INVALID;
-    if (strcasecmp(data, "all") == 0)
+    if (strcasecmp(data, "all") == 0) {
         ret = DATA_ALL;
-    else if (strcasecmp(data, "aahrs") == 0)
+    } else if (strcasecmp(data, "aahrs") == 0) {
         ret = DATA_AAHRS;
-    else if (strcasecmp(data, "gps") == 0)
+    } else if (strcasecmp(data, "gps") == 0) {
         ret = DATA_GPS;
-    else if (strcasecmp(data, "batt") == 0)
+    } else if (strcasecmp(data, "batt") == 0) {
         ret = DATA_BATT;
+    }
     json_value_free(root);
     return ret;
 }
@@ -147,11 +152,12 @@ static SensorData parse_args(const char *args) {
 //  "batt":"batt":[number,...]
 // }
 
-i32 api_get_sensor(const char *args) {
+i32 api_get_sensor(const char *in, char **out) {
     // Parse args to determine the sensor data we should return
-    SensorData data = parse_args(args);
-    if (data == DATA_INVALID)
+    SensorData data = parse_args(in);
+    if (data == DATA_INVALID) {
         return 400;
+    }
 
     // Generate all response data, regardless of the request
     JSON_Value *root = json_value_init_object();
@@ -159,8 +165,9 @@ i32 api_get_sensor(const char *args) {
     JSON_Value *aahrsObj = create_aahrs_obj();
     JSON_Value *gpsObj = create_gps_obj();
     JSON_Value *battArr = create_batt_arr();
-    if (!aahrsObj || !gpsObj || !battArr)
+    if (!aahrsObj || !gpsObj || !battArr) {
         return 500;
+    }
 
     // Now, include response data selectively based on the request
     switch (data) {
@@ -198,8 +205,7 @@ i32 api_get_sensor(const char *args) {
             break;
     }
     char *serialized = json_serialize_to_string(root);
-    printraw("%s\n", serialized);
-    json_free_serialized_string(serialized);
     json_value_free(root);
-    return -1;
+    *out = serialized;
+    return 200;
 }

@@ -47,22 +47,9 @@ typedef alarm_id_t __callback_id_t;
 static const u32 ADC_PINS[] = {PIN_ADC_0, PIN_ADC_1, PIN_ADC_2, PIN_ADC_3};
 #endif
 
-// Display
-#define PLATFORM_SUPPORTS_DISPLAY 1
-#if PLATFORM_SUPPORTS_DISPLAY
-    // Display information
-    #define DISPLAY_WIDTH 128
-    #define DISPLAY_HEIGHT 32
-    #define DISPLAY_MAX_LINE_LEN 15 // 15 for margins; 16 can physically be fit but it looks bad
-    // Display i2c bus details
-    #define DISPLAY_FREQ_KHZ 400
-    #define DISPLAY_ADDR 0x3C
-    #define PIN_DISPLAY_SDA 18
-    #define PIN_DISPLAY_SCL 19
-#endif
-
 // Wi-Fi
-#define PLATFORM_SUPPORTS_WIFI 1 // Technically, only the Pico W supports Wi-Fi, but other platforms emulate it through USB
+#define PLATFORM_SUPPORTS_WIFI                                                                                         \
+    1 // Technically, only the Pico W supports Wi-Fi, but other platforms emulate it through USB
 
 #ifdef RASPBERRYPI_PICO2
     #undef PLATFORM_NAME

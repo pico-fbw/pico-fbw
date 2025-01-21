@@ -25,8 +25,9 @@ typedef enum Mode {
 #define DEADBAND config.control[CONTROL_DEADBAND]
 #define ROLL_INPUT() (fabsf(receiver_get((u32)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE) - 90.f) > DEADBAND)
 #define PITCH_INPUT() (fabsf(receiver_get((u32)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEGREE) - 90.f) > DEADBAND)
-#define YAW_INPUT()                                                                                                            \
-    (receiver_has_rud() && fabsf(receiver_get((u32)config.pins[PINS_INPUT_RUD], RECEIVER_MODE_DEGREE) - 90.f) > DEADBAND)
+#define YAW_INPUT()                                                                                                    \
+    (receiver_has_rud() &&                                                                                             \
+     fabsf(receiver_get((u32)config.pins[PINS_INPUT_RUD], RECEIVER_MODE_DEGREE) - 90.f) > DEADBAND)
 // Throttle input usually isn't self-centering so it's more difficult to determine if there is input
 #define USER_INPUTTING() (ROLL_INPUT() || PITCH_INPUT() || YAW_INPUT())
 

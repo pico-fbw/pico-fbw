@@ -3,72 +3,72 @@
  * Licensed under the GNU GPL-3.0
  */
 
+#include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 
-#include "GET/get_config.h"
-#include "GET/get_flightplan.h"
-#include "GET/get_info.h"
-#include "GET/get_input.h"
-#include "GET/get_logs.h"
-#include "GET/get_mode.h"
-#include "GET/get_sensor.h"
-
-#include "SET/set_bay.h"
-#include "SET/set_config.h"
-#include "SET/set_flightplan.h"
-#include "SET/set_mode.h"
-#include "SET/set_target.h"
-#include "SET/set_waypoint.h"
-
-#include "TEST/test_aahrs.h"
-#include "TEST/test_all.h"
-#include "TEST/test_gps.h"
-#include "TEST/test_pwm.h"
-#include "TEST/test_servo.h"
-#include "TEST/test_throttle.h"
-
-#include "MISC/about.h"
-#include "MISC/help.h"
-#include "MISC/ping.h"
-#include "MISC/reboot.h"
-#include "MISC/reset.h"
+#include "sys/api/api.h"
+#include "sys/print.h"
 
 #include "cmds.h"
 
+/**
+ * Wraps an API command handler for use with stdin/stdout.
+ * @param args the command arguments from stdin
+ * @param handler the handler function to call
+ * @param has_output whether the command is expected to produce output
+ * @return the status code of the operation
+ */
+static i32 api_wrap_handler(const char *args, api_handler handler, bool has_output) {
+    char *out = NULL;
+    i32 res = handler(args, &out);
+    if (res != 200 || (has_output && !out)) {
+        if (out) {
+            free(out);
+        }
+        return res;
+    }
+    printraw("%s\n", out);
+    free(out);
+    return -1; // -1 indicates the same as 200, but indicates that output has already been printed
+}
+
 i32 api_handle_get(const char *cmd, const char *args) {
     if (strcasecmp(cmd, "GET_CONFIG") == 0) {
-        return api_get_config(args);
+        return api_wrap_handler(args, api_get_config, true);
     } else if (strcasecmp(cmd, "GET_FLIGHTPLAN") == 0) {
-        return api_get_flightplan(args);
+        return api_wrap_handler(args, api_get_flightplan, true);
     } else if (strcasecmp(cmd, "GET_INFO") == 0) {
-        return api_get_info(args);
+        return api_wrap_handler(args, api_get_info, true);
     } else if (strcasecmp(cmd, "GET_INPUT") == 0) {
-        return api_get_input(args);
+        return api_wrap_handler(args, api_get_input, true);
     } else if (strcasecmp(cmd, "GET_LOGS") == 0) {
-        return api_get_logs(args);
+        return api_wrap_handler(args, api_get_logs, true);
     } else if (strcasecmp(cmd, "GET_MODE") == 0) {
-        return api_get_mode(args);
+        return api_wrap_handler(args, api_get_mode, true);
     } else if (strcasecmp(cmd, "GET_SENSOR") == 0) {
-        return api_get_sensor(args);
-    } else
+        return api_wrap_handler(args, api_get_sensor, true);
+    } else {
         return 404;
+    }
 }
 
 i32 api_handle_set(const char *cmd, const char *args) {
     if (strcasecmp(cmd, "SET_BAY") == 0) {
-        return api_set_bay(args);
+        return api_wrap_handler(args, api_set_bay, false);
     } else if (strcasecmp(cmd, "SET_CONFIG") == 0) {
-        return api_set_config(args);
+        return api_wrap_handler(args, api_set_config, true);
     } else if (strcasecmp(cmd, "SET_FLIGHTPLAN") == 0) {
-        return api_set_flightplan(args);
+        return api_wrap_handler(args, api_set_flightplan, true);
     } else if (strcasecmp(cmd, "SET_MODE") == 0) {
-        return api_set_mode(args);
+        return api_wrap_handler(args, api_set_mode, false);
     } else if (strcasecmp(cmd, "SET_TARGET") == 0) {
-        return api_set_target(args);
+        return api_wrap_handler(args, api_set_target, false);
     } else if (strcasecmp(cmd, "SET_WAYPOINT") == 0) {
-        return api_set_waypoint(args);
-    } else
+        return api_wrap_handler(args, api_set_waypoint, false);
+    } else {
         return 404;
+    }
 }
 
 i32 api_handle_test(const char *cmd, const char *args) {
@@ -84,8 +84,9 @@ i32 api_handle_test(const char *cmd, const char *args) {
         return api_test_servo(args);
     } else if (strcasecmp(cmd, "TEST_THROTTLE") == 0) {
         return api_test_throttle(args);
-    } else
+    } else {
         return 404;
+    }
 }
 
 i32 api_handle_misc(const char *cmd, const char *args) {
@@ -99,6 +100,7 @@ i32 api_handle_misc(const char *cmd, const char *args) {
         return api_reboot(args);
     } else if (strcasecmp(cmd, "RESET") == 0) {
         return api_reset(args);
-    } else
+    } else {
         return 404;
+    }
 }

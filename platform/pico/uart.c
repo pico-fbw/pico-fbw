@@ -51,8 +51,9 @@ static inline uart_inst_t *uart_inst_from_pins(u32 tx, u32 rx) {
 
 bool uart_setup(u32 tx, u32 rx, u32 baud) {
     uart_inst_t *uart = uart_inst_from_pins(tx, rx);
-    if (!uart)
+    if (!uart) {
         return false;
+    }
     gpio_set_function(tx, GPIO_FUNC_UART);
     gpio_set_function(rx, GPIO_FUNC_UART);
     gpio_pull_up(tx);
@@ -68,24 +69,28 @@ bool uart_setup(u32 tx, u32 rx, u32 baud) {
 
 char *uart_read(u32 tx, u32 rx) {
     uart_inst_t *uart = uart_inst_from_pins(tx, rx);
-    if (!uart)
+    if (!uart) {
         return NULL;
+    }
     // Very similar to stdin_read() in pico/stdio.c, take a look at that for documentation
     char *buf = NULL;
     if (uart_is_readable(uart)) {
         u32 i = 0;
         while (uart_is_readable_within_us(uart, UART_TIMEOUT_US)) {
             char c = uart_getc(uart);
-            if (c == '\r' || c == '\n')
+            if (c == '\r' || c == '\n') {
                 break;
+            }
             buf = try_realloc(buf, (i + 1) * sizeof(char));
-            if (!buf)
+            if (!buf) {
                 return NULL;
+            }
             buf[i++] = c;
         }
         buf = try_realloc(buf, (i + 1) * sizeof(char));
-        if (!buf)
+        if (!buf) {
             return NULL;
+        }
         buf[i] = '\0';
     }
     return buf;
@@ -93,8 +98,9 @@ char *uart_read(u32 tx, u32 rx) {
 
 bool uart_write(u32 tx, u32 rx, const char *str) {
     uart_inst_t *uart = uart_inst_from_pins(tx, rx);
-    if (!uart)
+    if (!uart) {
         return false;
+    }
     uart_write_blocking(uart, (const u8 *)str, strlen(str) + 1); // +1 to include the null terminator
     return true;
 }

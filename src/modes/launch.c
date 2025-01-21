@@ -34,8 +34,9 @@ static LaunchStatus status = LAUNCH_AWAITING;
  */
 static inline bool aahrs_has_launch_accel() {
     for (u32 i = 0; i < 3; i++) {
-        if (fabsf(aahrs.accel[i]) > LAUNCH_ACCEL_THRESHOLD)
+        if (fabsf(aahrs.accel[i]) > LAUNCH_ACCEL_THRESHOLD) {
             return true;
+        }
     }
     return false;
 }
@@ -68,8 +69,9 @@ void launch_update() {
                 // Launch is happening right now, set max thrust
                 throttle.target = calibration.esc[ESC_DETENT_MAX];
                 // If we need to return to auto mode after launch, do so after a delay
-                if (afterLaunch == MODE_AUTO)
+                if (afterLaunch == MODE_AUTO) {
                     callback_in_ms(AUTO_ENGAGE_DELAY_S * 1000, return_to_mode, NULL);
+                }
                 status = LAUNCH_CLIMBING;
             }
             break;

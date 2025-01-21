@@ -3,7 +3,7 @@
  * Licensed under the GNU GPL-3.0
  */
 
-// "Flight" is not an actual mode--it is merely a collection of common controllers and code that is used by many other modes.
+// "Flight" is not an actual mode, merely a collection of common controllers and code that is used by many other modes.
 
 #include <math.h>
 #include <stdlib.h>
@@ -32,25 +32,33 @@ static f32 flightYawSetpoint;
 static bool yawDamperOn;
 
 static void flight_roll_params_update(f64 kP, f64 kI, f64 kD, bool reset) {
-    if (kP != INFINITY)
+    if (kP != INFINITY) {
         rollC.kp = kP;
-    if (kI != INFINITY)
+    }
+    if (kI != INFINITY) {
         rollC.ki = kI;
-    if (kD != INFINITY)
+    }
+    if (kD != INFINITY) {
         rollC.kd = kD;
-    if (reset)
+    }
+    if (reset) {
         pid_init(&rollC);
+    }
 }
 
 static void flight_pitch_params_update(f64 kP, f64 kI, f64 kD, bool reset) {
-    if (kP != INFINITY)
+    if (kP != INFINITY) {
         pitchC.kp = kP;
-    if (kI != INFINITY)
+    }
+    if (kI != INFINITY) {
         pitchC.ki = kI;
-    if (kD != INFINITY)
+    }
+    if (kD != INFINITY) {
         pitchC.kd = kD;
-    if (reset)
+    }
+    if (reset) {
         pid_init(&pitchC);
+    }
 }
 
 void flight_init() {
@@ -110,8 +118,8 @@ void flight_init() {
 void flight_update(f64 roll, f64 pitch, f64 yaw, bool override) {
     // Check flight envelope for hard-coded irregularities
     if (fabsf(aahrs.roll) > 72 || aahrs.pitch > 35 || aahrs.pitch < -20) {
-        printpre("flight", "WARNING: flight envelope exceeded! (roll: %.0f, pitch: %.0f, yaw: %.0f)", aahrs.roll, aahrs.pitch,
-                 aahrs.yaw);
+        printpre("flight", "WARNING: flight envelope exceeded! (roll: %.0f, pitch: %.0f, yaw: %.0f)", aahrs.roll,
+                 aahrs.pitch, aahrs.yaw);
         aircraft.set_aahrs_safe(false);
     }
 
@@ -136,8 +144,9 @@ void flight_update(f64 roll, f64 pitch, f64 yaw, bool override) {
                 yawDamperOn = false;
             } else {
                 // Yaw damper enabled
-                if (!yawDamperOn)
+                if (!yawDamperOn) {
                     flightYawSetpoint = aahrs.yaw; // Yaw damper was just enabled, create our setpoint
+                }
                 pid_update(&yawC, flightYawSetpoint, aahrs.yaw);
                 yawOutput = (f32)yawC.out;
                 yawDamperOn = true;
@@ -159,8 +168,10 @@ void flight_update(f64 roll, f64 pitch, f64 yaw, bool override) {
             lElevonOut = control_mix_elevon(ELEVON_LEFT, ailOut, eleOut);
             rElevonOut = control_mix_elevon(ELEVON_RIGHT, ailOut, eleOut);
             // Limit elevon outputs
-            clampf(lElevonOut, -config.control[CONTROL_MAX_ELEVON_DEFLECTION], config.control[CONTROL_MAX_ELEVON_DEFLECTION]);
-            clampf(rElevonOut, -config.control[CONTROL_MAX_ELEVON_DEFLECTION], config.control[CONTROL_MAX_ELEVON_DEFLECTION]);
+            clampf(lElevonOut, -config.control[CONTROL_MAX_ELEVON_DEFLECTION],
+                   config.control[CONTROL_MAX_ELEVON_DEFLECTION]);
+            clampf(rElevonOut, -config.control[CONTROL_MAX_ELEVON_DEFLECTION],
+                   config.control[CONTROL_MAX_ELEVON_DEFLECTION]);
 
             servo_set((u32)config.pins[PINS_SERVO_AIL], lElevonOut);
             servo_set((u32)config.pins[PINS_SERVO_ELE], rElevonOut);
@@ -184,14 +195,18 @@ void flight_params_get(Axis axis, f64 *kP, f64 *kI, f64 *kD) {
             axisC = &pitchC;
             break;
     }
-    if (!axisC)
+    if (!axisC) {
         return;
-    if (kP)
+    }
+    if (kP) {
         *kP = axisC->kp;
-    if (kI)
+    }
+    if (kI) {
         *kI = axisC->ki;
-    if (kD)
+    }
+    if (kD) {
         *kD = axisC->kd;
+    }
 }
 
 void flight_params_update(Axis axis, f64 kP, f64 kI, f64 kD, bool reset) {

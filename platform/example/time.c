@@ -5,9 +5,9 @@
 
 #include "platform/time.h"
 
-// An important part of the timekeeping system are callbacks. These are functions that are scheduled to be called at a certain
-// time in the future. As a part of the CallbackData that you see here, there is a callback ID (__callback_id_t). You need to
-// define what this type is in defs.h.
+// An important part of the timekeeping system are callbacks. These are functions that are scheduled to be called at a
+// certain time in the future. As a part of the CallbackData that you see here, there is a callback ID
+// (__callback_id_t). You need to define what this type is in defs.h.
 
 u64 time_us() {
     // This function should return the amount of time since the system powered on, in microseconds.
@@ -26,10 +26,9 @@ CallbackData *callback_in_ms(u32 ms, Callback callback, void *data) {
     // have it call the actual callback function through the user data (platforms like the pico and esp do this).
 
     // This function also needs to return a CallbackData that can be used to cancel the callback.
-    // A CallbackData is a struct that contains the callback, its ID (which you define the type of in defs.h), and its data.
-    // Most platforms choose to allocate a new CallbackData on the heap and free() is when the callback is either cancelled or
-    // returns zero.
-    // However, a non-rescheduling callback will never be cancelled.
+    // A CallbackData is a struct that contains the callback, its ID (which you define the type of in defs.h), and its
+    // data. Most platforms choose to allocate a new CallbackData on the heap and free() is when the callback is either
+    // cancelled or returns zero. However, a non-rescheduling callback will never be cancelled.
 
     // So, in summary:
     // 1. Schedule a Callback `callback` to be called in `ms` milliseconds.

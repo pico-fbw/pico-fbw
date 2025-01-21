@@ -27,11 +27,13 @@ static bool icm20948_change_bank(byte i2caddr, void *state, u8 bank_no) {
     ICM20948State *iud = (ICM20948State *)state;
     byte bank_addr = 0x00;
 
-    if (!state)
+    if (!state) {
         return false;
+    }
 
-    if (bank_no == iud->current_bank_no)
+    if (bank_no == iud->current_bank_no) {
         return true;
+    }
 
     switch (bank_no) {
         case 0:
@@ -59,20 +61,24 @@ static bool icm20948_detect(byte addr, void *state) {
     ICM20948State *iud = (ICM20948State *)state;
     i32 device_id;
 
-    if (!state)
+    if (!state) {
         return false;
-    if (iud->accgyro_initialized)
+    }
+    if (iud->accgyro_initialized) {
         return true;
+    }
 
     device_id = mgos_i2c_read_reg_b(addr, ICM20948_REG0_WHO_AM_I);
-    if (device_id == ICM20948_DEVID)
+    if (device_id == ICM20948_DEVID) {
         return true;
+    }
     return false;
 }
 
 static bool icm20948_accgyro_create(byte i2caddr, void *state) {
-    if (!icm20948_change_bank(i2caddr, state, 0))
+    if (!icm20948_change_bank(i2caddr, state, 0)) {
         return false;
+    }
 
     // PWR_MGMNT_1: DEVICE_RESET=1; SLEEP=0; LP_EN=0; TEMP_DIS=0; CLKSEL=000;
     mgos_i2c_write_reg_b(i2caddr, ICM20948_REG0_PWR_MGMT_1, 0x80);
@@ -91,16 +97,18 @@ void *icm20948_state_create() {
     ICM20948State *iud;
 
     iud = calloc(1, sizeof(ICM20948State));
-    if (!iud)
+    if (!iud) {
         return NULL;
+    }
     iud->accgyro_initialized = false;
     iud->current_bank_no = -1;
     return iud;
 }
 
 void *icm20948_state_destroy(void *state) {
-    if (state)
+    if (state) {
         free(state);
+    }
     return NULL;
 }
 
@@ -112,18 +120,21 @@ bool icm20948_acc_detect(byte addr, void *state) {
 
 bool icm20948_acc_create(Accelerometer *dev, void *state) {
     ICM20948State *iud = (ICM20948State *)state;
-    if (!dev)
+    if (!dev) {
         return false;
+    }
 
     // Only initialize the ICM20948 if gyro hasn't done so yet
     if (!iud->accgyro_initialized) {
-        if (!icm20948_accgyro_create(dev->addr, state))
+        if (!icm20948_accgyro_create(dev->addr, state)) {
             return false;
+        }
         iud->accgyro_initialized = true;
     }
 
-    if (!icm20948_change_bank(dev->addr, state, 2))
+    if (!icm20948_change_bank(dev->addr, state, 2)) {
         return false;
+    }
 
     // REG2_ACCEL_CONFIG: ACCEL_DLPFCFG=101(12Hz); ACCEL_FS_SEL=10(8g); ACCEL_FCHOICE=1(Enable accel DLPF);
     // ACCEL_SMPLRT_DIV_1: ACCEL_SMPLRT_DIV=0000(MSB);
@@ -138,13 +149,16 @@ bool icm20948_acc_create(Accelerometer *dev, void *state) {
 
 bool icm20948_acc_read(Accelerometer *dev, void *state) {
     byte data[6];
-    if (!dev)
+    if (!dev) {
         return false;
+    }
 
-    if (!icm20948_change_bank(dev->addr, state, 0))
+    if (!icm20948_change_bank(dev->addr, state, 0)) {
         return false;
-    if (!mgos_i2c_read_reg_n(dev->addr, ICM20948_REG0_ACCEL_XOUT_H, 6, data))
+    }
+    if (!mgos_i2c_read_reg_n(dev->addr, ICM20948_REG0_ACCEL_XOUT_H, 6, data)) {
         return false;
+    }
 
     dev->ax = (data[0] << 8) | (data[1]);
     dev->ay = (data[2] << 8) | (data[3]);
@@ -156,13 +170,16 @@ bool icm20948_acc_read(Accelerometer *dev, void *state) {
 bool icm20948_acc_get_scale(Accelerometer *dev, void *state, f32 *scale) {
     u8 fs = 0;
 
-    if (!scale)
+    if (!scale) {
         return false;
+    }
 
-    if (!icm20948_change_bank(dev->addr, state, 2))
+    if (!icm20948_change_bank(dev->addr, state, 2)) {
         return false;
-    if (!mgos_i2c_getbits_reg_b(dev->addr, ICM20948_REG2_ACCEL_CONFIG, 1, 2, &fs))
+    }
+    if (!mgos_i2c_getbits_reg_b(dev->addr, ICM20948_REG2_ACCEL_CONFIG, 1, 2, &fs)) {
         return false;
+    }
 
     switch (fs) {
         case 0:
@@ -197,13 +214,16 @@ bool icm20948_acc_set_scale(Accelerometer *dev, void *state, f32 scale) {
     } else if (scale <= 16) {
         fs = 3;
         scale = 16.f;
-    } else
+    } else {
         return false;
+    }
 
-    if (!icm20948_change_bank(dev->addr, state, 2))
+    if (!icm20948_change_bank(dev->addr, state, 2)) {
         return false;
-    if (!mgos_i2c_setbits_reg_b(dev->addr, ICM20948_REG2_ACCEL_CONFIG, 1, 2, fs))
+    }
+    if (!mgos_i2c_setbits_reg_b(dev->addr, ICM20948_REG2_ACCEL_CONFIG, 1, 2, fs)) {
         return false;
+    }
     dev->opts.scale = scale;
     dev->scale = dev->opts.scale / 32767.0f;
 
@@ -213,13 +233,16 @@ bool icm20948_acc_set_scale(Accelerometer *dev, void *state, f32 scale) {
 bool icm20948_acc_get_odr(Accelerometer *dev, void *state, f32 *odr) {
     u16 div = 0;
 
-    if (!odr)
+    if (!odr) {
         return false;
+    }
 
-    if (!icm20948_change_bank(dev->addr, state, 2))
+    if (!icm20948_change_bank(dev->addr, state, 2)) {
         return false;
-    if (!mgos_i2c_read_reg_n(dev->addr, ICM20948_REG2_ACCEL_SMPLRT_DIV_1, 2, (u8 *)&div))
+    }
+    if (!mgos_i2c_read_reg_n(dev->addr, ICM20948_REG2_ACCEL_SMPLRT_DIV_1, 2, (u8 *)&div)) {
         return false;
+    }
     div = (div & 0x00ff) << 8 | (div & 0xff00) >> 8;
     // ODR is computed as follows:
     // 1.125 kHz/(1+ACCEL_SMPLRT_DIV[11:0])
@@ -230,18 +253,22 @@ bool icm20948_acc_get_odr(Accelerometer *dev, void *state, f32 *odr) {
 bool icm20948_acc_set_odr(Accelerometer *dev, void *state, f32 odr) {
     u16 div = 0;
 
-    if (odr <= 0)
+    if (odr <= 0) {
         return false;
+    }
 
     div = (ICM20948_ACC_BASE_ODR / odr) - 1;
-    if (div > 0xfff)
+    if (div > 0xfff) {
         return false; // Not feasible
+    }
 
-    if (!icm20948_change_bank(dev->addr, state, 2))
+    if (!icm20948_change_bank(dev->addr, state, 2)) {
         return false;
+    }
     div = (div & 0x00ff) << 8 | (div & 0xff00) >> 8;
-    if (!mgos_i2c_write_reg_n(dev->addr, ICM20948_REG2_ACCEL_SMPLRT_DIV_1, 2, (u8 *)&div))
+    if (!mgos_i2c_write_reg_n(dev->addr, ICM20948_REG2_ACCEL_SMPLRT_DIV_1, 2, (u8 *)&div)) {
         return false;
+    }
     dev->opts.odr = odr;
 
     return true;
@@ -255,18 +282,21 @@ bool icm20948_gyro_detect(byte addr, void *state) {
 
 bool icm20948_gyro_create(Gyroscope *dev, void *state) {
     ICM20948State *iud = (ICM20948State *)state;
-    if (!dev)
+    if (!dev) {
         return false;
+    }
 
     // Only initialize the ICM20948 if acc hasn't done so yet
     if (!iud->accgyro_initialized) {
-        if (!icm20948_accgyro_create(dev->addr, state))
+        if (!icm20948_accgyro_create(dev->addr, state)) {
             return false;
+        }
         iud->accgyro_initialized = true;
     }
 
-    if (!icm20948_change_bank(dev->addr, state, 2))
+    if (!icm20948_change_bank(dev->addr, state, 2)) {
         return false;
+    }
 
     // GYRO_CONFIG_1: GYRO_DLPFCFG=101(12Hz); GYRO_FS_SEL=11(2000dps); GYRO_FCHOICE=1(Enable gyro DLPF);
     // GYRO_SMPLRT_DIV: GYRO_SMPLRT_DIV=00000000;
@@ -279,13 +309,16 @@ bool icm20948_gyro_create(Gyroscope *dev, void *state) {
 
 bool icm20948_gyro_read(Gyroscope *dev, void *state) {
     byte data[6];
-    if (!dev)
+    if (!dev) {
         return false;
+    }
 
-    if (!icm20948_change_bank(dev->addr, state, 0))
+    if (!icm20948_change_bank(dev->addr, state, 0)) {
         return false;
-    if (!mgos_i2c_read_reg_n(dev->addr, ICM20948_REG0_GYRO_XOUT_H, 6, data))
+    }
+    if (!mgos_i2c_read_reg_n(dev->addr, ICM20948_REG0_GYRO_XOUT_H, 6, data)) {
         return false;
+    }
     dev->gx = (data[0] << 8) | (data[1]);
     dev->gy = (data[2] << 8) | (data[3]);
     dev->gz = (data[4] << 8) | (data[5]);
@@ -295,13 +328,16 @@ bool icm20948_gyro_read(Gyroscope *dev, void *state) {
 
 bool icm20948_gyro_get_scale(Gyroscope *dev, void *state, f32 *scale) {
     u8 fs = 0;
-    if (!scale)
+    if (!scale) {
         return false;
+    }
 
-    if (!icm20948_change_bank(dev->addr, state, 2))
+    if (!icm20948_change_bank(dev->addr, state, 2)) {
         return false;
-    if (!mgos_i2c_getbits_reg_b(dev->addr, ICM20948_REG2_GYRO_CONFIG_1, 1, 2, &fs))
+    }
+    if (!mgos_i2c_getbits_reg_b(dev->addr, ICM20948_REG2_GYRO_CONFIG_1, 1, 2, &fs)) {
         return false;
+    }
     switch (fs) {
         case 0:
             *scale = 250;
@@ -335,13 +371,16 @@ bool icm20948_gyro_set_scale(Gyroscope *dev, void *state, f32 scale) {
     } else if (scale <= 2000) {
         fs = 3;
         scale = 2000.f;
-    } else
+    } else {
         return false;
+    }
 
-    if (!icm20948_change_bank(dev->addr, state, 2))
+    if (!icm20948_change_bank(dev->addr, state, 2)) {
         return false;
-    if (!mgos_i2c_setbits_reg_b(dev->addr, ICM20948_REG2_GYRO_CONFIG_1, 1, 2, fs))
+    }
+    if (!mgos_i2c_setbits_reg_b(dev->addr, ICM20948_REG2_GYRO_CONFIG_1, 1, 2, fs)) {
         return false;
+    }
     dev->opts.scale = scale;
     dev->scale = dev->opts.scale / 32767.0f;
 
@@ -350,13 +389,16 @@ bool icm20948_gyro_set_scale(Gyroscope *dev, void *state, f32 scale) {
 
 bool icm20948_gyro_get_odr(Gyroscope *dev, void *state, f32 *odr) {
     u8 div = 0;
-    if (!odr)
+    if (!odr) {
         return false;
+    }
 
-    if (!icm20948_change_bank(dev->addr, state, 2))
+    if (!icm20948_change_bank(dev->addr, state, 2)) {
         return false;
-    if (!mgos_i2c_read_reg_n(dev->addr, ICM20948_REG2_GYRO_SMPLRT_DIV, 1, &div))
+    }
+    if (!mgos_i2c_read_reg_n(dev->addr, ICM20948_REG2_GYRO_SMPLRT_DIV, 1, &div)) {
         return false;
+    }
 
     // ODR is computed as follows:
     // 1.1 kHz/(1+GYRO_SMPLRT_DIV[7:0])
@@ -366,14 +408,17 @@ bool icm20948_gyro_get_odr(Gyroscope *dev, void *state, f32 *odr) {
 
 bool icm20948_gyro_set_odr(Gyroscope *dev, void *state, f32 odr) {
     u8 div = 0;
-    if (odr <= 0 || odr > ICM20948_GYRO_BASE_ODR)
+    if (odr <= 0 || odr > ICM20948_GYRO_BASE_ODR) {
         return false;
+    }
 
     div = (ICM20948_GYRO_BASE_ODR / odr) - 1;
-    if (!icm20948_change_bank(dev->addr, state, 2))
+    if (!icm20948_change_bank(dev->addr, state, 2)) {
         return false;
-    if (!mgos_i2c_write_reg_b(dev->addr, ICM20948_REG2_GYRO_SMPLRT_DIV, div))
+    }
+    if (!mgos_i2c_write_reg_b(dev->addr, ICM20948_REG2_GYRO_SMPLRT_DIV, div)) {
         return false;
+    }
     dev->opts.odr = odr;
 
     return true;
@@ -393,8 +438,9 @@ bool icm20948_mag_detect(byte addr, void *state) {
 }
 
 bool icm20948_mag_create(Magnetometer *dev, void *state) {
-    if (!dev)
+    if (!dev) {
         return false;
+    }
 
     // CNTL3: SRST=1;
     mgos_i2c_write_reg_b(dev->addr, ICM20948_CNTL3_M, 0x01);
@@ -413,11 +459,13 @@ bool icm20948_mag_create(Magnetometer *dev, void *state) {
 
 bool icm20948_mag_read(Magnetometer *dev, void *state) {
     byte data[6];
-    if (!dev)
+    if (!dev) {
         return false;
+    }
 
-    if (!mgos_i2c_read_reg_n(dev->addr, ICM20948_HXL_M, 6, data))
+    if (!mgos_i2c_read_reg_n(dev->addr, ICM20948_HXL_M, 6, data)) {
         return false;
+    }
 
     // It is required to read ST2 register after data reading.
     mgos_i2c_read_reg_b(dev->addr, ICM20948_ST2_M);
@@ -432,12 +480,14 @@ bool icm20948_mag_read(Magnetometer *dev, void *state) {
 
 bool icm20948_mag_get_odr(Magnetometer *dev, void *state, f32 *odr) {
     i16 mode;
-    if (!odr)
+    if (!odr) {
         return false;
+    }
 
     mode = mgos_i2c_read_reg_b(dev->addr, ICM20948_CNTL2_M);
-    if (mode == -1)
+    if (mode == -1) {
         return false;
+    }
 
     switch (mode) {
         case 0x02:
@@ -471,8 +521,9 @@ bool icm20948_mag_set_odr(Magnetometer *dev, void *state, f32 odr) {
         mode = 0x06;
     } else if (odr <= 100) {
         mode = 0x08;
-    } else
+    } else {
         return false;
+    }
     if (!mgos_i2c_write_reg_b(dev->addr, ICM20948_CNTL2_M, mode)) {
         return false;
     }

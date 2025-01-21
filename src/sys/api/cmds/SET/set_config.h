@@ -3,11 +3,11 @@
 #include "platform/types.h"
 
 /**
- * Internal use version of the API command SET_FLIGHTPLAN, which returns output directly.
- * @param in input to the command as it would be passed to the API
- * @param out unused
+ * Executes the SET_CONFIG API command.
+ * @param in input to the command
+ * @param out pointer to where the output should be stored, allocated by the function
  * @return the status code of the operation
+ * @note The caller is responsible for freeing the memory allocated for the output.
+ * Both json_free_serialized_string() and free() may be used.
  */
-i32 api_handle_set_config(const char *in, char **out);
-
-i32 api_set_config(const char *args);
+i32 api_set_config(const char *in, char **out);

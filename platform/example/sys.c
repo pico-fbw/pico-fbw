@@ -7,8 +7,8 @@
 
 void sys_boot_begin() {
     // This code will be executed at the beginning of the boot process when the system is powered on.
-    // Use it to initialize any platform-specific critical hardware or software that must be set up before anything else can
-    // happen. If your platform doesn't need to do anything special at boot, you can leave this function empty.
+    // Use it to initialize any platform-specific critical hardware or software that must be set up before anything else
+    // can happen. If your platform doesn't need to do anything special at boot, you can leave this function empty.
 }
 
 void sys_boot_end() {

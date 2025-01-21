@@ -41,7 +41,8 @@ static int flash_read(const struct lfs_config *c, lfs_block_t block, lfs_off_t o
     return LFS_ERR_OK;
 }
 
-static int flash_prog(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, const void *buffer, lfs_size_t size) {
+static int flash_prog(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, const void *buffer,
+                      lfs_size_t size) {
     assert(block < c->block_count);
     u32 sector = (u32)c->context + (block * c->block_size) + off;
     // Interrupt save and restore is necessary to prevent corruption of flash
@@ -96,7 +97,8 @@ struct lfs_config wwwfs_cfg = {
     .prog = flash_prog,
     .erase = flash_erase,
     .sync = flash_sync,
-    .context = (void *)WWWFS_BASE, // FS_BASE is provided as the context so that block operations know where to read/write
+    .context =
+        (void *)WWWFS_BASE, // FS_BASE is provided as the context so that block operations know where to read/write
     .read_size = 1,
     .prog_size = FLASH_PAGE_SIZE,    // Minimum write size (256 bytes)
     .block_size = FLASH_SECTOR_SIZE, // Block size must be a multiple of the sector size (4096 bytes)

@@ -14,8 +14,9 @@
 #include "reset.h"
 
 i32 api_reset(const char *args) {
-    printraw("This will erase ALL user data stored on the device!\nReset will occur in 10 seconds...power off the device to "
-             "cancel.\n");
+    printraw(
+        "This will erase ALL user data stored on the device!\nReset will occur in 10 seconds...power off the device to "
+        "cancel.\n");
     runtime_sleep_ms(10000, false);
     config_reset();
     printraw("Reset complete. Shutting down...\n");

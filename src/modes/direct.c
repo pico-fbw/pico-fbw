@@ -20,7 +20,8 @@ void direct_update() {
     switch ((ControlMode)config.general[GENERAL_CONTROL_MODE]) {
         case CTRLMODE_3AXIS_ATHR:
         case CTRLMODE_3AXIS:
-            servo_set((u32)config.pins[PINS_SERVO_RUD], receiver_get((u32)config.pins[PINS_INPUT_RUD], RECEIVER_MODE_DEGREE));
+            servo_set((u32)config.pins[PINS_SERVO_RUD],
+                      receiver_get((u32)config.pins[PINS_INPUT_RUD], RECEIVER_MODE_DEGREE));
             /* fall through */
         case CTRLMODE_2AXIS_ATHR:
         case CTRLMODE_2AXIS:
@@ -33,7 +34,8 @@ void direct_update() {
             servo_set((u32)config.pins[PINS_SERVO_ELE], control_mix_elevon(ELEVON_RIGHT, ail, ele));
             break;
     }
-    if (receiver_has_athr())
+    if (receiver_has_athr()) {
         esc_set((u32)config.pins[PINS_ESC_THROTTLE],
                 receiver_get((u32)config.pins[PINS_INPUT_THROTTLE], RECEIVER_MODE_PERCENT));
+    }
 }

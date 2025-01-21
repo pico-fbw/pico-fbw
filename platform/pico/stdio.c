@@ -44,7 +44,8 @@ void stdio_setup() {
     // We must handle USB events manually due to custom USB stack
     assert(callback_in_ms(TINYUSB_TASK_INTERVAL_MS, tinyusb_task, NULL));
 #endif
-    stdio_init_all(); // The stdio types that are initializes here depend on what gets defined in platform/pico/CMakeLists.txt
+    // The stdio types that are initialized here depend on what gets defined in platform/pico/CMakeLists.txt
+    stdio_init_all();
 }
 
 char *stdin_read() {
@@ -59,16 +60,18 @@ char *stdin_read() {
         } else {
             // Recieved a valid character, resize the buffer and store it
             buf = try_realloc(buf, (i + 1) * sizeof(char));
-            if (!buf)
+            if (!buf) {
                 return NULL;
+            }
             buf[i++] = c;
         }
     }
     // Done reading, null-terminate the buffer if we read a line
     if (i != 0) {
         buf = try_realloc(buf, (i + 1) * sizeof(char));
-        if (!buf)
+        if (!buf) {
             return NULL; // Nothing was read
+        }
         buf[i] = '\0';
     }
     return buf;

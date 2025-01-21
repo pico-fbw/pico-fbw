@@ -41,8 +41,8 @@ void receiver_enable(const u32 pins[], u32 num_pins);
 f32 receiver_get(u32 pin, ReceiverMode mode);
 
 /**
- * Samples a list of pins for deviation from a specified value for a specified number of samples, then saves that offset value
- * to flash.
+ * Samples a list of pins for deviation from a specified value for a specified number of samples, then saves that offset
+ * value to flash.
  * @param pins the list of pins to calibrate
  * @param num_pins the number of pins in the list
  * @param deviations the value we should be seeing on each pin
@@ -51,7 +51,8 @@ f32 receiver_get(u32 pin, ReceiverMode mode);
  * @param run_times the amount of times to run a sampling function (num_samples), will be averaged at the end
  * @return true if the calibration was successful, false if not
  */
-bool receiver_calibrate(const u32 pins[], u32 num_pins, f32 deviations[], u32 num_samples, u32 sample_delay_ms, u32 run_times);
+bool receiver_calibrate(const u32 pins[], u32 num_pins, f32 deviations[], u32 num_samples, u32 sample_delay_ms,
+                        u32 run_times);
 
 /**
  * @return the status of any previous receiver calibration.
@@ -67,8 +68,8 @@ ReceiverCalibrationStatus receiver_is_calibrated();
 void receiver_get_pins(u32 *pins, u32 *num_pins, f32 *deviations);
 
 /**
- * @return true if PWM has been set up with an autothrottle input (aka an autothrottle control mode has been selected), false if
- * not.
+ * @return true if PWM has been set up with an autothrottle input (aka an autothrottle control mode has been selected),
+ * false if not.
  */
 bool receiver_has_athr();
 

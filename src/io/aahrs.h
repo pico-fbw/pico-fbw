@@ -50,7 +50,7 @@ typedef struct AAHRS {
     aahrs_deinit_t deinit;
     /**
      * Polls sensors for updated data and periodically runs the AAHRS fusion algorithm when applicable.
-     * @note This function must be called as often as possible to obtain many sensor readings for the algorithms to work with!
+     * @note This function must be called as often as possible to obtain many sensor readings!
      */
     aahrs_update_t update;
     /**
@@ -64,5 +64,5 @@ typedef struct AAHRS {
 extern AAHRS aahrs;
 
 // Obtains the difference between two angles in degrees.
-#define ANGLE_DIFFERENCE(a1, a2)                                                                                               \
+#define ANGLE_DIFFERENCE(a1, a2)                                                                                       \
     ((a2 - a1 + 180) % 360 - 180) < -180 ? ((a2 - a1 + 180) % 360 - 180) + 360 : ((a2 - a1 + 180) % 360 - 180)

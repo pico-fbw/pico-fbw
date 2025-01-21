@@ -43,29 +43,33 @@ void __attribute__((noreturn)) sys_shutdown() {
 }
 
 void __attribute__((noreturn)) sys_reboot(bool bootloader) {
-    if (bootloader)
+    if (bootloader) {
         reset_usb_boot(0, 0); // Reboot into bootloader and mount mass storage
-    // Set a magic value in the scratch register to indicate that the reboot was intentional (since power-on reset doesn't clear
-    // the scratch register)
+    }
+    // Set a magic value in the scratch register to indicate that the reboot was intentional (since power-on reset
+    // doesn't clear the scratch register)
     watchdog_hw->scratch[0] = WATCHDOG_FORCE_MAGIC;
     // Trigger the watchdog to force a reboot and stall for it to take effect
     watchdog_hw->ctrl = WATCHDOG_CTRL_TRIGGER_BITS;
-    while (true)
+    while (true) {
         tight_loop_contents();
+    }
 }
 
 BootType sys_boot_type() {
     if (watchdog_caused_reboot()) {
-        // If the reboot was intentional (forced by firmware), WATCHDOG_FORCE_MAGIC would have been set into scratch[0] before
-        // triggering the watchdog
+        // If the reboot was intentional (forced by firmware), WATCHDOG_FORCE_MAGIC would have been set into scratch[0]
+        // before triggering the watchdog
         if (watchdog_hw->scratch[0] == WATCHDOG_FORCE_MAGIC) {
             return BOOT_REBOOT;
         } else if (watchdog_hw->scratch[0] == WATCHDOG_TIMEOUT_MAGIC) {
-            return BOOT_WATCHDOG; // This flag is set after the boot finishes, which means watchdog had to reboot while program
-                                  // was running...not good
-        } else
-            return BOOT_RESET; // No flag was set, so watchdog caused reboot before it was enabled, likely BOOTSEL (it uses
-                               // watchdog and doesn't set that flag)
-    } else
+            return BOOT_WATCHDOG; // This flag is set after the boot finishes, which means watchdog had to reboot while
+                                  // program was running...not good
+        } else {
+            return BOOT_RESET; // No flag was set, so watchdog caused reboot before it was enabled, likely BOOTSEL (it
+                               // uses watchdog and doesn't set that flag)
+        }
+    } else {
         return BOOT_COLD; // No watchdog reboot, so a cold boot
+    }
 }

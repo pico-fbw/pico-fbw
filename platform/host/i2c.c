@@ -16,8 +16,9 @@ bool i2c_setup(u32 sda, u32 scl, u32 freq) {
 
 bool i2c_read(u32 sda, u32 scl, byte addr, byte reg, byte dest[], size_t len) {
     // Not implemented
-    for (u32 i = 0; i < len; i++)
+    for (u32 i = 0; i < len; i++) {
         dest[i] = 0x00;
+    }
     return true;
     (void)sda;
     (void)scl;

@@ -26,16 +26,18 @@ char *stdin_read() {
             break;
         } else {
             buf = try_realloc(buf, (i + 1) * sizeof(char));
-            if (!buf)
+            if (!buf) {
                 return NULL;
+            }
             buf[i++] = c;
             sleep_us_blocking(50); // Sleep for a bit to wait for more input (possibly)
         }
     }
     if (i != 0) {
         buf = try_realloc(buf, (i + 1) * sizeof(char));
-        if (!buf)
+        if (!buf) {
             return NULL;
+        }
         buf[i] = '\0';
     }
     return buf;

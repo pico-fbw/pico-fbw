@@ -6,9 +6,9 @@
 /**
  * Compatability functions
  * Since the IMU system was originally written for mongoose-os, these functions provite compatibility with the
- * original mongoose-os system calls. This means it is compatible with all drivers already written with minimal porting effort.
- * If you are writing a new driver, it doesn't really matter whether you use mongoose-os's functions or pico-fbw's,
- * they both behave identically at their core. It's whichever you prefer.
+ * original mongoose-os system calls. This means it is compatible with all drivers already written with minimal porting
+ * effort. If you are writing a new driver, it doesn't really matter whether you use mongoose-os's functions or
+ * pico-fbw's, they both behave identically at their core. It's whichever you prefer.
  */
 
 #pragma once
@@ -28,8 +28,9 @@
  */
 static inline i32 mgos_i2c_read_reg_b(u16 addr, byte reg) {
     byte read;
-    if (!i2c_read(SDA, SCL, (byte)addr, reg, &read, 1))
+    if (!i2c_read(SDA, SCL, (byte)addr, reg, &read, 1)) {
         return -1;
+    }
     return read;
 }
 
@@ -101,13 +102,16 @@ static inline bool mgos_i2c_write_reg_n(u16 addr, byte reg, size_t n, const u8 *
 static inline bool mgos_i2c_setbits_reg_b(u16 addr, byte reg, u8 bitoffset, u8 bitlen, u8 value) {
     u8 old, new;
 
-    if (bitoffset + bitlen > 8 || bitlen == 0)
+    if (bitoffset + bitlen > 8 || bitlen == 0) {
         return false;
-    if (value > (1 << bitlen) - 1)
+    }
+    if (value > (1 << bitlen) - 1) {
         return false;
+    }
 
-    if (!i2c_read(SDA, SCL, addr, reg, &old, 1))
+    if (!i2c_read(SDA, SCL, addr, reg, &old, 1)) {
         return false;
+    }
 
     new = old | (((1 << bitlen) - 1) << bitoffset);
     new &= ~(((1 << bitlen) - 1) << bitoffset);
@@ -118,11 +122,13 @@ static inline bool mgos_i2c_setbits_reg_b(u16 addr, byte reg, u8 bitoffset, u8 b
 static inline bool mgos_i2c_getbits_reg_b(u16 addr, byte reg, u8 bitoffset, u8 bitlen, u8 *value) {
     u8 val, mask;
 
-    if (bitoffset + bitlen > 8 || bitlen == 0 || !value)
+    if (bitoffset + bitlen > 8 || bitlen == 0 || !value) {
         return false;
+    }
 
-    if (!i2c_read(SDA, SCL, addr, reg, &val, 1))
+    if (!i2c_read(SDA, SCL, addr, reg, &val, 1)) {
         return false;
+    }
 
     mask = ((1 << bitlen) - 1);
     mask <<= bitoffset;

@@ -53,8 +53,9 @@ GyroscopeDetails gyroscopes[] = {
 };
 
 bool fusion_gyroscope_find(IMU *imu, const GyroscopeOptions *opts) {
-    if (!imu)
+    if (!imu) {
         return false;
+    }
 
     // See accel.c for comments on this loop
     for (u32 i = 0; i < count_of(gyroscopes); i++) {
@@ -63,18 +64,19 @@ bool fusion_gyroscope_find(IMU *imu, const GyroscopeOptions *opts) {
         if (!imu->state && gyroscopes[i].create_state) {
             imu->state = gyroscopes[i].create_state();
             if (!imu->state) {
-                printfbw(aahrs, "ERROR: could not create user data for gyroscope \"%s\"", gyroscopes[i].name);
+                printsys(aahrs, "ERROR: could not create user data for gyroscope \"%s\"", gyroscopes[i].name);
                 return false;
             }
         }
         if (gyroscopes[i].detect) {
             for (u32 a = 0; a < count_of(gyroscopes[i].addr); a++) {
                 byte addr = gyroscopes[i].addr[a];
-                if (addr == NOADDR)
+                if (addr == NOADDR) {
                     continue;
-                printfbw(aahrs, "scanning for gyroscope \"%s\" at I2C 0x%02x", gyroscopes[i].name, addr);
+                }
+                printsys(aahrs, "scanning for gyroscope \"%s\" at I2C 0x%02x", gyroscopes[i].name, addr);
                 if (gyroscopes[i].detect(addr, imu->state)) {
-                    printfbw(aahrs, "detected gyroscope \"%s\" at I2C 0x%02x", gyroscopes[i].name, addr);
+                    printsys(aahrs, "detected gyroscope \"%s\" at I2C 0x%02x", gyroscopes[i].name, addr);
                     imu->gyro->addr = addr;
                     detected = true;
                     break;
@@ -85,22 +87,27 @@ bool fusion_gyroscope_find(IMU *imu, const GyroscopeOptions *opts) {
             imu->gyro->opts = *opts;
             if (imu->gyro->create) {
                 if (!imu->gyro->create(imu->gyro, imu->state)) {
-                    printfbw(aahrs, "ERROR: could not create gyroscope \"%s\" at I2C 0x%02x", gyroscopes[i].name,
+                    printsys(aahrs, "ERROR: could not create gyroscope \"%s\" at I2C 0x%02x", gyroscopes[i].name,
                              imu->gyro->addr);
-                    if (imu->gyro->destroy)
+                    if (imu->gyro->destroy) {
                         imu->gyro->destroy(imu->gyro, imu->state);
-                    if (imu->state)
+                    }
+                    if (imu->state) {
                         free(imu->state);
+                    }
                     imu->state = NULL;
                     return false;
                 } else {
-                    printfbw(aahrs, "successfully created gyroscope \"%s\" at I2C 0x%02x", gyroscopes[i].name, imu->gyro->addr);
+                    printsys(aahrs, "successfully created gyroscope \"%s\" at I2C 0x%02x", gyroscopes[i].name,
+                             imu->gyro->addr);
                 }
             }
-            if (imu->gyro->set_scale)
+            if (imu->gyro->set_scale) {
                 imu->gyro->set_scale(imu->gyro, imu->state, opts->scale);
-            if (imu->gyro->set_odr)
+            }
+            if (imu->gyro->set_odr) {
                 imu->gyro->set_odr(imu->gyro, imu->state, opts->odr);
+            }
             imu->gyro->orientation[0] = 1.f;
             imu->gyro->orientation[1] = 0.f;
             imu->gyro->orientation[2] = 0.f;
@@ -110,11 +117,12 @@ bool fusion_gyroscope_find(IMU *imu, const GyroscopeOptions *opts) {
             imu->gyro->orientation[6] = 0.f;
             imu->gyro->orientation[7] = 0.f;
             imu->gyro->orientation[8] = 1.f;
-            printfbw(aahrs, "done initializing, gyroscope \"%s\" will be used", gyroscopes[i].name);
+            printsys(aahrs, "done initializing, gyroscope \"%s\" will be used", gyroscopes[i].name);
             return true;
         } else {
-            if (imu->state && gyroscopes[i].create_state && gyroscopes[i].destroy_state)
+            if (imu->state && gyroscopes[i].create_state && gyroscopes[i].destroy_state) {
                 imu->state = gyroscopes[i].destroy_state(imu->state);
+            }
             memset(imu->gyro, 0, sizeof(Gyroscope));
         }
     }
@@ -123,34 +131,39 @@ bool fusion_gyroscope_find(IMU *imu, const GyroscopeOptions *opts) {
 }
 
 bool fusion_gyroscope_get(IMU *imu, f32 *x, f32 *y, f32 *z) {
-    if (!imu->gyro || !imu->gyro->read)
+    if (!imu->gyro || !imu->gyro->read) {
         return false;
+    }
     if (!imu->gyro->read(imu->gyro, imu->state)) {
-        printfbw(aahrs, "ERROR: could not read from gyroscope");
+        printsys(aahrs, "ERROR: could not read from gyroscope");
         return false;
     }
 
     if (x) {
-        *x = (imu->gyro->scale * (imu->gyro->gx * imu->gyro->orientation[0] + imu->gyro->gy * imu->gyro->orientation[1] +
-                                  imu->gyro->gz * imu->gyro->orientation[2])) +
-             imu->gyro->offset_gx;
+        *x =
+            (imu->gyro->scale * (imu->gyro->gx * imu->gyro->orientation[0] + imu->gyro->gy * imu->gyro->orientation[1] +
+                                 imu->gyro->gz * imu->gyro->orientation[2])) +
+            imu->gyro->offset_gx;
     }
     if (y) {
-        *y = (imu->gyro->scale * (imu->gyro->gx * imu->gyro->orientation[3] + imu->gyro->gy * imu->gyro->orientation[4] +
-                                  imu->gyro->gz * imu->gyro->orientation[5])) +
-             imu->gyro->offset_gy;
+        *y =
+            (imu->gyro->scale * (imu->gyro->gx * imu->gyro->orientation[3] + imu->gyro->gy * imu->gyro->orientation[4] +
+                                 imu->gyro->gz * imu->gyro->orientation[5])) +
+            imu->gyro->offset_gy;
     }
     if (z) {
-        *z = (imu->gyro->scale * (imu->gyro->gx * imu->gyro->orientation[6] + imu->gyro->gy * imu->gyro->orientation[7] +
-                                  imu->gyro->gz * imu->gyro->orientation[8])) +
-             imu->gyro->offset_gz;
+        *z =
+            (imu->gyro->scale * (imu->gyro->gx * imu->gyro->orientation[6] + imu->gyro->gy * imu->gyro->orientation[7] +
+                                 imu->gyro->gz * imu->gyro->orientation[8])) +
+            imu->gyro->offset_gz;
     }
     return true;
 }
 
 bool fusion_gyroscope_set_offset(IMU *imu, f32 x, f32 y, f32 z) {
-    if (!imu || !imu->gyro)
+    if (!imu || !imu->gyro) {
         return false;
+    }
 
     imu->gyro->offset_gx = x;
     imu->gyro->offset_gy = y;
@@ -159,58 +172,68 @@ bool fusion_gyroscope_set_offset(IMU *imu, f32 x, f32 y, f32 z) {
 }
 
 bool fusion_gyroscope_get_offset(IMU *imu, f32 *x, f32 *y, f32 *z) {
-    if (!imu || !imu->gyro)
+    if (!imu || !imu->gyro) {
         return false;
+    }
 
-    if (x)
+    if (x) {
         *x = imu->gyro->offset_gx;
-    if (y)
+    }
+    if (y) {
         *y = imu->gyro->offset_gy;
-    if (z)
+    }
+    if (z) {
         *z = imu->gyro->offset_gz;
+    }
     return true;
 }
 
 bool fusion_gyroscope_get_orientation(IMU *imu, f32 v[9]) {
-    if (!imu || !imu->gyro || !v)
+    if (!imu || !imu->gyro || !v) {
         return false;
+    }
 
     memcpy(v, imu->gyro->orientation, sizeof(f32) * 9);
     return true;
 }
 
 bool fusion_gyroscope_set_orientation(IMU *imu, f32 v[9]) {
-    if (!imu || !imu->gyro || !v)
+    if (!imu || !imu->gyro || !v) {
         return false;
+    }
 
     memcpy(imu->gyro->orientation, v, sizeof(f32) * 9);
     return true;
 }
 
 bool fusion_gyroscope_get_scale(IMU *imu, f32 *scale) {
-    if (!imu || !imu->gyro || !imu->gyro->get_scale || !scale)
+    if (!imu || !imu->gyro || !imu->gyro->get_scale || !scale) {
         return false;
+    }
 
     return imu->gyro->get_scale(imu->gyro, imu->state, scale);
 }
 
 bool fusion_gyroscope_set_scale(IMU *imu, f32 scale) {
-    if (!imu || !imu->gyro || !imu->gyro->set_scale)
+    if (!imu || !imu->gyro || !imu->gyro->set_scale) {
         return false;
+    }
 
     return imu->gyro->set_scale(imu->gyro, imu->state, scale);
 }
 
 bool fusion_gyroscope_get_odr(IMU *imu, f32 *hertz) {
-    if (!imu || !imu->gyro || !imu->gyro->get_odr || !hertz)
+    if (!imu || !imu->gyro || !imu->gyro->get_odr || !hertz) {
         return false;
+    }
 
     return imu->gyro->get_odr(imu->gyro, imu->state, hertz);
 }
 
 bool fusion_gyroscope_set_odr(IMU *imu, f32 hertz) {
-    if (!imu || !imu->gyro || !imu->gyro->set_odr)
+    if (!imu || !imu->gyro || !imu->gyro->set_odr) {
         return false;
+    }
 
     return imu->gyro->set_odr(imu->gyro, imu->state, hertz);
 }
