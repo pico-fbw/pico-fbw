@@ -1,6 +1,6 @@
 /**
  * pico-fbw's host Wi-Fi (but not really Wi-Fi) implementation is curteousy of Mongoose.
- * Check it out at https://github.com/cesanta/mongoose!
+ * Check it out at https://github.com/cesanta/mongoose
  */
 
 /**
@@ -15,18 +15,99 @@
 // clang-format off
 
 #include <limits.h>
+#include <stdbool.h>
 #include <stdio.h>
+#include <time.h>
 
 #include "mongoose.h"
 
+#include "platform/flash.h"
+
 #include "sys/api/api.h"
 
-#define DOCUMENT_ROOT "./www/www" // Root directory for the web server
 #define POLL_PERIOD_MS 2 // Rate at which the web server is polled
 
 // clang-format on
 
 static struct mg_mgr mgr;
+
+static int fs_st(const char *path, size_t *size, time_t *mtime) {
+    struct lfs_info info;
+    int res = lfs_stat(&wwwfs, path, &info);
+    if (res < 0) {
+        return res;
+    }
+    if (size) {
+        *size = info.size;
+    }
+    // littlefs doesn't support modification times, so just return the current time
+    if (mtime) {
+        *mtime = time(NULL);
+    }
+    return MG_FS_READ | MG_FS_WRITE | (info.type == LFS_TYPE_DIR ? MG_FS_DIR : 0);
+    return 0;
+}
+
+static void fs_ls(const char *path, void (*fn)(const char *, void *), void *userdata) {
+    lfs_dir_t dir;
+    struct lfs_info info;
+    int res = lfs_dir_open(&wwwfs, &dir, path);
+    if (res < 0) {
+        return;
+    }
+    printf("LOG: opened directory %s\n", path);
+    while (lfs_dir_read(&wwwfs, &dir, &info) > 0) {
+        printf("LOG: found file %s\n", info.name);
+        if (strcmp(info.name, ".") != 0 && strcmp(info.name, "..") != 0) {
+            printf("LOG: calling function with file %s\n", info.name);
+            fn(info.name, userdata);
+        }
+    }
+    lfs_dir_close(&wwwfs, &dir);
+}
+
+static void *fs_op(const char *path, int flags) {
+    int open_flags = flags == MG_FS_READ ? LFS_O_RDONLY : LFS_O_RDWR | LFS_O_CREAT;
+    lfs_file_t *file = (lfs_file_t *)malloc(sizeof(lfs_file_t));
+    if (!file) {
+        return NULL;
+    }
+    int res = lfs_file_open(&wwwfs, file, path, open_flags);
+    if (res < 0) {
+        free(file);
+        return NULL;
+    }
+    return file;
+}
+
+static void fs_cl(void *fd) {
+    lfs_file_close(&wwwfs, (lfs_file_t *)fd);
+    free(fd);
+}
+
+static size_t fs_rd(void *fd, void *buf, size_t len) {
+    return lfs_file_read(&wwwfs, (lfs_file_t *)fd, buf, len);
+}
+
+static size_t fs_wr(void *fd, const void *buf, size_t len) {
+    return lfs_file_write(&wwwfs, (lfs_file_t *)fd, buf, len);
+}
+
+static size_t fs_sk(void *fd, size_t offset) {
+    return lfs_file_seek(&wwwfs, (lfs_file_t *)fd, offset, LFS_SEEK_SET);
+}
+
+static bool fs_mv(const char *from, const char *to) {
+    return lfs_rename(&wwwfs, from, to) == LFS_ERR_OK;
+}
+
+static bool fs_rm(const char *path) {
+    return lfs_remove(&wwwfs, path) == LFS_ERR_OK;
+}
+
+static bool fs_mkd(const char *path) {
+    return lfs_mkdir(&wwwfs, path) == LFS_ERR_OK;
+}
 
 // Handles an API request from an HTTP event.
 static void handle_api_v1_request(struct mg_connection *c, struct mg_http_message *hm, api_handler handler) {
@@ -75,34 +156,23 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
         handle_api_v1_request(c, hm, NULL);
     } else {
         // No matching API request, serve static files instead
-        // Check if the requested file exists
-        char path[PATH_MAX];
-        snprintf(path, sizeof(path), "%s%.*s", DOCUMENT_ROOT, hm->uri.len, hm->uri.buf);
-        // Root path should serve index.html
-        if (hm->uri.buf[hm->uri.len - 1] == '/') {
-            strcat(path, "index.html");
-        }
-        bool found = false;
-        for (u32 i = 0; i < 2; i++) {
-            FILE *fp = fopen(path, "rb");
-            if (fp) {
-                fclose(fp);
-                found = true;
-            } else {
-                strcat(path, ".gz"); // Check for a gzipped variant
-                continue;
-            }
-        }
-        if (found) {
-            // File exists, mongoose can handle this
-            struct mg_http_serve_opts opts = {
-                .root_dir = DOCUMENT_ROOT,
-            };
-            mg_http_serve_dir(c, hm, &opts);
-        } else {
-            // File doesn't exist, redirect to root
-            mg_http_reply(c, 302, "Location: /\r\n", "");
-        }
+        struct mg_http_serve_opts opts = {
+            .root_dir = "/www",
+            .fs =
+                &(struct mg_fs){
+                    .st = fs_st,
+                    .ls = fs_ls,
+                    .op = fs_op,
+                    .cl = fs_cl,
+                    .rd = fs_rd,
+                    .wr = fs_wr,
+                    .sk = fs_sk,
+                    .mv = fs_mv,
+                    .rm = fs_rm,
+                    .mkd = fs_mkd,
+                },
+        };
+        mg_http_serve_dir(c, hm, &opts);
     }
 }
 

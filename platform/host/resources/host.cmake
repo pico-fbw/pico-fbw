@@ -1,10 +1,10 @@
 # See platform/example/resources/example.cmake for comments regarding the structure of this file
 add_compile_definitions(FBW_PLATFORM_HOST=1)
+
 if (HOST_SKIP_WWW)
     add_compile_definitions(HOST_SKIP_WWW=1)
 else()
-    # littlefs generation parameters -- these don't actually matter as the host webserver doesn't use littlefs
-    set(LFS_BLOCK_SIZE 1024)
+    set(LFS_BLOCK_SIZE 4096)
     set(LFS_PROG_SIZE 1)
     set(LFS_IMG_SIZE 262144) # 256KB
 endif()
@@ -33,5 +33,20 @@ function(setup_after_subdirs)
     # Link math library on Linux for trig functions
     if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
         target_link_libraries(${PROJECT_NAME} m)
+    endif()
+    if (NOT HOST_SKIP_WWW)
+        # Move the generated lfs.bin into pico-fbw's emulated filesystem directory
+        if (CMAKE_HOST_WIN32)
+            set(DEST_DIR "$ENV{APPDATA}/.pico-fbw")
+        else()
+            set(DEST_DIR "$ENV{HOME}/.pico-fbw")
+        endif()
+        add_custom_command(
+            TARGET wwwfs
+            POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${DEST_DIR}
+            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/generated/www/lfs.bin ${DEST_DIR}/wwwfs.bin
+            COMMENT "Copying lfs.bin to pico-fbw directory"
+        )
     endif()
 endfunction()

@@ -24,18 +24,21 @@
 // Since we are reading and writing from files and not directly from flash memory, most of these settings are arbitrary.
 #define READ_SIZE 1
 #define WRITE_SIZE 1
-#define BLOCK_SIZE 1024 // 1 KB blocks because I felt like it
+#define BLOCK_SIZE 4096 // 4 KB blocks because they seem pretty comomon (and I felt like it)
 #define CACHE_SIZE 512
 #define LOOKAHEAD_SIZE 128
 #define BLOCK_CYCLES -1 // Don't need to worry about wear leveling on a host system
 #define FS_SIZE 262144  // 256 KB
 
-// To emulate flash memory on a microcontroller, we use a file on the host system.
+// To emulate flash memory on a microcontroller, we use files on the host system.
 // The file (BINNAME) is stored inside a directory (BINDIR)
-// in the user's home directory(*nix) or AppData directory (Windows).
+// in the user's home directory (*nix) or AppData directory (Windows).
 #define BINDIR ".pico-fbw"
-#define BINNAME "lfs.bin"
-char *filepath; // Will store the full path to the file, set in flash_setup()
+#define LFS_BINNAME "lfs.bin"
+#define WWWFS_BINNAME "wwwfs.bin"
+// Will store the full path to its respective file; set in flash_setup()
+char *lfsFilepath;
+char *wwwfsFilepath;
 
 /**
  * Opens the littlefs data file and seeks to the specified offset.
@@ -109,67 +112,110 @@ static int flash_sync(const struct lfs_config *c) {
     (void)c;
 }
 
-bool flash_setup() {
-    // Determine the filepath and allocate memory for it
+/**
+ * Makes a path to the directory where filesystem binary files should be stored.
+ * @param binname the name of the binary file to make a path to, or NULL to make a path to the directory
+ * @param path the output path
+ * @return true if successful
+ */
+static bool make_path(const char *binname, char **path) {
 #if defined(_WIN32)
-    const char *appdata = getenv("APPDATA");
-    if (!appdata) {
+    const char *env = getenv("APPDATA");
+    if (!env) {
         return false;
     }
-    filepath = (char *)malloc(strlen(appdata) + strlen(BINDIR) + strlen(BINNAME) + 2);
-    if (!filepath) {
-        return false;
-    }
-    sprintf(filepath, "%s%s%s", appdata, SEP, BINDIR);
 #elif defined(__APPLE__) || defined(__linux__)
-    const char *home = getenv("HOME");
-    if (!home) {
+    const char *env = getenv("HOME");
+    if (!env) {
         return false;
     }
-    filepath = (char *)malloc(strlen(home) + strlen(BINDIR) + strlen(BINNAME) + 2);
-    if (!filepath) {
-        return false;
-    }
-    sprintf(filepath, "%s%s%s", home, SEP, BINDIR);
 #else
-    // Unknown platform, create the file in the current directory
-    filepath = (char *)malloc(strlen(BINNAME));
-    if (!filepath) {
-        return false;
-    }
-    strcpy(filepath, BINNAME);
+    const char *env = "";
 #endif
-
-    // Create the directory if it doesn't exist
-    if (mkdir(filepath, 0755) != 0 && errno != EEXIST) {
-        free(filepath);
+    if (!binname) {
+        *path = (char *)malloc(strlen(env) + strlen(SEP) + strlen(BINDIR) + 1);
+        if (!*path) {
+            return false;
+        }
+        sprintf(*path, "%s%s%s", env, SEP, BINDIR);
+        return true;
+    }
+    *path = (char *)malloc(strlen(env) + strlen(SEP) * 2 + strlen(BINDIR) + strlen(binname) + 1);
+    if (!*path) {
         return false;
     }
-    // Directory is now confirmed to exist, add the filename and now we have the full path
-    strcat(filepath, SEP);
-    strcat(filepath, BINNAME);
+    sprintf(*path, "%s%s%s%s%s", env, SEP, BINDIR, SEP, binname);
+    return true;
+}
 
-    // Confirm the file exist and create it if it doesn't
-    FILE *file = fopen(filepath, "rb");
+/**
+ * @param path the path to the file
+ * @return true if the file exists
+ */
+static bool file_exists(const char *path) {
+    FILE *file = fopen(path, "rb");
     if (!file) {
-        file = fopen(filepath, "wb");
-        if (!file) {
-            return false;
-        }
-        // Set the file size to the total filesystem size
-        // This makes everything else much simpler, and the file will be quite small anyway
-        if (fseek(file, FS_SIZE - 1, SEEK_SET) != 0) {
-            fclose(file);
-            return false;
-        }
-        if (fwrite("\0", 1, 1, file) < 1) {
-            fclose(file);
-            return false;
-        }
+        return false;
     }
     fclose(file);
-    // Pass the filepath in as context to littlefs so block operations can access it
-    lfs_cfg.context = (void *)filepath;
+    return true;
+}
+
+/**
+ * Creates a blank binary file of FS_SIZE bytes.
+ * @param path the path to the file
+ * @return true if successful
+ */
+static bool create_flash_bin(const char *path) {
+    FILE *file = fopen(path, "wb");
+    if (!file) {
+        return false;
+    }
+    // Set the file size to the total filesystem size
+    // This makes everything else much simpler, and the file will be quite small anyway
+    if (fseek(file, FS_SIZE - 1, SEEK_SET) != 0) {
+        fclose(file);
+        return false;
+    }
+    if (fwrite("\0", 1, 1, file) < 1) {
+        fclose(file);
+        return false;
+    }
+    fclose(file);
+    return true;
+}
+
+bool flash_setup() {
+    // Get the path to the directory where the filesystem files are stored
+    char *dirpath;
+    if (!make_path(NULL, &dirpath)) {
+        return false;
+    }
+    // Create the directory if it doesn't exist
+    if (mkdir(dirpath, 0755) != 0 && errno != EEXIST) {
+        free(dirpath);
+        return false;
+    }
+    free(dirpath);
+
+    // Containing directory is confirmed to exist, we can now get paths to the filesystem files
+    if (!make_path(LFS_BINNAME, &lfsFilepath) || !make_path(WWWFS_BINNAME, &wwwfsFilepath)) {
+        return false;
+    }
+    // Also create LFS_BIN if it doesn't exist
+    if (!file_exists(lfsFilepath) && !create_flash_bin(lfsFilepath)) {
+        return false;
+    }
+    // Pass the filepaths in as context to littlefs so block operations can access it
+    lfs_cfg.context = (void *)lfsFilepath;
+#if PLATFORM_SUPPORTS_WIFI
+    // We don't create WWWFS_BIN as cmake should be handling that
+    // If it doesn't exist, throw a warning and continue
+    if (!file_exists(wwwfsFilepath)) {
+        fprintf(stderr, "WARNING: wwwfs.bin not found, web interface will not be available\n");
+    }
+    wwwfs_cfg.context = (void *)wwwfsFilepath;
+#endif
     return true;
 }
 
@@ -192,7 +238,6 @@ struct lfs_config lfs_cfg = {
 };
 
 #if PLATFORM_SUPPORTS_WIFI
-// Defined in this case to make the compiler happy, not actually used
 lfs_t wwwfs;
 struct lfs_config wwwfs_cfg = {
     .read = flash_read,
