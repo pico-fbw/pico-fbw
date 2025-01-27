@@ -1,4 +1,3 @@
-# Define the platform library and its files
 add_library(platform_pico
     adc.c
     flash.c
@@ -81,6 +80,5 @@ else()
     )
 endif()
 
-# Include the root directory (so we can #include "platform/..." in files),
-# and the source directory (so we can include "sys/...", etc. in files)
+
 target_include_directories(platform_pico PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/src)

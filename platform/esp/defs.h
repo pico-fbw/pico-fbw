@@ -30,7 +30,7 @@ typedef esp_timer_handle_t __callback_id_t;
 #define PLATFORM_NAME ("Espressif Systems " CONFIG_IDF_TARGET " (" CONFIG_IDF_TARGET_ARCH ")")
 #define PLATFORM_VERSION ("1.0.0 (ESP-IDF v" CONFIG_IDF_INIT_VERSION ")")
 // Platform features
-#define PLATFORM_SUPPORTS_WIFI 1
+#define PLATFORM_SUPPORTS_WIFI FBW_BUILD_WWW
 
 // In ESP-IDF, FreeRTOS is required, and it expects the entrypoint to be called app_main
 // This define will rename main() to app_main() in main.c (as this file is included in main.c before main() is defined)

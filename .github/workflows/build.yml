@@ -138,7 +138,7 @@ jobs:
 
     - name: Configure CMake (windows)
       if: matrix.OS == 'windows-latest'
-      run: cmake -B "${{github.workspace}}/build" -DFBW_PLATFORM=host -DHOST_SKIP_WWW=1 -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -GNinja
+      run: cmake -B "${{github.workspace}}/build" -DFBW_PLATFORM=host -DFBW_BUILD_WWW=0 -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -GNinja
 
     - name: Build
       run: cmake --build "${{github.workspace}}/build" --config ${{env.BUILD_TYPE}}

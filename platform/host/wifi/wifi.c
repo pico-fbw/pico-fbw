@@ -35,7 +35,7 @@ static int fs_st(const char *path, size_t *size, time_t *mtime) {
     struct lfs_info info;
     int res = lfs_stat(&wwwfs, path, &info);
     if (res < 0) {
-        return res;
+        return 0;
     }
     if (size) {
         *size = info.size;
@@ -45,7 +45,6 @@ static int fs_st(const char *path, size_t *size, time_t *mtime) {
         *mtime = time(NULL);
     }
     return MG_FS_READ | MG_FS_WRITE | (info.type == LFS_TYPE_DIR ? MG_FS_DIR : 0);
-    return 0;
 }
 
 static void fs_ls(const char *path, void (*fn)(const char *, void *), void *userdata) {
@@ -55,11 +54,8 @@ static void fs_ls(const char *path, void (*fn)(const char *, void *), void *user
     if (res < 0) {
         return;
     }
-    printf("LOG: opened directory %s\n", path);
     while (lfs_dir_read(&wwwfs, &dir, &info) > 0) {
-        printf("LOG: found file %s\n", info.name);
         if (strcmp(info.name, ".") != 0 && strcmp(info.name, "..") != 0) {
-            printf("LOG: calling function with file %s\n", info.name);
             fn(info.name, userdata);
         }
     }

@@ -48,8 +48,8 @@ static const u32 ADC_PINS[] = {PIN_ADC_0, PIN_ADC_1, PIN_ADC_2, PIN_ADC_3};
 #endif
 
 // Wi-Fi
-#define PLATFORM_SUPPORTS_WIFI                                                                                         \
-    1 // Technically, only the Pico W supports Wi-Fi, but other platforms emulate it through USB
+// Technically, only the Pico W supports Wi-Fi, but other platforms emulate it through USB
+#define PLATFORM_SUPPORTS_WIFI FBW_BUILD_WWW
 
 #ifdef RASPBERRYPI_PICO2
     #undef PLATFORM_NAME

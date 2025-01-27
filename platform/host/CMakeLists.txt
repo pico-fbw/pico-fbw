@@ -9,17 +9,11 @@ add_library(platform_host
     uart.c
 )
 
-if (NOT HOST_SKIP_WWW)
-    # We need to fetch mongoose as a dependency (wifi emulation requires it)
-    include(FetchContent)
-    FetchContent_Declare(
-        mongoose
-        GIT_REPOSITORY https://github.com/cesanta/mongoose
-        GIT_TAG 7.16
-    )
-    FetchContent_MakeAvailable(mongoose)
-    target_sources(platform_host PRIVATE ${mongoose_SOURCE_DIR}/mongoose.c wifi/wifi.c)
-    target_include_directories(platform_host PRIVATE ${mongoose_SOURCE_DIR})
+if (FBW_BUILD_WWW)
+    # We need to fetch mongoose as a dependency ("wifi" support requires it)
+    include(${CMAKE_SOURCE_DIR}/platform/host/resources/mongoose.cmake)
+    add_mongoose_to_target(platform_host)
+    target_sources(platform_host PRIVATE wifi/wifi.c)
 endif()
 
 if (SimConnect_FOUND)

@@ -1,5 +1,6 @@
 # Remember to change the name of the library to match your platform!
 
+# Define the platform library and its files
 add_library(platform_example
     flash.c
     gpio.c
@@ -17,4 +18,6 @@ target_link_libraries(platform_example
     # (maybe SDK libraries, etc.)
 )
 
-target_include_directories(platform_example PRIVATE ${CMAKE_SOURCE_DIR})
+# Include the root directory (so we can #include "platform/..." in files),
+# and the source directory (so we can include "sys/...", etc. in files)
+target_include_directories(platform_example PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/src)
