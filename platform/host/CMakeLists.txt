@@ -14,6 +14,8 @@ if (FBW_BUILD_WWW)
     include(${CMAKE_SOURCE_DIR}/platform/host/resources/mongoose.cmake)
     add_mongoose_to_target(platform_host)
     target_sources(platform_host PRIVATE wifi/wifi.c)
+    # We need to include the generated/www directory so that the call to INCBIN in flash.c can find lfs.bin
+    target_include_directories(platform_host PUBLIC ${CMAKE_BINARY_DIR}/generated/www)
 endif()
 
 if (SimConnect_FOUND)

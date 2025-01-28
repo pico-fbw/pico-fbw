@@ -98,7 +98,7 @@ struct lfs_config wwwfs_cfg = {
     .erase = flash_erase,
     .sync = flash_sync,
     // FS_BASE is provided as the context so that block operations know where to read/write
-    .context = (void *)WWWFS_BASE, 
+    .context = (void *)WWWFS_BASE,
     .read_size = 1,
     .prog_size = FLASH_PAGE_SIZE,    // Minimum write size (256 bytes)
     .block_size = FLASH_SECTOR_SIZE, // Block size must be a multiple of the sector size (4096 bytes)

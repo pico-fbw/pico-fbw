@@ -10,6 +10,7 @@ if (NOT FBW_BUILD_WWW)
     return()
 endif()
 add_compile_definitions(FBW_BUILD_WWW=1)
+target_compile_definitions(platform_${PLATFORM_DIR} PRIVATE FBW_BUILD_WWW=1)
 
 # Ensure yarn is installed
 find_package(yarn REQUIRED)

@@ -4,6 +4,11 @@
  * https://gist.github.com/lundman/731d0d7d09eca072cd1224adb00d9b9e
  */
 
+/**
+ * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
+ * Licensed under the GNU GPL-3.0
+ */
+
 #pragma once
 
 #include <dispatch/dispatch.h>

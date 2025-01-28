@@ -30,21 +30,4 @@ function(setup_after_subdirs)
     if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
         target_link_libraries(${PROJECT_NAME} m)
     endif()
-    # TODO: can we just include lfs.bin into the compiled binary (similar to how pico does it)
-    if (FBW_BUILD_WWW)
-        # Move the generated lfs.bin into pico-fbw's emulated filesystem directory
-        if (CMAKE_HOST_WIN32)
-            set(DEST_DIR "$ENV{APPDATA}/.pico-fbw")
-        else()
-            set(DEST_DIR "$ENV{HOME}/.pico-fbw")
-        endif()
-        add_custom_command(
-            OUTPUT ${DEST_DIR}/wwwfs.bin
-            COMMAND ${CMAKE_COMMAND} -E make_directory ${DEST_DIR}
-            COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/generated/www/lfs.bin ${DEST_DIR}/wwwfs.bin
-            DEPENDS ${CMAKE_BINARY_DIR}/generated/www/built
-            USES_TERMINAL
-            COMMENT "Copying lfs.bin to pico-fbw directory"
-        )
-    endif()
 endfunction()

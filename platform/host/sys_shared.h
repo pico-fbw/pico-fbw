@@ -1,3 +1,8 @@
+/**
+ * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
+ * Licensed under the GNU GPL-3.0
+ */
+
 #pragma once
 
 // The purpose of sys_shared.h is to allow tStart (and tFreq) to be shared between sys.c and time.c
