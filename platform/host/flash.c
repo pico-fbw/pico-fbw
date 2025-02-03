@@ -148,6 +148,10 @@ static int flash_sync_posix(const struct lfs_config *c) {
 
 #if PLATFORM_SUPPORTS_WIFI
 
+    // Embed wwwfs data into the binary
+    #include "incbin.h"
+INCBIN(wwwfs_bin, "lfs.bin")
+
 static int flash_read_bin(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, void *buffer, lfs_size_t size) {
     assert(block < c->block_count);
     assert(off + size <= c->block_size);
@@ -157,19 +161,22 @@ static int flash_read_bin(const struct lfs_config *c, lfs_block_t block, lfs_off
 
 static int flash_prog_bin(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, const void *buffer,
                           lfs_size_t size) {
-    assert(block < c->block_count);
-    memcpy(c->context + (block * c->block_size) + off, buffer, size);
-    return LFS_ERR_OK;
+    // Binary cannot write to itself
+    return LFS_ERR_IO;
+    (void)c;
+    (void)block;
+    (void)off;
+    (void)buffer;
+    (void)size;
 }
 
 static int flash_erase_bin(const struct lfs_config *c, lfs_block_t block) {
-    assert(block < c->block_count);
-    memset(c->context + (block * c->block_size), 0xFF, c->block_size);
-    return LFS_ERR_OK;
+    return LFS_ERR_IO;
+    (void)c;
+    (void)block;
 }
 
 static int flash_sync_bin(const struct lfs_config *c) {
-    // No need for sync, data is stored in the binary
     return LFS_ERR_OK;
     (void)c;
 }
@@ -239,16 +246,13 @@ struct lfs_config lfs_cfg = {
 
 #if PLATFORM_SUPPORTS_WIFI
 
-#include "incbin.h"
-INCBIN(wwwfs_bin, "lfs.bin");
-
 lfs_t wwwfs;
 struct lfs_config wwwfs_cfg = {
     .read = flash_read_bin,
     .prog = flash_prog_bin,
     .erase = flash_erase_bin,
     .sync = flash_sync_bin,
-    .context = (void *)wwwfs_bin_start,
+    .context = (void *)wwwfs_bin_start, // Symbol exported by INCBIN()
     .read_size = READ_SIZE,
     .prog_size = WRITE_SIZE,
     .block_size = BLOCK_SIZE,

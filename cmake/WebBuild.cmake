@@ -10,7 +10,7 @@ if (NOT FBW_BUILD_WWW)
     return()
 endif()
 add_compile_definitions(FBW_BUILD_WWW=1)
-target_compile_definitions(platform_${PLATFORM_DIR} PRIVATE FBW_BUILD_WWW=1)
+target_compile_definitions(${PLATFORM_LIB} PUBLIC FBW_BUILD_WWW=1)
 
 # Ensure yarn is installed
 find_package(yarn REQUIRED)
@@ -39,32 +39,23 @@ ExternalProject_Add(mklittlefs
 # Add a target to build the web interface
 # It depends on all files in the www directory, so it will only rebuild if any of those files change
 file(GLOB_RECURSE WWW_FILES ${CMAKE_SOURCE_DIR}/www/*)
-if (NOT CMAKE_HOST_WIN32)
-    # Invoke our custom wrapper script to ensure that nvm is sourced
-    add_custom_command(
-        # This command will also output an empty file whose modify timestamp can be used to check if/when the web interface has been built
-        OUTPUT ${CMAKE_BINARY_DIR}/generated/www/built
-        COMMAND ${CMAKE_SOURCE_DIR}/www/www.sh ${CMAKE_SOURCE_DIR}/www ${YARN_EXE}
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/generated/www
-        COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_BINARY_DIR}/generated/www/built
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/www
-        DEPENDS ${WWW_FILES}
-        USES_TERMINAL
-        COMMENT "Building the web interface"
-    )
-else()
-    # Because cmake is weird, no, there is (probably) not a better way than copying this function twice...sigh
-    add_custom_command(
-        OUTPUT ${CMAKE_BINARY_DIR}/generated/www/built
-        COMMAND ${YARN_EXE} install && ${YARN_EXE} build # nvm doesn't exist on windows so just attempt to run directly
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/generated/www
-        COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_BINARY_DIR}/generated/www/built
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/www
-        DEPENDS ${WWW_FILES}
-        USES_TERMINAL
-        COMMENT "Building the web interface"
-    )
+# To build the web interface, invoke the www.sh wrapper script which will respect nvm if installed
+set(BUILD_WWW_CMD ${CMAKE_SOURCE_DIR}/www/www.sh ${CMAKE_SOURCE_DIR}/www ${YARN_EXE})
+if (CMAKE_HOST_WIN32)
+    # nvm doesn't exist on windows, so just attempt to invoke yarn directly
+    set(BUILD_WWW_CMD ${YARN_EXE} install && ${YARN_EXE} build)
 endif()
+add_custom_command(
+    # This command will also output an empty file whose modify timestamp can be used to check if/when the web interface has been built
+    OUTPUT ${CMAKE_BINARY_DIR}/generated/www/built
+    COMMAND ${BUILD_WWW_CMD}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/generated/www
+    COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_BINARY_DIR}/generated/www/built
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/www
+    DEPENDS ${WWW_FILES}
+    USES_TERMINAL
+    COMMENT "Building the web interface"
+)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     set(MKLITTLEFS_DEBUG_LEVEL 0)
@@ -86,7 +77,9 @@ add_custom_command(
 message("Web interface will be built")
 add_custom_target(www DEPENDS ${CMAKE_BINARY_DIR}/generated/www/built)
 add_custom_target(wwwfs DEPENDS ${CMAKE_BINARY_DIR}/generated/www/lfs.bin)
-add_dependencies(${PROJECT_NAME} wwwfs)
+# Add the wwwfs target as a dependency of the platform target instead of the main ${PROJECT_NAME} target
+# This way, lfs.bin is guaranteed to exist when the platform library is being compiled, which is what is most likely to need it
+add_dependencies(${PLATFORM_LIB} wwwfs)
 
 # Configure www-accessible version file
 configure_file(${CMAKE_SOURCE_DIR}/www/src/helpers/version.ts.in ${CMAKE_SOURCE_DIR}/www/src/helpers/version.ts @ONLY)

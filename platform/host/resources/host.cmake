@@ -26,6 +26,21 @@ function(setup_before_subdirs)
 endfunction()
 
 function(setup_after_subdirs)
+    if (${FBW_BUILD_WWW})
+        # Fetch mongoose as a dependency ("wifi" support requires it)
+        include(FetchContent)
+        FetchContent_Declare(
+            mongoose
+            GIT_REPOSITORY https://github.com/cesanta/mongoose
+            GIT_TAG 7.16
+        )
+        FetchContent_MakeAvailable(mongoose)
+        target_sources(platform_host PRIVATE ${mongoose_SOURCE_DIR}/mongoose.c)
+        target_include_directories(platform_host PRIVATE ${mongoose_SOURCE_DIR})
+        target_sources(platform_host PRIVATE ${PLATFORM_PATH}/wifi/wifi.c)
+        # Include the generated/www directory so that the call to INCBIN in flash.c can find lfs.bin
+        target_include_directories(platform_host PUBLIC ${CMAKE_BINARY_DIR}/generated/www)
+    endif()
     # Link math library on Linux for trig functions
     if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
         target_link_libraries(${PROJECT_NAME} m)

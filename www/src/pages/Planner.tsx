@@ -12,6 +12,8 @@ import Map from "../elements/Map";
 import hasInternet from "../helpers/hasInternet";
 
 // [ ] Allow saving flightplans to the server (in littlefs)
+// [ ] ETA calculation
+// [ ] Better UI for changing speed, etc (move out of settings)
 
 export default function Planner() {
     const [hasConnection, setHasConnection] = useState<boolean | null>(null);

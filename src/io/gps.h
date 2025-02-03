@@ -16,6 +16,8 @@ typedef void (*gps_update_t)();
 typedef void (*gps_calibrate_alt_offset_t)(u32);
 typedef bool (*gps_is_supported_t)();
 
+// TODO: remove struct/make static
+
 typedef struct GPS {
     f64 lat;   // -90 to 90 deg. (Read-only)
     f64 lng;   // -180 to 180 deg. (Read-only)

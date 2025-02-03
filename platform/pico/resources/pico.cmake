@@ -34,7 +34,7 @@ function(setup_after_subdirs)
     # If the web interface is going to be built,
     if (${FBW_BUILD_WWW})
         # Compile our custom assembly file that includes the littlefs binary data into the final executable
-        target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_BINARY_DIR}/generated/www) # So lfs.S can find the binary data
+        target_include_directories(platform_pico PUBLIC ${CMAKE_BINARY_DIR}/generated/www) # So lfs.S can find the binary data
         set(LFS_ASM_FILE ${PLATFORM_PATH}/resources/lfs.S)
         target_sources(${PROJECT_NAME} PRIVATE ${LFS_ASM_FILE})
         # If any of the files in the www directory have been changed, we "touch" the lfs.S file to force it to be recompiled

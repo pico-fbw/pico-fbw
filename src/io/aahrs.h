@@ -29,6 +29,8 @@ typedef void (*aahrs_deinit_t)();
 typedef void (*aahrs_update_t)();
 typedef bool (*aahrs_calibrate_t)();
 
+// TODO: remove struct/make static
+
 // Altitude-Attitude Heading Reference System (AAHRS)
 typedef struct AAHRS {
     f32 roll, pitch, yaw;             // (Read-only), deg

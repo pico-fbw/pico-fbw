@@ -36,6 +36,8 @@ typedef void (*aircraft_change_to_t)(Mode);
 typedef void (*aircraft_set_aahrs_safe_t)(bool);
 typedef void (*aircraft_set_gps_safe_t)(bool);
 
+// TODO: remove struct/make static
+
 typedef struct Aircraft {
     Mode mode;     // (Read-only)
     bool isFlying; // (Read-only)
