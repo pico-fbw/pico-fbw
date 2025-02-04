@@ -8,10 +8,8 @@
 #include "platform/sys.h"
 #include "platform/time.h"
 
+#include "ctrl/aircraft.h"
 #include "io/aahrs.h"
-
-#include "modes/aircraft.h"
-
 #include "sys/print.h"
 #include "sys/runtime.h"
 

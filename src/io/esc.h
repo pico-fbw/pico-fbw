@@ -3,8 +3,6 @@
 #include <stdbool.h>
 #include "platform/types.h"
 
-// TODO: make struct
-
 /**
  * Enables ESC control on a certain pin.
  * @param pin the GPIO pin the ESC is attached to

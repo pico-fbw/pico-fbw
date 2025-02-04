@@ -5,9 +5,8 @@
 
 #include <string.h>
 
+#include "ctrl/aircraft.h"
 #include "lib/parson.h"
-
-#include "modes/aircraft.h"
 
 #include "set_mode.h"
 

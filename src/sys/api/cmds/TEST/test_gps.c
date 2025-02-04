@@ -3,10 +3,9 @@
  * Licensed under the GNU GPL-3.0
  */
 
+#include "ctrl/aircraft.h"
+
 #include "io/gps.h"
-
-#include "modes/aircraft.h"
-
 #include "sys/configuration.h"
 #include "sys/print.h"
 

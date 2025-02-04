@@ -54,7 +54,15 @@ static inline f32 mapf(f32 f, f32 in_min, f32 in_max, f32 out_min, f32 out_max) 
     #define count_of(a) (sizeof(a) / sizeof((a)[0]))
 #endif
 
-/* Compiler optimization helpers */
+/* Bit manipulation helpers */
+
+#if !defined(bit) || FORCE_DEFINE_HELPERS
+    #undef bit
+    // Returns a bit mask with the bit at position `n` set.
+    #define bit(n) (1 << (n))
+#endif
+
+/* Compiler helpers */
 
 #if defined(__GNUC__) || defined(__clang__)
 
@@ -72,10 +80,28 @@ static inline f32 mapf(f32 f, f32 in_min, f32 in_max, f32 out_min, f32 out_max) 
 
 #endif
 
-/* Bit manipulation helpers */
-
-#if !defined(bit) || FORCE_DEFINE_HELPERS
-    #undef bit
-    // Returns a bit mask with the bit at position `n` set.
-    #define bit(n) (1 << (n))
+/**
+ * Embed a binary file into the executable.
+ * @param sym symbol to use for the binary data
+ * @param filename path to the file to embed
+ */
+#if defined(__APPLE__) || defined(__MACH__)
+    #define INCBIN(sym, filename)                                                                                      \
+        __asm__(".section __TEXT,__const\n"                                                                            \
+                ".global __" #sym "_start\n__" #sym "_start:\n"                                                        \
+                ".incbin \"" filename "\"\n"                                                                           \
+                ".global __" #sym "_end\n__" #sym "_end:\n");                                                          \
+        extern const unsigned char _##sym##_start[];                                                                   \
+        extern const unsigned char _##sym##_end[];
+#elif defined(__GNUC__)
+    #define INCBIN(sym, filename)                                                                                      \
+        __asm__(".section .text\n"                                                                                     \
+                ".global _" #sym "_start\n_" #sym "_start:\n"                                                          \
+                ".incbin \"" filename "\"\n"                                                                           \
+                ".global _" #sym "_end\n_" #sym "_end:\n");                                                            \
+        extern const unsigned char _##sym##_start[];                                                                   \
+        extern const unsigned char _##sym##_end[];
+#else
+    #warning "INCBIN is not supported for this compiler"
+    #define INCBIN(sym, filename)
 #endif

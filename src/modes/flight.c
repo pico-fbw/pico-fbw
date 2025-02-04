@@ -9,15 +9,12 @@
 #include <stdlib.h>
 #include "platform/helpers.h"
 
+#include "ctrl/aircraft.h"
 #include "io/aahrs.h"
 #include "io/receiver.h"
 #include "io/servo.h"
-
 #include "lib/pid.h"
-
-#include "modes/aircraft.h"
 #include "modes/tune.h"
-
 #include "sys/configuration.h"
 #include "sys/print.h"
 

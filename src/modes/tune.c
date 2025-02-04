@@ -6,14 +6,12 @@
 #include <math.h>
 #include "platform/time.h"
 
+#include "ctrl/control.h"
 #include "io/aahrs.h"
 #include "io/receiver.h"
-
 #include "modes/flight.h"
 #include "modes/normal.h"
-
 #include "sys/configuration.h"
-#include "sys/control.h"
 
 #include "tune.h"
 

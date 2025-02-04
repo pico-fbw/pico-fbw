@@ -11,14 +11,12 @@
 #include "io/gps.h"
 #include "io/receiver.h"
 #include "io/servo.h"
-
 #include "modes/auto.h"
 #include "modes/direct.h"
 #include "modes/hold.h"
 #include "modes/launch.h"
 #include "modes/normal.h"
 #include "modes/tune.h"
-
 #include "sys/configuration.h"
 #include "sys/flightplan.h"
 #include "sys/log.h"

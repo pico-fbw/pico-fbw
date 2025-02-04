@@ -12,11 +12,9 @@
 #include "platform/time.h"
 #include "platform/uart.h"
 
+#include "ctrl/aircraft.h"
 #include "lib/minmea.h"
-
-#include "modes/aircraft.h"
 #include "modes/flight.h"
-
 #include "sys/configuration.h"
 #include "sys/log.h"
 #include "sys/print.h"

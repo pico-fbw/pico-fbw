@@ -7,9 +7,7 @@
 #include "platform/flash.h"
 
 #include "lib/semver.h"
-
 #include "sys/print.h"
-
 #include "version.h"
 
 #define FILE_VERSION "version.txt"

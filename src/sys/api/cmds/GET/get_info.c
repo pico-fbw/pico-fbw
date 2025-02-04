@@ -6,7 +6,6 @@
 #include "platform/defs.h"
 
 #include "lib/parson.h"
-
 #include "sys/version.h"
 
 #include "get_info.h"

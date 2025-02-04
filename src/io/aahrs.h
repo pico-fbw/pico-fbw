@@ -24,13 +24,6 @@ typedef enum BaroModel {
 } BaroModel;
 #define BARO_MODEL_MAX BARO_MODEL_DPS310
 
-typedef bool (*aahrs_init_t)();
-typedef void (*aahrs_deinit_t)();
-typedef void (*aahrs_update_t)();
-typedef bool (*aahrs_calibrate_t)();
-
-// TODO: remove struct/make static
-
 // Altitude-Attitude Heading Reference System (AAHRS)
 typedef struct AAHRS {
     f32 roll, pitch, yaw;             // (Read-only), deg
@@ -45,22 +38,22 @@ typedef struct AAHRS {
      * Initializes the AAHRS computation layer, sensor hardware, and underlying fusion algorithms.
      * @return true if successful, false if not.
      */
-    aahrs_init_t init;
+    bool (*init)();
     /**
      * Deinitializes and stops the AAHRS system.
      */
-    aahrs_deinit_t deinit;
+    void (*deinit)();
     /**
      * Polls sensors for updated data and periodically runs the AAHRS fusion algorithm when applicable.
      * @note This function must be called as often as possible to obtain many sensor readings!
      */
-    aahrs_update_t update;
+    void (*update)();
     /**
      * Initiates a calibration of the AAHRS system.
      * This includes relavent accelerometer, magnetometer, gyroscope, and barometer calibration.
      * @return true if successful, false if not.
      */
-    aahrs_calibrate_t calibrate;
+    bool (*calibrate)();
 } AAHRS;
 
 extern AAHRS aahrs;

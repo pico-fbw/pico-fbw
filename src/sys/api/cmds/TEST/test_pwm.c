@@ -9,13 +9,10 @@
 #include "platform/helpers.h"
 #include "platform/time.h"
 
+#include "ctrl/aircraft.h"
 #include "io/receiver.h"
 #include "io/servo.h"
-
 #include "lib/parson.h"
-
-#include "modes/aircraft.h"
-
 #include "sys/configuration.h"
 #include "sys/print.h"
 

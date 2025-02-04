@@ -7,6 +7,7 @@ add_library(platform_host
     sys.c
     time.c
     uart.c
+    wifi/wifi.c
 )
 
 if (SimConnect_FOUND)

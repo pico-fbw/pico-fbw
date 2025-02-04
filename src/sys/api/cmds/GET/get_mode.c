@@ -3,9 +3,9 @@
  * Licensed under the GNU GPL-3.0
  */
 
-#include "lib/parson.h"
+#include "ctrl/aircraft.h"
 
-#include "modes/aircraft.h"
+#include "lib/parson.h"
 
 #include "get_mode.h"
 

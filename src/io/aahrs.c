@@ -11,18 +11,16 @@
 #endif
 #include "platform/time.h"
 
+#include "ctrl/aircraft.h"
 #include "lib/fusion/fusion.h"
 #include "lib/fusion/madgwick.h"
-
-#include "modes/aircraft.h"
-
 #include "sys/configuration.h"
 #include "sys/log.h"
 #include "sys/print.h"
 
 #include "aahrs.h"
 
-// https://ardupilot.org/copter/docs/deadreckoning-failsafe.html
+// TODO: https://ardupilot.org/copter/docs/deadreckoning-failsafe.html
 
 static IMU *imu;
 static Madgwick *filter;

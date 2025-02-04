@@ -5,8 +5,6 @@
 #define DEFAULT_SERVO_TEST {110.f, 70.f, 90.f} // Default degree amounts to move the servos to
 #define DEFAULT_SERVO_TEST_PAUSE_MS 300        // Default pause between servo moves in milliseconds
 
-// TODO: make struct?
-
 /**
  * Enables servo control on a list of pins.
  * @param pins the array of servo GPIO pins

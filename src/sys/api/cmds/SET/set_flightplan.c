@@ -3,10 +3,8 @@
  * Licensed under the GNU GPL-3.0
  */
 
+#include "ctrl/aircraft.h"
 #include "lib/parson.h"
-
-#include "modes/aircraft.h"
-
 #include "sys/flightplan.h"
 
 #include "set_flightplan.h"

@@ -12,7 +12,6 @@
 #include "platform/time.h"
 
 #include "io/receiver.h"
-
 #include "sys/configuration.h"
 #include "sys/log.h"
 #include "sys/print.h"
@@ -21,13 +20,13 @@
 #include "esc.h"
 
 /**
- * Waits up to timeout_ms for the throttle input to move, then wait for duration_ms after it stops moving, and write to
- * *detent.
+ * Waits up to `timeout_ms` for the throttle input to move,
+ * then wait for `duration_ms` after it stops moving, and write to `detent`.
  * @param pin the GPIO pin the ESC is attached to
  * @param detent the detent to write to
  * @param timeout_ms the timeout (before the throttle is moved) in milliseconds
  * @param duration_ms the duration (after the throttle stops moving) in milliseconds
- * @return Whether a timeout occured.
+ * @return whether a timeout occured
  */
 static bool wait_for_detent(u32 pin, f32 *detent, u32 timeout_ms, u32 duration_ms) {
     Timestamp wait = timestamp_in_ms(timeout_ms);

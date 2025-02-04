@@ -7,8 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "lib/parson.h"
-
+#include "lib/parson.h" =
 #include "sys/log.h"
 #include "sys/print.h"
 #include "sys/version.h"

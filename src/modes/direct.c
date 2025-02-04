@@ -5,12 +5,11 @@
 
 #include "platform/types.h"
 
+#include "ctrl/control.h"
 #include "io/esc.h"
 #include "io/receiver.h"
 #include "io/servo.h"
-
 #include "sys/configuration.h"
-#include "sys/control.h"
 
 #include "direct.h"
 

@@ -15,7 +15,6 @@
 #include "io/aahrs.h"
 #include "io/gps.h"
 #include "io/receiver.h"
-
 #include "sys/print.h"
 #include "sys/runtime.h"
 #include "sys/version.h"

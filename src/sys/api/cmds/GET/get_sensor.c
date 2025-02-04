@@ -7,13 +7,10 @@
 #include "platform/adc.h"
 #include "platform/defs.h"
 
+#include "ctrl/aircraft.h"
 #include "io/aahrs.h"
 #include "io/gps.h"
-
 #include "lib/parson.h"
-
-#include "modes/aircraft.h"
-
 #include "sys/configuration.h"
 
 #include "get_sensor.h"

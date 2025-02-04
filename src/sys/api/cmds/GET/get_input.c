@@ -6,7 +6,6 @@
 #include "io/receiver.h"
 
 #include "lib/parson.h"
-
 #include "sys/configuration.h"
 
 #include "get_input.h"

@@ -11,13 +11,6 @@ typedef enum GPSCommandType {
 } GPSCommandType;
 #define GPS_COMMAND_TYPE_MAX GPS_COMMAND_TYPE_PMTK
 
-typedef bool (*gps_init_t)();
-typedef void (*gps_update_t)();
-typedef void (*gps_calibrate_alt_offset_t)(u32);
-typedef bool (*gps_is_supported_t)();
-
-// TODO: remove struct/make static
-
 typedef struct GPS {
     f64 lat;   // -90 to 90 deg. (Read-only)
     f64 lng;   // -180 to 180 deg. (Read-only)
@@ -34,20 +27,20 @@ typedef struct GPS {
      * Initializes the GPS module.
      * @return true if successful
      */
-    gps_init_t init;
+    bool (*init)();
     /**
      * Obtains updated data from the GPS module and stores it in this GPS struct.
      */
-    gps_update_t update;
+    void (*update)();
     /**
      * Calibrates the altitude offset from the GPS.
      * @param num_samples number of samples to take
      */
-    gps_calibrate_alt_offset_t calibrate_alt_offset;
+    void (*calibrate_alt_offset)(u32 num_samples);
     /**
      * @return whether or not the GPS sensor is supported in the current system configuration
      */
-    gps_is_supported_t is_supported;
+    bool (*is_supported)();
 } GPS;
 
 extern GPS gps;

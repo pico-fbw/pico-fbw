@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include "platform/types.h"
 
-#include "sys/control.h"
+#include "ctrl/control.h"
 
 /**
  * Initializes the flight system (axis PIDs).

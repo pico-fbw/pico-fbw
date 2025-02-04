@@ -7,14 +7,12 @@
 #include "platform/sys.h"
 #include "platform/time.h"
 
+#include "ctrl/aircraft.h"
+#include "ctrl/throttle.h"
 #include "lib/parson.h"
-
-#include "modes/aircraft.h"
-
 #include "sys/configuration.h"
 #include "sys/print.h"
 #include "sys/runtime.h"
-#include "sys/throttle.h"
 
 #include "test_throttle.h"
 

@@ -83,3 +83,17 @@ add_dependencies(${PLATFORM_LIB} wwwfs)
 
 # Configure www-accessible version file
 configure_file(${CMAKE_SOURCE_DIR}/www/src/helpers/version.ts.in ${CMAKE_SOURCE_DIR}/www/src/helpers/version.ts @ONLY)
+
+# Makes the wwwfs target available to the compiler/linker.
+# target_file should point to whichever file directly links to lfs.bin.
+function(include_wwwfs target_file)
+    # Include the generated/www directory so that the linker can find lfs.bin
+    target_include_directories(${PLATFORM_LIB} PUBLIC ${CMAKE_BINARY_DIR}/generated/www)
+    # If any of the files in the www directory have been changed, touch the target_file to force a rebuild
+    # This means that if the web interface is modified, linking will be rerun and changes included
+    add_custom_command(
+        OUTPUT ${target_file}
+        COMMAND ${CMAKE_COMMAND} -E touch ${target_file}
+        DEPENDS ${CMAKE_BINARY_DIR}/generated/www/built
+    )
+endfunction()

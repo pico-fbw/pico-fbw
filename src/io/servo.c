@@ -11,7 +11,6 @@
 #include "platform/time.h"
 
 #include "io/receiver.h"
-
 #include "sys/configuration.h"
 #include "sys/log.h"
 #include "sys/print.h"

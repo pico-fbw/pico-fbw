@@ -5,13 +5,10 @@
 
 #include "platform/helpers.h"
 #include "platform/time.h"
-#include "platform/types.h"
 
 #include "io/esc.h"
 #include "io/gps.h"
-
 #include "lib/pid.h"
-
 #include "sys/configuration.h"
 
 #include "throttle.h"

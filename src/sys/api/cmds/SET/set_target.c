@@ -6,11 +6,9 @@
 #include <math.h>
 #include <stdbool.h>
 
+#include "ctrl/aircraft.h"
 #include "lib/parson.h"
-
-#include "modes/aircraft.h"
 #include "modes/normal.h"
-
 #include "sys/configuration.h"
 
 #include "set_target.h"

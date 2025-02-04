@@ -18,6 +18,8 @@
     #define SEP "/"
 #endif
 
+#include "platform/helpers.h"
+
 #include "platform/flash.h"
 
 // FS configuration, littlefs documentation explains these settings in detail (see lib/lfs.h)
@@ -148,8 +150,7 @@ static int flash_sync_posix(const struct lfs_config *c) {
 
 #if PLATFORM_SUPPORTS_WIFI
 
-    // Embed wwwfs data into the binary
-    #include "incbin.h"
+// Embed wwwfs data into the binary
 INCBIN(wwwfs_bin, "lfs.bin")
 
 static int flash_read_bin(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, void *buffer, lfs_size_t size) {
@@ -252,7 +253,7 @@ struct lfs_config wwwfs_cfg = {
     .prog = flash_prog_bin,
     .erase = flash_erase_bin,
     .sync = flash_sync_bin,
-    .context = (void *)wwwfs_bin_start, // Symbol exported by INCBIN()
+    .context = (void *)_wwwfs_bin_start, // Symbol exported by INCBIN()
     .read_size = READ_SIZE,
     .prog_size = WRITE_SIZE,
     .block_size = BLOCK_SIZE,

@@ -5,22 +5,19 @@
 
 #include "platform/time.h"
 
+#include "ctrl/aircraft.h"
+#include "ctrl/throttle.h"
 #include "io/aahrs.h"
 #include "io/gps.h"
 #include "io/servo.h"
-
 #include "lib/nav.h"
 #include "lib/pid.h"
-
-#include "modes/aircraft.h"
 #include "modes/flight.h"
 #include "modes/normal.h"
 #include "modes/tune.h"
-
 #include "sys/configuration.h"
 #include "sys/flightplan.h"
 #include "sys/log.h"
-#include "sys/throttle.h"
 
 #include "auto.h"
 

@@ -37,9 +37,7 @@ function(setup_after_subdirs)
         FetchContent_MakeAvailable(mongoose)
         target_sources(platform_host PRIVATE ${mongoose_SOURCE_DIR}/mongoose.c)
         target_include_directories(platform_host PRIVATE ${mongoose_SOURCE_DIR})
-        target_sources(platform_host PRIVATE ${PLATFORM_PATH}/wifi/wifi.c)
-        # Include the generated/www directory so that the call to INCBIN in flash.c can find lfs.bin
-        target_include_directories(platform_host PUBLIC ${CMAKE_BINARY_DIR}/generated/www)
+        include_wwwfs(${PLATFORM_PATH}/flash.c)
     endif()
     # Link math library on Linux for trig functions
     if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")

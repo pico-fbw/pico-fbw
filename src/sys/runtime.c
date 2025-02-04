@@ -9,12 +9,10 @@
 #include "platform/time.h"
 #include "platform/wifi.h"
 
+#include "ctrl/aircraft.h"
 #include "io/aahrs.h"
 #include "io/gps.h"
 #include "io/receiver.h"
-
-#include "modes/aircraft.h"
-
 #include "sys/api/api.h"
 #include "sys/configuration.h"
 #include "sys/flightplan.h"

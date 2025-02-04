@@ -1,7 +1,8 @@
 #pragma once
 
 #include <stdbool.h>
-#include "modes/aircraft.h"
+
+#include "ctrl/aircraft.h"
 
 /**
  * Initializes launch mode.

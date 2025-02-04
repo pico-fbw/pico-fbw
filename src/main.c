@@ -14,20 +14,21 @@
 #include "platform/types.h"
 #include "platform/wifi.h"
 
+#include "ctrl/aircraft.h"
 #include "io/aahrs.h"
 #include "io/esc.h"
 #include "io/gps.h"
 #include "io/receiver.h"
 #include "io/servo.h"
-
-#include "modes/aircraft.h"
-
 #include "sys/boot.h"
 #include "sys/configuration.h"
 #include "sys/log.h"
 #include "sys/print.h"
 #include "sys/runtime.h"
 #include "sys/version.h"
+
+// TODO: refactoring needed (here and in general)
+// Standardize comments/function docs, factor things out, increase readability, re-eval structs, etc.
 
 int main() {
     boot_begin();

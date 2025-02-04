@@ -31,13 +31,6 @@ typedef enum Mode {
 // Throttle input usually isn't self-centering so it's more difficult to determine if there is input
 #define USER_INPUTTING() (ROLL_INPUT() || PITCH_INPUT() || YAW_INPUT())
 
-typedef void (*aircraft_update_t)();
-typedef void (*aircraft_change_to_t)(Mode);
-typedef void (*aircraft_set_aahrs_safe_t)(bool);
-typedef void (*aircraft_set_gps_safe_t)(bool);
-
-// TODO: remove struct/make static
-
 typedef struct Aircraft {
     Mode mode;     // (Read-only)
     bool isFlying; // (Read-only)
@@ -49,20 +42,20 @@ typedef struct Aircraft {
     /**
      * Runs the code of the system's currently selected mode.
      */
-    aircraft_update_t update;
+    void (*update)();
     /**
      * Transitions the aircraft to a specified mode.
      * @param mode The mode to transition to.
      */
-    aircraft_change_to_t change_to;
+    void (*change_to)(Mode mode);
     /**
      * @param state Declares whether or not the AAHRS data is safe to use.
      */
-    aircraft_set_aahrs_safe_t set_aahrs_safe;
+    void (*set_aahrs_safe)(bool state);
     /**
      * @param state Declares whether or not the GPS data is safe to use.
      */
-    aircraft_set_gps_safe_t set_gps_safe;
+    void (*set_gps_safe)(bool state);
 } Aircraft;
 
 extern Aircraft aircraft;

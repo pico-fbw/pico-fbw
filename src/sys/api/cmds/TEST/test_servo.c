@@ -5,11 +5,9 @@
 
 #include "platform/helpers.h"
 
+#include "ctrl/aircraft.h"
 #include "io/servo.h"
-
 #include "lib/parson.h"
-
-#include "modes/aircraft.h"
 
 #include "test_servo.h"
 

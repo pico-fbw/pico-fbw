@@ -8,7 +8,6 @@
 #include <string.h>
 
 #include "lib/parson.h"
-
 #include "sys/configuration.h"
 
 #include "set_config.h"

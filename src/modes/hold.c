@@ -7,16 +7,13 @@
 #include "platform/time.h"
 #include "platform/types.h"
 
+#include "ctrl/throttle.h"
 #include "io/gps.h"
-
 #include "lib/pid.h"
-
-#include "sys/configuration.h"
-#include "sys/log.h"
-#include "sys/throttle.h"
-
 #include "modes/auto.h"
 #include "modes/flight.h"
+#include "sys/configuration.h"
+#include "sys/log.h"
 
 #include "hold.h"
 

@@ -23,7 +23,7 @@
 
 #include "platform/flash.h"
 
-// Global symbols defined in resources/lfs.S
+// Global symbols defined in lfs.S
 extern const char __lfs_start[];
 extern const char __lfs_end[];
 
