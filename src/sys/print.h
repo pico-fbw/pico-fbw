@@ -1,7 +1,7 @@
 #pragma once
 
-// This is a header-only file that simply wraps the HAL-provided printf with the correct format and debug settings
-// for easier usage, and also so the HAL can compile independently.
+// This is a header-only file that simply wraps the platform-provided printf with the correct format and debug settings
+// for easier usage, and also so the platform library can compile independently.
 
 #include <stdbool.h>
 #include "platform/defs.h" // A platform can define NO_COLOR_OUTPUT to disable terminal color output

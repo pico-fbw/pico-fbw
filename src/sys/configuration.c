@@ -12,6 +12,7 @@
 #include "platform/types.h"
 #include "platform/wifi.h"
 
+#include "ctrl/switch.h"
 #include "io/aahrs.h"
 #include "io/gps.h"
 #include "io/receiver.h"
@@ -107,6 +108,7 @@ PrintDefs shouldPrint = {
     // Default print settings
     true, false, false, false, false
 };
+
 // clang-format on
 
 /**
@@ -178,318 +180,207 @@ void config_reset() {
 
 // I'm so sorry (this is a C moment)
 
+#define GENERAL_KEY_LIST                                                                                               \
+    X("controlMode", GENERAL_CONTROL_MODE)                                                                             \
+    X("switchType", GENERAL_SWITCH_TYPE)                                                                               \
+    X("maxCalibrationOffset", GENERAL_MAX_CALIBRATION_OFFSET)                                                          \
+    X("servoHz", GENERAL_SERVO_HZ)                                                                                     \
+    X("escHz", GENERAL_ESC_HZ)                                                                                         \
+    X("apiEnabled", GENERAL_API_ENABLED)                                                                               \
+    X("wifiEnabled", GENERAL_WIFI_ENABLED)                                                                             \
+    X("launchAssistEnabled", GENERAL_LAUNCHASSIST_ENABLED)                                                             \
+    X("autoTuneEnabled", GENERAL_AUTOTUNE_ENABLED)                                                                     \
+    X("skipCalibration", GENERAL_SKIP_CALIBRATION)
+
+#define CONTROL_KEY_LIST                                                                                               \
+    X("maxRollRate", CONTROL_MAX_ROLL_RATE)                                                                            \
+    X("maxPitchRate", CONTROL_MAX_PITCH_RATE)                                                                          \
+    X("rudderSensitivity", CONTROL_RUDDER_SENSITIVITY)                                                                 \
+    X("controlDeadband", CONTROL_DEADBAND)                                                                             \
+    X("throttleMaxTime", CONTROL_THROTTLE_MAX_TIME)                                                                    \
+    X("throttleCooldownTime", CONTROL_THROTTLE_COOLDOWN_TIME)                                                          \
+    X("throttleSensitivity", CONTROL_THROTTLE_SENSITIVITY)                                                             \
+    X("dropDetentClosed", CONTROL_DROP_DETENT_CLOSED)                                                                  \
+    X("dropDetentOpen", CONTROL_DROP_DETENT_OPEN)                                                                      \
+    X("rollLimit", CONTROL_ROLL_LIMIT)                                                                                 \
+    X("rollLimitHold", CONTROL_ROLL_LIMIT_HOLD)                                                                        \
+    X("pitchLowerLimit", CONTROL_PITCH_LOWER_LIMIT)                                                                    \
+    X("pitchUpperLimit", CONTROL_PITCH_UPPER_LIMIT)                                                                    \
+    X("maxAilDeflection", CONTROL_MAX_AIL_DEFLECTION)                                                                  \
+    X("maxEleDeflection", CONTROL_MAX_ELE_DEFLECTION)                                                                  \
+    X("maxRudDeflection", CONTROL_MAX_RUD_DEFLECTION)                                                                  \
+    X("maxElevonDeflection", CONTROL_MAX_ELEVON_DEFLECTION)                                                            \
+    X("elevonMixingGain", CONTROL_ELEVON_MIXING_GAIN)                                                                  \
+    X("ailMixingBias", CONTROL_AIL_MIXING_BIAS)                                                                        \
+    X("elevMixingBias", CONTROL_ELEV_MIXING_BIAS)
+
+#define PINS_KEY_LIST                                                                                                  \
+    X("inputAil", PINS_INPUT_AIL)                                                                                      \
+    X("servoAil", PINS_SERVO_AIL)                                                                                      \
+    X("inputEle", PINS_INPUT_ELE)                                                                                      \
+    X("servoEle", PINS_SERVO_ELE)                                                                                      \
+    X("inputRud", PINS_INPUT_RUD)                                                                                      \
+    X("servoRud", PINS_SERVO_RUD)                                                                                      \
+    X("inputThrottle", PINS_INPUT_THROTTLE)                                                                            \
+    X("escThrottle", PINS_ESC_THROTTLE)                                                                                \
+    X("inputSwitch", PINS_INPUT_SWITCH)                                                                                \
+    X("servoBay", PINS_SERVO_BAY)                                                                                      \
+    X("aahrsSda", PINS_AAHRS_SDA)                                                                                      \
+    X("aahrsScl", PINS_AAHRS_SCL)                                                                                      \
+    X("gpsTx", PINS_GPS_TX)                                                                                            \
+    X("gpsRx", PINS_GPS_RX)                                                                                            \
+    X("reverseRoll", PINS_REVERSE_ROLL)                                                                                \
+    X("reversePitch", PINS_REVERSE_PITCH)                                                                              \
+    X("reverseYaw", PINS_REVERSE_YAW)
+
+#define SENSORS_KEY_LIST                                                                                               \
+    X("imuModel", SENSORS_IMU_MODEL)                                                                                   \
+    X("baroModel", SENSORS_BARO_MODEL)                                                                                 \
+    X("aahrsBusFreq", SENSORS_AAHRS_BUS_FREQ)                                                                          \
+    X("gpsCommandType", SENSORS_GPS_COMMAND_TYPE)                                                                      \
+    X("gpsBaudrate", SENSORS_GPS_BAUDRATE)
+
+#define SYSTEM_KEY_LIST                                                                                                \
+    X("printsys", SYSTEM_PRINT_FBW)                                                                                    \
+    X("printAAHRS", SYSTEM_PRINT_AAHRS)                                                                                \
+    X("printAircraft", SYSTEM_PRINT_AIRCRAFT)                                                                          \
+    X("printGPS", SYSTEM_PRINT_GPS)                                                                                    \
+    X("printNetwork", SYSTEM_PRINT_NETWORK)
+
+#define WIFI_KEY_LIST                                                                                                  \
+    X("ssid", ssid)                                                                                                    \
+    X("pass", pass)
+
 static void get_from_general(const char *key, f32 **value) {
-    if (strcasecmp(key, "controlMode") == 0) {
-        *value = &config.general[GENERAL_CONTROL_MODE];
-    } else if (strcasecmp(key, "switchType") == 0) {
-        *value = &config.general[GENERAL_SWITCH_TYPE];
-    } else if (strcasecmp(key, "maxCalibrationOffset") == 0) {
-        *value = &config.general[GENERAL_MAX_CALIBRATION_OFFSET];
-    } else if (strcasecmp(key, "servoHz") == 0) {
-        *value = &config.general[GENERAL_SERVO_HZ];
-    } else if (strcasecmp(key, "escHz") == 0) {
-        *value = &config.general[GENERAL_ESC_HZ];
-    } else if (strcasecmp(key, "apiEnabled") == 0) {
-        *value = &config.general[GENERAL_API_ENABLED];
-    } else if (strcasecmp(key, "wifiEnabled") == 0) {
-        *value = &config.general[GENERAL_WIFI_ENABLED];
-    } else if (strcasecmp(key, "launchAssistEnabled") == 0) {
-        *value = &config.general[GENERAL_LAUNCHASSIST_ENABLED];
-    } else if (strcasecmp(key, "autoTuneEnabled") == 0) {
-        *value = &config.general[GENERAL_AUTOTUNE_ENABLED];
-    } else if (strcasecmp(key, "skipCalibration") == 0) {
-        *value = &config.general[GENERAL_SKIP_CALIBRATION];
-    } else {
-        *value = NULL;
+#define X(KEY, INDEX)                                                                                                  \
+    if (strcasecmp(key, KEY) == 0) {                                                                                   \
+        *value = &config.general[INDEX];                                                                               \
+        return;                                                                                                        \
     }
+    GENERAL_KEY_LIST
+#undef X
+    *value = NULL;
 }
 
 static bool set_to_general(const char *key, f32 value) {
-    if (strcasecmp(key, "controlMode") == 0) {
-        config.general[GENERAL_CONTROL_MODE] = value;
-    } else if (strcasecmp(key, "switchType") == 0) {
-        config.general[GENERAL_SWITCH_TYPE] = value;
-    } else if (strcasecmp(key, "maxCalibrationOffset") == 0) {
-        config.general[GENERAL_MAX_CALIBRATION_OFFSET] = value;
-    } else if (strcasecmp(key, "servoHz") == 0) {
-        config.general[GENERAL_SERVO_HZ] = value;
-    } else if (strcasecmp(key, "escHz") == 0) {
-        config.general[GENERAL_ESC_HZ] = value;
-    } else if (strcasecmp(key, "apiEnabled") == 0) {
-        config.general[GENERAL_API_ENABLED] = value;
-    } else if (strcasecmp(key, "wifiEnabled") == 0) {
-        config.general[GENERAL_WIFI_ENABLED] = value;
-    } else if (strcasecmp(key, "launchAssistEnabled") == 0) {
-        config.general[GENERAL_LAUNCHASSIST_ENABLED] = value;
-    } else if (strcasecmp(key, "autoTuneEnabled") == 0) {
-        config.general[GENERAL_AUTOTUNE_ENABLED] = value;
-    } else if (strcasecmp(key, "skipCalibration") == 0) {
-        config.general[GENERAL_SKIP_CALIBRATION] = value;
-    } else {
-        return false;
+#define X(KEY, INDEX)                                                                                                  \
+    if (strcasecmp(key, KEY) == 0) {                                                                                   \
+        config.general[INDEX] = value;                                                                                 \
+        return true;                                                                                                   \
     }
-    return true;
+    GENERAL_KEY_LIST
+#undef X
+    return false;
 }
 
 static void get_from_control(const char *key, f32 **value) {
-    if (strcasecmp(key, "maxRollRate") == 0) {
-        *value = &config.control[CONTROL_MAX_ROLL_RATE];
-    } else if (strcasecmp(key, "maxPitchRate") == 0) {
-        *value = &config.control[CONTROL_MAX_PITCH_RATE];
-    } else if (strcasecmp(key, "rudderSensitivity") == 0) {
-        *value = &config.control[CONTROL_RUDDER_SENSITIVITY];
-    } else if (strcasecmp(key, "controlDeadband") == 0) {
-        *value = &config.control[CONTROL_DEADBAND];
-    } else if (strcasecmp(key, "throttleMaxTime") == 0) {
-        *value = &config.control[CONTROL_THROTTLE_MAX_TIME];
-    } else if (strcasecmp(key, "throttleCooldownTime") == 0) {
-        *value = &config.control[CONTROL_THROTTLE_COOLDOWN_TIME];
-    } else if (strcasecmp(key, "throttleSensitivity") == 0) {
-        *value = &config.control[CONTROL_THROTTLE_SENSITIVITY];
-    } else if (strcasecmp(key, "dropDetentClosed") == 0) {
-        *value = &config.control[CONTROL_DROP_DETENT_CLOSED];
-    } else if (strcasecmp(key, "dropDetentOpen") == 0) {
-        *value = &config.control[CONTROL_DROP_DETENT_OPEN];
-    } else if (strcasecmp(key, "rollLimit") == 0) {
-        *value = &config.control[CONTROL_ROLL_LIMIT];
-    } else if (strcasecmp(key, "rollLimitHold") == 0) {
-        *value = &config.control[CONTROL_ROLL_LIMIT_HOLD];
-    } else if (strcasecmp(key, "pitchLowerLimit") == 0) {
-        *value = &config.control[CONTROL_PITCH_LOWER_LIMIT];
-    } else if (strcasecmp(key, "pitchUpperLimit") == 0) {
-        *value = &config.control[CONTROL_PITCH_UPPER_LIMIT];
-    } else if (strcasecmp(key, "maxAilDeflection") == 0) {
-        *value = &config.control[CONTROL_MAX_AIL_DEFLECTION];
-    } else if (strcasecmp(key, "maxEleDeflection") == 0) {
-        *value = &config.control[CONTROL_MAX_ELE_DEFLECTION];
-    } else if (strcasecmp(key, "maxRudDeflection") == 0) {
-        *value = &config.control[CONTROL_MAX_RUD_DEFLECTION];
-    } else if (strcasecmp(key, "maxElevonDeflection") == 0) {
-        *value = &config.control[CONTROL_MAX_ELEVON_DEFLECTION];
-    } else if (strcasecmp(key, "elevonMixingGain") == 0) {
-        *value = &config.control[CONTROL_ELEVON_MIXING_GAIN];
-    } else if (strcasecmp(key, "ailMixingBias") == 0) {
-        *value = &config.control[CONTROL_AIL_MIXING_BIAS];
-    } else if (strcasecmp(key, "elevMixingBias") == 0) {
-        *value = &config.control[CONTROL_ELEV_MIXING_BIAS];
-    } else {
-        *value = NULL;
+#define X(KEY, INDEX)                                                                                                  \
+    if (strcasecmp(key, KEY) == 0) {                                                                                   \
+        *value = &config.control[INDEX];                                                                               \
+        return;                                                                                                        \
     }
+    CONTROL_KEY_LIST
+#undef X
+    *value = NULL;
 }
 
 static bool set_to_control(const char *key, f32 value) {
-    if (strcasecmp(key, "maxRollRate") == 0) {
-        config.control[CONTROL_MAX_ROLL_RATE] = value;
-    } else if (strcasecmp(key, "maxPitchRate") == 0) {
-        config.control[CONTROL_MAX_PITCH_RATE] = value;
-    } else if (strcasecmp(key, "rudderSensitivity") == 0) {
-        config.control[CONTROL_RUDDER_SENSITIVITY] = value;
-    } else if (strcasecmp(key, "controlDeadband") == 0) {
-        config.control[CONTROL_DEADBAND] = value;
-    } else if (strcasecmp(key, "throttleMaxTime") == 0) {
-        config.control[CONTROL_THROTTLE_MAX_TIME] = value;
-    } else if (strcasecmp(key, "throttleCooldownTime") == 0) {
-        config.control[CONTROL_THROTTLE_COOLDOWN_TIME] = value;
-    } else if (strcasecmp(key, "throttleSensitivity") == 0) {
-        config.control[CONTROL_THROTTLE_SENSITIVITY] = value;
-    } else if (strcasecmp(key, "dropDetentClosed") == 0) {
-        config.control[CONTROL_DROP_DETENT_CLOSED] = value;
-    } else if (strcasecmp(key, "dropDetentOpen") == 0) {
-        config.control[CONTROL_DROP_DETENT_OPEN] = value;
-    } else if (strcasecmp(key, "rollLimit") == 0) {
-        config.control[CONTROL_ROLL_LIMIT] = value;
-    } else if (strcasecmp(key, "rollLimitHold") == 0) {
-        config.control[CONTROL_ROLL_LIMIT_HOLD] = value;
-    } else if (strcasecmp(key, "pitchLowerLimit") == 0) {
-        config.control[CONTROL_PITCH_LOWER_LIMIT] = value;
-    } else if (strcasecmp(key, "pitchUpperLimit") == 0) {
-        config.control[CONTROL_PITCH_UPPER_LIMIT] = value;
-    } else if (strcasecmp(key, "maxAilDeflection") == 0) {
-        config.control[CONTROL_MAX_AIL_DEFLECTION] = value;
-    } else if (strcasecmp(key, "maxEleDeflection") == 0) {
-        config.control[CONTROL_MAX_ELE_DEFLECTION] = value;
-    } else if (strcasecmp(key, "maxRudDeflection") == 0) {
-        config.control[CONTROL_MAX_RUD_DEFLECTION] = value;
-    } else if (strcasecmp(key, "maxElevonDeflection") == 0) {
-        config.control[CONTROL_MAX_ELEVON_DEFLECTION] = value;
-    } else if (strcasecmp(key, "elevonMixingGain") == 0) {
-        config.control[CONTROL_ELEVON_MIXING_GAIN] = value;
-    } else if (strcasecmp(key, "ailMixingBias") == 0) {
-        config.control[CONTROL_AIL_MIXING_BIAS] = value;
-    } else if (strcasecmp(key, "elevMixingBias") == 0) {
-        config.control[CONTROL_ELEV_MIXING_BIAS] = value;
-    } else {
-        return false;
+#define X(KEY, INDEX)                                                                                                  \
+    if (strcasecmp(key, KEY) == 0) {                                                                                   \
+        config.control[INDEX] = value;                                                                                 \
+        return true;                                                                                                   \
     }
-    return true;
+    CONTROL_KEY_LIST
+#undef X
+    return false;
 }
 
 static void get_from_pins(const char *key, f32 **value) {
-    if (strcasecmp(key, "inputAil") == 0) {
-        *value = &config.pins[PINS_INPUT_AIL];
-    } else if (strcasecmp(key, "servoAil") == 0) {
-        *value = &config.pins[PINS_SERVO_AIL];
-    } else if (strcasecmp(key, "inputEle") == 0) {
-        *value = &config.pins[PINS_INPUT_ELE];
-    } else if (strcasecmp(key, "servoEle") == 0) {
-        *value = &config.pins[PINS_SERVO_ELE];
-    } else if (strcasecmp(key, "inputRud") == 0) {
-        *value = &config.pins[PINS_INPUT_RUD];
-    } else if (strcasecmp(key, "servoRud") == 0) {
-        *value = &config.pins[PINS_SERVO_RUD];
-    } else if (strcasecmp(key, "inputThrottle") == 0) {
-        *value = &config.pins[PINS_INPUT_THROTTLE];
-    } else if (strcasecmp(key, "escThrottle") == 0) {
-        *value = &config.pins[PINS_ESC_THROTTLE];
-    } else if (strcasecmp(key, "inputSwitch") == 0) {
-        *value = &config.pins[PINS_INPUT_SWITCH];
-    } else if (strcasecmp(key, "servoBay") == 0) {
-        *value = &config.pins[PINS_SERVO_BAY];
-    } else if (strcasecmp(key, "aahrsSda") == 0) {
-        *value = &config.pins[PINS_AAHRS_SDA];
-    } else if (strcasecmp(key, "aahrsScl") == 0) {
-        *value = &config.pins[PINS_AAHRS_SCL];
-    } else if (strcasecmp(key, "gpsTx") == 0) {
-        *value = &config.pins[PINS_GPS_TX];
-    } else if (strcasecmp(key, "gpsRx") == 0) {
-        *value = &config.pins[PINS_GPS_RX];
-    } else if (strcasecmp(key, "reverseRoll") == 0) {
-        *value = &config.pins[PINS_REVERSE_ROLL];
-    } else if (strcasecmp(key, "reversePitch") == 0) {
-        *value = &config.pins[PINS_REVERSE_PITCH];
-    } else if (strcasecmp(key, "reverseYaw") == 0) {
-        *value = &config.pins[PINS_REVERSE_YAW];
-    } else {
-        *value = NULL;
+#define X(KEY, INDEX)                                                                                                  \
+    if (strcasecmp(key, KEY) == 0) {                                                                                   \
+        *value = &config.pins[INDEX];                                                                                  \
+        return;                                                                                                        \
     }
+    PINS_KEY_LIST
+#undef X
+    *value = NULL;
 }
 
 static bool set_to_pins(const char *key, f32 value) {
-    if (strcasecmp(key, "inputAil") == 0) {
-        config.pins[PINS_INPUT_AIL] = value;
-    } else if (strcasecmp(key, "servoAil") == 0) {
-        config.pins[PINS_SERVO_AIL] = value;
-    } else if (strcasecmp(key, "inputEle") == 0) {
-        config.pins[PINS_INPUT_ELE] = value;
-    } else if (strcasecmp(key, "servoEle") == 0) {
-        config.pins[PINS_SERVO_ELE] = value;
-    } else if (strcasecmp(key, "inputRud") == 0) {
-        config.pins[PINS_INPUT_RUD] = value;
-    } else if (strcasecmp(key, "servoRud") == 0) {
-        config.pins[PINS_SERVO_RUD] = value;
-    } else if (strcasecmp(key, "inputThrottle") == 0) {
-        config.pins[PINS_INPUT_THROTTLE] = value;
-    } else if (strcasecmp(key, "escThrottle") == 0) {
-        config.pins[PINS_ESC_THROTTLE] = value;
-    } else if (strcasecmp(key, "inputSwitch") == 0) {
-        config.pins[PINS_INPUT_SWITCH] = value;
-    } else if (strcasecmp(key, "servoBay") == 0) {
-        config.pins[PINS_SERVO_BAY] = value;
-    } else if (strcasecmp(key, "aahrsSda") == 0) {
-        config.pins[PINS_AAHRS_SDA] = value;
-    } else if (strcasecmp(key, "aahrsScl") == 0) {
-        config.pins[PINS_AAHRS_SCL] = value;
-    } else if (strcasecmp(key, "gpsTx") == 0) {
-        config.pins[PINS_GPS_TX] = value;
-    } else if (strcasecmp(key, "gpsRx") == 0) {
-        config.pins[PINS_GPS_RX] = value;
-    } else if (strcasecmp(key, "reverseRoll") == 0) {
-        config.pins[PINS_REVERSE_ROLL] = value;
-    } else if (strcasecmp(key, "reversePitch") == 0) {
-        config.pins[PINS_REVERSE_PITCH] = value;
-    } else if (strcasecmp(key, "reverseYaw") == 0) {
-        config.pins[PINS_REVERSE_YAW] = value;
-    } else {
-        return false;
+#define X(KEY, INDEX)                                                                                                  \
+    if (strcasecmp(key, KEY) == 0) {                                                                                   \
+        config.pins[INDEX] = value;                                                                                    \
+        return true;                                                                                                   \
     }
-    return true;
+    PINS_KEY_LIST
+#undef X
+    return false;
 }
 
 static void get_from_sensors(const char *key, f32 **value) {
-    if (strcasecmp(key, "imuModel") == 0) {
-        *value = &config.sensors[SENSORS_IMU_MODEL];
-    } else if (strcasecmp(key, "baroModel") == 0) {
-        *value = &config.sensors[SENSORS_BARO_MODEL];
-    } else if (strcasecmp(key, "aahrsBusFreq") == 0) {
-        *value = &config.sensors[SENSORS_AAHRS_BUS_FREQ];
-    } else if (strcasecmp(key, "gpsCommandType") == 0) {
-        *value = &config.sensors[SENSORS_GPS_COMMAND_TYPE];
-    } else if (strcasecmp(key, "gpsBaudrate") == 0) {
-        *value = &config.sensors[SENSORS_GPS_BAUDRATE];
-    } else {
-        *value = NULL;
+#define X(KEY, INDEX)                                                                                                  \
+    if (strcasecmp(key, KEY) == 0) {                                                                                   \
+        *value = &config.sensors[INDEX];                                                                               \
+        return;                                                                                                        \
     }
+    SENSORS_KEY_LIST
+#undef X
+    *value = NULL;
 }
 
 static bool set_to_sensors(const char *key, f32 value) {
-    if (strcasecmp(key, "imuModel") == 0) {
-        config.sensors[SENSORS_IMU_MODEL] = value;
-    } else if (strcasecmp(key, "baroModel") == 0) {
-        config.sensors[SENSORS_BARO_MODEL] = value;
-    } else if (strcasecmp(key, "aahrsBusFreq") == 0) {
-        config.sensors[SENSORS_AAHRS_BUS_FREQ] = value;
-    } else if (strcasecmp(key, "gpsCommandType") == 0) {
-        config.sensors[SENSORS_GPS_COMMAND_TYPE] = value;
-    } else if (strcasecmp(key, "gpsBaudrate") == 0) {
-        config.sensors[SENSORS_GPS_BAUDRATE] = value;
-    } else {
-        return false;
+#define X(KEY, INDEX)                                                                                                  \
+    if (strcasecmp(key, KEY) == 0) {                                                                                   \
+        config.sensors[INDEX] = value;                                                                                 \
+        return true;                                                                                                   \
     }
-    return true;
+    SENSORS_KEY_LIST
+#undef X
+    return false;
 }
 
 static void get_from_system(const char *key, f32 **value) {
-    if (strcasecmp(key, "printsys") == 0) {
-        *value = &config.system[SYSTEM_PRINT_FBW];
-    } else if (strcasecmp(key, "printAAHRS") == 0) {
-        *value = &config.system[SYSTEM_PRINT_AAHRS];
-    } else if (strcasecmp(key, "printAircraft") == 0) {
-        *value = &config.system[SYSTEM_PRINT_AIRCRAFT];
-    } else if (strcasecmp(key, "printGPS") == 0) {
-        *value = &config.system[SYSTEM_PRINT_GPS];
-    } else if (strcasecmp(key, "printNetwork") == 0) {
-        *value = &config.system[SYSTEM_PRINT_NETWORK];
-    } else {
-        *value = NULL;
+#define X(KEY, INDEX)                                                                                                  \
+    if (strcasecmp(key, KEY) == 0) {                                                                                   \
+        *value = &config.system[INDEX];                                                                                \
+        return;                                                                                                        \
     }
+    SYSTEM_KEY_LIST
+#undef X
+    *value = NULL;
 }
 
 static bool set_to_system(const char *key, f32 value) {
-    if (strcasecmp(key, "printsys") == 0) {
-        config.system[SYSTEM_PRINT_FBW] = value;
-    } else if (strcasecmp(key, "printAAHRS") == 0) {
-        config.system[SYSTEM_PRINT_AAHRS] = value;
-    } else if (strcasecmp(key, "printAircraft") == 0) {
-        config.system[SYSTEM_PRINT_AIRCRAFT] = value;
-    } else if (strcasecmp(key, "printGPS") == 0) {
-        config.system[SYSTEM_PRINT_GPS] = value;
-    } else if (strcasecmp(key, "printNetwork") == 0) {
-        config.system[SYSTEM_PRINT_NETWORK] = value;
-    } else {
-        return false;
+#define X(KEY, INDEX)                                                                                                  \
+    if (strcasecmp(key, KEY) == 0) {                                                                                   \
+        config.system[INDEX] = value;                                                                                  \
+        return true;                                                                                                   \
     }
-    return true;
+    SYSTEM_KEY_LIST
+#undef X
+    return false;
 }
 
 static void get_from_wifi(const char *key, char **value) {
-    if (strcasecmp(key, "ssid") == 0) {
-        *value = config.wifi.ssid;
-    } else if (strcasecmp(key, "pass") == 0) {
-        *value = config.wifi.pass;
-    } else {
-        *value = NULL;
+#define X(KEY, MEMBER)                                                                                                 \
+    if (strcasecmp(key, KEY) == 0) {                                                                                   \
+        *value = config.wifi.MEMBER;                                                                                   \
+        return;                                                                                                        \
     }
+    WIFI_KEY_LIST
+#undef X
+    *value = NULL;
 }
 
 static bool set_to_wifi(const char *key, const char *value) {
-    if (strcasecmp(key, "ssid") == 0) {
-        strcpy(config.wifi.ssid, value);
-    } else if (strcasecmp(key, "pass") == 0) {
-        strcpy(config.wifi.pass, value);
-    } else {
-        return false;
+#define X(KEY, MEMBER)                                                                                                 \
+    if (strcasecmp(key, KEY) == 0) {                                                                                   \
+        strcpy(config.wifi.MEMBER, value);                                                                             \
+        return true;                                                                                                   \
     }
-    return true;
+    WIFI_KEY_LIST
+#undef X
+    return false;
 }
 
 bool config_validate(char *error, size_t error_size) {
