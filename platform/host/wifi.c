@@ -105,6 +105,19 @@ static bool fs_mkd(const char *path) {
     return lfs_mkdir(&wwwfs, path) == LFS_ERR_OK;
 }
 
+static struct mg_fs fs = {
+    .st = fs_st,
+    .ls = fs_ls,
+    .op = fs_op,
+    .cl = fs_cl,
+    .rd = fs_rd,
+    .wr = fs_wr,
+    .sk = fs_sk,
+    .mv = fs_mv,
+    .rm = fs_rm,
+    .mkd = fs_mkd,
+};
+
 // Handles an API request from an HTTP event.
 static void handle_api_v1_request(struct mg_connection *c, struct mg_http_message *hm, api_handler handler) {
     char *out = NULL;
@@ -154,19 +167,7 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
         // No matching API request, serve static files instead
         struct mg_http_serve_opts opts = {
             .root_dir = "/www",
-            .fs =
-                &(struct mg_fs){
-                    .st = fs_st,
-                    .ls = fs_ls,
-                    .op = fs_op,
-                    .cl = fs_cl,
-                    .rd = fs_rd,
-                    .wr = fs_wr,
-                    .sk = fs_sk,
-                    .mv = fs_mv,
-                    .rm = fs_rm,
-                    .mkd = fs_mkd,
-                },
+            .fs = &fs,
         };
         mg_http_serve_dir(c, hm, &opts);
     }

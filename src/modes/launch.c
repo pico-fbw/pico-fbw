@@ -6,10 +6,10 @@
 #include <math.h>
 #include "platform/time.h"
 
+#include "ctrl/flight.h"
 #include "ctrl/throttle.h"
 #include "io/aahrs.h"
 #include "io/receiver.h"
-#include "modes/flight.h"
 #include "sys/configuration.h"
 
 #include "launch.h"

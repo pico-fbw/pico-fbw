@@ -3,6 +3,7 @@
  * Licensed under the GNU GPL-3.0
  */
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -156,7 +157,7 @@ void log_message(LogType type, const char *msg, i32 code, u32 pulse_ms, bool for
     lastEntry = entry;
 
     // Format an error string to be printed
-    const char *typeMsg = NULL;
+    const char *typeMsg = "";
     const char *colorCode = "";
     switch (type) {
         case TYPE_INFO:
@@ -222,7 +223,6 @@ void log_clear(LogType type) {
         // Reset the error display if the current displayed error is of this type
         if (lastEntry->type == type) {
             // Go through all log types in reverse order to find the most fatal error (if it exists), and display it
-            // instead
             bool hadError = false;
             for (LogType type = TYPE_FATAL; type >= TYPE_INFO; type--) {
                 for (u32 i = 0; i < numLogs; i++) {
@@ -253,7 +253,7 @@ u32 log_count() {
 u32 log_count_errs() {
     u32 count = 0;
     for (u32 i = 0; i < numLogs; i++) {
-        if (logs[i].type == TYPE_WARNING || logs[i].type == TYPE_ERROR || logs[i].type == TYPE_FATAL) {
+        if (logs[i].type >= TYPE_WARNING) {
             count++;
         }
     }

@@ -87,18 +87,21 @@ static inline f32 mapf(f32 f, f32 in_min, f32 in_max, f32 out_min, f32 out_max) 
  */
 #if defined(__APPLE__) || defined(__MACH__)
     #define INCBIN(sym, filename)                                                                                      \
-        __asm__(".section __TEXT,__const\n"                                                                            \
+        __asm__(".section __DATA,__data\n"                                                                             \
                 ".global __" #sym "_start\n__" #sym "_start:\n"                                                        \
                 ".incbin \"" filename "\"\n"                                                                           \
-                ".global __" #sym "_end\n__" #sym "_end:\n");                                                          \
-        extern const unsigned char _##sym##_start[];                                                                   \
-        extern const unsigned char _##sym##_end[];
+                ".global __" #sym "_end\n__" #sym "_end:\n"                                                            \
+                // Switch back to the text section to avoid memory corruption/segfaults
+                ".section __TEXT,__text\n");
+                extern const unsigned char _##sym##_start[];
+                extern const unsigned char _##sym##_end[];
 #elif defined(__GNUC__)
     #define INCBIN(sym, filename)                                                                                      \
-        __asm__(".section .text\n"                                                                                     \
+        __asm__(".section .data\n"                                                                                     \
                 ".global _" #sym "_start\n_" #sym "_start:\n"                                                          \
                 ".incbin \"" filename "\"\n"                                                                           \
-                ".global _" #sym "_end\n_" #sym "_end:\n");                                                            \
+                ".global _" #sym "_end\n_" #sym "_end:\n"                                                              \
+                ".section .text\n");                                                                                   \
         extern const unsigned char _##sym##_start[];                                                                   \
         extern const unsigned char _##sym##_end[];
 #else

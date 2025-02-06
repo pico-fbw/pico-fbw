@@ -12,9 +12,6 @@
 #include "sys/print.h"
 #include "sys/runtime.h"
 
-// TODO: refactoring needed (here and in general)
-// Standardize comments/function docs, factor things out, increase readability, re-eval structs, etc.
-
 int main() {
     boot_begin();
     print("\nhello and welcome to pico-fbw v%s!\nrunning on \"%s\", HAL v%s", PICO_FBW_VERSION, PLATFORM_NAME,

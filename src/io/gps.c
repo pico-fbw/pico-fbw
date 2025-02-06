@@ -14,7 +14,6 @@
 
 #include "ctrl/aircraft.h"
 #include "lib/minmea.h"
-#include "modes/flight.h"
 #include "sys/configuration.h"
 #include "sys/log.h"
 #include "sys/print.h"
@@ -153,8 +152,8 @@ void gps_update() {
                 break;
             }
 
-            // All of these indicate parse errors but happen every so often and don't really mean anything, so they do
-            // not warrant a message
+            // All of these indicate parse errors but happen every so often and don't really mean anything,
+            // so they do not warrant a message
             case MINMEA_INVALID:
             case MINMEA_UNKNOWN:
             default:

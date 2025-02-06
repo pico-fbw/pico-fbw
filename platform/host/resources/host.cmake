@@ -28,13 +28,7 @@ endfunction()
 function(setup_after_subdirs)
     if (${FBW_BUILD_WWW})
         # Fetch mongoose as a dependency ("wifi" support requires it)
-        include(FetchContent)
-        FetchContent_Declare(
-            mongoose
-            GIT_REPOSITORY https://github.com/cesanta/mongoose
-            GIT_TAG 7.16
-        )
-        FetchContent_MakeAvailable(mongoose)
+        include(Mongoose)
         target_sources(platform_host PRIVATE ${mongoose_SOURCE_DIR}/mongoose.c)
         target_include_directories(platform_host PRIVATE ${mongoose_SOURCE_DIR})
         include_wwwfs(${PLATFORM_PATH}/flash.c)

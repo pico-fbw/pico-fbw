@@ -7,9 +7,9 @@
 #include "platform/time.h"
 
 #include "ctrl/control.h"
+#include "ctrl/flight.h"
 #include "io/aahrs.h"
 #include "io/receiver.h"
-#include "modes/flight.h"
 #include "modes/normal.h"
 #include "sys/configuration.h"
 

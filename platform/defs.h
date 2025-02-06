@@ -6,6 +6,8 @@
     #include "platform/esp/defs.h"
 #elif defined(FBW_PLATFORM_HOST)
     #include "platform/host/defs.h"
+#elif defined(FBW_PLATFORM_LINUX)
+    #include "platform/linux/defs.h"
 #elif defined(FBW_PLATFORM_PICO)
     #include "platform/pico/defs.h"
 #else

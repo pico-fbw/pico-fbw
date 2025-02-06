@@ -162,19 +162,15 @@ static int flash_read_bin(const struct lfs_config *c, lfs_block_t block, lfs_off
 
 static int flash_prog_bin(const struct lfs_config *c, lfs_block_t block, lfs_off_t off, const void *buffer,
                           lfs_size_t size) {
-    // Binary cannot write to itself
-    return LFS_ERR_IO;
-    (void)c;
-    (void)block;
-    (void)off;
-    (void)buffer;
-    (void)size;
+    assert(block < c->block_count);
+    memcpy(c->context + (block * c->block_size) + off, buffer, size);
+    return LFS_ERR_OK;
 }
 
 static int flash_erase_bin(const struct lfs_config *c, lfs_block_t block) {
-    return LFS_ERR_IO;
-    (void)c;
-    (void)block;
+    assert(block < c->block_count);
+    memset(c->context + block * c->block_size, 0xFF, c->block_size);
+    return LFS_ERR_OK;
 }
 
 static int flash_sync_bin(const struct lfs_config *c) {

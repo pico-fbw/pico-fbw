@@ -27,7 +27,6 @@ typedef timer_t __callback_id_t;
 #define PIN_ESC_THR 7
 #define PIN_INPUT_SWITCH 8
 #define PIN_SERVO_BAY 9
-
 #define PIN_AAHRS_SDA 10
 #define PIN_AAHRS_SCL 11
 #define PIN_GPS_TX 12
@@ -42,7 +41,7 @@ typedef timer_t __callback_id_t;
 #elif defined(__APPLE__)
     #define PLATFORM "macOS"
 #elif defined(__linux__)
-    #define PLATFORM "Linux"
+    #define PLATFORM "Linux+Host"
 #else
     #define PLATFORM "Unknown"
 #endif
@@ -63,7 +62,6 @@ typedef timer_t __callback_id_t;
 #define PLATFORM_VERSION "1.0.0"
 // Platform features
 #define PLATFORM_SUPPORTS_ADC 0
-#define PLATFORM_SUPPORTS_DISPLAY 0
 #define PLATFORM_SUPPORTS_WIFI FBW_BUILD_WWW
 
 // printf format checking

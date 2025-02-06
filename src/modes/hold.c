@@ -7,11 +7,11 @@
 #include "platform/time.h"
 #include "platform/types.h"
 
+#include "ctrl/flight.h"
 #include "ctrl/throttle.h"
 #include "io/gps.h"
 #include "lib/pid.h"
 #include "modes/auto.h"
-#include "modes/flight.h"
 #include "sys/configuration.h"
 #include "sys/log.h"
 

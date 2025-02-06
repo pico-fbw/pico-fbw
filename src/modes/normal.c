@@ -8,10 +8,10 @@
 
 #include "ctrl/aircraft.h"
 #include "ctrl/control.h"
+#include "ctrl/flight.h"
 #include "ctrl/throttle.h"
 #include "io/receiver.h"
 #include "io/servo.h"
-#include "modes/flight.h"
 #include "sys/configuration.h"
 
 #include "normal.h"
