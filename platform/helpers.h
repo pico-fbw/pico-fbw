@@ -91,10 +91,10 @@ static inline f32 mapf(f32 f, f32 in_min, f32 in_max, f32 out_min, f32 out_max) 
                 ".global __" #sym "_start\n__" #sym "_start:\n"                                                        \
                 ".incbin \"" filename "\"\n"                                                                           \
                 ".global __" #sym "_end\n__" #sym "_end:\n"                                                            \
-                // Switch back to the text section to avoid memory corruption/segfaults
-                ".section __TEXT,__text\n");
-                extern const unsigned char _##sym##_start[];
-                extern const unsigned char _##sym##_end[];
+                ".section __TEXT,__text\n");                                                                           \
+        extern const unsigned char _##sym##_start[];                                                                   \
+        extern const unsigned char _##sym##_end[];
+// We switch back to the text section after the binary to avoid memory corruption/segfaults
 #elif defined(__GNUC__)
     #define INCBIN(sym, filename)                                                                                      \
         __asm__(".section .data\n"                                                                                     \
