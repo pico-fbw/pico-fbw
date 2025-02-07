@@ -12,6 +12,9 @@
 
 #include "api.h"
 
+// TODO: api command to initiate gps alt offset calibration (currently it's never triggered)
+// also corresponding webui button
+
 /**
  * Executes an API command.
  * @param cmd command to execute

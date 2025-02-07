@@ -85,8 +85,8 @@ static inline void load_next_waypoint() {
 
 bool auto_init() {
     // Import flightplan data
-    if (!flightplan_was_parsed()) {
-        log_message(TYPE_ERROR, "No flightplan parsed!", 2000, 0, false);
+    if (!flightplan_get()) {
+        log_message(TYPE_ERROR, "No active flightplan!", 2000, 0, false);
         return false;
     }
     guidanceSource = SOURCE_FLIGHTPLAN;

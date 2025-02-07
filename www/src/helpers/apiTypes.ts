@@ -72,7 +72,7 @@ export type SET_CONFIG = {
     error?: string;
 };
 export type SET_FLIGHTPLAN = {
-    message: string;
+    error?: string;
 };
 export type SET_MODE = EmptyResponse;
 export type SET_TARGET = EmptyResponse;

@@ -423,6 +423,7 @@ bool config_validate(char *error, size_t error_size) {
                 if ((i32)config.pins[i] == lastPin) {
                     goto invalid;
                 }
+                lastPin = config.pins[i];
             }
             break;
         case CTRLMODE_3AXIS:
@@ -434,6 +435,7 @@ bool config_validate(char *error, size_t error_size) {
                 if ((i32)config.pins[i] == lastPin) {
                     goto invalid;
                 }
+                lastPin = config.pins[i];
             }
             break;
         case CTRLMODE_2AXIS_ATHR:
@@ -445,6 +447,7 @@ bool config_validate(char *error, size_t error_size) {
                 if ((i32)config.pins[i] == lastPin) {
                     goto invalid;
                 }
+                lastPin = config.pins[i];
             }
             break;
         case CTRLMODE_2AXIS:
@@ -456,6 +459,7 @@ bool config_validate(char *error, size_t error_size) {
                 if ((i32)config.pins[i] == lastPin) {
                     goto invalid;
                 }
+                lastPin = config.pins[i];
             }
             break;
         invalid:

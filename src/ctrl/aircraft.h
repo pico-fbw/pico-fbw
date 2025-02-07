@@ -7,8 +7,8 @@
 // clang-format off
 typedef enum Mode {
     MODE_INVALID,
-    MODE_LAUNCH,
     MODE_DIRECT,
+    MODE_LAUNCH,
     MODE_NORMAL,
     MODE_AUTO,
     MODE_TUNE,
@@ -30,6 +30,12 @@ typedef enum Mode {
      fabsf(receiver_get((u32)config.pins[PINS_INPUT_RUD], RECEIVER_MODE_DEGREE) - 90.f) > DEADBAND)
 // Throttle input usually isn't self-centering so it's more difficult to determine if there is input
 #define USER_INPUTTING() (ROLL_INPUT() || PITCH_INPUT() || YAW_INPUT())
+
+/**
+ * @param mode mode to convert to string
+ * @return string representation of the mode
+ */
+const char *mode_to_string(Mode mode);
 
 typedef struct Aircraft {
     Mode mode;     // (Read-only)

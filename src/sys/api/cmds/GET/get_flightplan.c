@@ -10,7 +10,7 @@
 #include "get_flightplan.h"
 
 i32 api_get_flightplan(const char *in, char **out) {
-    if (!flightplan_was_parsed()) {
+    if (!flightplan_get()) {
         return 204;
     }
     *out = strdup(flightplan_get()->json);

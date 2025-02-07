@@ -13,6 +13,8 @@ import { api } from "../helpers/api";
 import { GET_INFO } from "../helpers/apiTypes";
 import settings from "../helpers/settings";
 
+// TODO: make config errors show as a popup instead of basically deleting the whole component
+
 function ConfigUI() {
     const [error, setError] = useState("");
 

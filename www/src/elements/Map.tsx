@@ -112,7 +112,7 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
             return;
         }
         try {
-            await api("set/flightplan", flightplan).then(() => setUploaded(true));
+            await api("set/flightplan", { flightplan, active: true }).then(() => setUploaded(true));
         } catch (e) {
             setError(`Server error whilst uploading: ${(e as Error).message}`);
         }

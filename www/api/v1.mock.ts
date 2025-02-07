@@ -6,6 +6,8 @@
 import * as http from "http";
 import { MockHandler } from "vite-plugin-mock-server";
 
+import { Flightplan } from "../src/helpers/flightplan";
+
 function send_data(res: http.ServerResponse<http.IncomingMessage>, data: object) {
     res.setHeader("Content-Type", "application/json");
     res.end(JSON.stringify(data));
@@ -196,9 +198,10 @@ export default (): MockHandler[] => [
         pattern: "/api/v1/set/flightplan",
         handle: (req, res) => {
             req.on("data", (bodyString: string) => {
-                flightplan = bodyString;
+                const body = JSON.parse(bodyString) as { flightplan: Flightplan; active: boolean };
+                flightplan = JSON.stringify(body.flightplan);
                 send_data(res, {
-                    message: "",
+                    error: "",
                 });
             });
         },

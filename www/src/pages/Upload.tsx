@@ -14,6 +14,9 @@ import { Flightplan } from "../helpers/flightplan";
 import hasInternet from "../helpers/hasInternet";
 import settings from "../helpers/settings";
 
+// [ ] Consolidate upload page into planner page
+// TODO: display errors/message kicked back by api from SET_FLIGHTPLAN
+
 export default function Upload() {
     const [flightplan, setFlightplan] = useState("");
     const [error, setError] = useState("");
@@ -36,7 +39,7 @@ export default function Upload() {
             return;
         }
         try {
-            await api("set/flightplan", flightplan).then(() => setUploaded(true));
+            await api("set/flightplan", { flightplan, active: true }).then(() => setUploaded(true));
         } catch (e) {
             const error = (e as Error).message;
             if (error === "400") {

@@ -9,29 +9,6 @@
 
 #include "get_mode.h"
 
-/**
- * @param mode mode to convert to string
- * @return string representation of the mode
- */
-static const char *mode_to_string(Mode mode) {
-    switch (mode) {
-        case MODE_LAUNCH:
-            return "launch";
-        case MODE_DIRECT:
-            return "direct";
-        case MODE_NORMAL:
-            return "normal";
-        case MODE_AUTO:
-            return "auto";
-        case MODE_TUNE:
-            return "tune";
-        case MODE_HOLD:
-            return "hold";
-        default:
-            return "invalid";
-    }
-}
-
 // {"mode":"launch|direct|normal|auto|tune|hold"}
 
 i32 api_get_mode(const char *in, char **out) {

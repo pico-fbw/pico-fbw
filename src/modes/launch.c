@@ -45,14 +45,13 @@ static i32 return_to_mode(void *data) {
     (void)data;
 }
 
-bool launch_init(Mode return_to) {
+void launch_init(Mode return_to) {
     afterLaunch = return_to;
     flight_init();
     throttle.init();
     throttle.mode = THRMODE_THRUST;
     // Set idle thrust to indicate that we're ready to launch
     throttle.target = calibration.esc[ESC_DETENT_IDLE];
-    return true;
 }
 
 void launch_update() {
