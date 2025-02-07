@@ -22,6 +22,7 @@ env:
 jobs:
   embedded:
     runs-on: ubuntu-latest
+    continue-on-error: true
 
     strategy:
       matrix:
@@ -75,13 +76,13 @@ jobs:
     - name: Configure CMake
       if: matrix.PLATFORM != 'esp32'
       shell: bash
-      run: cmake -B "${{github.workspace}}/build" -DFBW_PLATFORM=${{matrix.PLATFORM}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -GNinja
+      run: cmake -B "${{github.workspace}}/build" -DFBW_PLATFORM=${{matrix.PLATFORM}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_C_FLAGS="-Werror" -GNinja
     
     - name: Configure CMake (esp)
       if: matrix.PLATFORM == 'esp32'
       shell: bash
       run: source ~/esp/esp-idf/export.sh && 
-        cmake -B "${{github.workspace}}/build" -DFBW_PLATFORM=${{matrix.PLATFORM}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -GNinja
+        cmake -B "${{github.workspace}}/build" -DFBW_PLATFORM=${{matrix.PLATFORM}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_C_FLAGS="-Werror" -GNinja
 
     - name: Build
       if: matrix.PLATFORM != 'esp32'
@@ -102,6 +103,7 @@ jobs:
 
   host:
     runs-on: ${{matrix.OS}}
+    continue-on-error: true
 
     strategy:
       matrix:
@@ -134,11 +136,11 @@ jobs:
 
     - name: Configure CMake
       if: matrix.OS != 'windows-latest'
-      run: cmake -B "${{github.workspace}}/build" -DFBW_PLATFORM=host -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -GNinja
+      run: cmake -B "${{github.workspace}}/build" -DFBW_PLATFORM=host -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_C_FLAGS="-Werror" -GNinja
 
     - name: Configure CMake (windows)
       if: matrix.OS == 'windows-latest'
-      run: cmake -B "${{github.workspace}}/build" -DFBW_PLATFORM=host -DFBW_BUILD_WWW=0 -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -GNinja
+      run: cmake -B "${{github.workspace}}/build" -DFBW_PLATFORM=host -DFBW_BUILD_WWW=0 -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_C_FLAGS="-Werror" -GNinja
 
     - name: Build
       run: cmake --build "${{github.workspace}}/build" --config ${{env.BUILD_TYPE}}

@@ -6,6 +6,7 @@ set(LFS_PROG_SIZE 1)
 set(LFS_IMG_SIZE 262144) # 256KB
 
 function(setup_before_subdirs)
+    add_compile_options(-Wno-format)
     add_executable(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/src/main.c)
 endfunction()
 

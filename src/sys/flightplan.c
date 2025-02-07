@@ -19,6 +19,7 @@
     "[{\"lat\":0,\"lng\":0,\"alt\":0,\"speed\":0,\"drop\":0}]}"
 
 static Flightplan active;
+static bool isActive = false;
 
 static inline bool state_is_error(FlightplanState state) {
     return state == FLIGHTPLAN_ERR_PARSE || state == FLIGHTPLAN_ERR_VERSION || state == FLIGHTPLAN_ERR_MEM;
@@ -152,9 +153,10 @@ cleanup:
 }
 
 Flightplan *flightplan_get() {
-    return &active;
+    return isActive ? &active : NULL;
 }
 
 void flightplan_set(Flightplan flightplan) {
     active = flightplan;
+    isActive = true;
 }

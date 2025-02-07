@@ -124,7 +124,7 @@ void log_init() {
 }
 
 void log_message(LogType type, const char *msg, i32 code, u32 pulse_ms, bool force) {
-    LogEntry *new = realloc(logs, numLogs * sizeof(LogEntry));
+    LogEntry *new = realloc(logs, (numLogs + 1) * sizeof(LogEntry));
     if (!new) {
         return;
     }
