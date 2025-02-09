@@ -22,14 +22,14 @@
 #define NUM_PWM_OUT_CHANNELS 8
 
 typedef struct PWMInChannel {
-    u32 pin;
+    i16 pin;
     u32 tRise, tFall; // rise/falling edge timestamps (in ticks)
     u32 tPulsewidth;  // pulsewidth (in ticks)
     bool active;      // whether or not channel is in use; internal
 } PWMInChannel;
 
 typedef struct PWMOutChannel {
-    u32 pin;
+    i16 pin;
     mcpwm_cmpr_handle_t out; // mcpwm_cmpr_handle_t for the channel
     u32 period;              // period (in μs)
     bool active;
@@ -72,7 +72,7 @@ static PWMOutChannel *get_available_out_channel() {
 /**
  * @return a pointer to the PWM IN channel representing the given pin, or NULL if none match
  */
-static PWMInChannel *get_in_channel(u32 pin) {
+static PWMInChannel *get_in_channel(i16 pin) {
     for (u32 i = 0; i < count_of(inChannels); i++) {
         if (inChannels[i].pin == pin) {
             return &inChannels[i];
@@ -84,7 +84,7 @@ static PWMInChannel *get_in_channel(u32 pin) {
 /**
  * @return a pointer to the PWM OUT channel representing the given pin, or NULL if none match
  */
-static PWMOutChannel *get_out_channel(u32 pin) {
+static PWMOutChannel *get_out_channel(i16 pin) {
     for (u32 i = 0; i < count_of(outChannels); i++) {
         if (outChannels[i].pin == pin) {
             return &outChannels[i];
@@ -110,7 +110,7 @@ static bool pwm_read_callback(mcpwm_cap_channel_handle_t cap_channel, const mcpw
     (void)cap_channel; // Unused
 }
 
-bool pwm_setup_read(const u32 pins[], u32 num_pins) {
+bool pwm_setup_read(const i16 pins[], u32 num_pins) {
     // Static variable; this means that the timer can be reused for multiple channels
     // Once it has been maxed out with channels, a new timer will be created
     static mcpwm_cap_timer_handle_t timer;
@@ -175,7 +175,7 @@ bool pwm_setup_read(const u32 pins[], u32 num_pins) {
     return true;
 }
 
-bool pwm_setup_write(const u32 pins[], u32 num_pins, u32 freq) {
+bool pwm_setup_write(const i16 pins[], u32 num_pins, u32 freq) {
     const u32 period = 1000000 / freq; // Period in μs
     static mcpwm_timer_handle_t timer;
     mcpwm_timer_config_t config = {
@@ -254,7 +254,7 @@ bool pwm_setup_write(const u32 pins[], u32 num_pins, u32 freq) {
     return true;
 }
 
-f32 pwm_read_raw(u32 pin) {
+f32 pwm_read_raw(i16 pin) {
     PWMInChannel *channel = get_in_channel(pin);
     if (!channel) {
         return -1.f;
@@ -263,7 +263,7 @@ f32 pwm_read_raw(u32 pin) {
     return channel->tPulsewidth * (1E6f / esp_clk_apb_freq());
 }
 
-void pwm_write_raw(u32 pin, f32 pulsewidth) {
+void pwm_write_raw(i16 pin, f32 pulsewidth) {
     PWMOutChannel *channel = get_out_channel(pin);
     if (!channel) {
         return;

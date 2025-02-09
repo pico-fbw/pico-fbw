@@ -72,27 +72,28 @@ char *uart_read(u32 tx, u32 rx) {
     if (!uart) {
         return NULL;
     }
+    if (!uart_is_readable(uart)) {
+        return NULL;
+    }
     // Very similar to stdin_read() in pico/stdio.c, take a look at that for documentation
     char *buf = NULL;
-    if (uart_is_readable(uart)) {
-        u32 i = 0;
-        while (uart_is_readable_within_us(uart, UART_TIMEOUT_US)) {
-            char c = uart_getc(uart);
-            if (c == '\r' || c == '\n') {
-                break;
-            }
-            buf = try_realloc(buf, (i + 1) * sizeof(char));
-            if (!buf) {
-                return NULL;
-            }
-            buf[i++] = c;
+    u32 i = 0;
+    while (uart_is_readable_within_us(uart, UART_TIMEOUT_US)) {
+        char c = uart_getc(uart);
+        if (c == '\r' || c == '\n') {
+            break;
         }
         buf = try_realloc(buf, (i + 1) * sizeof(char));
         if (!buf) {
             return NULL;
         }
-        buf[i] = '\0';
+        buf[i++] = c;
     }
+    buf = try_realloc(buf, (i + 1) * sizeof(char));
+    if (!buf) {
+        return NULL;
+    }
+    buf[i] = '\0';
     return buf;
 }
 

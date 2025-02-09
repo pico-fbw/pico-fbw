@@ -91,7 +91,7 @@ void throttle_update() {
     // Apply filtering to smooth out any rapid throttle changes, and send final value to ESC
     escTarget = lerp(prevEscTarget, escTarget, config.control[CONTROL_THROTTLE_SENSITIVITY]);
     prevEscTarget = escTarget;
-    esc_set((u32)config.pins[PINS_ESC_THROTTLE], (u16)(escTarget + 0.5f));
+    esc_set((i16)config.pins[PINS_ESC_THROTTLE], (u16)(escTarget + 0.5f));
 }
 
 // clang-format off

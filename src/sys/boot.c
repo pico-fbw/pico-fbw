@@ -77,7 +77,7 @@ void boot_do_updates() {
 
 void boot_init_receiver() {
     u32 num_pins = 5; // Maximum amount is 5 pins, may be overridden
-    u32 pins[num_pins];
+    i16 pins[num_pins];
     f32 deviations[num_pins];
     receiver_get_pins(pins, &num_pins, deviations);
     receiver_enable(pins, num_pins);
@@ -108,7 +108,7 @@ void boot_init_receiver() {
 
 void boot_init_servos() {
     u32 num_servos = 4; // Maximum is 4 servos, may be overridden
-    u32 servos[num_servos];
+    i16 servos[num_servos];
     servo_get_pins(servos, &num_servos);
     servo_enable(servos, num_servos);
     const f32 degrees[] = DEFAULT_SERVO_TEST;
@@ -119,7 +119,7 @@ void boot_init_escs() {
     if (!receiver_has_athr()) {
         return;
     }
-    esc_enable((u32)config.pins[PINS_ESC_THROTTLE]);
+    esc_enable((i16)config.pins[PINS_ESC_THROTTLE]);
     if (config.general[GENERAL_SKIP_CALIBRATION]) {
         log_message(TYPE_WARNING, "Throttle detent calibration skipped!", 500, 0, false);
         return;
@@ -128,7 +128,7 @@ void boot_init_escs() {
     if (!esc_is_calibrated()) {
         printpre("boot", "throttle detent calibration not found!");
         printpre("boot", "calibrating now...do not touch the throttle!");
-        if (!esc_calibrate((u32)config.pins[PINS_ESC_THROTTLE])) {
+        if (!esc_calibrate((i16)config.pins[PINS_ESC_THROTTLE])) {
             log_message(TYPE_FATAL, "Throttle detent calibration failed!", 500, 0, true);
             return;
         }

@@ -9,7 +9,7 @@
  * @param num_pins number of pins in `pins[]`
  * @return true if all pins were successfully set up
  */
-bool pwm_setup_read(const u32 pins[], u32 num_pins);
+bool pwm_setup_read(const i16 pins[], u32 num_pins);
 
 /**
  * Sets up `pins[]` for writing PWM signals.
@@ -18,7 +18,7 @@ bool pwm_setup_read(const u32 pins[], u32 num_pins);
  * @param freq frequency of PWM signal in hz, typically 50
  * @return true if all pins were successfully set up
  */
-bool pwm_setup_write(const u32 pins[], u32 num_pins, u32 freq);
+bool pwm_setup_write(const i16 pins[], u32 num_pins, u32 freq);
 
 /**
  * Reads the PWM signal on `pin`.
@@ -26,7 +26,7 @@ bool pwm_setup_write(const u32 pins[], u32 num_pins, u32 freq);
  * @return the pulsewidth of the PWM signal in μs, or -1 if the pin is invalid
  * @note `pin` must have been previously set up to read PWM signals using `pwm_setup_read()`
  */
-f32 pwm_read_raw(u32 pin);
+f32 pwm_read_raw(i16 pin);
 
 /**
  * Writes a PWM signal to `pin`.
@@ -34,4 +34,4 @@ f32 pwm_read_raw(u32 pin);
  * @param pulsewidth pulsewidth of the PWM signal in μs
  * @note `pin` must have been previously set up to write PWM signals using `pwm_setup_write()`
  */
-void pwm_write_raw(u32 pin, f32 pulsewidth);
+void pwm_write_raw(i16 pin, f32 pulsewidth);

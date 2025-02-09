@@ -17,7 +17,7 @@
  * @param servos array to store servo pins
  * @return number of servos parsed, or 0 if parsing failed
  */
-static u32 parse_args(const char *args, u32 servos[]) {
+static u32 parse_args(const char *args, i16 servos[]) {
     JSON_Value *root = json_parse_string(args);
     if (!root) {
         return 0;
@@ -38,7 +38,7 @@ static u32 parse_args(const char *args, u32 servos[]) {
         return 0;
     }
     for (u32 i = 0; i < numServos; i++) {
-        servos[i] = (u32)json_array_get_number(arr, i);
+        servos[i] = (i16)json_array_get_number(arr, i);
     }
     json_value_free(root);
     return numServos;
@@ -52,7 +52,7 @@ i32 api_test_servo(const char *args) {
     }
 
     u32 numServos = 3;
-    u32 servos[numServos];
+    i16 servos[numServos];
     const f32 degrees[] = DEFAULT_SERVO_TEST;
     if (args) {
         // Test the servo(s) provided in the command

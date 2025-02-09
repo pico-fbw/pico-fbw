@@ -9,22 +9,22 @@
 typedef alarm_id_t __callback_id_t;
 
 // Flight control I/O pins
-#define PIN_INPUT_AIL 1
-#define PIN_SERVO_AIL 2
-#define PIN_INPUT_ELE 3
-#define PIN_SERVO_ELE 4
-#define PIN_INPUT_RUD 5
-#define PIN_SERVO_RUD 6
-#define PIN_INPUT_THR 7
-#define PIN_ESC_THR 8
-#define PIN_INPUT_SWITCH 9
-#define PIN_SERVO_BAY 10
+#define DEFAULT_PIN_INPUT_AIL 1
+#define DEFAULT_PIN_SERVO_AIL 2
+#define DEFAULT_PIN_INPUT_ELE 3
+#define DEFAULT_PIN_SERVO_ELE 4
+#define DEFAULT_PIN_INPUT_RUD 5
+#define DEFAULT_PIN_SERVO_RUD 6
+#define DEFAULT_PIN_INPUT_THR 7
+#define DEFAULT_PIN_ESC_THR 8
+#define DEFAULT_PIN_INPUT_SWITCH 9
+#define DEFAULT_PIN_SERVO_BAY 10
 
 // Sensor I/O pins
-#define PIN_AAHRS_SDA 16
-#define PIN_AAHRS_SCL 17
-#define PIN_GPS_TX 21
-#define PIN_GPS_RX 20
+#define DEFAULT_PIN_AAHRS_SDA 16
+#define DEFAULT_PIN_AAHRS_SCL 17
+#define DEFAULT_PIN_GPS_TX 21
+#define DEFAULT_PIN_GPS_RX 20
 
 // Status LED
 #ifdef PICO_DEFAULT_LED_PIN

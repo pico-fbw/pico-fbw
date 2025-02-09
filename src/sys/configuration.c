@@ -60,10 +60,14 @@ Config config = {
         CONFIG_END_MAGIC,
     },
     .pins = {
-        PIN_INPUT_AIL, PIN_SERVO_AIL, PIN_INPUT_ELE, PIN_SERVO_ELE, PIN_INPUT_RUD,
-        PIN_SERVO_RUD, PIN_INPUT_THR, PIN_ESC_THR, PIN_INPUT_SWITCH, PIN_SERVO_BAY, // Control IO pins
-        PIN_AAHRS_SDA, PIN_AAHRS_SCL, PIN_GPS_TX, PIN_GPS_RX, // Sensor communications pins
-        false, false, false, // Servo reverse flags
+        // Control IO pins
+        DEFAULT_PIN_INPUT_AIL, DEFAULT_PIN_SERVO_AIL, DEFAULT_PIN_INPUT_ELE, DEFAULT_PIN_SERVO_ELE,
+        DEFAULT_PIN_INPUT_RUD, DEFAULT_PIN_SERVO_RUD, DEFAULT_PIN_INPUT_THR, DEFAULT_PIN_ESC_THR,
+        DEFAULT_PIN_INPUT_SWITCH, DEFAULT_PIN_SERVO_BAY,
+        // Sensor communications pins
+        DEFAULT_PIN_AAHRS_SDA, DEFAULT_PIN_AAHRS_SCL, DEFAULT_PIN_GPS_TX, DEFAULT_PIN_GPS_RX,
+        // Servo reverse flags
+        false, false, false,
         CONFIG_END_MAGIC,
     },
     .sensors = {
@@ -416,55 +420,51 @@ bool config_validate(char *error, size_t error_size) {
         return false;
     }
     // Unique pin validation
-    i32 lastPin = -1;
-    switch ((ControlMode)config.general[GENERAL_CONTROL_MODE]) {
-        case CTRLMODE_3AXIS_ATHR:
-            for (u32 i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
-                if ((i32)config.pins[i] == lastPin) {
+    i32 prevPin = -1;
+    for (u32 i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
+        i16 pin = config.pins[i];
+        if (pin < 0) {
+            // < 0 is invalid and means the pin is unused; don't validate it
+            continue;
+        }
+        switch ((ControlMode)config.general[GENERAL_CONTROL_MODE]) {
+            case CTRLMODE_3AXIS_ATHR:
+                if (pin == prevPin) {
                     goto invalid;
                 }
-                lastPin = config.pins[i];
-            }
-            break;
-        case CTRLMODE_3AXIS:
-            for (u32 i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
+                break;
+            case CTRLMODE_3AXIS:
                 // Skip pins that aren't utilized in this mode
                 if (i == PINS_INPUT_THROTTLE || i == PINS_ESC_THROTTLE) {
                     break;
                 }
-                if ((i32)config.pins[i] == lastPin) {
+                if (pin == prevPin) {
                     goto invalid;
                 }
-                lastPin = config.pins[i];
-            }
-            break;
-        case CTRLMODE_2AXIS_ATHR:
-        case CTRLMODE_FLYINGWING_ATHR:
-            for (u32 i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
+                break;
+            case CTRLMODE_2AXIS_ATHR:
+            case CTRLMODE_FLYINGWING_ATHR:
                 if (i == PINS_INPUT_RUD) {
                     break;
                 }
-                if ((i32)config.pins[i] == lastPin) {
+                if (pin == prevPin) {
                     goto invalid;
                 }
-                lastPin = config.pins[i];
-            }
-            break;
-        case CTRLMODE_2AXIS:
-        case CTRLMODE_FLYINGWING:
-            for (u32 i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
+                break;
+            case CTRLMODE_2AXIS:
+            case CTRLMODE_FLYINGWING:
                 if (i == PINS_INPUT_RUD || i == PINS_INPUT_THROTTLE || i == PINS_ESC_THROTTLE) {
                     break;
                 }
-                if ((i32)config.pins[i] == lastPin) {
+                if (pin == prevPin) {
                     goto invalid;
                 }
-                lastPin = config.pins[i];
-            }
-            break;
-        invalid:
-            snprintf(error, error_size, "A pin may only be used once.");
-            return false;
+                break;
+            invalid:
+                snprintf(error, error_size, "A pin may only be used once.");
+                return false;
+        }
+        prevPin = pin;
     }
     // Limit validation
     if (config.control[CONTROL_ROLL_LIMIT] > 72 || config.control[CONTROL_ROLL_LIMIT] < 0) {

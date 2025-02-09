@@ -57,9 +57,9 @@ static inline bool data_valid(f32 lat, f32 lng, i32 alt, f32 speed, f32 track, f
 
 bool gps_init() {
 #if !SIMCONNECT
-    printsys(gps, "initializing uart at baudrate %lu, on pins %lu (tx) and %lu (rx)",
-             (u32)config.sensors[SENSORS_GPS_BAUDRATE], (u32)config.pins[PINS_GPS_TX], (u32)config.pins[PINS_GPS_RX]);
-    uart_setup((u32)config.pins[PINS_GPS_TX], (u32)config.pins[PINS_GPS_RX], (u32)config.sensors[SENSORS_GPS_BAUDRATE]);
+    printsys(gps, "initializing uart at baudrate %lu, on pins %d (tx) and %d (rx)",
+             (u32)config.sensors[SENSORS_GPS_BAUDRATE], (i16)config.pins[PINS_GPS_TX], (i16)config.pins[PINS_GPS_RX]);
+    uart_setup((i16)config.pins[PINS_GPS_TX], (i16)config.pins[PINS_GPS_RX], (u32)config.sensors[SENSORS_GPS_BAUDRATE]);
     printsys(gps, "configuring...");
     // Send a command and wait until UART is ready to read, then read back the command response
     // Useful tool for calculating command checksums: https://nmeachecksum.eqth.net/
@@ -70,13 +70,13 @@ bool gps_init() {
             // Enable the correct sentences
             sleep_ms_blocking(1800); // Acknowledgement is a hit or miss without a delay
             // VTG enabled 5x per fix (for fast track updates), GGA, GSA enabled once per fix
-            uart_write((u32)config.pins[PINS_GPS_TX], (u32)config.pins[PINS_GPS_RX],
+            uart_write((i16)config.pins[PINS_GPS_TX], (i16)config.pins[PINS_GPS_RX],
                        "$PMTK314,0,0,5,1,1,0,0,0,0,0,0,0,0,0,0,0,0*2D\r\n");
             // Check up to 30 sentences or up to 3 seconds for the acknowledgement
             u8 lines = 0;
             Timestamp timeout = timestamp_in_ms(3000);
             while (lines < 30 && !timestamp_reached(&timeout)) {
-                char *line = uart_read((u32)config.pins[PINS_GPS_TX], (u32)config.pins[PINS_GPS_RX]);
+                char *line = uart_read((i16)config.pins[PINS_GPS_TX], (i16)config.pins[PINS_GPS_RX]);
                 if (!line) {
                     continue;
                 }
@@ -109,7 +109,7 @@ bool gps_init() {
 void gps_update() {
 #if !SIMCONNECT
     // Read line(s) from the GPS and parse them until there are none remaining
-    char *line = uart_read((u32)config.pins[PINS_GPS_TX], (u32)config.pins[PINS_GPS_RX]);
+    char *line = uart_read((i16)config.pins[PINS_GPS_TX], (i16)config.pins[PINS_GPS_RX]);
     while (line) {
         switch (minmea_sentence_id(line, false)) {
             case MINMEA_SENTENCE_GGA: {
@@ -161,7 +161,7 @@ void gps_update() {
         }
         // Clear the line and attempt to read in a new one
         free(line);
-        line = uart_read((u32)config.pins[PINS_GPS_TX], (u32)config.pins[PINS_GPS_RX]);
+        line = uart_read((i16)config.pins[PINS_GPS_TX], (i16)config.pins[PINS_GPS_RX]);
     }
 #else
     gps.lat = scGPS.lat;

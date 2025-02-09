@@ -167,6 +167,7 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
         // No matching API request, serve static files instead
         struct mg_http_serve_opts opts = {
             .root_dir = "/www",
+            .page404 = "/www/index.html",
             .fs = &fs,
         };
         mg_http_serve_dir(c, hm, &opts);

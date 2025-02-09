@@ -80,8 +80,8 @@ void tune_update() {
         return;
     }
 
-    f32 rollInput = receiver_get((u32)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE) - 90.f;
-    f32 pitchInput = receiver_get((u32)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEGREE) - 90.f;
+    f32 rollInput = receiver_get((i16)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE) - 90.f;
+    f32 pitchInput = receiver_get((i16)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEGREE) - 90.f;
     // Get the requested and actual roll and pitch rates
     f32 reqRollRate = control_get_dps(AXIS_ROLL, rollInput, pitchInput);
     f32 reqPitchRate = control_get_dps(AXIS_PITCH, rollInput, pitchInput);

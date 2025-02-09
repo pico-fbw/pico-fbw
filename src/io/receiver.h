@@ -30,7 +30,7 @@ typedef enum ReceiverCalibrationStatus {
  * @param pins the list of pins to enable PWM input on
  * @param numPins the number of pins you are enabling PWM input on (1-7)
  */
-void receiver_enable(const u32 pins[], u32 num_pins);
+void receiver_enable(const i16 pins[], u32 num_pins);
 
 /**
  * @param pin the GPIO pin to read (must have been already enabled with `receiver_enable()`)
@@ -38,7 +38,7 @@ void receiver_enable(const u32 pins[], u32 num_pins);
  * @return the calculated degree value derived from the pulsewidth on that pin
  * @note The mode simply changes how data is displayed and not how it is calculated (DEG from 0-180 and ESC from 0-100).
  */
-f32 receiver_get(u32 pin, ReceiverMode mode);
+f32 receiver_get(i16 pin, ReceiverMode mode);
 
 /**
  * Samples a list of pins for deviation from a specified value for a specified number of samples, then saves that offset
@@ -51,7 +51,7 @@ f32 receiver_get(u32 pin, ReceiverMode mode);
  * @param run_times the amount of times to run a sampling function (num_samples), will be averaged at the end
  * @return true if the calibration was successful, false if not
  */
-bool receiver_calibrate(const u32 pins[], u32 num_pins, f32 deviations[], u32 num_samples, u32 sample_delay_ms,
+bool receiver_calibrate(const i16 pins[], u32 num_pins, f32 deviations[], u32 num_samples, u32 sample_delay_ms,
                         u32 run_times);
 
 /**
@@ -65,7 +65,7 @@ ReceiverCalibrationStatus receiver_is_calibrated();
  * @param num_pins pointer to the number of pins
  * @param deviations array of at least 5 elements to fill with pin calibration deviations
  */
-void receiver_get_pins(u32 *pins, u32 *num_pins, f32 *deviations);
+void receiver_get_pins(i16 *pins, u32 *num_pins, f32 *deviations);
 
 /**
  * @return true if PWM has been set up with an autothrottle input (aka an autothrottle control mode has been selected),

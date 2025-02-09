@@ -16,21 +16,23 @@ typedef HANDLE __callback_id_t;
 typedef timer_t __callback_id_t;
 #endif
 
-// Not implemented
-#define PIN_INPUT_AIL 0
-#define PIN_SERVO_AIL 1
-#define PIN_INPUT_ELE 2
-#define PIN_SERVO_ELE 3
-#define PIN_INPUT_RUD 4
-#define PIN_SERVO_RUD 5
-#define PIN_INPUT_THR 6
-#define PIN_ESC_THR 7
-#define PIN_INPUT_SWITCH 8
-#define PIN_SERVO_BAY 9
-#define PIN_AAHRS_SDA 10
-#define PIN_AAHRS_SCL 11
-#define PIN_GPS_TX 12
-#define PIN_GPS_RX 13
+// All pins are set to -1 (unused) by default since host platforms have no I/O support.
+
+#define DEFAULT_PIN_INPUT_AIL -1
+#define DEFAULT_PIN_SERVO_AIL -1
+#define DEFAULT_PIN_INPUT_ELE -1
+#define DEFAULT_PIN_SERVO_ELE -1
+#define DEFAULT_PIN_INPUT_RUD -1
+#define DEFAULT_PIN_SERVO_RUD -1
+#define DEFAULT_PIN_INPUT_THR -1
+#define DEFAULT_PIN_ESC_THR -1
+#define DEFAULT_PIN_INPUT_SWITCH -1
+#define DEFAULT_PIN_SERVO_BAY -1
+
+#define DEFAULT_PIN_AAHRS_SDA -1
+#define DEFAULT_PIN_AAHRS_SCL -1
+#define DEFAULT_PIN_GPS_TX -1
+#define DEFAULT_PIN_GPS_RX -1
 
 #if defined(_WIN32)
     #if SIMCONNECT
@@ -41,7 +43,7 @@ typedef timer_t __callback_id_t;
 #elif defined(__APPLE__)
     #define PLATFORM "macOS"
 #elif defined(__linux__)
-    #define PLATFORM "Linux+Host"
+    #define PLATFORM "Linux+NoIO"
 #else
     #define PLATFORM "Unknown"
 #endif

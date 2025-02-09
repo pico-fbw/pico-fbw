@@ -3,6 +3,7 @@
  * Licensed under the GNU GPL-3.0
  */
 
+#include "platform/defs.h"
 #include "platform/sys.h"
 
 #include "ctrl/aircraft.h"

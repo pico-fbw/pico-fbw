@@ -148,14 +148,14 @@ void flight_update(f64 roll, f64 pitch, f64 yaw, bool override) {
             }
 
             rudOut = (((bool)config.pins[PINS_REVERSE_YAW] ? -1 : 1) * (f32)yawOutput + 90.f);
-            servo_set((u32)config.pins[PINS_SERVO_RUD], rudOut);
+            servo_set((i16)config.pins[PINS_SERVO_RUD], rudOut);
         }
         /* fall through */
         case CTRLMODE_2AXIS_ATHR:
         case CTRLMODE_2AXIS:
             // Send outputs to servos
-            servo_set((u32)config.pins[PINS_SERVO_AIL], ailOut);
-            servo_set((u32)config.pins[PINS_SERVO_ELE], eleOut);
+            servo_set((i16)config.pins[PINS_SERVO_AIL], ailOut);
+            servo_set((i16)config.pins[PINS_SERVO_ELE], eleOut);
             break;
         // Flying wing control modes must mix elevator and aileron outputs to create elevon outputs
         case CTRLMODE_FLYINGWING_ATHR:
@@ -168,8 +168,8 @@ void flight_update(f64 roll, f64 pitch, f64 yaw, bool override) {
             clampf(rElevonOut, -config.control[CONTROL_MAX_ELEVON_DEFLECTION],
                    config.control[CONTROL_MAX_ELEVON_DEFLECTION]);
 
-            servo_set((u32)config.pins[PINS_SERVO_AIL], lElevonOut);
-            servo_set((u32)config.pins[PINS_SERVO_ELE], rElevonOut);
+            servo_set((i16)config.pins[PINS_SERVO_AIL], lElevonOut);
+            servo_set((i16)config.pins[PINS_SERVO_ELE], rElevonOut);
             break;
         }
         default: {

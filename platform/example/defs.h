@@ -8,23 +8,23 @@ typedef x __callback_id_t;
 
 // Flight control I/O pins
 // These are all required; their numbers depend on your platform and where it allows certain GPIO functions such as PWM.
-#define PIN_INPUT_AIL x
-#define PIN_SERVO_AIL x
-#define PIN_INPUT_ELE x
-#define PIN_SERVO_ELE x
-#define PIN_INPUT_RUD x
-#define PIN_SERVO_RUD x
-#define PIN_INPUT_THR x
-#define PIN_ESC_THR x
-#define PIN_INPUT_SWITCH x
-#define PIN_SERVO_BAY x
+#define DEFAULT_PIN_INPUT_AIL x
+#define DEFAULT_PIN_SERVO_AIL x
+#define DEFAULT_PIN_INPUT_ELE x
+#define DEFAULT_PIN_SERVO_ELE x
+#define DEFAULT_PIN_INPUT_RUD x
+#define DEFAULT_PIN_SERVO_RUD x
+#define DEFAULT_PIN_INPUT_THR x
+#define DEFAULT_PIN_ESC_THR x
+#define DEFAULT_PIN_INPUT_SWITCH x
+#define DEFAULT_PIN_SERVO_BAY x
 
 // Sensor I/O pins
 // These are also required and again depend on your platform.
-#define PIN_AAHRS_SDA x
-#define PIN_AAHRS_SCL x
-#define PIN_GPS_TX x
-#define PIN_GPS_RX x
+#define DEFAULT_PIN_AAHRS_SDA x
+#define DEFAULT_PIN_AAHRS_SCL x
+#define DEFAULT_PIN_GPS_TX x
+#define DEFAULT_PIN_GPS_RX x
 
 // Status LED
 // This is optional. Define if your platform has a built-in LED that can be used for status indication.

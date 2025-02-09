@@ -12,7 +12,9 @@ add_library(platform_linux
 )
 
 target_link_libraries(platform_linux
-    m # For trig functions
+    gpiod
+    m
+    rt
 )
 
 target_include_directories(platform_linux PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/src)

@@ -20,22 +20,22 @@ typedef enum PinState {
  * @param pin GPIO pin number
  * @param mode PinMode to use
  */
-void gpio_setup(u32 pin, PinMode mode);
+void gpio_setup(i16 pin, PinMode mode);
 
 /**
  * @param pin GPIO pin number
  * @return current PinState
  */
-PinState gpio_state(u32 pin);
+PinState gpio_state(i16 pin);
 
 /**
  * @param pin GPIO pin number
  * @param state PinState to set
  */
-void gpio_set(u32 pin, PinState state);
+void gpio_set(i16 pin, PinState state);
 
 /**
  * Toggles the state of a GPIO pin.
  * @param pin GPIO pin number
  */
-void gpio_toggle(u32 pin);
+void gpio_toggle(i16 pin);

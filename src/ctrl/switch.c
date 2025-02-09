@@ -44,7 +44,7 @@ static SwitchPosition deg_to_pos(f32 deg) {
 }
 
 void switch_update() {
-    SwitchPosition pos = deg_to_pos(receiver_get((u32)config.pins[PINS_INPUT_SWITCH], RECEIVER_MODE_DEGREE));
+    SwitchPosition pos = deg_to_pos(receiver_get((i16)config.pins[PINS_INPUT_SWITCH], RECEIVER_MODE_DEGREE));
     // The mode will only be changed when the user moves the switch;
     // the system's mode changes can persist and won't instantly be overrided by the switch
     if (lastPos == pos) {

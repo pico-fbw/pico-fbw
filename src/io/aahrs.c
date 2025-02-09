@@ -53,7 +53,7 @@ bool aahrs_init() {
     // Set up the I2C bus and scan for any supported sensors
     static bool i2cInitialized = false;
     if (!i2cInitialized) {
-        i2c_setup((u32)config.pins[PINS_AAHRS_SDA], (u32)config.pins[PINS_AAHRS_SCL],
+        i2c_setup((i16)config.pins[PINS_AAHRS_SDA], (i16)config.pins[PINS_AAHRS_SCL],
                   (u32)config.sensors[SENSORS_AAHRS_BUS_FREQ] * 1000);
         i2cInitialized = true;
     }

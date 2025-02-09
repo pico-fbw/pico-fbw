@@ -33,7 +33,7 @@ static f32 rand_180() {
  * @param out array to store output pins
  * @return number of bridges parsed, or 0 if parsing failed
  */
-static u32 parse_args(const char *args, u32 in[], u32 out[]) {
+static u32 parse_args(const char *args, i16 in[], i16 out[]) {
     JSON_Value *root = json_parse_string(args);
     if (!root) {
         return 0;
@@ -59,8 +59,8 @@ static u32 parse_args(const char *args, u32 in[], u32 out[]) {
             json_value_free(root);
             return 0;
         }
-        in[i] = (u32)json_array_get_number(bridge, 0);
-        out[i] = (u32)json_array_get_number(bridge, 1);
+        in[i] = (i16)json_array_get_number(bridge, 0);
+        out[i] = (i16)json_array_get_number(bridge, 1);
     }
     json_value_free(root);
     return bridges;
@@ -74,9 +74,9 @@ i32 api_test_pwm(const char *args) {
     }
 
     // These pins should be bridged by the user
-    u32 in[] = {config.pins[PINS_INPUT_AIL], config.pins[PINS_INPUT_ELE], config.pins[PINS_INPUT_RUD],
+    i16 in[] = {config.pins[PINS_INPUT_AIL], config.pins[PINS_INPUT_ELE], config.pins[PINS_INPUT_RUD],
                 config.pins[PINS_INPUT_THROTTLE], config.pins[PINS_INPUT_SWITCH]};
-    u32 out[] = {config.pins[PINS_SERVO_AIL], config.pins[PINS_SERVO_ELE], config.pins[PINS_SERVO_RUD],
+    i16 out[] = {config.pins[PINS_SERVO_AIL], config.pins[PINS_SERVO_ELE], config.pins[PINS_SERVO_RUD],
                  config.pins[PINS_ESC_THROTTLE], config.pins[PINS_SERVO_BAY]};
     u32 numBridges = 5;
     if (args) {
@@ -95,7 +95,7 @@ i32 api_test_pwm(const char *args) {
     }
     // For every bridge, set the degree value from the predefined set and compare the read value
     for (u32 i = 0; i < numBridges; i++) {
-        printpre("test", "testing pin combo %lu:%lu", in[i], out[i]);
+        printpre("test", "testing pin combo %d:%d", in[i], out[i]);
         f32 deg = testDegrees[i % (count_of(testDegrees))];
         servo_set(out[i], deg);
         sleep_ms_blocking(100);

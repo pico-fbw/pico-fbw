@@ -31,7 +31,7 @@
 
 // Struct to store data from each state machine
 typedef struct PWMInData {
-    u32 pin;
+    i16 pin;
     u32 pulsewidth, period;
 } PWMInData;
 
@@ -85,7 +85,7 @@ regular Pico, this keeps compatability between models. */
  * @param pin The pin to use
  * @return true if the state machine was set up successfully, false if no state machines were available
  */
-static bool setup_sm(const PIO pio, const u32 offset, u32 pin) {
+static bool setup_sm(const PIO pio, const u32 offset, i16 pin) {
     gpio_set_function(pin, (pio == pio0) ? GPIO_FUNC_PIO0 : GPIO_FUNC_PIO1);
     // Find a usable state machine for this pin
     i32 sm = pio_claim_unused_sm(pio, false);
@@ -111,7 +111,7 @@ static bool setup_sm(const PIO pio, const u32 offset, u32 pin) {
     return true;
 }
 
-bool pwm_setup_read(const u32 pins[], u32 num_pins) {
+bool pwm_setup_read(const i16 pins[], u32 num_pins) {
     // Load the PWM program into all 4 PIO0 state machines
     if (pio_can_add_program(pio0, &pwm_program)) {
         u32 offset = pio_add_program(pio0, &pwm_program);
@@ -150,7 +150,7 @@ bool pwm_setup_read(const u32 pins[], u32 num_pins) {
     return true;
 }
 
-bool pwm_setup_write(const u32 pins[], u32 num_pins, u32 freq) {
+bool pwm_setup_write(const i16 pins[], u32 num_pins, u32 freq) {
     for (u32 i = 0; i < num_pins; i++) {
         assert(pwm_gpio_to_channel(pins[i]) == PWM_CHAN_A || pwm_gpio_to_channel(pins[i]) == PWM_CHAN_B);
         gpio_set_function(pins[i], GPIO_FUNC_PWM);
@@ -186,7 +186,7 @@ bool pwm_setup_write(const u32 pins[], u32 num_pins, u32 freq) {
     return true;
 }
 
-f32 pwm_read_raw(u32 pin) {
+f32 pwm_read_raw(i16 pin) {
     // Find the pin's state machine
     for (u32 i = 0; i < count_of(inData); i++) {
         if (inData[i].pin == pin) {
@@ -200,7 +200,7 @@ f32 pwm_read_raw(u32 pin) {
     return -1.f; // Pin not found
 }
 
-void pwm_write_raw(u32 pin, f32 pulsewidth) {
+void pwm_write_raw(i16 pin, f32 pulsewidth) {
     // Calculate the duty cycle from the given pulsewidth and period (calculated from the frequency)
     f32 period = 1E6f / frequencies[pwm_gpio_to_slice_num(pin)];
     pwm_set_gpio_level(pin, (u16)((pulsewidth / period) * UINT16_MAX));

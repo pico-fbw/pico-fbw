@@ -28,7 +28,7 @@
  * @param duration_ms the duration (after the throttle stops moving) in milliseconds
  * @return whether a timeout occured
  */
-static bool wait_for_detent(u32 pin, f32 *detent, u32 timeout_ms, u32 duration_ms) {
+static bool wait_for_detent(i16 pin, f32 *detent, u32 timeout_ms, u32 duration_ms) {
     Timestamp wait = timestamp_in_ms(timeout_ms);
     u16 lastReading = receiver_get(pin, RECEIVER_MODE_PERCENT);
     bool hasMoved =
@@ -43,7 +43,7 @@ static bool wait_for_detent(u32 pin, f32 *detent, u32 timeout_ms, u32 duration_m
     }
 
     while (true) {
-        esc_set((u32)config.pins[PINS_ESC_THROTTLE], (u16)receiver_get(pin, RECEIVER_MODE_PERCENT));
+        esc_set((i16)config.pins[PINS_ESC_THROTTLE], (u16)receiver_get(pin, RECEIVER_MODE_PERCENT));
         hasMoved =
             (abs(((u16)receiver_get(pin, RECEIVER_MODE_PERCENT) - lastReading)) > config.control[CONTROL_DEADBAND]);
         if (!hasMoved) {
@@ -59,20 +59,20 @@ static bool wait_for_detent(u32 pin, f32 *detent, u32 timeout_ms, u32 duration_m
         lastReading = receiver_get(pin, RECEIVER_MODE_PERCENT);
     }
     *detent = (f32)lastReading;
-    esc_set((u32)config.pins[PINS_ESC_THROTTLE], 0);
+    esc_set((i16)config.pins[PINS_ESC_THROTTLE], 0);
     return true;
 }
 
-void esc_enable(u32 pin) {
-    printpre("ESC", "setting up ESC on pin %lu", pin);
-    u32 pins[] = {pin};
+void esc_enable(i16 pin) {
+    printpre("ESC", "setting up ESC on pin %d", pin);
+    i16 pins[] = {pin};
     if (!pwm_setup_write(pins, 1, config.general[GENERAL_ESC_HZ])) {
         log_message(TYPE_FATAL, "Failed to enable PWM output!", 500, 0, true);
     }
     esc_set(pin, 0); // Set initial position to 0 to be safe
 }
 
-void esc_set(u32 pin, f32 speed) {
+void esc_set(i16 pin, f32 speed) {
 #if !SIMCONNECT
     // Ensure speed is within range 0-100% and convert from percentage to duty cycle
     // See servo.c for more information on how the duty cycle is calculated
@@ -87,7 +87,7 @@ void esc_set(u32 pin, f32 speed) {
 #endif
 }
 
-bool esc_calibrate(u32 pin) {
+bool esc_calibrate(i16 pin) {
     log_message(TYPE_INFO, "Calibrating ESC", 200, 0, false);
     if (!wait_for_detent(pin, &calibration.esc[ESC_DETENT_IDLE], (u32)20E3, 4000)) {
         return false;

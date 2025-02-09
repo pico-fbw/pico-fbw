@@ -6,22 +6,22 @@
 typedef esp_timer_handle_t __callback_id_t;
 
 // Flight control I/O pins
-#define PIN_INPUT_AIL 15
-#define PIN_SERVO_AIL 4
-#define PIN_INPUT_ELE 16
-#define PIN_SERVO_ELE 17
-#define PIN_INPUT_RUD 5
-#define PIN_SERVO_RUD 18
-#define PIN_INPUT_THR 19
-#define PIN_ESC_THR 21
-#define PIN_INPUT_SWITCH 22
-#define PIN_SERVO_BAY 23
+#define DEFAULT_PIN_INPUT_AIL 15
+#define DEFAULT_PIN_SERVO_AIL 4
+#define DEFAULT_PIN_INPUT_ELE 16
+#define DEFAULT_PIN_SERVO_ELE 17
+#define DEFAULT_PIN_INPUT_RUD 5
+#define DEFAULT_PIN_SERVO_RUD 18
+#define DEFAULT_PIN_INPUT_THR 19
+#define DEFAULT_PIN_ESC_THR 21
+#define DEFAULT_PIN_INPUT_SWITCH 22
+#define DEFAULT_PIN_SERVO_BAY 23
 
 // Sensor I/O pins
-#define PIN_AAHRS_SDA 14
-#define PIN_AAHRS_SCL 27
-#define PIN_GPS_TX 26
-#define PIN_GPS_RX 25
+#define DEFAULT_PIN_AAHRS_SDA 14
+#define DEFAULT_PIN_AAHRS_SCL 27
+#define DEFAULT_PIN_GPS_TX 26
+#define DEFAULT_PIN_GPS_RX 25
 
 // Status LED
 #define PIN_LED 2

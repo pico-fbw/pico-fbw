@@ -17,7 +17,7 @@ char buf[1];
 
 #include "platform/gpio.h"
 
-void gpio_setup(u32 pin, PinMode mode) {
+void gpio_setup(i16 pin, PinMode mode) {
 #ifdef RASPBERRYPI_PICO_W
     if (pin >= CYW43_GPIO_OFFSET) {
         return; // Don't setup pins that are mapped to CYW43
@@ -28,10 +28,11 @@ void gpio_setup(u32 pin, PinMode mode) {
         case MODE_INPUT_PULLDOWN:
             gpio_pull_down(pin);
             gpio_set_dir(pin, GPIO_IN);
-            break;
+            goto INPUT;
         case MODE_INPUT_PULLUP:
             gpio_pull_up(pin);
-        /* fall through */
+            goto INPUT;
+        INPUT:
         case MODE_INPUT:
             gpio_set_dir(pin, GPIO_IN);
             break;
@@ -40,7 +41,7 @@ void gpio_setup(u32 pin, PinMode mode) {
     }
 }
 
-PinState gpio_state(u32 pin) {
+PinState gpio_state(i16 pin) {
 #ifdef RASPBERRYPI_PICO_W
     // Pins 0-29 are for regular Pico GPIO, 30-32 will be mapped to CYW43 gpios 0-2
     // This is done so that the same gpio functions can be used but all pins can still be accessed
@@ -50,7 +51,7 @@ PinState gpio_state(u32 pin) {
 #endif
 }
 
-void gpio_set(u32 pin, PinState state) {
+void gpio_set(i16 pin, PinState state) {
 #ifdef RASPBERRYPI_PICO_W
     if (pin >= CYW43_GPIO_OFFSET) {
         cyw43_arch_gpio_put(pin - CYW43_GPIO_OFFSET, state);
@@ -63,7 +64,7 @@ void gpio_set(u32 pin, PinState state) {
 #endif
 }
 
-void gpio_toggle(u32 pin) {
+void gpio_toggle(i16 pin) {
 #ifdef RASPBERRYPI_PICO_W
     if (pin >= CYW43_GPIO_OFFSET) {
         cyw43_arch_gpio_put(pin - CYW43_GPIO_OFFSET, !cyw43_arch_gpio_get(pin - CYW43_GPIO_OFFSET));

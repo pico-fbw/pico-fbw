@@ -34,12 +34,12 @@ void normal_init() {
 
 void normal_update() {
     // Refresh input data from rx
-    rollInput = receiver_get((u32)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE) - 90.f;
-    pitchInput = receiver_get((u32)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEGREE) - 90.f;
+    rollInput = receiver_get((i16)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE) - 90.f;
+    pitchInput = receiver_get((i16)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEGREE) - 90.f;
     if (receiver_has_rud()) {
-        yawInput = receiver_get((u32)config.pins[PINS_INPUT_RUD], RECEIVER_MODE_DEGREE) - 90.f;
+        yawInput = receiver_get((i16)config.pins[PINS_INPUT_RUD], RECEIVER_MODE_DEGREE) - 90.f;
     }
-    throttleSet = receiver_get((u32)config.pins[PINS_INPUT_THROTTLE], RECEIVER_MODE_PERCENT);
+    throttleSet = receiver_get((i16)config.pins[PINS_INPUT_THROTTLE], RECEIVER_MODE_PERCENT);
 
     // If the roll value is above the limit, we do allow setting up to to the hold limit but constant input is required
     // for that, so if we don't have it, bring it back to the hold limit at the specified rate

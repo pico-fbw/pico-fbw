@@ -10,14 +10,14 @@
  * @param pins the array of servo GPIO pins
  * @param num_pins the number of pins
  */
-void servo_enable(const u32 pins[], u32 num_pins);
+void servo_enable(const i16 pins[], u32 num_pins);
 
 /**
  * Sets the position of the servo using the the duty cycle of the PWM signal.
  * @param gpio_pin the GPIO pin the servo is attached to
  * @param degree the position in degrees, within 0-180
  */
-void servo_set(u32 pin, f32 degree);
+void servo_set(i16 pin, f32 degree);
 
 /**
  * "Tests" a list of servos by moving them to a list of degree positions.
@@ -29,11 +29,11 @@ void servo_set(u32 pin, f32 degree);
  * @note If num_servos = 0, the servos from the config will be tested.
  * You also may want to add 90 at the end of the list to ensure that the servos return to a neutral position.
  */
-void servo_test(u32 servos[], u32 num_servos, const f32 degrees[], u32 num_degrees, u32 pause_between_moves_ms);
+void servo_test(i16 servos[], u32 num_servos, const f32 degrees[], u32 num_degrees, u32 pause_between_moves_ms);
 
 /**
  * Gets the GPIO pins and number of pins designated as servos in the config.
  * @param pins array of at least 3 elements to fill with pins
  * @param num_pins pointer to the number of pins
  */
-void servo_get_pins(u32 *servos, u32 *num_servos);
+void servo_get_pins(i16 *servos, u32 *num_servos);

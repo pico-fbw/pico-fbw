@@ -7,7 +7,7 @@
 
 #include "platform/gpio.h"
 
-void gpio_setup(u32 pin, PinMode mode) {
+void gpio_setup(i16 pin, PinMode mode) {
     const gpio_config_t config = {
         .pin_bit_mask = 1u << pin,
         // OUTPUT is mapped to INPUT_OUTPUT so toggle works
@@ -19,14 +19,14 @@ void gpio_setup(u32 pin, PinMode mode) {
     gpio_config(&config);
 }
 
-PinState gpio_state(u32 pin) {
+PinState gpio_state(i16 pin) {
     return gpio_get_level((gpio_num_t)pin);
 }
 
-void gpio_set(u32 pin, PinState state) {
+void gpio_set(i16 pin, PinState state) {
     gpio_set_level((gpio_num_t)pin, (u32)state);
 }
 
-void gpio_toggle(u32 pin) {
+void gpio_toggle(i16 pin) {
     gpio_set_level((gpio_num_t)pin, !gpio_get_level((gpio_num_t)pin));
 }

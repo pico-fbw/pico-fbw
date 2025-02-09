@@ -33,8 +33,8 @@ function(setup_after_subdirs)
         target_include_directories(platform_host PRIVATE ${mongoose_SOURCE_DIR})
         include_wwwfs(${PLATFORM_PATH}/flash.c)
     endif()
-    # Link math library on Linux for trig functions
     if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-        target_link_libraries(${PROJECT_NAME} m)
+        # Link math and time libraries
+        target_link_libraries(${PROJECT_NAME} m rt)
     endif()
 endfunction()

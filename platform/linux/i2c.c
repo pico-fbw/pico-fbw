@@ -3,26 +3,78 @@
  * Licensed under the GNU GPL-3.0
  */
 
+#include <fcntl.h>
+#include <linux/i2c-dev.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+
+#include "platform/defs.h"
+
 #include "platform/i2c.h"
 
+typedef struct I2CInstance {
+    const char *device;
+    int fd;
+} I2CInstance;
+
+static I2CInstance instances[MAX_I2C_DEVICES];
+
+/**
+ * @return a pointer to the I2C instance that uses the given pins, or NULL if no such instance exists
+ */
+static I2CInstance *i2c_instance_from_pins(u32 sda, u32 scl) {
+    for (u32 i = 0; i < MAX_I2C_DEVICES; i++) {
+        I2CMapping mapping = I2C_MAP[i];
+        if (mapping.sda == sda && mapping.scl == scl) {
+            instances[i].device = mapping.device;
+            return &instances[i];
+        }
+    }
+    return NULL;
+}
+
 bool i2c_setup(u32 sda, u32 scl, u32 freq) {
-    // This function will be called before executing any other I2C-related functions on a given SDA/SCL pair.
-    // It should configure the given SDA and SCL pins for I2C communication at the given frequency (in Hz).
-    // It should return true if the setup was successful, false if not.
+    I2CInstance *inst = i2c_instance_from_pins(sda, scl);
+    if (inst == NULL) {
+        return false;
+    }
+    inst->fd = open(inst->device, O_RDWR);
+    if (inst->fd < 0) {
+        return false;
+    }
+    return true;
+    (void)freq; // Frequency is managed by the kernel driver
 }
 
 bool i2c_read(u32 sda, u32 scl, byte addr, byte reg, byte dest[], size_t len) {
-    // This function should read `len` bytes from an 8-bit I2C device address `addr` at an 8-bit I2C register `reg` and
-    // store them in the array `dest[]`. For example, if `addr` is 0x69, `reg` is 0x01, and `len` is 1, this function
-    // should initiate an I2C transaction to read 1 byte from register 0x01 of device 0x69 and store it in `dest[0]`.
-    // Note that many I2C devices require a write transaction to set the register to read from before reading, so you
-    // may need to write to the device before reading from it. This function should return true if the read was
-    // successful, false if not.
+    I2CInstance *inst = i2c_instance_from_pins(sda, scl);
+    if (inst == NULL || inst->fd < 0) {
+        return false;
+    }
+    // Set slave address for this transaction
+    if (ioctl(inst->fd, I2C_SLAVE, addr) < 0) {
+        return false;
+    }
+    // Write the register address to read from
+    if (write(inst->fd, &reg, 1) != 1) {
+        return false;
+    }
+    // Read the data
+    return read(inst->fd, dest, len) == (ssize_t)len;
 }
 
 bool i2c_write(u32 sda, u32 scl, byte addr, byte reg, const byte src[], size_t len) {
-    // This function should write `len` bytes from the array `src[]` to an 8-bit I2C device address `addr` at an 8-bit
-    // I2C register `reg`. For example, if `addr` is 0x69, `reg` is 0x01, and `len` is 1, this function should initiate
-    // an I2C transaction to write 1 byte to register 0x01 of device 0x69 with the value `src[0]`. This function should
-    // return true if the write was successful, false if not.
+    I2CInstance *inst = i2c_instance_from_pins(sda, scl);
+    if (inst == NULL || inst->fd < 0) {
+        return false;
+    }
+    if (ioctl(inst->fd, I2C_SLAVE, addr) < 0) {
+        return false;
+    }
+    byte cmd[len + 1];
+    cmd[0] = reg;
+    memcpy(cmd + 1, src, len);
+    return write(inst->fd, cmd, len + 1) == (ssize_t)(len + 1);
 }
