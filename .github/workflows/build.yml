@@ -73,6 +73,10 @@ jobs:
             sh ${{github.workspace}}/.github/workflows/esp-idf_install.sh ${{env.ESP_IDF_VERSION}}
           fi
 
+    - name: Prepare (linux)
+      if: matrix.PLATFORM == 'linux'
+      run: sudo apt-get install -y gpiod libgpiod-dev
+
     - name: Configure CMake
       if: matrix.PLATFORM != 'esp32'
       shell: bash
