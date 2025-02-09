@@ -76,6 +76,7 @@ jobs:
     - name: Prepare (linux)
       if: matrix.PLATFORM == 'linux'
       run: |
+        sudo apt install -y autoconf autoconf-archive libtool pkg-config
         git clone https://git.kernel.org/pub/scm/libs/libgpiod/libgpiod.git
         cd libgpiod
         git checkout v2.1.x
