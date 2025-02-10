@@ -39,7 +39,8 @@ export default function Upload() {
             return;
         }
         try {
-            await api("set/flightplan", { flightplan, active: true }).then(() => setUploaded(true));
+            // FIXME: when switching to the new manager page approach, give flightplans actual/unique names
+            await api("set/flightplan", { flightplan, name: "flightplan", active: true }).then(() => setUploaded(true));
         } catch (e) {
             const error = (e as Error).message;
             if (error === "400") {
@@ -89,7 +90,8 @@ export default function Upload() {
                         onClose={() => settings.set("showOfflineNotice", "0")}
                         className="flex mx-4 sm:mx-8 lg:mx-0"
                     >
-                        It looks like you're offline. You can still upload flightplans that have been pre-generated at&nbsp;
+                        It looks like you're offline. You can still upload flightplans that have been pre-generated
+                        at&nbsp;
                         <a
                             href="https://pico-fbw.org/tools/planner"
                             target="_blank"

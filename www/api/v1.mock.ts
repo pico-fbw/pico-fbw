@@ -42,7 +42,8 @@ let config = {
         },
     ],
 };
-let flightplan = "";
+let flightplans: { [name: string]: string };
+let activeFlightplan = "";
 let mode = "direct";
 
 export default (): MockHandler[] => [
@@ -81,14 +82,21 @@ export default (): MockHandler[] => [
     {
         pattern: "/api/v1/get/flightplan",
         handle: (req, res) => {
-            if (!flightplan) {
-                res.statusCode = 204;
-                res.end();
-                return;
-            }
-            res.statusCode = 200;
-            res.setHeader("Content-Type", "application/json");
-            res.end(flightplan.toString());
+            let dataReceived = false;
+            req.on("data", () => {
+                dataReceived = true;
+                res.statusCode = 200;
+                res.setHeader("Content-Type", "application/json");
+                res.end(activeFlightplan.toString());
+            });
+            req.on("end", () => {
+                if (!dataReceived) {
+                    // No input, return list of all flightplan names
+                    send_data(res, {
+                        flightplans: Object.keys(flightplans),
+                    });
+                }
+            });
         },
     },
     {
@@ -100,6 +108,7 @@ export default (): MockHandler[] => [
                 version_flightplan: "1.0",
                 platform: "Simulated Devlopment Platform",
                 platform_version: "1.0.0",
+                fs_free: 256000,
             });
         },
     },
@@ -166,6 +175,16 @@ export default (): MockHandler[] => [
         },
     },
     {
+        pattern: "/api/v1/set/active",
+        handle: (req, res) => {
+            req.on("data", (bodyString: string) => {
+                const body = JSON.parse(bodyString) as { name: string };
+                activeFlightplan = flightplans[body.name];
+                send_data(res, { error: "" });
+            });
+        },
+    },
+    {
         pattern: "/api/v1/set/bay",
         handle: (req, res) => {
             send_data(res, {});
@@ -198,11 +217,9 @@ export default (): MockHandler[] => [
         pattern: "/api/v1/set/flightplan",
         handle: (req, res) => {
             req.on("data", (bodyString: string) => {
-                const body = JSON.parse(bodyString) as { flightplan: Flightplan; active: boolean };
-                flightplan = JSON.stringify(body.flightplan);
-                send_data(res, {
-                    error: "",
-                });
+                const body = JSON.parse(bodyString) as { flightplan: Flightplan; name: string };
+                flightplans[body.name] = JSON.stringify(body.flightplan);
+                send_data(res, {});
             });
         },
     },

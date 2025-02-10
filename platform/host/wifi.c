@@ -33,8 +33,7 @@ static struct mg_mgr mgr;
 
 static int fs_st(const char *path, size_t *size, time_t *mtime) {
     struct lfs_info info;
-    int res = lfs_stat(&wwwfs, path, &info);
-    if (res < 0) {
+    if (lfs_stat(&wwwfs, path, &info) != LFS_ERR_OK) {
         return 0;
     }
     if (size) {
@@ -50,8 +49,7 @@ static int fs_st(const char *path, size_t *size, time_t *mtime) {
 static void fs_ls(const char *path, void (*fn)(const char *, void *), void *userdata) {
     lfs_dir_t dir;
     struct lfs_info info;
-    int res = lfs_dir_open(&wwwfs, &dir, path);
-    if (res < 0) {
+    if (lfs_dir_open(&wwwfs, &dir, path) != LFS_ERR_OK) {
         return;
     }
     while (lfs_dir_read(&wwwfs, &dir, &info) > 0) {
@@ -63,13 +61,12 @@ static void fs_ls(const char *path, void (*fn)(const char *, void *), void *user
 }
 
 static void *fs_op(const char *path, int flags) {
-    int open_flags = flags == MG_FS_READ ? LFS_O_RDONLY : LFS_O_RDWR | LFS_O_CREAT;
+    i32 open_flags = flags == MG_FS_READ ? LFS_O_RDONLY : LFS_O_RDWR | LFS_O_CREAT;
     lfs_file_t *file = (lfs_file_t *)malloc(sizeof(lfs_file_t));
     if (!file) {
         return NULL;
     }
-    int res = lfs_file_open(&wwwfs, file, path, open_flags);
-    if (res < 0) {
+    if (lfs_file_open(&wwwfs, file, path, open_flags) != LFS_ERR_OK) {
         free(file);
         return NULL;
     }
@@ -149,6 +146,8 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
         handle_api_v1_request(c, hm, api_get_mode);
     } else if (mg_match(hm->uri, mg_str("/api/v1/get/sensor"), NULL)) {
         handle_api_v1_request(c, hm, api_get_sensor);
+    } else if (mg_match(hm->uri, mg_str("/api/v1/set/active"), NULL)) {
+        handle_api_v1_request(c, hm, api_set_active);
     } else if (mg_match(hm->uri, mg_str("/api/v1/set/bay"), NULL)) {
         handle_api_v1_request(c, hm, api_set_bay);
     } else if (mg_match(hm->uri, mg_str("/api/v1/set/config"), NULL)) {
@@ -167,7 +166,7 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
         // No matching API request, serve static files instead
         struct mg_http_serve_opts opts = {
             .root_dir = "/www",
-            .page404 = "/www/index.html",
+            .page404 = "/www/index.html", // Fix router behavior
             .fs = &fs,
         };
         mg_http_serve_dir(c, hm, &opts);

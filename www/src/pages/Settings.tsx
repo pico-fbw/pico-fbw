@@ -78,7 +78,10 @@ function SettingsUI() {
                         onChange={e => {
                             let setting = Number((e.target as HTMLInputElement).value);
                             if (!isNaN(setting)) {
-                                setting = Math.min(Math.max(Number((e.target as HTMLInputElement).value), minValue), maxValue);
+                                setting = Math.min(
+                                    Math.max(Number((e.target as HTMLInputElement).value), minValue),
+                                    maxValue,
+                                );
                                 setValue(setting);
                                 settings.set(id, String(setting));
                             }
@@ -95,14 +98,19 @@ function SettingsUI() {
                 <h2 className="text-2xl font-bold leading-7 text-sky-500 sm:text-3xl sm:tracking-tight sm:col-span-1 my-auto">
                     Settings
                 </h2>
-                <SettingItem title="Altitude Offset Samples" id="altSamples" value={altSamples} setValue={setAltSamples}>
-                    The number of altitude readings to take when determining the autopilot's ground offset altitude. Note that
-                    higher values will require additional time before auto mode may be engaged, especially for systems that rely
-                    on GPS for altitude.
+                <SettingItem
+                    title="Altitude Offset Samples"
+                    id="altSamples"
+                    value={altSamples}
+                    setValue={setAltSamples}
+                >
+                    The number of altitude readings to take when determining the autopilot's ground offset altitude.
+                    Note that higher values will require additional time before auto mode may be engaged, especially for
+                    systems that rely on GPS for altitude.
                 </SettingItem>
                 <SettingItem title="Default Speed" id="defaultSpeed" value={defaultSpeed} setValue={setDefaultSpeed}>
-                    The default speed (in knots) to set at each waypoint. This is measured as the speed over the ground, not as
-                    airspeed.
+                    The default speed (in knots) to set at each waypoint. This is measured as the speed over the ground,
+                    not as airspeed.
                 </SettingItem>
                 <SettingItem title="Drop Release Time" id="dropSecs" value={dropSecs} setValue={setDropSecs}>
                     The number of seconds the drop mechanism will stay released for, after a drop is initiated.

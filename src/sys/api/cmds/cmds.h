@@ -12,6 +12,7 @@
 #include "GET/get_mode.h"
 #include "GET/get_sensor.h"
 
+#include "SET/set_active.h"
 #include "SET/set_bay.h"
 #include "SET/set_config.h"
 #include "SET/set_flightplan.h"

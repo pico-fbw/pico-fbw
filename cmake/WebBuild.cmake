@@ -94,6 +94,8 @@ function(include_wwwfs target_file)
     add_custom_command(
         OUTPUT ${target_file}
         COMMAND ${CMAKE_COMMAND} -E touch ${target_file}
-        DEPENDS ${CMAKE_BINARY_DIR}/generated/www/built
+        DEPENDS ${WWW_FILES}
     )
+    add_custom_target(wwwfs_touch DEPENDS ${target_file})
+    add_dependencies(${PLATFORM_LIB} wwwfs_touch)
 endfunction()

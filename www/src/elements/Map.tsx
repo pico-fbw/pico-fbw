@@ -60,7 +60,8 @@ const layers = [
     {
         id: 3,
         name: "OpenStreetMap",
-        attribution: 'Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> and contributors',
+        attribution:
+            'Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> and contributors',
         link: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
         icon: MapPinOutline,
     },
@@ -112,7 +113,8 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
             return;
         }
         try {
-            await api("set/flightplan", { flightplan, active: true }).then(() => setUploaded(true));
+            // FIXME: when switching to the new manager page approach, give flightplans actual/unique names
+            await api("set/flightplan", { flightplan, name: "flightplan", active: true }).then(() => setUploaded(true));
         } catch (e) {
             setError(`Server error whilst uploading: ${(e as Error).message}`);
         }
@@ -124,7 +126,8 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
      */
     const syncFlightplan = async () => {
         try {
-            const flightplan = await api("get/flightplan");
+            // FIXME: here too
+            const flightplan = (await api("get/flightplan", { name: "flightplan" })) as Flightplan;
             if (Object.keys(flightplan).length === 0) {
                 return; // No existing flightplan
             }
@@ -550,7 +553,10 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
                                     #{editing}
                                 </h2>
                                 <div className="sm:col-span-2">
-                                    <label htmlFor="latitude" className="block text-sm font-medium leading-6 text-white">
+                                    <label
+                                        htmlFor="latitude"
+                                        className="block text-sm font-medium leading-6 text-white"
+                                    >
                                         Latitude
                                     </label>
                                     <div className="mt-2">
@@ -579,7 +585,10 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
                                     </div>
                                 </div>
                                 <div className="sm:col-span-2">
-                                    <label htmlFor="longitude" className="block text-sm font-medium leading-6 text-white">
+                                    <label
+                                        htmlFor="longitude"
+                                        className="block text-sm font-medium leading-6 text-white"
+                                    >
                                         Longitude
                                     </label>
                                     <div className="mt-2">
@@ -608,7 +617,10 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
                                     </div>
                                 </div>
                                 <div className="sm:col-span-2">
-                                    <label htmlFor="altitude" className="block text-sm font-medium leading-6 text-white">
+                                    <label
+                                        htmlFor="altitude"
+                                        className="block text-sm font-medium leading-6 text-white"
+                                    >
                                         Altitude
                                     </label>
                                     <div className="mt-2">
@@ -768,7 +780,9 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
                                     <div className="hidden md:block">{marker.position.lng}</div>
                                     <div className="md:hidden">{`${marker.position.lng.toFixed(4)}...`}</div>
                                 </td>
-                                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-300">{distanceToPrevious}</td>
+                                <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-300">
+                                    {distanceToPrevious}
+                                </td>
                                 <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-300">
                                     <>{marker.alt}ft</>
                                 </td>
@@ -841,7 +855,10 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
                                 <Alert type="info" className="flex mx-4 sm:mx-6 lg:mx-0">
                                     Please create at least 2 waypoints
                                     <span className="hidden md:block">, or&nbsp;</span>
-                                    <a className="hidden md:block cursor-pointer hover:text-sky-500" onClick={openFilePicker}>
+                                    <a
+                                        className="hidden md:block cursor-pointer hover:text-sky-500"
+                                        onClick={openFilePicker}
+                                    >
                                         click to upload a flightplan
                                     </a>
                                 </Alert>

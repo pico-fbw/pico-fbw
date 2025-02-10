@@ -57,10 +57,8 @@ static bool parse_args(const char *args, char **section, char **key) {
         json_value_free(root);
         return false;
     }
-    *section = malloc(strlen(s) + 1);
-    *key = malloc(strlen(k) + 1);
-    strcpy(*section, s);
-    strcpy(*key, k);
+    *section = strdup(s);
+    *key = strdup(k);
     json_value_free(root);
     return true;
 }
@@ -170,6 +168,7 @@ static char *get_entire_config() {
 
 // Input:
 // {"section":"","key":""}
+// No input will return all config values
 
 // Output:
 // {"sections":[{"name":"","values":[number|""]}]}

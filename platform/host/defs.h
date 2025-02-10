@@ -47,16 +47,16 @@ typedef timer_t __callback_id_t;
 #else
     #define PLATFORM "Unknown"
 #endif
-#if defined(__x86_64__) || defined(_M_X64)
+#if defined(__x86_64__)
     #define ARCH "x86_64"
-#elif defined(__i386__) || defined(_M_IX86)
+#elif defined(__i386__)
     #define ARCH "x86"
 #elif defined(__aarch64__)
-    #define ARCH "ARM64"
-#elif defined(__ARM_ARCH)
-    #define ARCH "ARM"
+    #define ARCH "arm64"
+#elif defined(__ARM_ARCH) || defined(__arm__)
+    #define ARCH "arm"
 #else
-    #define ARCH "Unknown"
+    #define ARCH "unknown"
 #endif
 
 // Platform details

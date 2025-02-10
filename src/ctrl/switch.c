@@ -61,7 +61,7 @@ void switch_update() {
             switch ((SwitchType)config.general[GENERAL_SWITCH_TYPE]) {
                 case SWITCH_TYPE_2_POS:
                     // For 2-position switches, auto-select auto or normal mode based on if a flight plan is present
-                    if (flightplan_get()) {
+                    if (flightplan_get_active()) {
                         aircraft.change_to(MODE_AUTO);
                     } else {
                         aircraft.change_to(MODE_NORMAL);

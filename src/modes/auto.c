@@ -80,12 +80,12 @@ static void load_waypoint(Waypoint *wpt) {
  * Load the next Waypoint in the flightplan.
  */
 static inline void load_next_waypoint() {
-    load_waypoint(&(flightplan_get()->waypoints[currentWptIndex]));
+    load_waypoint(&(flightplan_get_active()->waypoints[currentWptIndex]));
 }
 
 bool auto_init() {
     // Import flightplan data
-    if (!flightplan_get()) {
+    if (!flightplan_get_active()) {
         log_message(TYPE_ERROR, "No active flightplan!", 2000, 0, false);
         return false;
     }
@@ -176,7 +176,7 @@ void auto_update() {
                 // then advance to the next one
                 currentWptIndex++;
                 // Check if the flightplan is over
-                if (currentWptIndex >= flightplan_get()->waypoint_count) {
+                if (currentWptIndex >= flightplan_get_active()->waypoint_count) {
                     // Auto mode ends here, we enter a holding pattern
                     autoComplete = true;
                     aircraft.change_to(MODE_HOLD);

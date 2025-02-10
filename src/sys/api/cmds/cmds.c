@@ -54,7 +54,9 @@ i32 api_handle_get(const char *cmd, const char *args) {
 }
 
 i32 api_handle_set(const char *cmd, const char *args) {
-    if (strcasecmp(cmd, "SET_BAY") == 0) {
+    if (strcasecmp(cmd, "SET_ACTIVE") == 0) {
+        return api_wrap_handler(args, api_set_active, true);
+    } else if (strcasecmp(cmd, "SET_BAY") == 0) {
         return api_wrap_handler(args, api_set_bay, false);
     } else if (strcasecmp(cmd, "SET_CONFIG") == 0) {
         return api_wrap_handler(args, api_set_config, true);

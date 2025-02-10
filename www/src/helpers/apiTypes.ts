@@ -14,13 +14,18 @@ export type GET_CONFIG = {
         values: (number | string)[];
     }[];
 };
-export type GET_FLIGHTPLAN = Flightplan;
+export type GET_FLIGHTPLAN =
+    | {
+          flightplans: string[];
+      }
+    | Flightplan;
 export type GET_INFO = {
     version: string;
     version_api: string;
     version_flightplan: string;
     platform: string;
     platform_version: string;
+    fs_free: number;
 };
 export type GET_INPUT = {
     ail: number;
@@ -67,13 +72,14 @@ export type GET_SENSOR = {
 };
 
 // SET endpoints
+export type SET_ACTIVE = {
+    error?: string;
+};
 export type SET_BAY = EmptyResponse;
 export type SET_CONFIG = {
     error?: string;
 };
-export type SET_FLIGHTPLAN = {
-    error?: string;
-};
+export type SET_FLIGHTPLAN = EmptyResponse;
 export type SET_MODE = EmptyResponse;
 export type SET_TARGET = EmptyResponse;
 export type SET_WAYPOINT = EmptyResponse;
@@ -86,8 +92,16 @@ export type EndpointMap = {
     "get/config": GET_CONFIG;
     "get/flightplan": GET_FLIGHTPLAN;
     "get/info": GET_INFO;
+    "get/input": GET_INPUT;
     "get/logs": GET_LOGS;
+    "get/mode": GET_MODE;
+    "get/sensor": GET_SENSOR;
+    "set/active": SET_ACTIVE;
+    "set/bay": SET_BAY;
     "set/config": SET_CONFIG;
     "set/flightplan": SET_FLIGHTPLAN;
+    "set/mode": SET_MODE;
+    "set/target": SET_TARGET;
+    "set/waypoint": SET_WAYPOINT;
     ping: PING;
 };

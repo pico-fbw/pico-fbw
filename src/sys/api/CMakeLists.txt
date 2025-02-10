@@ -13,6 +13,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     cmds/MISC/ping.c
     cmds/MISC/reboot.c
     cmds/MISC/reset.c
+    cmds/SET/set_active.c
     cmds/SET/set_bay.c
     cmds/SET/set_config.c
     cmds/SET/set_flightplan.c

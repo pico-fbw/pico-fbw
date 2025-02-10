@@ -581,12 +581,14 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
                                                     {config[section.name as keyof typeof config]?.[valueIndex]?.desc}
                                                 </div>
                                                 <div className="mt-3">
-                                                    {config[section.name as keyof typeof config]?.[valueIndex]?.enumMap ? (
+                                                    {config[section.name as keyof typeof config]?.[valueIndex]
+                                                        ?.enumMap ? (
                                                         // Dropdown for enums
                                                         <select
                                                             className="block w-full border-gray-300 rounded-md shadow-sm p-2 focus:ring focus:ring-opacity-50"
                                                             disabled={
-                                                                config[section.name as keyof typeof config][valueIndex].readOnly
+                                                                config[section.name as keyof typeof config][valueIndex]
+                                                                    .readOnly
                                                             }
                                                             value={value.toString()}
                                                             // eslint complains here about handleConfigChange returning a promise.
@@ -614,7 +616,8 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
                                                             }
                                                         >
                                                             {Object.entries(
-                                                                config[section.name as keyof typeof config][valueIndex].enumMap,
+                                                                config[section.name as keyof typeof config][valueIndex]
+                                                                    .enumMap,
                                                             ).map(([enumKey, enumValue]) => (
                                                                 <option key={enumKey} value={enumKey}>
                                                                     {enumValue}

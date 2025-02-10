@@ -231,6 +231,21 @@ esp_err_t http_server_open(httpd_handle_t *server) {
         .user_ctx = api_get_sensor,
     };
     httpd_register_uri_handler(*server, &apiV1GetSensorURI);
+    httpd_uri_t apiV1SetActiveURIGet = {
+        .uri = "/api/v1/get/active",
+        .method = HTTP_GET,
+        .handler = handle_api_v1_request,
+        .user_ctx = api_get_active,
+    };
+    httpd_uri_t apiV1SetActiveURIPost = {
+        .uri = "/api/v1/get/active",
+        .method = HTTP_POST,
+        .handler = handle_api_v1_request,
+        .user_ctx = api_get_active,
+    };
+    // get/active also supports both GET and POST
+    httpd_register_uri_handler(*server, &apiV1SetActiveURIGet);
+    httpd_register_uri_handler(*server, &apiV1SetActiveURIPost);
     httpd_uri_t apiV1SetBayURI = {
         .uri = "/api/v1/set/bay",
         .method = HTTP_POST,

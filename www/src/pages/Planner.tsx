@@ -11,6 +11,11 @@ import Map from "../elements/Map";
 
 import hasInternet from "../helpers/hasInternet";
 
+// [ ] Planner should drop onto a flightplan manager page first
+//     with the user having to select/create/upload a flightplan to edit
+// [ ] Allow: upload from local file > planner, download from planner > local file,
+//     'send to' plane (both to fs and active), download from plane?
+
 // [ ] Allow saving flightplans to the server (in littlefs)
 // [ ] ETA calculation
 // [ ] Better UI for changing speed, etc (move out of settings)
