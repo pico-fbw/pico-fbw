@@ -71,6 +71,13 @@ char *flightplan_get_json(const char *name);
 bool flightplan_save_json(const char *name, const char *json);
 
 /**
+ * Deletes a Flightplan from the filesystem.
+ * @param name the name of the Flightplan
+ * @return whether the delete was successful
+ */
+bool flightplan_delete(const char *name);
+
+/**
  * Parses a Flightplan from a JSON string.
  * @param name the name of the Flightplan to parse
  * @param flightplan the Flightplan to populate

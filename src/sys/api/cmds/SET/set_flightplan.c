@@ -35,11 +35,15 @@ static bool parse_args(const char *args, char **flightplan, char **name) {
         return false;
     }
     JSON_Value *flightplanVal = json_object_get_value(obj, "flightplan");
-    if (!flightplanVal || json_value_get_type(flightplanVal) != JSONObject) {
-        json_value_free(root);
-        return false;
+    if (flightplanVal) {
+        // Not having a flightplan field is not necessarily an error (unless it's formatted incorrectly)
+        // The lack of a field denotes that an existing should be deleted
+        if (json_value_get_type(flightplanVal) != JSONObject) {
+            json_value_free(root);
+            return false;
+        }
+        *flightplan = json_serialize_to_string(flightplanVal);
     }
-    *flightplan = json_serialize_to_string(flightplanVal);
     const char *n = json_object_get_string(obj, "name");
     if (!n) {
         free(*flightplan);
@@ -58,6 +62,12 @@ i32 api_set_flightplan(const char *in, char **out) {
     char *flightplan, *name;
     if (!parse_args(in, &flightplan, &name)) {
         return 400;
+    }
+    if (!flightplan) {
+        // No flightplan field given, try to delete an existing flightplan
+        bool deleted = flightplan_delete(name);
+        free(name);
+        return deleted ? 200 : 400;
     }
     bool saved = flightplan_save_json(name, flightplan);
     free(flightplan);

@@ -43,8 +43,8 @@ let config = {
     ],
 };
 // eslint-disable-next-line prefer-const
-let flightplans: { [name: string]: string } = {
-    flightplan: JSON.stringify({
+let flightplans: { [name: string]: Flightplan } = {
+    flightplan: {
         version: "1.0",
         version_fw: "1.0.0",
         alt_samples: 0,
@@ -52,7 +52,7 @@ let flightplans: { [name: string]: string } = {
             { lat: 35, lng: -140, alt: 100, speed: 20, drop: 0 },
             { lat: 35, lng: 140, alt: 100, speed: 20, drop: 0 },
         ],
-    }),
+    },
 };
 let mode = "direct";
 
@@ -102,9 +102,7 @@ export default (): MockHandler[] => [
                     res.end();
                     return;
                 }
-                res.statusCode = 200;
-                res.setHeader("Content-Type", "application/json");
-                res.end(flightplan);
+                send_data(res, flightplan);
             });
             req.on("end", () => {
                 if (!dataReceived) {
@@ -230,8 +228,12 @@ export default (): MockHandler[] => [
         pattern: "/api/v1/set/flightplan",
         handle: (req, res) => {
             req.on("data", (bodyString: string) => {
-                const body = JSON.parse(bodyString) as { flightplan: Flightplan; name: string };
-                flightplans[body.name] = JSON.stringify(body.flightplan);
+                const body = JSON.parse(bodyString) as { flightplan?: Flightplan; name: string };
+                if (body.flightplan) {
+                    flightplans[body.name] = body.flightplan;
+                } else {
+                    delete flightplans[body.name];
+                }
                 send_data(res, {});
             });
         },

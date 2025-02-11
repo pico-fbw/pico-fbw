@@ -5,7 +5,7 @@
 
 import { useEffect, useState } from "preact/hooks";
 import { useFileDownload, useFileUpload } from "helpers/hooks";
-import { useRoute } from "wouter-preact";
+import { useLocation, useRoute } from "wouter-preact";
 
 import ContentBlock from "elements/ContentBlock";
 import Explorer from "elements/Explorer";
@@ -16,21 +16,10 @@ import { FlightplanList } from "helpers/apiTypes";
 import hasInternet from "helpers/hasInternet";
 import { Flightplan } from "helpers/flightplan";
 
-// [ ] Flightplan manager page, user has to select/create/upload a flightplan to edit
-// [ ] Allow: upload from local file > planner, download from planner > local file,
-//     'send to' plane (both to fs and active), download from plane?
-
-// [ ] ETA calculation
-// [ ] Better UI for changing speed, etc (move out of settings)
-
-// TODO: before commit features
-// - this file should manage the active json and passed into map as props when needed
-// - should be able to handle uploading/downloading (or at least add funcs for it)
-// - remove upload component
-
 export default function Planner() {
     const [error, setError] = useState("");
 
+    const [, setLocation] = useLocation();
     const [match, params] = useRoute<{ plan: string }>("/planner/:plan");
     const flightplanName = match ? params.plan : null;
     const [flightplan, setFlightplan] = useState<string | null>(null);
@@ -42,22 +31,40 @@ export default function Planner() {
     const [isMapFocused, setIsMapFocused] = useState(false);
 
     /**
-     * Send a Flightplan to the server.
+     * Save a Flightplan to the server.
      * @param input the Flightplan as a JSON string
      */
-    const sendFlightplan = async (input: string) => {
+    const saveFlightplan = async (input: string) => {
+        let fplan: Flightplan;
         // First attempt to parse the input as a Flightplan to ensure its validity
         try {
-            JSON.parse(input) as Flightplan;
-        } catch {
-            setError("Invalid flightplan!");
+            fplan = JSON.parse(input) as Flightplan;
+        } catch (e) {
+            setError(`Invalid flightplan! (${(e as Error).message})`);
             return;
         }
         // Now try to send the Flightplan to the server
         try {
-            await api("set/flightplan", { flightplan, name: flightplanName });
+            await api("set/flightplan", { flightplan: fplan, name: flightplanName });
         } catch (e) {
-            setError(`Server error whilst uploading: ${(e as Error).message}`);
+            setError(`Server error whilst sending flightplan: ${(e as Error).message}`);
+        }
+    };
+
+    /**
+     * Set a Flightplan as the active Flightplan on the server.
+     * @param name the name of the Flightplan to set as active
+     */
+    const setActiveFlightplan = async (name: string) => {
+        try {
+            await api("set/active", { name }).then(response => {
+                // TODO: make these warnings instead, they aren't really errors
+                if (response.error) {
+                    setError(response.error);
+                }
+            });
+        } catch (e) {
+            setError(`Couldn't set as active: ${(e as Error).message}`);
         }
     };
 
@@ -70,10 +77,13 @@ export default function Planner() {
         accept: ".json",
         onFileChange: selectedFile => {
             const reader = new FileReader();
-            reader.onload = async () => {
+            reader.onload = () => {
+                // Load file contents into the flightplan state and name into URL
+                // Because of our useEffect hooks, this will also result in saving the flightplan to the server
                 const uploaded = reader.result as string;
+                const name = selectedFile.name.replace(".json", "");
+                setLocation(`/planner/${name}`);
                 setFlightplan(uploaded);
-                await sendFlightplan(uploaded);
             };
             reader.readAsText(selectedFile);
         },
@@ -97,8 +107,24 @@ export default function Planner() {
                 const fplan = response as Flightplan;
                 setFlightplan(JSON.stringify(fplan));
             })
-            .catch(console.error);
+            .catch(e => {
+                const err = e as Error;
+                if (err.message === "404") {
+                    setFlightplan("{}"); // Create a new flightplan
+                } else {
+                    setError(`Server error whilst fetching flightplan: ${err.message}`);
+                }
+            });
     }, [flightplanName]);
+
+    // Update the flightplan server-side (auto-save) when the flightplan changes
+    useEffect(() => {
+        if (!flightplan && flightplan !== "{}") {
+            return;
+        }
+        saveFlightplan(flightplan).catch(console.error);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [flightplan]);
 
     // Check internet connection and fetch saved flightplans on page load
     useEffect(() => {
@@ -124,13 +150,26 @@ export default function Planner() {
                     <div className="flex justify-end mb-4">
                         <button
                             type="button"
-                            onClick={() => setFlightplan("{}")}
+                            onClick={() => {
+                                // FIXME: temp js input, implement proper input
+                                const name = prompt();
+                                if (name) {
+                                    setLocation(`/planner/${name}`);
+                                }
+                            }}
                             className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-600"
                         >
                             New
                         </button>
+                        <button
+                            type="button"
+                            onClick={openFilePicker}
+                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-600"
+                        >
+                            Load from File
+                        </button>
                     </div>
-                    <Explorer flightplans={flightplans} />
+                    <Explorer flightplans={flightplans} setFlightplans={setFlightplans} />
                 </>
             ) : (
                 <>
@@ -140,10 +179,10 @@ export default function Planner() {
                             <button
                                 type="button"
                                 // eslint-disable-next-line @typescript-eslint/no-misused-promises
-                                onClick={() => sendFlightplan(flightplan)}
+                                onClick={() => setActiveFlightplan(flightplanName)}
                                 className="flex-1 rounded-md bg-white/10 px-2.5 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-white/20 cursor-pointer"
                             >
-                                Send to Plane
+                                Set as Active
                             </button>
                             <button
                                 type="button"
@@ -151,13 +190,6 @@ export default function Planner() {
                                 className="flex-1 rounded-md bg-white/10 px-2.5 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-white/20 cursor-pointer"
                             >
                                 Save to File
-                            </button>
-                            <button
-                                type="button"
-                                onClick={openFilePicker}
-                                className="flex-1 rounded-md bg-white/10 px-2.5 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-white/20 cursor-pointer"
-                            >
-                                Load from File
                             </button>
                             <button
                                 type="button"

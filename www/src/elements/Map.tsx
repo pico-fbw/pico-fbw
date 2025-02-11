@@ -24,6 +24,9 @@ import settings from "helpers/settings";
 
 import "leaflet/dist/leaflet.css";
 
+// [ ] ETA calculation
+// [ ] Better UI for changing speed, etc (move out of settings)
+
 export interface Marker {
     id: number;
     position: LatLng;

@@ -131,6 +131,12 @@ bool flightplan_save_json(const char *name, const char *json) {
     return true;
 }
 
+bool flightplan_delete(const char *name) {
+    char path[LFS_NAME_MAX + 1];
+    snprintf(path, sizeof(path), FLIGHTPLAN_STORAGE_DIR "/%s.json", name);
+    return lfs_remove(&lfs, path) == LFS_ERR_OK;
+}
+
 FlightplanState flightplan_parse(const char *name, Flightplan *flightplan, bool silent) {
     // Load the JSON file
     char *json = flightplan_get_json(name);
