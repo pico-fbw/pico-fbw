@@ -5,7 +5,6 @@
 
 import L, { LatLng } from "leaflet";
 import { useEffect, useRef, useState } from "preact/hooks";
-import { useFileDownload, useFileUpload } from "../helpers/hooks";
 import {
     Cog6ToothOutline,
     GlobeAmericasOutline,
@@ -16,13 +15,12 @@ import {
 } from "preact-heroicons";
 import { Link } from "wouter-preact";
 
-import Alert from "./Alert";
-import calculateDistance from "../helpers/calculateDistance";
-import classNames from "../helpers/classNames";
+import Alert from "elements/Alert";
 
-import { api } from "../helpers/api";
-import { Flightplan, flightplanToMarkers, markersToFlightplan } from "../helpers/flightplan";
-import settings from "../helpers/settings";
+import calculateDistance from "helpers/calculateDistance";
+import classNames from "helpers/classNames";
+import { flightplanToMarkers, markersToFlightplan } from "helpers/flightplan";
+import settings from "helpers/settings";
 
 import "leaflet/dist/leaflet.css";
 
@@ -68,10 +66,12 @@ const layers = [
 ];
 
 interface MapProps {
+    json: string;
+    setJson: (json: string) => void;
     setIsFocused?: (isFocused: boolean) => void;
 }
 
-const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
+export default function Map({ json, setJson, setIsFocused }: MapProps) {
     const [currentAlt, setCurrentAlt] = useState(100);
     const altRef = useRef(currentAlt);
     const speed = useRef(Number(settings.get("defaultSpeed")));
@@ -86,76 +86,14 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
     const mapContainer = useRef<HTMLDivElement>(null); // div that will contain the map
     const map = useRef<L.Map | null>(null); // The map itself
 
-    const [error, setError] = useState(""); // Any current errors, to be displayed in an alert
-    const [uploaded, setUploaded] = useState(false); // Whether the flightplan has been uploaded
-
     // Configuration of the icon used to visually display markers
     const markerIcon = L.icon({
-        iconUrl: "marker-icon.png",
-        shadowUrl: "marker-shadow.png",
+        iconUrl: "/marker-icon.png",
+        shadowUrl: "/marker-shadow.png",
         iconSize: [25, 41],
         shadowSize: [41, 41],
         iconAnchor: [12.5, 38],
         shadowAnchor: [12.5, 38],
-    });
-
-    /**
-     * Uploads a flightplan to the server.
-     * @param input the flightplan to upload
-     */
-    const uploadFlightplan = async (input: string) => {
-        let flightplan: Flightplan;
-        try {
-            flightplan = JSON.parse(input) as Flightplan;
-        } catch (e) {
-            console.error("Error parsing JSON:", (e as Error).message);
-            setError(`Error generating flightplan: ${(e as Error).message}`);
-            return;
-        }
-        try {
-            // FIXME: when switching to the new manager page approach, give flightplans actual/unique names
-            await api("set/flightplan", { flightplan, name: "flightplan", active: true }).then(() => setUploaded(true));
-        } catch (e) {
-            setError(`Server error whilst uploading: ${(e as Error).message}`);
-        }
-    };
-
-    /**
-     * Syncs the flightplan with the server.
-     * This will replace any existing local flightplan with the active flightplan on the server.
-     */
-    const syncFlightplan = async () => {
-        try {
-            // FIXME: here too
-            const flightplan = (await api("get/flightplan", { name: "flightplan" })) as Flightplan;
-            if (Object.keys(flightplan).length === 0) {
-                return; // No existing flightplan
-            }
-            setMarkers(flightplanToMarkers(JSON.stringify(flightplan)));
-            setUploaded(true);
-        } catch (e) {
-            setError(`Server error whilst syncing: ${(e as Error).message}`);
-        }
-    };
-
-    // Configure file upload and download hooks
-
-    const { downloadFile } = useFileDownload({
-        filename: "flightplan.json",
-        filetype: "application/json",
-    });
-
-    const { openFilePicker } = useFileUpload({
-        accept: ".json",
-        onFileChange: selectedFile => {
-            const reader = new FileReader();
-            reader.onload = async () => {
-                const uploaded = reader.result as string;
-                setMarkers(flightplanToMarkers(uploaded));
-                await uploadFlightplan(uploaded);
-            };
-            reader.readAsText(selectedFile);
-        },
     });
 
     /**
@@ -169,10 +107,6 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
         const marker = markers.find(marker => marker.id === id);
         map.current.setView(marker ? marker.position : ({ lat: 0, lng: 0 } as LatLng));
         setEditing(id);
-    };
-
-    const clearMarkers = () => {
-        setMarkers([]);
     };
 
     /**
@@ -227,10 +161,18 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
         return Math.min(Math.max(value, min), max);
     };
 
-    // Clear any errors if a successful upload has occurred
-    useEffect(() => {
-        setError("");
-    }, [uploaded]);
+    /**
+     * Calculates the center and zoom level of the map based on the given markers.
+     * @param markers markers to calculate from
+     * @returns a tuple containing the center and zoom level of the map
+     */
+    const calcCenterZoom = (markers: Marker[]): [LatLng, number] => {
+        const latLngs = markers.map(marker => marker.position);
+        const averageLat = markers.reduce((acc, marker) => acc + marker.position.lat, 0) / markers.length;
+        const averageLng = markers.reduce((acc, marker) => acc + marker.position.lng, 0) / markers.length;
+        const zoom = map.current?.getBoundsZoom(L.latLngBounds(latLngs), false) ?? 2;
+        return [L.latLng(averageLat, averageLng), zoom];
+    };
 
     // Sync altitude ref with state
     // The ref is needed so that the Leaflet event handlers can access the current altitude value
@@ -263,13 +205,15 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
         const latLngs = markers.map(marker => marker.position);
         polyline.current = L.polyline(latLngs, { color: polylineColor }).addTo(map.current);
 
-        // Calculate the average position of all markers and lowest possible zoom level that still shows all markers
-        const averageLat = markers.reduce((acc, marker) => acc + marker.position.lat, 0) / markers.length;
-        const averageLng = markers.reduce((acc, marker) => acc + marker.position.lng, 0) / markers.length;
-        const zoom = map.current.getBoundsZoom(L.latLngBounds(latLngs), false);
-        // Save these for later, so that when the user returns to the map, they are pretty much right back where they left off
+        // Update externally managed JSON
+        setJson(markersToFlightplan(markers));
+
+        // Save position for later, so that when the user returns to the map, they are back where they left off
+        const [center, zoom] = calcCenterZoom(markers);
+        const { lat: averageLat, lng: averageLng } = center;
         settings.set("lastMapPosition", `${averageLat},${averageLng}`);
         settings.set("lastMapZoom", zoom.toString());
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [markers]);
 
@@ -288,7 +232,7 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
 
     // Registers event listeners and initializes the map when the component is mounted
     useEffect(() => {
-        if (!mapContainer.current) {
+        if (!mapContainer.current || map.current) {
             return;
         }
         map.current = L.map(mapContainer.current as HTMLElement, {
@@ -315,10 +259,14 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
         setMapLink(layers[index].link);
         setMapAttribution(layers[index].attribution);
 
-        // Load the active flightplan from the server (if available)
-        syncFlightplan().catch(console.error);
-
-        if (settings.get("lastMapPosition") !== "") {
+        if (json && json !== "{}") {
+            // We were given initial flightplan data, load it and center the map on the plan
+            const newMarkers = flightplanToMarkers(json);
+            setMarkers(newMarkers);
+            const [center, zoom] = calcCenterZoom(newMarkers);
+            map.current.setView(center, zoom);
+        } else if (settings.get("lastMapPosition") !== "") {
+            // No JSON given, start at the last known position (if available)
             const [lat, lng] = settings.get("lastMapPosition").split(",").map(Number);
             map.current.setView([lat, lng], Number(settings.get("lastMapZoom")));
         }
@@ -351,7 +299,7 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
                         <label htmlFor="alt" className="text-gray-300 mr-3 hidden md:block">
                             Altitude:
                         </label>
-                        {/* FIXME: this slider is very...laggy and I have no clue why. It isn't laggy on the React version..? */}
+                        {/* FIXME: numerous inputsare very laggy, might be due to unwanted focus switching? */}
                         <input
                             type="range"
                             name="alt"
@@ -708,7 +656,7 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
                                 <button
                                     type="button"
                                     onClick={() => removeMarker(editing ?? -1)}
-                                    className="sm:col-span-2 mt-auto rounded-md bg-red-500/60 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+                                    className="sm:col-span-2 mt-auto rounded-md bg-red-500/60 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
                                 >
                                     Delete
                                 </button>
@@ -823,30 +771,6 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
                         <h1 className="text-base font-semibold leading-6 text-white">Waypoints</h1>
                         <p className="mt-2 text-sm text-gray-300">A list of all waypoints in your flightplan</p>
                     </div>
-                    <div className="relative flex-initial w-64 justify-end">
-                        <button
-                            type="button"
-                            // eslint-disable-next-line @typescript-eslint/no-misused-promises
-                            onClick={() => uploadFlightplan(JSON.stringify(markersToFlightplan(markers)))}
-                            className="mt-3 w-full rounded-md bg-white/10 px-2.5 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-white/20 cursor-pointer"
-                        >
-                            Upload
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => downloadFile(JSON.stringify(markersToFlightplan(markers)))}
-                            className="mt-3 w-full rounded-md bg-white/10 px-2.5 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-white/20 cursor-pointer"
-                        >
-                            Download
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => clearMarkers()}
-                            className="mt-3 w-full rounded-md bg-red-500/60 px-2.5 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-red-500/90 cursor-pointer"
-                        >
-                            Clear
-                        </button>
-                    </div>
                 </div>
                 <div className="mt-8 flow-root">
                     <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
@@ -854,26 +778,9 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
                             {markers.length < 2 ? (
                                 <Alert type="info" className="flex mx-4 sm:mx-6 lg:mx-0">
                                     Please create at least 2 waypoints
-                                    <span className="hidden md:block">, or&nbsp;</span>
-                                    <a
-                                        className="hidden md:block cursor-pointer hover:text-sky-500"
-                                        onClick={openFilePicker}
-                                    >
-                                        click to upload a flightplan
-                                    </a>
                                 </Alert>
                             ) : (
                                 <div className="space-y-6">
-                                    {error && <Alert type="danger">{error}</Alert>}
-                                    {uploaded && (
-                                        <Alert
-                                            type="success"
-                                            onClose={() => setUploaded(false)}
-                                            className="mx-4 sm:mx-8 lg:mx-0"
-                                        >
-                                            Flightplan uploaded successfully!
-                                        </Alert>
-                                    )}
                                     <WaypointTable />
                                 </div>
                             )}
@@ -883,6 +790,4 @@ const Map: preact.FunctionComponent<MapProps> = ({ setIsFocused }) => {
             </div>
         </div>
     );
-};
-
-export default Map;
+}

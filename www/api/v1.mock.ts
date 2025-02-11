@@ -6,7 +6,7 @@
 import * as http from "http";
 import { MockHandler } from "vite-plugin-mock-server";
 
-import { Flightplan } from "../src/helpers/flightplan";
+import { Flightplan } from "helpers/flightplan";
 
 function send_data(res: http.ServerResponse<http.IncomingMessage>, data: object) {
     res.setHeader("Content-Type", "application/json");
@@ -42,8 +42,18 @@ let config = {
         },
     ],
 };
-let flightplans: { [name: string]: string };
-let activeFlightplan = "";
+// eslint-disable-next-line prefer-const
+let flightplans: { [name: string]: string } = {
+    flightplan: JSON.stringify({
+        version: "1.0",
+        version_fw: "1.0.0",
+        alt_samples: 0,
+        waypoints: [
+            { lat: 35, lng: -140, alt: 100, speed: 20, drop: 0 },
+            { lat: 35, lng: 140, alt: 100, speed: 20, drop: 0 },
+        ],
+    }),
+};
 let mode = "direct";
 
 export default (): MockHandler[] => [
@@ -83,17 +93,24 @@ export default (): MockHandler[] => [
         pattern: "/api/v1/get/flightplan",
         handle: (req, res) => {
             let dataReceived = false;
-            req.on("data", () => {
+            req.on("data", (bodyString: string) => {
                 dataReceived = true;
+                const body = JSON.parse(bodyString) as { name: string };
+                const flightplan = flightplans[body.name];
+                if (!flightplan) {
+                    res.statusCode = 404;
+                    res.end();
+                    return;
+                }
                 res.statusCode = 200;
                 res.setHeader("Content-Type", "application/json");
-                res.end(activeFlightplan.toString());
+                res.end(flightplan);
             });
             req.on("end", () => {
                 if (!dataReceived) {
                     // No input, return list of all flightplan names
                     send_data(res, {
-                        flightplans: Object.keys(flightplans),
+                        flightplans: flightplans ? Object.keys(flightplans) : [],
                     });
                 }
             });
@@ -177,11 +194,7 @@ export default (): MockHandler[] => [
     {
         pattern: "/api/v1/set/active",
         handle: (req, res) => {
-            req.on("data", (bodyString: string) => {
-                const body = JSON.parse(bodyString) as { name: string };
-                activeFlightplan = flightplans[body.name];
-                send_data(res, { error: "" });
-            });
+            send_data(res, { error: "" });
         },
     },
     {

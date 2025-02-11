@@ -4,9 +4,11 @@
  */
 
 import { LatLng } from "leaflet";
-import { Marker } from "../elements/Map";
-import settings from "./settings";
-import { firmwareVersion } from "./version";
+
+import { Marker } from "elements/Map";
+
+import settings from "helpers/settings";
+import { firmwareVersion } from "helpers/version";
 
 const generatorVersion = "1.0";
 
@@ -29,14 +31,13 @@ export interface Flightplan {
 }
 
 /**
- * Converts an array of markers to a Flightplan.
+ * Converts an array of markers to a Flightplan JSON string.
  * @param markers the markers to convert
- * @returns the markers expressed as a Flightplan
+ * @returns the markers expressed as a Flightplan JSON string
  */
-export function markersToFlightplan(markers: Marker[]): Flightplan {
+export function markersToFlightplan(markers: Marker[]): string {
     const altSamples = Number(settings.get("altSamples"));
     const dropSecs = Number(settings.get("dropSecs"));
-
     const waypoints: Waypoint[] = markers.map(marker => {
         if (marker.position.lat <= -90 || marker.position.lat >= 90) {
             throw new Error("Invalid latitude");
@@ -57,12 +58,12 @@ export function markersToFlightplan(markers: Marker[]): Flightplan {
         };
     });
 
-    return {
+    return JSON.stringify({
         version: generatorVersion,
         version_fw: firmwareVersion,
         alt_samples: altSamples,
         waypoints,
-    };
+    });
 }
 
 /**
@@ -75,7 +76,6 @@ export function flightplanToMarkers(json: string): Marker[] {
     if (parsed.version !== generatorVersion) {
         throw new Error("Invalid JSON version");
     }
-
     return parsed.waypoints.map((waypoint: Waypoint, index: number) => ({
         id: index + 1,
         position: {

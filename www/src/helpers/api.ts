@@ -3,7 +3,7 @@
  * Licensed under the GNU GPL-3.0
  */
 
-import { EndpointMap } from "./apiTypes";
+import { EndpointMap } from "helpers/apiTypes";
 
 const timeout = 2000; // Timeout for an API request in ms
 

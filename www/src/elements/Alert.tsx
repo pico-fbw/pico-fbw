@@ -13,7 +13,7 @@ import {
     XMarkSolid,
 } from "preact-heroicons";
 
-import classNames from "../helpers/classNames";
+import classNames from "helpers/classNames";
 
 interface AlertProps {
     type: "success" | "info" | "warning" | "danger";
@@ -35,7 +35,7 @@ function getColors(type: AlertProps["type"]) {
     }
 }
 
-const Alert: preact.FunctionComponent<AlertProps> = ({ type, onClose, className = "", children }) => {
+export default function Alert({ type, onClose, className = "", children }: AlertProps) {
     const [hidden, setHidden] = useState(false);
 
     /**
@@ -71,6 +71,4 @@ const Alert: preact.FunctionComponent<AlertProps> = ({ type, onClose, className 
             </div>
         </div>
     );
-};
-
-export default Alert;
+}

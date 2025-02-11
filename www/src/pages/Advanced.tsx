@@ -7,7 +7,7 @@
 // [ ] Allow more actions (retriggering system/webui setups, rebooting, etc)
 // [ ] Add about section w/ version, license, etc
 
-import ContentBlock from "../elements/ContentBlock";
+import ContentBlock from "elements/ContentBlock";
 
 export default function Advanced() {
     return (

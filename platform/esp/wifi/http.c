@@ -232,18 +232,18 @@ esp_err_t http_server_open(httpd_handle_t *server) {
     };
     httpd_register_uri_handler(*server, &apiV1GetSensorURI);
     httpd_uri_t apiV1SetActiveURIGet = {
-        .uri = "/api/v1/get/active",
+        .uri = "/api/v1/set/active",
         .method = HTTP_GET,
         .handler = handle_api_v1_request,
-        .user_ctx = api_get_active,
+        .user_ctx = api_set_active,
     };
     httpd_uri_t apiV1SetActiveURIPost = {
-        .uri = "/api/v1/get/active",
+        .uri = "/api/v1/set/active",
         .method = HTTP_POST,
         .handler = handle_api_v1_request,
-        .user_ctx = api_get_active,
+        .user_ctx = api_set_active,
     };
-    // get/active also supports both GET and POST
+    // set/active also supports both GET and POST
     httpd_register_uri_handler(*server, &apiV1SetActiveURIGet);
     httpd_register_uri_handler(*server, &apiV1SetActiveURIPost);
     httpd_uri_t apiV1SetBayURI = {

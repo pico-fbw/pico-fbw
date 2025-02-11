@@ -5,7 +5,7 @@
 
 // [ ] First-time setup page (to set configuration, settings, user name, etc.)
 
-import ContentBlock from "../elements/ContentBlock";
+import ContentBlock from "elements/ContentBlock";
 
 export default function Setup() {
     return (

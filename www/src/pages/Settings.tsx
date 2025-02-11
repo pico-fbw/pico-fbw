@@ -5,19 +5,18 @@
 
 import { useEffect, useState } from "preact/hooks";
 
-import Alert from "../elements/Alert";
-import ContentBlock from "../elements/ContentBlock";
-import ConfigViewer from "../elements/ConfigViewer";
+import ContentBlock from "elements/ContentBlock";
+import ConfigViewer from "elements/ConfigViewer";
 
-import { api } from "../helpers/api";
-import { GET_INFO } from "../helpers/apiTypes";
-import settings from "../helpers/settings";
+import { api } from "helpers/api";
+import { GET_INFO } from "helpers/apiTypes";
+import settings from "helpers/settings";
 
-// TODO: make config errors show as a popup instead of basically deleting the whole component
+interface ConfigUIProps {
+    setError: (error: string) => void;
+}
 
-function ConfigUI() {
-    const [error, setError] = useState("");
-
+function ConfigUI({ setError }: ConfigUIProps) {
     return (
         <div className="divide-y divide-white/5">
             <div className="grid max-w-7xl grid-cols-1 gap-x-8 gap-y-10 px-4 py-16 sm:px-6 md:grid-cols-3 lg:px-8">
@@ -25,17 +24,11 @@ function ConfigUI() {
                     Configuration
                 </h2>
                 <div className="sm:col-span-3 space-y-6">
-                    {error ? (
-                        <Alert type="danger" className="mx-4 sm:mx-8 lg:mx-0">
-                            {error}
-                        </Alert>
-                    ) : (
-                        <div className="flex flex-col">
-                            <div className="flex-grow">
-                                <ConfigViewer setError={setError} />
-                            </div>
+                    <div className="flex flex-col">
+                        <div className="flex-grow">
+                            <ConfigViewer setError={setError} />
                         </div>
-                    )}
+                    </div>
                 </div>
             </div>
         </div>
@@ -57,15 +50,7 @@ function SettingsUI() {
         children: preact.ComponentChildren;
     }
 
-    const SettingItem: preact.FunctionComponent<SettingItemProps> = ({
-        title,
-        id,
-        value,
-        setValue,
-        minValue = 1,
-        maxValue = 100,
-        children,
-    }) => {
+    function SettingItem({ title, id, value, setValue, minValue = 1, maxValue = 100, children }: SettingItemProps) {
         return (
             <div className="sm:col-span-3 space-y-6">
                 <h3 className="text-xl font-bold leading-6 text-sky-500">{title}</h3>
@@ -90,7 +75,7 @@ function SettingsUI() {
                 </div>
             </div>
         );
-    };
+    }
 
     return (
         <div className="divide-y divide-white/5">
@@ -123,6 +108,7 @@ function SettingsUI() {
 }
 
 export default function Settings() {
+    const [error, setError] = useState("");
     const [info, setInfo] = useState<GET_INFO | null>(null);
 
     useEffect(() => {
@@ -130,10 +116,10 @@ export default function Settings() {
     }, []);
 
     return (
-        <ContentBlock title="Settings" loading={!info}>
+        <ContentBlock title="Settings" loading={!info} error={error} setError={setError}>
             <div>
                 <SettingsUI />
-                <ConfigUI />
+                <ConfigUI setError={setError} />
             </div>
             <footer className="bg-gray-900 text-gray-500 p-4">
                 <div className="w-full max-w-screen-xl mx-auto">

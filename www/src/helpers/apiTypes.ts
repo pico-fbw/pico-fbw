@@ -3,7 +3,7 @@
  * Licensed under the GNU GPL-3.0
  */
 
-import { Flightplan } from "./flightplan";
+import { Flightplan } from "helpers/flightplan";
 
 type EmptyResponse = Record<string, never>;
 
@@ -14,11 +14,10 @@ export type GET_CONFIG = {
         values: (number | string)[];
     }[];
 };
-export type GET_FLIGHTPLAN =
-    | {
-          flightplans: string[];
-      }
-    | Flightplan;
+export type FlightplanList = {
+    flightplans: string[];
+};
+export type GET_FLIGHTPLAN = FlightplanList | Flightplan;
 export type GET_INFO = {
     version: string;
     version_api: string;

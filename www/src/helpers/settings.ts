@@ -12,7 +12,6 @@ export class settings {
         defaultMap: { default: "0" },
         lastMapPosition: { default: "" },
         lastMapZoom: { default: "" },
-        showOfflineNotice: { default: "1" },
     } as const;
 
     /**

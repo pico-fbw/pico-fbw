@@ -3,11 +3,10 @@
  * Licensed under the GNU GPL-3.0
  */
 
-import preact from "preact";
 import { Bars3MiniSolid, HeroIcon, XMarkOutline } from "preact-heroicons";
 import { Link } from "wouter-preact";
 
-import classNames from "../helpers/classNames";
+import classNames from "helpers/classNames";
 
 export interface SidebarNavigation {
     name: string;
@@ -27,7 +26,7 @@ interface SidebarProps {
     setIsOpen: (isOpen: boolean) => void;
 }
 
-const SidebarEntry: preact.FunctionComponent<SidebarEntryProps> = ({ item, onClick }) => {
+function SidebarEntry({ item, onClick }: SidebarEntryProps) {
     return (
         <>
             <Link
@@ -45,16 +44,16 @@ const SidebarEntry: preact.FunctionComponent<SidebarEntryProps> = ({ item, onCli
             </Link>
         </>
     );
-};
+}
 
-const Sidebar: preact.FunctionComponent<SidebarProps> = ({ navigation, isOpen, setIsOpen }) => {
+export default function Sidebar({ navigation, isOpen, setIsOpen }: SidebarProps) {
     return (
         <>
             {/* Desktop: static sidebar */}
             <div className="hidden xl:fixed xl:inset-y-0 xl:z-50 xl:flex xl:w-72 xl:flex-col">
                 <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-black/10 px-6 ring-1 ring-white/5">
                     <Link to={"/"} className="flex h-[4.5rem] shrink-0 items-center">
-                        <img src="icon.svg" className="h-10 w-auto -m-2" />
+                        <img src="/icon.svg" className="h-10 w-auto -m-2" />
                     </Link>
                     <nav className="flex flex-1 flex-col">
                         <ul role="list" className="flex flex-1 flex-col gap-y-7">
@@ -95,7 +94,7 @@ const Sidebar: preact.FunctionComponent<SidebarProps> = ({ navigation, isOpen, s
                 >
                     <div className="flex items-center justify-between px-6 py-4">
                         <Link to="/" className="flex items-center gap-x-2">
-                            <img src="icon.svg" className="h-16 w-auto -m-2" />
+                            <img src="/icon.svg" className="h-16 w-auto -m-2" />
                         </Link>
                         <button
                             type="button"
@@ -123,6 +122,4 @@ const Sidebar: preact.FunctionComponent<SidebarProps> = ({ navigation, isOpen, s
             </div>
         </>
     );
-};
-
-export default Sidebar;
+}

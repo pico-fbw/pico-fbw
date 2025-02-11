@@ -22,7 +22,6 @@ env:
 jobs:
   embedded:
     runs-on: ubuntu-latest
-    continue-on-error: true
 
     strategy:
       matrix:
@@ -114,7 +113,6 @@ jobs:
 
   host:
     runs-on: ${{matrix.OS}}
-    continue-on-error: true
 
     strategy:
       matrix:

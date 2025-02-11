@@ -16,6 +16,13 @@ export default defineConfig({
     optimizeDeps: {
         exclude: ["preact-heroicons"],
     },
+    resolve: {
+        alias: {
+            elements: "/src/elements",
+            helpers: "/src/helpers",
+            pages: "/src/pages",
+        },
+    },
     build: {
         emptyOutDir: true,
         outDir: "../build/www/www",

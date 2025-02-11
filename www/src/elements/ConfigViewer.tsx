@@ -6,8 +6,8 @@
 import { useEffect, useState } from "preact/hooks";
 import { MinusSolid, PlusSolid } from "preact-heroicons";
 
-import { api } from "../helpers/api";
-import { GET_CONFIG } from "../helpers/apiTypes";
+import { api } from "helpers/api";
+import { GET_CONFIG } from "helpers/apiTypes";
 
 interface ConfigDatabaseItem {
     name: string;
@@ -585,7 +585,7 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
                                                         ?.enumMap ? (
                                                         // Dropdown for enums
                                                         <select
-                                                            className="block w-full border-gray-300 rounded-md shadow-sm p-2 focus:ring focus:ring-opacity-50"
+                                                            className="block w-full text-gray-200 border-gray-300 rounded-md shadow-sm p-2 focus:ring focus:ring-opacity-50"
                                                             disabled={
                                                                 config[section.name as keyof typeof config][valueIndex]
                                                                     .readOnly
@@ -628,7 +628,7 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
                                                         // Generic input for strings and numerical values
                                                         <input
                                                             type="text"
-                                                            className="block w-full border-gray-300 rounded-md shadow-sm p-2 focus:ring focus:ring-opacity-50"
+                                                            className="block w-full text-gray-200 border-gray-300 rounded-md shadow-sm p-2 focus:ring focus:ring-opacity-50"
                                                             value={value.toString()}
                                                             // onChange will only update the value in the state, onBlur will write it to the API
                                                             // This is so we don't spam the API with requests while the user is typing

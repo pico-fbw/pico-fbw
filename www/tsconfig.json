@@ -1,5 +1,6 @@
 {
 	"compilerOptions": {
+		"baseUrl": "src",
 		"target": "ES2020",
 		"module": "ESNext",
 		"moduleResolution": "bundler",
@@ -7,7 +8,7 @@
 		"allowJs": true,
 		"checkJs": true,
 
-		/* Preact Config */
+		/* Preact config */
 		"jsx": "react-jsx",
 		"jsxImportSource": "preact",
 		"skipLibCheck": true,

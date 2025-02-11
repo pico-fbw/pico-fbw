@@ -6,13 +6,12 @@
 import { render } from "preact";
 import { Link, Route, Switch } from "wouter-preact";
 
-import Advanced from "./pages/Advanced";
-import Dashboard from "./pages/Dashboard";
-import Index from "./pages/Index";
-import Planner from "./pages/Planner";
-import Settings from "./pages/Settings";
-import Setup from "./pages/Setup";
-import Upload from "./pages/Upload";
+import Advanced from "pages/Advanced";
+import Dashboard from "pages/Dashboard";
+import Index from "pages/Index";
+import Planner from "pages/Planner";
+import Settings from "pages/Settings";
+import Setup from "pages/Setup";
 
 import "./style.css";
 
@@ -40,9 +39,9 @@ function App() {
                 <Route path="/advanced">{() => <Advanced />}</Route>
                 <Route path="/dashboard">{() => <Dashboard />}</Route>
                 <Route path="/planner">{() => <Planner />}</Route>
+                <Route path="/planner/*">{() => <Planner />}</Route>
                 <Route path="/settings">{() => <Settings />}</Route>
                 <Route path="/setup">{() => <Setup />}</Route>
-                <Route path="/upload">{() => <Upload />}</Route>
                 <Route>{() => <NoMatch />}</Route>
             </Switch>
         </main>

@@ -8,11 +8,11 @@
 
 import { useEffect, useState } from "preact/hooks";
 
-import Alert from "../elements/Alert";
-import ContentBlock from "../elements/ContentBlock";
+import Alert from "elements/Alert";
+import ContentBlock from "elements/ContentBlock";
 
-import { api } from "../helpers/api";
-import { GET_LOGS } from "../helpers/apiTypes";
+import { api } from "helpers/api";
+import { GET_LOGS } from "helpers/apiTypes";
 
 export default function Dashboard() {
     const [logs, setLogs] = useState<GET_LOGS | null>(null);
@@ -35,8 +35,8 @@ export default function Dashboard() {
 
     useEffect(() => {
         api("get/logs")
-            .then(data => {
-                setLogs(data);
+            .then(response => {
+                setLogs(response);
             })
             .catch(console.error);
     }, []);

@@ -5,22 +5,21 @@
 
 import preact from "preact";
 import { useEffect, useState } from "preact/hooks";
-import { useSwipe } from "../helpers/hooks";
+import { useSwipe } from "helpers/hooks";
 import {
     AdjustmentsHorizontalOutline,
-    ArrowUpTrayOutline,
     Cog8ToothOutline,
     GlobeAmericasOutline,
     PaperAirplaneOutline,
 } from "preact-heroicons";
 
-import Sidebar, { SidebarNavigation } from "./Sidebar";
-import Spinner from "./Spinner";
+import Alert from "elements/Alert";
+import Sidebar, { SidebarNavigation } from "elements/Sidebar";
+import Spinner from "elements/Spinner";
 
 const sidebarNav: SidebarNavigation[] = [
     { name: "Dashboard", to: "/dashboard", icon: PaperAirplaneOutline },
     { name: "Planner", to: "/planner", icon: GlobeAmericasOutline },
-    { name: "Upload", to: "/upload", icon: ArrowUpTrayOutline },
     { name: "Settings", to: "/settings", icon: Cog8ToothOutline },
     { name: "Advanced", to: "/advanced", icon: AdjustmentsHorizontalOutline },
 ];
@@ -28,12 +27,14 @@ const sidebarNav: SidebarNavigation[] = [
 interface ContentBlockProps {
     title?: string;
     loading?: boolean;
+    error?: string;
+    setError?: (error: string) => void;
     ignoreSwipe?: boolean;
     children: preact.ComponentChildren;
 }
 
 // The ContentBlock is a wrapper for the content of a page, which provides a sidebar for navigation.
-const ContentBlock: preact.FunctionComponent<ContentBlockProps> = ({ title, loading, ignoreSwipe, children }) => {
+export default function ContentBlock({ title, loading, error, setError, ignoreSwipe, children }: ContentBlockProps) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     // Wrap in some swipe handlers to conveniently open/close the sidebar on touchscreen devices
@@ -49,11 +50,22 @@ const ContentBlock: preact.FunctionComponent<ContentBlockProps> = ({ title, load
     }, [title]);
 
     return (
-        <div {...swipeHandlers} className="h-full">
+        <div {...swipeHandlers} className="h-full relative">
+            {/* Error overlay */}
+            {error && (
+                <div
+                    className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/70"
+                    onClick={() => setError("")}
+                >
+                    <Alert type="danger" onClose={() => setError("")} className="mx-4 sm:mx-8 lg:mx-0">
+                        {error}
+                    </Alert>
+                </div>
+            )}
+            {/* Sidebar */}
             <Sidebar navigation={sidebarNav} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+            {/* Main content */}
             <div className="xl:pl-72 h-full">{loading ? <Spinner /> : <div>{children}</div>}</div>
         </div>
     );
-};
-
-export default ContentBlock;
+}
