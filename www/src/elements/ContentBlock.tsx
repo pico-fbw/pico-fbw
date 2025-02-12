@@ -65,7 +65,7 @@ export default function ContentBlock({ title, loading, error, setError, ignoreSw
             {/* Sidebar */}
             <Sidebar navigation={sidebarNav} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
             {/* Main content */}
-            <div className="xl:pl-72 h-full">{loading ? <Spinner /> : <div>{children}</div>}</div>
+            <div className="lg:pl-72 h-full">{loading ? <Spinner /> : <div>{children}</div>}</div>
         </div>
     );
 }

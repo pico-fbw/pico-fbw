@@ -53,29 +53,36 @@ void flightplan_set_active(Flightplan flightplan) {
     log_message(TYPE_INFO, "Flightplan recieved!", -1, 0, false);
 }
 
-i32 flightplan_list(char **list[]) {
+i32 flightplan_list(FlightplanEntry *entries[]) {
     lfs_dir_t dir;
     struct lfs_info info;
     if (lfs_dir_open(&lfs, &dir, FLIGHTPLAN_STORAGE_DIR) < 0) {
         return false;
     }
     u32 count = 0;
-    *list = NULL;
+    *entries = NULL;
     while (lfs_dir_read(&lfs, &dir, &info) > 0) {
         if (info.type != LFS_TYPE_REG) {
             continue;
         }
+        // Allocate memory for the new entry name
         char *name = strdup(info.name);
-        char **temp = realloc(*list, (count + 1) * sizeof(char *));
-        if (!name || !temp) {
+        if (!name) {
             lfs_dir_close(&lfs, &dir);
             return -1;
         }
-        // Remove the .json extension
+        // Remove the .json extension (assumes extension length is 5)
         name[strlen(info.name) - 5] = '\0';
-        *list = temp;
-        // Store the name in the list
-        (*list)[count] = name;
+        FlightplanEntry *temp = realloc(*entries, (count + 1) * sizeof(FlightplanEntry));
+        if (!temp) {
+            free(name);
+            lfs_dir_close(&lfs, &dir);
+            return -1;
+        }
+        *entries = temp;
+        // Store the name and file size in the entry
+        (*entries)[count].name = name;
+        (*entries)[count].size = info.size;
         count++;
     }
     lfs_dir_close(&lfs, &dir);

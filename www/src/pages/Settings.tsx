@@ -52,13 +52,13 @@ function SettingsUI() {
 
     function SettingItem({ title, id, value, setValue, minValue = 1, maxValue = 100, children }: SettingItemProps) {
         return (
-            <div className="sm:col-span-3 space-y-6">
-                <h3 className="text-xl font-bold leading-6 text-sky-500">{title}</h3>
+            <div className="sm:col-span-3 space-y-4 bg-gray-800 p-6 rounded-lg">
+                <h3 className="text-xl font-bold leading-6 text-gray-200">{title}</h3>
                 <p className="text-sm font-medium text-gray-200 w-auto">{children}</p>
                 <div>
                     <input
                         type="number"
-                        className="block rounded-md border-0 bg-white/5 px-2 py-1.5 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6"
+                        className="block sm:text-sm sm:leading-4 rounded-md border-0 bg-gray-300 px-2 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500"
                         value={value}
                         onChange={e => {
                             let setting = Number((e.target as HTMLInputElement).value);

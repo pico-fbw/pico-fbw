@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include "platform/types.h"
 
-#include "modes/auto.h"
+#include "modes/auto.h" // Waypoint definition
 
 #define FLIGHTPLAN_MSG_STATUS_GPS_OFFSET "GPS calibration is required before flight."
 #define FLIGHTPLAN_MSG_WARN_FW_VERSION "A new firmware version is available!"
@@ -30,6 +30,11 @@ typedef enum FlightplanState {
     FLIGHTPLAN_ERR_MEM,
 } FlightplanState;
 
+typedef struct FlightplanEntry {
+    char *name;
+    u32 size;
+} FlightplanEntry;
+
 /**
  * @return whether the given waypoint contains valid data
  */
@@ -42,10 +47,10 @@ Flightplan *flightplan_get_active();
 
 /**
  * Lists all Flightplans in the filesystem.
- * @param list pointer to store the list of Flightplan names (as an array of char *)
- * @return the number of Flightplans in the list, or -1 if an error occurred
+ * @param entries pointer to store the array FlightplanEntry's
+ * @return the number of entries in the array, or -1 if an error occurred
  */
-i32 flightplan_list(char **list[]);
+i32 flightplan_list(FlightplanEntry *entries[]);
 
 /**
  * Sets the active Flightplan.

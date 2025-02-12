@@ -19,7 +19,7 @@
 // Output:
 // <SEE FLIGHTPLAN.C FOR SCHEMA>
 // Output (no input):
-// {"flightplans":["name1","name2",...]}
+// {"flightplans":[{"name":"","size":number},...],"active":""|null}
 
 /**
  * Helper to parse command arguments.
@@ -63,8 +63,8 @@ i32 api_get_flightplan(const char *in, char **out) {
         *out = json;
     } else {
         // Didn't request a specific flightplan, return a list of all flightplans
-        char **names;
-        i32 count = flightplan_list(&names);
+        FlightplanEntry *plans;
+        i32 count = flightplan_list(&plans);
         if (count < 0) {
             return 500;
         }
@@ -79,10 +79,22 @@ i32 api_get_flightplan(const char *in, char **out) {
         }
         JSON_Value *flightplansArr = json_value_init_array();
         JSON_Array *flightplans = json_value_get_array(flightplansArr);
-        for (u32 i = 0; i < (u32)count; i++) {
-            json_array_append_string(flightplans, names[i]);
+        for (i32 i = 0; i < count; i++) {
+            // Construct an object containing the flightplan name and size
+            JSON_Value *entry = json_value_init_object();
+            JSON_Object *entryObj = json_value_get_object(entry);
+            json_object_set_string(entryObj, "name", plans[i].name);
+            json_object_set_number(entryObj, "size", plans[i].size);
+            json_array_append_value(flightplans, entry);
         }
         json_object_set_value(obj, "flightplans", flightplansArr);
+        // If there's an active flightplan, include it in the response
+        Flightplan *active = flightplan_get_active();
+        if (active) {
+            json_object_set_string(obj, "active", active->name);
+        } else {
+            json_object_set_null(obj, "active");
+        }
         char *serialized = json_serialize_to_string(root);
         json_value_free(root);
         *out = serialized;

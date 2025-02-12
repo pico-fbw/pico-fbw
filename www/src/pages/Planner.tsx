@@ -24,11 +24,23 @@ export default function Planner() {
     const flightplanName = match ? params.plan : null;
     const [flightplan, setFlightplan] = useState<string | null>(null);
 
-    const [flightplans, setFlightplans] = useState<string[] | null>(null);
+    const [flightplans, setFlightplans] = useState<FlightplanList | null>(null);
     const [hasInternetConnection, setHasInternetConnection] = useState<boolean | null>(null);
     // Keep track of whether the map is focused,
     // so that we don't trigger swipe events when the user is interacting with the map
     const [isMapFocused, setIsMapFocused] = useState(false);
+
+    /**
+     * Fetch the list of saved Flightplans from the server.
+     */
+    const getFlightplanList = async () => {
+        try {
+            const response = await api("get/flightplan");
+            setFlightplans(response as FlightplanList);
+        } catch (e) {
+            setError(`Server error whilst fetching flightplans: ${(e as Error).message}`);
+        }
+    };
 
     /**
      * Save a Flightplan to the server.
@@ -100,6 +112,8 @@ export default function Planner() {
     // Fetch the flightplan from the server when the flightplan name (in URL) changes
     useEffect(() => {
         if (!flightplanName) {
+            setFlightplan(null);
+            getFlightplanList().catch(console.error);
             return;
         }
         api("get/flightplan", { name: flightplanName })
@@ -129,11 +143,7 @@ export default function Planner() {
     // Check internet connection and fetch saved flightplans on page load
     useEffect(() => {
         checkInternetConnection().catch(console.error);
-        api("get/flightplan")
-            .then(response => {
-                setFlightplans((response as FlightplanList).flightplans);
-            })
-            .catch(console.error);
+        getFlightplanList().catch(console.error);
     }, []);
 
     return (
@@ -146,7 +156,10 @@ export default function Planner() {
         >
             {flightplan === null ? (
                 // No flightplan selected/being edited, show list of available flightplans
-                <>
+                <div className="flex flex-col min-h-screen">
+                    <div className="grow">
+                        <Explorer flightplans={flightplans} setFlightplans={setFlightplans} />
+                    </div>
                     <div className="flex justify-end mb-4">
                         <button
                             type="button"
@@ -169,8 +182,7 @@ export default function Planner() {
                             Load from File
                         </button>
                     </div>
-                    <Explorer flightplans={flightplans} setFlightplans={setFlightplans} />
-                </>
+                </div>
             ) : (
                 <>
                     <Map json={flightplan} setJson={setFlightplan} setIsFocused={setIsMapFocused} />

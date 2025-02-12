@@ -3,6 +3,8 @@
  * Licensed under the GNU GPL-3.0
  */
 
+/* eslint-disable prefer-const */
+
 import * as http from "http";
 import { MockHandler } from "vite-plugin-mock-server";
 
@@ -13,7 +15,6 @@ function send_data(res: http.ServerResponse<http.IncomingMessage>, data: object)
     res.end(JSON.stringify(data));
 }
 
-// eslint-disable-next-line prefer-const
 let config = {
     sections: [
         {
@@ -42,9 +43,8 @@ let config = {
         },
     ],
 };
-// eslint-disable-next-line prefer-const
 let flightplans: { [name: string]: Flightplan } = {
-    flightplan: {
+    default: {
         version: "1.0",
         version_fw: "1.0.0",
         alt_samples: 0,
@@ -54,6 +54,7 @@ let flightplans: { [name: string]: Flightplan } = {
         ],
     },
 };
+let activeFlightplan: string | null = null; // Name of currently active flightplan
 let mode = "direct";
 
 export default (): MockHandler[] => [
@@ -105,12 +106,14 @@ export default (): MockHandler[] => [
                 send_data(res, flightplan);
             });
             req.on("end", () => {
-                if (!dataReceived) {
-                    // No input, return list of all flightplan names
-                    send_data(res, {
-                        flightplans: flightplans ? Object.keys(flightplans) : [],
-                    });
+                if (dataReceived) {
+                    return;
                 }
+                // No input, return list of all flightplan names
+                send_data(res, {
+                    flightplans: flightplans ? Object.keys(flightplans).map(name => ({ name, size: 100 })) : [],
+                    active: activeFlightplan,
+                });
             });
         },
     },
@@ -123,7 +126,8 @@ export default (): MockHandler[] => [
                 version_flightplan: "1.0",
                 platform: "Simulated Devlopment Platform",
                 platform_version: "1.0.0",
-                fs_free: 256000,
+                fs_free: 128000,
+                fs_total: 256000,
             });
         },
     },
@@ -192,7 +196,11 @@ export default (): MockHandler[] => [
     {
         pattern: "/api/v1/set/active",
         handle: (req, res) => {
-            send_data(res, { error: "" });
+            req.on("data", (bodyString: string) => {
+                const body = JSON.parse(bodyString) as { name: string };
+                activeFlightplan = body.name;
+                send_data(res, { error: "" });
+            });
         },
     },
     {

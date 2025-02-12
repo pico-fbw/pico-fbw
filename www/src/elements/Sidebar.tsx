@@ -50,7 +50,7 @@ export default function Sidebar({ navigation, isOpen, setIsOpen }: SidebarProps)
     return (
         <>
             {/* Desktop: static sidebar */}
-            <div className="hidden xl:fixed xl:inset-y-0 xl:z-50 xl:flex xl:w-72 xl:flex-col">
+            <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
                 <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-black/10 px-6 ring-1 ring-white/5">
                     <Link to={"/"} className="flex h-[4.5rem] shrink-0 items-center">
                         <img src="/icon.svg" className="h-10 w-auto -m-2" />
@@ -71,14 +71,14 @@ export default function Sidebar({ navigation, isOpen, setIsOpen }: SidebarProps)
                 </div>
             </div>
             {/* Mobile: tray icon */}
-            <div className="sticky top-0 z-40 flex items-center gap-x-6 bg-gray-900 px-4 py-4 shadow-sm sm:px-6 lg:hidden">
+            <div className="sticky top-0 z-40 flex items-center gap-x-6 bg-gray-900 px-4 py-4 shadow-sm sm:px-6 3xl:hidden">
                 <button type="button" className="-m-2.5 p-2.5 text-gray-400 lg:hidden" onClick={() => setIsOpen(true)}>
                     <span className="sr-only">Open sidebar</span>
                     <Bars3MiniSolid className="h-6 w-6" aria-hidden="true" />
                 </button>
             </div>
             {/* Mobile: full sidebar */}
-            <div className="relative z-[2000] lg:hidden">
+            <div className="relative z-[2000] 3xl:hidden">
                 <div
                     className={classNames(
                         isOpen ? "block" : "hidden",

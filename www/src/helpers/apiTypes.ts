@@ -15,7 +15,11 @@ export type GET_CONFIG = {
     }[];
 };
 export type FlightplanList = {
-    flightplans: string[];
+    flightplans: {
+        name: string;
+        size: number;
+    }[];
+    active?: string;
 };
 export type GET_FLIGHTPLAN = FlightplanList | Flightplan;
 export type GET_INFO = {
@@ -25,6 +29,7 @@ export type GET_INFO = {
     platform: string;
     platform_version: string;
     fs_free: number;
+    fs_total: number;
 };
 export type GET_INPUT = {
     ail: number;
