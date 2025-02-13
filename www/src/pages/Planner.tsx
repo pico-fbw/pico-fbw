@@ -156,31 +156,36 @@ export default function Planner() {
         >
             {flightplan === null ? (
                 // No flightplan selected/being edited, show list of available flightplans
-                <div className="flex flex-col min-h-screen">
+                <div className="flex flex-col h-full">
+                    <div className="flex bg-black/10 ring-white/5 ring-1 mb-4">
+                        <h1 className="px-6 place-self-center rounded-md text-3xl font-bold text-white">
+                            Flight Plans
+                        </h1>
+                        <div className="flex grow p-4 gap-3 justify-end">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    // FIXME: temp js input, implement proper input
+                                    const name = prompt();
+                                    if (name) {
+                                        setLocation(`/planner/${name}`);
+                                    }
+                                }}
+                                className="inline-flex items-center px-4 py-2 border border-transparent text-md leading-4 font-semibold rounded-md shadow-sm text-white bg-gray-500 hover:bg-gray-500/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-600"
+                            >
+                                New
+                            </button>
+                            <button
+                                type="button"
+                                onClick={openFilePicker}
+                                className="inline-flex items-center px-4 py-2 border border-transparent text-md leading-4 font-semibold rounded-md shadow-sm text-white bg-gray-500 hover:bg-gray-500/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-600"
+                            >
+                                Load from File
+                            </button>
+                        </div>
+                    </div>
                     <div className="grow">
                         <Explorer flightplans={flightplans} setFlightplans={setFlightplans} />
-                    </div>
-                    <div className="flex justify-end mb-4">
-                        <button
-                            type="button"
-                            onClick={() => {
-                                // FIXME: temp js input, implement proper input
-                                const name = prompt();
-                                if (name) {
-                                    setLocation(`/planner/${name}`);
-                                }
-                            }}
-                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-600"
-                        >
-                            New
-                        </button>
-                        <button
-                            type="button"
-                            onClick={openFilePicker}
-                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-600"
-                        >
-                            Load from File
-                        </button>
                     </div>
                 </div>
             ) : (
