@@ -44,7 +44,7 @@ typedef alarm_id_t __callback_id_t;
     #define PIN_ADC_1 27
     #define PIN_ADC_2 28
     #define PIN_ADC_3 29
-static const u32 ADC_PINS[] = {PIN_ADC_0, PIN_ADC_1, PIN_ADC_2, PIN_ADC_3};
+static const i16 ADC_PINS[] = {PIN_ADC_0, PIN_ADC_1, PIN_ADC_2, PIN_ADC_3};
 #endif
 
 // Wi-Fi

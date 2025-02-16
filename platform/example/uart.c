@@ -16,7 +16,7 @@ char *uart_read(u32 tx, u32 rx) {
     // This function should read ONE line from all the given UART pins and return it as a null-terminated string.
     // Memory for this string should be allocated on the heap using malloc(), realloc(), or similar.
     // It will be free()d by the caller.
-    // If there is no input currentlym available, this function should return NULL.
+    // If there is no input currently available, this function should return NULL.
 }
 
 bool uart_write(u32 tx, u32 rx, const char *str) {

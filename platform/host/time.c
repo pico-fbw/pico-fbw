@@ -17,6 +17,7 @@
 #endif
 #include <unistd.h>
 
+#include "platform/helpers.h"
 #include "sys_shared.h"
 
 #include "platform/time.h"
@@ -136,5 +137,14 @@ void cancel_callback(CallbackData *data) {
 }
 
 void sleep_us_blocking(u64 us) {
+#if defined(_WIN32)
     usleep(us);
+#elif defined(__APPLE__) || defined(__linux__)
+    if (likely(us < 1000000)) {
+        nanosleep((const struct timespec[]){{0, us * 1000L}}, NULL);
+        return;
+    }
+    // Delay too long, fall back to usleep
+    usleep(us);
+#endif
 }

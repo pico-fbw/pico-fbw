@@ -111,7 +111,12 @@ export default (): MockHandler[] => [
                 }
                 // No input, return list of all flightplan names
                 send_data(res, {
-                    flightplans: flightplans ? Object.keys(flightplans).map(name => ({ name, size: 100 })) : [],
+                    flightplans: flightplans
+                        ? Object.keys(flightplans).map(name => ({
+                              name,
+                              size: Buffer.byteLength(JSON.stringify(flightplans[name])),
+                          }))
+                        : [],
                     active: activeFlightplan,
                 });
             });

@@ -59,7 +59,7 @@ include(ClangFormat)
 include(Doxygen)
 include(WebBuild)
 # Final setup tasks
-message("Finishing up setup for '${FBW_PLATFORM}'")
+message("Finishing up setup for '${FBW_PLATFORM}', this may take a moment...")
 setup_after_subdirs()
 
 message("Configuration summary:")

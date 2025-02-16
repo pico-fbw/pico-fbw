@@ -59,7 +59,7 @@ bool uart_setup(u32 tx, u32 rx, u32 baud) {
     gpio_pull_up(tx);
     gpio_pull_up(rx);
     uart_init(uart, baud);
-    uart_set_format(uart, 8, 1, UART_PARITY_NONE); // NMEA-0183 format
+    uart_set_format(uart, 8, 1, UART_PARITY_NONE); // 8N1
     // Clear FIFO
     uart_set_fifo_enabled(uart, false);
     irq_set_enabled(uart == uart0 ? UART0_IRQ : UART1_IRQ, true);

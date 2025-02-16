@@ -53,7 +53,7 @@ typedef x __callback_id_t;
     #define ADC_NUM_CHANNELS x // Number of individual input channels your ADC supports
     #define PIN_ADC_0 x        // First pin your ADC supports
 // Add more as needed...
-static const u32 ADC_PINS[] = {PIN_ADC_0}; // Array of all ADC pins you've defined
+static const i16 ADC_PINS[] = {PIN_ADC_0}; // Array of all ADC pins you've defined
 #endif
 
 // Wi-Fi

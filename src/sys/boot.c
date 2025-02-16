@@ -97,7 +97,8 @@ void boot_init_receiver() {
         case RECEIVERCALIBRATION_INCOMPLETE:
             printpre("boot", "receiver calibration not found!");
             printpre("boot", "calibrating now...do not touch the transmitter!");
-            if (!receiver_calibrate(pins, num_pins, deviations, 2000, 2, 3) || receiver_is_calibrated() != 0) {
+            if (!receiver_calibrate(pins, num_pins, deviations, 2000, 2, 3) ||
+                receiver_is_calibrated() != RECEIVERCALIBRATION_OK) {
                 log_message(TYPE_FATAL, "Receiver calibration failed!", 500, 0, true);
                 return;
             }

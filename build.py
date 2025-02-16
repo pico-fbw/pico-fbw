@@ -5,6 +5,7 @@
 # Licensed under the GNU GPL-3.0
 
 import os
+import platform
 import random
 import shutil
 import ssl
@@ -16,14 +17,24 @@ from pathlib import Path
 from urllib.request import urlretrieve
 import zipfile
 
-host = os.sys.platform.lower() # OS of host machine
+SUPPORTED_HOSTS = [
+    "linux-aarch64", # Linux arm64
+    "linux-x86_64", # Linux x86_64
+    "win32-amd64", # Windows x86_64
+    "darwin-arm64", # macOS arm64
+    "darwin-x86_64", # macOS x86_64
+]
+
+host_os = os.sys.platform.lower()
+host_arch = platform.machine().lower()
+host = f"{host_os}-{host_arch}"
 root_dir = Path(__file__).resolve().parent # Root directory of the project
 ssl._create_default_https_context = ssl._create_stdlib_context
 
 # === Install functions for dependencies ===
 
 def install_esp_idf():
-    if host == "win32":
+    if "win32" in host:
         subprocess.check_call(["install.bat"])
     else:
         os.chmod("install.sh", os.stat("install.sh").st_mode | stat.S_IEXEC)
@@ -32,14 +43,14 @@ def install_esp_idf():
 
 def install_ninja():
     ninja = "ninja"
-    if host == "win32":
+    if "win32" in host:
         ninja += ".exe"
     os.chmod(ninja, os.stat(ninja).st_mode | stat.S_IEXEC)
 
 def install_node():
-    os.environ["PATH"] += os.pathsep + (str(get_dependency_dir("node") / "bin") if host != "win32" else str(get_dependency_dir("node")))
+    os.environ["PATH"] += os.pathsep + (str(get_dependency_dir("node") / "bin") if not "win32" in host else str(get_dependency_dir("node")))
     corepack = Path("bin/corepack")
-    if host == "win32":
+    if "win32" in host:
         corepack = Path("corepack.cmd")
     # Enable corepack to install yarn
     subprocess.check_call([str(corepack), "enable"])
@@ -56,20 +67,24 @@ def install_pico_sdk():
 # Dependencies needed for the build process and details on how to install them
 dependencies = {
     'arm-none-eabi-gcc': {
-        'version': '10.3.1',
+        'version': '14.2.rel1',
         'url': {
-            'linux': 'https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2',
-            'win32': 'https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-win32.zip',
-            'darwin': 'https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-mac.tar.bz2',
+            'linux-aarch64': 'https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-aarch64-arm-none-eabi.tar.xz',
+            'linux-x86_64': 'https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi.tar.xz',
+            'win32-amd64': 'https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-mingw-w64-x86_64-arm-none-eabi.zip',
+            'darwin-arm64': 'https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-darwin-arm64-arm-none-eabi.tar.xz',
+            'darwin-x86_64': 'https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-darwin-x86_64-arm-none-eabi.tar.xz',
         },
         'add_to_path': 'bin',
     },
     'cmake': {
-        'version': '3.31.0',
+        'version': '3.31.5',
         'url': {
-            'linux': 'https://github.com/Kitware/CMake/releases/download/v3.31.0/cmake-3.31.0-linux-x86_64.tar.gz',
-            'win32': 'https://github.com/Kitware/CMake/releases/download/v3.31.0/cmake-3.31.0-windows-x86_64.zip',
-            'darwin': 'https://github.com/Kitware/CMake/releases/download/v3.31.0/cmake-3.31.0-macos-universal.tar.gz',
+            'linux-aarch64': 'https://github.com/Kitware/CMake/releases/download/v3.31.5/cmake-3.31.5-linux-aarch64.tar.gz',
+            'linux-x86_64': 'https://github.com/Kitware/CMake/releases/download/v3.31.5/cmake-3.31.5-linux-x86_64.tar.gz',
+            'win32-amd64': 'https://github.com/Kitware/CMake/releases/download/v3.31.5/cmake-3.31.5-windows-x86_64.zip',
+            'darwin-arm64': 'https://github.com/Kitware/CMake/releases/download/v3.31.5/cmake-3.31.5-macos-universal.tar.gz',
+            'darwin-x86_64': 'https://github.com/Kitware/CMake/releases/download/v3.31.5/cmake-3.31.5-macos-universal.tar.gz',
         },
     },
     'ESP-IDF': {
@@ -81,9 +96,11 @@ dependencies = {
     'ninja': {
         'version': '1.12.1',
         'url': {
-            'linux': 'https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-linux.zip',
-            'win32': 'https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-win.zip',
-            'darwin': 'https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-mac.zip',
+            'linux-aarch64': 'https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-linux-aarch64.zip',
+            'linux-x86_64': 'https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-linux.zip',
+            'win32-amd64': 'https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-win.zip',
+            'darwin-arm64': 'https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-mac.zip',
+            'darwin-x86_64': 'https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-mac.zip',
         },
         'install': install_ninja,
         'add_to_path': '',
@@ -91,9 +108,11 @@ dependencies = {
     'node': {
         'version': '22.13.0',
         'url': {
-            'linux': 'https://nodejs.org/dist/v22.13.0/node-v22.13.0-linux-x64.tar.xz',
-            'win32': 'https://nodejs.org/dist/v22.13.0/node-v22.13.0-win-x64.zip',
-            'darwin': 'https://nodejs.org/dist/v22.13.0/node-v22.13.0-darwin-x64.tar.gz',
+            'linux-aarch64': 'https://nodejs.org/dist/v22.13.0/node-v22.13.0-linux-arm64.tar.xz',
+            'linux-x86_64': 'https://nodejs.org/dist/v22.13.0/node-v22.13.0-linux-x64.tar.xz',
+            'win32-amd64': 'https://nodejs.org/dist/v22.13.0/node-v22.13.0-win-x64.zip',
+            'darwin-arm64': 'https://nodejs.org/dist/v22.13.0/node-v22.13.0-darwin-arm64.tar.gz',
+            'darwin-x86_64': 'https://nodejs.org/dist/v22.13.0/node-v22.13.0-darwin-x64.tar.gz',
         },
         'install': install_node,
         # node is actually added to PATH but has to be handled as an edge case (in run_prebuild_tasks)
@@ -108,20 +127,22 @@ dependencies = {
 
 # Platforms that can be built for
 platforms = [
+    "esp32",
     "host",
+    "linux",
     "pico",
     "pico2",
     "pico_w",
-    "esp32",
 ]
 
 # Dependencies needed for each platform
 platform_dependencies = {
+    "esp32": ["ninja", "cmake", "node", "ESP-IDF"],
     "host": ["ninja", "cmake", "node"],
+    "linux": ["ninja", "cmake", "node"],
     "pico": ["ninja", "cmake", "node", "arm-none-eabi-gcc", "pico-sdk"],
     "pico2": ["ninja", "cmake", "node", "arm-none-eabi-gcc", "pico-sdk"],
     "pico_w": ["ninja", "cmake", "node", "arm-none-eabi-gcc", "pico-sdk"],
-    "esp32": ["ninja", "cmake", "node", "ESP-IDF"],
 }
 
 def find_innermost_subdir(path: Path) -> Path:
@@ -234,15 +255,15 @@ def find_dependency(program: str) -> Path | None:
         if program == "arm-none-eabi-gcc":
             return path / "bin" # Return the entire bin directory to have access to all tools
         elif program == "cmake":
-            if host == "win32":
+            if "win32" in host:
                 return path / "bin" / "cmake.exe"
             return path / "bin" / "cmake"
         elif program == "ninja":
-            if host == "win32":
+            if "win32" in host:
                 return path / "ninja.exe"
             return path / "ninja"
         elif program == "node":
-            if host == "win32":
+            if "win32" in host:
                 return path / "node.exe"
             return path / "bin" / "node"
         
@@ -251,25 +272,28 @@ def find_dependency(program: str) -> Path | None:
 
 def setup_host_tools():
     """Install any necessary build tools for the host platform."""
-    if host == "linux":
+    if "linux" in host:
         gpp = shutil.which("g++")
-        if gpp:
+        git = shutil.which("git")
+        if gpp and git:
             print(f"Dependency 'g++' found at '{gpp}'")
+            print(f"Dependency 'git' found at '{git}'")
         else:
             print("-- Installing build tools")
-            # Try to install g++ via the system's package manager
+            print("Using sudo, you may be prompted for your password")
+            # Try to install via the system's package manager
             if shutil.which("apt"):
-                subprocess.check_call(["sudo", "apt", "install", "g++", "-y"])
+                subprocess.check_call(["sudo", "apt", "install", "g++", "git", "-y"])
             elif shutil.which("dnf"):
-                subprocess.check_call(["sudo", "dnf", "install", "gcc-c++", "-y"])
+                subprocess.check_call(["sudo", "dnf", "install", "gcc-c++", "git", "-y"])
             elif shutil.which("pacman"):
-                subprocess.check_call(["sudo", "pacman", "-S", "gcc", "gcc-libs", "--noconfirm"])
+                subprocess.check_call(["sudo", "pacman", "-S", "gcc", "gcc-libs", "git", "--noconfirm"])
             elif shutil.which("zypper"):
-                subprocess.check_call(["sudo", "zypper", "install", "gcc-c++"])
+                subprocess.check_call(["sudo", "zypper", "install", "gcc-c++", "git"])
             else:
-                print("Unable to install build tools, please install them manually.")
+                print("Unable to install build tools (g++, git), please install them manually.")
                 exit(1)
-    elif host == "win32":
+    elif "win32" in host:
         msys2 = (Path(os.path.abspath(os.sep)) / "msys64")
         if msys2.exists():
             print(f"Dependency 'MSYS2' found at '{msys2}'")
@@ -293,7 +317,7 @@ def setup_host_tools():
             print("Installing build tools")
             subprocess.check_call(["C:\\msys64\\usr\\bin\\pacman", "-S", "base-devel", "mingw-w64-ucrt-x86_64-toolchain", "--needed", "--noconfirm"])
         os.environ["PATH"] += os.pathsep + "C:\\msys64\\ucrt64\\bin" + os.pathsep + "C:\\msys64\\usr\\bin" # Ensure packages are in PATH during build
-    elif host == "darwin":
+    elif "darwin" in host:
         xcode = (Path(os.path.abspath(os.sep)) / "Library/Developer/CommandLineTools")
         if xcode.exists():
             print(f"Dependency 'Xcode' found at '{xcode}'")
@@ -331,13 +355,13 @@ def construct_cmake_command(platform: str) -> tuple[str, str]:
     source_dir = str(root_dir)
     build_dir = "build"
     # Base configure command 
-    configure = str(find_dependency("cmake")) + " -S" + source_dir + " -B" + build_dir + f" -DFBW_PLATFORM={platform}"+ " -DCMAKE_BUILD_TYPE=Release"
+    configure = str(find_dependency("cmake")) + " -S" + source_dir + " -B" + build_dir + f" -DFBW_PLATFORM={platform}" + " -DCMAKE_BUILD_TYPE=Release"
     # If ninja is in PATH, use it as the build tool
     if find_dependency("ninja") is not None:
         configure += f" -DCMAKE_MAKE_PROGRAM={str(find_dependency('ninja'))}" + " -GNinja"
     # Platform-specific modifications
     if platform == "esp32":
-        if host == "win32":
+        if "win32" in host:
             configure = str(find_dependency("ESP-IDF") / "export.bat") + " && " + configure
         else:
             configure = ". $IDF_PATH/export.sh && " + configure
@@ -346,7 +370,7 @@ def construct_cmake_command(platform: str) -> tuple[str, str]:
     build = str(find_dependency("cmake")) + " --build " + build_dir + " --parallel"
     # More platform-specific modifications for build
     if platform == "esp32":
-        if host == "win32":
+        if "win32" in host:
             build = str(find_dependency("ESP-IDF") / "export.bat") + " && " + build
         else:
             build = ". $IDF_PATH/export.sh && " + build
@@ -399,20 +423,32 @@ def main():
     if len(os.sys.argv) > 1 and os.sys.argv[1] == "clean":
         clean_build_dir()
         exit(0)
+    # Ensure host is supported
+    if host not in SUPPORTED_HOSTS:
+        print(f"Unsupported host '{host}'")
+        exit(1)
     # Get the platform to build for
     platform = get_platform()
     print(f"-- Building for platform '{platform}'")
+    # Validate platform
     if platform not in platforms:
         print(f"Invalid platform '{platform}'")
         exit(1)
+    if platform == "linux" and not "linux" in host:
+        print(f"Linux platform can only be built on a Linux host (detected host: '{host}')")
+        exit(1)
 
+    # Check for host build tools (host compiler, git, etc.)
+    print("-- Setting up host tools")
+    setup_host_tools()
     # Find which dependencies we need based on the provided platform
     needed = platform_dependencies[platform].copy()
     print("-- Indexing dependencies...")
     # Check what dependencies (if any) are installed and remove them from the list
     for dep in needed.copy():
-        if find_dependency(dep) is not None:
-            print(f"Depencency '{dep}' found at '{find_dependency(dep)}'")
+        found = find_dependency(dep)
+        if found is not None:
+            print(f"Depencency '{dep}' found at '{found}'")
             needed.remove(dep)
     if needed:
         # Create the deps directory if it doesn't exist
@@ -434,9 +470,6 @@ def main():
                 print(f"Failed to install '{dep}'")
                 exit(1)
     os.chdir(root_dir)
-    # Check for host build tools; cmake likes to use host compilers for a lot of things
-    print("-- Setting up host tools")
-    setup_host_tools()
     print("-- All dependencies installed")
 
     # Run pre-build tasks and then build the project

@@ -27,6 +27,17 @@ export default function Explorer({ flightplans, setFlightplans }: ExplorerProps)
         });
     };
 
+    const formatBytes = (bytes: number, decimals = 2) => {
+        if (bytes === 0) {
+            return "0 B";
+        }
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ["B", "kB", "MB", "GB", "TB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+    };
+
     interface EntryProps {
         name: string;
         size: number;
@@ -42,7 +53,7 @@ export default function Explorer({ flightplans, setFlightplans }: ExplorerProps)
                     <DocumentOutline className="h-8 w-8 text-white" />
                     <div className="flex flex-col">
                         <p className="text-2xl font-semibold text-white">{name}</p>
-                        <p className="text-xl font-medium text-white">{size} B</p>
+                        <p className="text-xl font-medium text-white">{formatBytes(size)}</p>
                     </div>
                 </div>
                 <div className="flex flex-col gap-3 justify-center md:flex-row">
