@@ -35,33 +35,58 @@ typedef struct PWMOutChannel {
     bool active;
 } PWMOutChannel;
 
-static PWMInChannel inChannels[NUM_PWM_IN_CHANNELS];
+static PWMInChannel inChannels[NUM_PWM_IN_CHANNELS] = {[0 ... NUM_PWM_IN_CHANNELS - 1] = {.active = false}};
 static size_t numCaptureChannels = 0; // Number of MCPWM capture channels in use
 static int currentCaptureTimer = 0;   // Current capture timer being used to create channels
 
-static PWMOutChannel outChannels[NUM_PWM_OUT_CHANNELS];
+static PWMOutChannel outChannels[NUM_PWM_OUT_CHANNELS] = {[0 ... NUM_PWM_OUT_CHANNELS - 1] = {.active = false}};
 static size_t numOperators = 0; // Number of MCPWM operators in use
 static int currentTimer = 0;    // Current timer being used to create operators
 
 /**
- * @return a pointer to the first available PWM IN channel, or NULL if none are available
+ * Gets the corresponding PWM IN channel for the given pin, optionally creating a new one if it doesn't exist.
+ * @param pin the pin to get the channel for
+ * @param new whether or not to create a new channel if it doesn't exist
+ * @return a pointer to the PWM IN channel representing the given pin, or NULL if none match
  */
-static PWMInChannel *get_available_in_channel() {
+static PWMInChannel *get_in_channel(i16 pin, bool new) {
+    for (u32 i = 0; i < count_of(inChannels); i++) {
+        if (inChannels[i].pin == pin) {
+            return &inChannels[i];
+        }
+    }
+    if (!new) {
+        return NULL; // No channel found, and we weren't asked to create a new one
+    }
+    // Create a new channel
     for (u32 i = 0; i < count_of(inChannels); i++) {
         if (!inChannels[i].active) {
+            inChannels[i].pin = pin;
             inChannels[i].active = true;
             return &inChannels[i];
         }
     }
-    return NULL;
+    return NULL; // No available channels
 }
 
 /**
- * @return a pointer to the first available PWM OUT channel, or NULL if none are available
+ * Gets the corresponding PWM OUT channel for the given pin, optionally creating a new one if it doesn't exist.
+ * @param pin the pin to get the channel for
+ * @param new whether or not to create a new channel if it doesn't exist
+ * @return a pointer to the PWM OUT channel representing the given pin, or NULL if none match
  */
-static PWMOutChannel *get_available_out_channel() {
+static PWMOutChannel *get_out_channel(i16 pin, bool new) {
+    for (u32 i = 0; i < count_of(outChannels); i++) {
+        if (outChannels[i].pin == pin) {
+            return &outChannels[i];
+        }
+    }
+    if (!new) {
+        return NULL;
+    }
     for (u32 i = 0; i < count_of(outChannels); i++) {
         if (!outChannels[i].active) {
+            outChannels[i].pin = pin;
             outChannels[i].active = true;
             return &outChannels[i];
         }
@@ -69,30 +94,7 @@ static PWMOutChannel *get_available_out_channel() {
     return NULL;
 }
 
-/**
- * @return a pointer to the PWM IN channel representing the given pin, or NULL if none match
- */
-static PWMInChannel *get_in_channel(i16 pin) {
-    for (u32 i = 0; i < count_of(inChannels); i++) {
-        if (inChannels[i].pin == pin) {
-            return &inChannels[i];
-        }
-    }
-    return NULL;
-}
-
-/**
- * @return a pointer to the PWM OUT channel representing the given pin, or NULL if none match
- */
-static PWMOutChannel *get_out_channel(i16 pin) {
-    for (u32 i = 0; i < count_of(outChannels); i++) {
-        if (outChannels[i].pin == pin) {
-            return &outChannels[i];
-        }
-    }
-    return NULL;
-}
-
+// Callback for when a capture event occurs.
 static bool pwm_read_callback(mcpwm_cap_channel_handle_t cap_channel, const mcpwm_capture_event_data_t *event,
                               void *data) {
     PWMInChannel *channel = (PWMInChannel *)data;
@@ -134,11 +136,10 @@ bool pwm_setup_read(const i16 pins[], u32 num_pins) {
         }
 
         // Get an available channel in the array, this will allow us to interact with the channel later
-        PWMInChannel *channel = get_available_in_channel();
+        PWMInChannel *channel = get_in_channel(pins[i], true);
         if (!channel) {
             return false;
         }
-        channel->pin = pins[i];
         // Create a new capture channel and register a callback for it
         mcpwm_cap_channel_handle_t capture;
         mcpwm_capture_channel_config_t captureConfig = {
@@ -199,11 +200,7 @@ bool pwm_setup_write(const i16 pins[], u32 num_pins, u32 freq) {
             }
         }
 
-        PWMOutChannel *channel = get_available_out_channel();
-        if (!channel) {
-            return false;
-        }
-        channel->pin = pins[i];
+        PWMOutChannel *channel = get_out_channel(pins[i], true);
         channel->period = period;
         // Create a new operator, comparator, and generator for the channel
         mcpwm_oper_handle_t operator;
@@ -255,7 +252,7 @@ bool pwm_setup_write(const i16 pins[], u32 num_pins, u32 freq) {
 }
 
 f32 pwm_read_raw(i16 pin) {
-    PWMInChannel *channel = get_in_channel(pin);
+    PWMInChannel *channel = get_in_channel(pin, false);
     if (!channel) {
         return -1.f;
     }
@@ -264,7 +261,7 @@ f32 pwm_read_raw(i16 pin) {
 }
 
 void pwm_write_raw(i16 pin, f32 pulsewidth) {
-    PWMOutChannel *channel = get_out_channel(pin);
+    PWMOutChannel *channel = get_out_channel(pin, false);
     if (!channel) {
         return;
     }

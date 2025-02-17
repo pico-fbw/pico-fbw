@@ -18,11 +18,12 @@
 #include <unistd.h>
 
 #include "platform/helpers.h"
-#include "sys_shared.h"
 
 #include "platform/time.h"
 
 #if defined(_WIN32)
+
+extern LARGE_INTEGER tStart, tFreq; // Defined in sys.c
 
 VOID CALLBACK callback_to_WAITORTIMERCALLBACK(PVOID lpParameter, BOOLEAN TimerOrWaitFired) {
     CallbackData *data = (CallbackData *)lpParameter;
@@ -38,6 +39,8 @@ VOID CALLBACK callback_to_WAITORTIMERCALLBACK(PVOID lpParameter, BOOLEAN TimerOr
 }
 
 #elif defined(__APPLE__) || defined(__linux__)
+
+extern u64 tStart; // Defined in sys.c
 
 static void callback_to_sigevent(union sigval sv); // Forward declaration
 
@@ -140,6 +143,7 @@ void sleep_us_blocking(u64 us) {
 #if defined(_WIN32)
     usleep(us);
 #elif defined(__APPLE__) || defined(__linux__)
+    // Prefer nanosleep for short delays (more accurate)
     if (likely(us < 1000000)) {
         nanosleep((const struct timespec[]){{0, us * 1000L}}, NULL);
         return;

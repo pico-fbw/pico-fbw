@@ -23,14 +23,18 @@ static i32 api_wrap_handler(const char *args, api_handler handler, bool has_outp
     char *out = NULL;
     i32 res = handler(args, &out);
     if (res != 200 || (has_output && !out)) {
+        // Command failed, or output was expected but not produced
         if (out) {
             free(out);
         }
         return res;
     }
-    printraw("%s\n", out);
-    free(out);
-    return -1; // -1 indicates the same as 200, but indicates that output has already been printed
+    if (out) {
+        printraw("%s\n", out);
+        free(out);
+        return -1; // -1 indicates the same as 200, but indicates that output has already been printed
+    }
+    return res;
 }
 
 i32 api_handle_get(const char *cmd, const char *args) {

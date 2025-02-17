@@ -65,22 +65,18 @@ static bool wait_for_detent(i16 pin, f32 *detent, u32 timeout_ms, u32 duration_m
 
 void esc_enable(i16 pin) {
     printpre("ESC", "setting up ESC on pin %d", pin);
-    i16 pins[] = {pin};
-    if (!pwm_setup_write(pins, 1, config.general[GENERAL_ESC_HZ])) {
+    if (!pwm_setup_write((const i16[]){pin}, 1, (u32)config.general[GENERAL_ESC_HZ])) {
         log_message(TYPE_FATAL, "Failed to enable PWM output!", 500, 0, true);
     }
-    esc_set(pin, 0); // Set initial position to 0 to be safe
+    esc_set(pin, 0.f); // Set initial position to 0 to be safe
 }
 
 void esc_set(i16 pin, f32 speed) {
 #if !SIMCONNECT
-    // Ensure speed is within range 0-100% and convert from percentage to duty cycle
-    // See servo.c for more information on how the duty cycle is calculated
-    speed = clampf(speed, 0, 100);
-    f32 pulsewidth = 1E3f + ((f32)speed / 100.0f) * 1E3f;
-    f32 period = 1E6f / config.general[GENERAL_ESC_HZ];
-    u16 duty = (u16)((pulsewidth / period) * UINT16_MAX);
-    pwm_write_raw(pin, duty);
+    // Ensure speed is within range 0-100% and convert from percentage to pulsewidth
+    f32 percent = clampf(speed, 0.f, 100.f);
+    // ESCs expect a pulsewidth between 1000-2000µs (1000µs is 0%, 2000µs is 100%)
+    pwm_write_raw(pin, mapf(percent, 0.f, 100.f, 1000.f, 2000.f));
 #else
     simconnect_set(FCTRL_THR, speed);
     (void)pin;

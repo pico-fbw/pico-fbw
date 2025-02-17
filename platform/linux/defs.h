@@ -51,6 +51,10 @@ static const UARTMapping UART_MAP[] = {
 };
 #define MAX_UARTS count_of(UART_MAP)
 
+// GPIO settings
+#define GPIOCHIP_DEVICE "gpiochip0"
+#define MAX_GPIOD_REQUESTS 64 // Should be as large as the highest GPIO line being used
+
 // Platform details
 #if defined(__x86_64__)
     #define ARCH "x86_64"

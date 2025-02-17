@@ -8,6 +8,9 @@ typedef enum PinMode {
     MODE_OUTPUT,
     MODE_INPUT_PULLUP,
     MODE_INPUT_PULLDOWN,
+#if FBW_PLATFORM_LINUX
+    MODE_INPUT_EDGEDET, // Input with edge detection, only available on platform_linux (used for PWM input)
+#endif
 } PinMode;
 
 typedef enum PinState {

@@ -4,6 +4,7 @@
  */
 
 #include <math.h>
+#include "platform/helpers.h"
 #include "platform/pwm.h"
 #if SIMCONNECT
     #include "platform/simconnect.h"
@@ -27,7 +28,7 @@
  * Be aware that this value may not be cohesive;
  * this function does not check to see whether or not a calibration has been done, so it is able to return random data.
  */
-static inline f32 offset_of(i16 pin) {
+static f32 offset_of(i16 pin) {
     // Look up the correct value to fetch based on the pin
     u32 val = PWM_OFFSET_AIL; // Default/fallback as well as AIL
     if (pin == (i16)config.pins[PINS_INPUT_ELE]) {
@@ -42,14 +43,20 @@ static inline f32 offset_of(i16 pin) {
     return calibration.pwm[val];
 }
 
-static inline f32 read_raw(i16 pin, ReceiverMode mode) {
+static f32 read_raw(i16 pin, ReceiverMode mode) {
     f32 pulsewidth = pwm_read_raw(pin);
-    if (pulsewidth < 0) {
-        return 0; // Invalid pin
+    if (pulsewidth < 0.f) {
+        return 0.f; // Invalid pin
     }
     // Map pulsewidth to either 0-180.f (degree) or 0-100.f (percent)
-    // Pulsewidths should be between 1000-2000μs for servos
-    return mode == RECEIVER_MODE_DEGREE ? (pulsewidth - 1000.0f) * 0.18f : (pulsewidth - 1000.0f) * 0.10f;
+    // We expect a pulsewidth between 1000-2000μs
+    switch (mode) {
+        case RECEIVER_MODE_DEGREE:
+            return mapf(pulsewidth, 1000.f, 2000.f, 0.f, 180.f);
+        case RECEIVER_MODE_PERCENT:
+            return mapf(pulsewidth, 1000.f, 2000.f, 0.f, 100.f);
+    }
+    return 0.f;
 }
 
 void receiver_enable(const i16 pins[], u32 num_pins) {

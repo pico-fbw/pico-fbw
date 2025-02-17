@@ -5,14 +5,14 @@
 
 #include <gpiod.h>
 
+#include "platform/defs.h"
+
 #include "platform/gpio.h"
 
-#define GPIOCHIP_DEVICE "gpiochip0"
 #define GPIOCHIP_CONSUMER "pico-fbw"
-#define MAX_REQUESTS 64
 
 static struct gpiod_chip *chip = NULL;
-static struct gpiod_line_request *requests[MAX_REQUESTS];
+struct gpiod_line_request *requests[MAX_GPIOD_REQUESTS]; // Not static; used by pwm.c
 
 void gpio_setup(i16 pin, PinMode mode) {
     // Establish control of the specified gpiochip device
@@ -53,6 +53,15 @@ void gpio_setup(i16 pin, PinMode mode) {
                 return;
             }
             break;
+        case MODE_INPUT_EDGEDET:
+        // FIXME: edge detection causes odd crashing behavior on non-x86_64 platforms, investigate further?
+#if !defined(__x86_64__) && !defined(__i386__)
+            if (gpiod_line_settings_set_edge_detection(settings, GPIOD_LINE_EDGE_BOTH) != 0) {
+                gpiod_line_settings_free(settings);
+                return;
+            }
+#endif
+            goto INPUT;
     }
     // Configure a line configuration for the specified pin
     struct gpiod_line_config *line_cfg = gpiod_line_config_new();
