@@ -56,14 +56,6 @@ char *stdin_read() {
     if (!line) {
         return NULL;
     }
-    line[strcspn(line, "\n")] = 0; // Remove trailing newline
+    line[strcspn(line, "\n")] = '\0'; // Remove trailing newline
     return line;
-}
-
-int __printflike(1, 2) wrap_printf(const char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    int ret = vprintf(fmt, args);
-    va_end(args);
-    return ret;
 }

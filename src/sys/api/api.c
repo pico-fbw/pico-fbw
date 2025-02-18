@@ -3,9 +3,12 @@
  * Licensed under the GNU GPL-3.0
  */
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "platform/defs.h"
+#include "platform/stdio.h"
 
 #include "sys/api/cmds/cmds.h"
 #include "sys/print.h"
@@ -14,6 +17,16 @@
 
 // TODO: api command to initiate gps alt offset calibration (currently it's never triggered)
 // also corresponding webui button
+
+// api_output_func-compatible printf wrapper for API output to stdout
+static int __printflike(2, 3) api_print(void *ctx, const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    int ret = vprintf(fmt, args);
+    va_end(args);
+    return ret;
+    (void)ctx;
+}
 
 /**
  * Executes an API command.
@@ -24,9 +37,9 @@
 static i32 api_exec(const char *cmd, const char *args) {
     i32 status;
     if (strncasecmp(cmd, "GET_", 4) == 0) {
-        status = api_handle_get(cmd, args);
+        status = api_handle_get(cmd, args, api_print, NULL);
     } else if (strncasecmp(cmd, "SET_", 4) == 0) {
-        status = api_handle_set(cmd, args);
+        status = api_handle_set(cmd, args, api_print, NULL);
     } else if (strncasecmp(cmd, "TEST_", 5) == 0) {
         status = api_handle_test(cmd, args);
     } else {

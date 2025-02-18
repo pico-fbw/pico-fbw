@@ -8,70 +8,70 @@
 #include <string.h>
 
 #include "sys/api/api.h"
-#include "sys/print.h"
 
 #include "cmds.h"
 
 /**
- * Wraps an API command handler for use with stdin/stdout.
- * @param args the command arguments from stdin
+ * Wraps an API command function for use with a given output function.
+ * @param args the command arguments
  * @param handler the handler function to call
- * @param has_output whether the command is expected to produce output
+ * @param output_func the function to call to output data, or NULL if no output is expected
+ * @param output_ctx the context to pass to the output function
  * @return the status code of the operation
  */
-static i32 api_wrap_handler(const char *args, api_handler handler, bool has_output) {
+static i32 api_wrap_handler(const char *args, api_func handler, api_output_func output_func, void *output_ctx) {
     char *out = NULL;
     i32 res = handler(args, &out);
-    if (res != 200 || (has_output && !out)) {
+    if (res != 200 || (output_func && !out)) {
         // Command failed, or output was expected but not produced
         if (out) {
             free(out);
         }
         return res;
     }
-    if (out) {
-        printraw("%s\n", out);
+    if (out && output_func) {
+        output_func(output_ctx, "%s\n", out);
         free(out);
-        return -1; // -1 indicates the same as 200, but indicates that output has already been printed
+        return -1; // -1 indicates the same as 200, but indicates that output was already produced
     }
     return res;
 }
 
-i32 api_handle_get(const char *cmd, const char *args) {
+i32 api_handle_get(const char *cmd, const char *args, api_output_func output_func, void *output_ctx) {
     if (strcasecmp(cmd, "GET_CONFIG") == 0) {
-        return api_wrap_handler(args, api_get_config, true);
+        return api_wrap_handler(args, api_get_config, output_func, output_ctx);
     } else if (strcasecmp(cmd, "GET_FLIGHTPLAN") == 0) {
-        return api_wrap_handler(args, api_get_flightplan, true);
+        return api_wrap_handler(args, api_get_flightplan, output_func, output_ctx);
     } else if (strcasecmp(cmd, "GET_INFO") == 0) {
-        return api_wrap_handler(args, api_get_info, true);
+        return api_wrap_handler(args, api_get_info, output_func, output_ctx);
     } else if (strcasecmp(cmd, "GET_INPUT") == 0) {
-        return api_wrap_handler(args, api_get_input, true);
+        return api_wrap_handler(args, api_get_input, output_func, output_ctx);
     } else if (strcasecmp(cmd, "GET_LOGS") == 0) {
-        return api_wrap_handler(args, api_get_logs, true);
+        return api_wrap_handler(args, api_get_logs, output_func, output_ctx);
     } else if (strcasecmp(cmd, "GET_MODE") == 0) {
-        return api_wrap_handler(args, api_get_mode, true);
+        return api_wrap_handler(args, api_get_mode, output_func, output_ctx);
     } else if (strcasecmp(cmd, "GET_SENSOR") == 0) {
-        return api_wrap_handler(args, api_get_sensor, true);
+        return api_wrap_handler(args, api_get_sensor, output_func, output_ctx);
     } else {
         return 404;
     }
 }
 
-i32 api_handle_set(const char *cmd, const char *args) {
+i32 api_handle_set(const char *cmd, const char *args, api_output_func output_func, void *output_ctx) {
     if (strcasecmp(cmd, "SET_ACTIVE") == 0) {
-        return api_wrap_handler(args, api_set_active, true);
+        return api_wrap_handler(args, api_set_active, output_func, output_ctx);
     } else if (strcasecmp(cmd, "SET_BAY") == 0) {
-        return api_wrap_handler(args, api_set_bay, false);
+        return api_wrap_handler(args, api_set_bay, NULL, NULL);
     } else if (strcasecmp(cmd, "SET_CONFIG") == 0) {
-        return api_wrap_handler(args, api_set_config, true);
+        return api_wrap_handler(args, api_set_config, output_func, output_ctx);
     } else if (strcasecmp(cmd, "SET_FLIGHTPLAN") == 0) {
-        return api_wrap_handler(args, api_set_flightplan, true);
+        return api_wrap_handler(args, api_set_flightplan, output_func, output_ctx);
     } else if (strcasecmp(cmd, "SET_MODE") == 0) {
-        return api_wrap_handler(args, api_set_mode, false);
+        return api_wrap_handler(args, api_set_mode, NULL, NULL);
     } else if (strcasecmp(cmd, "SET_TARGET") == 0) {
-        return api_wrap_handler(args, api_set_target, false);
+        return api_wrap_handler(args, api_set_target, NULL, NULL);
     } else if (strcasecmp(cmd, "SET_WAYPOINT") == 0) {
-        return api_wrap_handler(args, api_set_waypoint, false);
+        return api_wrap_handler(args, api_set_waypoint, NULL, NULL);
     } else {
         return 404;
     }

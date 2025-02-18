@@ -47,7 +47,7 @@ export default function Explorer({ flightplans, setFlightplans }: ExplorerProps)
     function Entry({ name, size, active }: EntryProps) {
         return (
             <div
-                className={`flex max-width items-center py-4 px-6 mx-4 lg:mx-35 my-6 ${active ? "bg-gray-700" : "bg-gray-800"} rounded-2xl`}
+                className={`flex max-width items-center py-4 px-6 mx-4 lg:mx-35 my-6 ${active ? "bg-gray-700 border-2 border-gray-300" : "bg-gray-800"} rounded-2xl`}
             >
                 <div className="flex grow items-center space-x-3">
                     <DocumentOutline className="h-8 w-8 text-white" />

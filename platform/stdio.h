@@ -27,14 +27,6 @@ void stdio_setup();
 char *stdin_read();
 
 /**
- * A wrapper for the printf() function that outputs to all initialized stdout sources.
- * @param fmt the format string
- * @param ... the arguments to be formatted
- * @return the number of characters printed
- */
-int __printflike(1, 2) wrap_printf(const char *fmt, ...);
-
-/**
  * Attemps to reallocate a buffer.
  * @param buf the buffer to reallocate
  * @param size the new size of the buffer

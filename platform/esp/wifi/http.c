@@ -62,7 +62,7 @@ static esp_err_t get_request_body(httpd_req_t *req, char **response) {
 
 static esp_err_t handle_api_v1_request(httpd_req_t *req) {
     // API handler function that was registered with the URI
-    api_handler handler = (api_handler)req->user_ctx;
+    api_func handler = (api_func)req->user_ctx;
     char *out = NULL;
     i32 res = 200;
     if (handler) {

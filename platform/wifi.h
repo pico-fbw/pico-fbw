@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdbool.h>
 #include "platform/defs.h"
 
 #define WIFI_SSID_MIN_LEN 2
@@ -16,12 +17,6 @@ typedef enum WifiEnabled {
 #define WIFI_ENABLED_MAX WIFI_ENABLED_PASS
 
 #if PLATFORM_SUPPORTS_WIFI
-
-// clang-format off
-
-#include <stdbool.h>
-
-// clang-format on
 
 /**
  * Sets up the Wi-Fi access point with the given SSID and password.

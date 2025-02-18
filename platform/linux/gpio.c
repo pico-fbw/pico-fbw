@@ -54,7 +54,7 @@ void gpio_setup(i16 pin, PinMode mode) {
             }
             break;
         case MODE_INPUT_EDGEDET:
-        // FIXME: edge detection causes odd crashing behavior on non-x86_64 platforms, investigate further?
+            // FIXME: edge detection causes odd crashing behavior on non-x86_64 platforms, investigate further?
 #if !defined(__x86_64__) && !defined(__i386__)
             if (gpiod_line_settings_set_edge_detection(settings, GPIOD_LINE_EDGE_BOTH) != 0) {
                 gpiod_line_settings_free(settings);

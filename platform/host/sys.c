@@ -16,6 +16,9 @@ LARGE_INTEGER tStart, tFreq;
     #include <sys/time.h>
 u64 tStart;
 #endif
+#if FBW_PLATFORM_LINUX
+    #include "platform/sock.h"
+#endif
 
 #include "platform/sys.h"
 
@@ -42,6 +45,9 @@ void sys_boot_begin() {
 #endif
 #if SIMCONNECT
     simconnect_init();
+#endif
+#if FBW_PLATFORM_LINUX
+    sock_setup();
 #endif
 }
 

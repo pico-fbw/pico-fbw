@@ -42,12 +42,3 @@ char *stdin_read() {
     }
     return buf;
 }
-
-int __printflike(1, 2) wrap_printf(const char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    int ret = vprintf(fmt, args);
-    va_end(args);
-    fflush(stdout);
-    return ret;
-}

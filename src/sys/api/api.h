@@ -5,8 +5,8 @@
 // cmds.h is included for convenience (so other files can import all commands with a single include)
 #include "sys/api/cmds/cmds.h"
 
-// Type for internal API command handler functions.
-typedef i32 (*api_handler)(const char *in, char **out);
+// Type for API command functions
+typedef i32 (*api_func)(const char *in, char **out);
 
 /**
  * Polls the API for new data (incoming commands) and responds if necessary.

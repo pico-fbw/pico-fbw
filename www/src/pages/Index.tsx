@@ -42,7 +42,7 @@ export default function Index() {
 
     // Check connection on page load
     useEffect(() => {
-        checkAPIConnection().catch(console.error);
+        void checkAPIConnection();
     }, []);
 
     return (

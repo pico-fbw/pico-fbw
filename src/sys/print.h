@@ -1,11 +1,10 @@
 #pragma once
 
-// This is a header-only file that simply wraps the platform-provided printf with the correct format and debug settings
-// for easier usage, and also so the platform library can compile independently.
+// This is a header-only file that simply wraps printf with correct format and debug settings.
 
 #include <stdbool.h>
+#include <stdio.h>
 #include "platform/defs.h" // A platform can define NO_COLOR_OUTPUT to disable terminal color output
-#include "platform/stdio.h"
 
 #ifndef NO_COLOR_OUTPUT
     // Color codes for ANSI terminal colors
@@ -33,7 +32,7 @@ typedef struct PrintDefs {
  * @param ... the format string and arguments to print (same as printf)
  * @note This does not include a newline character and does not check whether printing is enabled.
  */
-#define printraw(...) wrap_printf(__VA_ARGS__)
+#define printraw(...) printf(__VA_ARGS__)
 
 /**
  * printf wrapper

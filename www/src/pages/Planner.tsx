@@ -24,6 +24,7 @@ export default function Planner() {
     const flightplanName = match ? params.plan : null;
     const [flightplan, setFlightplan] = useState<string | null>(null);
 
+    const [fsUsed, setFsUsed] = useState<number | null>(null);
     const [flightplans, setFlightplans] = useState<FlightplanList | null>(null);
     const [hasInternetConnection, setHasInternetConnection] = useState<boolean | null>(null);
     // Keep track of whether the map is focused,
@@ -38,7 +39,19 @@ export default function Planner() {
             const response = await api("get/flightplan");
             setFlightplans(response as FlightplanList);
         } catch (e) {
-            setError(`Server error whilst fetching flightplans: ${(e as Error).message}`);
+            setError(`Couldn't fetch flightplans: ${(e as Error).message}`);
+        }
+    };
+
+    /**
+     * Fetch the filesystem usage from the server.
+     */
+    const getFsUsed = async () => {
+        try {
+            const response = await api("get/info");
+            setFsUsed(response.fs_free / response.fs_total);
+        } catch (e) {
+            setError(`Couldn't get filesystem info: ${(e as Error).message}`);
         }
     };
 
@@ -113,7 +126,7 @@ export default function Planner() {
     useEffect(() => {
         if (!flightplanName) {
             setFlightplan(null);
-            getFlightplanList().catch(console.error);
+            void getFlightplanList();
             return;
         }
         api("get/flightplan", { name: flightplanName })
@@ -136,14 +149,15 @@ export default function Planner() {
         if (!flightplan && flightplan !== "{}") {
             return;
         }
-        saveFlightplan(flightplan).catch(console.error);
+        void saveFlightplan(flightplan);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [flightplan]);
 
     // Check internet connection and fetch saved flightplans on page load
     useEffect(() => {
-        checkInternetConnection().catch(console.error);
-        getFlightplanList().catch(console.error);
+        void checkInternetConnection();
+        void getFlightplanList();
+        void getFsUsed();
     }, []);
 
     return (

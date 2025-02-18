@@ -176,7 +176,7 @@ static i32 send_file_chunk(TCPConnection *con_state, struct tcp_pcb *pcb, const 
  * @param api_func the API function to call
  * @return true if the request was handled successfully
  */
-static bool handle_api_v1_request(struct tcp_pcb *pcb, const char *req, api_handler handler) {
+static bool handle_api_v1_request(struct tcp_pcb *pcb, const char *req, api_func handler) {
     char *out = NULL;
     i32 res = 200;
     if (handler) {

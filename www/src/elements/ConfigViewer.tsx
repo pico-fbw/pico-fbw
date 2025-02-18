@@ -539,7 +539,7 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
     };
 
     useEffect(() => {
-        getConfigData().catch(console.error);
+        void getConfigData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 

@@ -116,7 +116,7 @@ static struct mg_fs fs = {
 };
 
 // Handles an API request from an HTTP event.
-static void handle_api_v1_request(struct mg_connection *c, struct mg_http_message *hm, api_handler handler) {
+static void handle_api_v1_request(struct mg_connection *c, struct mg_http_message *hm, api_func handler) {
     char *out = NULL;
     i32 res = 200;
     if (handler) {
