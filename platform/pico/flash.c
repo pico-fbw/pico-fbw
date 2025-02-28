@@ -64,7 +64,7 @@ static int flash_erase(const struct lfs_config *c, lfs_block_t block) {
 static int flash_sync(const struct lfs_config *c) {
     flash_flush_cache();
     return LFS_ERR_OK;
-    (void)c; // Supress unused parameter warning
+    (void)c;
 }
 
 bool flash_setup() {
@@ -81,11 +81,13 @@ struct lfs_config lfs_cfg = {
     .prog = flash_prog,
     .erase = flash_erase,
     .sync = flash_sync,
+    // LFS_BASE is provided as context so block operations know where to read/write
     .context = (void *)LFS_BASE,
     .read_size = 1,
     .prog_size = FLASH_PAGE_SIZE,
-    .block_size = FLASH_SECTOR_SIZE,
-    .cache_size = (FLASH_SECTOR_SIZE / 4),
+    .block_size = FLASH_SECTOR_SIZE, // Must be a multiple of the sector size (4096 bytes)
+    // block_count is set in flash_setup()
+    .cache_size = (FLASH_SECTOR_SIZE / 4), // Must be a multiple of the block size (1024 bytes)
     .lookahead_size = 32,
     .block_cycles = 500,
 };
@@ -97,13 +99,11 @@ struct lfs_config wwwfs_cfg = {
     .prog = flash_prog,
     .erase = flash_erase,
     .sync = flash_sync,
-    // FS_BASE is provided as the context so that block operations know where to read/write
     .context = (void *)WWWFS_BASE,
     .read_size = 1,
-    .prog_size = FLASH_PAGE_SIZE,    // Minimum write size (256 bytes)
-    .block_size = FLASH_SECTOR_SIZE, // Block size must be a multiple of the sector size (4096 bytes)
-    // block_count is set in flash_setup()
-    .cache_size = (FLASH_SECTOR_SIZE / 4), // Must be a multiple of the block size (1024 bytes)
+    .prog_size = FLASH_PAGE_SIZE,
+    .block_size = FLASH_SECTOR_SIZE,
+    .cache_size = (FLASH_SECTOR_SIZE / 4),
     .lookahead_size = 32,
     .block_cycles = 500,
 };

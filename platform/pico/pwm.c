@@ -15,7 +15,6 @@
  * Licensed under the GNU GPL-3.0
  */
 
-#include <assert.h>
 #include "hardware/pwm.h"
 #include "hardware/clocks.h"
 #include "hardware/gpio.h"
@@ -34,29 +33,26 @@ typedef struct PWMInData {
     i16 pin;
     u32 pulsewidth, period;
 } PWMInData;
-
 static PWMInData inData[NUM_PIO_STATE_MACHINES * NUM_PIOS]; // (8)
 
-// For PWM output:
+// For PWM output
 
 #define SERVO_TOP_MAX (UINT16_MAX - 1) // Maximum "top" is set at 65534 to be able to achieve 100% duty with 65535.
-
 // Array to store the frequency of each PWM slice
 static u32 frequencies[NUM_PWM_SLICES]; // (8)
 
 // Handles PWM input from state machines in PIO0.
-// Called when an interrupt is raised by a state machine, and will read the pulsewidth and period from the state
-// machine.
+// Called when an interrupt is raised by a state machine, and will read the pulsewidth and period from it.
 static void pio0Handler() {
     for (u32 i = 0; i < NUM_PIO_STATE_MACHINES; i++) {
         // Check if the IRQ has been raised for this state machine
         if (pio0_hw->irq & 1 << i) {
-            pio0_hw->irq = 1 << i;                      // Clear interrupt
-            inData[i].pulsewidth = pio_sm_get(pio0, i); // Read pulsewidth from FIFO
-            inData[i].period =
-                pio_sm_get(pio0, i) + inData[i].pulsewidth; // Read period from FIFO (PIO only stores low period
-                                                            // so we add the pulsewidth to get the full period)
-            pio0_hw->irq = 1 << i;                          // Clear interrupt
+            pio0_hw->irq = 1 << i; // Clear interrupt
+            // Read pulsewidth from FIFO
+            inData[i].pulsewidth = pio_sm_get(pio0, i);
+            // Read period from FIFO (PIO only stores low period, so we need to add the pulsewidth to get the full period)
+            inData[i].period = pio_sm_get(pio0, i) + inData[i].pulsewidth;
+            pio0_hw->irq = 1 << i; // Clear interrupt
         }
     }
 }
@@ -80,12 +76,12 @@ regular Pico, this keeps compatability between models. */
 
 /**
  * Sets up a PWM state machine for a single pin.
- * @param pio The PIO instance to use
- * @param offset The PIO program offset to use
- * @param pin The pin to use
+ * @param pio PIO instance to use
+ * @param offset PIO program offset to use
+ * @param pin pin to use
  * @return true if the state machine was set up successfully, false if no state machines were available
  */
-static bool setup_sm(const PIO pio, const u32 offset, i16 pin) {
+static bool setup_sm(const PIO pio, const u32 offset, uint pin) {
     gpio_set_function(pin, (pio == pio0) ? GPIO_FUNC_PIO0 : GPIO_FUNC_PIO1);
     // Find a usable state machine for this pin
     i32 sm = pio_claim_unused_sm(pio, false);
@@ -117,7 +113,9 @@ bool pwm_setup_read(const i16 pins[], u32 num_pins) {
     }
     u32 offset = pio_add_program(pio0, &pwm_program);
     for (u32 i = 0; i < (num_pins > NUM_PIO_STATE_MACHINES ? NUM_PIO_STATE_MACHINES : num_pins); i++) {
-        assert(pwm_gpio_to_channel(pins[i]) == PWM_CHAN_B); // Only PWM channel B can be used for input
+        if (pwm_gpio_to_channel(pins[i]) != PWM_CHAN_B) {
+            return false; // Only PWM channel B can be used for input
+        }
         if (!setup_sm(pio0, offset, pins[i])) {
             return false;
         }
@@ -133,7 +131,9 @@ bool pwm_setup_read(const i16 pins[], u32 num_pins) {
         }
         u32 offset = pio_add_program(pio1, &pwm_program);
         for (u32 i = NUM_PIO_STATE_MACHINES; i < num_pins; i++) {
-            assert(pwm_gpio_to_channel(pins[i]) == PWM_CHAN_B);
+            if (pwm_gpio_to_channel(pins[i]) != PWM_CHAN_B) {
+                return false;
+            }
             if (!setup_sm(pio1, offset, pins[i])) {
                 return false;
             }
@@ -148,7 +148,9 @@ bool pwm_setup_read(const i16 pins[], u32 num_pins) {
 
 bool pwm_setup_write(const i16 pins[], u32 num_pins, u32 freq) {
     for (u32 i = 0; i < num_pins; i++) {
-        assert(pwm_gpio_to_channel(pins[i]) == PWM_CHAN_A || pwm_gpio_to_channel(pins[i]) == PWM_CHAN_B);
+        if (pwm_gpio_to_channel(pins[i]) != PWM_CHAN_A && pwm_gpio_to_channel(pins[i]) != PWM_CHAN_B) {
+            return false; // Only PWM channels A and B can be used for output
+        }
         gpio_set_function(pins[i], GPIO_FUNC_PWM);
         // Approximate a clock divider and wrap value for the PWM clock to try and match the desired frequency
         u8 slice = pwm_gpio_to_slice_num(pins[i]);

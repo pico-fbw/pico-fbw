@@ -119,6 +119,7 @@ typedef struct Config {
 #define CONFIG_SYSTEM_STR "System"
     ConfigWifi wifi;
 #define CONFIG_WIFI_STR "WiFi"
+    const char *version; // Not a config section; identifier for this config struct's saved version
 } Config;
 
 // -- Calibration struct indices and definition --
@@ -177,6 +178,7 @@ typedef struct Calibration {
 #define CONFIG_AAHRS_STR "AAHRS"
     f32 pid[CONFIG_SECTION_SIZE];
 #define CONFIG_PID_STR "PID"
+    const char *version;
 } Calibration;
 
 // -- Config section type and enum conversion functions (for lookup functions) --

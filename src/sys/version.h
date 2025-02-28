@@ -6,9 +6,10 @@
 #ifndef PICO_FBW_VERSION // Should be defined in the root CMakeLists.txt
     #define PICO_FBW_VERSION "Unknown"
 #endif
-
-#define PICO_FBW_API_VERSION "1.0"
-#define FLIGHTPLAN_VERSION "1.0" // Version of flightplan that this version supports
+#define API_VERSION "1.0"
+#define CALIBRATION_VERSION "1.0" // Version of calibration (struct) that this version supports (can load/save)
+#define CONFIG_VERSION "1.0" // Version of config (struct) that this version supports (can load/save)
+#define FLIGHTPLAN_VERSION "1.0" // Version of flightplan schema that this version supports
 
 typedef enum VersionCheck {
     VERSION_SAME,

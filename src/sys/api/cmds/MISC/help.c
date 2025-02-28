@@ -36,7 +36,7 @@ i32 api_help(const char *args) {
              "REBOOT - Reboot the system\n"
              "RESET - Reset pico-fbw to \"factory\" defaults\n"
              "\nMore information can be found at https://pico-fbw.org/wiki/\n",
-             PICO_FBW_API_VERSION);
+             API_VERSION);
     return -1;
     (void)args;
 }

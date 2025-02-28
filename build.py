@@ -78,13 +78,13 @@ dependencies = {
         'add_to_path': 'bin',
     },
     'cmake': {
-        'version': '3.31.5',
+        'version': '3.31.6',
         'url': {
-            'linux-aarch64': 'https://github.com/Kitware/CMake/releases/download/v3.31.5/cmake-3.31.5-linux-aarch64.tar.gz',
-            'linux-x86_64': 'https://github.com/Kitware/CMake/releases/download/v3.31.5/cmake-3.31.5-linux-x86_64.tar.gz',
-            'win32-amd64': 'https://github.com/Kitware/CMake/releases/download/v3.31.5/cmake-3.31.5-windows-x86_64.zip',
-            'darwin-arm64': 'https://github.com/Kitware/CMake/releases/download/v3.31.5/cmake-3.31.5-macos-universal.tar.gz',
-            'darwin-x86_64': 'https://github.com/Kitware/CMake/releases/download/v3.31.5/cmake-3.31.5-macos-universal.tar.gz',
+            'linux-aarch64': 'https://github.com/Kitware/CMake/releases/download/v3.31.6/cmake-3.31.6-linux-aarch64.tar.gz',
+            'linux-x86_64': 'https://github.com/Kitware/CMake/releases/download/v3.31.6/cmake-3.31.6-linux-x86_64.tar.gz',
+            'win32-amd64': 'https://github.com/Kitware/CMake/releases/download/v3.31.6/cmake-3.31.6-windows-x86_64.zip',
+            'darwin-arm64': 'https://github.com/Kitware/CMake/releases/download/v3.31.6/cmake-3.31.6-macos-universal.tar.gz',
+            'darwin-x86_64': 'https://github.com/Kitware/CMake/releases/download/v3.31.6/cmake-3.31.6-macos-universal.tar.gz',
         },
     },
     'ESP-IDF': {
@@ -118,9 +118,9 @@ dependencies = {
         # node is actually added to PATH but has to be handled as an edge case (in run_prebuild_tasks)
     },
     'pico-sdk': {
-        'version': '2.1.0',
+        'version': '2.1.1',
         'independent': True,
-        'cmd': 'git clone https://github.com/raspberrypi/pico-sdk.git --branch 2.1.0 --depth 1',
+        'cmd': 'git clone https://github.com/raspberrypi/pico-sdk.git --branch 2.1.1 --depth 1',
         'install': install_pico_sdk,
     },
 }

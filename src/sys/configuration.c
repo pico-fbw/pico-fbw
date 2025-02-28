@@ -83,6 +83,7 @@ Config config = {
         .ssid = "pico-fbw",
         .pass = "picodashfbw",
     },
+    .version = CONFIG_VERSION,
 };
 
 Calibration calibration = {
@@ -105,7 +106,8 @@ Calibration calibration = {
         25.f, 0.11f, 40.f, // Default autothrottle PID parameters
         // TODO: find working tau
         1.f, // Default PID tau
-    }
+    },
+    .version = CALIBRATION_VERSION,
 };
 
 PrintDefs shouldPrint = {

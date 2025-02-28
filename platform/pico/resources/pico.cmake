@@ -46,7 +46,7 @@ function(setup_after_subdirs)
     # Always use our custom linker script regardless of the web interface, this is so littlefs can always be in the same place
     pico_set_linker_script(${PROJECT_NAME} ${CMAKE_BINARY_DIR}/memmap.ld)
     if (${FBW_BUILD_WWW})
-        target_sources(platform_pico PRIVATE ${PLATFORM_PATH}/lfs.S)
+        target_sources(${PROJECT_NAME} PRIVATE ${PLATFORM_PATH}/lfs.S)
         include_wwwfs(${PLATFORM_PATH}/lfs.S)
     endif()
 endfunction()

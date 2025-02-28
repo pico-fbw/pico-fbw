@@ -26,7 +26,7 @@ i32 api_get_info(const char *in, char **out) {
     JSON_Value *root = json_value_init_object();
     JSON_Object *obj = json_value_get_object(root);
     json_object_set_string(obj, "version", PICO_FBW_VERSION);
-    json_object_set_string(obj, "version_api", PICO_FBW_API_VERSION);
+    json_object_set_string(obj, "version_api", API_VERSION);
     json_object_set_string(obj, "version_flightplan", FLIGHTPLAN_VERSION);
     json_object_set_string(obj, "platform", PLATFORM_NAME);
     json_object_set_string(obj, "platform_version", PLATFORM_VERSION);
