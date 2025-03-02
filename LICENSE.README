@@ -4,7 +4,11 @@ Copyright (C) 2023-2025, pico-fbw
 MIT License
 ======================================
 
-pico-fbw, except where otherwise noted in the following information, is licensed under the MIT License.
+pico-fbw, except where otherwise noted in the following information, is licensed under the MIT License. 
+
+This means that, unless otherwise stated, you are free to use, modify, and distribute this software under the terms of the MIT License.
+However, certain files originate from third-party projects that are licensed under different terms, as detailed below.
+Users must comply with the respective licenses when using those parts of the code.
 
 The following files (and their corresponding Header [.h] files, where applicable) of this project utilize code which is licensed under the MIT License:
 
@@ -18,7 +22,7 @@ The following files (and their corresponding Header [.h] files, where applicable
 - platform/pico/wifi/dhcp.c
 - .github/workflows/build.yml
 
-You can find a copy of the License in 'LICENSE.MIT' or at the following URL:
+A copy of the MIT License can be found in `LICENSE` or at the following URL:
 <https://opensource.org/licenses/MIT>
 
 ======================================
@@ -33,25 +37,8 @@ The following files (and their corresponding Header [.h] files, where applicable
 - platform/pico/wifi/dns.c
 - platform/pico/wifi/tcp.c
 
-You can find a copy of the License in 'LICENSE.3-CLAUSE-BSD' or at the following URL:
+A copy of the BSD 3-Clause License can be found in `LICENSE.3-CLAUSE-BSD` or at the following URL:
 <https://opensource.org/licenses/BSD-3-Clause>
-
-======================================
-Apache-2.0 License
-======================================
-
-The following files (and their corresponding Header [.h] files, where applicable) of this project utilize code which is licensed under the Apache-2.0 License:
-
-- lib/fusion/accel.c
-- lib/fusion/fusion.c
-- lib/fusion/gyro.c
-- lib/fusion/madgwick.c
-- lib/fusion/mag.c
-- lib/fusion/drivers/drivers.h
-- lib/fusion/drivers/icm20948.c
-
-You can find a copy of the License in 'LICENSE.APACHE-2.0' or at the following URL:
-<https://opensource.org/license/apache-2-0>
 
 ======================================
 
