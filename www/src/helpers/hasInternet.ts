@@ -1,6 +1,6 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the MIT License
  */
 
 const url = "https://mt1.google.com/vt/lyrs=s&x=0&y=0&z=0"; // URL to run a GET request on to check for internet connection

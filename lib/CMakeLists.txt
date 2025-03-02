@@ -1,9 +1,5 @@
 target_sources(${PROJECT_NAME} PRIVATE
-    fusion/accel.c
     fusion/fusion.c
-    fusion/gyro.c
-    fusion/madgwick.c
-    fusion/mag.c
     fusion/drivers/icm20948.c
     lfs.c
     lfs_util.c

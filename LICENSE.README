@@ -1,17 +1,10 @@
 Copyright (C) 2023-2025, pico-fbw
 
 ======================================
-GNU General Public License, Version 3
-======================================
-
-pico-fbw, except where otherwise noted in the following information, is licensed under the GNU General Public License, Version 3.
-
-You can find a copy of the License in 'LICENSE' or at the following URL:
-<https://opensource.org/license/gpl-3-0>
-
-======================================
 MIT License
 ======================================
+
+pico-fbw, except where otherwise noted in the following information, is licensed under the MIT License.
 
 The following files (and their corresponding Header [.h] files, where applicable) of this project utilize code which is licensed under the MIT License:
 
@@ -39,7 +32,6 @@ The following files (and their corresponding Header [.h] files, where applicable
 - platform/pico/flash.c
 - platform/pico/wifi/dns.c
 - platform/pico/wifi/tcp.c
-- io/display.c
 
 You can find a copy of the License in 'LICENSE.3-CLAUSE-BSD' or at the following URL:
 <https://opensource.org/licenses/BSD-3-Clause>

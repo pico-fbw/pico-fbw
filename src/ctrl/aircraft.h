@@ -41,7 +41,7 @@ typedef struct Aircraft {
     Mode mode;     // (Read-only)
     bool isFlying; // (Read-only)
 #if PLATFORM_SUPPORTS_WIFI
-    bool wifiDeinitialized; // (Read-only)
+    bool wifiDeinitialized; // Whether wifi has been deinitialized after taking flight (read-only)
 #endif
     bool aahrsSafe; // (Read-only)
     bool gpsSafe;   // (Read-only)

@@ -1,6 +1,6 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the MIT License
  */
 
 import { useEffect, useState } from "preact/hooks";
@@ -15,6 +15,8 @@ import { api } from "helpers/api";
 import { FlightplanList } from "helpers/apiTypes";
 import hasInternet from "helpers/hasInternet";
 import { Flightplan } from "helpers/flightplan";
+
+// [ ] Do something with fsUsed, hasInternetConnection result
 
 export default function Planner() {
     const [error, setError] = useState("");

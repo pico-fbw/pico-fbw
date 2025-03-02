@@ -1,6 +1,6 @@
 /**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the GNU GPL-3.0
+ * Licensed under the MIT License
  */
 
 // [ ] Allow backing up the config (as a littlefs blob?), to client, and reuploading it

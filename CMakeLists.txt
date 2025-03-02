@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.22)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 if (NOT CMAKE_BUILD_TYPE)
-    message("Defaulting to BUILD_TYPE to 'Release' since not specified")
+    message("Defaulting CMAKE_BUILD_TYPE to 'Release' since not specified")
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 endif()
 
