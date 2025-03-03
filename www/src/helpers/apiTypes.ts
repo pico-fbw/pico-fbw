@@ -28,7 +28,7 @@ export type GET_INFO = {
     version_flightplan: string;
     platform: string;
     platform_version: string;
-    fs_free: number;
+    fs_used: number;
     fs_total: number;
 };
 export type GET_INPUT = {

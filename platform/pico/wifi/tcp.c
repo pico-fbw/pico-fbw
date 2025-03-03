@@ -343,11 +343,12 @@ static bool handle_request(TCPConnection *con_state, struct tcp_pcb *pcb, const 
         }
         LWIP_DEBUGF(TCP_DEBUG, ("handle_request: POST URI: %s\n", uri));
         if (strncmp(uri, API_V1_PATH, strlen(API_V1_PATH)) == 0) {
-            // GET_CONFIG and SET_ACTIVE can also be called with POST requests (in addition to GET requests above)
+            // Some commands can also be called with POST requests
+            // (in addition to GET requests above), hence the repeats
             if (strcmp(uri + strlen(API_V1_PATH), "get/config") == 0) {
                 res = handle_api_v1_request(pcb, request, api_get_config);
-            } else if (strcmp(uri + strlen(API_V1_PATH), "set/active") == 0) {
-                res = handle_api_v1_request(pcb, request, api_set_active);
+            } else if (strcmp(uri + strlen(API_V1_PATH), "get/flightplan") == 0) {
+                res = handle_api_v1_request(pcb, request, api_get_flightplan);
             } else if (strcmp(uri + strlen(API_V1_PATH), "set/bay") == 0) {
                 res = handle_api_v1_request(pcb, request, api_set_bay);
             } else if (strcmp(uri + strlen(API_V1_PATH), "set/config") == 0) {

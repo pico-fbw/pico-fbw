@@ -174,136 +174,121 @@ esp_err_t http_server_open(httpd_handle_t *server) {
     }
 
     // API handlers
-    httpd_uri_t apiV1GetConfigURIGet = {
-        .uri = "/api/v1/get/config",
-        .method = HTTP_GET,
-        .handler = handle_api_v1_request,
-        .user_ctx = api_get_config,
+    // Some commands support both GET and POST requests (ex. GET_CONFIG), hence the repeats
+    httpd_uri_t uris[] = {
+        {
+            .uri = "/api/v1/get/config",
+            .method = HTTP_GET,
+            .handler = handle_api_v1_request,
+            .user_ctx = api_get_config,
+        },
+        {
+            .uri = "/api/v1/get/config",
+            .method = HTTP_POST,
+            .handler = handle_api_v1_request,
+            .user_ctx = api_get_config,
+        },
+        {
+            .uri = "/api/v1/get/flightplan",
+            .method = HTTP_GET,
+            .handler = handle_api_v1_request,
+            .user_ctx = api_get_flightplan,
+        },
+        {
+            .uri = "/api/v1/get/flightplan",
+            .method = HTTP_POST,
+            .handler = handle_api_v1_request,
+            .user_ctx = api_get_flightplan,
+        },
+        {
+            .uri = "/api/v1/get/info",
+            .method = HTTP_GET,
+            .handler = handle_api_v1_request,
+            .user_ctx = api_get_info,
+        },
+        {
+            .uri = "/api/v1/get/input",
+            .method = HTTP_GET,
+            .handler = handle_api_v1_request,
+            .user_ctx = api_get_input,
+        },
+        {
+            .uri = "/api/v1/get/logs",
+            .method = HTTP_GET,
+            .handler = handle_api_v1_request,
+            .user_ctx = api_get_logs,
+        },
+        {
+            .uri = "/api/v1/get/mode",
+            .method = HTTP_GET,
+            .handler = handle_api_v1_request,
+            .user_ctx = api_get_mode,
+        },
+        {
+            .uri = "/api/v1/get/sensor",
+            .method = HTTP_GET,
+            .handler = handle_api_v1_request,
+            .user_ctx = api_get_sensor,
+        },
+        {
+            .uri = "/api/v1/set/active",
+            .method = HTTP_POST,
+            .handler = handle_api_v1_request,
+            .user_ctx = api_set_active,
+        },
+        {
+            .uri = "/api/v1/set/bay",
+            .method = HTTP_POST,
+            .handler = handle_api_v1_request,
+            .user_ctx = api_set_bay,
+        },
+        {
+            .uri = "/api/v1/set/config",
+            .method = HTTP_POST,
+            .handler = handle_api_v1_request,
+            .user_ctx = api_set_config,
+        },
+        {
+            .uri = "/api/v1/set/flightplan",
+            .method = HTTP_POST,
+            .handler = handle_api_v1_request,
+            .user_ctx = api_set_flightplan,
+        },
+        {
+            .uri = "/api/v1/set/mode",
+            .method = HTTP_POST,
+            .handler = handle_api_v1_request,
+            .user_ctx = api_set_mode,
+        },
+        {
+            .uri = "/api/v1/set/target",
+            .method = HTTP_POST,
+            .handler = handle_api_v1_request,
+            .user_ctx = api_set_target,
+        },
+        {
+            .uri = "/api/v1/set/waypoint",
+            .method = HTTP_POST,
+            .handler = handle_api_v1_request,
+            .user_ctx = api_set_waypoint,
+        },
+        {
+            .uri = "/api/v1/ping",
+            .method = HTTP_GET,
+            .handler = handle_api_v1_request,
+        },
+        // Common GET handler (for serving files)
+        {
+            .uri = "/*",
+            .method = HTTP_GET,
+            .handler = handle_common_get,
+        },
     };
-    httpd_uri_t apiV1GetConfigURIPost = {
-        .uri = "/api/v1/get/config",
-        .method = HTTP_POST,
-        .handler = handle_api_v1_request,
-        .user_ctx = api_get_config,
-    };
-    // get/config supports both GET and POST
-    httpd_register_uri_handler(*server, &apiV1GetConfigURIGet);
-    httpd_register_uri_handler(*server, &apiV1GetConfigURIPost);
-    httpd_uri_t apiV1GetFlightplanURI = {
-        .uri = "/api/v1/get/flightplan",
-        .method = HTTP_GET,
-        .handler = handle_api_v1_request,
-        .user_ctx = api_get_flightplan,
-    };
-    httpd_register_uri_handler(*server, &apiV1GetFlightplanURI);
-    httpd_uri_t apiV1GetInfoURI = {
-        .uri = "/api/v1/get/info",
-        .method = HTTP_GET,
-        .handler = handle_api_v1_request,
-        .user_ctx = api_get_info,
-    };
-    httpd_register_uri_handler(*server, &apiV1GetInfoURI);
-    httpd_uri_t apiV1GetInputURI = {
-        .uri = "/api/v1/get/input",
-        .method = HTTP_GET,
-        .handler = handle_api_v1_request,
-        .user_ctx = api_get_input,
-    };
-    httpd_register_uri_handler(*server, &apiV1GetInputURI);
-    httpd_uri_t apiV1GetLogsURI = {
-        .uri = "/api/v1/get/logs",
-        .method = HTTP_GET,
-        .handler = handle_api_v1_request,
-        .user_ctx = api_get_logs,
-    };
-    httpd_register_uri_handler(*server, &apiV1GetLogsURI);
-    httpd_uri_t apiV1GetModeURI = {
-        .uri = "/api/v1/get/mode",
-        .method = HTTP_GET,
-        .handler = handle_api_v1_request,
-        .user_ctx = api_get_mode,
-    };
-    httpd_register_uri_handler(*server, &apiV1GetModeURI);
-    httpd_uri_t apiV1GetSensorURI = {
-        .uri = "/api/v1/get/sensor",
-        .method = HTTP_GET,
-        .handler = handle_api_v1_request,
-        .user_ctx = api_get_sensor,
-    };
-    httpd_register_uri_handler(*server, &apiV1GetSensorURI);
-    httpd_uri_t apiV1SetActiveURIGet = {
-        .uri = "/api/v1/set/active",
-        .method = HTTP_GET,
-        .handler = handle_api_v1_request,
-        .user_ctx = api_set_active,
-    };
-    httpd_uri_t apiV1SetActiveURIPost = {
-        .uri = "/api/v1/set/active",
-        .method = HTTP_POST,
-        .handler = handle_api_v1_request,
-        .user_ctx = api_set_active,
-    };
-    // set/active also supports both GET and POST
-    httpd_register_uri_handler(*server, &apiV1SetActiveURIGet);
-    httpd_register_uri_handler(*server, &apiV1SetActiveURIPost);
-    httpd_uri_t apiV1SetBayURI = {
-        .uri = "/api/v1/set/bay",
-        .method = HTTP_POST,
-        .handler = handle_api_v1_request,
-        .user_ctx = api_set_bay,
-    };
-    httpd_register_uri_handler(*server, &apiV1SetBayURI);
-    httpd_uri_t apiV1SetConfigURI = {
-        .uri = "/api/v1/set/config",
-        .method = HTTP_POST,
-        .handler = handle_api_v1_request,
-        .user_ctx = api_set_config,
-    };
-    httpd_register_uri_handler(*server, &apiV1SetConfigURI);
-    httpd_uri_t apiV1SetFlightplanURI = {
-        .uri = "/api/v1/set/flightplan",
-        .method = HTTP_POST,
-        .handler = handle_api_v1_request,
-        .user_ctx = api_set_flightplan,
-    };
-    httpd_register_uri_handler(*server, &apiV1SetFlightplanURI);
-    httpd_uri_t apiV1SetModeURI = {
-        .uri = "/api/v1/set/mode",
-        .method = HTTP_POST,
-        .handler = handle_api_v1_request,
-        .user_ctx = api_set_mode,
-    };
-    httpd_register_uri_handler(*server, &apiV1SetModeURI);
-    httpd_uri_t apiV1SetTargetURI = {
-        .uri = "/api/v1/set/target",
-        .method = HTTP_POST,
-        .handler = handle_api_v1_request,
-        .user_ctx = api_set_target,
-    };
-    httpd_register_uri_handler(*server, &apiV1SetTargetURI);
-    httpd_uri_t apiV1SetWaypointURI = {
-        .uri = "/api/v1/set/waypoint",
-        .method = HTTP_POST,
-        .handler = handle_api_v1_request,
-        .user_ctx = api_set_waypoint,
-    };
-    httpd_register_uri_handler(*server, &apiV1SetWaypointURI);
-    httpd_uri_t apiV1PingURI = {
-        .uri = "/api/v1/ping",
-        .method = HTTP_GET,
-        .handler = handle_api_v1_request,
-        .user_ctx = NULL,
-    };
-    httpd_register_uri_handler(*server, &apiV1PingURI);
-
-    // Common GET handler (for serving files)
-    httpd_uri_t commonGETURI = {
-        .uri = "/*",
-        .method = HTTP_GET,
-        .handler = handle_common_get,
-    };
-    httpd_register_uri_handler(*server, &commonGETURI);
-
+    for (u32 i = 0; i < count_of(uris); i++) {
+        if (httpd_register_uri_handler(*server, &uris[i]) != ESP_OK) {
+            return ESP_FAIL;
+        }
+    }
     return ESP_OK;
 }
 

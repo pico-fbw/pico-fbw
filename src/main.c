@@ -40,8 +40,8 @@ int main() {
         log_message(TYPE_ERROR, "Watchdog rebooted!", 500, 150, true);
         print("\nPlease report this error! Only direct mode is available until the next reboot.\n");
         // Lock into direct mode for safety reasons
-        // This is done now because minimum peripherals have been initialized, but not more complex ones that could be
-        // causing the watchdog reboots
+        // This is done now because minimum peripherals have been initialized,
+        // but not more complex ones that could be causing the watchdog reboots
         sys_boot_end();
         aircraft.change_to(MODE_DIRECT);
         while (true) {
@@ -55,15 +55,11 @@ int main() {
     boot_set_progress(65, "Initializing GPS");
     boot_init_gps();
 
-#if PLATFORM_SUPPORTS_WIFI
     boot_set_progress(80, "Initializing Wi-Fi");
     boot_init_wifi();
-#endif
 
-#if PLATFORM_SUPPORTS_ADC
     boot_set_progress(85, "Initializing ADC");
     boot_init_adc();
-#endif
 
     boot_set_progress(90, "Finishing up");
     boot_complete();

@@ -125,14 +125,16 @@ export default (): MockHandler[] => [
     {
         pattern: "/api/v1/get/info",
         handle: (req, res) => {
+            const fs_total = 256000;
+            const fs_used = Buffer.byteLength(JSON.stringify(flightplans));
             send_data(res, {
                 version: "1.0.0",
                 version_api: "1.0",
                 version_flightplan: "1.0",
                 platform: "Simulated Devlopment Platform",
                 platform_version: "1.0.0",
-                fs_free: 128000,
-                fs_total: 256000,
+                fs_used,
+                fs_total,
             });
         },
     },
