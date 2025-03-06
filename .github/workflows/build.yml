@@ -37,7 +37,7 @@ jobs:
       uses: seanmiddleditch/gha-setup-ninja@v4
 
     - name: Enable pnpm
-      run: corepack enable pnpm
+      run: npm install --global corepack@latest && corepack enable pnpm
 
     - name: Set up web build environment
       uses: actions/setup-node@v4.0.4
@@ -133,7 +133,7 @@ jobs:
 
     - name: Enable pnpm
       if: matrix.OS != 'windows-latest'
-      run: corepack enable pnpm
+      run: npm install --global corepack@latest && corepack enable pnpm
 
     - name: Set up web build environment
       if: matrix.OS != 'windows-latest'
