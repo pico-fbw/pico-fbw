@@ -71,6 +71,7 @@ function(setup_before_subdirs)
 endfunction()
 
 function(setup_after_subdirs)
+    target_compile_definitions(platform_esp PUBLIC timegm=mktime) # For minmea
     target_link_options(${PROJECT_NAME} PUBLIC "-Wl,--no-warn-rwx-segments") # Suppress warning about RWX segments
     idf_build_executable(${PROJECT_NAME})
 endfunction()
