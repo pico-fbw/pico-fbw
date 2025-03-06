@@ -50,7 +50,8 @@ static void pio0Handler() {
             pio0_hw->irq = 1 << i; // Clear interrupt
             // Read pulsewidth from FIFO
             inData[i].pulsewidth = pio_sm_get(pio0, i);
-            // Read period from FIFO (PIO only stores low period, so we need to add the pulsewidth to get the full period)
+            // Read period from FIFO
+            // (PIO only stores low period, so we need to add the pulsewidth to get the full period)
             inData[i].period = pio_sm_get(pio0, i) + inData[i].pulsewidth;
             pio0_hw->irq = 1 << i; // Clear interrupt
         }

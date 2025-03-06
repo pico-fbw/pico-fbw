@@ -52,7 +52,7 @@ def install_node():
     corepack = Path("bin/corepack")
     if "win32" in host:
         corepack = Path("corepack.cmd")
-    # Enable corepack to install yarn
+    # Enable corepack to install pnpm
     subprocess.check_call([str(corepack), "enable"])
 
 def install_pico_sdk():

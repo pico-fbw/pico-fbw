@@ -43,8 +43,8 @@ jobs:
       uses: actions/setup-node@v4.0.4
       with:
         node-version: '22'
-        cache: 'yarn'
-        cache-dependency-path: '${{github.workspace}}/www/yarn.lock'
+        cache: 'pnpm'
+        cache-dependency-path: '${{github.workspace}}/www/pnpm-lock.yaml'
 
     - name: Check cache (esp)
       if: matrix.PLATFORM == 'esp32'
@@ -140,8 +140,8 @@ jobs:
       uses: actions/setup-node@v4.0.4
       with:
         node-version: '22'
-        cache: 'yarn'
-        cache-dependency-path: '${{github.workspace}}/www/yarn.lock'
+        cache: 'pnpm'
+        cache-dependency-path: '${{github.workspace}}/www/pnpm-lock.yaml'
 
     - name: Configure CMake
       if: matrix.OS != 'windows-latest'

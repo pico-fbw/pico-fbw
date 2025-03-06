@@ -6,6 +6,5 @@
         ".gif"
     ],
     "algorithms": ["gz"],
-    "directory": "../build/www/www",
     "retainUncompressedFiles": false
 }

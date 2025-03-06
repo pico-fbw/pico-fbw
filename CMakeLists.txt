@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake") # Include custom cmake modules
 
 if (NOT CMAKE_BUILD_TYPE)
     message("Defaulting CMAKE_BUILD_TYPE to 'Release' since not specified")
@@ -53,13 +53,18 @@ message("Adding subdirectories")
 add_subdirectory(src)
 add_subdirectory(lib)
 add_subdirectory(platform)
+message("Fetching external libraries, this may take a moment...")
+include(ExternalLibs)
+target_sources(${PROJECT_NAME} PRIVATE ${EXTERNALLIBS_SOURCES})
+# Includes should target the platform lib so that they have access to headers (ex. lfs.h) too
+target_include_directories(${PLATFORM_LIB} PUBLIC ${EXTERNALLIBS_INCLUDE_DIR})
 # Add extra targets (formatting, documentation, etc.)
 message("Configuring utilities")
 include(ClangFormat)
 include(Doxygen)
 include(WebBuild)
 # Final setup tasks
-message("Finishing up setup for '${FBW_PLATFORM}', this may take a moment...")
+message("Finishing up setup for '${FBW_PLATFORM}'")
 setup_after_subdirs()
 
 message("Configuration summary:")

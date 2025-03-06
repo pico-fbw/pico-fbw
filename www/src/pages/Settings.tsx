@@ -117,24 +117,8 @@ export default function Settings() {
 
     return (
         <ContentBlock title="Settings" loading={!info} error={error} setError={setError}>
-            <div>
-                <SettingsUI />
-                <ConfigUI setError={setError} />
-            </div>
-            <footer className="bg-gray-900 text-gray-500 p-4">
-                <div className="w-full max-w-screen-xl mx-auto">
-                    <hr className="my-6 border-gray-700" />
-                    <span className="block text-sm text-gray-500 text-center">
-                        {info ? (
-                            <>
-                                {info.platform}, HAL v{info.platform_version} | {info.version} | API v{info.version_api}
-                            </>
-                        ) : (
-                            <>No device information available</>
-                        )}
-                    </span>
-                </div>
-            </footer>
+            <SettingsUI />
+            <ConfigUI setError={setError} />
         </ContentBlock>
     );
 }

@@ -2,9 +2,15 @@
 
 # Wrapper script to install and build the www files. Required for nvm to work correctly.
 
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # Source nvm if requried
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # Source nvm if required
 
-# Navigate to the correct directory and run the necessary yarn commands
-cd "$1" || exit
-"$2" install
-"$2" build
+# Capture the first two arguments and shift them out
+DIR="$1"
+CMD="$2"
+shift 2
+EXTRA_ARGS="$@"
+
+# Navigate to the correct directory and run the necessary commands
+cd "$DIR" || exit
+"$CMD" install
+"$CMD" build $EXTRA_ARGS # Pass any extra arguments to the build command

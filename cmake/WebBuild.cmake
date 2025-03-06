@@ -12,8 +12,8 @@ endif()
 add_compile_definitions(FBW_BUILD_WWW=1)
 target_compile_definitions(${PLATFORM_LIB} PUBLIC FBW_BUILD_WWW=1)
 
-# Ensure yarn is installed
-find_package(yarn REQUIRED)
+# Ensure pnpm is installed
+find_package(pnpm REQUIRED)
 
 # Add mklittlefs as an external project so it will be built to be used later
 include(ExternalProject)
@@ -40,15 +40,18 @@ ExternalProject_Add(mklittlefs
 # It depends on all files in the www directory, so it will only rebuild if any of those files change
 file(GLOB_RECURSE WWW_FILES ${CMAKE_SOURCE_DIR}/www/*)
 # To build the web interface, invoke the www.sh wrapper script which will respect nvm if installed
-set(BUILD_WWW_CMD ${CMAKE_SOURCE_DIR}/www/www.sh ${CMAKE_SOURCE_DIR}/www ${YARN_EXE})
+set(BUILD_WWW_CMD ${CMAKE_SOURCE_DIR}/www/www.sh ${CMAKE_SOURCE_DIR}/www ${PNPM_EXE})
 if (CMAKE_HOST_WIN32)
-    # nvm doesn't exist on windows, so just attempt to invoke yarn directly
-    set(BUILD_WWW_CMD ${YARN_EXE} install && ${YARN_EXE} build)
+    # nvm doesn't exist on windows, so just attempt to invoke pnpm directly
+    set(BUILD_WWW_CMD ${PNPM_EXE} install && ${PNPM_EXE} build)
 endif()
+get_filename_component(CMAKE_BINARY_DIR_NAME ${CMAKE_BINARY_DIR} NAME)
+set(DIST_DIR ../${CMAKE_BINARY_DIR_NAME}/www/www) # Directory where the web interface assets will be placed
 add_custom_command(
     # This command will also output an empty file whose modify timestamp can be used to check if/when the web interface has been built
     OUTPUT ${CMAKE_BINARY_DIR}/generated/www/built
-    COMMAND ${BUILD_WWW_CMD}
+    # Provide the DIST_DIR both as an environment variable and as an argument to the script
+    COMMAND ${CMAKE_COMMAND} -E env DIST_DIR=${DIST_DIR} ${BUILD_WWW_CMD} ${DIST_DIR}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/generated/www
     COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_BINARY_DIR}/generated/www/built
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/www

@@ -41,7 +41,7 @@ bool aahrs_init() {
                   (u32)config.sensors[SENSORS_AAHRS_BUS_FREQ] * 1000);
         i2cInitialized = true;
     }
-    
+
     // ...
 
     aahrs.isInitialized = true;
