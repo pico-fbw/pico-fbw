@@ -1,5 +1,7 @@
 #pragma once
 
+#include "platform/defs.h"
+
 // Required for lfs struct definitions
 #include "lib/lfs.h"
 
@@ -21,10 +23,10 @@ and is overwritten every time an update is flashed (this means we can also flash
 The other (lfs) is not overwritten when being flashed, so data persists between updates.
 It's used to store, well, persistant data, such as config, calibration, logs, and more. */
 
+extern lfs_t lfs;
+extern struct lfs_config lfs_cfg;
+
 #if PLATFORM_SUPPORTS_WIFI
 extern lfs_t wwwfs;
 extern struct lfs_config wwwfs_cfg;
 #endif
-
-extern lfs_t lfs;
-extern struct lfs_config lfs_cfg;
