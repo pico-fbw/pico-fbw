@@ -30,10 +30,10 @@ typedef struct AAHRS {
     f32 rollRate, pitchRate, yawRate; // (Read-only), deg/s
     // Note that while roll, pitch, and yaw are guaranteed to be abstracted by AAHRS to indicate the correct axes,
     // accelerations are not. This means that the directions of X, Y, and Z can very between aircraft.
-    f32 accel[3];       // [X, Y, Z] (Read-only), g
-    f32 alt;            // (Read-only)
-    bool isCalibrated;  // (Read-only)
-    bool isInitialized; // (Read-only)
+    f32 accel[3];      // [X, Y, Z] (Read-only), g
+    f32 alt;           // (Read-only)
+    bool isCalibrated; // (Read-only)
+    bool ready;        // (Read-only)
     /**
      * Initializes the AAHRS computation layer, sensor hardware, and underlying fusion algorithms.
      * @return true if successful, false if not.

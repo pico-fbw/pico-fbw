@@ -5,20 +5,20 @@
 
 #include "platform/uart.h"
 
-bool uart_setup(u32 tx, u32 rx, u32 baud) {
+bool uart_setup(i16 tx, i16 rx, u32 baud) {
     return true; // Not implemented
     (void)tx;
     (void)rx;
     (void)baud;
 }
 
-char *uart_read(u32 tx, u32 rx) {
+char *uart_read(i16 tx, i16 rx) {
     return NULL; // Not implemented
     (void)tx;
     (void)rx;
 }
 
-bool uart_write(u32 tx, u32 rx, const char *str) {
+bool uart_write(i16 tx, i16 rx, const char *str) {
     return true; // Not implemented
     (void)tx;
     (void)rx;

@@ -8,12 +8,12 @@
 typedef timer_t __callback_id_t;
 
 typedef struct I2CMapping {
-    u32 sda, scl;
+    i16 sda, scl;
     const char *device;
 } I2CMapping;
 
 typedef struct UARTMapping {
-    u32 tx, rx;
+    i16 tx, rx;
     const char *device;
 } UARTMapping;
 

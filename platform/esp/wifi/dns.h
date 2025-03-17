@@ -16,13 +16,13 @@
 #include "esp_netif.h"
 
 #ifndef DNS_SERVER_MAX_ITEMS
-#define DNS_SERVER_MAX_ITEMS 1
+    #define DNS_SERVER_MAX_ITEMS 1
 #endif
 
-#define DNS_SERVER_CONFIG_SINGLE(queried_name, netif_key)  {        \
-        .num_of_entries = 1,                                        \
-        .item = { { .name = queried_name, .if_key = netif_key } }   \
-        }
+#define DNS_SERVER_CONFIG_SINGLE(queried_name, netif_key)                                                          \
+    {                                                                                                              \
+        .num_of_entries = 1, .item = { {.name = queried_name, .if_key = netif_key} }                               \
+    }
 
 // clang-format on
 

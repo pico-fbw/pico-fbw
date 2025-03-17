@@ -4,6 +4,7 @@
  */
 
 // [ ] First-time setup page (to set configuration, settings, user name, etc.)
+// [ ] Should also guide user through sensor calibration
 
 import ContentBlock from "elements/ContentBlock";
 

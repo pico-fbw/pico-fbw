@@ -12,45 +12,37 @@
 #include "platform/time.h"
 
 #include "ctrl/aircraft.h"
+#include "lib/fusion/fusion.h"
 #include "sys/configuration.h"
 #include "sys/print.h"
 
 #include "aahrs.h"
 
-// TODO: redo the entire fusion system (sigh)
-
-// TODO: https://ardupilot.org/copter/docs/deadreckoning-failsafe.html seems like an interesting feature to implement
-
 static bool i2cInitialized = false; // Whether the AAHRS I2C bus has already been initialized
 
 bool aahrs_init() {
-    // Check the state of any previous calibration
-    aahrs.isCalibrated = (bool)calibration.aahrs[AAHRS_CALIBRATED];
-    bool differentIMU = (IMUModel)calibration.aahrs[AAHRS_IMU_MODEL] != (IMUModel)config.sensors[SENSORS_IMU_MODEL];
-    bool differentBaro =
-        (BaroModel)calibration.aahrs[AAHRS_BARO_MODEL] != (BaroModel)config.sensors[SENSORS_BARO_MODEL];
-    if (aahrs.isCalibrated && (differentIMU || differentBaro)) {
-        printsys(aahrs, "calibration was performed on different models, recalibration will be necessary!");
-        // This ensures the system won't load any bad calibration into the fusion algorithms
-        aahrs.isCalibrated = false;
-    }
-
-    // Set up the I2C bus and scan for any supported sensors
+    // Set up the I2C bus
     if (!i2cInitialized) {
-        i2c_setup((i16)config.pins[PINS_AAHRS_SDA], (i16)config.pins[PINS_AAHRS_SCL],
-                  (u32)config.sensors[SENSORS_AAHRS_BUS_FREQ] * 1000);
+        if (!i2c_setup((i16)config.pins[PINS_AAHRS_SDA], (i16)config.pins[PINS_AAHRS_SCL],
+                       (u32)config.sensors[SENSORS_AAHRS_BUS_FREQ] * 1000)) {
+            printsys(aahrs, "failed to initialize I2C bus");
+            return false;
+        }
         i2cInitialized = true;
     }
-
-    // ...
-
-    aahrs.isInitialized = true;
+    // Initialize fusion system (scan for/initialize devices, start filter algorithms, etc.)
+    if (!fusion_init()) {
+        printsys(aahrs, "failed to initialize fusion system");
+        return false;
+    }
+    aahrs.ready = true;
     aircraft.set_aahrs_safe(true);
     return true;
 }
 
 void aahrs_deinit() {
-    printsys(aahrs, "stopping!");
+    fusion_deinit();
+    printsys(aahrs, "deinitialized fusion");
     aahrs.roll = 0.f;
     aahrs.pitch = 0.f;
     aahrs.yaw = 0.f;
@@ -61,8 +53,7 @@ void aahrs_deinit() {
     aahrs.accel[1] = 0.f;
     aahrs.accel[2] = 0.f;
     aahrs.alt = -1;
-    // ...
-    aahrs.isInitialized = false;
+    aahrs.ready = false;
     aircraft.set_aahrs_safe(false);
 }
 
@@ -86,25 +77,15 @@ bool aahrs_calibrate() {
 
     // Flag AAHRS as calibrated, note the models at time of calibration, and save
     calibration.aahrs[AAHRS_CALIBRATED] = true;
-    calibration.aahrs[AAHRS_IMU_MODEL] = (IMUModel)config.sensors[SENSORS_IMU_MODEL];
-    calibration.aahrs[AAHRS_BARO_MODEL] = (BaroModel)config.sensors[SENSORS_BARO_MODEL];
     config_save();
     return true;
 }
 
 AAHRS aahrs = {
-    .roll = 0.f,
-    .pitch = 0.f,
-    .yaw = 0.f,
-    .rollRate = 0.f,
-    .pitchRate = 0.f,
-    .yawRate = 0.f,
-    .accel = {0.f, 0.f, 0.f},
-    .alt = -1,
+    .isCalibrated = false, // Will be set by aahrs_init() as applicable
+    .ready = false,
     .init = aahrs_init,
     .deinit = aahrs_deinit,
     .update = aahrs_update,
     .calibrate = aahrs_calibrate,
-    .isCalibrated = false, // Will be set by aahrs_init() as applicable
-    .isInitialized = false,
 };

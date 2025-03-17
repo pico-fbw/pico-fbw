@@ -74,7 +74,7 @@ else()
     # Add custom usb descriptors
     target_sources(platform_pico PUBLIC tinyusb/usb_descriptors.c)
     # USB reset via baudrate/vendor interface gets disabled when manually configuring tinyusb, so re-enable it
-    target_compile_definitions(${PROJECT_NAME} PRIVATE
+    target_compile_definitions(platform_pico PUBLIC
         PICO_STDIO_USB_ENABLE_RESET_VIA_BAUD_RATE=1
         PICO_STDIO_USB_ENABLE_RESET_VIA_VENDOR_INTERFACE=1
     )

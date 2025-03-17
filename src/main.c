@@ -15,10 +15,10 @@
 
 int main() {
     boot_begin();
-    print("hello and welcome to pico-fbw (%s)!", PICO_FBW_VERSION);
-    print("running on %s (%s)", PLATFORM_NAME, PLATFORM_VERSION)
+    print("hello and welcome to pico-fbw [%s]!", PICO_FBW_VERSION);
+    print("running on %s [%s]", PLATFORM_NAME, PLATFORM_VERSION);
 
-        boot_set_progress(0, "Mounting filesystem");
+    boot_set_progress(0, "Mounting filesystem");
     boot_mount_fs();
     boot_set_progress(5, "Loading configuration");
     config_load();

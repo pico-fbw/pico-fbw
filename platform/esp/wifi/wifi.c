@@ -47,20 +47,20 @@ bool wifi_setup(const char *ssid, const char *pass) {
     if (esp_wifi_init(&initConfig) != ESP_OK) {
         return false;
     }
-    // clang-format off
     wifi_config_t wifiConfig = {
-        .ap = {
-            // ssid and password are copied below, since thety are stored as arrays and not pointers
-            .ssid_len = strlen(ssid),
-            .channel = WIFI_CHANNEL,
-            .max_connection = WIFI_MAX_CONNECTIONS,
-            .authmode = pass ? WIFI_AUTH_WPA2_WPA3_PSK : WIFI_AUTH_OPEN,
-            .pmf_cfg = {
-                .required = true,
+        .ap =
+            {
+                // ssid and password are copied below, since thety are stored as arrays and not pointers
+                .ssid_len = strlen(ssid),
+                .channel = WIFI_CHANNEL,
+                .max_connection = WIFI_MAX_CONNECTIONS,
+                .authmode = pass ? WIFI_AUTH_WPA2_WPA3_PSK : WIFI_AUTH_OPEN,
+                .pmf_cfg =
+                    {
+                        .required = true,
+                    },
             },
-        },
     };
-    // clang-format on
     strncpy((char *)wifiConfig.ap.ssid, ssid, sizeof(wifiConfig.ap.ssid));
     if (pass) {
         strncpy((char *)wifiConfig.ap.password, pass, sizeof(wifiConfig.ap.password));

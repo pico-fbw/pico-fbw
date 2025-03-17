@@ -19,6 +19,11 @@
 
 #include "log.h"
 
+// TODO: redo logging system (it's clunky to use and still kind of like you're using the display)
+// - use ringbuf instead of heap
+// - make logging functions simpler and more intuitive to call
+// - more general system (less specific to LED)
+
 #define MSG_INFO "INFO"
 #define MSG_WARN "WARNING"
 #define MSG_ERROR "ERROR"

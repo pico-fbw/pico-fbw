@@ -83,11 +83,9 @@ typedef enum ConfigPins {
     PINS_REVERSE_YAW,
 } ConfigPins;
 #define S_PIN_MIN PINS_INPUT_AIL
-#define S_PIN_MAX PINS_GPS_RX
+#define S_PIN_MAX PINS_REVERSE_YAW
 
 typedef enum ConfigSensors {
-    SENSORS_IMU_MODEL,
-    SENSORS_BARO_MODEL,
     SENSORS_AAHRS_BUS_FREQ,
     SENSORS_GPS_COMMAND_TYPE,
     SENSORS_GPS_BAUDRATE,
@@ -143,8 +141,6 @@ typedef enum CalibrationESC {
 
 typedef enum CalibrationAAHRS {
     AAHRS_CALIBRATED,
-    AAHRS_IMU_MODEL,
-    AAHRS_BARO_MODEL,
 } CalibrationAAHRS;
 
 typedef enum CalibrationPID {

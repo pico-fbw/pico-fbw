@@ -4,6 +4,7 @@
  */
 
 #include <assert.h>
+#include "esp_heap_caps.h" // https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32/api-reference/system/mem_alloc.html
 #include "esp_sleep.h" // https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32/api-reference/system/sleep_modes.html
 #include "esp_system.h" // https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32/api-reference/system/misc_system_api.html
 #include "esp_task_wdt.h" // https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32/api-reference/system/wdts.html

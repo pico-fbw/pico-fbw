@@ -22,7 +22,7 @@ void runtime_loop(bool update_aircraft) {
     // Update the mode switch's position
     switch_update();
     // Update sensors
-    if (aahrs.isInitialized) {
+    if (aahrs.ready) {
         aahrs.update();
     }
     if (gps.is_supported()) {

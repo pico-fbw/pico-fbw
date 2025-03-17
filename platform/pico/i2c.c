@@ -17,7 +17,7 @@
  * @param scl the pin number of the SCL pin
  * @return the i2c instance that the pins lie on, or NULL if the pins do not form a valid i2c instance
  */
-static inline i2c_inst_t *i2c_inst_from_pins(u32 sda, u32 scl) {
+static inline i2c_inst_t *i2c_inst_from_pins(i16 sda, i16 scl) {
     switch (sda) {
         case 0:
         case 4:
@@ -60,7 +60,7 @@ static inline i2c_inst_t *i2c_inst_from_pins(u32 sda, u32 scl) {
     }
 }
 
-bool i2c_setup(u32 sda, u32 scl, u32 freq) {
+bool i2c_setup(i16 sda, i16 scl, u32 freq) {
     gpio_set_function(sda, GPIO_FUNC_I2C);
     gpio_set_function(scl, GPIO_FUNC_I2C);
     gpio_pull_up(sda);
@@ -74,7 +74,7 @@ bool i2c_setup(u32 sda, u32 scl, u32 freq) {
     return true;
 }
 
-bool i2c_read(u32 sda, u32 scl, byte addr, byte reg, byte dest[], size_t len) {
+bool i2c_read(i16 sda, i16 scl, byte addr, byte reg, byte dest[], size_t len) {
     i2c_inst_t *i2c = i2c_inst_from_pins(sda, scl);
     if (!i2c) {
         return false;
@@ -90,7 +90,7 @@ bool i2c_read(u32 sda, u32 scl, byte addr, byte reg, byte dest[], size_t len) {
     return timeout == (i32)len;
 }
 
-bool i2c_write(u32 sda, u32 scl, byte addr, byte reg, const byte src[], size_t len) {
+bool i2c_write(i16 sda, i16 scl, byte addr, byte reg, const byte src[], size_t len) {
     i2c_inst_t *i2c = i2c_inst_from_pins(sda, scl);
     if (!i2c) {
         return false;

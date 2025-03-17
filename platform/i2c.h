@@ -12,7 +12,7 @@
  * @note Many platforms have limitations on which pins and frequencies can be used for I2C.
  * This means that the frequency that you request may not be the exact frequency that is set.
  */
-bool i2c_setup(u32 sda, u32 scl, u32 freq);
+bool i2c_setup(i16 sda, i16 scl, u32 freq);
 
 /**
  * Reads `len` bytes from `addr` at `reg` and stores them in `dest[]`.
@@ -26,7 +26,7 @@ bool i2c_setup(u32 sda, u32 scl, u32 freq);
  * @note `dest[]` must be large enough to hold `len` bytes of data.
  * @note `sda` and `scl` must be set up with `i2c_setup()` before calling this function.
  */
-bool i2c_read(u32 sda, u32 scl, byte addr, byte reg, byte dest[], size_t len);
+bool i2c_read(i16 sda, i16 scl, byte addr, byte reg, byte dest[], size_t len);
 
 /**
  * Writes `len` bytes from `src[]` to `addr` at `reg`.
@@ -40,4 +40,51 @@ bool i2c_read(u32 sda, u32 scl, byte addr, byte reg, byte dest[], size_t len);
  * @note `src[]` must contain at least `len` bytes of data
  * @note `sda` and `scl` must be set up with `i2c_setup()` before calling this function.
  */
-bool i2c_write(u32 sda, u32 scl, byte addr, byte reg, const byte src[], size_t len);
+bool i2c_write(i16 sda, i16 scl, byte addr, byte reg, const byte src[], size_t len);
+
+/**
+ * Reads a single byte from `addr` at `reg`.
+ * @param sda the SDA pin to use
+ * @param scl the SCL pin to use
+ * @param addr the I2C address to read from
+ * @param reg the register to read from
+ * @return the byte read
+ * @note `sda` and `scl` must be set up with `i2c_setup()` before calling this function.
+ */
+static inline byte i2c_read_byte(i16 sda, i16 scl, byte addr, byte reg) {
+    byte data;
+    i2c_read(sda, scl, addr, reg, &data, 1);
+    return data;
+}
+
+/**
+ * Writes a single byte from `data` to `addr` at `reg`.
+ * @param sda the SDA pin to use
+ * @param scl the SCL pin to use
+ * @param addr the I2C address to write to
+ * @param reg the register to write to
+ * @param data the byte to write
+ * @return true if the write was successful
+ * @note `sda` and `scl` must be set up with `i2c_setup()` before calling this function.
+ */
+static inline bool i2c_write_byte(i16 sda, i16 scl, byte addr, byte reg, byte data) {
+    return i2c_write(sda, scl, addr, reg, (byte[]){data}, 1);
+}
+
+/**
+ * Writes `data` to `addr` at `reg` with the bits specified by `mask` set to `data`.
+ * @param sda the SDA pin to use
+ * @param scl the SCL pin to use
+ * @param addr the I2C address to write to
+ * @param reg the register to write to
+ * @param mask the bits to set
+ * @param data the data to write
+ * @return true if the write was successful
+ * @note `sda` and `scl` must be set up with `i2c_setup()` before calling this function.
+ */
+static inline bool i2c_write_bits(i16 sda, i16 scl, byte addr, byte reg, byte mask, byte data) {
+    byte value = i2c_read_byte(sda, scl, addr, reg);
+    value &= ~mask;
+    value |= data & mask;
+    return i2c_write_byte(sda, scl, addr, reg, value);
+}

@@ -24,7 +24,7 @@ static I2CInstance instances[MAX_I2C_DEVICES];
 /**
  * @return a pointer to the I2C instance that uses the given pins, or NULL if no such instance exists
  */
-static I2CInstance *i2c_instance_from_pins(u32 sda, u32 scl) {
+static I2CInstance *i2c_instance_from_pins(i16 sda, i16 scl) {
     for (u32 i = 0; i < MAX_I2C_DEVICES; i++) {
         I2CMapping mapping = I2C_MAP[i];
         if (mapping.sda == sda && mapping.scl == scl) {
@@ -35,7 +35,7 @@ static I2CInstance *i2c_instance_from_pins(u32 sda, u32 scl) {
     return NULL;
 }
 
-bool i2c_setup(u32 sda, u32 scl, u32 freq) {
+bool i2c_setup(i16 sda, i16 scl, u32 freq) {
     I2CInstance *inst = i2c_instance_from_pins(sda, scl);
     if (inst == NULL) {
         return false;
@@ -48,7 +48,7 @@ bool i2c_setup(u32 sda, u32 scl, u32 freq) {
     (void)freq; // Frequency is managed by the kernel driver
 }
 
-bool i2c_read(u32 sda, u32 scl, byte addr, byte reg, byte dest[], size_t len) {
+bool i2c_read(i16 sda, i16 scl, byte addr, byte reg, byte dest[], size_t len) {
     I2CInstance *inst = i2c_instance_from_pins(sda, scl);
     if (inst == NULL || inst->fd < 0) {
         return false;
@@ -65,7 +65,7 @@ bool i2c_read(u32 sda, u32 scl, byte addr, byte reg, byte dest[], size_t len) {
     return read(inst->fd, dest, len) == (ssize_t)len;
 }
 
-bool i2c_write(u32 sda, u32 scl, byte addr, byte reg, const byte src[], size_t len) {
+bool i2c_write(i16 sda, i16 scl, byte addr, byte reg, const byte src[], size_t len) {
     I2CInstance *inst = i2c_instance_from_pins(sda, scl);
     if (inst == NULL || inst->fd < 0) {
         return false;

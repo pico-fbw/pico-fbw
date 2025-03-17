@@ -9,7 +9,6 @@ if (NOT FBW_BUILD_WWW)
     endif()
     return()
 endif()
-add_compile_definitions(FBW_BUILD_WWW=1)
 target_compile_definitions(${PLATFORM_LIB} PUBLIC FBW_BUILD_WWW=1)
 
 # Ensure pnpm is installed

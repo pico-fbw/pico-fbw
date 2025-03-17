@@ -26,7 +26,7 @@ function(setup_after_subdirs)
     # These are compiled into stdio, so using printf() will output to whatever is enabled
     pico_enable_stdio_usb(${PROJECT_NAME} 1)
     pico_enable_stdio_uart(${PROJECT_NAME} 1)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE
+    target_compile_definitions(platform_pico PUBLIC
         PICO_DEFAULT_UART_TX_PIN=12 # Must be a pin with UART0 TX
         PICO_DEFAULT_UART_RX_PIN=13 # Must be a pin with UART0 RX
     )

@@ -3,7 +3,6 @@
  * Licensed under the MIT License
  */
 
-#include <stdlib.h>
 #include <string.h>
 #include "driver/i2c_master.h" // https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32/api-reference/peripherals/i2c.html
 
@@ -12,7 +11,8 @@
 #include "platform/i2c.h"
 
 // Interrupt WDT had to be increased in sdkconfig to prevent it from triggering during long timeouts
-#define I2C_TIMEOUT_MS 50
+#define I2C_TIMEOUT_MS 50     // Timeout for all I2C operations
+#define MAX_DEVICES_PER_BUS 5 // Maximum number of devices that can exist on a single bus
 
 typedef struct I2CDevice {
     byte addr;
@@ -20,9 +20,10 @@ typedef struct I2CDevice {
 } I2CDevice;
 
 typedef struct I2CBus {
-    u32 sda, scl, freq;
+    i16 sda, scl;
+    u32 freq;
     i2c_master_bus_handle_t handle;
-    I2CDevice *devices;
+    I2CDevice devices[MAX_DEVICES_PER_BUS];
     size_t numDevices;
 } I2CBus;
 
@@ -35,15 +36,10 @@ static I2CBus buses[I2C_NUM_MAX];
  * @return true if the device was successfully added
  */
 static bool add_device(I2CBus *bus, byte addr) {
-    // Allocate a new device onto the bus array
-    bus->numDevices++;
-    I2CDevice *new = reallocarray(bus->devices, bus->numDevices, sizeof(I2CDevice));
-    if (!new) {
+    if (++bus->numDevices > MAX_DEVICES_PER_BUS) {
         bus->numDevices--;
-        free(bus->devices);
         return false;
     }
-    bus->devices = new;
     // Add the new device to the bus
     const i2c_device_config_t deviceConfig = {
         .dev_addr_length = I2C_ADDR_BIT_LEN_7,
@@ -63,11 +59,11 @@ static bool add_device(I2CBus *bus, byte addr) {
  * @param sda the SDA pin that the device is connected to
  * @param scl the SCL pin that the device is connected to
  * @param addr the I2C address of the device
- * @return the `I2CDevice` that matches the given details, or NULL if no such bus exists matching the given SDA and SCL
- * pins
+ * @return the `I2CDevice` that matches the given details,
+ * or NULL if no such bus exists matching the given SDA and SCL pins
  * @note If no such device exists, it will be automatically added to the bus.
  */
-static I2CDevice *i2c_device_from_details(u32 sda, u32 scl, byte addr) {
+static I2CDevice *i2c_device_from_details(i16 sda, i16 scl, byte addr) {
     // Find the bus that matches the given SDA and SCL pins
     I2CBus *bus = NULL;
     for (size_t i = 0; i < count_of(buses); i++) {
@@ -88,7 +84,7 @@ static I2CDevice *i2c_device_from_details(u32 sda, u32 scl, byte addr) {
         }
     }
     if (!device) {
-        // Device has not yet been added to the bus, do that now
+        // Device has not yet been added to the bus, try to do that now
         if (!add_device(bus, addr)) {
             return NULL;
         }
@@ -96,7 +92,7 @@ static I2CDevice *i2c_device_from_details(u32 sda, u32 scl, byte addr) {
     return device;
 }
 
-bool i2c_setup(u32 sda, u32 scl, u32 freq) {
+bool i2c_setup(i16 sda, i16 scl, u32 freq) {
     const i2c_master_bus_config_t config = {
         .i2c_port = -1, // auto-select
         .sda_io_num = sda,
@@ -123,7 +119,7 @@ bool i2c_setup(u32 sda, u32 scl, u32 freq) {
     return false;
 }
 
-bool i2c_read(u32 sda, u32 scl, byte addr, byte reg, byte dest[], size_t len) {
+bool i2c_read(i16 sda, i16 scl, byte addr, byte reg, byte dest[], size_t len) {
     I2CDevice *device = i2c_device_from_details(sda, scl, addr);
     if (!device) {
         return false;
@@ -132,7 +128,7 @@ bool i2c_read(u32 sda, u32 scl, byte addr, byte reg, byte dest[], size_t len) {
     return i2c_master_transmit_receive(device->handle, &reg, sizeof(reg), dest, len + 1, I2C_TIMEOUT_MS) == ESP_OK;
 }
 
-bool i2c_write(u32 sda, u32 scl, byte addr, byte reg, const byte src[], size_t len) {
+bool i2c_write(i16 sda, i16 scl, byte addr, byte reg, const byte src[], size_t len) {
     I2CDevice *device = i2c_device_from_details(sda, scl, addr);
     if (!device) {
         return false;

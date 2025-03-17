@@ -26,7 +26,7 @@ static UARTInstance instances[MAX_UARTS];
 /**
  * @return a pointer to the UART instance that uses the given pins, or NULL if no such instance exists
  */
-static UARTInstance *uart_instance_from_pins(u32 tx, u32 rx) {
+static UARTInstance *uart_instance_from_pins(i16 tx, i16 rx) {
     for (u32 i = 0; i < MAX_UARTS; i++) {
         UARTMapping mapping = UART_MAP[i];
         if (mapping.tx == tx && mapping.rx == rx) {
@@ -59,7 +59,7 @@ static speed_t baud_to_speed(u32 baud) {
     }
 }
 
-bool uart_setup(u32 tx, u32 rx, u32 baud) {
+bool uart_setup(i16 tx, i16 rx, u32 baud) {
     UARTInstance *inst = uart_instance_from_pins(tx, rx);
     if (inst == NULL) {
         return false;
@@ -100,7 +100,7 @@ bool uart_setup(u32 tx, u32 rx, u32 baud) {
     return true;
 }
 
-char *uart_read(u32 tx, u32 rx) {
+char *uart_read(i16 tx, i16 rx) {
     UARTInstance *inst = uart_instance_from_pins(tx, rx);
     if (inst == NULL || inst->fd < 0) {
         return NULL;
@@ -140,7 +140,7 @@ char *uart_read(u32 tx, u32 rx) {
     return buf;
 }
 
-bool uart_write(u32 tx, u32 rx, const char *str) {
+bool uart_write(i16 tx, i16 rx, const char *str) {
     UARTInstance *inst = uart_instance_from_pins(tx, rx);
     if (inst == NULL || inst->fd < 0) {
         return false;

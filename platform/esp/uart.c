@@ -18,7 +18,7 @@
 #define UART_PORT_START UART_NUM_1
 
 typedef struct UARTInstance {
-    u32 tx, rx;
+    i16 tx, rx;
     uart_port_t port;
 } UARTInstance;
 
@@ -27,7 +27,7 @@ static UARTInstance instances[UART_NUM_MAX];
 /**
  * @return a pointer to the UART instance that uses the given pins, or NULL if no such instance exists
  */
-static UARTInstance *uart_instance_from_pins(u32 tx, u32 rx) {
+static UARTInstance *uart_instance_from_pins(i16 tx, i16 rx) {
     for (uart_port_t port = UART_PORT_START; port < UART_NUM_MAX; port++) {
         if (instances[port].tx == tx && instances[port].rx == rx) {
             return &instances[port];
@@ -36,7 +36,7 @@ static UARTInstance *uart_instance_from_pins(u32 tx, u32 rx) {
     return NULL;
 }
 
-bool uart_setup(u32 tx, u32 rx, u32 baud) {
+bool uart_setup(i16 tx, i16 rx, u32 baud) {
     for (uart_port_t port = UART_PORT_START; port < UART_NUM_MAX; port++) {
         // Find an available UART port
         if (!uart_is_driver_installed(port)) {
@@ -67,7 +67,7 @@ bool uart_setup(u32 tx, u32 rx, u32 baud) {
     return false; // No available UART ports
 }
 
-char *uart_read(u32 tx, u32 rx) {
+char *uart_read(i16 tx, i16 rx) {
     UARTInstance *instance = uart_instance_from_pins(tx, rx);
     if (!instance) {
         return NULL;
@@ -100,7 +100,7 @@ char *uart_read(u32 tx, u32 rx) {
     return buf;
 }
 
-bool uart_write(u32 tx, u32 rx, const char *str) {
+bool uart_write(i16 tx, i16 rx, const char *str) {
     UARTInstance *instance = uart_instance_from_pins(tx, rx);
     if (!instance) {
         return false;

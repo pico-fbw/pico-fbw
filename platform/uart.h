@@ -12,7 +12,7 @@
  * @note Many platforms have limitations on which pins and baudrates can be used for UART.
  * Check the documentation of the platform you are using to ensure you are using valid pins and baudrates.
  */
-bool uart_setup(u32 tx, u32 rx, u32 baud);
+bool uart_setup(i16 tx, i16 rx, u32 baud);
 
 /**
  * Reads a line from the specifed UART pins, if available.
@@ -22,7 +22,7 @@ bool uart_setup(u32 tx, u32 rx, u32 baud);
  *        or NULL if there was no input available.
  * @note This function does not free the memory allocated for the line if read, ensure to free() it after use.
  */
-char *uart_read(u32 tx, u32 rx);
+char *uart_read(i16 tx, i16 rx);
 
 /**
  * Writes the given string to the specified UART pins.
@@ -31,4 +31,4 @@ char *uart_read(u32 tx, u32 rx);
  * @param str the string to write
  * @return true if the write was successful
  */
-bool uart_write(u32 tx, u32 rx, const char *str);
+bool uart_write(i16 tx, i16 rx, const char *str);

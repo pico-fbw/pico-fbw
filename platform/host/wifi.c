@@ -24,6 +24,7 @@
 #include "platform/flash.h"
 
 #include "sys/api/api.h"
+#include "sys/print.h"
 
 #define POLL_PERIOD_MS 2 // Rate at which the web server is polled
 
@@ -178,7 +179,7 @@ bool wifi_setup(const char *ssid, const char *pass) {
     if (!mg_http_listen(&mgr, "http://0.0.0.0:5173", ev_handler, NULL)) {
         return false;
     }
-    printf("emulated Wi-Fi access point started at http://localhost:5173\n");
+    printsys(network, "emulated Wi-Fi access point started at http://localhost:5173");
     return true;
     (void)ssid;
     (void)pass;

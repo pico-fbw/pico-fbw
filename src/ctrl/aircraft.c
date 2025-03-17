@@ -217,7 +217,7 @@ void set_aahrs_safe(bool state) {
         return;
     }
     // Last-ditch attempt to re-init AAHRS if it's not already
-    if (!aahrs.isInitialized && !aahrs.init()) {
+    if (!aahrs.ready && !aahrs.init()) {
         log_message(TYPE_ERROR, "AAHRS initialization failed!", 1000, 0, false);
         change_to(MODE_DIRECT);
         return;

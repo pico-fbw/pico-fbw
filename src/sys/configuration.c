@@ -71,7 +71,7 @@ Config config = {
         CONFIG_END_MAGIC,
     },
     .sensors = {
-        IMU_MODEL_ICM20948, BARO_MODEL_NONE, 400, // AAHRS configuration
+        400, // AAHRS configuration
         GPS_COMMAND_TYPE_PMTK, 9600, // GPS configuration
         CONFIG_END_MAGIC,
     },
@@ -240,8 +240,6 @@ void config_reset() {
     X("reverseYaw", PINS_REVERSE_YAW)
 
 #define SENSORS_KEY_LIST                                                                                               \
-    X("imuModel", SENSORS_IMU_MODEL)                                                                                   \
-    X("baroModel", SENSORS_BARO_MODEL)                                                                                 \
     X("aahrsBusFreq", SENSORS_AAHRS_BUS_FREQ)                                                                          \
     X("gpsCommandType", SENSORS_GPS_COMMAND_TYPE)                                                                      \
     X("gpsBaudrate", SENSORS_GPS_BAUDRATE)
@@ -405,14 +403,6 @@ bool config_validate(char *error, size_t error_size) {
         config.general[GENERAL_WIFI_ENABLED] > WIFI_ENABLED_MAX) {
         snprintf(error, error_size, "Wi-Fi enable status must be between %d and %d.", WIFI_ENABLED_MIN,
                  WIFI_ENABLED_MAX);
-        return false;
-    }
-    if (config.sensors[SENSORS_IMU_MODEL] < IMU_MODEL_MIN || config.sensors[SENSORS_IMU_MODEL] > IMU_MODEL_MAX) {
-        snprintf(error, error_size, "IMU model must be between %d and %d.", IMU_MODEL_MIN, IMU_MODEL_MAX);
-        return false;
-    }
-    if (config.sensors[SENSORS_BARO_MODEL] < BARO_MODEL_MIN || config.sensors[SENSORS_BARO_MODEL] > BARO_MODEL_MAX) {
-        snprintf(error, error_size, "Barometer model must be between %d and %d.", BARO_MODEL_MIN, BARO_MODEL_MAX);
         return false;
     }
     if (config.sensors[SENSORS_GPS_COMMAND_TYPE] < GPS_COMMAND_TYPE_MIN ||

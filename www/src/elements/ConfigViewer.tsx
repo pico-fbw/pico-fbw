@@ -321,23 +321,6 @@ const config: ConfigDatabase = {
 
     Sensors: [
         {
-            name: "IMU Model",
-            id: "imuModel",
-            desc: "The model of the IMU that is being used. Please let us know if there's an IMU you would like supported!",
-            enumMap: {
-                1: "ICM20948",
-            },
-        },
-        {
-            name: "Barometer Model",
-            id: "baroModel",
-            desc: "The model of the barometer that is being used, if applicable. Can also be used to disable the barometer, which is the case by default. Please let us know if there's a barometer you would like supported!",
-            enumMap: {
-                0: "Barometer Disabled",
-                1: "DPS310",
-            },
-        },
-        {
             name: "AAHRS Bus Frequency",
             id: "aahrsBusFreq",
             desc: "The frequency to be used on the AAHRS I2C bus, in KHz. The default is 400 KHz which should work for most devices, but you can try lowering it if you are experiencing issues.",

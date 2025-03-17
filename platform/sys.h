@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include "platform/types.h"
 
 typedef enum BootType {
     BOOT_COLD,     // Cold boot (power-on reset)

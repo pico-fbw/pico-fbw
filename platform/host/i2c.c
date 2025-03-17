@@ -7,14 +7,14 @@
 
 #include "platform/i2c.h"
 
-bool i2c_setup(u32 sda, u32 scl, u32 freq) {
+bool i2c_setup(i16 sda, i16 scl, u32 freq) {
     return true; // Not implemented
     (void)sda;
     (void)scl;
     (void)freq;
 }
 
-bool i2c_read(u32 sda, u32 scl, byte addr, byte reg, byte dest[], size_t len) {
+bool i2c_read(i16 sda, i16 scl, byte addr, byte reg, byte dest[], size_t len) {
     // Not implemented
     for (u32 i = 0; i < len; i++) {
         dest[i] = 0x00;
@@ -28,7 +28,7 @@ bool i2c_read(u32 sda, u32 scl, byte addr, byte reg, byte dest[], size_t len) {
     (void)len;
 }
 
-bool i2c_write(u32 sda, u32 scl, byte addr, byte reg, const byte src[], size_t len) {
+bool i2c_write(i16 sda, i16 scl, byte addr, byte reg, const byte src[], size_t len) {
     return true; // Not implemented
     (void)sda;
     (void)scl;
