@@ -24,6 +24,8 @@
 
 #include "aircraft.h"
 
+// Shorthand for checking GPS feature support and data validitity
+#define GPS_OK() (gps.is_supported() && aircraft.gpsSafe)
 // Speed threshold to determine if the aircraft is flying (kts)
 #define SPEED_FLYING_THRESHOLD 5
 // The highest amount of time that the aircraft can still be considered flying after the last control input (s)

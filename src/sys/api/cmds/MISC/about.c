@@ -12,7 +12,7 @@
 
 i32 api_about(const char *args) {
     printraw("pico-fbw [%s], API v%s\n", PICO_FBW_VERSION, API_VERSION);
-    printraw("Built on %s at %s for \"%s\" [%s]\n\n", __DATE__, __TIME__, PLATFORM_NAME, PLATFORM_VERSION);
+    printraw("Built on %s at %s for %s [%s]\n\n", __DATE__, __TIME__, PLATFORM_NAME, PLATFORM_VERSION);
     printraw("Copyright (C) 2023-2025, pico-fbw\n\n"
              "This program is free software: you can redistribute it and/or modify\n"
              "it under the terms of the MIT License. See LICENSE for more details.\n\n"

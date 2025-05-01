@@ -16,7 +16,6 @@
 // Master device list; devices are defined in their respective driver source files
 static const FusionDevice *devices[] = {
     &bme280,
-    &icm20948,
 };
 static const FusionDevice *detected[MAX_DEVICES];
 static u32 detectedCount = 0;
@@ -29,15 +28,15 @@ static u32 detectedCount = 0;
  * @return false if the driver does not exist or failed to initialize
  */
 static bool init_driver(const FusionDevice *device, FusionDriver *driver, const char *name) {
-    if (driver && driver->exists(driver)) {
-        if (!driver->init(driver)) {
-            printsys(aahrs, "WARNING: detected %s for '%s' but failed to initialize", name, device->name);
-            return false;
-        }
-        printsys(aahrs, "initialized %s for '%s'", name, device->name);
-        return true;
+    if (!driver || !driver->exists(driver)) {
+        return false;
     }
-    return false;
+    if (!driver->init(driver)) {
+        printsys(aahrs, "WARNING: detected %s for '%s' but failed to initialize", name, device->name);
+        return false;
+    }
+    printsys(aahrs, "initialized %s for '%s'", name, device->name);
+    return true;
 }
 
 /**

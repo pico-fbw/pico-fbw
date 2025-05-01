@@ -28,16 +28,16 @@ void pid_init(PIDController *pid) {
 }
 
 void pid_update(PIDController *pid, f64 setpoint, f64 measurement) {
-    pid->T = time_s() - pid->prevT;     // Time
-    f64 error = setpoint - measurement; // Error signal
+    pid->T = time_s() - pid->prevT;
+    f64 error = setpoint - measurement;
     // Compute PID components
-    f64 proportional = pid->kp * error;                                                     // Proportional
-    pid->integrator = pid->integrator + 0.5f * pid->ki * pid->T * (error + pid->prevError); // Integral
+    f64 proportional = pid->kp * error;
+    pid->integrator = pid->integrator + 0.5 * pid->ki * pid->T * (error + pid->prevError);
     // Derivative (band-limited differentiator)
     // Derivative on measurement, therefore minus sign in front of equation
     pid->differentiator =
-        -(2.0f * pid->kd * (measurement - pid->prevMeasurement) + (2.0f * pid->tau - pid->T) * pid->differentiator) /
-        (2.0f * pid->tau + pid->T);
+        -(2.0 * pid->kd * (measurement - pid->prevMeasurement) + (2.0 * pid->tau - pid->T) * pid->differentiator) /
+        (2.0 * pid->tau + pid->T);
 
     // Compute output and apply limits
     f64 out = proportional + pid->integrator + pid->differentiator;

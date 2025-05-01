@@ -7,7 +7,7 @@ message("Fetching littlefs")
 FetchContent_Declare(
     littlefs
     GIT_REPOSITORY https://github.com/littlefs-project/littlefs
-    GIT_TAG v2.10.1
+    GIT_TAG v2.10.2
 )
 FetchContent_MakeAvailable(littlefs)
 list(APPEND EXTERNALLIBS_SOURCES

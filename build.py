@@ -78,19 +78,19 @@ dependencies = {
         'add_to_path': 'bin',
     },
     'cmake': {
-        'version': '3.31.6',
+        'version': '4.0.1',
         'url': {
-            'linux-aarch64': 'https://github.com/Kitware/CMake/releases/download/v3.31.6/cmake-3.31.6-linux-aarch64.tar.gz',
-            'linux-x86_64': 'https://github.com/Kitware/CMake/releases/download/v3.31.6/cmake-3.31.6-linux-x86_64.tar.gz',
-            'win32-amd64': 'https://github.com/Kitware/CMake/releases/download/v3.31.6/cmake-3.31.6-windows-x86_64.zip',
-            'darwin-arm64': 'https://github.com/Kitware/CMake/releases/download/v3.31.6/cmake-3.31.6-macos-universal.tar.gz',
-            'darwin-x86_64': 'https://github.com/Kitware/CMake/releases/download/v3.31.6/cmake-3.31.6-macos-universal.tar.gz',
+            'linux-aarch64': 'https://github.com/Kitware/CMake/releases/download/v4.0.1/cmake-4.0.1-linux-aarch64.tar.gz',
+            'linux-x86_64': 'https://github.com/Kitware/CMake/releases/download/v4.0.1/cmake-4.0.1-linux-x86_64.tar.gz',
+            'win32-amd64': 'https://github.com/Kitware/CMake/releases/download/v4.0.1/cmake-4.0.1-windows-x86_64.zip',
+            'darwin-arm64': 'https://github.com/Kitware/CMake/releases/download/v4.0.1/cmake-4.0.1-macos-universal.tar.gz',
+            'darwin-x86_64': 'https://github.com/Kitware/CMake/releases/download/v4.0.1/cmake-4.0.1-macos-universal.tar.gz',
         },
     },
     'ESP-IDF': {
-        'version': '5.4.0',
+        'version': '5.4.1',
         'independent': True,
-        'url': 'https://github.com/espressif/esp-idf/releases/download/v5.4/esp-idf-v5.4.zip',
+        'url': 'https://github.com/espressif/esp-idf/releases/download/v5.4.1/esp-idf-v5.4.1.zip',
         'install': install_esp_idf,
     },
     'ninja': {

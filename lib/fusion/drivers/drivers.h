@@ -82,4 +82,3 @@ static inline bool check_devid(FusionDriver *driver, byte addr, byte alt_addr, b
 }
 
 extern const FusionDevice bme280;
-extern const FusionDevice icm20948;

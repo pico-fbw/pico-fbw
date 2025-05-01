@@ -12,6 +12,7 @@
 #include "sys/log.h"
 #include "sys/print.h"
 #include "sys/runtime.h"
+#include "sys/version.h"
 
 int main() {
     boot_begin();

@@ -17,9 +17,6 @@ typedef enum Mode {
 // clang-format on
 #define MODE_MAX MODE_HOLD
 
-// Shorthand for checking GPS feature support and data validitity
-#define GPS_OK() (gps.is_supported() && aircraft.gpsSafe)
-
 // Helper macros to determine if the user is currently inputting on the controls
 // If used, ensure to #include "io/receiver.h" and "sys/configuration.h"
 #define DEADBAND config.control[CONTROL_DEADBAND]
