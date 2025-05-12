@@ -12,15 +12,13 @@ if (NOT DEFINED FBW_PLATFORM)
     message(STATUS "To specify a platform, run cmake with -DFBW_PLATFORM=<platform>")
 endif()
 set(FBW_PLATFORM "host" CACHE STRING "Platform to build pico-fbw for")
-# Special cases
-set(PICO_PLATFORMS "pico" "pico2" "pico_w")
-set(ESP_PLATFORMS "esp32")
-if (FBW_PLATFORM IN_LIST PICO_PLATFORMS)
+string(REGEX MATCH "^pico" fbw_pico_match ${FBW_PLATFORM})
+string(REGEX MATCH "^esp32" fbw_esp_match ${FBW_PLATFORM})
+if (fbw_pico_match)
     set(PLATFORM_NAME "pico")
-elseif (FBW_PLATFORM IN_LIST ESP_PLATFORMS)
+elseif (fbw_esp_match)
     set(PLATFORM_NAME "esp")
 else()
-    # Default to the platform name as its directory
     set(PLATFORM_NAME ${FBW_PLATFORM})
 endif()
 set(PLATFORM_LIB "platform_${PLATFORM_NAME}")
@@ -55,7 +53,12 @@ add_subdirectory(lib)
 add_subdirectory(platform)
 message("Fetching external libraries, this may take a moment...")
 include(ExternalLibs)
-target_sources(${PROJECT_NAME} PRIVATE ${EXTERNALLIBS_SOURCES})
+target_link_libraries(${PROJECT_NAME}
+    littlefs
+    minmea
+    parson
+    semver
+)
 # Includes should target the platform lib so that they have access to headers (ex. lfs.h) too
 target_include_directories(${PLATFORM_LIB} PUBLIC ${EXTERNALLIBS_INCLUDE_DIR})
 # Add extra targets (formatting, documentation, etc.)

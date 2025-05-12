@@ -38,6 +38,7 @@ ExternalProject_Add(mklittlefs
 # Add a target to build the web interface
 # It depends on all files in the www directory, so it will only rebuild if any of those files change
 file(GLOB_RECURSE WWW_FILES ${CMAKE_SOURCE_DIR}/www/*)
+list(FILTER WWW_FILES EXCLUDE REGEX ".*/node_modules/.*")
 # To build the web interface, invoke the www.sh wrapper script which will respect nvm if installed
 set(BUILD_WWW_CMD ${CMAKE_SOURCE_DIR}/www/www.sh ${CMAKE_SOURCE_DIR}/www ${PNPM_EXE})
 if (CMAKE_HOST_WIN32)

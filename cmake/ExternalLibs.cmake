@@ -1,7 +1,25 @@
 include(FetchContent)
 
-set(EXTERNALLIBS_SOURCES "")
-set(EXTERNALLIBS_INCLUDE_DIRS "")
+# Create a common include/wrapper directory for external headers
+set(EXTERNALLIBS_INCLUDE_DIR "${CMAKE_BINARY_DIR}/include")
+set(EXTERNALLIBS_WRAPPER_LIB_DIR "${EXTERNALLIBS_INCLUDE_DIR}/lib")
+file(MAKE_DIRECTORY ${EXTERNALLIBS_WRAPPER_LIB_DIR})
+
+# Imports a library into the project, creating a static library target and importing headers
+function(import_library name dir)
+    message(STATUS "Importing ${name}")
+    # Get the source file(s) from the arguments
+    set(sources "")
+    foreach(src IN LISTS ARGN)
+        list(APPEND sources "${dir}/${src}")
+    endforeach()
+    # Get the header files from the directory
+    file(GLOB LIB_HEADERS "${dir}/*.h")
+    # Add the library and set up includes
+    add_library(${name} STATIC ${sources})
+    target_include_directories(${name} PUBLIC ${dir})
+    file(COPY ${LIB_HEADERS} DESTINATION ${EXTERNALLIBS_WRAPPER_LIB_DIR})
+endfunction()
 
 message("Fetching littlefs")
 FetchContent_Declare(
@@ -10,11 +28,10 @@ FetchContent_Declare(
     GIT_TAG v2.10.2
 )
 FetchContent_MakeAvailable(littlefs)
-list(APPEND EXTERNALLIBS_SOURCES
-    ${littlefs_SOURCE_DIR}/lfs.c
-    ${littlefs_SOURCE_DIR}/lfs_util.c
+import_library(littlefs ${littlefs_SOURCE_DIR}
+    lfs.c
+    lfs_util.c
 )
-list(APPEND EXTERNALLIBS_INCLUDE_DIRS ${littlefs_SOURCE_DIR})
 
 message("Fetching minmea")
 FetchContent_Declare(
@@ -23,12 +40,11 @@ FetchContent_Declare(
     SOURCE_SUBDIR " " # Override the source directory with a nonexistant one so cmake doesn't try to run CMakeLists.txt
 )
 FetchContent_MakeAvailable(minmea)
-list(APPEND EXTERNALLIBS_SOURCES
-    ${minmea_SOURCE_DIR}/minmea.c
+import_library(minmea ${minmea_SOURCE_DIR}
+    minmea.c
 )
-list(APPEND EXTERNALLIBS_INCLUDE_DIRS ${minmea_SOURCE_DIR})
-# Most platforms don't support timegm, so fall back to mktime
-target_compile_definitions(${PLATFORM_LIB} PUBLIC timegm=mktime)
+# Most platforms don't support timegm, so fall back to mktime when compiling minmea
+target_compile_definitions(minmea PUBLIC timegm=mktime)
 
 message("Fetching parson")
 FetchContent_Declare(
@@ -37,10 +53,9 @@ FetchContent_Declare(
     SOURCE_SUBDIR " "
 )
 FetchContent_MakeAvailable(parson)
-list(APPEND EXTERNALLIBS_SOURCES
-    ${parson_SOURCE_DIR}/parson.c
+import_library(parson ${parson_SOURCE_DIR}
+    parson.c
 )
-list(APPEND EXTERNALLIBS_INCLUDE_DIRS ${parson_SOURCE_DIR})
 
 message("Fetching semver")
 FetchContent_Declare(
@@ -49,20 +64,6 @@ FetchContent_Declare(
     GIT_TAG v1.0.0
 )
 FetchContent_MakeAvailable(semver)
-list(APPEND EXTERNALLIBS_SOURCES
-    ${semver_SOURCE_DIR}/semver.c
+import_library(semver ${semver_SOURCE_DIR}
+    semver.c
 )
-list(APPEND EXTERNALLIBS_INCLUDE_DIRS ${semver_SOURCE_DIR})
-
-# Create a new include/wrapper directory to store the headers of the external libraries
-# This is so that they can be included in the same way as the in-project libraries (#include "lib/____.h")
-set(EXTERNALLIBS_INCLUDE_DIR "${CMAKE_BINARY_DIR}/include")
-set(EXTERNALLIBS_WRAPPER_LIB_DIR "${EXTERNALLIBS_INCLUDE_DIR}/lib")
-file(MAKE_DIRECTORY ${EXTERNALLIBS_WRAPPER_LIB_DIR})
-foreach(lib_dir IN LISTS EXTERNALLIBS_INCLUDE_DIRS)
-    file(GLOB LIB_HEADERS "${lib_dir}/*.h")
-    foreach(header IN LISTS LIB_HEADERS)
-        # Copy the header file into the wrapper lib directory
-        file(COPY ${header} DESTINATION ${EXTERNALLIBS_WRAPPER_LIB_DIR})
-    endforeach()
-endforeach()

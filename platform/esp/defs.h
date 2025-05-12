@@ -35,5 +35,3 @@ typedef esp_timer_handle_t __callback_id_t;
 // In ESP-IDF, FreeRTOS is required, and it expects the entrypoint to be called app_main
 // This define will rename main() to app_main() in main.c (as this file is included in main.c before main() is defined)
 #define main app_main
-
-#define LFS_THREADSAFE 1 // FreeRTOS is multithreaded so we need to enable thread safety in littlefs

@@ -71,6 +71,10 @@ function(setup_before_subdirs)
 endfunction()
 
 function(setup_after_subdirs)
-    target_link_options(${PROJECT_NAME} PUBLIC "-Wl,--no-warn-rwx-segments") # Suppress warning about RWX segments
+    # FreeRTOS is multithreaded so we need to enable thread safety in littlefs
+    target_compile_definitions(littlefs PUBLIC -DLFS_THREADSAFE=1)
+    target_compile_definitions(platform_esp PRIVATE -DLFS_THREADSAFE=1)
+    # Suppress warning about RWX segments
+    target_link_options(${PROJECT_NAME} PUBLIC "-Wl,--no-warn-rwx-segments")
     idf_build_executable(${PROJECT_NAME})
 endfunction()

@@ -16,6 +16,8 @@
 // Master device list; devices are defined in their respective driver source files
 static const FusionDevice *devices[] = {
     &bme280,
+    &bmi270,
+    &bmm350,
 };
 static const FusionDevice *detected[MAX_DEVICES];
 static u32 detectedCount = 0;
