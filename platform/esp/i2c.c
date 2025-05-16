@@ -33,12 +33,12 @@ static I2CBus buses[I2C_NUM_MAX];
  * Adds an `I2CDevice` to the given `I2CBus`.
  * @param bus the `I2CBus` to add the device to
  * @param addr the I2C address of the device
- * @return true if the device was successfully added
+ * @return the `I2CDevice` that was added to the bus, or NULL if the device could not be added
  */
-static bool add_device(I2CBus *bus, byte addr) {
+static I2CDevice *add_device(I2CBus *bus, byte addr) {
     if (++bus->numDevices > MAX_DEVICES_PER_BUS) {
         bus->numDevices--;
-        return false;
+        return NULL;
     }
     // Add the new device to the bus
     const i2c_device_config_t deviceConfig = {
@@ -48,10 +48,10 @@ static bool add_device(I2CBus *bus, byte addr) {
     };
     i2c_master_dev_handle_t deviceHandle;
     if (i2c_master_bus_add_device(bus->handle, &deviceConfig, &deviceHandle) != ESP_OK) {
-        return false;
+        return NULL;
     }
     bus->devices[bus->numDevices - 1] = (I2CDevice){addr, deviceHandle};
-    return true;
+    return &bus->devices[bus->numDevices - 1];
 }
 
 /**
@@ -85,7 +85,8 @@ static I2CDevice *i2c_device_from_details(i16 sda, i16 scl, byte addr) {
     }
     if (!device) {
         // Device has not yet been added to the bus, try to do that now
-        if (!add_device(bus, addr)) {
+        device = add_device(bus, addr);
+        if (!device) {
             return NULL;
         }
     }

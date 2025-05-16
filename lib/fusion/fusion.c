@@ -26,7 +26,7 @@ static u32 detectedCount = 0;
  * Checks if a driver exists and attempts to initialize it if it does.
  * @param device pointer to the device
  * @param driver pointer to the driver to initialize
- * @param ident human-readable identifier for the driver name
+ * @param name human-readable identifier for the driver name
  * @return false if the driver does not exist or failed to initialize
  */
 static bool init_driver(const FusionDevice *device, FusionDriver *driver, const char *name) {
@@ -45,7 +45,7 @@ static bool init_driver(const FusionDevice *device, FusionDriver *driver, const 
  * Deinitializes a driver, if applicable.
  * @param device pointer to the device
  * @param driver pointer to the driver to deinitialize
- * @param ident human-readable identifier for the driver name
+ * @param name human-readable identifier for the driver name
  */
 static void deinit_driver(const FusionDevice *device, FusionDriver *driver, const char *name) {
     if (driver && driver->destroy) {

@@ -30,12 +30,13 @@ void bmm350_destroy(FusionDriver *self) {
     return;
 }
 
+FusionDriver bmm350_driver = {
+    .exists = bmm350_exists,
+    .init = bmm350_init,
+    .read = bmm350_read,
+    .destroy = bmm350_destroy,
+};
 const FusionDevice bmm350 = {
-    .mag = &((FusionDriver){
-        .exists = bmm350_exists,
-        .init = bmm350_init,
-        .read = bmm350_read,
-        .destroy = bmm350_destroy,
-    }),
+    .mag = &bmm350_driver,
     .name = "BMM350",
 };

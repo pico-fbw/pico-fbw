@@ -195,12 +195,13 @@ void bme280_destroy(FusionDriver *self) {
     }
 }
 
+FusionDriver bme280_baro = {
+    .exists = bme280_exists,
+    .init = bme280_init,
+    .read = bme280_read,
+    .destroy = bme280_destroy,
+};
 const FusionDevice bme280 = {
-    .baro = &((FusionDriver){
-        .exists = bme280_exists,
-        .init = bme280_init,
-        .read = bme280_read,
-        .destroy = bme280_destroy,
-    }),
+    .baro = &bme280_baro,
     .name = "BME280",
 };

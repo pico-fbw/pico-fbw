@@ -30,18 +30,20 @@ void bmi270_destroy(FusionDriver *self) {
     return;
 }
 
+FusionDriver bmi270_acc = {
+    .exists = bmi270_exists,
+    .init = bmi270_init,
+    .read = bmi270_read,
+    .destroy = bmi270_destroy,
+};
+FusionDriver bmi270_gyro = {
+    .exists = bmi270_exists,
+    .init = bmi270_init,
+    .read = bmi270_read,
+    .destroy = bmi270_destroy,
+};
 const FusionDevice bmi270 = {
-    .acc = &((FusionDriver){
-        .exists = bmi270_exists,
-        .init = bmi270_init,
-        .read = bmi270_read,
-        .destroy = bmi270_destroy,
-    }),
-    .gyro = &((FusionDriver){
-        .exists = bmi270_exists,
-        .init = bmi270_init,
-        .read = bmi270_read,
-        .destroy = bmi270_destroy,
-    }),
+    .acc = &bmi270_acc,
+    .gyro = &bmi270_gyro,
     .name = "BMI270",
 };
