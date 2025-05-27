@@ -9,7 +9,7 @@
 
 void gpio_setup(i16 pin, PinMode mode) {
     const gpio_config_t config = {
-        .pin_bit_mask = 1u << pin,
+        .pin_bit_mask = 1ULL << (gpio_num_t)pin,
         // OUTPUT is mapped to INPUT_OUTPUT so toggle works
         .mode = mode == MODE_OUTPUT ? GPIO_MODE_INPUT_OUTPUT : GPIO_MODE_INPUT,
         .pull_up_en = mode == MODE_INPUT_PULLUP ? GPIO_PULLUP_ENABLE : GPIO_PULLUP_DISABLE,

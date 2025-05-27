@@ -14,6 +14,8 @@
  */
 
 #include <stdlib.h>
+#include "platform/i2c.h"
+#include "platform/time.h"
 
 #include "drivers.h"
 
@@ -56,10 +58,10 @@ typedef struct BME280State {
 static BME280State *create_bme280_state(FusionDriver *self) {
     // Fetch lower and upper calibration data from the device
     byte calibL[25], calibU[8];
-    if (!i2c_read(SDA, SCL, self->addr, BME280_REG_CALIB_00, calibL, sizeof(calibL))) {
+    if (!i2c_read(ASDA, ASCL, self->addr, BME280_REG_CALIB_00, calibL, sizeof(calibL))) {
         return NULL;
     }
-    if (!i2c_read(SDA, SCL, self->addr, BME280_REG_CALIB_26, calibU, sizeof(calibU))) {
+    if (!i2c_read(ASDA, ASCL, self->addr, BME280_REG_CALIB_26, calibU, sizeof(calibU))) {
         return NULL;
     }
     // Create a new state and populate its calibration parameters
@@ -158,13 +160,13 @@ bool bme280_exists(FusionDriver *self) {
 
 bool bme280_init(FusionDriver *self) {
     bool success = true;
-    // Reset the device
-    success &= i2c_write_byte(SDA, SCL, self->addr, BME280_REG_RESET, BME280_RESET_TRIGGER);
+    // Reset device
+    success &= i2c_write_byte(ASDA, ASCL, self->addr, BME280_REG_RESET, BME280_RESET_TRIGGER);
     sleep_ms_blocking(2);
     // Humidity x1 oversampling
-    success &= i2c_write_bits(SDA, SCL, self->addr, BME280_REG_CTRL_HUM, 0b00000111, BME280_OVERSAMPLE_X1);
+    success &= i2c_write_bits(ASDA, ASCL, self->addr, BME280_REG_CTRL_HUM, 0b00000111, BME280_OVERSAMPLE_X1);
     // Pressure x16 oversampling, temperature x2 oversampling, normal mode
-    success &= i2c_write_byte(SDA, SCL, self->addr, BME280_REG_CTRL_MEAS,
+    success &= i2c_write_byte(ASDA, ASCL, self->addr, BME280_REG_CTRL_MEAS,
                               BME280_OVERSAMPLE_X2 << 5 | BME280_OVERSAMPLE_X16 << 2 | BME280_MODE_NORMAL);
     // Fetch calibration parameters for later readings
     BME280State *state = create_bme280_state(self);
@@ -174,8 +176,9 @@ bool bme280_init(FusionDriver *self) {
 }
 
 bool bme280_read(FusionDriver *self, f32 data[]) {
+    BME280State *state = (BME280State *)self->context;
     byte raw[8];
-    if (!i2c_read(SDA, SCL, self->addr, BME280_REG_PRESS, raw, sizeof(raw))) {
+    if (!i2c_read(ASDA, ASCL, self->addr, BME280_REG_PRESS, raw, sizeof(raw))) {
         return false;
     }
     // Convert byte array to 20/16-bit signed adc values
@@ -183,9 +186,9 @@ bool bme280_read(FusionDriver *self, f32 data[]) {
     i32 adcTemp = (raw[3] << 12) | (raw[4] << 4) | (raw[5] >> 4);
     i32 adcHum = (raw[6] << 8) | raw[7];
     // Compensate measurements and convert to floating point
-    data[0] = compensate_press(adcPress, (BME280State *)self->context) / 25600.f; // Pressure in Pa
-    data[1] = compensate_temp(adcTemp, (BME280State *)self->context) / 100.f;     // Temperature in °C
-    data[2] = compensate_hum(adcHum, (BME280State *)self->context) / 1024.f;      // Humidity in %RH
+    data[0] = compensate_press(adcPress, state) / 25600.f; // Pressure in Pa
+    data[1] = compensate_temp(adcTemp, state) / 100.f;     // Temperature in °C
+    data[2] = compensate_hum(adcHum, state) / 1024.f;      // Humidity in %RH
     return true;
 }
 
@@ -195,13 +198,13 @@ void bme280_destroy(FusionDriver *self) {
     }
 }
 
-FusionDriver bme280_baro = {
+FusionDriver bme280_driver = {
     .exists = bme280_exists,
     .init = bme280_init,
     .read = bme280_read,
     .destroy = bme280_destroy,
 };
 const FusionDevice bme280 = {
-    .baro = &bme280_baro,
+    .baro = &bme280_driver,
     .name = "BME280",
 };

@@ -52,7 +52,7 @@ bool i2c_write(i16 sda, i16 scl, byte addr, byte reg, const byte src[], size_t l
  * @note `sda` and `scl` must be set up with `i2c_setup()` before calling this function.
  */
 static inline byte i2c_read_byte(i16 sda, i16 scl, byte addr, byte reg) {
-    byte data;
+    byte data = 0x00;
     i2c_read(sda, scl, addr, reg, &data, 1);
     return data;
 }
@@ -69,6 +69,21 @@ static inline byte i2c_read_byte(i16 sda, i16 scl, byte addr, byte reg) {
  */
 static inline bool i2c_write_byte(i16 sda, i16 scl, byte addr, byte reg, byte data) {
     return i2c_write(sda, scl, addr, reg, (byte[]){data}, 1);
+}
+
+/**
+ * Reads the bits specified by `mask` from `addr` at `reg`.
+ * @param sda the SDA pin to use
+ * @param scl the SCL pin to use
+ * @param addr the I2C address to read from
+ * @param reg the register to read from
+ * @param mask the bits to read
+ * @return the bits read
+ * @note `sda` and `scl` must be set up with `i2c_setup()` before calling this function.
+ */
+static inline byte i2c_read_bits(i16 sda, i16 scl, byte addr, byte reg, byte mask) {
+    byte value = i2c_read_byte(sda, scl, addr, reg);
+    return value & mask;
 }
 
 /**

@@ -1,8 +1,7 @@
 include(FetchContent)
 
 # Create a common include/wrapper directory for external headers
-set(EXTERNALLIBS_INCLUDE_DIR "${CMAKE_BINARY_DIR}/include")
-set(EXTERNALLIBS_WRAPPER_LIB_DIR "${EXTERNALLIBS_INCLUDE_DIR}/lib")
+set(EXTERNALLIBS_WRAPPER_LIB_DIR "${CMAKE_BINARY_DIR}/include/lib")
 file(MAKE_DIRECTORY ${EXTERNALLIBS_WRAPPER_LIB_DIR})
 
 # Imports a library into the project, creating a static library target and importing headers

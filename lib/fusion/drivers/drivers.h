@@ -1,19 +1,12 @@
-/**
- * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
- * Licensed under the MIT License
- */
-
 #pragma once
 
 #include <stdbool.h>
-#include "platform/i2c.h"
-#include "platform/time.h"
 #include "platform/types.h"
 
 #include "sys/configuration.h"
 
-#define SDA (i16) config.pins[PINS_AAHRS_SDA]
-#define SCL (i16) config.pins[PINS_AAHRS_SCL]
+#define ASDA (i16) config.pins[PINS_AAHRS_SDA]
+#define ASCL (i16) config.pins[PINS_AAHRS_SCL]
 
 typedef struct FusionDriver FusionDriver; // Forward declaration
 typedef struct FusionDriver {
@@ -68,19 +61,28 @@ typedef struct FusionDevice {
  * @return true if the device is present and has the expected ID
  * @note This function also sets the `addr` field of `driver` if it succeeds.
  */
-static inline bool check_devid(FusionDriver *driver, byte addr, byte alt_addr, byte reg, byte expected) {
-    if (i2c_read_byte(SDA, SCL, addr, reg) == expected) {
-        driver->addr = addr;
-        return true;
-    }
-    // Main address failed, check the alternate address
-    if (alt_addr && i2c_read_byte(SDA, SCL, alt_addr, reg) == expected) {
-        driver->addr = alt_addr;
-        return true;
-    }
-    return false;
-}
+bool check_devid(FusionDriver *driver, byte addr, byte alt_addr, byte reg, byte expected);
+
+/**
+ * Checks if a driver exists and attempts to initialize it if it does.
+ * @param device pointer to the device
+ * @param driver pointer to the driver to initialize
+ * @param name human-readable identifier for the driver name
+ * @return false if the driver does not exist or failed to initialize
+ */
+bool init_driver(const FusionDevice *device, FusionDriver *driver, const char *name);
+
+/**
+ * Deinitializes a driver, if applicable.
+ * @param device pointer to the device
+ * @param driver pointer to the driver to deinitialize
+ * @param name human-readable identifier for the driver name
+ */
+void deinit_driver(const FusionDevice *device, FusionDriver *driver, const char *name);
 
 extern const FusionDevice bme280;
 extern const FusionDevice bmi270;
 extern const FusionDevice bmm350;
+
+extern const FusionDevice *fusionDevices[];
+extern const u32 numFusionDevices;

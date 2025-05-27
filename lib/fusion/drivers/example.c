@@ -51,6 +51,6 @@ const FusionDevice example = {
 
 // After configuring the FusionDevice struct, the driver should be registered with the fusion system.
 // This can be done by adding the line `extern const FusionDevice example;` to drivers.h, changing the name accordingly.
-// Then, the driver should be added to the `devices` array in fusion.c.
+// Then, the driver should be added to the `fusionDevices` array in drivers.c.
 // Finally, the driver source file should be added to the CMakelists.txt file (located in lib/CMakeLists.txt).
 // The driver will then be automatically detected and utilized by the fusion system.

@@ -59,8 +59,6 @@ target_link_libraries(${PROJECT_NAME}
     parson
     semver
 )
-# Includes should target the platform lib so that they have access to headers (ex. lfs.h) too
-target_include_directories(${PLATFORM_LIB} PUBLIC ${EXTERNALLIBS_INCLUDE_DIR})
 # Add extra targets (formatting, documentation, etc.)
 message("Configuring utilities")
 include(ClangFormat)
@@ -69,6 +67,8 @@ include(WebBuild)
 # Final setup tasks
 message("Finishing up setup for '${FBW_PLATFORM}'")
 setup_after_subdirs()
+# Include any generated headers to both the library and the main executable (eg. library headers, firmware blobs, etc.)
+target_include_directories(${PLATFORM_LIB} PUBLIC ${CMAKE_BINARY_DIR}/include)
 
 message("Configuration summary:")
 message("    Version: ${PICO_FBW_VERSION}")
