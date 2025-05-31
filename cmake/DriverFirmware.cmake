@@ -1,6 +1,6 @@
 # Generate headers (to be included in fusion drivers) from binary firmware blobs
 function(generate_firmware_headers firmware_files)
-    set(FIRMWARE_BIN_DIR "${CMAKE_SOURCE_DIR}/lib/fusion/drivers/firmware")
+    set(FIRMWARE_BIN_DIR "${CMAKE_SOURCE_DIR}/lib/drivers/firmware")
     set(FIRMWARE_HEADERS_INCLUDE_DIR "${CMAKE_BINARY_DIR}/include/firmware")
     file(MAKE_DIRECTORY ${FIRMWARE_HEADERS_INCLUDE_DIR})
     set(GENERATED_HEADERS)

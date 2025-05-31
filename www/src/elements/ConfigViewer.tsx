@@ -271,24 +271,24 @@ const config: ConfigDatabase = {
             desc: "Pin that the PWM (signal) wire on the BAY servo is connected to.",
         },
         {
-            name: "AAHRS SDA Pin",
-            id: "aahrsSda",
-            desc: "The SDA pin of the AAHRS system (IMU + Baro). Note that this must line up with the Pico's I2C0 interface, see a pinout if you're not sure!",
+            name: "I2C SDA Pin",
+            id: "i2cSda",
+            desc: "The SDA pin of the I2C sensor bus.",
         },
         {
-            name: "AAHRS SCL Pin",
-            id: "aahrsScl",
-            desc: "The SCL pin of the AAHRS system (IMU + Baro). Note that this must line up with the Pico's I2C0 interface, see a pinout if you're not sure!",
+            name: "I2C SCL Pin",
+            id: "i2cScl",
+            desc: "The SCL pin of the I2C sensor bus.",
         },
         {
             name: "GPS TX Pin",
             id: "gpsTx",
-            desc: "The TX pin of the GPS. Note that this must line up with the Pico's UART1 interface, see a pinout if you're not sure!",
+            desc: "The TX pin of the GPS.",
         },
         {
             name: "GPS RX Pin",
             id: "gpsRx",
-            desc: "The RX pin of the GPS. Note that this must line up with the Pico's UART1 interface, see a pinout if you're not sure!",
+            desc: "The RX pin of the GPS.",
         },
         {
             name: "Reverse Roll",
@@ -321,9 +321,9 @@ const config: ConfigDatabase = {
 
     Sensors: [
         {
-            name: "AAHRS Bus Frequency",
-            id: "aahrsBusFreq",
-            desc: "The frequency to be used on the AAHRS I2C bus, in KHz. The default is 400 KHz which should work for most devices, but you can try lowering it if you are experiencing issues.",
+            name: "I2C Bus Frequency",
+            id: "i2cBusFreq",
+            desc: "The frequency to be used on the I2C sensor bus, in KHz. The default is 400 KHz which should work for most devices, but you can try lowering it if you are experiencing issues.",
         },
         {
             name: "GPS Command Type",
@@ -365,9 +365,9 @@ const config: ConfigDatabase = {
             },
         },
         {
-            name: "Debug: AAHRS",
-            id: "printAAHRS",
-            desc: "Enables more specific logs, warnings, and errors pertaining to the AAHRS system.",
+            name: "Debug: IMU",
+            id: "printIMU",
+            desc: "Enables more specific logs, warnings, and errors pertaining to the IMU system.",
             enumMap: {
                 0: "Disabled",
                 1: "Enabled",

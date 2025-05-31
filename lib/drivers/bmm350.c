@@ -65,9 +65,9 @@
 
 typedef struct BMM350State {
     f32 offset[4]; // x, y, z, temperature offsets
-    f32 sens[4]; // x, y, z, temperature sensitivities
-    f32 tco[3]; // x, y, z temperature coefficients
-    f32 tcs[3]; // x, y, z temperature coefficients for sensitivity
+    f32 sens[4];   // x, y, z, temperature sensitivities
+    f32 tco[3];    // x, y, z temperature coefficients
+    f32 tcs[3];    // x, y, z temperature coefficients for sensitivity
     f32 dutT0;
     f32 crossXY, crossYX, crossZX, crossZY;
 } BMM350State;
@@ -83,7 +83,7 @@ static i32 fix_sign(uint32_t raw, i8 num_bits) {
     i32 ret;
     switch (num_bits) {
         case BMM350_SIGNED_8_BIT:
-            power = 128; // 2^7 
+            power = 128; // 2^7
             break;
         case BMM350_SIGNED_12_BIT:
             power = 2048; // 2^11
@@ -152,8 +152,10 @@ static BMM350State *create_bmm350_state(FusionDriver *self) {
     }
     // Populate the state with calibration data from OTP
     state->offset[0] = fix_sign((otp[BMM350_MAG_OFFSET_X] & 0x0FFF), BMM350_SIGNED_12_BIT);
-    state->offset[1] = fix_sign(((otp[BMM350_MAG_OFFSET_X] & 0xF000) >> 4) + (otp[BMM350_MAG_OFFSET_Y] & 0x00FF), BMM350_SIGNED_12_BIT);
-    state->offset[2] = fix_sign((otp[BMM350_MAG_OFFSET_Y] & 0x0F00) + (otp[BMM350_MAG_OFFSET_Z] & 0x00FF), BMM350_SIGNED_12_BIT);
+    state->offset[1] = fix_sign(((otp[BMM350_MAG_OFFSET_X] & 0xF000) >> 4) + (otp[BMM350_MAG_OFFSET_Y] & 0x00FF),
+                                BMM350_SIGNED_12_BIT);
+    state->offset[2] =
+        fix_sign((otp[BMM350_MAG_OFFSET_Y] & 0x0F00) + (otp[BMM350_MAG_OFFSET_Z] & 0x00FF), BMM350_SIGNED_12_BIT);
     state->offset[3] = fix_sign((otp[BMM350_TEMP_OFF_SENS] & 0x00FF), BMM350_SIGNED_8_BIT) / 5.0f;
     state->sens[0] = fix_sign((otp[BMM350_MAG_SENS_X] & 0xFF00) >> 8, BMM350_SIGNED_8_BIT) / 256.0f;
     state->sens[1] = (fix_sign((otp[BMM350_MAG_SENS_Y] & 0x00FF), BMM350_SIGNED_8_BIT) / 256.0f) + 0.01f;
@@ -200,10 +202,17 @@ bool bmm350_read(FusionDriver *self, f32 data[]) {
         return false;
     }
     u32 uncomp[] = {
-        raw[0] + ((u32)raw[1] << 8) + ((u32)raw[2] << 16) * (BMM350_POWER / (BMM350_BXY_SENS * BMM350_INA_XY_GAIN_TRGT * BMM350_ADC_GAIN * BMM350_LUT_GAIN)),
-        raw[3] + ((u32)raw[4] << 8) + ((u32)raw[5] << 16) * (BMM350_POWER / (BMM350_BXY_SENS * BMM350_INA_XY_GAIN_TRGT * BMM350_ADC_GAIN * BMM350_LUT_GAIN)),
-        raw[6] + ((u32)raw[7] << 8) + ((u32)raw[8] << 16) * (BMM350_POWER / (BMM350_BXY_SENS * BMM350_INA_Z_GAIN_TRGT * BMM350_ADC_GAIN * BMM350_LUT_GAIN)),
-        raw[9] + ((u32)raw[10] << 8) + ((u32)raw[11] << 16) / (BMM350_TEMP_SENS * BMM350_ADC_GAIN * BMM350_LUT_GAIN * 1048576),
+        raw[0] + ((u32)raw[1] << 8) +
+            ((u32)raw[2] << 16) *
+                (BMM350_POWER / (BMM350_BXY_SENS * BMM350_INA_XY_GAIN_TRGT * BMM350_ADC_GAIN * BMM350_LUT_GAIN)),
+        raw[3] + ((u32)raw[4] << 8) +
+            ((u32)raw[5] << 16) *
+                (BMM350_POWER / (BMM350_BXY_SENS * BMM350_INA_XY_GAIN_TRGT * BMM350_ADC_GAIN * BMM350_LUT_GAIN)),
+        raw[6] + ((u32)raw[7] << 8) +
+            ((u32)raw[8] << 16) *
+                (BMM350_POWER / (BMM350_BXY_SENS * BMM350_INA_Z_GAIN_TRGT * BMM350_ADC_GAIN * BMM350_LUT_GAIN)),
+        raw[9] + ((u32)raw[10] << 8) +
+            ((u32)raw[11] << 16) / (BMM350_TEMP_SENS * BMM350_ADC_GAIN * BMM350_LUT_GAIN * 1048576),
     }; // x, y, z, temperature
     // Compensate raw magnetic data
     for (u32 i = 0; i < 3; i++) {
@@ -214,7 +223,9 @@ bool bmm350_read(FusionDriver *self, f32 data[]) {
     }
     data[0] = (uncomp[0] - state->crossXY * uncomp[1]) / (1 - state->crossYX * state->crossXY);
     data[1] = (uncomp[1] - state->crossYX * uncomp[0]) / (1 - state->crossYX * state->crossXY);
-    data[2] = (uncomp[2] + (uncomp[0] * (state->crossYX * state->crossZY - state->crossZX) - uncomp[1] * (state->crossZY - state->crossXY * state->crossZX)) / (1 - state->crossYX * state->crossXY));
+    data[2] = (uncomp[2] + (uncomp[0] * (state->crossYX * state->crossZY - state->crossZX) -
+                            uncomp[1] * (state->crossZY - state->crossXY * state->crossZX)) /
+                               (1 - state->crossYX * state->crossXY));
     return true;
 }
 

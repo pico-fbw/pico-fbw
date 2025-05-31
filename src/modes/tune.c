@@ -8,7 +8,7 @@
 
 #include "ctrl/control.h"
 #include "ctrl/flight.h"
-#include "io/aahrs.h"
+#include "io/imu.h"
 #include "io/receiver.h"
 #include "modes/normal.h"
 #include "sys/configuration.h"
@@ -85,8 +85,8 @@ void tune_update() {
     // Get the requested and actual roll and pitch rates
     f32 reqRollRate = control_get_dps(AXIS_ROLL, rollInput, pitchInput);
     f32 reqPitchRate = control_get_dps(AXIS_PITCH, rollInput, pitchInput);
-    f32 actRollRate = aahrs.rollRate;
-    f32 actPitchRate = aahrs.pitchRate;
+    f32 actRollRate = imu.rollRate;
+    f32 actPitchRate = imu.pitchRate;
 
     update_gain(AXIS_ROLL, reqRollRate, actRollRate);
     update_gain(AXIS_PITCH, reqPitchRate, actPitchRate);

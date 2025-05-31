@@ -18,8 +18,8 @@ typedef esp_timer_handle_t __callback_id_t;
 #define DEFAULT_PIN_SERVO_BAY 23
 
 // Sensor I/O pins
-#define DEFAULT_PIN_AAHRS_SDA 14
-#define DEFAULT_PIN_AAHRS_SCL 27
+#define DEFAULT_PIN_I2C_SDA 14
+#define DEFAULT_PIN_I2C_SCL 27
 #define DEFAULT_PIN_GPS_TX 26
 #define DEFAULT_PIN_GPS_RX 25
 

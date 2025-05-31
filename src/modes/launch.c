@@ -8,7 +8,7 @@
 
 #include "ctrl/flight.h"
 #include "ctrl/throttle.h"
-#include "io/aahrs.h"
+#include "io/imu.h"
 #include "io/receiver.h"
 #include "sys/configuration.h"
 
@@ -29,9 +29,9 @@ static LaunchStatus status = LAUNCH_AWAITING;
 /**
  * @return true if a high acceleration above the launch threshold is detected on any axis
  */
-static inline bool aahrs_has_launch_accel() {
+static inline bool has_launch_accel() {
     for (u32 i = 0; i < 3; i++) {
-        if (fabsf(aahrs.accel[i]) > LAUNCH_ACCEL_THRESHOLD) {
+        if (fabsf(imu.accel[i]) > LAUNCH_ACCEL_THRESHOLD) {
             return true;
         }
     }
@@ -57,11 +57,11 @@ void launch_init(Mode return_to) {
 void launch_update() {
     switch (status) {
         case LAUNCH_AWAITING:
-            climbAngle = aahrs.pitch;
+            climbAngle = imu.pitch;
             // Detect if we're launching
             // To do this, we check for an abnormal/sudden increase in acceleration
             // which indicates the user probably threw the aircraft
-            if (aahrs_has_launch_accel()) {
+            if (has_launch_accel()) {
                 // Launch is happening right now, set max thrust
                 throttle.target = calibration.esc[ESC_DETENT_MAX];
                 // If we need to return to auto mode after launch, do so after a delay

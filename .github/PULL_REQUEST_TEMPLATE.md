@@ -9,7 +9,7 @@ Contributors guide: https://pico-fbw.org/wiki/docs/Contributing/
 <!-- Please provide a short description of the change(s) here. -->
 
 ### Affected core subsystem(s)
-<!-- Please provide affected core subsystem(s), such as autopilot, AAHRS, etc. -->
+<!-- Please provide affected core subsystem(s), such as autopilot, IMU, etc. -->
 - 
 
 ### Changelog

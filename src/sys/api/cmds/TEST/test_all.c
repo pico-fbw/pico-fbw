@@ -7,8 +7,8 @@
 
 #include "sys/print.h"
 
-#include "test_aahrs.h"
 #include "test_gps.h"
+#include "test_imu.h"
 #include "test_pwm.h"
 #include "test_servo.h"
 #include "test_throttle.h"
@@ -18,8 +18,8 @@
 i32 api_test_all(const char *args) {
     u32 status[5];
     u32 passed = 0;
-    status[0] = api_test_aahrs(args);
-    status[1] = api_test_gps(args);
+    status[0] = api_test_gps(args);
+    status[1] = api_test_imu(args);
     status[2] = api_test_pwm(args);
     status[3] = api_test_servo(args);
     status[4] = api_test_throttle(args);
@@ -29,13 +29,13 @@ i32 api_test_all(const char *args) {
         }
     }
     printraw("========== TEST RESULTS ==========");
-    printraw("\nAAHRS: %lu", status[0]);
+    printraw("\nGPS:   %lu", status[0]);
     if (status[0] == 200) {
-        printraw(" (PASSED)");
-    }
-    printraw("\nGPS:   %lu", status[1]);
-    if (status[1] == 200) {
         printraw(" (PASSED, VERIFY)"); // "PASSED, VERIFY" results require more manual verification
+    }
+    printraw("\nIMU:   %lu", status[0]);
+    if (status[1] == 200) {
+        printraw(" (PASSED)");
     }
     printraw("\nPWM:   %lu", status[2]);
     if (status[2] == 200) {

@@ -50,8 +50,8 @@ int main() {
         }
     }
 
-    boot_set_progress(45, "Initializing AAHRS");
-    boot_init_aahrs();
+    boot_set_progress(45, "Initializing IMU");
+    boot_init_imu();
 
     boot_set_progress(65, "Initializing GPS");
     boot_init_gps();

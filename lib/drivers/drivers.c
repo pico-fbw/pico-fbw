@@ -36,16 +36,16 @@ bool init_driver(const FusionDevice *device, FusionDriver *driver, const char *n
         return false;
     }
     if (!driver->init(driver)) {
-        printsys(aahrs, "WARNING: detected %s for '%s' but failed to initialize", name, device->name);
+        printsys(imu, "WARNING: detected %s for '%s' but failed to initialize", name, device->name);
         return false;
     }
-    printsys(aahrs, "initialized %s for '%s'", name, device->name);
+    printsys(imu, "initialized %s for '%s'", name, device->name);
     return true;
 }
 
 void deinit_driver(const FusionDevice *device, FusionDriver *driver, const char *name) {
     if (driver && driver->destroy) {
         driver->destroy(driver);
-        printsys(aahrs, "deinitialized %s for '%s'", name, device->name);
+        printsys(imu, "deinitialized %s for '%s'", name, device->name);
     }
 }

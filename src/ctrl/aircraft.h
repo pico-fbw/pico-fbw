@@ -40,23 +40,23 @@ typedef struct Aircraft {
 #if PLATFORM_SUPPORTS_WIFI
     bool wifiDeinitialized; // Whether wifi has been deinitialized after taking flight (read-only)
 #endif
-    bool aahrsSafe; // (Read-only)
-    bool gpsSafe;   // (Read-only)
+    bool imuSafe; // (Read-only)
+    bool gpsSafe; // (Read-only)
     /**
      * Runs the code of the system's currently selected mode.
      */
     void (*update)();
     /**
      * Transitions the aircraft to a specified mode.
-     * @param mode The mode to transition to.
+     * @param mode mode to transition to.
      */
     void (*change_to)(Mode mode);
     /**
-     * @param state Declares whether or not the AAHRS data is safe to use.
+     * @param state whether or not the IMU data is safe to use.
      */
-    void (*set_aahrs_safe)(bool state);
+    void (*set_imu_safe)(bool state);
     /**
-     * @param state Declares whether or not the GPS data is safe to use.
+     * @param state whether or not the GPS data is safe to use.
      */
     void (*set_gps_safe)(bool state);
 } Aircraft;

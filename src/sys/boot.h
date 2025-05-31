@@ -35,9 +35,9 @@ void boot_init_servos();
 void boot_init_escs();
 
 /**
- * Initializes the AAHRS I/O and fusion.
+ * Initializes the IMU sensor I/O.
  */
-void boot_init_aahrs();
+void boot_init_imu();
 
 /**
  * Initializes the GPS I/O.

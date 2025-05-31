@@ -11,8 +11,8 @@
 
 #include "ctrl/aircraft.h"
 #include "ctrl/switch.h"
-#include "io/aahrs.h"
 #include "io/gps.h"
+#include "io/imu.h"
 #include "sys/api/api.h"
 #include "sys/configuration.h"
 
@@ -22,8 +22,8 @@ void runtime_loop(bool update_aircraft) {
     // Update the mode switch's position
     switch_update();
     // Update sensors
-    if (aahrs.ready) {
-        aahrs.update();
+    if (imu.ready) {
+        imu.update();
     }
     if (gps.is_supported()) {
         gps.update();

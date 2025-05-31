@@ -14,9 +14,9 @@
 #include "platform/time.h"
 #include "platform/wifi.h"
 
-#include "io/aahrs.h"
 #include "io/esc.h"
 #include "io/gps.h"
+#include "io/imu.h"
 #include "io/receiver.h"
 #include "io/servo.h"
 
@@ -137,33 +137,33 @@ void boot_init_escs() {
     }
 }
 
-void boot_init_aahrs() {
-    if (aahrs.init()) {
-        printpre("boot", "AAHRS ok");
+void boot_init_imu() {
+    if (imu.init()) {
+        printpre("boot", "IMU ok");
         return;
     }
-    // If AAHRS is calibrated: severity level is only an error as we could be in flight and we want to finish the boot
-    // If AAHRS is not calibrated: severity level is a fatal error to help point the user in the right direction
-    LogType severity = aahrs.isCalibrated ? TYPE_ERROR : TYPE_FATAL;
-    // Host platforms are the only exception, as AAHRS will always fail to initialize
+    // If IMU is calibrated: severity level is only an error as we could be in flight and we want to finish the boot
+    // If IMU is not calibrated: severity level is a fatal error to help point the user in the right direction
+    LogType severity = imu.isCalibrated ? TYPE_ERROR : TYPE_FATAL;
+    // Host platforms are the only exception, as IMU will always fail to initialize
 #if FBW_PLATFORM_HOST
     severity = TYPE_ERROR;
 #endif
-    log_message(severity, "AAHRS initialization failed!", 1000, 0, false);
+    log_message(severity, "IMU initialization failed!", 1000, 0, false);
     if (config.general[GENERAL_SKIP_CALIBRATION]) {
-        log_message(TYPE_WARNING, "AAHRS calibration skipped!", 1000, 0, false);
+        log_message(TYPE_WARNING, "IMU calibration skipped!", 1000, 0, false);
         return;
     }
-    printpre("boot", "validating AAHRS calibration");
-    if (aahrs.isCalibrated) {
+    printpre("boot", "validating IMU calibration");
+    if (imu.isCalibrated) {
         return;
     }
-    printpre("boot", "AAHRS calibration not found!");
-    if (!aahrs.calibrate()) {
-        log_message(TYPE_FATAL, "AAHRS calibration failed!", 1000, 0, true);
+    printpre("boot", "IMU calibration not found!");
+    if (!imu.calibrate()) {
+        log_message(TYPE_FATAL, "IMU calibration failed!", 1000, 0, true);
         return;
     }
-    printpre("boot", "AAHRS calibration successful!");
+    printpre("boot", "IMU calibration successful!");
 }
 
 void boot_init_gps() {

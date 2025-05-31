@@ -78,12 +78,12 @@ i32 api_handle_set(const char *cmd, const char *args, api_output_func output_fun
 }
 
 i32 api_handle_test(const char *cmd, const char *args) {
-    if (strcasecmp(cmd, "TEST_AAHRS") == 0) {
-        return api_test_aahrs(args);
-    } else if (strcasecmp(cmd, "TEST_ALL") == 0) {
+    if (strcasecmp(cmd, "TEST_ALL") == 0) {
         return api_test_all(args);
     } else if (strcasecmp(cmd, "TEST_GPS") == 0) {
         return api_test_gps(args);
+    } else if (strcasecmp(cmd, "TEST_IMU") == 0) {
+        return api_test_imu(args);
     } else if (strcasecmp(cmd, "TEST_PWM") == 0) {
         return api_test_pwm(args);
     } else if (strcasecmp(cmd, "TEST_SERVO") == 0) {

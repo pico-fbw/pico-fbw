@@ -8,8 +8,8 @@
 #include "ctrl/aircraft.h"
 #include "ctrl/flight.h"
 #include "ctrl/throttle.h"
-#include "io/aahrs.h"
 #include "io/gps.h"
+#include "io/imu.h"
 #include "io/servo.h"
 #include "lib/nav.h"
 #include "lib/pid.h"
@@ -156,7 +156,7 @@ void auto_update() {
     // Predictive roll control adjustment to avoid overshooting
     if (fabs(diff) < ROLL_OVERSHOOT_THRESHOLD) {
         // Apply reverse input to dampen overshoot
-        latGuid.out = -latGuid.out * (aahrs.rollRate / ROLL_OVERSHOOT_DAMPEN);
+        latGuid.out = -latGuid.out * (imu.rollRate / ROLL_OVERSHOOT_DAMPEN);
     }
 
     // Nested PIDs to command bank/pitch angles

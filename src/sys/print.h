@@ -29,7 +29,7 @@
 #endif
 
 typedef struct PrintDefs {
-    bool fbw, aahrs, aircraft, gps, network;
+    bool fbw, aircraft, gps, imu, network;
 } PrintDefs;
 
 /**
@@ -65,7 +65,7 @@ typedef struct PrintDefs {
 
 /**
  * printf wrapper to be used with PrintDefs
- * @param sys the system to print from (must be a valid member of PrintDefs, such as `fbw` or `aahrs`)
+ * @param sys the system to print from (must be a valid member of PrintDefs, such as `fbw` or `imu`)
  * @param ... the format string and arguments to print (same as printf)
  * @note This function automatically appends a newline.
  */

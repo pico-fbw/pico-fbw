@@ -21,8 +21,8 @@ typedef alarm_id_t __callback_id_t;
 #define DEFAULT_PIN_SERVO_BAY 10
 
 // Sensor I/O pins
-#define DEFAULT_PIN_AAHRS_SDA 16
-#define DEFAULT_PIN_AAHRS_SCL 17
+#define DEFAULT_PIN_I2C_SDA 16
+#define DEFAULT_PIN_I2C_SCL 17
 #define DEFAULT_PIN_GPS_TX 21
 #define DEFAULT_PIN_GPS_RX 20
 

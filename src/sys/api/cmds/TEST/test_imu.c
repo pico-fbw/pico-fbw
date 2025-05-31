@@ -9,11 +9,11 @@
 #include "platform/time.h"
 
 #include "ctrl/aircraft.h"
-#include "io/aahrs.h"
+#include "io/imu.h"
 #include "sys/print.h"
 #include "sys/runtime.h"
 
-#include "test_aahrs.h"
+#include "test_imu.h"
 
 /**
  * Waits up to timeout_ms for an IMU axis to move past the breakpoint.
@@ -23,13 +23,13 @@
  * @return true if the axis that moved was equal to axis and its difference was positive, false if not.
  */
 static bool wait_for_axis(IMUAxis axis, u32 breakpoint, u32 timeout_ms) {
-    AAHRS original = aahrs; // Take a snapshot of the current position
+    IMU original = imu; // Take a snapshot of the current position
     Timestamp timeout = timestamp_in_ms(timeout_ms);
     IMUAxis moved = IMU_AXIS_NONE;
     while (!timestamp_reached(&timeout)) {
-        i32 diff_roll = ANGLE_DIFFERENCE((i32)original.roll, (i32)aahrs.roll);
-        i32 diff_pitch = ANGLE_DIFFERENCE((i32)original.pitch, (i32)aahrs.pitch);
-        i32 diff_yaw = ANGLE_DIFFERENCE((i32)original.yaw, (i32)aahrs.yaw);
+        i32 diff_roll = ANGLE_DIFFERENCE((i32)original.roll, (i32)imu.roll);
+        i32 diff_pitch = ANGLE_DIFFERENCE((i32)original.pitch, (i32)imu.pitch);
+        i32 diff_yaw = ANGLE_DIFFERENCE((i32)original.yaw, (i32)imu.yaw);
         if ((u32)abs(diff_roll) > breakpoint) {
             printpre("test", "detected roll axis");
             if (diff_roll < 0) {
@@ -55,14 +55,14 @@ static bool wait_for_axis(IMUAxis axis, u32 breakpoint, u32 timeout_ms) {
             moved = IMU_AXIS_YAW;
             break;
         }
-        aahrs.update();
+        imu.update();
         sys_periodic();
     }
     return moved == axis;
 }
 
-i32 api_test_aahrs(const char *args) {
-    if (aircraft.aahrsSafe) {
+i32 api_test_imu(const char *args) {
+    if (aircraft.imuSafe) {
         return 500;
     }
     printpre("test", "awaiting right roll...");

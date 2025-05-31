@@ -1,7 +1,7 @@
 target_sources(${PROJECT_NAME} PRIVATE
-    aahrs.c
     esc.c
     gps.c
+    imu.c
     receiver.c
     servo.c
 )

@@ -5,8 +5,8 @@
 
 #include "sys/configuration.h"
 
-#define ASDA (i16) config.pins[PINS_AAHRS_SDA]
-#define ASCL (i16) config.pins[PINS_AAHRS_SCL]
+#define ASDA (i16) config.pins[PINS_I2C_SDA]
+#define ASCL (i16) config.pins[PINS_I2C_SCL]
 
 typedef struct FusionDriver FusionDriver; // Forward declaration
 typedef struct FusionDriver {
@@ -42,12 +42,13 @@ typedef struct FusionDriver {
 
 typedef struct FusionDevice {
     // One or more drivers may be NULL
-    FusionDriver *acc, *gyro, *mag;
+    FusionDriver *acc, *gyro, *mag, *baro;
     f32 accData[3];  // x, y, z (m/s^2)
     f32 gyroData[3]; // x, y, z (rad/s)
-    f32 magData[3];  // x, y, z (uT)
-    FusionDriver *baro;
-    f32 baroData[3];  // pressure (Pa), temperature (°C), %RH (% 0-1)
+    union {
+        f32 magData[3];  // x, y, z (uT)
+        f32 baroData[3]; // pressure (Pa), temperature (°C), %RH (% 0-1)
+    };
     const char *name; // Human-readable identifier for the device
 } FusionDevice;
 

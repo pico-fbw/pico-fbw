@@ -8,7 +8,7 @@
 #include "platform/helpers.h"
 
 #include "ctrl/aircraft.h"
-#include "io/aahrs.h"
+#include "io/imu.h"
 #include "io/receiver.h"
 #include "io/servo.h"
 #include "lib/pid.h"
@@ -112,15 +112,15 @@ void flight_init() {
 
 void flight_update(f64 roll, f64 pitch, f64 yaw, bool override) {
     // Check flight envelope for hard-coded irregularities
-    if (fabsf(aahrs.roll) > 72 || aahrs.pitch > 35 || aahrs.pitch < -20) {
-        printpre("flight", "WARNING: flight envelope exceeded! (roll: %.0f, pitch: %.0f, yaw: %.0f)", aahrs.roll,
-                 aahrs.pitch, aahrs.yaw);
-        aircraft.set_aahrs_safe(false);
+    if (fabsf(imu.roll) > 72 || imu.pitch > 35 || imu.pitch < -20) {
+        printpre("flight", "WARNING: flight envelope exceeded! (roll: %.0f, pitch: %.0f, yaw: %.0f)", imu.roll,
+                 imu.pitch, imu.yaw);
+        aircraft.set_imu_safe(false);
     }
 
     // Update PID controllers
-    pid_update(&rollC, roll, (f64)aahrs.roll);
-    pid_update(&pitchC, pitch, (f64)aahrs.pitch);
+    pid_update(&rollC, roll, (f64)imu.roll);
+    pid_update(&pitchC, pitch, (f64)imu.pitch);
     // All control modes require the roll/pitch PIDs to be mapped to a servo output (0-180)
     ailOut = (((bool)config.pins[PINS_REVERSE_ROLL] ? -1 : 1) * (f32)rollC.out + 90.f);
     eleOut = (((bool)config.pins[PINS_REVERSE_PITCH] ? -1 : 1) * (f32)pitchC.out + 90.f);
@@ -140,9 +140,9 @@ void flight_update(f64 roll, f64 pitch, f64 yaw, bool override) {
             } else {
                 // Yaw damper enabled
                 if (!yawDamperOn) {
-                    flightYawSetpoint = aahrs.yaw; // Yaw damper was just enabled, create our setpoint
+                    flightYawSetpoint = imu.yaw; // Yaw damper was just enabled, create our setpoint
                 }
-                pid_update(&yawC, flightYawSetpoint, aahrs.yaw);
+                pid_update(&yawC, flightYawSetpoint, imu.yaw);
                 yawOutput = (f32)yawC.out;
                 yawDamperOn = true;
             }

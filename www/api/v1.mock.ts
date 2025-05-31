@@ -174,17 +174,6 @@ export default (): MockHandler[] => [
         pattern: "/api/v1/get/sensor",
         handle: (req, res) => {
             send_data(res, {
-                aahrs: {
-                    roll: 0,
-                    pitch: 0,
-                    yaw: 0,
-                    roll_rate: 0,
-                    pitch_rate: 0,
-                    yaw_rate: 0,
-                    accel_x: 0,
-                    accel_y: 0,
-                    accel_z: 0,
-                },
                 gps: {
                     lat: 0,
                     lng: 0,
@@ -195,6 +184,17 @@ export default (): MockHandler[] => [
                     hdop: 0,
                     vdop: 0,
                     sats: 0,
+                },
+                imu: {
+                    roll: 0,
+                    pitch: 0,
+                    yaw: 0,
+                    roll_rate: 0,
+                    pitch_rate: 0,
+                    yaw_rate: 0,
+                    accel_x: 0,
+                    accel_y: 0,
+                    accel_z: 0,
                 },
                 batt: [3.1, 3.1, 3.1, 3.1],
             });

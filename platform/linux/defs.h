@@ -33,8 +33,8 @@ typedef struct UARTMapping {
 #define DEFAULT_PIN_SERVO_BAY 20
 
 // Sensor I/O pins
-#define DEFAULT_PIN_AAHRS_SDA 2
-#define DEFAULT_PIN_AAHRS_SCL 3
+#define DEFAULT_PIN_I2C_SDA 2
+#define DEFAULT_PIN_I2C_SCL 3
 #define DEFAULT_PIN_GPS_TX 14
 #define DEFAULT_PIN_GPS_RX 15
 

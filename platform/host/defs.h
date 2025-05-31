@@ -29,8 +29,8 @@ typedef timer_t __callback_id_t;
 #define DEFAULT_PIN_INPUT_SWITCH -1
 #define DEFAULT_PIN_SERVO_BAY -1
 
-#define DEFAULT_PIN_AAHRS_SDA -1
-#define DEFAULT_PIN_AAHRS_SCL -1
+#define DEFAULT_PIN_I2C_SDA -1
+#define DEFAULT_PIN_I2C_SCL -1
 #define DEFAULT_PIN_GPS_TX -1
 #define DEFAULT_PIN_GPS_RX -1
 

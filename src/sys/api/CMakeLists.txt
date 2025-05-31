@@ -22,7 +22,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     cmds/SET/set_waypoint.c
     cmds/TEST/test_all.c
     cmds/TEST/test_gps.c
-    cmds/TEST/test_aahrs.c
+    cmds/TEST/test_imu.c
     cmds/TEST/test_pwm.c
     cmds/TEST/test_servo.c
     cmds/TEST/test_throttle.c

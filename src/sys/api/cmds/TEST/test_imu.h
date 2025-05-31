@@ -2,4 +2,4 @@
 
 #include "platform/types.h"
 
-i32 api_test_aahrs(const char *args);
+i32 api_test_imu(const char *args);

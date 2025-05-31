@@ -8,8 +8,8 @@
 #include "platform/defs.h"
 
 #include "ctrl/aircraft.h"
-#include "io/aahrs.h"
 #include "io/gps.h"
+#include "io/imu.h"
 #include "lib/parson.h"
 #include "sys/configuration.h"
 
@@ -18,43 +18,10 @@
 typedef enum SensorData {
     DATA_INVALID,
     DATA_ALL,
-    DATA_AAHRS,
     DATA_GPS,
+    DATA_IMU,
     DATA_BATT,
 } SensorData;
-
-/**
- * @return JSON object with AAHRS data, or NULL on error
- */
-static JSON_Value *create_aahrs_obj() {
-    JSON_Value *aahrsObj = json_value_init_object();
-    if (!aahrsObj) {
-        return NULL;
-    }
-    JSON_Object *obj = json_value_get_object(aahrsObj);
-    if (aircraft.aahrsSafe) {
-        json_object_set_number(obj, "roll", aahrs.roll);
-        json_object_set_number(obj, "pitch", aahrs.pitch);
-        json_object_set_number(obj, "yaw", aahrs.yaw);
-        json_object_set_number(obj, "roll_rate", aahrs.rollRate);
-        json_object_set_number(obj, "pitch_rate", aahrs.pitchRate);
-        json_object_set_number(obj, "yaw_rate", aahrs.yawRate);
-        json_object_set_number(obj, "accel_x", aahrs.accel[0]);
-        json_object_set_number(obj, "accel_y", aahrs.accel[1]);
-        json_object_set_number(obj, "accel_z", aahrs.accel[2]);
-    } else {
-        json_object_set_null(obj, "roll");
-        json_object_set_null(obj, "pitch");
-        json_object_set_null(obj, "yaw");
-        json_object_set_null(obj, "roll_rate");
-        json_object_set_null(obj, "pitch_rate");
-        json_object_set_null(obj, "yaw_rate");
-        json_object_set_null(obj, "accel_x");
-        json_object_set_null(obj, "accel_y");
-        json_object_set_null(obj, "accel_z");
-    }
-    return aahrsObj;
-}
 
 /**
  * @return JSON object with GPS data, or NULL on error
@@ -87,6 +54,39 @@ static JSON_Value *create_gps_obj() {
         json_object_set_null(obj, "sats");
     }
     return gpsObj;
+}
+
+/**
+ * @return JSON object with IMU data, or NULL on error
+ */
+static JSON_Value *create_imu_obj() {
+    JSON_Value *imuObj = json_value_init_object();
+    if (!imuObj) {
+        return NULL;
+    }
+    JSON_Object *obj = json_value_get_object(imuObj);
+    if (aircraft.imuSafe) {
+        json_object_set_number(obj, "roll", imu.roll);
+        json_object_set_number(obj, "pitch", imu.pitch);
+        json_object_set_number(obj, "yaw", imu.yaw);
+        json_object_set_number(obj, "roll_rate", imu.rollRate);
+        json_object_set_number(obj, "pitch_rate", imu.pitchRate);
+        json_object_set_number(obj, "yaw_rate", imu.yawRate);
+        json_object_set_number(obj, "accel_x", imu.accel[0]);
+        json_object_set_number(obj, "accel_y", imu.accel[1]);
+        json_object_set_number(obj, "accel_z", imu.accel[2]);
+    } else {
+        json_object_set_null(obj, "roll");
+        json_object_set_null(obj, "pitch");
+        json_object_set_null(obj, "yaw");
+        json_object_set_null(obj, "roll_rate");
+        json_object_set_null(obj, "pitch_rate");
+        json_object_set_null(obj, "yaw_rate");
+        json_object_set_null(obj, "accel_x");
+        json_object_set_null(obj, "accel_y");
+        json_object_set_null(obj, "accel_z");
+    }
+    return imuObj;
 }
 
 /**
@@ -126,10 +126,10 @@ static SensorData parse_args(const char *args) {
     SensorData ret = DATA_INVALID;
     if (strcasecmp(data, "all") == 0) {
         ret = DATA_ALL;
-    } else if (strcasecmp(data, "aahrs") == 0) {
-        ret = DATA_AAHRS;
     } else if (strcasecmp(data, "gps") == 0) {
         ret = DATA_GPS;
+    } else if (strcasecmp(data, "imu") == 0) {
+        ret = DATA_IMU;
     } else if (strcasecmp(data, "batt") == 0) {
         ret = DATA_BATT;
     }
@@ -138,14 +138,14 @@ static SensorData parse_args(const char *args) {
 }
 
 // Input:
-// {"data":"all|aahrs|gps|batt"}
+// {"data":"all|gps|imu|batt"}
 
 // Output (for data="all", note that "batt" may not exist and may have a different length):
 // {
-//  "aahrs":{"roll":number|null,"pitch":number|null,"yaw":number|null,"roll_rate":number|null,"pitch_rate":number|null,
-//           "yaw_rate":number|null,"accel_x":number|null,"accel_y":number|null,"accel_z":number|null},
 //  "gps":{"lat":number|null,"lng":number|null,"alt":number|null,"speed":number|null,"track":number|null,
 //         "pdop":number|null,"hdop":number|null,"vdop":number|null,"sats":number|null},
+//  "imu":{"roll":number|null,"pitch":number|null,"yaw":number|null,"roll_rate":number|null,"pitch_rate":number|null,
+//           "yaw_rate":number|null,"accel_x":number|null,"accel_y":number|null,"accel_z":number|null},
 //  "batt":"batt":[number,...]
 // }
 
@@ -159,10 +159,11 @@ i32 api_get_sensor(const char *in, char **out) {
     // Generate all response data, regardless of the request
     JSON_Value *root = json_value_init_object();
     JSON_Object *obj = json_value_get_object(root);
-    JSON_Value *aahrsObj = create_aahrs_obj();
+
     JSON_Value *gpsObj = create_gps_obj();
+    JSON_Value *imuObj = create_imu_obj();
     JSON_Value *battArr = create_batt_arr();
-    if (!aahrsObj || !gpsObj || !battArr) {
+    if (!gpsObj || !imuObj || !battArr) {
         return 500;
     }
 
@@ -170,24 +171,24 @@ i32 api_get_sensor(const char *in, char **out) {
     switch (data) {
         default:
         case DATA_ALL:
-            json_object_set_value(obj, "aahrs", aahrsObj);
             json_object_set_value(obj, "gps", gpsObj);
+            json_object_set_value(obj, "imu", imuObj);
 #if PLATFORM_SUPPORTS_ADC
             json_object_set_value(obj, "batt", battArr);
 #endif
-            break;
-        case DATA_AAHRS:
-            json_object_set_value(obj, "aahrs", aahrsObj);
             break;
         case DATA_GPS:
             if (!gps.is_supported()) {
                 json_value_free(battArr);
                 json_value_free(gpsObj);
-                json_value_free(aahrsObj);
+                json_value_free(imuObj);
                 json_value_free(root);
                 return 403;
             }
             json_object_set_value(obj, "gps", gpsObj);
+            break;
+        case DATA_IMU:
+            json_object_set_value(obj, "imu", imuObj);
             break;
         case DATA_BATT:
 #if PLATFORM_SUPPORTS_ADC
@@ -195,7 +196,7 @@ i32 api_get_sensor(const char *in, char **out) {
 #else
             json_value_free(battArr);
             json_value_free(gpsObj);
-            json_value_free(aahrsObj);
+            json_value_free(imuObj);
             json_value_free(root);
             return 403;
 #endif

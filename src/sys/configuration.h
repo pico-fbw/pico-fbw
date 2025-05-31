@@ -73,8 +73,8 @@ typedef enum ConfigPins {
     PINS_INPUT_SWITCH,
     PINS_SERVO_BAY,
     // Sensor communications pins
-    PINS_AAHRS_SDA,
-    PINS_AAHRS_SCL,
+    PINS_I2C_SDA,
+    PINS_I2C_SCL,
     PINS_GPS_TX,
     PINS_GPS_RX,
     // Servo reverse flags
@@ -86,14 +86,14 @@ typedef enum ConfigPins {
 #define S_PIN_MAX PINS_REVERSE_YAW
 
 typedef enum ConfigSensors {
-    SENSORS_AAHRS_BUS_FREQ,
+    SENSORS_I2C_BUS_FREQ,
     SENSORS_GPS_COMMAND_TYPE,
     SENSORS_GPS_BAUDRATE,
 } ConfigSensors;
 
 typedef enum ConfigSystem {
     SYSTEM_PRINT_FBW,
-    SYSTEM_PRINT_AAHRS,
+    SYSTEM_PRINT_IMU,
     SYSTEM_PRINT_AIRCRAFT,
     SYSTEM_PRINT_GPS,
     SYSTEM_PRINT_NETWORK,
@@ -139,9 +139,9 @@ typedef enum CalibrationESC {
     ESC_DETENT_MAX,
 } CalibrationESC;
 
-typedef enum CalibrationAAHRS {
-    AAHRS_CALIBRATED,
-} CalibrationAAHRS;
+typedef enum CalibrationIMU {
+    IMU_CALIBRATED,
+} CalibrationIMU;
 
 typedef enum CalibrationPID {
     PID_TUNED,
@@ -170,8 +170,8 @@ typedef struct Calibration {
 #define CONFIG_PWM_STR "PWM"
     f32 esc[CONFIG_SECTION_SIZE];
 #define CONFIG_ESC_STR "ESC"
-    f32 aahrs[CONFIG_SECTION_SIZE];
-#define CONFIG_AAHRS_STR "AAHRS"
+    f32 imu[CONFIG_SECTION_SIZE];
+#define CONFIG_IMU_STR "IMU"
     f32 pid[CONFIG_SECTION_SIZE];
 #define CONFIG_PID_STR "PID"
     const char *version;

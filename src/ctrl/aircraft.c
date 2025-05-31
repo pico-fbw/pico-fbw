@@ -7,8 +7,8 @@
 #include "platform/time.h"
 #include "platform/wifi.h"
 
-#include "io/aahrs.h"
 #include "io/gps.h"
+#include "io/imu.h"
 #include "io/receiver.h"
 #include "io/servo.h"
 #include "modes/auto.h"
@@ -183,10 +183,10 @@ void change_to(Mode new_mode) {
     // Deinit the current mode
     printsys(aircraft, "exiting %s mode", mode_to_string(aircraft.mode));
     deinit_mode(aircraft.mode);
-    // All modes (except for direct) require AAHRS so make sure that's all good
-    if (!aircraft.aahrsSafe && new_mode != MODE_DIRECT) {
-        printsys(aircraft, "AAHRS has failed, entering direct mode!");
-        log_message(TYPE_ERROR, "AAHRS has failed!", 250, 0, true);
+    // All modes (except for direct) require IMU so make sure that's all good
+    if (!aircraft.imuSafe && new_mode != MODE_DIRECT) {
+        printsys(aircraft, "IMU has failed, entering direct mode!");
+        log_message(TYPE_ERROR, "IMU has failed!", 250, 0, true);
         aircraft.mode = MODE_DIRECT;
         return;
     }
@@ -206,25 +206,25 @@ void change_to(Mode new_mode) {
 #endif
 }
 
-void set_aahrs_safe(bool state) {
-    if (state == aircraft.aahrsSafe) {
+void set_imu_safe(bool state) {
+    if (state == aircraft.imuSafe) {
         return; // Nothing to do
     }
-    aircraft.aahrsSafe = state;
-    if (!aircraft.aahrsSafe) {
-        // Change to direct mode as it doesn't require AAHRS, and deinit
+    aircraft.imuSafe = state;
+    if (!aircraft.imuSafe) {
+        // Change to direct mode as it doesn't require IMU, and deinit
         change_to(MODE_DIRECT);
-        aahrs.deinit();
-        printsys(aircraft, "AAHRS set as unsafe");
+        imu.deinit();
+        printsys(aircraft, "IMU set as unsafe");
         return;
     }
-    // Last-ditch attempt to re-init AAHRS if it's not already
-    if (!aahrs.ready && !aahrs.init()) {
-        log_message(TYPE_ERROR, "AAHRS initialization failed!", 1000, 0, false);
+    // Last-ditch attempt to re-init IMU if it's not already
+    if (!imu.ready && !imu.init()) {
+        log_message(TYPE_ERROR, "IMU initialization failed!", 1000, 0, false);
         change_to(MODE_DIRECT);
         return;
     }
-    printsys(aircraft, "AAHRS set as safe");
+    printsys(aircraft, "IMU set as safe");
 }
 
 void set_gps_safe(bool state) {
@@ -251,11 +251,11 @@ Aircraft aircraft = {
 #if PLATFORM_SUPPORTS_WIFI
     .wifiDeinitialized = false,
 #endif
-    .aahrsSafe = false,
+    .imuSafe = false,
     .gpsSafe = false,
     .update = update,
     .change_to = change_to,
-    .set_aahrs_safe = set_aahrs_safe,
+    .set_imu_safe = set_imu_safe,
     .set_gps_safe = set_gps_safe,
 };
 // clang-format on

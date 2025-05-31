@@ -50,17 +50,6 @@ export type GET_MODE = {
     mode: "launch" | "direct" | "normal" | "auto" | "tune" | "hold";
 };
 export type GET_SENSOR = {
-    aahrs: {
-        roll: number | null;
-        pitch: number | null;
-        yaw: number | null;
-        roll_rate: number | null;
-        pitch_rate: number | null;
-        yaw_rate: number | null;
-        accel_x: number | null;
-        accel_y: number | null;
-        accel_z: number | null;
-    };
     gps: {
         lat: number | null;
         lng: number | null;
@@ -71,6 +60,17 @@ export type GET_SENSOR = {
         hdop: number | null;
         vdop: number | null;
         sats: number | null;
+    };
+    imu: {
+        roll: number | null;
+        pitch: number | null;
+        yaw: number | null;
+        roll_rate: number | null;
+        pitch_rate: number | null;
+        yaw_rate: number | null;
+        accel_x: number | null;
+        accel_y: number | null;
+        accel_z: number | null;
     };
     batt?: number[];
 };

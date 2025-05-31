@@ -1,11 +1,10 @@
 include(DriverFirmware)
 
 target_sources(${PROJECT_NAME} PRIVATE
-    fusion/fusion.c
-    fusion/drivers/bme280.c
-    fusion/drivers/bmi270.c
-    fusion/drivers/bmm350.c
-    fusion/drivers/drivers.c
+    drivers/bme280.c
+    drivers/bmi270.c
+    drivers/bmm350.c
+    drivers/drivers.c
     nav.c
     pid.c
 )

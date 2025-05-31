@@ -13,8 +13,8 @@
 #include "platform/wifi.h"
 
 #include "ctrl/switch.h"
-#include "io/aahrs.h"
 #include "io/gps.h"
+#include "io/imu.h"
 #include "io/receiver.h"
 #include "sys/print.h"
 #include "sys/runtime.h"
@@ -65,13 +65,13 @@ Config config = {
         DEFAULT_PIN_INPUT_RUD, DEFAULT_PIN_SERVO_RUD, DEFAULT_PIN_INPUT_THR, DEFAULT_PIN_ESC_THR,
         DEFAULT_PIN_INPUT_SWITCH, DEFAULT_PIN_SERVO_BAY,
         // Sensor communications pins
-        DEFAULT_PIN_AAHRS_SDA, DEFAULT_PIN_AAHRS_SCL, DEFAULT_PIN_GPS_TX, DEFAULT_PIN_GPS_RX,
+        DEFAULT_PIN_I2C_SDA, DEFAULT_PIN_I2C_SCL, DEFAULT_PIN_GPS_TX, DEFAULT_PIN_GPS_RX,
         // Servo reverse flags
         false, false, false,
         CONFIG_END_MAGIC,
     },
     .sensors = {
-        400, // AAHRS configuration
+        400, // I2C configuration
         GPS_COMMAND_TYPE_PMTK, 9600, // GPS configuration
         CONFIG_END_MAGIC,
     },
@@ -96,7 +96,7 @@ Calibration calibration = {
         false,
         10, 75, 90, // Default throttle detents
     },
-    .aahrs = {false},
+    .imu = {false},
     .pid = {
         false,
         // TODO: tune throttle pid, keep checking others (they're mostly tuned already)
@@ -168,7 +168,7 @@ void config_load() {
     load_file_to_struct(FILE_CALIBRATION, &calibration, sizeof(calibration));
     // Load print settings and set debug flag
     shouldPrint.fbw = config.system[SYSTEM_PRINT_FBW];
-    shouldPrint.aahrs = config.system[SYSTEM_PRINT_AAHRS];
+    shouldPrint.imu = config.system[SYSTEM_PRINT_IMU];
     shouldPrint.aircraft = config.system[SYSTEM_PRINT_AIRCRAFT];
     shouldPrint.gps = config.system[SYSTEM_PRINT_GPS];
     shouldPrint.network = config.system[SYSTEM_PRINT_NETWORK];
@@ -231,8 +231,8 @@ void config_reset() {
     X("escThrottle", PINS_ESC_THROTTLE)                                                                                \
     X("inputSwitch", PINS_INPUT_SWITCH)                                                                                \
     X("servoBay", PINS_SERVO_BAY)                                                                                      \
-    X("aahrsSda", PINS_AAHRS_SDA)                                                                                      \
-    X("aahrsScl", PINS_AAHRS_SCL)                                                                                      \
+    X("i2cSda", PINS_I2C_SDA)                                                                                          \
+    X("i2cScl", PINS_I2C_SCL)                                                                                          \
     X("gpsTx", PINS_GPS_TX)                                                                                            \
     X("gpsRx", PINS_GPS_RX)                                                                                            \
     X("reverseRoll", PINS_REVERSE_ROLL)                                                                                \
@@ -240,13 +240,13 @@ void config_reset() {
     X("reverseYaw", PINS_REVERSE_YAW)
 
 #define SENSORS_KEY_LIST                                                                                               \
-    X("aahrsBusFreq", SENSORS_AAHRS_BUS_FREQ)                                                                          \
+    X("i2cBusFreq", SENSORS_I2C_BUS_FREQ)                                                                              \
     X("gpsCommandType", SENSORS_GPS_COMMAND_TYPE)                                                                      \
     X("gpsBaudrate", SENSORS_GPS_BAUDRATE)
 
 #define SYSTEM_KEY_LIST                                                                                                \
     X("printsys", SYSTEM_PRINT_FBW)                                                                                    \
-    X("printAAHRS", SYSTEM_PRINT_AAHRS)                                                                                \
+    X("printIMU", SYSTEM_PRINT_IMU)                                                                                    \
     X("printAircraft", SYSTEM_PRINT_AIRCRAFT)                                                                          \
     X("printGPS", SYSTEM_PRINT_GPS)                                                                                    \
     X("printNetwork", SYSTEM_PRINT_NETWORK)

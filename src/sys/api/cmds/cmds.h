@@ -20,9 +20,9 @@
 #include "SET/set_target.h"
 #include "SET/set_waypoint.h"
 
-#include "TEST/test_aahrs.h"
 #include "TEST/test_all.h"
 #include "TEST/test_gps.h"
+#include "TEST/test_imu.h"
 #include "TEST/test_pwm.h"
 #include "TEST/test_servo.h"
 #include "TEST/test_throttle.h"

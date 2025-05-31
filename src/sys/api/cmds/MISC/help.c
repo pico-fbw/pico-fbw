@@ -25,7 +25,7 @@ i32 api_help(const char *args) {
              "SET_TARGET - Set the desired attitude/thrust target\n"
              "SET_WAYPOINT - Create and track onto a Waypoint\n"
              "TEST_ALL - Runs all possible system tests using default values\n"
-             "TEST_AAHRS - Tests the AAHRS\n"
+             "TEST_IMU - Tests the IMU\n"
              "TEST_GPS - Tests the GPS module\n"
              "TEST_PWM - Tests the PWM input system\n"
              "TEST_SERVO - Tests the servo(s)\n"

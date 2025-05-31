@@ -21,8 +21,8 @@ typedef x __callback_id_t;
 
 // Sensor I/O pins
 // These are also required and again depend on your platform.
-#define DEFAULT_PIN_AAHRS_SDA x
-#define DEFAULT_PIN_AAHRS_SCL x
+#define DEFAULT_PIN_I2C_SDA x
+#define DEFAULT_PIN_I2C_SCL x
 #define DEFAULT_PIN_GPS_TX x
 #define DEFAULT_PIN_GPS_RX x
 
