@@ -3,6 +3,8 @@
  * Licensed under the MIT License
  */
 
+// TODO: refactor, shorten functions, more files? etc.
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

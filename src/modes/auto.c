@@ -3,6 +3,8 @@
  * Licensed under the MIT License
  */
 
+// TODO: refactor using new autopilot logic
+
 #include "platform/time.h"
 
 #include "ctrl/aircraft.h"

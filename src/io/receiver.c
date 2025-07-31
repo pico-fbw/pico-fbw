@@ -3,6 +3,8 @@
  * Licensed under the MIT License
  */
 
+// TODO: refactor, shorten functions/more functions etc.
+
 #include <math.h>
 #include "platform/helpers.h"
 #include "platform/pwm.h"

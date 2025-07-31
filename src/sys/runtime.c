@@ -3,6 +3,10 @@
  * Licensed under the MIT License
  */
 
+// TODO: refactor, make less convoluted, easier to use
+// rethink how sleeps/concurrency is handled (because that's why this file exists in the first place
+// and it's not implemented particularly well at the moment)
+
 #include "platform/defs.h"
 #include "platform/gpio.h"
 #include "platform/sys.h"

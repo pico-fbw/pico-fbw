@@ -3,6 +3,10 @@
  * Licensed under the MIT License
  */
 
+// TODO: redo config system to...not be so confusing
+// restructure with littlefs in mind this time
+// maybe just key-values
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

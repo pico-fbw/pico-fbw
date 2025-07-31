@@ -3,6 +3,8 @@
  * Licensed under the MIT License
  */
 
+// TODO: refactor, shorten functions, static var usage, remove "object" notation? etc.
+
 #include "platform/helpers.h"
 #include "platform/time.h"
 

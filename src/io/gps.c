@@ -3,6 +3,8 @@
  * Licensed under the MIT License
  */
 
+// TODO: refactor, shorten functions, reduce nesting, remove "object" notation (or just fx from?) etc.
+
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>

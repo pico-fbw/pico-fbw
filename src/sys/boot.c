@@ -3,6 +3,9 @@
  * Licensed under the MIT License
  */
 
+// TODO: refactor, shorten functions etc.
+// bring out into other files?
+
 #include <assert.h>
 #include <string.h>
 #include "platform/adc.h"

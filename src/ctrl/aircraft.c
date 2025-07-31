@@ -3,6 +3,8 @@
  * Licensed under the MIT License
  */
 
+// TODO: refactor, shorten functions, edge case weirdness, remove "object" notation etc.
+
 #include "platform/defs.h"
 #include "platform/time.h"
 #include "platform/wifi.h"

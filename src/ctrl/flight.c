@@ -3,6 +3,8 @@
  * Licensed under the MIT License
  */
 
+// TODO: refactor, shorten functions etc.
+
 #include <math.h>
 #include <stdlib.h>
 #include "platform/helpers.h"
