@@ -4,7 +4,7 @@
  */
 
 // TODO: refactor, make logic less spaghetti and convoluted
- 
+
 #include <math.h>
 #include "platform/time.h"
 

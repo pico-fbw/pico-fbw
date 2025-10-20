@@ -43,7 +43,8 @@ import_library(minmea ${minmea_SOURCE_DIR}
     minmea.c
 )
 # Most platforms don't support timegm, so fall back to mktime when compiling minmea
-target_compile_definitions(minmea PUBLIC timegm=mktime)
+# Also define uint as unsigned for compatibility with some platforms
+target_compile_definitions(minmea PUBLIC timegm=mktime uint=unsigned)
 
 message("Fetching parson")
 FetchContent_Declare(

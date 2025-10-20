@@ -111,10 +111,8 @@ static void handle_mode_flyingwing() {
     lElevonOut = control_mix_elevon(ELEVON_LEFT, ailOut, eleOut);
     rElevonOut = control_mix_elevon(ELEVON_RIGHT, ailOut, eleOut);
     // Limit elevon outputs
-    clampf(lElevonOut, -config.control[CONTROL_MAX_ELEVON_DEFLECTION],
-            config.control[CONTROL_MAX_ELEVON_DEFLECTION]);
-    clampf(rElevonOut, -config.control[CONTROL_MAX_ELEVON_DEFLECTION],
-            config.control[CONTROL_MAX_ELEVON_DEFLECTION]);
+    clampf(lElevonOut, -config.control[CONTROL_MAX_ELEVON_DEFLECTION], config.control[CONTROL_MAX_ELEVON_DEFLECTION]);
+    clampf(rElevonOut, -config.control[CONTROL_MAX_ELEVON_DEFLECTION], config.control[CONTROL_MAX_ELEVON_DEFLECTION]);
 
     servo_set((i16)config.pins[PINS_SERVO_AIL], lElevonOut);
     servo_set((i16)config.pins[PINS_SERVO_ELE], rElevonOut);
