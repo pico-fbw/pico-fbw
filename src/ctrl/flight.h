@@ -30,20 +30,20 @@ void flight_init();
 void flight_update(f64 roll, f64 pitch, f64 yaw, bool override);
 
 /**
- * Gets the current PID parameters for an axis.
- * @param axis the axis to get the PID parameters for
+ * Gets the current PID tunings for an axis.
+ * @param axis the axis to get the PID tunings for
  * @param kP pointer to where to store the proportional gain, or NULL if not needed
  * @param kI pointer to where to store the integral gain, or NULL if not needed
  * @param kD pointer to where to store the derivative gain, or NULL if not needed
  */
-void flight_params_get(Axis axis, f64 *kP, f64 *kI, f64 *kD);
+void flight_tunings_get(Axis axis, f64 *kP, f64 *kI, f64 *kD);
 
 /**
- * Updates an axis's PID parameters.
- * @param axis the axis to update the PID parameters for
+ * Updates an axis's PID tunings.
+ * @param axis the axis to update the PID tunings for
  * @param kP the new proportional gain, or INFINITY to keep the current value
  * @param kI the new integral gain, or INFINITY to keep the current value
  * @param kD the new derivative gain, or INFINITY to keep the current value
  * @param reset whether or not to reset the PID
  */
-void flight_params_update(Axis axis, f64 kP, f64 kI, f64 kD, bool reset);
+void flight_tunings_update(Axis axis, f64 kP, f64 kI, f64 kD, bool reset);

@@ -3,8 +3,6 @@
  * Licensed under the MIT License
  */
 
-// TODO: refactor, shorten functions etc.
-
 #include <math.h>
 #include <stdlib.h>
 #include "platform/helpers.h"
@@ -24,11 +22,11 @@ static PIDController rollC, pitchC, yawC;
 static f32 ailOut, eleOut, rudOut;
 static f32 lElevonOut, rElevonOut;
 
-static f32 yawOutput;
 static f32 flightYawSetpoint;
 static bool yawDamperOn;
 
-static void flight_roll_params_update(f64 kP, f64 kI, f64 kD, bool reset) {
+// Updates PID tunings of the roll controller
+static void roll_tunings_update(f64 kP, f64 kI, f64 kD, bool reset) {
     if (kP != INFINITY) {
         rollC.kp = kP;
     }
@@ -43,7 +41,8 @@ static void flight_roll_params_update(f64 kP, f64 kI, f64 kD, bool reset) {
     }
 }
 
-static void flight_pitch_params_update(f64 kP, f64 kI, f64 kD, bool reset) {
+// Updates PID tunings of the pitch controller
+static void pitch_tunings_update(f64 kP, f64 kI, f64 kD, bool reset) {
     if (kP != INFINITY) {
         pitchC.kp = kP;
     }
@@ -56,6 +55,69 @@ static void flight_pitch_params_update(f64 kP, f64 kI, f64 kD, bool reset) {
     if (reset) {
         pid_init(&pitchC);
     }
+}
+
+/**
+ * Computes yaw output based on current flight conditions.
+ * @param roll roll input
+ * @param yaw yaw input
+ * @param override whether yaw override is active
+ * @return computed yaw output
+ */
+static f32 compute_yaw_output(f64 roll, f64 yaw, bool override) {
+    f32 yawOutput = 0.f;
+    if (override) {
+        // Yaw override (raw)
+        yawOutput = (f32)yaw;
+        yawDamperOn = false;
+    } else if (fabs(roll) > config.control[CONTROL_DEADBAND]) {
+        // Yaw damper disabled (passthrough)
+        yawOutput = (f32)(rollC.out * config.control[CONTROL_RUDDER_SENSITIVITY]);
+        yawDamperOn = false;
+    } else {
+        // Yaw damper enabled
+        if (!yawDamperOn) {
+            flightYawSetpoint = imu.yaw; // Yaw damper was just enabled, create our setpoint
+        }
+        pid_update(&yawC, flightYawSetpoint, imu.yaw);
+        yawOutput = (f32)yawC.out;
+        yawDamperOn = true;
+    }
+    return yawOutput;
+}
+
+// Applies PID output to servo position, accounting for reversal
+static inline f32 apply_pid_output(f64 output, bool reversed) {
+    return (reversed ? -1.f : 1.f) * (f32)output + 90.f;
+}
+
+// Handles control for 3-axis modes
+static void handle_mode_3axis(f64 roll, f64 yaw, bool override) {
+    rudOut = apply_pid_output(compute_yaw_output(roll, yaw, override), (bool)config.pins[PINS_REVERSE_YAW]);
+    servo_set((i16)config.pins[PINS_SERVO_RUD], rudOut);
+    servo_set((i16)config.pins[PINS_SERVO_AIL], ailOut);
+    servo_set((i16)config.pins[PINS_SERVO_ELE], eleOut);
+}
+
+// Handles control for 2-axis modes
+static void handle_mode_2axis() {
+    servo_set((i16)config.pins[PINS_SERVO_AIL], ailOut);
+    servo_set((i16)config.pins[PINS_SERVO_ELE], eleOut);
+}
+
+// Handles control for flying wing modes
+static void handle_mode_flyingwing() {
+    // Flying wing control modes must mix elevator and aileron outputs to create elevon outputs
+    lElevonOut = control_mix_elevon(ELEVON_LEFT, ailOut, eleOut);
+    rElevonOut = control_mix_elevon(ELEVON_RIGHT, ailOut, eleOut);
+    // Limit elevon outputs
+    clampf(lElevonOut, -config.control[CONTROL_MAX_ELEVON_DEFLECTION],
+            config.control[CONTROL_MAX_ELEVON_DEFLECTION]);
+    clampf(rElevonOut, -config.control[CONTROL_MAX_ELEVON_DEFLECTION],
+            config.control[CONTROL_MAX_ELEVON_DEFLECTION]);
+
+    servo_set((i16)config.pins[PINS_SERVO_AIL], lElevonOut);
+    servo_set((i16)config.pins[PINS_SERVO_ELE], rElevonOut);
 }
 
 void flight_init() {
@@ -130,50 +192,17 @@ void flight_update(f64 roll, f64 pitch, f64 yaw, bool override) {
     switch ((ControlMode)config.general[GENERAL_CONTROL_MODE]) {
         // Compute yaw damper output for 3axis (rudder-enabled) control modes
         case CTRLMODE_3AXIS_ATHR:
-        case CTRLMODE_3AXIS: {
-            if (override) {
-                // Yaw override (raw)
-                yawOutput = (f32)yaw;
-                yawDamperOn = false;
-            } else if (fabs(roll) > config.control[CONTROL_DEADBAND]) {
-                // Yaw damper disabled (passthrough)
-                yawOutput = (f32)(rollC.out * config.control[CONTROL_RUDDER_SENSITIVITY]);
-                yawDamperOn = false;
-            } else {
-                // Yaw damper enabled
-                if (!yawDamperOn) {
-                    flightYawSetpoint = imu.yaw; // Yaw damper was just enabled, create our setpoint
-                }
-                pid_update(&yawC, flightYawSetpoint, imu.yaw);
-                yawOutput = (f32)yawC.out;
-                yawDamperOn = true;
-            }
-
-            rudOut = (((bool)config.pins[PINS_REVERSE_YAW] ? -1 : 1) * (f32)yawOutput + 90.f);
-            servo_set((i16)config.pins[PINS_SERVO_RUD], rudOut);
-        }
-        /* fall through */
+        case CTRLMODE_3AXIS:
+            handle_mode_3axis(roll, yaw, override);
+            break;
         case CTRLMODE_2AXIS_ATHR:
         case CTRLMODE_2AXIS:
-            // Send outputs to servos
-            servo_set((i16)config.pins[PINS_SERVO_AIL], ailOut);
-            servo_set((i16)config.pins[PINS_SERVO_ELE], eleOut);
+            handle_mode_2axis();
             break;
-        // Flying wing control modes must mix elevator and aileron outputs to create elevon outputs
         case CTRLMODE_FLYINGWING_ATHR:
-        case CTRLMODE_FLYINGWING: {
-            lElevonOut = control_mix_elevon(ELEVON_LEFT, ailOut, eleOut);
-            rElevonOut = control_mix_elevon(ELEVON_RIGHT, ailOut, eleOut);
-            // Limit elevon outputs
-            clampf(lElevonOut, -config.control[CONTROL_MAX_ELEVON_DEFLECTION],
-                   config.control[CONTROL_MAX_ELEVON_DEFLECTION]);
-            clampf(rElevonOut, -config.control[CONTROL_MAX_ELEVON_DEFLECTION],
-                   config.control[CONTROL_MAX_ELEVON_DEFLECTION]);
-
-            servo_set((i16)config.pins[PINS_SERVO_AIL], lElevonOut);
-            servo_set((i16)config.pins[PINS_SERVO_ELE], rElevonOut);
+        case CTRLMODE_FLYINGWING:
+            handle_mode_flyingwing();
             break;
-        }
         default: {
             printpre("flight", "ERROR: unknown control mode!");
             aircraft.change_to(MODE_DIRECT);
@@ -182,7 +211,7 @@ void flight_update(f64 roll, f64 pitch, f64 yaw, bool override) {
     }
 }
 
-void flight_params_get(Axis axis, f64 *kP, f64 *kI, f64 *kD) {
+void flight_tunings_get(Axis axis, f64 *kP, f64 *kI, f64 *kD) {
     PIDController *axisC = NULL;
     switch (axis) {
         case AXIS_ROLL:
@@ -206,13 +235,13 @@ void flight_params_get(Axis axis, f64 *kP, f64 *kI, f64 *kD) {
     }
 }
 
-void flight_params_update(Axis axis, f64 kP, f64 kI, f64 kD, bool reset) {
+void flight_tunings_update(Axis axis, f64 kP, f64 kI, f64 kD, bool reset) {
     switch (axis) {
         case AXIS_ROLL:
-            flight_roll_params_update(kP, kI, kD, reset);
+            roll_tunings_update(kP, kI, kD, reset);
             break;
         case AXIS_PITCH:
-            flight_pitch_params_update(kP, kI, kD, reset);
+            pitch_tunings_update(kP, kI, kD, reset);
             break;
     }
 }

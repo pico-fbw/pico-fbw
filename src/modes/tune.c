@@ -53,8 +53,8 @@ static void update_gain(Axis axis, f32 req_rate, f32 act_rate) {
         }
         if (time_ms() - *tDiff > P_GAIN_DIFF_TIME_MS) {
             f64 kP;
-            flight_params_get(axis, &kP, NULL, NULL);
-            flight_params_update(axis, kP + P_GAIN_STEP, INFINITY, INFINITY, false);
+            flight_tunings_get(axis, &kP, NULL, NULL);
+            flight_tunings_update(axis, kP + P_GAIN_STEP, INFINITY, INFINITY, false);
             *tDiff = 0;
         }
         lastTuneEvent = timestamp_now();
@@ -62,8 +62,8 @@ static void update_gain(Axis axis, f32 req_rate, f32 act_rate) {
     } else if (fabsf(req_rate - act_rate) < D_GAIN_REQ_RATE_THRESHOLD) {
         if (fabsf(req_rate - act_rate) > D_GAIN_OVERSHOOT_THRESHOLD) {
             f64 kD;
-            flight_params_get(axis, NULL, &kD, NULL);
-            flight_params_update(axis, INFINITY, kD + D_GAIN_STEP, INFINITY, false);
+            flight_tunings_get(axis, NULL, &kD, NULL);
+            flight_tunings_update(axis, INFINITY, kD + D_GAIN_STEP, INFINITY, false);
             lastTuneEvent = timestamp_now();
         }
     }

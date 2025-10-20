@@ -78,19 +78,19 @@ dependencies = {
         'add_to_path': 'bin',
     },
     'cmake': {
-        'version': '4.0.3',
+        'version': '4.1.2',
         'url': {
-            'linux-aarch64': 'https://github.com/Kitware/CMake/releases/download/v4.0.3/cmake-4.0.3-linux-aarch64.tar.gz',
-            'linux-x86_64': 'https://github.com/Kitware/CMake/releases/download/v4.0.3/cmake-4.0.3-linux-x86_64.tar.gz',
-            'win32-amd64': 'https://github.com/Kitware/CMake/releases/download/v4.0.3/cmake-4.0.3-windows-x86_64.zip',
-            'darwin-arm64': 'https://github.com/Kitware/CMake/releases/download/v4.0.3/cmake-4.0.3-macos-universal.tar.gz',
-            'darwin-x86_64': 'https://github.com/Kitware/CMake/releases/download/v4.0.3/cmake-4.0.3-macos-universal.tar.gz',
+            'linux-aarch64': 'https://github.com/Kitware/CMake/releases/download/v4.1.2/cmake-4.1.2-linux-aarch64.tar.gz',
+            'linux-x86_64': 'https://github.com/Kitware/CMake/releases/download/v4.1.2/cmake-4.1.2-linux-x86_64.tar.gz',
+            'win32-amd64': 'https://github.com/Kitware/CMake/releases/download/v4.1.2/cmake-4.1.2-windows-x86_64.zip',
+            'darwin-arm64': 'https://github.com/Kitware/CMake/releases/download/v4.1.2/cmake-4.1.2-macos-universal.tar.gz',
+            'darwin-x86_64': 'https://github.com/Kitware/CMake/releases/download/v4.1.2/cmake-4.1.2-macos-universal.tar.gz',
         },
     },
     'ESP-IDF': {
-        'version': '5.5',
+        'version': '5.5.1',
         'independent': True,
-        'url': 'https://github.com/espressif/esp-idf/releases/download/v5.5/esp-idf-v5.5.zip',
+        'url': 'https://github.com/espressif/esp-idf/releases/download/v5.5.1/esp-idf-v5.5.1.zip',
         'install': install_esp_idf,
     },
     'ninja': {
@@ -118,9 +118,9 @@ dependencies = {
         # node is actually added to PATH but has to be handled as an edge case (in run_prebuild_tasks)
     },
     'pico-sdk': {
-        'version': '2.1.1',
+        'version': '2.2.0',
         'independent': True,
-        'cmd': 'git clone https://github.com/raspberrypi/pico-sdk.git --branch 2.1.1 --depth 1',
+        'cmd': 'git clone https://github.com/raspberrypi/pico-sdk.git --branch 2.2.0 --depth 1',
         'install': install_pico_sdk,
     },
 }
