@@ -72,6 +72,35 @@ static inline bool i2c_write_byte(i16 sda, i16 scl, byte addr, byte reg, byte da
 }
 
 /**
+ * Reads a 16-bit word from `addr` at `reg`.
+ * @param sda the SDA pin to use
+ * @param scl the SCL pin to use
+ * @param addr the I2C address to read from
+ * @param reg the register to read from
+ * @return the word read
+ * @note `sda` and `scl` must be set up with `i2c_setup()` before calling this function.
+ */
+static inline word i2c_read_word(i16 sda, i16 scl, byte addr, byte reg) {
+    byte raw[2];
+    i2c_read(sda, scl, addr, reg, raw, sizeof(raw));
+    return (word)(raw[1] << 8 | raw[0]);
+}
+
+/**
+ * Writes a 16-bit word `data` to `addr` at `reg`.
+ * @param sda the SDA pin to use
+ * @param scl the SCL pin to use
+ * @param addr the I2C address to write to
+ * @param reg the register to write to
+ * @param data the word to write
+ * @return true if the write was successful
+ * @note `sda` and `scl` must be set up with `i2c_setup()` before calling this function.
+ */
+static inline bool i2c_write_word(i16 sda, i16 scl, byte addr, byte reg, word data) {
+    return i2c_write(sda, scl, addr, reg, (byte[]){data & 0xFF, (data >> 8) & 0xFF}, 2);
+}
+
+/**
  * Reads the bits specified by `mask` from `addr` at `reg`.
  * @param sda the SDA pin to use
  * @param scl the SCL pin to use

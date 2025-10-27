@@ -1,4 +1,10 @@
 /**
+ * Copyright (c) 2023 Bosch Sensortec GmbH. All rights reserved.
+ *
+ * This file utilizes code under the BSD-3-Clause License. See "LICENSE" for details.
+ */
+
+/**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the MIT License
  */
@@ -11,6 +17,7 @@
 #include "drivers.h"
 
 // https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmm350-ds001.pdf
+// https://github.com/boschsensortec/BMM350_SensorAPI
 
 #define BMM350_ADDR_LOW 0x14
 #define BMM350_ADDR_HIGH 0x15

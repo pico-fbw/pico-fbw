@@ -3,6 +3,7 @@ include(DriverFirmware)
 target_sources(${PROJECT_NAME} PRIVATE
     drivers/bme280.c
     drivers/bmi270.c
+    drivers/bmi323.c
     drivers/bmm350.c
     drivers/drivers.c
     nav.c

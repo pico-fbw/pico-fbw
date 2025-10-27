@@ -1,4 +1,10 @@
 /**
+ * Copyright (c) 2020 Bosch Sensortec GmbH. All rights reserved.
+ *
+ * This file utilizes code under the BSD-3-Clause License. See "LICENSE" for details.
+ */
+
+/**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the MIT License
  */
@@ -20,6 +26,7 @@
 #include "drivers.h"
 
 // https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bme280-ds002.pdf
+// https://github.com/boschsensortec/BME280_SensorAPI
 
 #define BME280_ADDR_LOW 0x76
 #define BME280_ADDR_HIGH 0x77

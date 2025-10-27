@@ -1,4 +1,10 @@
 /**
+ * Copyright (c) 2023 Bosch Sensortec GmbH. All rights reserved.
+ *
+ * This file utilizes code under the BSD-3-Clause License. See "LICENSE" for details.
+ */
+
+/**
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the MIT License
  */
@@ -11,6 +17,7 @@
 #include "drivers.h"
 
 // https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmi270-ds000.pdf
+// https://github.com/boschsensortec/BMI270_SensorAPI
 
 #define BMI270_ADDR_LOW 0x68
 #define BMI270_ADDR_HIGH 0x69
@@ -51,12 +58,13 @@ bool bmi270_init(FusionDriver *self) {
     sleep_us_blocking(450);
     // Write config data
     success &= i2c_write_byte(ASDA, ASCL, self->addr, BMI270_REG_INIT_CTRL, 0x00);
+    // FIXME: properly upload config data in chunks
     success &= i2c_write(ASDA, ASCL, self->addr, BMI270_REG_INIT_DATA, bmi270_bin, sizeof(bmi270_bin));
     success &= i2c_write_byte(ASDA, ASCL, self->addr, BMI270_REG_INIT_CTRL, 0x01);
     // Wait up to 20ms for device to signal that it is ready
     Timestamp timeout = timestamp_in_ms(20);
     bool ready = false;
-    while (ready || timestamp_reached(&timeout)) {
+    while (!ready || timestamp_reached(&timeout)) {
         ready = i2c_read_bits(ASDA, ASCL, self->addr, BMI270_REG_INTERNAL_STATUS, 0b00001111) == 0b0001;
     }
     if (!ready || !success) {

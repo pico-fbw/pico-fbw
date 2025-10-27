@@ -83,6 +83,7 @@ void deinit_driver(const FusionDevice *device, FusionDriver *driver, const char 
 
 extern const FusionDevice bme280;
 extern const FusionDevice bmi270;
+extern const FusionDevice bmi323;
 extern const FusionDevice bmm350;
 
 extern const FusionDevice *fusionDevices[];
