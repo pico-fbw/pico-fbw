@@ -44,7 +44,11 @@ import_library(minmea ${minmea_SOURCE_DIR}
 )
 # Most platforms don't support timegm, so fall back to mktime when compiling minmea
 # Also fix undefined uint type on some platforms
-target_compile_definitions(minmea PUBLIC timegm=mktime uint=uint32_t)
+target_compile_definitions(minmea PUBLIC timegm=mktime)
+if (FBW_PLATFORM STREQUAL "host")
+    # Fix uint type on certain host platforms
+    target_compile_definitions(minmea PUBLIC uint=uint32_t)
+endif()
 
 message("Fetching parson")
 FetchContent_Declare(

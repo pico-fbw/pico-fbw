@@ -39,19 +39,19 @@ ExternalProject_Add(mklittlefs
 # It depends on all files in the www directory, so it will only rebuild if any of those files change
 file(GLOB_RECURSE WWW_FILES ${CMAKE_SOURCE_DIR}/www/*)
 list(FILTER WWW_FILES EXCLUDE REGEX ".*/node_modules/.*")
-# To build the web interface, invoke the www.sh wrapper script which will respect nvm if installed
-set(BUILD_WWW_CMD ${CMAKE_SOURCE_DIR}/www/www.sh ${CMAKE_SOURCE_DIR}/www ${PNPM_EXE})
-if (CMAKE_HOST_WIN32)
-    # nvm doesn't exist on windows, so just attempt to invoke pnpm directly
-    set(BUILD_WWW_CMD ${PNPM_EXE} install && ${PNPM_EXE} build)
-endif()
 get_filename_component(CMAKE_BINARY_DIR_NAME ${CMAKE_BINARY_DIR} NAME)
 set(DIST_DIR ../${CMAKE_BINARY_DIR_NAME}/www/www) # Directory where the web interface assets will be placed
+# To build the web interface, invoke the www.sh/.bat wrapper script
+if (CMAKE_HOST_WIN32)
+    set(BUILD_WWW_SCRIPT ${CMAKE_SOURCE_DIR}/www/www.bat)
+else()
+    set(BUILD_WWW_SCRIPT ${CMAKE_SOURCE_DIR}/www/www.sh)
+endif()
 add_custom_command(
     # This command will also output an empty file whose modify timestamp can be used to check if/when the web interface has been built
     OUTPUT ${CMAKE_BINARY_DIR}/generated/www/built
     # Provide the DIST_DIR both as an environment variable and as an argument to the script
-    COMMAND ${CMAKE_COMMAND} -E env DIST_DIR=${DIST_DIR} ${BUILD_WWW_CMD} ${DIST_DIR}
+    COMMAND ${CMAKE_COMMAND} -E env DIST_DIR=${DIST_DIR} ${BUILD_WWW_SCRIPT} ${CMAKE_SOURCE_DIR}/www ${PNPM_EXE} ${DIST_DIR}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/generated/www
     COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_BINARY_DIR}/generated/www/built
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/www

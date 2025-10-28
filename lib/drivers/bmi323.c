@@ -33,7 +33,23 @@
 #define BMI323_RESET_TRIGGER 0xDEAF
 
 bool bmi323_exists(FusionDriver *self) {
-    return check_devid(self, BMI323_ADDR_LOW, BMI323_ADDR_HIGH, BMI323_REG_ID, BMI323_DEVICE_ID);
+    byte data[4] = {};
+    if (!i2c_read(ASDA, ASCL, BMI323_ADDR_LOW, BMI323_REG_ID, data, sizeof(data))) {
+        return false;
+    }
+    if (data[3] == BMI323_DEVICE_ID) {
+        self->addr = BMI323_ADDR_LOW;
+        return true;
+    }
+    // Main address failed, check the alternate address
+    if (!i2c_read(ASDA, ASCL, BMI323_ADDR_HIGH, BMI323_REG_ID, data, sizeof(data))) {
+        return false;
+    }
+    if (data[3] == BMI323_DEVICE_ID) {
+        self->addr = BMI323_ADDR_HIGH;
+        return true;
+    }
+    return false;
 }
 
 bool bmi323_init(FusionDriver *self) {
