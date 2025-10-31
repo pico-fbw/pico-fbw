@@ -18,6 +18,7 @@
 
 // https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmi270-ds000.pdf
 // https://github.com/boschsensortec/BMI270_SensorAPI
+// Based off `accel_gyro` example
 
 #define BMI270_ADDR_LOW 0x68
 #define BMI270_ADDR_HIGH 0x69
@@ -54,7 +55,7 @@ bool bmi270_init(FusionDriver *self) {
     success &= i2c_write_byte(ASDA, ASCL, self->addr, BMI270_REG_CMD, BMI270_RESET_TRIGGER);
     sleep_ms_blocking(2);
     // Disable advanced power save
-    success &= i2c_write_bits(ASDA, ASCL, self->addr, BMI270_REG_PWR_CONF, 0b00000001, 0);
+    success &= i2c_write_bits(ASDA, ASCL, self->addr, BMI270_REG_PWR_CONF, 0b00000001, 0b0);
     sleep_us_blocking(450);
     // Write config data
     success &= i2c_write_byte(ASDA, ASCL, self->addr, BMI270_REG_INIT_CTRL, 0x00);
@@ -72,7 +73,7 @@ bool bmi270_init(FusionDriver *self) {
     }
     // Enable accelerometer and gyroscope (w/ noise performance on), disable temperature and auxillary sensors
     success &= i2c_write_bits(ASDA, ASCL, self->addr, BMI270_REG_PWR_CTRL, 0b00001111, 0b0110);
-    success &= i2c_write_bits(ASDA, ASCL, self->addr, BMI270_REG_GYR_CONF, 0b01000000, 1);
+    success &= i2c_write_bits(ASDA, ASCL, self->addr, BMI270_REG_GYR_CONF, 0b01000000, 0b1 << 6);
     return success;
 }
 
