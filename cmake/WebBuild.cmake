@@ -25,7 +25,7 @@ endif()
 set(MKLITTLEFS_EXE ${MKLITTLEFS_DIR}/${MKLITTLEFS_EXE_NAME})
 ExternalProject_Add(mklittlefs
     GIT_REPOSITORY https://github.com/earlephilhower/mklittlefs.git
-        GIT_TAG 4.0.1
+        GIT_TAG 4.1.0
         GIT_SUBMODULES_RECURSE TRUE
     SOURCE_DIR ${MKLITTLEFS_DIR}
         BUILD_IN_SOURCE TRUE

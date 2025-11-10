@@ -9,6 +9,7 @@ import { Redirect } from "wouter-preact";
 import Alert from "elements/Alert";
 
 import { api } from "helpers/api";
+import settings from "helpers/settings";
 
 export default function Index() {
     const [status, setStatus] = useState("loading");
@@ -61,9 +62,12 @@ export default function Index() {
                         </Alert>
                     )}
                 </div>
-            ) : (
+            ) : settings.get("setupComplete") === "true" ? (
                 // Preliminary checks passed, redirect to dashboard
                 <Redirect to="/dashboard" />
+            ) : (
+                // Proceed to setup wizard
+                <Redirect to="/setup" />
             )}
         </>
     );

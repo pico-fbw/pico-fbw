@@ -31,7 +31,7 @@ let config = {
         },
         {
             name: "Sensors",
-            values: [1, 0, 400, 1, 9600],
+            values: [400, 1, 9600],
         },
         {
             name: "System",
@@ -221,12 +221,14 @@ export default (): MockHandler[] => [
         handle: (req, res) => {
             req.on("data", (bodyString: string) => {
                 const body = JSON.parse(bodyString) as {
-                    changes: { section: string; key: number; value: string }[];
+                    changes: { section: string; key: string; value: string }[];
                     save: boolean;
                 };
                 body.changes.forEach(change => {
                     const section = config.sections.find(s => s.name === change.section);
                     if (section) {
+                        // FIXME: I'm aware that this handling is improper and doesn't work,
+                        // but I'm waiting for the config system rewrite to bother fixing it
                         const currentValue = section.values[change.key];
                         if (typeof currentValue === "number") {
                             section.values[change.key] = parseFloat(change.value);

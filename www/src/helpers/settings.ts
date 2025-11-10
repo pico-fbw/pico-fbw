@@ -3,15 +3,19 @@
  * Licensed under the MIT License
  */
 
+// [ ] Move these settings out of local storage and into on-device config
+
 export class settings {
     static setting = {
         altSamples: { default: "10" },
         defaultSpeed: { default: "25" },
         dropSecs: { default: "10" },
+        pilotName: { default: "" },
         // Internal settings, cannot be changed by user
         defaultMap: { default: "0" },
         lastMapPosition: { default: "" },
         lastMapZoom: { default: "" },
+        setupComplete: { default: "false" },
     } as const;
 
     /**

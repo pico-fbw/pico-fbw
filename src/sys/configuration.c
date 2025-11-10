@@ -6,6 +6,7 @@
 // TODO: redo config system to...not be so confusing
 // restructure with littlefs in mind this time
 // maybe just key-values
+// TODO: also add a section for webui settings (see www/src/helpers/settings.ts)
 
 #include <math.h>
 #include <stdio.h>
@@ -417,7 +418,7 @@ bool config_validate(char *error, size_t error_size) {
     }
     // Unique pin validation
     i32 prevPin = -1;
-    for (u32 i = S_PIN_MIN; i <= S_PIN_MAX; i++) {
+    for (u32 i = S_PIN_MIN; i <= S_PIN_NOT_FLAG_MAX; i++) {
         i16 pin = config.pins[i];
         if (pin < 0) {
             // < 0 is invalid and means the pin is unused; don't validate it

@@ -30,11 +30,12 @@ interface ContentBlockProps {
     error?: string;
     setError?: (error: string) => void;
     ignoreSwipe?: boolean;
+    noSidebar?: boolean;
     children: preact.ComponentChildren;
 }
 
 // The ContentBlock is a wrapper for the content of a page, which provides a sidebar for navigation.
-export default function ContentBlock({ title, loading, error, setError, ignoreSwipe, children }: ContentBlockProps) {
+export default function ContentBlock({ title, loading, error, setError, ignoreSwipe, noSidebar, children }: ContentBlockProps) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     // Wrap in some swipe handlers to conveniently open/close the sidebar on touchscreen devices
@@ -63,9 +64,11 @@ export default function ContentBlock({ title, loading, error, setError, ignoreSw
                 </div>
             )}
             {/* Sidebar */}
-            <Sidebar navigation={sidebarNav} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+            {!noSidebar &&
+                <Sidebar navigation={sidebarNav} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+            }
             {/* Main content */}
-            <div className="lg:pl-72 h-full">{loading ? <Spinner /> : <div>{children}</div>}</div>
+            <div className={`${noSidebar ? "" : "lg:pl-72"} h-full`}>{loading ? <Spinner /> : <div>{children}</div>}</div>
         </div>
     );
 }

@@ -24,7 +24,7 @@ message("Fetching littlefs")
 FetchContent_Declare(
     littlefs
     GIT_REPOSITORY https://github.com/littlefs-project/littlefs
-    GIT_TAG v2.10.2
+    GIT_TAG v2.11.2
 )
 FetchContent_MakeAvailable(littlefs)
 import_library(littlefs ${littlefs_SOURCE_DIR}

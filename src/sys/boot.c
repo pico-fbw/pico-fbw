@@ -5,6 +5,8 @@
 
 // TODO: refactor, shorten functions etc.
 // bring out into other files?
+// TODO: for systems with wifi, maybe wait for confirmation of connection so that
+// calibrations can be done in sync with webui
 
 #include <assert.h>
 #include <string.h>

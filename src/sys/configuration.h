@@ -83,6 +83,7 @@ typedef enum ConfigPins {
     PINS_REVERSE_YAW,
 } ConfigPins;
 #define S_PIN_MIN PINS_INPUT_AIL
+#define S_PIN_NOT_FLAG_MAX PINS_GPS_RX // Last entry in Pins that is actually a pin and not a flag
 #define S_PIN_MAX PINS_REVERSE_YAW
 
 typedef enum ConfigSensors {
