@@ -58,7 +58,7 @@ bool imu_init() {
         }
         return false;
     }
-    aircraft.set_imu_safe(true);
+    aircraft_set_imu_safe(true);
     return true;
 }
 
@@ -87,7 +87,7 @@ void imu_deinit() {
         deinit_driver(dev, dev->baro, "barometer");
     }
     detectedCount = 0;
-    aircraft.set_imu_safe(false);
+    aircraft_set_imu_safe(false);
 }
 
 IMU imu = {

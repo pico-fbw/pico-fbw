@@ -47,7 +47,7 @@ static BayPosition parse_args(const char *args) {
 // {"position":"open|closed"}
 
 i32 api_set_bay(const char *in, char **out) {
-    if (aircraft.mode != MODE_NORMAL) {
+    if (aircraft_get_mode() != MODE_NORMAL) {
         return 403;
     }
     BayPosition position = parse_args(in);

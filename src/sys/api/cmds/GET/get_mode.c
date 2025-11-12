@@ -14,7 +14,7 @@
 i32 api_get_mode(const char *in, char **out) {
     JSON_Value *root = json_value_init_object();
     JSON_Object *obj = json_value_get_object(root);
-    json_object_set_string(obj, "mode", mode_to_string(aircraft.mode));
+    json_object_set_string(obj, "mode", mode_to_string(aircraft_get_mode()));
     char *serialized = json_serialize_to_string(root);
     json_value_free(root);
     *out = serialized;

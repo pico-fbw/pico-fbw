@@ -30,8 +30,8 @@ static bool overrideSetpoints = false;
 
 void normal_init() {
     flight_init();
-    throttle.init();
-    throttle.mode = THRMODE_THRUST;
+    throttle_init();
+    throttle_set_mode(THRMODE_THRUST);
 }
 
 void normal_update() {
@@ -98,8 +98,8 @@ void normal_update() {
 
     // Update the flight and throttle systems with calculated setpoints
     flight_update((f64)rollSet, (f64)pitchSet, (f64)yawInput, overrideYaw);
-    throttle.target = throttleSet;
-    throttle.update();
+    throttle_set_target(throttleSet);
+    throttle_update();
 }
 
 void normal_deinit() {

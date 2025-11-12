@@ -52,7 +52,7 @@ i32 api_set_mode(const char *in, char **out) {
     if (newMode == MODE_INVALID) {
         return 400;
     }
-    aircraft.change_to(newMode);
+    aircraft_change_mode(newMode);
     return 200;
     (void)out;
 }

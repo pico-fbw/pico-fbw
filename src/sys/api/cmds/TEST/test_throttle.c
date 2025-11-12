@@ -23,7 +23,7 @@
 static void wait_for(u32 s) {
     Timestamp wait = timestamp_in_ms(s * 1000);
     while (!timestamp_reached(&wait)) {
-        throttle.update();
+        throttle_update();
         sys_periodic();
     }
 }
@@ -56,7 +56,7 @@ static bool parse_args(const char *args, f32 *t_idle, f32 *t_mct, f32 *t_max) {
 // {"idle":number,"mct":number,"max":number}
 
 i32 api_test_throttle(const char *args) {
-    if (aircraft.mode != MODE_DIRECT) {
+    if (aircraft_get_mode() != MODE_DIRECT) {
         return 403;
     }
 
@@ -70,16 +70,16 @@ i32 api_test_throttle(const char *args) {
         }
     }
     // Transition into thrust mode to set thrust percentages
-    throttle.mode = THRMODE_THRUST;
+    throttle_set_mode(THRMODE_THRUST);
     printpre("test", "setting IDLE (%.1f%%) for %.1fs", *idle, t_idle);
-    throttle.target = *idle;
+    throttle_set_target(*idle);
     wait_for((u32)(t_idle));
     printpre("test", "setting MCT (%.1f%%) for %.1fs", *mct, t_mct);
-    throttle.target = *mct;
+    throttle_set_target(*mct);
     wait_for((u32)(t_mct));
     printpre("test", "setting MAX (%.1f%%) for %.1fs", *max, t_max);
-    throttle.target = *max;
+    throttle_set_target(*max);
     wait_for((u32)(t_max));
-    throttle.target = 0;
+    throttle_set_target(0);
     return 200;
 }

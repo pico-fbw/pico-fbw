@@ -8,19 +8,43 @@ typedef enum ThrottleMode {
                     // (within ESC limits)
 } ThrottleMode;
 
-typedef struct Throttle {
-    ThrottleMode mode;
-    ThrottleMode supportedMode; // Highest ThrottleMode supported in the system's current configuration
-    f32 target;                 // Target speed [kts] or thrust [0-100] (depending on mode)
-    /**
-     * Initializes the throttle system (checks for highest supported mode and initializes it).
-     */
-    void (*init)();
-    /**
-     * Updates the throttle output according to flight system data.
-     * @note As with most computational functions, this should be called as often as possible for best results.
-     */
-    void (*update)();
-} Throttle;
+/**
+ * Initializes the throttle system (checks for highest supported mode and initializes it).
+ */
+void throttle_init();
 
-extern Throttle throttle;
+/**
+ * Updates the throttle output according to flight system data.
+ * @note As with most computational functions, this should be called as often as possible for best results.
+ */
+void throttle_update();
+
+/**
+ * Gets the current throttle mode.
+ * @return the current throttle mode
+ */
+ThrottleMode throttle_get_mode();
+
+/**
+ * Gets the highest supported throttle mode.
+ * @return the highest supported throttle mode
+ */
+ThrottleMode throttle_get_supported_mode();
+
+/**
+ * Gets the current throttle target.
+ * @return the target speed [kts] or thrust [0-100] (depending on mode)
+ */
+f32 throttle_get_target();
+
+/**
+ * Sets the throttle mode.
+ * @param mode the throttle mode to set
+ */
+void throttle_set_mode(ThrottleMode mode);
+
+/**
+ * Sets the throttle target.
+ * @param target the target speed [kts] or thrust [0-100] (depending on mode)
+ */
+void throttle_set_target(f32 target);

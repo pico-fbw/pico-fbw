@@ -136,7 +136,7 @@ void flight_init() {
             break;
         default:
             printpre("flight", "ERROR: unknown control mode!");
-            aircraft.change_to(MODE_DIRECT);
+            aircraft_change_mode(MODE_DIRECT);
             return;
     }
     // Create PID controllers for the roll and pitch axes and initialize them
@@ -177,7 +177,7 @@ void flight_update(f64 roll, f64 pitch, f64 yaw, bool override) {
     if (fabsf(imu.roll) > 72 || imu.pitch > 35 || imu.pitch < -20) {
         printpre("flight", "WARNING: flight envelope exceeded! (roll: %.0f, pitch: %.0f, yaw: %.0f)", imu.roll,
                  imu.pitch, imu.yaw);
-        aircraft.set_imu_safe(false);
+        aircraft_set_imu_safe(false);
     }
 
     // Update PID controllers
@@ -203,7 +203,7 @@ void flight_update(f64 roll, f64 pitch, f64 yaw, bool override) {
             break;
         default: {
             printpre("flight", "ERROR: unknown control mode!");
-            aircraft.change_to(MODE_DIRECT);
+            aircraft_change_mode(MODE_DIRECT);
             return;
         }
     }

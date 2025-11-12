@@ -69,14 +69,14 @@ static i32 turn_around(void *data) {
 
 bool hold_init() {
     flight_init();
-    throttle.init();
-    if (throttle.supportedMode < THRMODE_SPEED) {
+    throttle_init();
+    if (throttle_get_supported_mode() < THRMODE_SPEED) {
         log_message(TYPE_WARNING, "SPEED mode required!", 2000, 0, false);
         return false;
     }
-    throttle.mode = THRMODE_SPEED;
+    throttle_set_mode(THRMODE_SPEED);
     // We try to maintain the speed of the aircraft as it was entering the holding pattern
-    throttle.target = gps.speed;
+    throttle_set_target(gps.speed);
     // We use a vertical guidance PID here so that we can keep the aircraft level; 0deg pitch does not equal 0 altitude
     // change (sadly)
     vertGuid = (PIDController){
@@ -95,7 +95,7 @@ bool hold_init() {
 void hold_update() {
     pid_update(&vertGuid, targetAlt, gps.alt);
     flight_update(rollSet, vertGuid.out, 0, false);
-    throttle.update();
+    throttle_update();
 
     switch (turnStatus) {
         case HOLD_TURN_BEGUN:

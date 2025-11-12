@@ -69,7 +69,7 @@ static void load_waypoint(Waypoint *wpt) {
         currentWpt.alt = wpt->alt + gps.altOffset;
     }
     // Set the (possibly new) target speed
-    throttle.target = wpt->speed;
+    throttle_set_target(wpt->speed);
     // Initiate a drop if applicable
     if (wpt->drop > 0) {
         auto_set_bay_position(POS_OPEN);
@@ -94,13 +94,13 @@ bool auto_init() {
     guidanceSource = SOURCE_FLIGHTPLAN;
     currentWptIndex = 0;
     flight_init();
-    throttle.init();
+    throttle_init();
     // Check if SPEED mode is supported, which we need for autopilot
-    if (throttle.supportedMode < THRMODE_SPEED) {
+    if (throttle_get_supported_mode() < THRMODE_SPEED) {
         log_message(TYPE_WARNING, "SPEED mode required!", 2000, 0, false);
         return false;
     }
-    throttle.mode = THRMODE_SPEED;
+    throttle_set_mode(THRMODE_SPEED);
     // Initialize (clear) PIDs
     latGuid = (PIDController){
         .kp = LATGD_KP,
@@ -128,7 +128,7 @@ bool auto_init() {
 void auto_update() {
     // Don't allow re-entering auto mode after the user has exited hold mode and auto is complete
     if (autoComplete) {
-        aircraft.change_to(MODE_NORMAL);
+        aircraft_change_mode(MODE_NORMAL);
         return;
     }
 
@@ -165,11 +165,11 @@ void auto_update() {
     pid_update(&latGuid, 0.0, diff);
     pid_update(&vertGuid, target.alt, gps.alt);
     flight_update(latGuid.out, vertGuid.out, 0, false);
-    throttle.update();
+    throttle_update();
 
     // Calculate the radius at which to consider the Waypoint intercepted
     // This must be calculated every loop as we need to turn sooner if we're going faster to stay on course
-    f64 radius = INTERCEPT_BASE_RADIUS + (throttle.target - INTERCEPT_BASE_SPEED) * 5;
+    f64 radius = INTERCEPT_BASE_RADIUS + (throttle_get_target() - INTERCEPT_BASE_SPEED) * 5;
     radius = (radius < MIN_RADIUS) ? MIN_RADIUS : radius;
     // If we've intercepted the waypoint,
     if (distance < radius) {
@@ -181,7 +181,7 @@ void auto_update() {
                 if (currentWptIndex >= flightplan_get_active()->waypoint_count) {
                     // Auto mode ends here, we enter a holding pattern
                     autoComplete = true;
-                    aircraft.change_to(MODE_HOLD);
+                    aircraft_change_mode(MODE_HOLD);
                 } else {
                     // More waypoints to go, load the next one
                     load_next_waypoint();
@@ -193,7 +193,7 @@ void auto_update() {
                     (captureCallback)();
                 }
                 guidanceSource = SOURCE_FLIGHTPLAN;
-                aircraft.change_to(MODE_HOLD);
+                aircraft_change_mode(MODE_HOLD);
                 break;
         }
     }

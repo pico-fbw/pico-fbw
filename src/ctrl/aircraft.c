@@ -3,8 +3,6 @@
  * Licensed under the MIT License
  */
 
-// TODO: refactor, shorten functions, edge case weirdness, remove "object" notation etc.
-
 #include "platform/defs.h"
 #include "platform/time.h"
 #include "platform/wifi.h"
@@ -26,13 +24,19 @@
 
 #include "aircraft.h"
 
-// Shorthand for checking GPS feature support and data validitity
-#define GPS_OK() (gps.is_supported() && aircraft.gpsSafe)
+// Shorthand for checking GPS feature support and data validity
+#define GPS_OK() (gps.is_supported() && gpsSafe)
 // Speed threshold to determine if the aircraft is flying (kts)
 #define SPEED_FLYING_THRESHOLD 5
 // The highest amount of time that the aircraft can still be considered flying after the last control input (s)
 #define STILL_FLYING_TIMEOUT 15
 
+static Mode mode = MODE_DIRECT;
+static bool isFlying = false;
+static bool imuSafe = false, gpsSafe = false;
+#if PLATFORM_SUPPORTS_WIFI
+static bool wifiDeinitialized = false;
+#endif
 static Timestamp lastNonzeroInput; // Last time a control input was detected
 
 /**
@@ -54,7 +58,8 @@ static bool is_flying() {
 }
 
 /**
- * @param mode the (current) mode to deinitialize
+ * Deinitializes the given mode.
+ * @param mode the mode to deinitialize
  */
 static void deinit_mode(Mode mode) {
     switch (mode) {
@@ -67,74 +72,171 @@ static void deinit_mode(Mode mode) {
         default:
             break;
     }
-    aircraft.mode = MODE_INVALID;
+    mode = MODE_INVALID;
 }
 
 /**
+ * Helper function to handle launch assist initialization.
+ * @param next_mode the mode to transition to after launch
+ * @return true if launch was initiated
+ */
+static bool try_launch_assist(Mode next_mode) {
+    if (!(bool)config.general[GENERAL_LAUNCHASSIST_ENABLED]) {
+        return false;
+    }
+    printsys(aircraft, "initiating launch assist");
+    launch_init(next_mode);
+    mode = MODE_LAUNCH;
+    return true;
+}
+
+/**
+ * Helper function to handle autotune initialization.
+ * @return true if autotune was initiated
+ */
+static bool try_autotune() {
+    if (tune_is_tuned() || !(bool)config.general[GENERAL_AUTOTUNE_ENABLED]) {
+        return false;
+    }
+    printsys(aircraft, "initiating autotune");
+    tune_init();
+    mode = MODE_TUNE;
+    return true;
+}
+
+/* Mode initializers */
+
+static void init_normal_mode() {
+    // Attempt to use launch assist before engaging normal mode
+    if (try_launch_assist(MODE_NORMAL)) {
+        return;
+    }
+    normal_init();
+    mode = MODE_NORMAL;
+}
+
+static bool init_auto_mode() {
+    // Check if autotune is needed
+    if (try_autotune()) {
+        return true;
+    }
+    // GPS is required for auto mode
+    if (!GPS_OK()) {
+        printsys(aircraft, "WARNING: GPS is required for auto mode, falling back to normal mode");
+        init_normal_mode();
+        return false;
+    }
+    if (try_launch_assist(MODE_AUTO)) {
+        return true;
+    }
+    if (!auto_init()) {
+        printsys(aircraft, "WARNING: failed to initialize auto mode, falling back to normal mode");
+        init_normal_mode();
+        return false;
+    }
+    mode = MODE_AUTO;
+    return true;
+}
+
+static void init_tune_mode() {
+    if (tune_is_tuned()) {
+        printsys(aircraft, "already tuned, falling back to normal mode");
+        init_normal_mode();
+        return;
+    }
+    tune_init();
+    mode = MODE_TUNE;
+}
+
+static void init_hold_mode() {
+    // GPS is required for hold mode
+    if (!GPS_OK()) {
+        printsys(aircraft, "WARNING: GPS is required for hold mode, falling back to normal mode");
+        init_normal_mode();
+        return;
+    }
+    if (!hold_init()) {
+        printsys(aircraft, "WARNING: failed to initialize hold mode, falling back to normal mode");
+        init_normal_mode();
+        return;
+    }
+    mode = MODE_HOLD;
+}
+
+/**
+ * Initializes the given mode.
  * @param mode the mode to initialize
  */
 static void init_mode(Mode mode) {
     switch (mode) {
-        default:
         case MODE_DIRECT:
-            aircraft.mode = MODE_DIRECT;
+            mode = MODE_DIRECT;
             break;
-        LAUNCH:
         case MODE_LAUNCH:
             launch_init(mode);
-            aircraft.mode = MODE_LAUNCH;
+            mode = MODE_LAUNCH;
             break;
-        NORMAL:
         case MODE_NORMAL:
-            // Initiate an autolaunch if necessary
-            if ((bool)config.general[GENERAL_LAUNCHASSIST_ENABLED]) {
-                printsys(aircraft, "initiating launch assist");
-                goto LAUNCH;
-            }
-            normal_init();
-            aircraft.mode = MODE_NORMAL;
+            init_normal_mode();
             break;
         case MODE_AUTO:
-            if (!tune_is_tuned() && (bool)config.general[GENERAL_AUTOTUNE_ENABLED]) {
-                printsys(aircraft, "initiating autotune");
-                goto TUNE;
-            }
-            if (!GPS_OK()) {
-                // GPS is required to be safe for auto and hold modes, fallback to normal mode
-                printsys(aircraft, "WARNING: GPS is required for auto mode, falling back to normal mode");
-                goto NORMAL;
-            }
-            if ((bool)config.general[GENERAL_LAUNCHASSIST_ENABLED]) {
-                printsys(aircraft, "initiating launch assist");
-                goto LAUNCH;
-            }
-            if (!auto_init()) {
-                printsys(aircraft, "WARNING: failed to initialize auto mode, falling back to normal mode");
-                goto NORMAL;
-            }
-            aircraft.mode = MODE_AUTO;
+            init_auto_mode();
             break;
-        TUNE:
         case MODE_TUNE:
-            if (tune_is_tuned()) {
-                printsys(aircraft, "already tuned, falling back to normal mode");
-                goto NORMAL;
-            }
-            tune_init();
-            aircraft.mode = MODE_TUNE;
+            init_tune_mode();
             break;
         case MODE_HOLD:
-            if (!GPS_OK()) {
-                printsys(aircraft, "WARNING: GPS is required for hold mode, falling back to normal mode");
-                goto NORMAL;
-            }
-            if (!hold_init()) {
-                printsys(aircraft, "WARNING: failed to initialize hold mode, falling back to normal mode");
-                goto NORMAL;
-            }
-            aircraft.mode = MODE_HOLD;
+            init_hold_mode();
+            break;
+        default:
+            mode = MODE_DIRECT;
             break;
     }
+}
+
+/**
+ * Updates the current mode's logic.
+ */
+static void update_mode() {
+    switch (mode) {
+        case MODE_DIRECT:
+            direct_update();
+            break;
+        case MODE_LAUNCH:
+            launch_update();
+            break;
+        case MODE_NORMAL:
+            normal_update();
+            break;
+        case MODE_AUTO:
+            auto_update();
+            break;
+        case MODE_TUNE:
+            tune_update();
+            break;
+        case MODE_HOLD:
+            hold_update();
+            break;
+        default:
+            direct_update();
+            break;
+    }
+}
+
+/**
+ * Handles wifi deinitialization after taking flight.
+ */
+static void handle_wifi_deinit() {
+#if PLATFORM_SUPPORTS_WIFI
+    if (!wifiDeinitialized && isFlying) {
+        // We're now airborne, so wifi is no longer needed
+        if (!wifi_disable()) {
+            printsys(network, "WARNING: failed to disable wifi!");
+        }
+        printsys(network, "wifi disabled");
+        wifiDeinitialized = true;
+    }
+#endif
 }
 
 const char *mode_to_string(Mode mode) {
@@ -156,66 +258,38 @@ const char *mode_to_string(Mode mode) {
     }
 }
 
-void update() {
-    switch (aircraft.mode) {
-        default:
-        case MODE_DIRECT:
-            direct_update();
-            break;
-        case MODE_LAUNCH:
-            launch_update();
-            break;
-        case MODE_NORMAL:
-            normal_update();
-            break;
-        case MODE_AUTO:
-            auto_update();
-            break;
-        case MODE_TUNE:
-            tune_update();
-            break;
-        case MODE_HOLD:
-            hold_update();
-            break;
-    }
-    aircraft.isFlying = is_flying();
+void aircraft_update() {
+    update_mode();
+    isFlying = is_flying();
 }
 
-void change_to(Mode new_mode) {
+void aircraft_change_mode(Mode new_mode) {
     // Deinit the current mode
-    printsys(aircraft, "exiting %s mode", mode_to_string(aircraft.mode));
-    deinit_mode(aircraft.mode);
+    printsys(aircraft, "exiting %s mode", mode_to_string(mode));
+    deinit_mode(mode);
     // All modes (except for direct) require IMU so make sure that's all good
-    if (!aircraft.imuSafe && new_mode != MODE_DIRECT) {
+    if (!imuSafe && new_mode != MODE_DIRECT) {
         printsys(aircraft, "IMU has failed, entering direct mode!");
         log_message(TYPE_ERROR, "IMU has failed!", 250, 0, true);
-        aircraft.mode = MODE_DIRECT;
+        mode = MODE_DIRECT;
         return;
     }
     // Init the new mode
     printsys(aircraft, "trying to enter %s mode", mode_to_string(new_mode));
     init_mode(new_mode);
-    printsys(aircraft, "entered %s mode", mode_to_string(aircraft.mode));
-#if PLATFORM_SUPPORTS_WIFI
-    if (!aircraft.wifiDeinitialized && aircraft.isFlying) {
-        // We're now airborne, so wifi is no longer needed
-        if (!wifi_disable()) {
-            printsys(network, "WARNING: failed to disable wifi!");
-        }
-        printsys(network, "wifi disabled");
-        aircraft.wifiDeinitialized = true;
-    }
-#endif
+    printsys(aircraft, "entered %s mode", mode_to_string(mode));
+    handle_wifi_deinit();
 }
 
-void set_imu_safe(bool state) {
-    if (state == aircraft.imuSafe) {
+void aircraft_set_imu_safe(bool is_safe) {
+    if (is_safe == imuSafe) {
         return; // Nothing to do
     }
-    aircraft.imuSafe = state;
-    if (!aircraft.imuSafe) {
+
+    imuSafe = is_safe;
+    if (!imuSafe) {
         // Change to direct mode as it doesn't require IMU, and deinit
-        change_to(MODE_DIRECT);
+        aircraft_change_mode(MODE_DIRECT);
         imu.deinit();
         printsys(aircraft, "IMU set as unsafe");
         return;
@@ -223,41 +297,48 @@ void set_imu_safe(bool state) {
     // Last-ditch attempt to re-init IMU if it's not already
     if (!imu.ready && !imu.init()) {
         log_message(TYPE_ERROR, "IMU initialization failed!", 1000, 0, false);
-        change_to(MODE_DIRECT);
+        aircraft_change_mode(MODE_DIRECT);
         return;
     }
     printsys(aircraft, "IMU set as safe");
 }
 
-void set_gps_safe(bool state) {
-    if (state == aircraft.gpsSafe) {
+void aircraft_set_gps_safe(bool is_safe) {
+    if (is_safe == gpsSafe) {
         return;
     }
-    aircraft.gpsSafe = state;
-    if (aircraft.gpsSafe) {
+
+    gpsSafe = is_safe;
+    if (gpsSafe) {
         printsys(aircraft, "GPS set as safe");
         log_clear(TYPE_INFO);
         return;
     }
     printsys(aircraft, "GPS set as unsafe");
-    if (aircraft.mode == MODE_AUTO || aircraft.mode == MODE_HOLD) {
-        // Return to normal mode if GPS is deemed unsafe in Auto or Hold modes (require GPS)
-        change_to(MODE_NORMAL);
+    // Return to normal mode if GPS is deemed unsafe in Auto or Hold modes (require GPS)
+    if (mode == MODE_AUTO || mode == MODE_HOLD) {
+        aircraft_change_mode(MODE_NORMAL);
     }
 }
 
-// clang-format off
-Aircraft aircraft = {
-    .mode = MODE_DIRECT,
-    .isFlying = false,
+Mode aircraft_get_mode() {
+    return mode;
+}
+
+bool aircraft_is_flying() {
+    return isFlying;
+}
+
+bool aircraft_is_imu_safe() {
+    return imuSafe;
+}
+
+bool aircraft_is_gps_safe() {
+    return gpsSafe;
+}
+
 #if PLATFORM_SUPPORTS_WIFI
-    .wifiDeinitialized = false,
+bool aircraft_wifi_deinitialized() {
+    return wifiDeinitialized;
+}
 #endif
-    .imuSafe = false,
-    .gpsSafe = false,
-    .update = update,
-    .change_to = change_to,
-    .set_imu_safe = set_imu_safe,
-    .set_gps_safe = set_gps_safe,
-};
-// clang-format on

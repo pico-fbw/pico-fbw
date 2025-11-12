@@ -72,7 +72,7 @@ static bool parse_args(const char *args, Waypoint *wpt) {
 // {"lat":number,"lng":number,"alt":number,"speed":number,"drop":number}
 
 i32 api_set_waypoint(const char *in, char **out) {
-    if (aircraft.mode != MODE_AUTO) {
+    if (aircraft_get_mode() != MODE_AUTO) {
         return 403;
     }
     Waypoint wpt;

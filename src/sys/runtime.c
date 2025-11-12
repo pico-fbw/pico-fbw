@@ -34,7 +34,7 @@ void runtime_loop(bool update_aircraft) {
     }
     // Run the current mode's code, if applicable
     if (update_aircraft) {
-        aircraft.update();
+        aircraft_update();
     }
     // Respond to any new API calls
     if (config.general[GENERAL_API_ENABLED]) {
@@ -42,7 +42,7 @@ void runtime_loop(bool update_aircraft) {
     }
     // Platform-specific and system tasks
 #if PLATFORM_SUPPORTS_WIFI
-    if ((WifiEnabled)config.general[GENERAL_WIFI_ENABLED] != WIFI_DISABLED && !aircraft.wifiDeinitialized) {
+    if ((WifiEnabled)config.general[GENERAL_WIFI_ENABLED] != WIFI_DISABLED && !aircraft_wifi_deinitialized()) {
         wifi_periodic();
     }
 #endif
@@ -51,7 +51,7 @@ void runtime_loop(bool update_aircraft) {
 
 void runtime_loop_minimal() {
     // Update the minimal amount of systems required to keep the plane in the air
-    aircraft.update();
+    aircraft_update();
     sys_periodic();
 }
 

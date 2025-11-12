@@ -40,7 +40,7 @@ static inline bool has_launch_accel() {
 
 // Callback to return to the afterLaunch mode.
 static i32 return_to_mode(void *data) {
-    aircraft.change_to(afterLaunch);
+    aircraft_change_mode(afterLaunch);
     return 0;
     (void)data;
 }
@@ -48,10 +48,10 @@ static i32 return_to_mode(void *data) {
 void launch_init(Mode return_to) {
     afterLaunch = return_to;
     flight_init();
-    throttle.init();
-    throttle.mode = THRMODE_THRUST;
+    throttle_init();
+    throttle_set_mode(THRMODE_THRUST);
     // Set idle thrust to indicate that we're ready to launch
-    throttle.target = calibration.esc[ESC_DETENT_IDLE];
+    throttle_set_target(calibration.esc[ESC_DETENT_IDLE]);
 }
 
 void launch_update() {
@@ -63,7 +63,7 @@ void launch_update() {
             // which indicates the user probably threw the aircraft
             if (has_launch_accel()) {
                 // Launch is happening right now, set max thrust
-                throttle.target = calibration.esc[ESC_DETENT_MAX];
+                throttle_set_target(calibration.esc[ESC_DETENT_MAX]);
                 // If we need to return to auto mode after launch, do so after a delay
                 if (afterLaunch == MODE_AUTO) {
                     callback_in_ms(AUTO_ENGAGE_DELAY_S * 1000, return_to_mode, NULL);
@@ -79,12 +79,12 @@ void launch_update() {
                 default:
                     // For all other modes, await user input to switch back
                     if (USER_INPUTTING()) {
-                        aircraft.change_to(afterLaunch);
+                        aircraft_change_mode(afterLaunch);
                         return;
                     }
                     break;
             }
     }
     flight_update(0.0, (f64)climbAngle, 0.0, false);
-    throttle.update();
+    throttle_update();
 }

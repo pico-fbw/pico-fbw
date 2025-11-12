@@ -62,7 +62,7 @@ static bool wait_for_axis(IMUAxis axis, u32 breakpoint, u32 timeout_ms) {
 }
 
 i32 api_test_imu(const char *args) {
-    if (aircraft.imuSafe) {
+    if (aircraft_is_imu_safe()) {
         return 500;
     }
     printpre("test", "awaiting right roll...");

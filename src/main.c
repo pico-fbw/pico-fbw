@@ -44,7 +44,7 @@ int main() {
         // This is done now because minimum peripherals have been initialized,
         // but not more complex ones that could be causing the watchdog reboots
         sys_boot_end();
-        aircraft.change_to(MODE_DIRECT);
+        aircraft_change_mode(MODE_DIRECT);
         while (true) {
             runtime_loop_minimal();
         }

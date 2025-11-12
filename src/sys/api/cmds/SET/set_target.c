@@ -63,7 +63,7 @@ static bool parse_args(const char *args, f32 *roll, f32 *pitch, f32 *yaw, f32 *t
 // {"roll":number,"pitch":number,"yaw":number,"throttle":number}
 
 i32 api_set_target(const char *in, char **out) {
-    if (aircraft.mode != MODE_NORMAL) {
+    if (aircraft_get_mode() != MODE_NORMAL) {
         return 403;
     }
     f32 roll, pitch, yaw, throttle;

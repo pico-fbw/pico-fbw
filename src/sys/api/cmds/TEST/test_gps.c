@@ -15,7 +15,7 @@ i32 api_test_gps(const char *args) {
     if (!gps.is_supported()) {
         return 403;
     }
-    if (!aircraft.gpsSafe) {
+    if (!aircraft_is_gps_safe()) {
         return 500;
     }
     printpre("test",

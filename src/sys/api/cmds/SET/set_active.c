@@ -50,7 +50,7 @@ i32 api_set_active(const char *in, char **out) {
     if (!in) {
         return 400;
     }
-    if (aircraft.mode == MODE_AUTO) {
+    if (aircraft_get_mode() == MODE_AUTO) {
         return 403;
     }
     char *name;

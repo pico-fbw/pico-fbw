@@ -32,7 +32,7 @@ static JSON_Value *create_gps_obj() {
         return NULL;
     }
     JSON_Object *obj = json_value_get_object(gpsObj);
-    if (aircraft.gpsSafe && gps.is_supported()) {
+    if (aircraft_is_gps_safe() && gps.is_supported()) {
         json_object_set_number(obj, "lat", gps.lat);
         json_object_set_number(obj, "lng", gps.lng);
         json_object_set_number(obj, "alt", gps.alt);
@@ -65,7 +65,7 @@ static JSON_Value *create_imu_obj() {
         return NULL;
     }
     JSON_Object *obj = json_value_get_object(imuObj);
-    if (aircraft.imuSafe) {
+    if (aircraft_is_imu_safe()) {
         json_object_set_number(obj, "roll", imu.roll);
         json_object_set_number(obj, "pitch", imu.pitch);
         json_object_set_number(obj, "yaw", imu.yaw);

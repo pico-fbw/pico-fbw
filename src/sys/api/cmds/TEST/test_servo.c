@@ -47,7 +47,7 @@ static u32 parse_args(const char *args, i16 servos[]) {
 // {"servos":[number,...]}
 
 i32 api_test_servo(const char *args) {
-    if (aircraft.mode != MODE_DIRECT) {
+    if (aircraft_get_mode() != MODE_DIRECT) {
         return 403;
     }
 
