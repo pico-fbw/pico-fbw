@@ -5,6 +5,9 @@
 
 #pragma once
 
+// TODO: refactor (along w/ logging system) to be less messy and more understanbale
+// rename printDefs, shouldPrint, printFbw to actually make sense
+
 // This is a header-only file that simply wraps printf with correct format and debug settings.
 
 #include <stdbool.h>

@@ -6,6 +6,8 @@
 import { useEffect, useState } from "preact/hooks";
 import { ChevronLeftOutline, ChevronRightOutline, Cog6ToothOutline } from "preact-heroicons";
 
+import { Spinner } from "elements/Spinner";
+
 import { api } from "helpers/api";
 import { GET_CONFIG } from "helpers/apiTypes";
 
@@ -24,13 +26,11 @@ export default function ConfigStep({ onNext, onBack, setError }: ConfigStepProps
 
     useEffect(() => {
         api("get/config")
-            .then((response) => {
+            .then(response => {
                 setConfig(response);
-                const general = response.sections.find((s) => s.name === "General");
+                const general = response.sections.find(s => s.name === "General");
                 if (general) {
                     const controlMode = Number(general.values[0]);
-                    console.log(general.values);
-                    console.log("controlMode:", controlMode);
                     // Map control mode to aircraft type and autothrottle
                     if (controlMode === 0 || controlMode === 1) {
                         setAircraftType("conventional");
@@ -46,7 +46,7 @@ export default function ConfigStep({ onNext, onBack, setError }: ConfigStepProps
                 }
                 setLoading(false);
             })
-            .catch((e) => {
+            .catch(e => {
                 setError(`Failed to load configuration: ${e.message}`);
                 setLoading(false);
             });
@@ -79,12 +79,7 @@ export default function ConfigStep({ onNext, onBack, setError }: ConfigStepProps
     };
 
     if (loading) {
-        return (
-            <div className="max-w-2xl mx-auto px-4 py-8 text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500 mx-auto"></div>
-                <p className="text-gray-400 mt-4">Loading configuration...</p>
-            </div>
-        );
+        return <Spinner>Loading configuration...</Spinner>;
     }
 
     return (
@@ -102,7 +97,7 @@ export default function ConfigStep({ onNext, onBack, setError }: ConfigStepProps
                         <span className="text-gray-300">I have a</span>
                         <select
                             value={aircraftType}
-                            onChange={(e) => setAircraftType(e.currentTarget.value as any)}
+                            onChange={e => setAircraftType(e.currentTarget.value as any)}
                             className="inline-flex px-4 py-2 rounded-md border-0 bg-gray-700 text-white shadow-sm ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-inset focus:ring-sky-500 font-semibold"
                         >
                             <option value="conventional">conventional</option>
@@ -117,7 +112,7 @@ export default function ConfigStep({ onNext, onBack, setError }: ConfigStepProps
                         <span className="text-gray-300">I</span>
                         <select
                             value={autothrottle ? "do" : "dont"}
-                            onChange={(e) => setAutothrottle(e.currentTarget.value === "do")}
+                            onChange={e => setAutothrottle(e.currentTarget.value === "do")}
                             className="inline-flex px-4 py-2 rounded-md border-0 bg-gray-700 text-white shadow-sm ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-inset focus:ring-sky-500 font-semibold"
                         >
                             <option value="do">do</option>
@@ -131,7 +126,7 @@ export default function ConfigStep({ onNext, onBack, setError }: ConfigStepProps
                         <span className="text-gray-300">and my flight mode switch has</span>
                         <select
                             value={switchType}
-                            onChange={(e) => setSwitchType(e.currentTarget.value as any)}
+                            onChange={e => setSwitchType(e.currentTarget.value as any)}
                             className="inline-flex px-4 py-2 rounded-md border-0 bg-gray-700 text-white shadow-sm ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-inset focus:ring-sky-500 font-semibold"
                         >
                             <option value="two">two</option>
@@ -142,9 +137,7 @@ export default function ConfigStep({ onNext, onBack, setError }: ConfigStepProps
                 </div>
 
                 <div className="mt-6 pt-6 border-t border-gray-700">
-                    <p className="text-sm text-gray-400">
-                        You can always change these settings later.
-                    </p>
+                    <p className="text-sm text-gray-400">You can always change these settings later.</p>
                 </div>
             </div>
 

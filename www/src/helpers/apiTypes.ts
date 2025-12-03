@@ -34,9 +34,9 @@ export type GET_INFO = {
 export type GET_INPUT = {
     ail: number;
     ele: number;
+    switch: number;
     rud?: number;
     thr?: number;
-    switch?: number;
 };
 export type GET_LOGS = {
     logs: {

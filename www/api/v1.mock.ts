@@ -142,11 +142,11 @@ export default (): MockHandler[] => [
         pattern: "/api/v1/get/input",
         handle: (req, res) => {
             send_data(res, {
-                ail: 0,
-                ele: 0,
-                rud: 0,
-                thr: 0,
-                switch: 0,
+                ail: 90,
+                ele: 90,
+                rud: 90,
+                thr: 50,
+                switch: 90,
             });
         },
     },

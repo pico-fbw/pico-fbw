@@ -3,6 +3,8 @@
  * Licensed under the MIT License
  */
 
+// [ ] Delete confirmation dialog
+
 import { DocumentOutline } from "preact-heroicons";
 import { useLocation } from "wouter-preact";
 

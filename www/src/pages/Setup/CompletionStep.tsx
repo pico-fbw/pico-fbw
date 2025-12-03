@@ -44,16 +44,14 @@ export default function CompletionStep() {
                         <CheckCircleOutline className="h-6 w-6 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
                         <div>
                             <p className="text-white font-medium">Perform a ground test</p>
-                            <p className="text-sm text-gray-400">
-                                Test your controls and sensors before taking flight
-                            </p>
+                            <p className="text-sm text-gray-400">Test your controls and sensors before taking flight</p>
                         </div>
                     </li>
                 </ul>
             </div>
 
             <Link
-                to="/dashboard"
+                to="/"
                 onClick={() => settings.set("setupComplete", "true")}
                 className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-sky-600 hover:bg-sky-700 transition-colors duration-150"
             >

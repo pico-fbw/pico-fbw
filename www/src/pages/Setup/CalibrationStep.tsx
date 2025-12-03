@@ -7,6 +7,8 @@ import { useEffect, useState } from "preact/hooks";
 import { ChevronLeftOutline, ChevronRightOutline, BeakerOutline } from "preact-heroicons";
 
 import Alert from "elements/Alert";
+import { Spinner } from "elements/Spinner";
+
 import { api } from "helpers/api";
 import { GET_SENSOR } from "helpers/apiTypes";
 
@@ -21,7 +23,6 @@ export default function CalibrationStep({ onNext, onBack, setError }: Calibratio
     const [sensorData, setSensorData] = useState<GET_SENSOR | null>(null);
     const [calibrating, setCalibrating] = useState(false);
     const [calibrationStep, setCalibrationStep] = useState(0);
-    const [loading, setLoading] = useState(true);
 
     const calibrationSteps = [
         {
@@ -47,15 +48,7 @@ export default function CalibrationStep({ onNext, onBack, setError }: Calibratio
     ];
 
     useEffect(() => {
-        api("get/sensor", { data: "all" })
-            .then((response) => {
-                setSensorData(response);
-                setLoading(false);
-            })
-            .catch((e) => {
-                setError(`Failed to read sensors: ${e.message}`);
-                setLoading(false);
-            });
+        api("get/sensor", { data: "all" }).then(setSensorData).catch(console.log);
     }, []);
 
     const startCalibration = () => {
@@ -69,17 +62,12 @@ export default function CalibrationStep({ onNext, onBack, setError }: Calibratio
         } else {
             // Calibration complete
             setCalibrating(false);
-            // In a real implementation, this would trigger the actual calibration via API
+            // TODO: when implemented, trigger calibration via API
         }
     };
 
-    if (loading) {
-        return (
-            <div className="max-w-2xl mx-auto px-4 py-8 text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500 mx-auto"></div>
-                <p className="text-gray-400 mt-4">Checking sensors...</p>
-            </div>
-        );
+    if (!sensorData) {
+        return <Spinner>Checking sensors...</Spinner>;
     }
 
     const imuAvailable = sensorData.imu.roll !== null;
@@ -93,7 +81,7 @@ export default function CalibrationStep({ onNext, onBack, setError }: Calibratio
             </div>
 
             {!imuAvailable && (
-                <Alert type="warning" onClose={() => {}} className="mb-6">
+                <Alert type="warning" className="mb-6">
                     IMU sensors not detected. Please check your sensor connections and restart the system.
                 </Alert>
             )}
@@ -117,7 +105,7 @@ export default function CalibrationStep({ onNext, onBack, setError }: Calibratio
                             <div className="bg-gray-900 rounded p-4">
                                 <p className="text-sm text-gray-400 mb-1">GPS</p>
                                 <p className="text-lg font-semibold text-white">
-                                    {sensorData?.gps && sensorData.gps.lat !== null ? (
+                                    {sensorData.gps && sensorData.gps.lat !== null ? (
                                         <span className="text-green-500">✓ Connected</span>
                                     ) : (
                                         <span className="text-yellow-500">○ Optional</span>
@@ -164,9 +152,7 @@ export default function CalibrationStep({ onNext, onBack, setError }: Calibratio
                                 />
                             </div>
                         </div>
-                        <h3 className="text-xl font-bold text-white mb-2">
-                            {calibrationSteps[calibrationStep].title}
-                        </h3>
+                        <h3 className="text-xl font-bold text-white mb-2">{calibrationSteps[calibrationStep].title}</h3>
                         <p className="text-gray-300 mb-6">{calibrationSteps[calibrationStep].instruction}</p>
                         <button
                             onClick={nextCalibrationStep}

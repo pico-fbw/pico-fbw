@@ -3,7 +3,13 @@
  * Licensed under the MIT License
  */
 
-import { ChevronRightOutline, PaperAirplaneOutline, UserCircleOutline, Cog6ToothOutline, BeakerOutline } from "preact-heroicons";
+import {
+    ChevronRightOutline,
+    PaperAirplaneOutline,
+    UserCircleOutline,
+    Cog6ToothOutline,
+    BeakerOutline,
+} from "preact-heroicons";
 
 interface WelcomeStepProps {
     onNext: () => void;

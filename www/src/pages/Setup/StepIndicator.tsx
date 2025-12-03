@@ -30,7 +30,9 @@ export default function StepIndicator({ numSteps, currentStep }: StepIndicatorPr
                             // Current step
                             <div className="flex items-center">
                                 <div className="relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-sky-600 bg-gray-800 transition-all duration-300 scale-110 shadow-lg shadow-sky-500/20">
-                                    <span className="text-sky-600 font-semibold text-sm animate-in zoom-in duration-300">{index + 1}</span>
+                                    <span className="text-sky-600 font-semibold text-sm animate-in zoom-in duration-300">
+                                        {index + 1}
+                                    </span>
                                 </div>
                                 {index !== numSteps - 1 && (
                                     <div className="absolute top-4 left-8 w-5 h-0.5 bg-gray-600 transition-all duration-500" />

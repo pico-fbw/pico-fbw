@@ -43,7 +43,7 @@ export default function UserInfoStep({ onNext, onBack }: UserInfoStepProps) {
                     id="pilotName"
                     type="text"
                     value={pilotName}
-                    onInput={(e) => setPilotName((e.target as HTMLInputElement).value)}
+                    onInput={e => setPilotName((e.target as HTMLInputElement).value)}
                     placeholder="Enter your name"
                     className={`block w-full rounded-md border-0 bg-gray-700 px-4 py-3 text-white shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-sky-500 sm:text-sm sm:leading-6 transition-all ${isShaking ? "animate-[shake_0.5s_ease-in-out]" : ""}`}
                 />
@@ -54,9 +54,7 @@ export default function UserInfoStep({ onNext, onBack }: UserInfoStepProps) {
                         20%, 40%, 60%, 80% { transform: translateX(8px); }
                     }
                 `}</style>
-                <p className="mt-2 text-sm text-gray-400">
-                    This will be used to identify you across the system.
-                </p>
+                <p className="mt-2 text-sm text-gray-400">This will be used to identify you across the system.</p>
             </div>
 
             <div className="flex justify-between">

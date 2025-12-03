@@ -15,7 +15,7 @@ import {
 
 import Alert from "elements/Alert";
 import Sidebar, { SidebarNavigation } from "elements/Sidebar";
-import Spinner from "elements/Spinner";
+import { FullPageSpinner } from "./Spinner";
 
 const sidebarNav: SidebarNavigation[] = [
     { name: "Dashboard", to: "/dashboard", icon: PaperAirplaneOutline },
@@ -35,7 +35,15 @@ interface ContentBlockProps {
 }
 
 // The ContentBlock is a wrapper for the content of a page, which provides a sidebar for navigation.
-export default function ContentBlock({ title, loading, error, setError, ignoreSwipe, noSidebar, children }: ContentBlockProps) {
+export default function ContentBlock({
+    title,
+    loading,
+    error,
+    setError,
+    ignoreSwipe,
+    noSidebar,
+    children,
+}: ContentBlockProps) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     // Wrap in some swipe handlers to conveniently open/close the sidebar on touchscreen devices
@@ -64,11 +72,11 @@ export default function ContentBlock({ title, loading, error, setError, ignoreSw
                 </div>
             )}
             {/* Sidebar */}
-            {!noSidebar &&
-                <Sidebar navigation={sidebarNav} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-            }
+            {!noSidebar && <Sidebar navigation={sidebarNav} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />}
             {/* Main content */}
-            <div className={`${noSidebar ? "" : "lg:pl-72"} h-full`}>{loading ? <Spinner /> : <div>{children}</div>}</div>
+            <div className={`${noSidebar ? "" : "lg:pl-72"} h-full`}>
+                {loading ? <FullPageSpinner /> : <div>{children}</div>}
+            </div>
         </div>
     );
 }

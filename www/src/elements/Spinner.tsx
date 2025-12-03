@@ -17,7 +17,7 @@ const splashTexts = [
     "Calibrating instruments...",
 ];
 
-const Spinner = () => {
+export function FullPageSpinner() {
     const splashText = useMemo(() => {
         return splashTexts[Math.floor(Math.random() * splashTexts.length)];
     }, []);
@@ -30,6 +30,13 @@ const Spinner = () => {
             </div>
         </div>
     );
-};
+}
 
-export default Spinner;
+export function Spinner({ children }: { children?: string }) {
+    return (
+        <div className="max-w-2xl mx-auto px-4 py-8 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500 mx-auto" />
+            <p className="text-gray-400 mt-4">{children}</p>
+        </div>
+    );
+}
