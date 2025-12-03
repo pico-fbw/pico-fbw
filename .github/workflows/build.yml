@@ -17,7 +17,7 @@ env:
   # Debug build will enable more useful warnings
   BUILD_TYPE: Debug
   PICO_SDK_PATH: ${{github.workspace}}/pico-sdk
-  ESP_IDF_VERSION: v5.4.1
+  ESP_IDF_VERSION: v5.5.1
 
 jobs:
   embedded:
@@ -58,7 +58,7 @@ jobs:
 
     - name: Prepare (pico)
       if: matrix.PLATFORM == 'pico' || matrix.platform == 'pico2' || matrix.PLATFORM == 'pico_w'
-      uses: Fortinbra/RaspberryPiPicoBuild@v4
+      uses: Fortinbra/RaspberryPiPicoBuild@v8
     
     - name: Prepare (esp)
       if: matrix.PLATFORM == 'esp32'
