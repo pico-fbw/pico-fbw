@@ -7,6 +7,7 @@
 #include "esp_timer.h" // https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32/api-reference/system/esp_timer.html
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "rom/ets_sys.h"
 
 #include "platform/time.h"
 
@@ -79,8 +80,7 @@ void sleep_us_blocking(u64 us) {
         // Delay the current task by allowing other tasks to run
         vTaskDelay(delay);
     } else {
-        // Too short to use FreeRTOS, use hardware sleep instead
-        esp_sleep_enable_timer_wakeup(us);
-        esp_light_sleep_start();
+        // Too short to use FreeRTOS, busy wait instead
+        ets_delay_us(us);
     }
 }

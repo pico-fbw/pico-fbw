@@ -23,10 +23,14 @@ interface SwipeOutput {
  * @returns the swipe gesture handlers
  */
 export default ({ onSwipedLeft, onSwipedRight }: SwipeInput): SwipeOutput => {
+    // Touch position state
     const touchStartX = useRef(0);
     const touchEndX = useRef(0);
     const touchStartY = useRef(0);
     const touchEndY = useRef(0);
+    // Multitouch state
+    const touches = useRef(0);
+    const cancelled = useRef(false);
 
     const minSwipeDistance = 50;
 
@@ -35,6 +39,10 @@ export default ({ onSwipedLeft, onSwipedRight }: SwipeInput): SwipeOutput => {
         touchEndY.current = 0;
         touchStartX.current = e.targetTouches[0].clientX;
         touchStartY.current = e.targetTouches[0].clientY;
+        touches.current++;
+        if (touches.current > 1) {
+            cancelled.current = true;
+        }
     };
 
     const onTouchMove = (e: TouchEvent) => {
@@ -43,6 +51,13 @@ export default ({ onSwipedLeft, onSwipedRight }: SwipeInput): SwipeOutput => {
     };
 
     const onTouchEnd = () => {
+        touches.current--;
+        if (cancelled.current) {
+            if (touches.current === 0) {
+                cancelled.current = false;
+            }
+            return;
+        }
         if (!touchStartX.current || !touchEndX.current) {
             return;
         }

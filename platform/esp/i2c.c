@@ -125,8 +125,7 @@ bool i2c_read(i16 sda, i16 scl, byte addr, byte reg, byte dest[], size_t len) {
     if (!device) {
         return false;
     }
-    // The ESP-IDF function subtracts 1 from the read length and I have no clue why...
-    return i2c_master_transmit_receive(device->handle, &reg, sizeof(reg), dest, len + 1, I2C_TIMEOUT_MS) == ESP_OK;
+    return i2c_master_transmit_receive(device->handle, &reg, sizeof(reg), dest, len, I2C_TIMEOUT_MS) == ESP_OK;
 }
 
 bool i2c_write(i16 sda, i16 scl, byte addr, byte reg, const byte src[], size_t len) {
@@ -138,5 +137,5 @@ bool i2c_write(i16 sda, i16 scl, byte addr, byte reg, const byte src[], size_t l
     byte cmd[len + 1];
     cmd[0] = reg;
     memcpy(cmd + 1, src, len);
-    return i2c_master_transmit(device->handle, cmd, len, I2C_TIMEOUT_MS) == ESP_OK;
+    return i2c_master_transmit(device->handle, cmd, len + 1, I2C_TIMEOUT_MS) == ESP_OK;
 }

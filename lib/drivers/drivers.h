@@ -1,6 +1,5 @@
 #pragma once
 
-#include <stdbool.h>
 #include "platform/types.h"
 
 #include "sys/configuration.h"
@@ -81,10 +80,8 @@ bool init_driver(const FusionDevice *device, FusionDriver *driver, const char *n
  */
 void deinit_driver(const FusionDevice *device, FusionDriver *driver, const char *name);
 
-extern const FusionDevice bme280;
-extern const FusionDevice bmi270;
-extern const FusionDevice bmi323;
-extern const FusionDevice bmm350;
+extern FusionDevice bme280;
+extern FusionDevice bmi323;
 
-extern const FusionDevice *fusionDevices[];
+extern FusionDevice *fusionDevices[];
 extern const u32 numFusionDevices;

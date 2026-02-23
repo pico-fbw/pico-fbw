@@ -1,6 +1,5 @@
 #pragma once
 
-#include <stdbool.h>
 #include "platform/types.h"
 
 #define GPS_COMMAND_TYPE_MIN GPS_COMMAND_TYPE_NONE

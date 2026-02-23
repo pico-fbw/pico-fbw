@@ -211,7 +211,7 @@ FusionDriver bme280_driver = {
     .read = bme280_read,
     .destroy = bme280_destroy,
 };
-const FusionDevice bme280 = {
+FusionDevice bme280 = {
     .baro = &bme280_driver,
     .name = "BME280",
 };

@@ -142,6 +142,14 @@ typedef enum CalibrationESC {
 
 typedef enum CalibrationIMU {
     IMU_CALIBRATED,
+    // Gyroscope bias calibration (deg/s)
+    IMU_GYRO_BIAS_X,
+    IMU_GYRO_BIAS_Y,
+    IMU_GYRO_BIAS_Z,
+    // Accelerometer offset calibration (g)
+    IMU_ACCEL_OFFSET_X,
+    IMU_ACCEL_OFFSET_Y,
+    IMU_ACCEL_OFFSET_Z,
 } CalibrationIMU;
 
 typedef enum CalibrationPID {

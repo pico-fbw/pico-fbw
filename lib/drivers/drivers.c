@@ -11,11 +11,9 @@
 #include "drivers.h"
 
 // Master device list; devices are defined in their respective driver source files
-const FusionDevice *fusionDevices[] = {
+FusionDevice *fusionDevices[] = {
     &bme280,
-    &bmi270,
     &bmi323,
-    &bmm350,
 };
 const u32 numFusionDevices = count_of(fusionDevices);
 

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <stdbool.h>
 #include "platform/types.h"
 
 // TODO: finish tuning these

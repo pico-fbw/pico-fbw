@@ -4,7 +4,6 @@
 extern "C" {
 #endif
 
-#include <stdbool.h>
 #include "platform/types.h"
 
 #if SIMCONNECT

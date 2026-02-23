@@ -32,12 +32,12 @@
 #define BMI323_RESET_TRIGGER 0xDEAF
 #define BMI323_ACC_RANGE_8G 0x02
 #define BMI323_GYR_RANGE_125 0x04
-#define BMI323_GYR_RANGE_2000 0x00
+#define BMI323_GYR_RANGE_500 0x02
 
-// ±8g is default acc range
+// Using ±8g acc range
 #define BMI323_RAW_TO_G(x) ((2 << BMI323_ACC_RANGE_8G) / 32768.f) * (x)
-// ±2000dps is default gyro range
-#define BMI323_RAW_TO_DPS(x) ((125 * (1 << (BMI323_GYR_RANGE_125 - BMI323_GYR_RANGE_2000))) / 32768.f) * (x)
+// Using ±2000dps gyro range
+#define BMI323_RAW_TO_DPS(x) ((125 * (1 << (BMI323_GYR_RANGE_125 - BMI323_GYR_RANGE_500))) / 32768.f) * (x)
 
 bool bmi323_exists(FusionDriver *self) {
     // Read 4 bytes (2 dummy bytes + ID register)
@@ -66,31 +66,33 @@ bool bmi323_init(FusionDriver *self) {
     // Reset device
     success &= i2c_write_word(ASDA, ASCL, self->addr, BMI323_REG_CMD, BMI323_RESET_TRIGGER);
     sleep_ms_blocking(2);
-    // Enable acc and gyro in normal mode
-    success &= i2c_write_bits_word(ASDA, ASCL, self->addr, BMI323_REG_ACC_CONF, 0b0111000000000000, 0x04 << 12);
-    success &= i2c_write_bits_word(ASDA, ASCL, self->addr, BMI323_REG_GYR_CONF, 0b0111000000000000, 0x04 << 12);
+    // Accel: high performance mode, no averaging, filtering to ODR/4, ±8g range, 200hz ODR
+    success &= i2c_write_word(ASDA, ASCL, self->addr, BMI323_REG_ACC_CONF, 0b0111000010101001);
+    // Gyro: high performance mode, no averaging, filtering to ODR/4, ±500dps range, 200hz ODR
+    success &= i2c_write_word(ASDA, ASCL, self->addr, BMI323_REG_GYR_CONF, 0b0111000010101001);
     return success;
 }
 
 bool bmi323_read_acc(FusionDriver *self, f32 data[]) {
-    byte raw[6];
+    byte raw[8]; // 2 dummy bytes + 3 words (6 bytes)
     if (!i2c_read(ASDA, ASCL, self->addr, BMI323_REG_ACC_X, raw, sizeof(raw))) {
         return false;
     }
-    data[0] = BMI323_RAW_TO_G((i16)(raw[1] << 8 | raw[0]));
-    data[1] = BMI323_RAW_TO_G((i16)(raw[3] << 8 | raw[2]));
-    data[2] = BMI323_RAW_TO_G((i16)(raw[5] << 8 | raw[4]));
+    // Convert raw data to signed 16-bit and then to g's
+    data[0] = BMI323_RAW_TO_G((i16)(raw[3] << 8 | raw[2]));
+    data[1] = BMI323_RAW_TO_G((i16)(raw[5] << 8 | raw[4]));
+    data[2] = BMI323_RAW_TO_G((i16)(raw[7] << 8 | raw[6]));
     return true;
 }
 
 bool bmi323_read_gyro(FusionDriver *self, f32 data[]) {
-    byte raw[6];
+    byte raw[8];
     if (!i2c_read(ASDA, ASCL, self->addr, BMI323_REG_GYR_X, raw, sizeof(raw))) {
         return false;
     }
-    data[0] = BMI323_RAW_TO_DPS((i16)(raw[1] << 8 | raw[0]));
-    data[1] = BMI323_RAW_TO_DPS((i16)(raw[3] << 8 | raw[2]));
-    data[2] = BMI323_RAW_TO_DPS((i16)(raw[5] << 8 | raw[4]));
+    data[0] = BMI323_RAW_TO_DPS((i16)(raw[3] << 8 | raw[2]));
+    data[1] = BMI323_RAW_TO_DPS((i16)(raw[5] << 8 | raw[4]));
+    data[2] = BMI323_RAW_TO_DPS((i16)(raw[7] << 8 | raw[6]));
     return true;
 }
 
@@ -104,7 +106,7 @@ FusionDriver bmi323_gyro = {
     .init = bmi323_init,
     .read = bmi323_read_gyro,
 };
-const FusionDevice bmi323 = {
+FusionDevice bmi323 = {
     .acc = &bmi323_acc,
     .gyro = &bmi323_gyro,
     .name = "BMI323",

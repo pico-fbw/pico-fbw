@@ -1,6 +1,5 @@
 #pragma once
 
-#include <stdbool.h>
 #include "platform/types.h"
 
 #define CTRLMODE_MIN CTRLMODE_3AXIS_ATHR

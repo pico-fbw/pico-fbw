@@ -8,6 +8,7 @@ import { useEffect, useState } from "preact/hooks";
 import ContentBlock from "elements/ContentBlock";
 
 import SystemStatus from "./SystemStatus";
+import OrientationVisualization from "./OrientationVisualization";
 import TransmitterDisplay from "./TransmitterDisplay";
 
 import { api } from "helpers/api";
@@ -71,7 +72,8 @@ export default function Dashboard() {
                         <TransmitterDisplay inputData={inputData} config={config} />
                     </div>
                     <div className="bg-gray-800 rounded-lg p-6 h-full">
-                        <h2 className="text-xl font-bold text-white mb-6">TODO</h2>
+                        <h2 className="text-xl font-bold text-white mb-6">Flight Deck</h2>
+                        <OrientationVisualization sensorData={sensorData} />
                     </div>
                 </div>
             </div>

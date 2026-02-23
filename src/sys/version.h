@@ -1,6 +1,5 @@
 #pragma once
 
-#include <stdbool.h>
 #include "platform/types.h"
 
 #ifndef PICO_FBW_VERSION // Should be defined in the root CMakeLists.txt
