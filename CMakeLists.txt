@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
+set(PROJECT_NAME "pico-fbw")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake") # Include custom cmake modules
 
 if (NOT CMAKE_BUILD_TYPE)
@@ -31,7 +32,7 @@ message("Building for platform '${FBW_PLATFORM}'")
 include(${PLATFORM_CMAKE_PATH})
 
 # Define the project, the languages it uses, and the version
-project(pico-fbw LANGUAGES C)
+project(${PROJECT_NAME} LANGUAGES C)
 set(CMAKE_C_STANDARD 11)
 set(PICO_FBW_VERSION "1.0.0-alpha.4")
 add_compile_definitions(PICO_FBW_VERSION="${PICO_FBW_VERSION}")
