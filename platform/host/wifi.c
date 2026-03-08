@@ -153,7 +153,7 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
         handle_api_v1_request(c, hm, api_set_active);
     } else if (mg_match(hm->uri, mg_str("/api/v1/set/bay"), NULL)) {
         handle_api_v1_request(c, hm, api_set_bay);
-    } else if (mg_match(hm->uri, mg_str("/api/v1/set/calibration")) {
+    } else if (mg_match(hm->uri, mg_str("/api/v1/set/calibration"), NULL)) {
         handle_api_v1_request(c, hm, api_set_calibration);
     } else if (mg_match(hm->uri, mg_str("/api/v1/set/config"), NULL)) {
         handle_api_v1_request(c, hm, api_set_config);
