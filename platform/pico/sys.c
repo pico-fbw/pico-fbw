@@ -4,8 +4,8 @@
  */
 
 #include <assert.h>
+#include "pico.h"
 #include "pico/bootrom.h"
-#include "pico/config.h"
 #include "pico/platform.h"
 #include "pico/stdio.h"
 #ifdef RASPBERRYPI_PICO_W

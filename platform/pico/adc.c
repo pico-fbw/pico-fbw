@@ -9,7 +9,7 @@
 
 // clang-format off
 
-#include "pico/config.h"
+#include "pico.h"
 #include "hardware/adc.h"
 
 #include "platform/gpio.h"

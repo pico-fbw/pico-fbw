@@ -1,7 +1,7 @@
 #pragma once
 
+#include "pico.h" // For platform-specific defines (e.g. RASPBERRYPI_PICO_W)
 #include "pico/binary_info.h"
-#include "pico/config.h" // For platform-specific defines (e.g. RASPBERRYPI_PICO_W)
 #include "pico/time.h"
 
 #include "platform/types.h"

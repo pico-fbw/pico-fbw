@@ -20,7 +20,7 @@
 
 #include <string.h>
 #include "lwip/ip_addr.h"
-#include "pico/config.h"
+#include "pico.h"
 #ifdef RASPBERRYPI_PICO_W
     #include "pico/cyw43_arch.h"
 #else

@@ -3,8 +3,7 @@
  * Licensed under the MIT License
  */
 
-#include "pico/config.h"
-
+#include "pico.h"
 #ifdef RASPBERRYPI_PICO_W
     #include <stdio.h>
     #include "pico/cyw43_arch.h"
