@@ -7,6 +7,7 @@
 #include "platform/time.h"
 #include "platform/wifi.h"
 
+#include "io/esc.h"
 #include "io/gps.h"
 #include "io/imu.h"
 #include "io/receiver.h"
@@ -82,6 +83,10 @@ static void deinit_mode(Mode mode) {
  */
 static bool try_launch_assist(Mode next_mode) {
     if (!(bool)config.general[GENERAL_LAUNCHASSIST_ENABLED]) {
+        return false;
+    }
+    if (!esc_is_calibrated()) {
+        printsys(aircraft, "WARNING: ESCs are not calibrated, cannot use launch assist");
         return false;
     }
     printsys(aircraft, "initiating launch assist");

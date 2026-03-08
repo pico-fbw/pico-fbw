@@ -11,6 +11,7 @@
 i32 api_help(const char *args) {
     printraw("\npico-fbw API v%s\n"
              "Commands:\n"
+             "GET_CALIBRATION - Get the current calibration status of a system\n"
              "GET_CONFIG - Get system configuration value(s)\n"
              "GET_FLIGHTPLAN - Get raw flightplan data\n"
              "GET_INFO - Get system information\n"
@@ -19,6 +20,7 @@ i32 api_help(const char *args) {
              "GET_MODE - Get the current flight mode\n"
              "GET_SENSOR - Get sensor data\n"
              "SET_BAY - Set the current position of the drop bay\n"
+             "SET_CALIBRATION - Initiate the calibration process for a system\n"
              "SET_CONFIG - Set system configuration value(s)\n"
              "SET_FLIGHTPLAN - Set raw flightplan data\n"
              "SET_MODE - Set the current flight mode\n"

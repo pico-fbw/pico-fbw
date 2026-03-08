@@ -5,8 +5,6 @@
 
 // TODO: refactor, shorten functions etc.
 // bring out into other files?
-// TODO: for systems with wifi, maybe wait for confirmation of connection so that
-// calibrations can be done in sync with webui
 
 #include <assert.h>
 #include <string.h>
@@ -81,44 +79,23 @@ void boot_do_updates() {
 }
 
 void boot_init_receiver() {
-    u32 num_pins = 5; // Maximum amount is 5 pins, may be overridden
-    i16 pins[num_pins];
-    f32 deviations[num_pins];
-    receiver_get_pins(pins, &num_pins, deviations);
-    receiver_enable(pins, num_pins);
-    if (config.general[GENERAL_SKIP_CALIBRATION]) {
-        log_message(TYPE_WARNING, "Receiver calibration skipped!", 500, 0, false);
-        return;
-    }
-    printpre("boot", "validating receiver calibration");
-    ReceiverCalibrationStatus status = receiver_is_calibrated();
-    switch (status) {
-        case RECEIVERCALIBRATION_OK:
-            break;
-        case RECEIVERCALIBRATION_INVALID:
-            printpre("boot", "receiver calibration was completed for a different control mode!");
-            /* fall through */
-        default:
-        case RECEIVERCALIBRATION_INCOMPLETE:
-            printpre("boot", "receiver calibration not found!");
-            printpre("boot", "calibrating now...do not touch the transmitter!");
-            if (!receiver_calibrate(pins, num_pins, deviations, 2000, 2, 3) ||
-                receiver_is_calibrated() != RECEIVERCALIBRATION_OK) {
-                log_message(TYPE_FATAL, "Receiver calibration failed!", 500, 0, true);
-                return;
-            }
-            printpre("boot", "calibration successful!");
-            break;
+    u32 numPins = MAX_RECEIVER_PINS; // Maximum, will be overridden by receiver_get_pins()
+    i16 pins[numPins];
+    f32 deviations[numPins];
+    receiver_get_pins(pins, &numPins, deviations);
+    receiver_enable(pins, numPins);
+    if (receiver_is_calibrated() != RECEIVERCALIBRATION_OK) {
+        log_message(TYPE_ERROR, "Receiver not calibrated!", 500, 0, false);
     }
 }
 
 void boot_init_servos() {
-    u32 num_servos = 4; // Maximum is 4 servos, may be overridden
-    i16 servos[num_servos];
-    servo_get_pins(servos, &num_servos);
-    servo_enable(servos, num_servos);
+    u32 numServos = 4; // Maximum is 4 servos, may be overridden
+    i16 servos[numServos];
+    servo_get_pins(servos, &numServos);
+    servo_enable(servos, numServos);
     const f32 degrees[] = DEFAULT_SERVO_TEST;
-    servo_test(servos, num_servos, degrees, count_of(degrees), DEFAULT_SERVO_TEST_PAUSE_MS);
+    servo_test(servos, numServos, degrees, count_of(degrees), DEFAULT_SERVO_TEST_PAUSE_MS);
 }
 
 void boot_init_escs() {
@@ -126,25 +103,14 @@ void boot_init_escs() {
         return;
     }
     esc_enable((i16)config.pins[PINS_ESC_THROTTLE]);
-    if (config.general[GENERAL_SKIP_CALIBRATION]) {
-        log_message(TYPE_WARNING, "Throttle detent calibration skipped!", 500, 0, false);
-        return;
-    }
-    printpre("boot", "validating throttle detent calibration");
-    if (!esc_is_calibrated()) {
-        printpre("boot", "throttle detent calibration not found!");
-        printpre("boot", "calibrating now...do not touch the throttle!");
-        if (!esc_calibrate((i16)config.pins[PINS_ESC_THROTTLE])) {
-            log_message(TYPE_FATAL, "Throttle detent calibration failed!", 500, 0, true);
-            return;
-        }
-        printpre("boot", "throttle detent calibration successful!");
-    }
 }
 
 void boot_init_imu() {
     if (imu.init()) {
         printpre("boot", "IMU ok");
+        if (!imu.isCalibrated) {
+            log_message(TYPE_WARNING, "IMU not calibrated!", 1000, 0, false);
+        }
         return;
     }
     // If IMU is calibrated: severity level is only an error as we could be in flight and we want to finish the boot
@@ -155,20 +121,6 @@ void boot_init_imu() {
     severity = TYPE_ERROR;
 #endif
     log_message(severity, "IMU initialization failed!", 1000, 0, false);
-    if (config.general[GENERAL_SKIP_CALIBRATION]) {
-        log_message(TYPE_WARNING, "IMU calibration skipped!", 1000, 0, false);
-        return;
-    }
-    printpre("boot", "validating IMU calibration");
-    if (imu.isCalibrated) {
-        return;
-    }
-    printpre("boot", "IMU calibration not found!");
-    if (!imu.calibrate()) {
-        log_message(TYPE_FATAL, "IMU calibration failed!", 1000, 0, true);
-        return;
-    }
-    printpre("boot", "IMU calibration successful!");
 }
 
 void boot_init_gps() {

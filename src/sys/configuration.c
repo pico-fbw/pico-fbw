@@ -101,7 +101,13 @@ Calibration calibration = {
         false,
         10, 75, 90, // Default throttle detents
     },
-    .imu = {false},
+    .imu = {
+        false,
+        0, 0, 0, // Default gyro bias
+        0, 0, 0, // Default accel offset
+        0, 1, 2, // Default axis map (identity)
+        1, 1, 1, // Default axis signs
+    },
     .pid = {
         false,
         // TODO: tune throttle pid, keep checking others (they're mostly tuned already)
@@ -481,7 +487,7 @@ bool config_validate(char *error, size_t error_size) {
         return false;
     }
     // Throttle configuration validation
-    if (config.control[CONTROL_THROTTLE_SENSITIVITY] < 0.0f || config.control[CONTROL_THROTTLE_SENSITIVITY] > 1.0f) {
+    if (config.control[CONTROL_THROTTLE_SENSITIVITY] < 0.f || config.control[CONTROL_THROTTLE_SENSITIVITY] > 1.0f) {
         snprintf(error, error_size, "Throttle sensitivity must be between 0.0 and 1.0.");
         return false;
     }

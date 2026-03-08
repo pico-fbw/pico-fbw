@@ -17,7 +17,7 @@ env:
   # Debug build will enable more useful warnings
   BUILD_TYPE: Debug
   PICO_SDK_PATH: ${{github.workspace}}/pico-sdk
-  ESP_IDF_VERSION: v5.5.1
+  ESP_IDF_VERSION: v5.5.3
 
 jobs:
   embedded:
@@ -29,7 +29,7 @@ jobs:
 
     steps:
     - name: Checkout pico-fbw
-      uses: actions/checkout@v3
+      uses: actions/checkout@v6
       with:
         submodules: 'recursive'
 
@@ -40,7 +40,7 @@ jobs:
       run: npm install --global corepack@latest && corepack enable pnpm
 
     - name: Set up web build environment
-      uses: actions/setup-node@v4.0.4
+      uses: actions/setup-node@v6.2.0
       with:
         node-version: '22'
         cache: 'pnpm'
@@ -56,9 +56,18 @@ jobs:
           ~/.espressif
         key: ${{runner.os}}-esp-idf-${{hashFiles('.github/workflows/esp-idf_install.sh')}}-${{env.ESP_IDF_VERSION}}
 
+    - name: Install toolchain (pico)
+      if: matrix.PLATFORM == 'pico' || matrix.platform == 'pico2' || matrix.PLATFORM == 'pico_w'
+      uses: carlosperate/arm-none-eabi-gcc-action@v1.12.0
+
     - name: Prepare (pico)
       if: matrix.PLATFORM == 'pico' || matrix.platform == 'pico2' || matrix.PLATFORM == 'pico_w'
-      uses: Fortinbra/RaspberryPiPicoBuild@v8
+      uses: actions/checkout@v6
+      with:
+        repository: raspberrypi/pico-sdk
+        ref: 2.2.0
+        path: pico-sdk
+        submodules: 'true'
     
     - name: Prepare (esp)
       if: matrix.PLATFORM == 'esp32'
@@ -120,7 +129,7 @@ jobs:
 
     steps:
     - name: Checkout pico-fbw
-      uses: actions/checkout@v3
+      uses: actions/checkout@v6
       with:
         submodules: 'recursive'
 

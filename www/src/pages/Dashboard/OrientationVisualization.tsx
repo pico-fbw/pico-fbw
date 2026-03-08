@@ -8,14 +8,10 @@ import { GET_SENSOR } from "helpers/apiTypes";
 interface OrientationVisualizationProps {
     sensorData: GET_SENSOR | null;
 }
-interface AxisReadoutProps {
-    label: string;
-    value: number;
-}
 
-const PITCH_LIMIT = 45;
-const PITCH_PIXELS_PER_DEGREE = 1.4;
-const ATTITUDE_LADDER = [-30, -20, -10, 10, 20, 30];
+const PITCH_LIMIT = 20;
+const PITCH_PIXELS_PER_DEGREE = 2.8;
+const ATTITUDE_LADDER = [-15, -10, -5, 5, 10, 15];
 const COMPASS_CARDINALS = [
     { label: "N", angle: 0 },
     { label: "E", angle: 90 },
@@ -40,23 +36,7 @@ const polarToCartesian = (angle: number, radius: number) => {
     };
 };
 
-const formatAngle = (value: number, fractionDigits = 1) => {
-    if (!isFiniteNumber(value)) {
-        return "--";
-    }
-    return `${value.toFixed(fractionDigits)}°`;
-};
-
-function AxisReadout({ label, value }: AxisReadoutProps) {
-    return (
-        <div className="rounded-lg border border-gray-700 bg-gray-900/70 p-3 text-center">
-            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">{label}</p>
-            <p className="mt-1 text-lg font-semibold text-white">{formatAngle(value)}</p>
-        </div>
-    );
-}
-
-function AttitudeIndicator({ roll, pitch }: { roll: number; pitch: number }) {
+function ArtificialHorizon({ roll, pitch }: { roll: number; pitch: number }) {
     const boundedPitch = clamp(pitch, -PITCH_LIMIT, PITCH_LIMIT);
     const horizonOffset = boundedPitch * PITCH_PIXELS_PER_DEGREE;
 
@@ -69,7 +49,7 @@ function AttitudeIndicator({ roll, pitch }: { roll: number; pitch: number }) {
             </defs>
 
             <g clipPath="url(#attitude-clip)">
-                <g transform={`translate(100 100) rotate(${roll}) translate(0 ${horizonOffset})`}>
+                <g transform={`translate(100 100) rotate(${-roll}) translate(0 ${horizonOffset})`}>
                     <rect x="-220" y="-220" width="440" height="220" fill="#0369a1" />
                     <rect x="-220" y="0" width="440" height="220" fill="#92400e" />
                     <line x1="-220" y1="0" x2="220" y2="0" stroke="#e5e7eb" strokeWidth="2" />
@@ -77,15 +57,16 @@ function AttitudeIndicator({ roll, pitch }: { roll: number; pitch: number }) {
                     {ATTITUDE_LADDER.map(step => (
                         <line
                             key={step}
-                            x1="-40"
+                            x1={step % 10 === 0 ? -30 : -20}
                             y1={-step * PITCH_PIXELS_PER_DEGREE}
-                            x2="40"
+                            x2={step % 10 === 0 ? 30 : 20}
                             y2={-step * PITCH_PIXELS_PER_DEGREE}
                             stroke="#d1d5db"
                             strokeWidth="1"
                             opacity="0.75"
                         />
                     ))}
+                    <polygon points="0,-76 -6,-66 6,-66" fill="#d1d5db" />
                 </g>
             </g>
 
@@ -93,7 +74,6 @@ function AttitudeIndicator({ roll, pitch }: { roll: number; pitch: number }) {
             <line x1="58" y1="100" x2="90" y2="100" stroke="#f8fafc" strokeWidth="3" strokeLinecap="round" />
             <line x1="110" y1="100" x2="142" y2="100" stroke="#f8fafc" strokeWidth="3" strokeLinecap="round" />
             <circle cx="100" cy="100" r="3" fill="#f8fafc" />
-            <polygon points="100,24 94,34 106,34" fill="#38bdf8" />
         </svg>
     );
 }
@@ -139,7 +119,7 @@ function HeadingIndicator({ yaw }: { yaw: number }) {
                 })}
             </g>
 
-            <polygon points="100,22 94,34 106,34" fill="#38bdf8" />
+            <polygon points="100,22 94,34 106,34" fill="#4b5563" />
             <text x="100" y="104" textAnchor="middle" className="fill-white text-xl font-semibold">
                 {heading.toFixed(0)}°
             </text>
@@ -161,7 +141,7 @@ export default function OrientationVisualization({ sensorData }: OrientationVisu
         <div className="space-y-4">
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                 <div className="rounded-lg border border-gray-700 bg-gray-900/60 p-4">
-                    <AttitudeIndicator
+                    <ArtificialHorizon
                         roll={Number.isFinite(roll) ? roll : 0}
                         pitch={Number.isFinite(pitch) ? pitch : 0}
                     />
@@ -172,11 +152,7 @@ export default function OrientationVisualization({ sensorData }: OrientationVisu
                 </div>
             </div>
 
-            {!hasImuData && (
-                <p className="text-center text-sm text-yellow-400">
-                    IMU orientation data is unavailable. Check sensor status before flight.
-                </p>
-            )}
+            {!hasImuData && <p className="text-center text-sm text-yellow-400">IMU orientation data is unavailable.</p>}
         </div>
     );
 }

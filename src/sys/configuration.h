@@ -150,6 +150,14 @@ typedef enum CalibrationIMU {
     IMU_ACCEL_OFFSET_X,
     IMU_ACCEL_OFFSET_Y,
     IMU_ACCEL_OFFSET_Z,
+    // Axis remap (destination/body axis -> source sensor axis index)
+    IMU_AXIS_MAP_ROLL,
+    IMU_AXIS_MAP_PITCH,
+    IMU_AXIS_MAP_YAW,
+    // Axis sign (+1 or -1) after remap
+    IMU_AXIS_SIGN_ROLL,
+    IMU_AXIS_SIGN_PITCH,
+    IMU_AXIS_SIGN_YAW,
 } CalibrationIMU;
 
 typedef enum CalibrationPID {

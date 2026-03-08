@@ -2,6 +2,11 @@
 
 #include "platform/types.h"
 
+#define MAX_RECEIVER_PINS 5 // The maximum number of pins that can be used for receiver input at once
+#define DEFAULT_RECEIVER_CALIBRATION_SAMPLES 2000
+#define DEFAULT_RECEIVER_CALIBRATION_SAMPLE_DELAY_MS 2
+#define DEFAULT_RECEIVER_CALIBRATION_RUN_TIMES 3
+
 #define CTRLMODE_MIN CTRLMODE_3AXIS_ATHR
 typedef enum ControlMode {
     CTRLMODE_3AXIS_ATHR,
@@ -25,9 +30,9 @@ typedef enum ReceiverCalibrationStatus {
 } ReceiverCalibrationStatus;
 
 /**
- * Enables receiver input functionality on the specified pins (up to 7).
+ * Enables receiver input functionality on the specified pins (up to `MAX_RECEIVER_PINS`).
  * @param pins the list of pins to enable PWM input on
- * @param numPins the number of pins you are enabling PWM input on (1-7)
+ * @param numPins the number of pins you are enabling PWM input on
  */
 void receiver_enable(const i16 pins[], u32 num_pins);
 

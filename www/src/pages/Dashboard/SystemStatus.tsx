@@ -10,6 +10,7 @@ import {
     SignalOutline,
     BoltOutline,
     CpuChipOutline,
+    HeroIcon,
 } from "preact-heroicons";
 import classNames from "helpers/classNames";
 import { GET_SENSOR, GET_MODE, GET_INFO, GET_LOGS } from "helpers/apiTypes";
@@ -24,7 +25,7 @@ interface SystemStatusProps {
 interface Alert {
     id: string;
     type: "info" | "warning" | "error";
-    icon: any;
+    icon: HeroIcon;
     title: string;
     message: string;
     action?: string;
@@ -163,10 +164,11 @@ export default function SystemStatus({ sensorData, modeData, infoData, logsData 
         }
 
         // Logs (direct from API)
-        if (logsData && logsData.logs.length > 0) {
-            const recentErrors = logsData.logs.filter(log => log.type === 3).slice(0, 2);
-            const recentWarnings = logsData.logs.filter(log => log.type === 2).slice(0, 1);
-            const recentInfos = logsData.logs.filter(log => log.type === 1).slice(0, 1);
+        const logs = logsData?.logs ?? [];
+        if (logs.length > 0) {
+            const recentErrors = logs.filter(log => log.type === 3).slice(0, 2);
+            const recentWarnings = logs.filter(log => log.type === 2).slice(0, 1);
+            const recentInfos = logs.filter(log => log.type === 1).slice(0, 1);
 
             recentErrors.forEach((log, idx) => {
                 alerts.push({
@@ -262,7 +264,7 @@ export default function SystemStatus({ sensorData, modeData, infoData, logsData 
                             )}
                         >
                             <div className="flex items-start space-x-3">
-                                <Icon className={classNames("h-6 w-6 flex-shrink-0 mt-0.5", colors.icon)} />
+                                <Icon className={classNames("h-6 w-6 shrink-0 mt-0.5", colors.icon)} />
                                 <div className="flex-1 min-w-0">
                                     <h4 className={classNames("text-sm font-semibold mb-1", colors.title)}>
                                         {alert.title}
@@ -270,7 +272,7 @@ export default function SystemStatus({ sensorData, modeData, infoData, logsData 
                                     <p className="text-sm text-gray-300 mb-2">{alert.message}</p>
                                     {alert.action && (
                                         <div className="flex space-x-2 mt-2">
-                                            <InformationCircleOutline className="h-4 w-4 text-gray-400 flex-shrink-0 my-auto" />
+                                            <InformationCircleOutline className="h-4 w-4 text-gray-400 shrink-0 my-auto" />
                                             <p className="text-sm text-gray-400 italic my-auto">{alert.action}</p>
                                         </div>
                                     )}

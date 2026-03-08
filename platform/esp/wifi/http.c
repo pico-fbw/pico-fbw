@@ -168,6 +168,12 @@ static esp_err_t handle_common_get(httpd_req_t *req) {
 // Some commands support both GET and POST requests (ex. GET_CONFIG), hence the repeats
 static httpd_uri_t uris[] = {
     {
+        .uri = "/api/v1/get/calibration",
+        .method = HTTP_POST,
+        .handler = handle_api_v1_request,
+        .user_ctx = api_get_calibration,
+    },
+    {
         .uri = "/api/v1/get/config",
         .method = HTTP_GET,
         .handler = handle_api_v1_request,
@@ -238,6 +244,12 @@ static httpd_uri_t uris[] = {
         .method = HTTP_POST,
         .handler = handle_api_v1_request,
         .user_ctx = api_set_bay,
+    },
+    {
+        .uri = "/api/v1/set/calibration",
+        .method = HTTP_POST,
+        .handler = handle_api_v1_request,
+        .user_ctx = api_set_calibration,
     },
     {
         .uri = "/api/v1/set/config",

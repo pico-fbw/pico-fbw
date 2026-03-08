@@ -4,6 +4,7 @@
 
 // Import all command headers so other files can import all commands simply by importing this file
 
+#include "GET/get_calibration.h"
 #include "GET/get_config.h"
 #include "GET/get_flightplan.h"
 #include "GET/get_info.h"
@@ -14,6 +15,7 @@
 
 #include "SET/set_active.h"
 #include "SET/set_bay.h"
+#include "SET/set_calibration.h"
 #include "SET/set_config.h"
 #include "SET/set_flightplan.h"
 #include "SET/set_mode.h"

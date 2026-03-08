@@ -23,6 +23,9 @@
 // - use ringbuf instead of heap
 // - make logging functions simpler and more intuitive to call
 // - more general system (less specific to LED)
+// - remove references to there being a display (can make codes more detailed now)
+// - also check where logging functions are called throughout; standardize how they are logged and take note of codes
+// for a guide or something
 
 #define MSG_INFO "INFO"
 #define MSG_WARN "WARNING"

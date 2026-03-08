@@ -1,6 +1,7 @@
 target_sources(${PROJECT_NAME} PRIVATE
     api.c
     cmds/cmds.c
+    cmds/GET/get_calibration.c
     cmds/GET/get_config.c
     cmds/GET/get_flightplan.c
     cmds/GET/get_info.c
@@ -15,6 +16,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     cmds/MISC/reset.c
     cmds/SET/set_active.c
     cmds/SET/set_bay.c
+    cmds/SET/set_calibration.c
     cmds/SET/set_config.c
     cmds/SET/set_flightplan.c
     cmds/SET/set_mode.c

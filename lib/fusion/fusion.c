@@ -38,7 +38,7 @@ void fusion_reset(FusionState *state) {
 void fusion_update(FusionConfig *config, FusionState *state, const f32 accel[3], const f32 gyro[3], f32 gpsTrack,
                    f32 dt) {
     // Reject non-finite or negative delta times and fall back to configured sample period
-    if (!isfinite(dt) || dt <= 0.0f) {
+    if (!isfinite(dt) || dt <= 0.f) {
         dt = 1.0f / config->sampleRate;
     } else {
         // Prevent large one-off dt spikes from causing unrealistic attitude jumps
@@ -63,7 +63,7 @@ void fusion_update(FusionConfig *config, FusionState *state, const f32 accel[3],
     if (!state->initialized) {
         state->roll = accel_roll;
         state->pitch = accel_pitch;
-        state->yaw = isnan(gpsTrack) ? 0.0f : gpsTrack;
+        state->yaw = isnan(gpsTrack) ? 0.f : gpsTrack;
         state->initialized = true;
     }
 

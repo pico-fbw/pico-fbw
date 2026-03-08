@@ -326,8 +326,6 @@ static bool handle_request(TCPConnection *con_state, struct tcp_pcb *pcb, const 
                 res = handle_api_v1_request(pcb, request, api_get_mode);
             } else if (strcmp(uri + strlen(API_V1_PATH), "get/sensor") == 0) {
                 res = handle_api_v1_request(pcb, request, api_get_sensor);
-            } else if (strcmp(uri + strlen(API_V1_PATH), "set/active") == 0) {
-                res = handle_api_v1_request(pcb, request, api_set_active);
             } else if (strcmp(uri + strlen(API_V1_PATH), "ping") == 0) {
                 res = handle_api_v1_request(pcb, request, NULL);
             }
@@ -345,12 +343,20 @@ static bool handle_request(TCPConnection *con_state, struct tcp_pcb *pcb, const 
         if (strncmp(uri, API_V1_PATH, strlen(API_V1_PATH)) == 0) {
             // Some commands can also be called with POST requests
             // (in addition to GET requests above), hence the repeats
-            if (strcmp(uri + strlen(API_V1_PATH), "get/config") == 0) {
+            if (strcmp(uri + strlen(API_V1_PATH), "get/calibration") == 0) {
+                res = handle_api_v1_request(pcb, request, api_get_calibration);
+            } else if (strcmp(uri + strlen(API_V1_PATH), "get/config") == 0) {
                 res = handle_api_v1_request(pcb, request, api_get_config);
             } else if (strcmp(uri + strlen(API_V1_PATH), "get/flightplan") == 0) {
                 res = handle_api_v1_request(pcb, request, api_get_flightplan);
+            } else if (strcmp(uri + strlen(API_V1_PATH), "get/sensor") == 0) {
+                res = handle_api_v1_request(pcb, request, api_get_sensor);
+            } else if (strcmp(uri + strlen(API_V1_PATH), "set/active") == 0) {
+                res = handle_api_v1_request(pcb, request, api_set_active);
             } else if (strcmp(uri + strlen(API_V1_PATH), "set/bay") == 0) {
                 res = handle_api_v1_request(pcb, request, api_set_bay);
+            } else if (strcmp(uri + strlen(API_V1_PATH), "set/calibration") == 0) {
+                res = handle_api_v1_request(pcb, request, api_set_calibration);
             } else if (strcmp(uri + strlen(API_V1_PATH), "set/config") == 0) {
                 res = handle_api_v1_request(pcb, request, api_set_config);
             } else if (strcmp(uri + strlen(API_V1_PATH), "set/flightplan") == 0) {

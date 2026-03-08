@@ -38,7 +38,9 @@ static i32 api_wrap_handler(const char *args, api_func handler, api_output_func 
 }
 
 i32 api_handle_get(const char *cmd, const char *args, api_output_func output_func, void *output_ctx) {
-    if (strcasecmp(cmd, "GET_CONFIG") == 0) {
+    if (strcasecmp(cmd, "GET_CALIBRATION") == 0) {
+        return api_wrap_handler(args, api_get_calibration, output_func, output_ctx);
+    } else if (strcasecmp(cmd, "GET_CONFIG") == 0) {
         return api_wrap_handler(args, api_get_config, output_func, output_ctx);
     } else if (strcasecmp(cmd, "GET_FLIGHTPLAN") == 0) {
         return api_wrap_handler(args, api_get_flightplan, output_func, output_ctx);
@@ -62,6 +64,8 @@ i32 api_handle_set(const char *cmd, const char *args, api_output_func output_fun
         return api_wrap_handler(args, api_set_active, output_func, output_ctx);
     } else if (strcasecmp(cmd, "SET_BAY") == 0) {
         return api_wrap_handler(args, api_set_bay, NULL, NULL);
+    } else if (strcasecmp(cmd, "SET_CALIBRATION") == 0) {
+        return api_wrap_handler(args, api_set_calibration, output_func, output_ctx);
     } else if (strcasecmp(cmd, "SET_CONFIG") == 0) {
         return api_wrap_handler(args, api_set_config, output_func, output_ctx);
     } else if (strcasecmp(cmd, "SET_FLIGHTPLAN") == 0) {

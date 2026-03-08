@@ -38,8 +38,7 @@ static Mode parse_args(const char *args) {
     } else if (strcasecmp(modeStr, "auto") == 0) {
         mode = MODE_AUTO;
     } else {
-        json_value_free(root);
-        return MODE_INVALID;
+        mode = MODE_INVALID;
     }
     json_value_free(root);
     return mode;

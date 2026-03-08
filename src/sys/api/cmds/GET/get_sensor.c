@@ -146,7 +146,7 @@ static SensorData parse_args(const char *args) {
 //         "pdop":number|null,"hdop":number|null,"vdop":number|null,"sats":number|null},
 //  "imu":{"roll":number|null,"pitch":number|null,"yaw":number|null,"roll_rate":number|null,"pitch_rate":number|null,
 //           "yaw_rate":number|null,"accel_x":number|null,"accel_y":number|null,"accel_z":number|null},
-//  "batt":"batt":[number,...]
+//  "batt":[number,...]
 // }
 
 i32 api_get_sensor(const char *in, char **out) {

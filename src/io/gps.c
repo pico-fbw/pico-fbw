@@ -131,7 +131,7 @@ bool gps_init() {
 static bool parse_gga_sentence(const char *line) {
     struct minmea_sentence_gga gga;
     if (!minmea_parse_gga(&gga, line)) {
-        printsys(gps, "ERROR: failed parsing $xxGGA sentence");
+        printsys(gps, "ERROR: failed parsing $xxGGA sentence: %s", line);
         return false;
     }
     gps.lat = minmea_tocoord(&gga.latitude);
@@ -158,7 +158,7 @@ static void parse_gsa_sentence(const char *line) {
         gps.hdop = minmea_tofloat(&gsa.hdop);
         gps.vdop = minmea_tofloat(&gsa.vdop);
     } else {
-        printsys(gps, "ERROR: failed parsing $xxGSA sentence");
+        printsys(gps, "ERROR: failed parsing $xxGSA sentence: %s", line);
     }
 }
 
@@ -172,7 +172,7 @@ static void parse_vtg_sentence(const char *line) {
         gps.speed = minmea_tofloat(&vtg.speed_knots);
         gps.track = minmea_tofloat(&vtg.true_track_degrees);
     } else {
-        printsys(gps, "ERROR: failed parsing $xxVTG sentence");
+        printsys(gps, "ERROR: failed parsing $xxVTG sentence: %s", line);
     }
 }
 

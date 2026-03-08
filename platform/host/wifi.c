@@ -133,7 +133,9 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
     }
     struct mg_http_message *hm = (struct mg_http_message *)ev_data;
     // Handle API requests
-    if (mg_match(hm->uri, mg_str("/api/v1/get/config"), NULL)) {
+    if (mg_match(hm->uri, mg_str("/api/v1/get/calibration"), NULL)) {
+        handle_api_v1_request(c, hm, api_get_calibration);
+    } else if (mg_match(hm->uri, mg_str("/api/v1/get/config"), NULL)) {
         handle_api_v1_request(c, hm, api_get_config);
     } else if (mg_match(hm->uri, mg_str("/api/v1/get/flightplan"), NULL)) {
         handle_api_v1_request(c, hm, api_get_flightplan);
@@ -151,6 +153,8 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
         handle_api_v1_request(c, hm, api_set_active);
     } else if (mg_match(hm->uri, mg_str("/api/v1/set/bay"), NULL)) {
         handle_api_v1_request(c, hm, api_set_bay);
+    } else if (mg_match(hm->uri, mg_str("/api/v1/set/calibration")) {
+        handle_api_v1_request(c, hm, api_set_calibration);
     } else if (mg_match(hm->uri, mg_str("/api/v1/set/config"), NULL)) {
         handle_api_v1_request(c, hm, api_set_config);
     } else if (mg_match(hm->uri, mg_str("/api/v1/set/flightplan"), NULL)) {
