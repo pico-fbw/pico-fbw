@@ -50,11 +50,6 @@ void boot_init_gps();
 void boot_init_wifi();
 
 /**
- * Initializes the ADC I/O, if applicable on the current platform.
- */
-void boot_init_adc();
-
-/**
  * Runs end of boot tasks, should be called at the end of `main()`.
  */
 void boot_complete();

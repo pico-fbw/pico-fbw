@@ -4,7 +4,6 @@
  */
 
 #include <string.h>
-#include "platform/adc.h"
 #include "platform/defs.h"
 
 #include "ctrl/aircraft.h"
@@ -20,7 +19,6 @@ typedef enum SensorData {
     DATA_ALL,
     DATA_GPS,
     DATA_IMU,
-    DATA_BATT,
 } SensorData;
 
 /**
@@ -89,25 +87,6 @@ static JSON_Value *create_imu_obj() {
     return imuObj;
 }
 
-/**
- * @return JSON array with battery data, or NULL on error
- */
-static JSON_Value *create_batt_arr() {
-#if PLATFORM_SUPPORTS_ADC
-    JSON_Value *battArr = json_value_init_array();
-    if (!battArr) {
-        return NULL;
-    }
-    JSON_Array *arr = json_value_get_array(battArr);
-    for (u32 i = 0; i < ADC_NUM_CHANNELS; i++) {
-        json_array_append_number(arr, adc_read_raw(ADC_PINS[i]));
-    }
-    return battArr;
-#else
-    return json_value_init_array();
-#endif
-}
-
 static SensorData parse_args(const char *args) {
     JSON_Value *root = json_parse_string(args);
     if (!root) {
@@ -130,23 +109,20 @@ static SensorData parse_args(const char *args) {
         ret = DATA_GPS;
     } else if (strcasecmp(data, "imu") == 0) {
         ret = DATA_IMU;
-    } else if (strcasecmp(data, "batt") == 0) {
-        ret = DATA_BATT;
     }
     json_value_free(root);
     return ret;
 }
 
 // Input:
-// {"data":"all|gps|imu|batt"}
+// {"data":"all|gps|imu"}
 
-// Output (for data="all", note that "batt" may not exist and may have a different length):
+// Output (for data="all"):
 // {
 //  "gps":{"lat":number|null,"lng":number|null,"alt":number|null,"speed":number|null,"track":number|null,
 //         "pdop":number|null,"hdop":number|null,"vdop":number|null,"sats":number|null},
 //  "imu":{"roll":number|null,"pitch":number|null,"yaw":number|null,"roll_rate":number|null,"pitch_rate":number|null,
-//           "yaw_rate":number|null,"accel_x":number|null,"accel_y":number|null,"accel_z":number|null},
-//  "batt":[number,...]
+//           "yaw_rate":number|null,"accel_x":number|null,"accel_y":number|null,"accel_z":number|null}
 // }
 
 i32 api_get_sensor(const char *in, char **out) {
@@ -162,8 +138,7 @@ i32 api_get_sensor(const char *in, char **out) {
 
     JSON_Value *gpsObj = create_gps_obj();
     JSON_Value *imuObj = create_imu_obj();
-    JSON_Value *battArr = create_batt_arr();
-    if (!gpsObj || !imuObj || !battArr) {
+    if (!gpsObj || !imuObj) {
         return 500;
     }
 
@@ -173,13 +148,9 @@ i32 api_get_sensor(const char *in, char **out) {
         case DATA_ALL:
             json_object_set_value(obj, "gps", gpsObj);
             json_object_set_value(obj, "imu", imuObj);
-#if PLATFORM_SUPPORTS_ADC
-            json_object_set_value(obj, "batt", battArr);
-#endif
             break;
         case DATA_GPS:
             if (!gps.is_supported()) {
-                json_value_free(battArr);
                 json_value_free(gpsObj);
                 json_value_free(imuObj);
                 json_value_free(root);
@@ -189,17 +160,6 @@ i32 api_get_sensor(const char *in, char **out) {
             break;
         case DATA_IMU:
             json_object_set_value(obj, "imu", imuObj);
-            break;
-        case DATA_BATT:
-#if PLATFORM_SUPPORTS_ADC
-            json_object_set_value(obj, "batt", battArr);
-#else
-            json_value_free(battArr);
-            json_value_free(gpsObj);
-            json_value_free(imuObj);
-            json_value_free(root);
-            return 403;
-#endif
             break;
     }
     char *serialized = json_serialize_to_string(root);

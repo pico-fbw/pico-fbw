@@ -71,7 +71,6 @@ static const UARTMapping UART_MAP[] = {
 // If you ever make any changes to the platform code, it's a nice courtesy to increment this.
 #define PLATFORM_VERSION "1.0.0"
 // Platform features
-#define PLATFORM_SUPPORTS_ADC 0
 #define PLATFORM_SUPPORTS_WIFI FBW_BUILD_WWW
 
 #define __printflike(fmtarg, firstvararg) __attribute__((__format__(__printf__, fmtarg, firstvararg)))

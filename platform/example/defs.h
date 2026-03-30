@@ -43,19 +43,6 @@ typedef x __callback_id_t;
 
 // Here are all of the possible features:
 
-// ADC
-#define PLATFORM_SUPPORTS_ADC 0
-#if PLATFORM_SUPPORTS_ADC
-    // The ADC requires writing an extra file 'adc.c', see a platform such as 'pico' for an example.
-    // Take a look at platform/adc.h to see the functions you'll need to implement.
-
-    // ADC information
-    #define ADC_NUM_CHANNELS x // Number of individual input channels your ADC supports
-    #define PIN_ADC_0 x        // First pin your ADC supports
-// Add more as needed...
-static const i16 ADC_PINS[] = {PIN_ADC_0}; // Array of all ADC pins you've defined
-#endif
-
 // Wi-Fi
 #define PLATFORM_SUPPORTS_WIFI 0
 // Wi-Fi requires writing an extra file 'wifi.c' (and probably some more as needed),

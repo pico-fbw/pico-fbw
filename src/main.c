@@ -59,9 +59,6 @@ int main() {
     boot_set_progress(80, "Initializing Wi-Fi");
     boot_init_wifi();
 
-    boot_set_progress(85, "Initializing ADC");
-    boot_init_adc();
-
     boot_set_progress(90, "Finishing up");
     boot_complete();
 

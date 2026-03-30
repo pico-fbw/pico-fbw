@@ -8,7 +8,6 @@
 
 #include <assert.h>
 #include <string.h>
-#include "platform/adc.h"
 #include "platform/defs.h"
 #include "platform/flash.h"
 #include "platform/gpio.h"
@@ -159,12 +158,6 @@ void boot_init_wifi() {
     fail:
         log_message(TYPE_ERROR, "Wi-Fi setup failed!", 2000, 0, false);
     }
-#endif
-}
-
-void boot_init_adc() {
-#if PLATFORM_SUPPORTS_ADC
-    adc_setup(ADC_PINS, ADC_NUM_CHANNELS);
 #endif
 }
 

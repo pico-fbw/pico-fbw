@@ -1,5 +1,4 @@
 add_library(platform_pico
-    adc.c
     flash.c
     gpio.c
     i2c.c
@@ -20,7 +19,6 @@ pico_generate_pio_header(platform_pico ${CMAKE_CURRENT_LIST_DIR}/pwm.pio)
 # Link the platform library to the pico-sdk libraries
 target_link_libraries(platform_pico
     boot_picobin_headers
-    hardware_adc
     hardware_clocks
     hardware_flash
     hardware_gpio

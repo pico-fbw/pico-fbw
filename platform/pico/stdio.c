@@ -5,8 +5,8 @@
 
 #include <stdarg.h>
 #include <stdio.h>
-#include "pico.h"
 #include "pico/stdio.h"
+#include "pico.h"
 #ifndef RASPBERRYPI_PICO_W
     #include <assert.h>
     #include "platform/time.h"

@@ -35,19 +35,6 @@ typedef alarm_id_t __callback_id_t;
 #define PLATFORM_NAME "Raspberry Pi Pico"
 #define PLATFORM_VERSION ("1.0.0 (pico-sdk v" PICO_SDK_VERSION_STRING ")")
 // Platform features
-// ADC
-#define PLATFORM_SUPPORTS_ADC 1
-#if PLATFORM_SUPPORTS_ADC
-    // ADC information
-    #define ADC_NUM_CHANNELS 4
-    #define PIN_ADC_0 26
-    #define PIN_ADC_1 27
-    #define PIN_ADC_2 28
-    #define PIN_ADC_3 29
-static const i16 ADC_PINS[] = {PIN_ADC_0, PIN_ADC_1, PIN_ADC_2, PIN_ADC_3};
-#endif
-
-// Wi-Fi
 // Technically, only the Pico W supports Wi-Fi, but other platforms emulate it through USB
 #define PLATFORM_SUPPORTS_WIFI FBW_BUILD_WWW
 

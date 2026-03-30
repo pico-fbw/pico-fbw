@@ -63,7 +63,6 @@ typedef timer_t __callback_id_t;
 #define PLATFORM_NAME (PLATFORM "-" ARCH)
 #define PLATFORM_VERSION "1.0.0"
 // Platform features
-#define PLATFORM_SUPPORTS_ADC 0
 #define PLATFORM_SUPPORTS_WIFI FBW_BUILD_WWW
 
 // printf format checking
