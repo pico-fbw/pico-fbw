@@ -62,8 +62,8 @@ static void update_gain(Axis axis, f32 req_rate, f32 act_rate) {
     } else if (fabsf(req_rate - act_rate) < D_GAIN_REQ_RATE_THRESHOLD) {
         if (fabsf(req_rate - act_rate) > D_GAIN_OVERSHOOT_THRESHOLD) {
             f64 kD;
-            flight_tunings_get(axis, NULL, &kD, NULL);
-            flight_tunings_update(axis, INFINITY, kD + D_GAIN_STEP, INFINITY, false);
+            flight_tunings_get(axis, NULL, NULL, &kD);
+            flight_tunings_update(axis, INFINITY, INFINITY, kD + D_GAIN_STEP, false);
             lastTuneEvent = timestamp_now();
         }
     }

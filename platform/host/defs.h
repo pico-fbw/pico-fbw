@@ -16,23 +16,23 @@ typedef HANDLE __callback_id_t;
 typedef timer_t __callback_id_t;
 #endif
 
-// All pins are set to -1 (unused) by default since host platforms have no I/O support.
+// Not implemented, but keep pins defined as unique numbers to keep simulation code happy
 
-#define DEFAULT_PIN_INPUT_AIL -1
-#define DEFAULT_PIN_SERVO_AIL -1
-#define DEFAULT_PIN_INPUT_ELE -1
-#define DEFAULT_PIN_SERVO_ELE -1
-#define DEFAULT_PIN_INPUT_RUD -1
-#define DEFAULT_PIN_SERVO_RUD -1
-#define DEFAULT_PIN_INPUT_THR -1
-#define DEFAULT_PIN_ESC_THR -1
-#define DEFAULT_PIN_INPUT_SWITCH -1
-#define DEFAULT_PIN_SERVO_BAY -1
+#define DEFAULT_PIN_INPUT_AIL 1
+#define DEFAULT_PIN_SERVO_AIL 2
+#define DEFAULT_PIN_INPUT_ELE 3
+#define DEFAULT_PIN_SERVO_ELE 4
+#define DEFAULT_PIN_INPUT_RUD 5
+#define DEFAULT_PIN_SERVO_RUD 6
+#define DEFAULT_PIN_INPUT_THR 7
+#define DEFAULT_PIN_ESC_THR 8
+#define DEFAULT_PIN_INPUT_SWITCH 9
+#define DEFAULT_PIN_SERVO_BAY 10
 
-#define DEFAULT_PIN_I2C_SDA -1
-#define DEFAULT_PIN_I2C_SCL -1
-#define DEFAULT_PIN_GPS_TX -1
-#define DEFAULT_PIN_GPS_RX -1
+#define DEFAULT_PIN_I2C_SDA 11
+#define DEFAULT_PIN_I2C_SCL 12
+#define DEFAULT_PIN_GPS_TX 13
+#define DEFAULT_PIN_GPS_RX 14
 
 #if defined(_WIN32)
     #if SIMCONNECT

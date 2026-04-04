@@ -60,10 +60,10 @@ static bool is_flying() {
 
 /**
  * Deinitializes the given mode.
- * @param mode the mode to deinitialize
+ * @param old_mode the mode to deinitialize
  */
-static void deinit_mode(Mode mode) {
-    switch (mode) {
+static void deinit_mode(Mode old_mode) {
+    switch (old_mode) {
         case MODE_NORMAL:
             normal_deinit();
             break;
@@ -170,10 +170,10 @@ static void init_hold_mode() {
 
 /**
  * Initializes the given mode.
- * @param mode the mode to initialize
+ * @param new_mode the mode to initialize
  */
-static void init_mode(Mode mode) {
-    switch (mode) {
+static void init_mode(Mode new_mode) {
+    switch (new_mode) {
         case MODE_DIRECT:
             mode = MODE_DIRECT;
             break;
@@ -232,7 +232,7 @@ static void update_mode() {
  * Handles wifi deinitialization after taking flight.
  */
 static void handle_wifi_deinit() {
-#if PLATFORM_SUPPORTS_WIFI
+#if PLATFORM_SUPPORTS_WIFI && !SIMCONNECT
     if (!wifiDeinitialized && isFlying) {
         // We're now airborne, so wifi is no longer needed
         if (!wifi_disable()) {

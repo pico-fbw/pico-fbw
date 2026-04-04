@@ -93,6 +93,7 @@ static bool imu_read_average_sensor_data(f32 accel_avg[3], f32 gyro_avg[3]) {
 }
 
 bool imu_init() {
+#if !SIMCONNECT
     // Set up I2C bus
     if (!i2cInitialized) {
         if (!i2c_setup((i16)config.pins[PINS_I2C_SDA], (i16)config.pins[PINS_I2C_SCL],
@@ -158,6 +159,12 @@ bool imu_init() {
     imu.ready = true;
     aircraft_set_imu_safe(true);
     return true;
+#else
+    bool ready = simconnect_ready();
+    aircraft_set_imu_safe(ready);
+    imu.ready = ready;
+    return ready;
+#endif // !SIMCONNECT
 }
 
 void imu_update() {
@@ -204,12 +211,11 @@ void imu_update() {
     memcpy(imu.accel, accelMapped, sizeof(imu.accel));
     lastUpdate = timestamp_now();
 #else
-    // Roll and pitch must be inverted as MSFS uses a different convention than pico-fbw
-    imu.roll = -(f32)scIMU.roll;
-    imu.pitch = -(f32)scIMU.pitch;
+    imu.roll = (f32)scIMU.roll;
+    imu.pitch = (f32)scIMU.pitch;
     imu.yaw = (f32)scIMU.yaw;
-    imu.rollRate = -(f32)scIMU.gyro[0];
-    imu.pitchRate = -(f32)scIMU.gyro[1];
+    imu.rollRate = (f32)scIMU.gyro[0];
+    imu.pitchRate = (f32)scIMU.gyro[1];
     imu.yawRate = (f32)scIMU.gyro[2];
     memcpy(imu.accel, scIMU.accel, sizeof(imu.accel));
 #endif // !SIMCONNECT

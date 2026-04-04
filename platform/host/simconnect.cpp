@@ -38,7 +38,6 @@ enum DataDefinitionRequestID {
     ID_AIL_OUT,
     ID_ELE_OUT,
     ID_RUD_OUT,
-    ID_INPUT_ENABLED,
     ID_NUM_ENG,
     // More data definitions will be created at runtime for engine throttle levels
 };
@@ -76,7 +75,6 @@ SC_GPS scGPS = {
 i32 numEngines = 0; // Will be filled in later
 
 f32 ailPos = 0.f, elePos = 0.f, rudPos = 0.f, thrPos = 0.f;                 // Last retrieved control surface positions
-f32 lastAilSet = 0.f, lastEleSet = 0.f, lastRudSet = 0.f, lastThrSet = 0.f; // Last set control surface positions
 
 /**
  * Simulates readings from a MEMS accelerometer based on available SimConnect data.
@@ -95,15 +93,6 @@ static void simulate_accel(SC_IMU *imu) {
     for (u32 i = 0; i < count_of(imu->accel); i++) {
         imu->accel[i] = (imu->bodyAccel[i] + g[i]) / GRAVITY;
     }
-}
-
-/**
- * Converts a servo degree range (0-180) to a SimConnect `position` range (-1.0 to 1.0).
- * @param deg the servo degree value
- * @return the equivalent SimConnect `position` value
- */
-static inline f32 deg_to_position(f32 deg) {
-    return mapf(deg, 0.f, 180.f, -1.f, 1.f);
 }
 
 /**
@@ -135,9 +124,8 @@ static bool set_control_surface(f32 deg, DataDefinitionRequestID id) {
     if (!hSimConnect) {
         return false;
     }
-    f32 pos = deg_to_position(deg);
-    HRESULT hr = SimConnect_SetDataOnSimObject(hSimConnect, id, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(pos), &pos);
-    return hr == S_OK;
+    f32 pos = mapf(deg, 0.f, 180.f, -1.f, 1.f); // Map from servo degree range to SimConnect position range
+    return SimConnect_SetDataOnSimObject(hSimConnect, id, SIMCONNECT_OBJECT_ID_USER, 0, 0, sizeof(pos), &pos) == S_OK;
 }
 
 /**
@@ -178,6 +166,11 @@ static void on_SIMCONNECT_RECV_SIMOBJECT_DATA(SIMCONNECT_RECV_SIMOBJECT_DATA *pD
         case ID_SC_IMU:
             // Don't copy accel[] as that will be simulated
             memcpy(&scIMU, &pData->dwData, sizeof(SC_IMU) - sizeof(scIMU.accel));
+            // Roll and pitch must be inverted as MSFS uses a different convention than pico-fbw
+            scIMU.roll = -scIMU.roll;
+            scIMU.gyro[0] = -scIMU.gyro[0];
+            scIMU.pitch = -scIMU.pitch;
+            scIMU.gyro[1] = -scIMU.gyro[1];
             // Simulate accelerometer readings as the fusion system expects them
             simulate_accel(&scIMU);
             break;
@@ -204,28 +197,21 @@ static void on_SIMCONNECT_RECV_SIMOBJECT_DATA(SIMCONNECT_RECV_SIMOBJECT_DATA *pD
 
 static void on_SIMCONNECT_RECV_EVENT(SIMCONNECT_RECV_EVENT *pData, void *pContext) {
     switch (pData->uEventID) {
+        // Reverse signs on control surface positions, also to match convention
         case EVENT_AIL_SET: {
-            ailPos = -eventdata_to_position(pData->dwData); // Reverse sign for some reason?
-            // Set the position back to the last set value, therefore cancelling the event
-            // This is done to mimic the behavior of pico-fbw in a real RC plane, where everything has to go through
-            // code first (no direct control)
-            set_control_surface(lastAilSet, ID_AIL_OUT);
+            ailPos = -eventdata_to_position(pData->dwData);
             break;
         }
         case EVENT_ELE_SET: {
-            elePos = eventdata_to_position(pData->dwData);
-            set_control_surface(lastEleSet, ID_ELE_OUT);
+            elePos = -eventdata_to_position(pData->dwData);
             break;
         }
         case EVENT_RUD_SET: {
-            rudPos = eventdata_to_position(pData->dwData);
-            set_control_surface(lastRudSet, ID_RUD_OUT);
+            rudPos = -eventdata_to_position(pData->dwData);
             break;
         }
         case EVENT_THR_SET: {
-            // Throttle is from 0 to 16383 for some reason
-            thrPos = mapf((f32)pData->dwData, 0.f, 16383.f, 0.f, 100.f);
-            set_throttle(lastThrSet);
+            thrPos = mapf((f32)pData->dwData, 0.f, 16384.f, 0.f, 100.f);
             break;
         }
         default:
@@ -276,13 +262,7 @@ static bool configure_datadef_control_surfaces() {
     SimConnect_AddToDataDefinition(hSimConnect, ID_ELE_OUT, "ELEVATOR POSITION", "position",
                                    SIMCONNECT_DATATYPE_FLOAT32);
     SimConnect_AddToDataDefinition(hSimConnect, ID_RUD_OUT, "RUDDER POSITION", "position", SIMCONNECT_DATATYPE_FLOAT32);
-    // Disable user input
-    // TODO: does this even do anything?
-    SimConnect_AddToDataDefinition(hSimConnect, ID_INPUT_ENABLED, "USER INPUT ENABLED", "bool",
-                                   SIMCONNECT_DATATYPE_INT32);
-    i32 enabled = 0;
-    return SUCCEEDED(SimConnect_SetDataOnSimObject(hSimConnect, ID_INPUT_ENABLED, SIMCONNECT_OBJECT_ID_USER, 0, 0,
-                                                   sizeof(i32), &enabled));
+    return true;
 }
 
 /**
@@ -297,7 +277,7 @@ static bool configure_event_fctrl() {
         SimConnect_AddClientEventToNotificationGroup(hSimConnect, GROUP_FCTRL, event, true);
     }
     return SUCCEEDED(
-        SimConnect_SetNotificationGroupPriority(hSimConnect, GROUP_FCTRL, SIMCONNECT_GROUP_PRIORITY_HIGHEST));
+        SimConnect_SetNotificationGroupPriority(hSimConnect, GROUP_FCTRL, SIMCONNECT_GROUP_PRIORITY_HIGHEST_MASKABLE));
 }
 
 bool simconnect_init() {
@@ -332,7 +312,7 @@ bool simconnect_init() {
     hr = SimConnect_RequestDataOnSimObject(hSimConnect, ID_NUM_ENG, ID_NUM_ENG, SIMCONNECT_OBJECT_ID_USER,
                                            SIMCONNECT_PERIOD_ONCE);
     if (FAILED(hr)) {
-        printmsfs("WARNING: failed to get number of engines!)");
+        printmsfs("WARNING: failed to get number of engines!");
         return false;
     }
     printmsfs("configured all data requests");
@@ -372,22 +352,14 @@ void simconnect_poll() {
 
 bool simconnect_set(SCFlightControl fctrl, f32 val) {
     switch (fctrl) {
-        case FCTRL_AIL: {
-            lastAilSet = val;
+        case FCTRL_AIL:
             return set_control_surface(val, ID_AIL_OUT);
-        }
-        case FCTRL_ELE: {
-            lastEleSet = val;
+        case FCTRL_ELE:
             return set_control_surface(val, ID_ELE_OUT);
-        }
-        case FCTRL_RUD: {
-            lastRudSet = val;
+        case FCTRL_RUD:
             return set_control_surface(val, ID_RUD_OUT);
-        }
-        case FCTRL_THR: {
-            lastThrSet = val;
+        case FCTRL_THR:
             return set_throttle(val);
-        }
     }
     return false;
 }

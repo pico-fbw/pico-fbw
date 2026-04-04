@@ -2,7 +2,7 @@ find_path(SimConnect_INCLUDE_DIR SimConnect.h
     PATHS
         "$ENV{MSFS_SDK}\\SimConnect SDK\\include" # Default MSFS SDK path
         # Typical SDK paths
-        "C:\\MSFS\\SDK\\SimConnect SDK\\include"
+        "C:\\MSFS SDK\\SimConnect SDK\\include"
         "C:\\Program Files\\Microsoft Flight Simulator SDK\\SimConnect SDK\\include"
         "C:\\SimConnect SDK\\include"
     DOC "Path to SimConnect.h"
@@ -11,7 +11,7 @@ find_path(SimConnect_INCLUDE_DIR SimConnect.h
 find_library(SimConnect_LIBRARY SimConnect
     PATHS
         "$ENV{MSFS_SDK}\\SimConnect SDK\\lib"
-        "C:\\MSFS\\SDK\\SimConnect SDK\\lib"
+        "C:\\MSFS SDK\\SimConnect SDK\\lib"
         "C:\\Program Files\\Microsoft Flight Simulator SDK\\SimConnect SDK\\lib"
         "C:\\SimConnect SDK\\lib"
     DOC "Path to SimConnect library"

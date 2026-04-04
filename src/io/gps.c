@@ -103,26 +103,6 @@ static bool init_pmtk_gps(void) {
     return wait_for_pmtk_ack();
 }
 
-bool gps_init() {
-#if !SIMCONNECT
-    printsys(gps, "initializing uart at baudrate %lu, on pins %d (tx) and %d (rx)",
-             (u32)config.sensors[SENSORS_GPS_BAUDRATE], (i16)config.pins[PINS_GPS_TX], (i16)config.pins[PINS_GPS_RX]);
-    uart_setup((i16)config.pins[PINS_GPS_TX], (i16)config.pins[PINS_GPS_RX], (u32)config.sensors[SENSORS_GPS_BAUDRATE]);
-    printsys(gps, "configuring...");
-
-    // Send a command and wait until UART is ready to read, then read back the command response
-    // Useful tool for calculating command checksums: https://nmeachecksum.eqth.net/
-    switch ((GPSCommandType)config.sensors[SENSORS_GPS_COMMAND_TYPE]) {
-        case GPS_COMMAND_TYPE_PMTK:
-            return init_pmtk_gps();
-        default:
-            return false;
-    }
-#else
-    return simconnect_ready();
-#endif // !SIMCONNECT
-}
-
 /**
  * Parses GGA sentence and updates GPS position data.
  * @param line NMEA sentence line to parse
@@ -216,6 +196,26 @@ static void update_from_uart(void) {
     }
 }
 
+bool gps_init() {
+#if !SIMCONNECT
+    printsys(gps, "initializing uart at baudrate %lu, on pins %d (tx) and %d (rx)",
+             (u32)config.sensors[SENSORS_GPS_BAUDRATE], (i16)config.pins[PINS_GPS_TX], (i16)config.pins[PINS_GPS_RX]);
+    uart_setup((i16)config.pins[PINS_GPS_TX], (i16)config.pins[PINS_GPS_RX], (u32)config.sensors[SENSORS_GPS_BAUDRATE]);
+    printsys(gps, "configuring...");
+
+    // Send a command and wait until UART is ready to read, then read back the command response
+    // Useful tool for calculating command checksums: https://nmeachecksum.eqth.net/
+    switch ((GPSCommandType)config.sensors[SENSORS_GPS_COMMAND_TYPE]) {
+        case GPS_COMMAND_TYPE_PMTK:
+            return init_pmtk_gps();
+        default:
+            return false;
+    }
+#else
+    return simconnect_ready();
+#endif // !SIMCONNECT
+}
+
 void gps_update() {
 #if !SIMCONNECT
     update_from_uart();
@@ -226,10 +226,10 @@ void gps_update() {
     gps.speed = scGPS.speed;
     gps.track = scGPS.track;
     // Not simulated
-    gps.pdop = 0.f;
-    gps.hdop = 0.f;
-    gps.vdop = 0.f;
-    gps.sats = 0;
+    gps.pdop = 1.f;
+    gps.hdop = 1.f;
+    gps.vdop = 1.f;
+    gps.sats = 10;
 #endif // !SIMCONNECT
     aircraft_set_gps_safe(data_valid(gps.lat, gps.lng, gps.alt, gps.speed, gps.track, gps.pdop, gps.hdop, gps.vdop));
 }

@@ -84,7 +84,7 @@ void boot_init_receiver() {
     receiver_get_pins(pins, &numPins, deviations);
     receiver_enable(pins, numPins);
     if (receiver_is_calibrated() != RECEIVERCALIBRATION_OK) {
-        log_message(TYPE_ERROR, "Receiver not calibrated!", 500, 0, false);
+        log_message(TYPE_WARNING, "Receiver not calibrated!", 500, 0, false);
     }
 }
 
