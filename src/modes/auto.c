@@ -148,12 +148,7 @@ void auto_update() {
 
     // Calculate difference between track and bearing, normalized between -180 and 180
     // Use GPS track instead of IMU heading because heading isn't always going to be navigational (more likely magnetic)
-    f64 diff = gps.track - bearing;
-    if (diff > 180.0) {
-        diff -= 360.0;
-    } else if (diff < -180.0) {
-        diff += 360.0;
-    }
+    f32 diff = control_get_heading_diff(bearing, gps.track);
 
     // Predictive roll control adjustment to avoid overshooting
     if (fabs(diff) < ROLL_OVERSHOOT_THRESHOLD) {

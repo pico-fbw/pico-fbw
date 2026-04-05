@@ -9,6 +9,7 @@
 #include "platform/time.h"
 #include "platform/types.h"
 
+#include "ctrl/control.h"
 #include "ctrl/flight.h"
 #include "ctrl/throttle.h"
 #include "io/gps.h"
@@ -62,7 +63,7 @@ static i32 turn_around(void *data) {
     if (targetTrack > 360) {
         targetTrack -= 360;
     }
-    turnStatus = HOLD_TURN_INPROGRESS;
+    turnStatus = HOLD_TURN_BEGUN;
     return 0; // Don't reschedule, we will wait until the turn is complete to do that
     (void)data;
 }
@@ -88,6 +89,8 @@ bool hold_init() {
         .limMax = VERTGD_LIM_MAX,
     };
     pid_init(&vertGuid);
+    turnStatus = HOLD_TURN_UNSCHEDULED;
+    rollSet = 0.f;
     targetAlt = gps.alt; // targetAlt is just the current alt from whenever we enter the mode
     return true;
 }
@@ -109,7 +112,7 @@ void hold_update() {
             break;
         case HOLD_TURN_INPROGRESS:
             // Wait until it is time to decrease the turn
-            if (fabsf(targetTrack - gps.track) <= HOLD_HEADING_DECREASE_WITHIN) {
+            if (fabsf(control_get_heading_diff(targetTrack, gps.track)) <= HOLD_HEADING_DECREASE_WITHIN) {
                 turnStatus = HOLD_TURN_ENDING;
             }
             break;
@@ -119,14 +122,17 @@ void hold_update() {
                 rollSet -= (HOLD_TURN_BANK_ANGLE * config.control[CONTROL_RUDDER_SENSITIVITY]);
             }
             // Move on to stabilization once we've intercepted the target heading
-            if (fabsf(targetTrack - gps.track) <= HOLD_HEADING_INTERCEPT_WITHIN) {
+            if (fabsf(control_get_heading_diff(targetTrack, gps.track)) <= HOLD_HEADING_INTERCEPT_WITHIN) {
                 turnStatus = HOLD_TURN_STABILIZING;
             }
             break;
         case HOLD_TURN_STABILIZING:
             // Stabilize the turn back to 0 degrees of bank, then mark it as completed (unscheduled)
-            if (rollSet >= 0) {
+            if (rollSet > 0) {
                 rollSet -= (HOLD_TURN_BANK_ANGLE * config.control[CONTROL_RUDDER_SENSITIVITY]);
+            } else {
+                rollSet = 0;
+                turnStatus = HOLD_TURN_UNSCHEDULED;
             }
             break;
         case HOLD_TURN_UNSCHEDULED:

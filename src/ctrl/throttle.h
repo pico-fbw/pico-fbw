@@ -45,6 +45,6 @@ void throttle_set_mode(ThrottleMode mode);
 
 /**
  * Sets the throttle target.
- * @param target the target speed [kts] or thrust [0-100] (depending on mode)
+ * @param new_target the target speed [kts] or thrust [0-100] (depending on mode)
  */
-void throttle_set_target(f32 target);
+void throttle_set_target(f32 new_target);

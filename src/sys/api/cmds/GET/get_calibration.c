@@ -11,12 +11,15 @@
 #include "io/imu.h"
 #include "io/receiver.h"
 
+#include "modes/tune.h"
+
 #include "get_calibration.h"
 
 typedef enum CalibrationSystem {
     CALIBRATION_RECEIVER,
     CALIBRATION_ESCS,
     CALIBRATION_IMU,
+    CALIBRATION_PID,
     CALIBRATION_UNKNOWN,
 } CalibrationSystem;
 
@@ -47,6 +50,8 @@ static CalibrationSystem parse_args(const char *args) {
         system = CALIBRATION_ESCS;
     } else if (strcasecmp(systemStr, "imu") == 0) {
         system = CALIBRATION_IMU;
+    } else if (strcasecmp(systemStr, "pid") == 0) {
+        system = CALIBRATION_PID;
     } else {
         system = CALIBRATION_UNKNOWN;
     }
@@ -55,7 +60,7 @@ static CalibrationSystem parse_args(const char *args) {
 }
 
 // Input:
-// {"system":"receiver|esc|imu"}
+// {"system":"receiver|esc|imu|pid"}
 
 // Output:
 // {"calibrated":boolean}
@@ -74,6 +79,9 @@ i32 api_get_calibration(const char *in, char **out) {
             break;
         case CALIBRATION_IMU:
             calibrated = imu.isCalibrated;
+            break;
+        case CALIBRATION_PID:
+            calibrated = tune_is_tuned();
             break;
         default:
             return 400;

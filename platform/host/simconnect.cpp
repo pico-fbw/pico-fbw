@@ -74,7 +74,7 @@ SC_GPS scGPS = {
 };
 i32 numEngines = 0; // Will be filled in later
 
-f32 ailPos = 0.f, elePos = 0.f, rudPos = 0.f, thrPos = 0.f;                 // Last retrieved control surface positions
+f32 ailPos = 0.f, elePos = 0.f, rudPos = 0.f, thrPos = 0.f; // Last retrieved control surface positions
 
 /**
  * Simulates readings from a MEMS accelerometer based on available SimConnect data.

@@ -22,17 +22,17 @@
 static i32 api_wrap_handler(const char *args, api_func handler, api_output_func output_func, void *output_ctx) {
     char *out = NULL;
     i32 res = handler(args, &out);
-    if (res != 200 || (output_func && !out)) {
-        // Command failed, or output was expected but not produced
-        if (out) {
-            free(out);
-        }
-        return res;
-    }
     if (out && output_func) {
         output_func(output_ctx, "%s\n", out);
         free(out);
-        return -1; // -1 indicates the same as 200, but indicates that output was already produced
+        return res == 200 ? -1 : res;
+    }
+    if (out) {
+        free(out);
+    }
+    if (res != 200 || (output_func && !out)) {
+        // Command failed, or output was expected but not produced
+        return res;
     }
     return res;
 }

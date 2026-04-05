@@ -8,6 +8,7 @@
 
 #include "io/esc.h"
 #include "io/gps.h"
+#include "io/receiver.h"
 #include "lib/pid.h"
 #include "sys/configuration.h"
 
@@ -29,22 +30,6 @@ static f32 escTarget = 0.0f;
 static f32 prevEscTarget = 0.0f;
 static ThrottleState state = THRSTATE_NORMAL;
 static u64 stateChangeAt = 0;
-
-void throttle_init() {
-    // GPS is required for speed mode, as we need to know the aircraft's current speed
-    supportedMode = gps.is_supported() ? THRMODE_SPEED : THRMODE_THRUST;
-    if (supportedMode == THRMODE_SPEED) {
-        athr_c = (PIDController){
-            .kp = calibration.pid[PID_THROTTLE_KP],
-            .ki = calibration.pid[PID_THROTTLE_KI],
-            .kd = calibration.pid[PID_THROTTLE_KD],
-            .tau = calibration.pid[PID_TAU],
-            .limMin = calibration.esc[ESC_DETENT_IDLE],
-            .limMax = calibration.esc[ESC_DETENT_MAX],
-        };
-        pid_init(&athr_c);
-    }
-}
 
 /**
  * Calculates the ESC target based on the current throttle mode.
@@ -132,6 +117,22 @@ static f32 apply_throttle_filtering() {
     return filtered;
 }
 
+void throttle_init() {
+    // GPS is required for speed mode, as we need to know the aircraft's current speed
+    supportedMode = gps.is_supported() ? THRMODE_SPEED : THRMODE_THRUST;
+    if (supportedMode == THRMODE_SPEED) {
+        athr_c = (PIDController){
+            .kp = calibration.pid[PID_THROTTLE_KP],
+            .ki = calibration.pid[PID_THROTTLE_KI],
+            .kd = calibration.pid[PID_THROTTLE_KD],
+            .tau = calibration.pid[PID_TAU],
+            .limMin = calibration.esc[ESC_DETENT_IDLE],
+            .limMax = calibration.esc[ESC_DETENT_MAX],
+        };
+        pid_init(&athr_c);
+    }
+}
+
 void throttle_update() {
     // Calculate base target from mode
     escTarget = calculate_esc_target();
@@ -160,8 +161,13 @@ f32 throttle_get_target() {
 
 void throttle_set_mode(ThrottleMode mode) {
     currentMode = mode;
+    if (mode == THRMODE_THRUST) {
+        // Prime throttle with current value so that we don't get a big jump on first update
+        escTarget = receiver_get((i16)config.pins[PINS_INPUT_THROTTLE], RECEIVER_MODE_PERCENT);
+        prevEscTarget = escTarget;
+    }
 }
 
-void throttle_set_target(f32 newTarget) {
-    target = newTarget;
+void throttle_set_target(f32 new_target) {
+    target = new_target;
 }

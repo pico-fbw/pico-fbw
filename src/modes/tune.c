@@ -12,6 +12,7 @@
 #include "io/receiver.h"
 #include "modes/normal.h"
 #include "sys/configuration.h"
+#include "sys/print.h"
 
 #include "tune.h"
 
@@ -30,7 +31,7 @@
 #define D_GAIN_STEP 0.1f
 
 // If this amount of time passes without any tune events, the system is considered tuned
-#define TUNED_THRESHOLD_MS 10000
+#define TUNED_THRESHOLD_MS 30E3
 
 static Timestamp lastTuneEvent;
 
@@ -95,6 +96,7 @@ void tune_update() {
     if (time_since_ms(&lastTuneEvent) > TUNED_THRESHOLD_MS) {
         calibration.pid[PID_TUNED] = true;
         config_save();
+        printsys(aircraft, "tuning complete");
     }
 }
 

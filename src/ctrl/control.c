@@ -76,3 +76,13 @@ f32 control_mix_elevon(Elevon elevon, f64 roll, f64 pitch) {
         return (rollComponent - pitchComponent) * config.control[CONTROL_ELEVON_MIXING_GAIN] + 90.f;
     }
 }
+
+f32 control_get_heading_diff(f32 target, f32 track) {
+    f32 diff = target - track;
+    if (diff > 180.f) {
+        diff -= 360.f;
+    } else if (diff < -180.f) {
+        diff += 360.f;
+    }
+    return diff;
+}

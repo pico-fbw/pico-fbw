@@ -187,9 +187,9 @@ static bool process_nmea_sentence(const char *line) {
 static void update_from_uart(void) {
     char *line = uart_read((i16)config.pins[PINS_GPS_TX], (i16)config.pins[PINS_GPS_RX]);
     while (line) {
-        bool continue_processing = process_nmea_sentence(line);
+        bool continueProcessing = process_nmea_sentence(line);
         free(line);
-        if (!continue_processing) {
+        if (!continueProcessing) {
             return;
         }
         line = uart_read((i16)config.pins[PINS_GPS_TX], (i16)config.pins[PINS_GPS_RX]);

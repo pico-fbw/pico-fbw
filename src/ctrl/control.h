@@ -47,3 +47,11 @@ void control_reset();
  * @return the mixing value for the elevon from 0 to 180 degrees
  */
 f32 control_mix_elevon(Elevon elevon, f64 roll, f64 pitch);
+
+/**
+ * @return the shortest signed difference between the target and track headings, in degrees.
+ * @param target the target heading in degrees (0-360)
+ * @param track the currently tracked heading in degrees (0-360)
+ * @note The result will be in the range [-180, 180].
+ */
+f32 control_get_heading_diff(f32 target, f32 track);
