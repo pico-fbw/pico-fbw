@@ -79,7 +79,7 @@ bool wifi_setup(const char *ssid, const char *pass) {
     if (http_server_open(&httpServer) != ESP_OK) {
         return false;
     }
-    dns_server_config_t dnsConfig = DNS_SERVER_CONFIG_SINGLE("*", "WIFI_AP_DEF");
+    dns_server_config_t dnsConfig = DNS_SERVER_CONFIG_SINGLE(WIFI_UI_HOSTNAME, "WIFI_AP_DEF");
     dnsServer = dns_server_start(&dnsConfig);
     return dnsServer != NULL;
 }

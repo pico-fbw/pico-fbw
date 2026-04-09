@@ -3,6 +3,13 @@
 #include "platform/types.h"
 
 /**
+ * Initializes the runtime loop.
+ * @note This does not actually call/start the loop, it just prepares it to run.
+ * It therefore must be called before `runtime_loop()` is called.
+ */
+void runtime_loop_begin();
+
+/**
  * Runs the main runtime loop code of the system.
  * Should be called in an infinite loop after the boot process is complete.
  * @param update_aircraft whether or not to update the aircraft's state (aka run the current mode's code)

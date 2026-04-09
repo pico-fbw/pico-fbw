@@ -8,6 +8,9 @@
 #define WIFI_PASS_MIN_LEN 8
 #define WIFI_PASS_MAX_LEN 63
 
+#define WIFI_UI_HOSTNAME "fly.pico-fbw.org"
+#define WIFI_UI_IP "192.168.4.1"
+
 #define WIFI_ENABLED_MIN WIFI_DISABLED
 typedef enum WifiEnabled {
     WIFI_DISABLED,

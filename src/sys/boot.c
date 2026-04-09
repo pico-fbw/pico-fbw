@@ -157,6 +157,8 @@ void boot_init_wifi() {
     if (!setup) {
     fail:
         log_message(TYPE_ERROR, "Wi-Fi setup failed!", 2000, 0, false);
+    } else {
+        printsys(network, "web ui available at http://%s/ (fallback http://%s/)", WIFI_UI_HOSTNAME, WIFI_UI_IP);
     }
 #endif
 }
@@ -164,6 +166,7 @@ void boot_init_wifi() {
 void boot_complete() {
     printpre("boot", "%s(100%%)%s Done!", COLOR_BLUE, COLOR_RESET);
     sys_boot_end();
+    runtime_loop_begin();
     isBooted = true;
 }
 

@@ -88,6 +88,9 @@ static JSON_Value *create_imu_obj() {
 }
 
 static SensorData parse_args(const char *args) {
+    if (!args) {
+        return DATA_ALL;
+    }
     JSON_Value *root = json_parse_string(args);
     if (!root) {
         return DATA_INVALID;
@@ -134,11 +137,21 @@ i32 api_get_sensor(const char *in, char **out) {
 
     // Generate all response data, regardless of the request
     JSON_Value *root = json_value_init_object();
+    if (!root) {
+        return 500;
+    }
     JSON_Object *obj = json_value_get_object(root);
 
     JSON_Value *gpsObj = create_gps_obj();
     JSON_Value *imuObj = create_imu_obj();
     if (!gpsObj || !imuObj) {
+        if (gpsObj) {
+            json_value_free(gpsObj);
+        }
+        if (imuObj) {
+            json_value_free(imuObj);
+        }
+        json_value_free(root);
         return 500;
     }
 

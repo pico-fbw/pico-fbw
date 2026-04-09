@@ -65,7 +65,7 @@ u8 tud_network_mac_address[6] = {[0 ... 5] = 0x00};
  * Generate a MAC address for the device based on the unique board ID.
  * @param mac the buffer to store the generated MAC address in
  */
-void generate_macaddr(u8 *mac) {
+static void generate_macaddr(u8 *mac) {
     pico_unique_board_id_t board_id;
     pico_get_unique_board_id(&board_id);
     memcpy(mac, &board_id.id[2], 6);

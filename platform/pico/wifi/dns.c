@@ -19,10 +19,12 @@
 
 #include <errno.h>
 #include <string.h>
+#include <strings.h>
 #include "lwip/debug.h"
 #include "lwip/udp.h"
 
 #include "platform/types.h"
+#include "platform/wifi.h"
 
 #define PORT_DNS_SERVER 53
 #define MAX_DNS_MSG_SIZE 300
@@ -136,6 +138,8 @@ static void dns_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p, 
     const u8 *question_ptr_start = dns_msg + sizeof(dns_header_t);
     const u8 *question_ptr_end = dns_msg + msg_len;
     const u8 *question_ptr = question_ptr_start;
+    char question[256] = "";
+    size_t question_len = 0;
     while (question_ptr < question_ptr_end) {
         if (*question_ptr == 0) {
             question_ptr++;
@@ -143,12 +147,24 @@ static void dns_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p, 
         } else {
             if (question_ptr > question_ptr_start) {
                 LWIP_DEBUGF(DNS_DEBUG, ("."));
+                if (question_len + 1 >= sizeof(question)) {
+                    LWIP_DEBUGF(DNS_DEBUG, ("Question too long\n"));
+                    goto ignore_request;
+                }
+                question[question_len++] = '.';
             }
             u16 label_len = *question_ptr++;
             if (label_len > 63) {
                 LWIP_DEBUGF(DNS_DEBUG, ("Invalid label\n"));
                 goto ignore_request;
             }
+            if (question_len + label_len >= sizeof(question)) {
+                LWIP_DEBUGF(DNS_DEBUG, ("Question too long\n"));
+                goto ignore_request;
+            }
+            memcpy(question + question_len, question_ptr, label_len);
+            question_len += label_len;
+            question[question_len] = '\0';
             LWIP_DEBUGF(DNS_DEBUG, ("%.*s", label_len, question_ptr));
             question_ptr += label_len;
         }
@@ -161,7 +177,26 @@ static void dns_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p, 
         goto ignore_request;
     }
 
-    // Skip QNAME and QTYPE
+    // Skip QTYPE + QCLASS
+    if (question_ptr + 4 > question_ptr_end) {
+        LWIP_DEBUGF(DNS_DEBUG, ("Question is missing QTYPE/QCLASS\n"));
+        goto ignore_request;
+    }
+
+    if (strcasecmp(question, WIFI_UI_HOSTNAME) != 0) {
+        LWIP_DEBUGF(DNS_DEBUG, ("Ignoring non-canonical hostname: %s\n", question));
+        dns_hdr->flags = lwip_htons(0x1 << 15 | // QR = response
+                                    0x1 << 10 | // AA = authoritive
+                                    0x1 << 7 |  // RA = authenticated
+                                    0x3);       // RCODE = NXDOMAIN
+        dns_hdr->question_count = lwip_htons(1);
+        dns_hdr->answer_record_count = 0;
+        dns_hdr->authority_record_count = 0;
+        dns_hdr->additional_record_count = 0;
+        dns_socket_sendto(&d->udp, &dns_msg, (question_ptr + 4) - dns_msg, src_addr, src_port);
+        goto ignore_request;
+    }
+
     question_ptr += 4;
 
     // Generate answer

@@ -19,8 +19,8 @@ void direct_update() {
     switch ((ControlMode)config.general[GENERAL_CONTROL_MODE]) {
         case CTRLMODE_3AXIS_ATHR:
         case CTRLMODE_3AXIS:
-            servo_set((i16)config.pins[PINS_SERVO_RUD],
-                      receiver_get((i16)config.pins[PINS_INPUT_RUD], RECEIVER_MODE_DEGREE));
+            f32 rud = receiver_get((i16)config.pins[PINS_INPUT_RUD], RECEIVER_MODE_DEGREE);
+            servo_set((i16)config.pins[PINS_SERVO_RUD], rud);
             /* fall through */
         case CTRLMODE_2AXIS_ATHR:
         case CTRLMODE_2AXIS:
@@ -34,7 +34,7 @@ void direct_update() {
             break;
     }
     if (receiver_has_athr()) {
-        esc_set((i16)config.pins[PINS_ESC_THROTTLE],
-                receiver_get((i16)config.pins[PINS_INPUT_THROTTLE], RECEIVER_MODE_PERCENT));
+        f32 esc = receiver_get((i16)config.pins[PINS_INPUT_THROTTLE], RECEIVER_MODE_PERCENT);
+        esc_set((i16)config.pins[PINS_ESC_THROTTLE], esc);
     }
 }

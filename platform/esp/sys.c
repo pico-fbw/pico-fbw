@@ -14,7 +14,7 @@
 
 #include "platform/sys.h"
 
-#define THREAD_DELAY_MS 10 // The amount of time to allow for other RTOS tasks to run
+#define THREAD_DELAY_TICKS 1 // The amount of time to allow for other RTOS tasks to run
 
 void sys_boot_begin() {
     // Initialize NVS, used to store wifi data
@@ -35,8 +35,8 @@ void sys_periodic() {
     if (esp_task_wdt_status(NULL) == ESP_OK) {
         esp_task_wdt_reset();
     }
-    vTaskDelay(pdMS_TO_TICKS(THREAD_DELAY_MS)); // Allow other RTOS tasks to run
-    static_assert(pdMS_TO_TICKS(THREAD_DELAY_MS) > 0, "THREAD_DELAY_MS must be at least one tick");
+    vTaskDelay(THREAD_DELAY_TICKS); // Allow other RTOS tasks to run
+    static_assert(THREAD_DELAY_TICKS > 0, "THREAD_DELAY_TICKS must be at least one tick");
 }
 
 void __attribute__((noreturn)) sys_shutdown() {

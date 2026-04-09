@@ -22,6 +22,7 @@ export async function api<E extends keyof EndpointMap>(endpoint: E, data?: objec
     if (data) {
         options = {
             method: "POST",
+            signal: controller.signal,
             headers: {
                 "Content-Type": "application/json",
             },
@@ -30,15 +31,18 @@ export async function api<E extends keyof EndpointMap>(endpoint: E, data?: objec
     }
 
     const id = setTimeout(() => controller.abort(), timeout);
-    const response = fetch(`/api/v1/${endpoint}`, options).then(res => {
-        if (!res.ok) {
-            throw new Error(res.status.toString());
-        }
-        if (res.status === 204) {
-            return {};
-        }
-        return res.json();
-    }) as Promise<EndpointMap[E]>;
-    clearTimeout(id);
-    return response;
+    try {
+        const response = (await fetch(`/api/v1/${endpoint}`, options).then(res => {
+            if (!res.ok) {
+                throw new Error(res.status.toString());
+            }
+            if (res.status === 204) {
+                return {};
+            }
+            return res.json();
+        })) as EndpointMap[E];
+        return response;
+    } finally {
+        clearTimeout(id);
+    }
 }

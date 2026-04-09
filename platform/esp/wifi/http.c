@@ -89,9 +89,38 @@ static esp_err_t handle_api_v1_request(httpd_req_t *req) {
     return res < 500 ? ESP_OK : ESP_FAIL;
 }
 
+// Returns true if the request was handled as an OS connectivity probe.
+static bool handle_connectivity_probe(httpd_req_t *req) {
+    if (strcmp(req->uri, "/generate_204") == 0 || strcmp(req->uri, "/gen_204") == 0) {
+        httpd_resp_set_status(req, "204 No Content");
+        httpd_resp_send(req, NULL, 0);
+        return true;
+    }
+    if (strcmp(req->uri, "/hotspot-detect.html") == 0) {
+        httpd_resp_set_type(req, "text/html");
+        httpd_resp_sendstr(req, "<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>");
+        return true;
+    }
+    if (strcmp(req->uri, "/ncsi.txt") == 0) {
+        httpd_resp_set_type(req, "text/plain");
+        httpd_resp_sendstr(req, "Microsoft NCSI");
+        return true;
+    }
+    if (strcmp(req->uri, "/connecttest.txt") == 0) {
+        httpd_resp_set_type(req, "text/plain");
+        httpd_resp_sendstr(req, "Microsoft Connect Test");
+        return true;
+    }
+    return false;
+}
+
 // Fetches the content requested by a GET request from littlefs and responds with the content.
 // Will be called by the HTTP server when a GET request is received.
 static esp_err_t handle_common_get(httpd_req_t *req) {
+    if (handle_connectivity_probe(req)) {
+        return ESP_OK;
+    }
+
     // Allocate a buffer to store the path to the file in the filesystem
     // Ensure the buffer is large enough to store anything that could be appended to the path
     size_t pathSize = strlen(req->uri) + sizeof("/www") + sizeof("index.html") + sizeof(".gz");
@@ -113,6 +142,7 @@ static esp_err_t handle_common_get(httpd_req_t *req) {
     bool gzipped = false;
     lfs_file_t file;
     i32 err;
+    // Try 2 times: once for the non-gzipped variant, once for the gzipped variant
     for (u32 i = 0; i < 2; i++) {
         err = lfs_file_open(&wwwfs, &file, path, LFS_O_RDONLY);
         if (err == LFS_ERR_NOENT && !gzipped) {
@@ -124,13 +154,15 @@ static esp_err_t handle_common_get(httpd_req_t *req) {
         break;
     }
     if (err != LFS_ERR_OK) {
-        // Redirect the client to the index page; this provides the captive portal behavior
-        httpd_resp_set_status(req, "302 Found");
-        httpd_resp_set_hdr(req, "Location", "/");
-        // To redirect on ios devices, there must be a response body
-        httpd_resp_send(req, "pico-fbw", HTTPD_RESP_USE_STRLEN);
-        free(path);
-        return ESP_OK;
+        // Both the gzipped and non-gzipped variants were not found, try falling back to index.html for SPA support
+        strcpy(path, "/www/index.html");
+        gzipped = false;
+        if (lfs_file_open(&wwwfs, &file, path, LFS_O_RDONLY) != LFS_ERR_OK) {
+            // index.html was not found either, give up
+            httpd_resp_send_500(req);
+            free(path);
+            return ESP_OK;
+        }
     }
 
     // Set the content type and encoding headers

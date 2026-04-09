@@ -42,9 +42,18 @@
 #define HTTP_GET "GET"
 #define HTTP_POST "POST"
 
-#define HEADER_302 "HTTP/1.1 302 Redirect\r\nLocation: http://%s/\r\nContent-Length: 0\r\n\r\n"
 #define HEADER_404 "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n"
 #define HEADER_500 "HTTP/1.1 500 Internal Server Error\r\nContent-Length: 0\r\n\r\n"
+#define HEADER_204 "HTTP/1.1 204 No Content\r\nContent-Length: 0\r\n\r\n"
+#define HEADER_IOS_SUCCESS                                                                                \
+    "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: 68\r\n\r\n"                     \
+    "<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>"
+#define HEADER_NCSI                                                                                        \
+    "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 14\r\n\r\n"                    \
+    "Microsoft NCSI"
+#define HEADER_CONNECT_TEST                                                                                \
+    "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 22\r\n\r\n"                    \
+    "Microsoft Connect Test"
 
 // clang-format on
 
@@ -203,6 +212,27 @@ static bool handle_api_v1_request(struct tcp_pcb *pcb, const char *req, api_func
     return res < 500 ? true : false;
 }
 
+// Returns true when an OS connectivity-check request is recognized and handled.
+static bool handle_connectivity_probe_request(struct tcp_pcb *pcb, const char *uri) {
+    if (strcmp(uri, "/generate_204") == 0 || strcmp(uri, "/gen_204") == 0) {
+        tcp_write(pcb, HEADER_204, strlen(HEADER_204), 0);
+        return true;
+    }
+    if (strcmp(uri, "/hotspot-detect.html") == 0) {
+        tcp_write(pcb, HEADER_IOS_SUCCESS, strlen(HEADER_IOS_SUCCESS), 0);
+        return true;
+    }
+    if (strcmp(uri, "/ncsi.txt") == 0) {
+        tcp_write(pcb, HEADER_NCSI, strlen(HEADER_NCSI), 0);
+        return true;
+    }
+    if (strcmp(uri, "/connecttest.txt") == 0) {
+        tcp_write(pcb, HEADER_CONNECT_TEST, strlen(HEADER_CONNECT_TEST), 0);
+        return true;
+    }
+    return false;
+}
+
 // Generic GET handler.
 // Fetches the content requested by a GET request from littlefs and responds with the content.
 // Will be called by the TCP server when a GET request is received that doesn't match any of the API paths.
@@ -239,9 +269,13 @@ static bool handle_common_get(TCPConnection *con_state, struct tcp_pcb *pcb, con
         break;
     }
     if (err != LFS_ERR_OK) {
-        LWIP_DEBUGF(TCP_DEBUG, ("handle_common_get: file %s not found\n", path));
-        free(path);
-        return false;
+        strcpy(path, "/www/index.html");
+        gzipped = false;
+        if (lfs_file_open(&wwwfs, &file, path, LFS_O_RDONLY) != LFS_ERR_OK) {
+            tcp_write(pcb, HEADER_500, strlen(HEADER_500), 0);
+            free(path);
+            return true;
+        }
     } else {
         lfs_file_close(&wwwfs, &file);
     }
@@ -311,7 +345,9 @@ static bool handle_request(TCPConnection *con_state, struct tcp_pcb *pcb, const 
             return false;
         }
         LWIP_DEBUGF(TCP_DEBUG, ("handle_request: GET URI: %s\n", uri));
-        if (strncmp(uri, API_V1_PATH, strlen(API_V1_PATH)) == 0) {
+        if (handle_connectivity_probe_request(pcb, uri)) {
+            res = true;
+        } else if (strncmp(uri, API_V1_PATH, strlen(API_V1_PATH)) == 0) {
             if (strcmp(uri + strlen(API_V1_PATH), "get/config") == 0) {
                 res = handle_api_v1_request(pcb, request, api_get_config);
             } else if (strcmp(uri + strlen(API_V1_PATH), "get/flightplan") == 0) {
@@ -372,10 +408,7 @@ static bool handle_request(TCPConnection *con_state, struct tcp_pcb *pcb, const 
     }
     free(uri);
     if (!res) {
-        // Redirect the client to the index page; this provides the captive portal behavior
-        char header[sizeof(HEADER_302) + 32] = "";
-        snprintf(header, sizeof(header), HEADER_302, ipaddr_ntoa(con_state->ip));
-        tcp_write(pcb, header, strlen(header), 0);
+        tcp_write(pcb, HEADER_404, strlen(HEADER_404), 0);
     }
     return res;
 }
