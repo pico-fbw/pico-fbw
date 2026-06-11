@@ -52,7 +52,7 @@ export default function Sidebar({ navigation, isOpen, setIsOpen }: SidebarProps)
             {/* Desktop: static sidebar */}
             <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
                 <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-black/10 px-6 ring-1 ring-white/5">
-                    <Link to={"/"} className="flex h-[4.5rem] shrink-0 items-center">
+                    <Link to={"/"} className="flex h-18 shrink-0 items-center">
                         <img src="/icon.svg" className="h-10 w-auto -m-2" />
                     </Link>
                     <nav className="flex flex-1 flex-col">
@@ -78,7 +78,7 @@ export default function Sidebar({ navigation, isOpen, setIsOpen }: SidebarProps)
                 </button>
             </div>
             {/* Mobile: full sidebar */}
-            <div className="relative z-[2000] 3xl:hidden">
+            <div className="relative z-2000 3xl:hidden">
                 <div
                     className={classNames(
                         isOpen ? "block" : "hidden",

@@ -49,7 +49,7 @@ function Slider({ value, label }: { value: number; label: string }) {
                 </div>
                 {/* Fill */}
                 <div
-                    className="absolute bottom-0 w-full bg-gradient-to-t from-sky-600 to-sky-500 transition-all duration-100"
+                    className="absolute bottom-0 w-full bg-linear-to-t from-sky-600 to-sky-500 transition-all duration-100"
                     style={{ height: `${value}%` }}
                 />
                 {/* Thumb */}
@@ -117,13 +117,14 @@ export default function TransmitterDisplay({ inputData, config }: TransmitterDis
         return <Spinner>Waiting for input data...</Spinner>;
     }
 
+    const generalSection = config?.sections.find(s => s.name === "General");
     // Determine control mode
-    const controlMode = config?.sections.find(s => s.name === "General").values[0] as number;
+    const controlMode = Number(generalSection?.values[0]);
     const hasRudder = controlMode <= 1;
     const hasThrottle = controlMode % 2 === 0;
 
     // Get switch type (2-position or 3-position)
-    const switchType = config?.sections.find(s => s.name === "General").values[1];
+    const switchType = generalSection?.values[1];
     const switchPositions = Number(switchType) === 0 ? 2 : 3;
 
     // Calculate switch position based on value
@@ -149,12 +150,12 @@ export default function TransmitterDisplay({ inputData, config }: TransmitterDis
             {/* Left stick/throttle slider (depending on aircraft) */}
             {hasRudder ? (
                 <Stick
-                    x={normalizeDegreeInput(inputData.rud)}
+                    x={normalizeDegreeInput(inputData.rud ?? 0)}
                     y={inputData.thr !== undefined ? normalizeThrottleInput(inputData.thr) : 0}
                     label={hasThrottle ? "Yaw / Throttle" : "Yaw"}
                 />
             ) : hasThrottle ? (
-                <Slider value={inputData.thr} label="Throttle" />
+                <Slider value={inputData.thr ?? 0} label="Throttle" />
             ) : null}
             {/* Right stick */}
             <Stick

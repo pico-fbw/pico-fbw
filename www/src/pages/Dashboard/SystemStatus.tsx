@@ -39,7 +39,7 @@ export default function SystemStatus({ sensorData, modeData, infoData, logsData 
         if (sensorData?.gps) {
             const sats = sensorData.gps.sats;
             const hdop = sensorData.gps.hdop;
-            if (sats < 4) {
+            if (sats !== null && sats < 4) {
                 alerts.push({
                     id: "gps-weak",
                     type: "warning",
@@ -49,7 +49,7 @@ export default function SystemStatus({ sensorData, modeData, infoData, logsData 
                     action: "Move to open area for better satellite reception.",
                 });
             }
-            if (hdop > 5) {
+            if (hdop !== null && hdop > 5) {
                 alerts.push({
                     id: "gps-poor-accuracy",
                     type: "info",

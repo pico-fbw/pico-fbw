@@ -63,10 +63,10 @@ export default function ContentBlock({
             {/* Error overlay */}
             {error && (
                 <div
-                    className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/80"
-                    onClick={() => setError("")}
+                    className="fixed inset-0 z-2000 flex items-center justify-center bg-black/80"
+                    onClick={() => setError?.("")}
                 >
-                    <Alert type="danger" onClose={() => setError("")} className="mx-4 sm:mx-8 lg:mx-0">
+                    <Alert type="danger" onClose={() => setError?.("")} className="mx-4 sm:mx-8 lg:mx-0">
                         {error}
                     </Alert>
                 </div>

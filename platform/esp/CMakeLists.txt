@@ -14,7 +14,10 @@ add_library(platform_esp
 )
 
 target_link_libraries(platform_esp
-    idf::driver
+    idf::esp_driver_gpio
+    idf::esp_driver_i2c
+    idf::esp_driver_mcpwm
+    idf::esp_driver_uart
     idf::esp_event
     idf::esp_http_server
     idf::esp_hw_support
@@ -24,7 +27,6 @@ target_link_libraries(platform_esp
     idf::esp_timer
     idf::esp_wifi
     idf::freertos
-    idf::newlib
     idf::nvs_flash
     idf::soc
 )

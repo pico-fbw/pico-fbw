@@ -35,3 +35,10 @@ typedef esp_timer_handle_t __callback_id_t;
 // In ESP-IDF, FreeRTOS is required, and it expects the entrypoint to be called app_main
 // This define will rename main() to app_main() in main.c (as this file is included in main.c before main() is defined)
 #define main app_main
+
+// Recent ESP-IDF versions use picolibc instead of newlib, which defines __picolibc_format instead of __printflike
+#ifndef __printflike
+    #ifdef __picolibc_format
+        #define __printflike(fmtarg, firstvararg) __picolibc_format(__printf__, fmtarg, firstvararg)
+    #endif
+#endif

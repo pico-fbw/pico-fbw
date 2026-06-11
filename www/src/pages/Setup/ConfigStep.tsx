@@ -9,7 +9,6 @@ import { ChevronLeftOutline, ChevronRightOutline, Cog6ToothOutline } from "preac
 import { Spinner } from "elements/Spinner";
 
 import { api } from "helpers/api";
-import { GET_CONFIG } from "helpers/apiTypes";
 
 interface ConfigStepProps {
     onNext: () => void;
@@ -18,7 +17,6 @@ interface ConfigStepProps {
 }
 
 export default function ConfigStep({ onNext, onBack, setError }: ConfigStepProps) {
-    const [config, setConfig] = useState<GET_CONFIG | null>(null);
     const [aircraftType, setAircraftType] = useState<"conventional" | "rudderless" | "flying-wing">("rudderless");
     const [autothrottle, setAutothrottle] = useState<boolean>(true);
     const [switchType, setSwitchType] = useState<"two" | "three">("three");
@@ -27,7 +25,6 @@ export default function ConfigStep({ onNext, onBack, setError }: ConfigStepProps
     useEffect(() => {
         api("get/config")
             .then(response => {
-                setConfig(response);
                 const general = response.sections.find(s => s.name === "General");
                 if (general) {
                     const controlMode = Number(general.values[0]);

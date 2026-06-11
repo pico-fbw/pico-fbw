@@ -224,9 +224,11 @@ export default function Planner() {
                     <div className="flex bg-black/10 ring-white/5 ring-1">
                         <h1 className="px-6 place-self-center rounded-md md:text-3xl text-2xl font-bold text-white">
                             Flightplans
-                            <span className="md:text-lg text-sm text-gray-400 ml-3">
-                                {(fsUsed * 100).toFixed(0)}% used
-                            </span>
+                            {fsUsed !== null && (
+                                <span className="md:text-lg text-sm text-gray-400 ml-3">
+                                    {(fsUsed * 100).toFixed(0)}% used
+                                </span>
+                            )}
                         </h1>
                         <div className="flex grow p-4 gap-3 justify-end">
                             <button
@@ -247,13 +249,17 @@ export default function Planner() {
                         </div>
                     </div>
                     {/* Progress bar-like indicator of fsUsed as divider */}
-                    <div
-                        className={`h-1 ${fsUsed < 0.8 ? "bg-blue-500" : fsUsed < 0.9 ? "bg-amber-500" : "bg-red-400"}`}
-                        style={{ width: `${fsUsed * 100}%` }}
-                    />
-                    <div className="grow">
-                        <Explorer flightplans={flightplans} setFlightplans={setFlightplans} />
-                    </div>
+                    {fsUsed !== null && (
+                        <div
+                            className={`h-1 ${fsUsed < 0.8 ? "bg-blue-500" : fsUsed < 0.9 ? "bg-amber-500" : "bg-red-400"}`}
+                            style={{ width: `${fsUsed * 100}%` }}
+                        />
+                    )}
+                    {flightplans !== null && (
+                        <div className="grow">
+                            <Explorer flightplans={flightplans} setFlightplans={setFlightplans} />
+                        </div>
+                    )}
                     {newFlightplanModalOpen && (
                         <NewFlightpanModal
                             name={newFlightplanName}
@@ -271,7 +277,7 @@ export default function Planner() {
                             <button
                                 type="button"
                                 // eslint-disable-next-line @typescript-eslint/no-misused-promises
-                                onClick={() => setActiveFlightplan(flightplanName)}
+                                onClick={() => flightplanName !== null && setActiveFlightplan(flightplanName)}
                                 className="flex-1 rounded-md bg-white/10 px-2.5 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-white/20 cursor-pointer"
                             >
                                 Set as Active

@@ -71,7 +71,7 @@ const layers = [
 interface MapProps {
     json: string;
     setJson: (json: string) => void;
-    setIsFocused?: (isFocused: boolean) => void;
+    setIsFocused: (isFocused: boolean) => void;
 }
 
 export default function Map({ json, setJson, setIsFocused }: MapProps) {
@@ -108,7 +108,7 @@ export default function Map({ json, setJson, setIsFocused }: MapProps) {
             return;
         }
         const marker = markers.find(marker => marker.id === id);
-        map.current.setView(marker ? marker.position : ({ lat: 0, lng: 0 } as LatLng));
+        map.current.setView(marker ? marker.position : { lat: 0, lng: 0 });
         setEditing(id);
     };
 
@@ -188,10 +188,12 @@ export default function Map({ json, setJson, setIsFocused }: MapProps) {
         if (!map.current) {
             return;
         }
+        const m = map.current;
+
         // Clear existing markers and polyline
-        map.current.eachLayer(layer => {
+        m.eachLayer(layer => {
             if (!(layer instanceof L.TileLayer)) {
-                map.current.removeLayer(layer);
+                m.removeLayer(layer);
             }
         });
 
@@ -199,14 +201,14 @@ export default function Map({ json, setJson, setIsFocused }: MapProps) {
         markers.forEach(marker => {
             const { position, id } = marker;
             L.marker(position, { icon: markerIcon, draggable: true })
-                .addTo(map.current)
+                .addTo(m)
                 .on("click", () => markerEditMode(id))
                 .on("dragend", e => handleMarkerDragEnd(e, id));
         });
 
         // Add polyline connecting all markers
         const latLngs = markers.map(marker => marker.position);
-        polyline.current = L.polyline(latLngs, { color: polylineColor }).addTo(map.current);
+        polyline.current = L.polyline(latLngs, { color: polylineColor }).addTo(m);
 
         // Update externally managed JSON
         setJson(markersToFlightplan(markers));
@@ -238,7 +240,7 @@ export default function Map({ json, setJson, setIsFocused }: MapProps) {
         if (!mapContainer.current || map.current) {
             return;
         }
-        map.current = L.map(mapContainer.current as HTMLElement, {
+        map.current = L.map(mapContainer.current, {
             center: [20, 0],
             zoom: 2,
             scrollWheelZoom: true,

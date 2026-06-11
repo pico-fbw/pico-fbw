@@ -36,7 +36,7 @@ export default function Index() {
         if (status === "loading" && hasAPIConnection !== null) {
             const delay = Math.floor(Math.random() * (1000 - 500 + 1)) + 500;
             setTimeout(() => {
-                setStatus(null);
+                setStatus("");
             }, delay);
         }
     }, [status, hasAPIConnection]);

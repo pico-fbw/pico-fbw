@@ -492,7 +492,9 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
                     return null;
                 }
                 const updatedData = { ...prevData };
-                updatedData.sections[sectionIndex].values[valueIndex] = originalValue;
+                if (originalValue !== undefined) {
+                    updatedData.sections[sectionIndex].values[valueIndex] = originalValue;
+                }
                 return updatedData;
             });
             setError(`Failed to set new config value: ${(e as Error).message}`);
@@ -566,12 +568,12 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
                                                 <div className="mt-3">
                                                     {config[section.name as keyof typeof config]?.[valueIndex]
                                                         ?.enumMap ? (
-                                                        // Dropdown for enums
                                                         <select
                                                             className="block w-full text-gray-900 border-gray-300 bg-gray-300 rounded-md shadow-sm p-2 focus:ring focus:ring-opacity-50"
                                                             disabled={
-                                                                config[section.name as keyof typeof config][valueIndex]
-                                                                    .readOnly
+                                                                config[section.name as keyof typeof config]?.[
+                                                                    valueIndex
+                                                                ]?.readOnly
                                                             }
                                                             value={value.toString()}
                                                             // eslint complains here about handleConfigChange returning a promise.
@@ -599,8 +601,9 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
                                                             }
                                                         >
                                                             {Object.entries(
-                                                                config[section.name as keyof typeof config][valueIndex]
-                                                                    .enumMap,
+                                                                config[section.name as keyof typeof config]?.[
+                                                                    valueIndex
+                                                                ]?.enumMap ?? {},
                                                             ).map(([enumKey, enumValue]) => (
                                                                 <option key={enumKey} value={enumKey}>
                                                                     {enumValue}

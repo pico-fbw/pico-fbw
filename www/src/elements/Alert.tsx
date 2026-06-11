@@ -43,11 +43,11 @@ export default function Alert({ type, onClose, className = "", children }: Alert
      */
     const handleClose = () => {
         setHidden(true);
-        onClose(); // Call the provided onClose function
+        onClose?.();
     };
 
     return (
-        <div className={classNames("relative rounded-md p-4", getColors(type), className, hidden && "hidden")}>
+        <div className={classNames("relative rounded-md p-4", getColors(type), className, hidden ? "hidden" : "")}>
             {onClose && (
                 <div onClick={handleClose} className="absolute top-0 right-0 p-1">
                     <button className="flex items-center justify-center h-6 w-6 text-gray-400 hover:text-gray-500">
@@ -56,7 +56,7 @@ export default function Alert({ type, onClose, className = "", children }: Alert
                 </div>
             )}
             <div className="flex">
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                     {type === "success" ? (
                         <CheckCircleOutline className={"mr-2 h-6 w-6 text-green-500"} />
                     ) : type === "info" ? (

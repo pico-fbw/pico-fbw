@@ -25,7 +25,7 @@ function ConfigUI({ setError }: ConfigUIProps) {
                 </h2>
                 <div className="sm:col-span-3 space-y-6">
                     <div className="flex flex-col">
-                        <div className="flex-grow">
+                        <div className="grow">
                             <ConfigViewer setError={setError} />
                         </div>
                     </div>

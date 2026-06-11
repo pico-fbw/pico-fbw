@@ -12,7 +12,7 @@
 #include "esp_private/esp_clk.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "soc/soc_caps.h"
+#include "hal/mcpwm_ll.h"
 
 #include "platform/helpers.h"
 
@@ -123,10 +123,10 @@ bool pwm_setup_read(const i16 pins[], u32 num_pins) {
 
     for (u32 i = 0; i < num_pins; i++) {
         // Create a new capture timer if necessary
-        bool newTimerNeeded = numCaptureChannels % SOC_MCPWM_CAPTURE_CHANNELS_PER_TIMER == 0;
+        bool newTimerNeeded = numCaptureChannels % MCPWM_LL_CAPTURE_CHANNELS_PER_TIMER == 0;
         if (newTimerNeeded) {
-            currentCaptureTimer = numCaptureChannels / SOC_MCPWM_CAPTURE_CHANNELS_PER_TIMER;
-            if (currentCaptureTimer >= SOC_MCPWM_TIMERS_PER_GROUP) {
+            currentCaptureTimer = numCaptureChannels / MCPWM_LL_CAPTURE_CHANNELS_PER_TIMER;
+            if (currentCaptureTimer >= MCPWM_LL_TIMERS_PER_GROUP) {
                 return false;
             }
             config.group_id = currentCaptureTimer;
@@ -188,10 +188,10 @@ bool pwm_setup_write(const i16 pins[], u32 num_pins, u32 freq) {
     };
 
     for (u32 i = 0; i < num_pins; i++) {
-        bool newTimerNeeded = numOperators % SOC_MCPWM_OPERATORS_PER_GROUP == 0;
+        bool newTimerNeeded = numOperators % MCPWM_LL_OPERATORS_PER_GROUP == 0;
         if (newTimerNeeded) {
-            currentTimer = numOperators / SOC_MCPWM_OPERATORS_PER_GROUP;
-            if (currentTimer >= SOC_MCPWM_TIMERS_PER_GROUP) {
+            currentTimer = numOperators / MCPWM_LL_OPERATORS_PER_GROUP;
+            if (currentTimer >= MCPWM_LL_TIMERS_PER_GROUP) {
                 return false;
             }
             config.group_id = currentTimer;

@@ -56,7 +56,10 @@ function(setup_before_subdirs)
             ${PICO_FBW_VERSION}
         COMPONENTS
             # See IDF_PATH/components/README.md for a list of available components
-            driver
+            esp_driver_gpio
+            esp_driver_i2c
+            esp_driver_mcpwm
+            esp_driver_uart
             esptool_py
             esp_event
             esp_http_server
@@ -67,7 +70,6 @@ function(setup_before_subdirs)
             esp_timer
             esp_wifi
             freertos
-            newlib
             nvs_flash
             soc
         SDKCONFIG

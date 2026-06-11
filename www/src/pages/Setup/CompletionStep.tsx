@@ -25,14 +25,14 @@ export default function CompletionStep() {
                 <h3 className="text-lg font-semibold text-white mb-4">What's next?</h3>
                 <ul className="space-y-3">
                     <li className="flex items-start">
-                        <CheckCircleOutline className="h-6 w-6 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+                        <CheckCircleOutline className="h-6 w-6 text-green-500 mr-3 shrink-0 mt-0.5" />
                         <div>
                             <p className="text-white font-medium">Review your configuration</p>
                             <p className="text-sm text-gray-400">Visit the Settings page to fine-tune your setup</p>
                         </div>
                     </li>
                     <li className="flex items-start">
-                        <CheckCircleOutline className="h-6 w-6 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+                        <CheckCircleOutline className="h-6 w-6 text-green-500 mr-3 shrink-0 mt-0.5" />
                         <div>
                             <p className="text-white font-medium">Create a flight plan</p>
                             <p className="text-sm text-gray-400">
@@ -41,7 +41,7 @@ export default function CompletionStep() {
                         </div>
                     </li>
                     <li className="flex items-start">
-                        <CheckCircleOutline className="h-6 w-6 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+                        <CheckCircleOutline className="h-6 w-6 text-green-500 mr-3 shrink-0 mt-0.5" />
                         <div>
                             <p className="text-white font-medium">Perform a ground test</p>
                             <p className="text-sm text-gray-400">Test your controls and sensors before taking flight</p>

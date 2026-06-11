@@ -3,7 +3,7 @@ import mockServer from "vite-plugin-mock-server";
 import preact from "@preact/preset-vite";
 import tailwindcss from "@tailwindcss/vite";
 
-export default defineConfig(({ command, mode }) => {
+export default defineConfig(() => {
     // Use the DIST_DIR argument if provided, otherwise fallback to the default assets path
     const outDir = `${process.env.DIST_DIR}` || "../build/www/www";
 

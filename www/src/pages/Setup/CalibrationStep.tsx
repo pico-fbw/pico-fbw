@@ -15,11 +15,10 @@ import { GET_SENSOR } from "helpers/apiTypes";
 interface CalibrationStepProps {
     onNext: () => void;
     onBack: () => void;
-    setError: (msg: string) => void;
 }
 
 // TODO: add pwm, esc calibration
-export default function CalibrationStep({ onNext, onBack, setError }: CalibrationStepProps) {
+export default function CalibrationStep({ onNext, onBack }: CalibrationStepProps) {
     const [sensorData, setSensorData] = useState<GET_SENSOR | null>(null);
     const [calibrating, setCalibrating] = useState(false);
     const [calibrationStep, setCalibrationStep] = useState(0);

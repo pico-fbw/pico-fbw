@@ -17,7 +17,7 @@ env:
   # Debug build will enable more useful warnings
   BUILD_TYPE: Debug
   PICO_SDK_PATH: ${{github.workspace}}/pico-sdk
-  ESP_IDF_VERSION: v5.5.3
+  ESP_IDF_VERSION: v6.0.1
 
 jobs:
   embedded:
@@ -37,16 +37,16 @@ jobs:
       run: npm install --global corepack@latest && corepack enable pnpm
 
     - name: Set up web build environment
-      uses: actions/setup-node@v6.2.0
+      uses: actions/setup-node@v6
       with:
-        node-version: '22'
-        cache: 'pnpm'
+        node-version: 22
+        cache: pnpm
         cache-dependency-path: '${{github.workspace}}/www/pnpm-lock.yaml'
 
     - name: Check cache (esp)
       if: matrix.PLATFORM == 'esp32'
       id: esp-idf-cache
-      uses: actions/cache@v3
+      uses: actions/cache@v5
       with:
         path: |
           ~/esp/esp-idf
@@ -55,7 +55,7 @@ jobs:
 
     - name: Install toolchain (pico)
       if: matrix.PLATFORM == 'pico' || matrix.PLATFORM == 'pico2' || matrix.PLATFORM == 'pico_w'
-      uses: carlosperate/arm-none-eabi-gcc-action@v1.12.0
+      uses: carlosperate/arm-none-eabi-gcc-action@v1
 
     - name: Prepare (pico)
       if: matrix.PLATFORM == 'pico' || matrix.PLATFORM == 'pico2' || matrix.PLATFORM == 'pico_w'
@@ -64,7 +64,7 @@ jobs:
         repository: raspberrypi/pico-sdk
         ref: 2.2.0
         path: pico-sdk
-        submodules: 'true'
+        submodules: true
     
     - name: Prepare (esp)
       if: matrix.PLATFORM == 'esp32'
@@ -84,7 +84,7 @@ jobs:
         sudo apt install -y autoconf autoconf-archive libtool pkg-config
         git clone https://git.kernel.org/pub/scm/libs/libgpiod/libgpiod.git
         cd libgpiod
-        git checkout v2.1.x
+        git checkout v2.2.x
         ./autogen.sh
         make
         sudo make install
@@ -112,7 +112,7 @@ jobs:
         cmake --build "${{github.workspace}}/build" --config ${{env.BUILD_TYPE}}
     
     - name: Upload binaries
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ${{matrix.PLATFORM}}-binaries
         path: ${{github.workspace}}/build
@@ -140,10 +140,10 @@ jobs:
 
     - name: Set up web build environment
       if: matrix.OS != 'windows-latest'
-      uses: actions/setup-node@v4.0.4
+      uses: actions/setup-node@v6
       with:
-        node-version: '22'
-        cache: 'pnpm'
+        node-version: 22
+        cache: pnpm
         cache-dependency-path: '${{github.workspace}}/www/pnpm-lock.yaml'
 
     - name: Configure CMake
@@ -158,7 +158,7 @@ jobs:
       run: cmake --build "${{github.workspace}}/build" --config ${{env.BUILD_TYPE}}
 
     - name: Upload binaries
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ${{matrix.OS}}-binaries
         path: ${{github.workspace}}/build
