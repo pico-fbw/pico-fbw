@@ -44,10 +44,10 @@ export default function ConfigStep({ onNext, onBack, setError }: ConfigStepProps
                 setLoading(false);
             })
             .catch(e => {
-                setError(`Failed to load configuration: ${e.message}`);
+                setError(`Failed to load configuration: ${(e as Error).message}`);
                 setLoading(false);
             });
-    }, []);
+    }, [setError]);
 
     const handleNext = async () => {
         try {
@@ -94,7 +94,9 @@ export default function ConfigStep({ onNext, onBack, setError }: ConfigStepProps
                         <span className="text-gray-300">I have a</span>
                         <select
                             value={aircraftType}
-                            onChange={e => setAircraftType(e.currentTarget.value as any)}
+                            onChange={e =>
+                                setAircraftType(e.currentTarget.value as "conventional" | "rudderless" | "flying-wing")
+                            }
                             className="inline-flex px-4 py-2 rounded-md border-0 bg-gray-700 text-white shadow-sm ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-inset focus:ring-sky-500 font-semibold"
                         >
                             <option value="conventional">conventional</option>
@@ -123,7 +125,7 @@ export default function ConfigStep({ onNext, onBack, setError }: ConfigStepProps
                         <span className="text-gray-300">and my flight mode switch has</span>
                         <select
                             value={switchType}
-                            onChange={e => setSwitchType(e.currentTarget.value as any)}
+                            onChange={e => setSwitchType(e.currentTarget.value as "two" | "three")}
                             className="inline-flex px-4 py-2 rounded-md border-0 bg-gray-700 text-white shadow-sm ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-inset focus:ring-sky-500 font-semibold"
                         >
                             <option value="two">two</option>
@@ -147,6 +149,7 @@ export default function ConfigStep({ onNext, onBack, setError }: ConfigStepProps
                     Back
                 </button>
                 <button
+                    // eslint-disable-next-line @typescript-eslint/no-misused-promises
                     onClick={handleNext}
                     disabled={loading}
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-sky-600 hover:bg-sky-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"

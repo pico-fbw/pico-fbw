@@ -2,6 +2,7 @@
  * Source file of pico-fbw: https://github.com/pico-fbw/pico-fbw
  * Licensed under the MIT License
  */
+/* eslint-disable react-refresh/only-export-components */
 
 import { render } from "preact";
 import { Link, Route, Switch } from "wouter-preact";
