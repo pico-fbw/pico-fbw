@@ -10,6 +10,7 @@
 #include "platform/types.h"
 #ifdef _WIN32
     #include <windows.h>
+    #include <timeapi.h>
     #include "platform/simconnect.h"
 LARGE_INTEGER tStart, tFreq;
 #else
@@ -37,6 +38,7 @@ void sys_boot_begin() {
     // Get time at which program was called, this is our "power-on time"
     QueryPerformanceFrequency(&tFreq);
     QueryPerformanceCounter(&tStart);
+    timeBeginPeriod(1); // Request 1ms timer resolution for more accurate sleeps
 #else
     signal(SIGTERM, term_handler);
     struct timeval tv;
@@ -59,12 +61,17 @@ void sys_periodic() {
 #if SIMCONNECT
     simconnect_poll();
 #endif
+#ifndef _WIN32 // Windows is slow, so no sleep needed
     sleep_ms_blocking(THREAD_SLEEP_MS); // Sadly we do not want to create pico-fbw OS
+#endif
 }
 
 void __attribute__((noreturn)) sys_shutdown() {
 #if SIMCONNECT
     simconnect_deinit();
+#endif
+#ifdef _WIN32
+    timeEndPeriod(1);
 #endif
     printf("\n");
     exit(0);

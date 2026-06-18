@@ -111,8 +111,8 @@ Calibration calibration = {
     .pid = {
         false,
         // TODO: tune throttle pid, keep checking others (they're mostly tuned already)
-        1.5f, 0.4f, 8.f, // Default roll PID parameters
-        1.5f, 0.4f, 8.f, // Default pitch PID parameters
+        0.7f, 0.2f, 1.5f, // Default roll PID parameters
+        0.7f, 0.2f, 1.5f, // Default pitch PID parameters
         2.f, 0.05f, 3.f, // Default yaw PID parameters
         25.f, 0.11f, 40.f, // Default autothrottle PID parameters
         // TODO: find working tau
@@ -176,7 +176,7 @@ static bool save_struct_to_file(const char *file, void *strct, size_t size) {
 
 void config_load() {
     load_file_to_struct(FILE_CONFIG, &config, sizeof(config));
-    load_file_to_struct(FILE_CALIBRATION, &calibration, sizeof(calibration));
+    // load_file_to_struct(FILE_CALIBRATION, &calibration, sizeof(calibration));
     // Load print settings and set debug flag
     shouldPrint.fbw = config.system[SYSTEM_PRINT_FBW];
     shouldPrint.imu = config.system[SYSTEM_PRINT_IMU];

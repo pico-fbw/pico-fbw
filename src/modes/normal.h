@@ -18,6 +18,13 @@ void normal_update();
 void normal_deinit();
 
 /**
+ * Retrieves the current roll and pitch setpoints of normal mode.
+ * @param roll pointer to store the current roll setpoint
+ * @param pitch pointer to store the current pitch setpoint
+ */
+void normal_get(f32 *roll, f32 *pitch);
+
+/**
  * Manually adjusts the setpoints of normal mode.
  * @param roll the roll setpoint
  * @param pitch the pitch setpoint

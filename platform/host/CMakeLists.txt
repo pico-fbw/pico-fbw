@@ -21,7 +21,7 @@ if (SimConnect_FOUND)
 endif()
 
 if (CMAKE_HOST_WIN32)
-    target_link_libraries(platform_host PRIVATE ws2_32) # For mongoose
+    target_link_libraries(platform_host PRIVATE ws2_32 winmm) # For mongoose and time functions
 endif()
 
 target_include_directories(platform_host PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/src)

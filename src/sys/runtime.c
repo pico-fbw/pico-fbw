@@ -34,9 +34,12 @@ static i32 calc_update_rate(void *data) {
     // Since 1 second has passed since loopCount was reset, loopCount is effectively the number of loops per second
     loopRate = loopCount;
     loopCount = 0;
-    if (loopRate < MIN_LOOP_RATE && !loopRateWarned) {
-        log_message(TYPE_WARNING, "Loop update rate is low: %u Hz. Performance may be degraded!", 250, 0, true);
-        loopRateWarned = true;
+    if (loopRate < MIN_LOOP_RATE) {
+        if (!loopRateWarned) {
+            log_message(TYPE_WARNING, "Loop update rate is low. Performance may be degraded!", 250, 0, true);
+            loopRateWarned = true;
+        }
+        printsys(aircraft, "update rate: %u Hz", loopRate);
     }
     return 1000; // Run again in 1s
     (void)data;

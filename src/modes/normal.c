@@ -21,6 +21,8 @@
 // The rate at which the roll setpoint returns to its limit from the hold limit (in deg)
 // This is NOT in deg/s, think of it as someone holding the stick at the magnitude of this value
 #define CONTROL_ROLL_RETURN_DPS 45.f
+// The threshold for how close to zero the roll must be to be considered zero (and auto-return to actual zero)
+#define CONTROL_ROLL_NEARZERO_THRESHOLD 1.f
 
 static f32 rollInput, pitchInput, yawInput;
 static f32 rollSet, pitchSet, throttleSet;
@@ -49,6 +51,11 @@ void normal_update() {
         // Override the input to bring it back in the opposite direction at the specified rate
         rollInput = rollSet < 0 ? CONTROL_ROLL_RETURN_DPS : -CONTROL_ROLL_RETURN_DPS;
     }
+    // Also, if the roll value is near zero and we don't have any input, bring it back to zero automatically to level
+    if (fabsf(rollSet) < CONTROL_ROLL_NEARZERO_THRESHOLD && fabsf(rollInput) < config.control[CONTROL_DEADBAND]) {
+        rollSet = 0.f;
+    }
+    
     // Calculate control adjustments based on input
     f32 rollAdj = control_calc_adjust(AXIS_ROLL, rollInput, pitchInput);
     f32 pitchAdj = control_calc_adjust(AXIS_PITCH, rollInput, pitchInput);
@@ -89,8 +96,8 @@ void normal_update() {
     }
 
     // Yaw deadband calculation
-    // If we detect any aileron input whatsoever, we wil override what PID wants with the user input
-    if (yawInput > config.control[CONTROL_DEADBAND] || yawInput < -config.control[CONTROL_DEADBAND]) {
+    // If we detect any rudder input whatsoever, we wil override what PID wants with the user input
+    if (fabsf(yawInput) > config.control[CONTROL_DEADBAND]) {
         overrideYaw = true;
     } else {
         overrideYaw = false;
@@ -107,6 +114,11 @@ void normal_deinit() {
     pitchSet = 0.f;
     overrideYaw = false;
     control_reset();
+}
+
+void normal_get(f32 *roll, f32 *pitch) {
+    *roll = rollSet;
+    *pitch = pitchSet;
 }
 
 bool normal_set(f32 roll, f32 pitch, f32 yaw, f32 throttle) {
