@@ -4,7 +4,7 @@
  */
 
 const url = "https://mt1.google.com/vt/lyrs=s&x=0&y=0&z=0"; // URL to run a GET request on to check for internet connection
-const timeout = 1000; // Timeout for the request in ms
+const timeout = 1500; // Timeout for the request in ms
 
 let hasInternetResult: boolean | null = null; // Cache the result
 

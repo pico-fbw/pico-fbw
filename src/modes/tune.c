@@ -47,8 +47,6 @@ static Timestamp lastTuneEvent;
  * @param act_angle the actual angle of the axis
  */
 static void update_gain(Axis axis, f32 req_rate, f32 act_rate, f32 setpoint, f32 act_angle) {
-    printraw("update_gain: axis=%s req_rate=%.1f act_rate=%.1f setpoint=%.1f act_angle=%.1f\n",
-             (axis == AXIS_ROLL) ? "ROLL" : "PITCH", req_rate, act_rate, setpoint, act_angle);
     static u32 tDiffRoll = 0, tDiffPitch = 0;
     static u32 tLastUpdateRoll = 0, tLastUpdatePitch = 0;
     u32 *tDiff       = (axis == AXIS_ROLL) ? &tDiffRoll       : &tDiffPitch;

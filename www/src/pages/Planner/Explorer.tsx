@@ -5,11 +5,25 @@
 
 // [ ] Delete confirmation dialog
 
+import { useState } from "preact/hooks";
 import { DocumentOutline } from "preact-heroicons";
 import { useLocation } from "wouter-preact";
 
+import DeleteFlightplanModal from "./DeleteFlightplanModal";
+
 import { api } from "helpers/api";
 import { FlightplanList } from "helpers/apiTypes";
+
+function formatBytes(bytes: number, decimals = 2) {
+    if (bytes === 0) {
+        return "0 B";
+    }
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ["B", "kB", "MB", "GB", "TB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+}
 
 interface ExplorerProps {
     flightplans: FlightplanList;
@@ -19,6 +33,8 @@ interface ExplorerProps {
 export default function Explorer({ flightplans, setFlightplans }: ExplorerProps) {
     const [, setLocation] = useLocation();
 
+    const [flightplanToDelete, setFlightplanToDelete] = useState("");
+
     const deleteFlightplan = async (name: string) => {
         await api("set/flightplan", { flightplan: null, name }).then(() => {
             // Flightplan has been removed from server, now remove it from client-side list
@@ -27,17 +43,6 @@ export default function Explorer({ flightplans, setFlightplans }: ExplorerProps)
                 flightplans: flightplans.flightplans.filter(fp => fp.name !== name),
             });
         });
-    };
-
-    const formatBytes = (bytes: number, decimals = 2) => {
-        if (bytes === 0) {
-            return "0 B";
-        }
-        const k = 1024;
-        const dm = decimals < 0 ? 0 : decimals;
-        const sizes = ["B", "kB", "MB", "GB", "TB"];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
     };
 
     interface EntryProps {
@@ -68,8 +73,7 @@ export default function Explorer({ flightplans, setFlightplans }: ExplorerProps)
                     </button>
                     <button
                         type="button"
-                        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-                        onClick={() => deleteFlightplan(name)}
+                        onClick={() => setFlightplanToDelete(name)}
                         className="grow px-4 py-2.5 lg:px-5 lg:py-4.5 border border-transparent text-xl leading-4 font-bold rounded-xl shadow-sm text-white bg-red-500/60 hover:bg-red-500/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500/60"
                     >
                         Delete
@@ -84,6 +88,11 @@ export default function Explorer({ flightplans, setFlightplans }: ExplorerProps)
             {flightplans.flightplans.map((fp, index) => (
                 <Entry key={index} name={fp.name} size={fp.size} active={fp.name === flightplans.active} />
             ))}
+            <DeleteFlightplanModal
+                name={flightplanToDelete}
+                setName={setFlightplanToDelete}
+                deleteFlightplan={deleteFlightplan}
+            />
         </div>
     );
 }

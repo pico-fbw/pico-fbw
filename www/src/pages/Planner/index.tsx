@@ -8,60 +8,15 @@ import { useFileDownload, useFileUpload } from "helpers/hooks";
 import { useLocation, useRoute } from "wouter-preact";
 
 import ContentBlock from "elements/ContentBlock";
-import Explorer from "elements/Explorer";
-import Map from "elements/Map";
+
+import Explorer from "./Explorer";
+import Map from "./Map";
+import NewFlightplanModal from "./NewFlightplanModal";
 
 import { api } from "helpers/api";
 import { FlightplanList } from "helpers/apiTypes";
 import hasInternet from "helpers/hasInternet";
 import { Flightplan } from "helpers/flightplan";
-
-interface NewFlightpanModalProps {
-    name: string;
-    setName: (name: string) => void;
-    setOpen: (open: boolean) => void;
-    setLocation: (location: string) => void;
-}
-
-function NewFlightpanModal({ name, setName, setOpen, setLocation }: NewFlightpanModalProps) {
-    return (
-        <div className="fixed inset-0 bg-black/80 bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-gray-900 p-6 rounded-md shadow-md w-11/12 max-w-md">
-                <h2 className="text-xl font-bold mb-4 text-white">New Flightplan</h2>
-                <input
-                    type="text"
-                    value={name}
-                    onChange={e => setName(e.currentTarget.value)}
-                    placeholder="Enter a name for your flightplan..."
-                    className="w-full p-2 mb-4 border-2 border-gray-700 text-gray-300 rounded"
-                />
-                <div className="flex justify-end">
-                    <button
-                        onClick={() => {
-                            setOpen(false);
-                            setName("");
-                        }}
-                        className="mr-2 px-4 py-2 text-md font-semibold rounded-md shadow-sm text-white bg-gray-500 hover:bg-gray-500/50"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={() => {
-                            if (name.trim() !== "") {
-                                setLocation(`/planner/${name}`);
-                            }
-                            setOpen(false);
-                            setName("");
-                        }}
-                        className="px-4 py-2 text-md font-semibold rounded-md shadow-sm text-white bg-sky-500 hover:bg-sky-600"
-                    >
-                        Create
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-}
 
 export default function Planner() {
     const [error, setError] = useState("");
@@ -79,7 +34,6 @@ export default function Planner() {
     const [isMapFocused, setIsMapFocused] = useState(false);
 
     const [newFlightplanModalOpen, setNewFlightplanModalOpen] = useState(false);
-    const [newFlightplanName, setNewFlightplanName] = useState("");
 
     /**
      * Fetch the list of saved Flightplans from the server.
@@ -222,15 +176,16 @@ export default function Planner() {
                 // No flightplan selected/being edited, show list of available flightplans
                 <div className="flex flex-col h-full">
                     <div className="flex bg-black/10 ring-white/5 ring-1">
-                        <h1 className="px-6 place-self-center rounded-md md:text-3xl text-2xl font-bold text-white">
+                        <h1 className="md:px-6 px-3 place-self-center rounded-md md:text-3xl text-2xl font-bold text-white">
                             Flightplans
                             {fsUsed !== null && (
-                                <span className="md:text-lg text-sm text-gray-400 ml-3">
+                                <span className="md:text-lg text-sm text-gray-400 md:ml-3 ml-1">
                                     {(fsUsed * 100).toFixed(0)}% used
                                 </span>
                             )}
                         </h1>
-                        <div className="flex grow p-4 gap-3 justify-end">
+                        {/* TODO: add hover or something for when no internet access */}
+                        <div className="flex grow md:p-4 p-2 gap-3 justify-end">
                             <button
                                 type="button"
                                 onClick={() => setNewFlightplanModalOpen(true)}
@@ -244,7 +199,7 @@ export default function Planner() {
                                 onClick={openFilePicker}
                                 className="inline-flex items-center px-4 py-2 border border-transparent text-md leading-4 font-semibold rounded-md shadow-sm text-white bg-gray-500 hover:bg-gray-500/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-600"
                             >
-                                Load from File
+                                Load
                             </button>
                         </div>
                     </div>
@@ -260,14 +215,11 @@ export default function Planner() {
                             <Explorer flightplans={flightplans} setFlightplans={setFlightplans} />
                         </div>
                     )}
-                    {newFlightplanModalOpen && (
-                        <NewFlightpanModal
-                            name={newFlightplanName}
-                            setName={setNewFlightplanName}
-                            setOpen={setNewFlightplanModalOpen}
-                            setLocation={setLocation}
-                        />
-                    )}
+                    <NewFlightplanModal
+                        open={newFlightplanModalOpen}
+                        setOpen={setNewFlightplanModalOpen}
+                        setLocation={setLocation}
+                    />
                 </div>
             ) : (
                 <>

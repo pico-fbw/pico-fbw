@@ -6,7 +6,8 @@
 import { useEffect, useState } from "preact/hooks";
 
 import ContentBlock from "elements/ContentBlock";
-import ConfigViewer from "elements/ConfigViewer";
+
+import ConfigViewer from "./ConfigViewer";
 
 import { api } from "helpers/api";
 import { GET_INFO } from "helpers/apiTypes";
