@@ -3,8 +3,6 @@
  * Licensed under the MIT License
  */
 
-// [ ] Delete confirmation dialog
-
 import { useState } from "preact/hooks";
 import { DocumentOutline } from "preact-heroicons";
 import { useLocation } from "wouter-preact";

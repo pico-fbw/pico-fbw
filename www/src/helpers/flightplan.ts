@@ -5,7 +5,7 @@
 
 import { LatLng } from "leaflet";
 
-import { Marker } from "elements/Map";
+import { Marker } from "pages/Planner/Map";
 
 import settings from "helpers/settings";
 import { firmwareVersion } from "helpers/version";
