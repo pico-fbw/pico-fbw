@@ -13,7 +13,7 @@ interface DeleteFlightplanModalProps {
 
 export default function DeleteFlightplanModal({ name, setName, deleteFlightplan }: DeleteFlightplanModalProps) {
     return (
-        <Modal title="Confirm?" open={name !== ""}>
+        <Modal title="Delete Flightplan" open={name !== ""}>
             <p className="mb-4 text-gray-300">Are you sure you want to delete this flightplan?</p>
             <div className="flex justify-end">
                 <button

@@ -6,12 +6,14 @@
 #include <math.h>
 #include "platform/time.h"
 
+#include "ctrl/aircraft.h"
 #include "ctrl/control.h"
 #include "ctrl/flight.h"
 #include "io/imu.h"
 #include "io/receiver.h"
 #include "modes/normal.h"
 #include "sys/configuration.h"
+#include "sys/log.h"
 #include "sys/print.h"
 
 #include "tune.h"
@@ -37,6 +39,8 @@
 #define TUNED_THRESHOLD_MS 30E3
 
 static Timestamp lastTuneEvent;
+static u32 tDiffRoll = 0, tDiffPitch = 0;
+static u32 tLastUpdateRoll = 0, tLastUpdatePitch = 0;
 
 /**
  * Updates the P and D gains for the given axis, if required.
@@ -47,14 +51,12 @@ static Timestamp lastTuneEvent;
  * @param act_angle the actual angle of the axis
  */
 static void update_gain(Axis axis, f32 req_rate, f32 act_rate, f32 setpoint, f32 act_angle) {
-    static u32 tDiffRoll = 0, tDiffPitch = 0;
-    static u32 tLastUpdateRoll = 0, tLastUpdatePitch = 0;
     u32 *tDiff       = (axis == AXIS_ROLL) ? &tDiffRoll       : &tDiffPitch;
     u32 *tLastUpdate = (axis == AXIS_ROLL) ? &tLastUpdateRoll  : &tLastUpdatePitch;
 
     u32 now = time_ms();
     if (*tLastUpdate != 0 && now - *tLastUpdate < GAIN_UPDATE_COOLDOWN_MS) {
-        return; // Throttled
+        return; // Update rate throttled
     }
 
     // Scale the P threshold to 15% of the requested rate, with a minimum floor to prevent
@@ -112,6 +114,10 @@ void tune_init() {
     // Tune depends on normal mode
     normal_init();
     lastTuneEvent = timestamp_now();
+    tDiffRoll = 0;
+    tDiffPitch = 0;
+    tLastUpdateRoll = 0;
+    tLastUpdatePitch = 0;
 }
 
 void tune_update() {
@@ -120,17 +126,23 @@ void tune_update() {
         return;
     }
 
+    // Get the current inputs and use them to calculate the mapped ("requested") rates in dps
     f32 rollInput = receiver_get((i16)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE) - 90.f;
     f32 pitchInput = receiver_get((i16)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEGREE) - 90.f;
-    // Get the requested and actual roll and pitch rates
     f32 reqRollRate = control_get_dps(AXIS_ROLL, rollInput, pitchInput);
     f32 reqPitchRate = control_get_dps(AXIS_PITCH, rollInput, pitchInput);
     // Get current attitude setpoints from normal mode (to check for overshoot)
     f32 rollSet, pitchSet;
     normal_get(&rollSet, &pitchSet);
 
-    update_gain(AXIS_ROLL, reqRollRate, imu.rollRate, rollSet, imu.roll);
-    update_gain(AXIS_PITCH, reqPitchRate, imu.pitchRate, pitchSet, imu.pitch);
+    // Update the gains for roll and pitch axes
+    // Only tune when the pilot is actively commanding movement
+    if (fabsf(reqRollRate) > P_GAIN_DIFF_THRESHOLD) {
+        update_gain(AXIS_ROLL, reqRollRate, imu.rollRate, rollSet, imu.roll);
+    }
+    if (fabsf(reqPitchRate) > P_GAIN_DIFF_THRESHOLD) {
+        update_gain(AXIS_PITCH, reqPitchRate, imu.pitchRate, pitchSet, imu.pitch);
+    }
 
     // Set the tuned flag if there haven't been any tune events for a while
     if (time_since_ms(&lastTuneEvent) > TUNED_THRESHOLD_MS) {

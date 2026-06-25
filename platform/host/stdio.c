@@ -18,8 +18,12 @@
 #include "platform/stdio.h"
 
 #define STDIN_BUF_SIZE 512
+static char buf[STDIN_BUF_SIZE];
 
 void stdio_setup() {
+    // Force stdout/stderr to flush immediately
+    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stderr, NULL, _IONBF, 0);
 #ifdef _WIN32
     // To be able to use ANSI escape codes, we need to enable virtual terminal processing
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -45,8 +49,29 @@ char *stdin_read() {
     if (!_kbhit()) {
         return NULL; // No input available
     }
-#endif
-    char buf[STDIN_BUF_SIZE];
+
+    static int buf_len = 0;
+    // Read one character at a time so we never block
+    int c = _getche();
+    if (c == '\r' || c == '\n') {
+        // Enter was pressed, return the line
+        printf("\n"); // Move to next line since _getche doesn't on \r
+        buf[buf_len] = '\0';
+        buf_len = 0;
+        if (buf[0] == '\0') {
+            return NULL;
+        }
+        return strdup(buf);
+    } else if (c == '\b' && buf_len > 0) {
+        // Backspace support
+        printf(" \b");
+        buf_len--;
+    } else if (buf_len < STDIN_BUF_SIZE - 1) {
+        buf[buf_len++] = (char)c;
+    }
+
+    return NULL; // Line not complete yet
+#else
     ssize_t len = read(STDIN_FILENO, buf, sizeof(buf) - 1);
     if (len <= 0) {
         return NULL;
@@ -58,4 +83,5 @@ char *stdin_read() {
     }
     line[strcspn(line, "\n")] = '\0'; // Remove trailing newline
     return line;
+#endif
 }

@@ -5,6 +5,7 @@
 
 #include <math.h>
 #include <string.h>
+#include "platform/helpers.h"
 #include "platform/i2c.h"
 #include "platform/time.h"
 #if SIMCONNECT
@@ -214,9 +215,9 @@ void imu_update() {
     imu.roll = (f32)scIMU.roll;
     imu.pitch = (f32)scIMU.pitch;
     imu.yaw = (f32)scIMU.yaw;
-    imu.rollRate = (f32)scIMU.gyro[0];
-    imu.pitchRate = (f32)scIMU.gyro[1];
-    imu.yawRate = (f32)scIMU.gyro[2];
+    imu.rollRate = (f32)degrees(scIMU.gyro[2]);
+    imu.pitchRate = (f32)degrees(scIMU.gyro[0]);
+    imu.yawRate = (f32)degrees(scIMU.gyro[1]);
     memcpy(imu.accel, scIMU.accel, sizeof(imu.accel));
 #endif // !SIMCONNECT
 }

@@ -168,9 +168,9 @@ static void on_SIMCONNECT_RECV_SIMOBJECT_DATA(SIMCONNECT_RECV_SIMOBJECT_DATA *pD
             memcpy(&scIMU, &pData->dwData, sizeof(SC_IMU) - sizeof(scIMU.accel));
             // Roll and pitch must be inverted as MSFS uses a different convention than pico-fbw
             scIMU.roll = -scIMU.roll;
-            scIMU.gyro[0] = -scIMU.gyro[0];
+            scIMU.gyro[2] = -scIMU.gyro[2]; // Roll = Z axis in MSFS
             scIMU.pitch = -scIMU.pitch;
-            scIMU.gyro[1] = -scIMU.gyro[1];
+            scIMU.gyro[0] = -scIMU.gyro[0]; // Pitch = X axis in MSFS
             // Simulate accelerometer readings as the fusion system expects them
             simulate_accel(&scIMU);
             break;
@@ -231,7 +231,8 @@ static bool configure_datadef_sc_imu() {
     SimConnect_AddToDataDefinition(hSimConnect, ID_SC_IMU, "ACCELERATION BODY X", "meters per second squared");
     SimConnect_AddToDataDefinition(hSimConnect, ID_SC_IMU, "ACCELERATION BODY Y", "meters per second squared");
     SimConnect_AddToDataDefinition(hSimConnect, ID_SC_IMU, "ACCELERATION BODY Z", "meters per second squared");
-    SimConnect_AddToDataDefinition(hSimConnect, ID_SC_IMU, "STRUCT BODY ROTATION VELOCITY", "degrees per second",
+    // dps is not available, so we use rad/s and convert later
+    SimConnect_AddToDataDefinition(hSimConnect, ID_SC_IMU, "STRUCT BODY ROTATION VELOCITY", "radians per second",
                                    SIMCONNECT_DATATYPE_XYZ);
     SimConnect_AddToDataDefinition(hSimConnect, ID_SC_IMU, "INDICATED ALTITUDE", "feet", SIMCONNECT_DATATYPE_FLOAT32);
     return SUCCEEDED(SimConnect_RequestDataOnSimObject(hSimConnect, ID_SC_IMU, ID_SC_IMU, SIMCONNECT_OBJECT_ID_USER,

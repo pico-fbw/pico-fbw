@@ -22,8 +22,8 @@ typedef struct SC_IMU {
     f64 roll;         // deg
     f64 pitch;        // deg
     f64 yaw;          // deg
-    f64 bodyAccel[3]; // [X, Y, Z], m/s^2, mainly for internal use
-    f64 gyro[3];      // [X, Y, Z], deg/s
+    f64 bodyAccel[3]; // [X, Y, Z], m/s^2; for internal use
+    f64 gyro[3];      // [X, Y, Z], rad/s
     f32 alt;          // ft
     // Not populated by SimConnect, but computed from other data
     f64 accel[3]; // [X, Y, Z], g

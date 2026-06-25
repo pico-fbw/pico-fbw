@@ -22,7 +22,7 @@
 // This is NOT in deg/s, think of it as someone holding the stick at the magnitude of this value
 #define CONTROL_ROLL_RETURN_DPS 45.f
 // The threshold for how close to zero the roll must be to be considered zero (and auto-return to actual zero)
-#define CONTROL_ROLL_NEARZERO_THRESHOLD 1.f
+#define CONTROL_ROLL_NEARZERO_THRESHOLD 2.f
 
 static f32 rollInput, pitchInput, yawInput;
 static f32 rollSet, pitchSet, throttleSet;

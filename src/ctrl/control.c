@@ -21,20 +21,22 @@ static f32 get_pitch_dps(f32 pitch) {
 }
 
 static f32 calc_roll_adjust(f32 roll) {
+    f32 now = time_s();
     if (lastRollUpdate == 0) {
-        lastRollUpdate = time_s(); // Initialize lastUpdate to current time
+        lastRollUpdate = now; // Initialize lastUpdate to current time
     }
-    f32 deltaT = time_s() - lastRollUpdate; // Time since last call to this function
-    lastRollUpdate = time_s();
+    f32 deltaT = now - lastRollUpdate; // Time since last call to this function
+    lastRollUpdate = now;
     return get_roll_dps(roll) * deltaT;
 }
 
 static f32 calc_pitch_adjust(f32 pitch) {
+    f32 now = time_s();
     if (lastPitchUpdate == 0) {
-        lastPitchUpdate = time_s();
+        lastPitchUpdate = now;
     }
-    f32 deltaT = time_s() - lastPitchUpdate;
-    lastPitchUpdate = time_s();
+    f32 deltaT = now - lastPitchUpdate;
+    lastPitchUpdate = now;
     return get_pitch_dps(pitch) * deltaT;
 }
 

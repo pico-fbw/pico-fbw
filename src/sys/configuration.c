@@ -56,7 +56,7 @@ Config config = {
         CONFIG_END_MAGIC,
     },
     .control = {
-        25, 15, 1.5f, 2.f, // Control handling preferences
+        50, 25, 1.5f, 2.f, // Control handling preferences
         10, 30, 0.3f, // Autothrottle configuration
         180, 0, // Drop bay detent settings
         33, 67, -15, 30, // Control limits
