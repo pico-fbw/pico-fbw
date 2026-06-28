@@ -56,7 +56,7 @@ Config config = {
         CONFIG_END_MAGIC,
     },
     .control = {
-        50, 25, 1.5f, 2.f, // Control handling preferences
+        40, 20, 1.5f, 2.f, // Control handling preferences
         10, 30, 0.3f, // Autothrottle configuration
         180, 0, // Drop bay detent settings
         33, 67, -15, 30, // Control limits
@@ -111,11 +111,10 @@ Calibration calibration = {
     .pid = {
         false,
         // TODO: tune throttle pid, keep checking others (they're mostly tuned already)
-        0.7f, 0.2f, 1.5f, // Default roll PID parameters
-        0.7f, 0.2f, 1.5f, // Default pitch PID parameters
-        2.f, 0.05f, 3.f, // Default yaw PID parameters
+        0.7f, 0.2f, 1.5f, 0.75f, // Default roll PID parameters
+        0.7f, 0.2f, 1.5f, 0.75f, // Default pitch PID parameters
+        0.1f, 0.05f, 1.f, 0.5f, // Default yaw PID parameters
         25.f, 0.11f, 40.f, // Default autothrottle PID parameters
-        // TODO: find working tau
         1.f, // Default PID tau
     },
     .version = CALIBRATION_VERSION,
@@ -176,7 +175,7 @@ static bool save_struct_to_file(const char *file, void *strct, size_t size) {
 
 void config_load() {
     load_file_to_struct(FILE_CONFIG, &config, sizeof(config));
-    // load_file_to_struct(FILE_CALIBRATION, &calibration, sizeof(calibration));
+    load_file_to_struct(FILE_CALIBRATION, &calibration, sizeof(calibration));
     // Load print settings and set debug flag
     shouldPrint.fbw = config.system[SYSTEM_PRINT_FBW];
     shouldPrint.imu = config.system[SYSTEM_PRINT_IMU];

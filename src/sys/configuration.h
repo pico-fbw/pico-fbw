@@ -166,14 +166,17 @@ typedef enum CalibrationPID {
     PID_ROLL_KP,
     PID_ROLL_KI,
     PID_ROLL_KD,
+    PID_ROLL_DB,
     // Pitch PID parameters
     PID_PITCH_KP,
     PID_PITCH_KI,
     PID_PITCH_KD,
+    PID_PITCH_DB,
     // Yaw PID parameters
     PID_YAW_KP,
     PID_YAW_KI,
     PID_YAW_KD,
+    PID_YAW_DB,
     // Throttle PID parameters
     PID_THROTTLE_KP,
     PID_THROTTLE_KI,

@@ -30,14 +30,26 @@ void pid_init(PIDController *pid) {
 void pid_update(PIDController *pid, f64 setpoint, f64 measurement) {
     pid->T = time_s() - pid->prevT;
     f64 error = setpoint - measurement;
+
     // Compute PID components
     f64 proportional = pid->kp * error;
-    pid->integrator = pid->integrator + 0.5 * pid->ki * pid->T * (error + pid->prevError);
+    // Integrator with deadband to prevent oscillation around setpoint
+    if (pid->deadband == 0.0 || fabs(error) > pid->deadband) {
+        pid->integrator = pid->integrator + 0.5 * pid->ki * pid->T * (error + pid->prevError);
+    } else {
+        // Bleed off integrator slowly when inside deadband to avoid a step when re-entering
+        pid->integrator *= 0.98;
+    }
     // Derivative (band-limited differentiator)
-    // Derivative on measurement, therefore minus sign in front of equation
-    pid->differentiator =
-        -(2.0 * pid->kd * (measurement - pid->prevMeasurement) + (2.0 * pid->tau - pid->T) * pid->differentiator) /
-        (2.0 * pid->tau + pid->T);
+    // Only recompute derivative when measurement has actually changed
+    // This is mainly a problem in the sim where data updates much slower than the PID loop, and therefore
+    // != (exact floating point) is a valid check. In real life, sensor noise will almost always cause this check to fail
+    if (measurement != pid->prevMeasurement) {
+        // Derivative on measurement, therefore minus sign in front of equation
+        pid->differentiator =
+            -(2.0 * pid->kd * (measurement - pid->prevMeasurement) + (2.0 * pid->tau - pid->T) * pid->differentiator) /
+            (2.0 * pid->tau + pid->T);
+    }
 
     // Compute output and apply limits
     f64 out = proportional + pid->integrator + pid->differentiator;

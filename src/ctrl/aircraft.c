@@ -27,12 +27,15 @@
 
 // Shorthand for checking GPS feature support and data validity
 #define GPS_OK() (gps.is_supported() && gpsSafe)
+// Rate at which the `update_mode()` function is called (ms): 200Hz
+#define MODE_UPDATE_RATE_MS 5
 // Speed threshold to determine if the aircraft is flying (kts)
 #define SPEED_FLYING_THRESHOLD 5
 // The highest amount of time that the aircraft can still be considered flying after the last control input (s)
 #define STILL_FLYING_TIMEOUT 15
 
 static Mode mode = MODE_DIRECT;
+static Timestamp lastModeUpdate;
 static bool isFlying = false;
 static bool imuSafe = false, gpsSafe = false;
 #if PLATFORM_SUPPORTS_WIFI
@@ -264,8 +267,12 @@ const char *mode_to_string(Mode mode) {
 }
 
 void aircraft_update() {
+    if (time_since_ms(&lastModeUpdate) < MODE_UPDATE_RATE_MS) {
+        return; // Don't update too frequently
+    }
     update_mode();
     isFlying = is_flying();
+    lastModeUpdate = timestamp_now();
 }
 
 void aircraft_change_mode(Mode new_mode) {

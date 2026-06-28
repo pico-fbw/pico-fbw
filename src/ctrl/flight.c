@@ -18,11 +18,13 @@
 
 #include "flight.h"
 
+// Hysteresis thresholds for yaw damper engagement/disengagement
+#define YAW_DAMPER_ON_THRESHOLD  (config.control[CONTROL_DEADBAND])
+#define YAW_DAMPER_OFF_THRESHOLD (config.control[CONTROL_DEADBAND] * 2.f)
+
 static PIDController rollC, pitchC, yawC;
 static f32 ailOut, eleOut, rudOut;
 static f32 lElevonOut, rElevonOut;
-
-static f32 flightYawSetpoint;
 static bool yawDamperOn;
 
 // Updates PID tunings of the roll controller
@@ -61,29 +63,32 @@ static void pitch_tunings_update(f64 kP, f64 kI, f64 kD, bool reset) {
  * Computes yaw output based on current flight conditions.
  * @param roll roll input
  * @param yaw yaw input
- * @param override whether yaw override is active
+ * @param yaw_override whether yaw override is active
  * @return computed yaw output
  */
-static f32 compute_yaw_output(f64 roll, f64 yaw, bool override) {
-    f32 yawOutput = 0.f;
-    if (override) {
-        // Yaw override (raw)
-        yawOutput = (f32)yaw;
+static f32 compute_yaw_output(f64 roll, f64 yaw, bool yaw_override) {
+    // If yaw_override is active, just return the raw value directly
+    if (yaw_override) {
         yawDamperOn = false;
-    } else if (fabs(roll) > config.control[CONTROL_DEADBAND]) {
-        // Yaw damper disabled (passthrough)
-        yawOutput = (f32)(rollC.out * config.control[CONTROL_RUDDER_SENSITIVITY]);
+        return (f32)yaw;
+    }
+
+    // Turn damper off if roll exceeds upper threshold
+    if (fabs(roll) > YAW_DAMPER_OFF_THRESHOLD) {
         yawDamperOn = false;
-    } else {
-        // Yaw damper enabled
-        if (!yawDamperOn) {
-            flightYawSetpoint = imu.yaw; // Yaw damper was just enabled, create our setpoint
-        }
-        pid_update(&yawC, flightYawSetpoint, imu.yaw);
-        yawOutput = (f32)yawC.out;
+    }
+    // Turn damper on only if roll is below lower threshold
+    if (!yawDamperOn && fabs(roll) < YAW_DAMPER_ON_THRESHOLD) {
+        pid_init(&yawC); // Reset integrator on re-engage to avoid step
         yawDamperOn = true;
     }
-    return yawOutput;
+    if (yawDamperOn) {
+        pid_update(&yawC, 0.0, imu.yawRate);
+        return (f32)yawC.out;
+    }
+
+    // Yaw damper disabled, pass through roll OUTPUT coupled with our sensitivity gain
+    return (f32)(rollC.out * config.control[CONTROL_RUDDER_SENSITIVITY]);
 }
 
 // Applies PID output to servo position, accounting for reversal
@@ -92,8 +97,8 @@ static inline f32 apply_pid_output(f64 output, bool reversed) {
 }
 
 // Handles control for 3-axis modes
-static void handle_mode_3axis(f64 roll, f64 yaw, bool override) {
-    rudOut = apply_pid_output(compute_yaw_output(roll, yaw, override), (bool)config.pins[PINS_REVERSE_YAW]);
+static void handle_mode_3axis(f64 roll, f64 yaw, bool yaw_override) {
+    rudOut = apply_pid_output(compute_yaw_output(roll, yaw, yaw_override), (bool)config.pins[PINS_REVERSE_YAW]);
     servo_set((i16)config.pins[PINS_SERVO_RUD], rudOut);
     servo_set((i16)config.pins[PINS_SERVO_AIL], ailOut);
     servo_set((i16)config.pins[PINS_SERVO_ELE], eleOut);
@@ -146,6 +151,7 @@ void flight_init() {
         .kp = calibration.pid[PID_ROLL_KP],
         .ki = calibration.pid[PID_ROLL_KI],
         .kd = calibration.pid[PID_ROLL_KD],
+        .deadband = calibration.pid[PID_ROLL_DB],
         .tau = calibration.pid[PID_TAU],
         .limMin = -rollLimit,
         .limMax = rollLimit,
@@ -154,6 +160,7 @@ void flight_init() {
         .kp = calibration.pid[PID_PITCH_KP],
         .ki = calibration.pid[PID_PITCH_KI],
         .kd = calibration.pid[PID_PITCH_KD],
+        .deadband = calibration.pid[PID_PITCH_DB],
         .tau = calibration.pid[PID_TAU],
         .limMin = -pitchLimit,
         .limMax = pitchLimit,
@@ -166,6 +173,7 @@ void flight_init() {
             .kp = calibration.pid[PID_YAW_KP],
             .ki = calibration.pid[PID_YAW_KI],
             .kd = calibration.pid[PID_YAW_KD],
+            .deadband = calibration.pid[PID_YAW_DB],
             .tau = calibration.pid[PID_TAU],
             .limMin = -config.control[CONTROL_MAX_RUD_DEFLECTION],
             .limMax = config.control[CONTROL_MAX_RUD_DEFLECTION],
@@ -174,7 +182,7 @@ void flight_init() {
     }
 }
 
-void flight_update(f64 roll, f64 pitch, f64 yaw, bool override) {
+void flight_update(f64 roll, f64 pitch, f64 yaw, bool yaw_override) {
     // Check flight envelope for hard-coded irregularities
     if (fabsf(imu.roll) > 72 || imu.pitch > 35 || imu.pitch < -20) {
         printpre("flight", "WARNING: flight envelope exceeded! (roll: %.0f, pitch: %.0f, yaw: %.0f)", imu.roll,
@@ -193,7 +201,7 @@ void flight_update(f64 roll, f64 pitch, f64 yaw, bool override) {
         // Compute yaw damper output for 3axis (rudder-enabled) control modes
         case CTRLMODE_3AXIS_ATHR:
         case CTRLMODE_3AXIS:
-            handle_mode_3axis(roll, yaw, override);
+            handle_mode_3axis(roll, yaw, yaw_override);
             break;
         case CTRLMODE_2AXIS_ATHR:
         case CTRLMODE_2AXIS:

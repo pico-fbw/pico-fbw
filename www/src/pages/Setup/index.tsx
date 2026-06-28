@@ -3,6 +3,8 @@
  * Licensed under the MIT License
  */
 
+// TODO: a step for servo reversal
+
 import { useState } from "preact/hooks";
 
 import ContentBlock from "elements/ContentBlock";

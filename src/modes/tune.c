@@ -24,16 +24,18 @@
 #define P_GAIN_DIFF_TIME_MS 500
 // The amount to increase/decrease the P gain by
 #define P_GAIN_STEP 0.25f
-#define P_GAIN_MAX 6.f
+#define P_GAIN_MAX 12.f
 
 // The amount of overshoot past the setpoint required to trigger a D gain increase
 #define D_GAIN_OVERSHOOT_THRESHOLD 4.f
 // The amount to increase/decrease the D gain by
 #define D_GAIN_STEP 0.1f
-#define D_GAIN_MAX 12.f
+#define D_GAIN_MAX 6.f
 
 // Minimum time between gain updates for a single axis to prevent runaway tuning
 #define GAIN_UPDATE_COOLDOWN_MS 1000
+// Threshold for detecting a possible axis reversal (over this value, check if the requested and actual rates are opposite in sign)
+#define REVERSAL_DETECTION_THRESHOLD 10.f
 
 // If this amount of time passes without any tune events, the system is considered tuned
 #define TUNED_THRESHOLD_MS 30E3
@@ -57,6 +59,18 @@ static void update_gain(Axis axis, f32 req_rate, f32 act_rate, f32 setpoint, f32
     u32 now = time_ms();
     if (*tLastUpdate != 0 && now - *tLastUpdate < GAIN_UPDATE_COOLDOWN_MS) {
         return; // Update rate throttled
+    }
+
+    // If commanded and actual rates are strongly opposite in sign, axis is likely reversed
+    if (fabsf(req_rate) > REVERSAL_DETECTION_THRESHOLD && fabsf(act_rate) > REVERSAL_DETECTION_THRESHOLD) {
+        if ((req_rate > 0) != (act_rate > 0)) {
+            // Throw an error and bail out to prevent loss of control
+            printsys(aircraft, "%s axis is likely reversed! (req_rate=%.1f, act_rate=%.1f)",
+                     (axis == AXIS_ROLL) ? "ROLL" : "PITCH", req_rate, act_rate);
+            log_message(TYPE_ERROR, "Axis is likely reversed!", 1000, 0, false);
+            aircraft_change_mode(MODE_DIRECT);
+            return;
+        }
     }
 
     // Scale the P threshold to 15% of the requested rate, with a minimum floor to prevent
