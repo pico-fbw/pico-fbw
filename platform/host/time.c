@@ -25,6 +25,7 @@
 
 extern LARGE_INTEGER tStart, tFreq; // Defined in sys.c
 
+// Wrapper function to convert the callback signature from `i32 (*)()` to `VOID CALLBACK`
 VOID CALLBACK callback_to_WAITORTIMERCALLBACK(PVOID lpParameter, BOOLEAN TimerOrWaitFired) {
     CallbackData *data = (CallbackData *)lpParameter;
     if (!data) {
@@ -86,10 +87,10 @@ static void callback_to_sigevent(union sigval sv) {
         if (!create_timer(data, reschedule)) {
             free(data);
         }
-    } else {
-        timer_delete(data->id);
-        free(data);
+        return;
     }
+    timer_delete(data->id);
+    free(data);
 }
 
 #endif // defined(__APPLE__) || defined(__linux__)

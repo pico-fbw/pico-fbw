@@ -24,7 +24,7 @@
 #define P_GAIN_DIFF_TIME_MS 500
 // The amount to increase/decrease the P gain by
 #define P_GAIN_STEP 0.25f
-#define P_GAIN_MAX 12.f
+#define P_GAIN_MAX 14.f
 
 // The amount of overshoot past the setpoint required to trigger a D gain increase
 #define D_GAIN_OVERSHOOT_THRESHOLD 4.f
@@ -36,6 +36,7 @@
 #define GAIN_UPDATE_COOLDOWN_MS 1000
 // Threshold for detecting a possible axis reversal (over this value, check if the requested and actual rates are opposite in sign)
 #define REVERSAL_DETECTION_THRESHOLD 10.f
+#define REVERSAL_CONFIRM_MS 300 // Must persist 300ms to count
 
 // If this amount of time passes without any tune events, the system is considered tuned
 #define TUNED_THRESHOLD_MS 30E3
@@ -43,6 +44,7 @@
 static Timestamp lastTuneEvent;
 static u32 tDiffRoll = 0, tDiffPitch = 0;
 static u32 tLastUpdateRoll = 0, tLastUpdatePitch = 0;
+static u32 tReversalRoll = 0, tReversalPitch = 0;
 
 /**
  * Updates the P and D gains for the given axis, if required.
@@ -55,23 +57,31 @@ static u32 tLastUpdateRoll = 0, tLastUpdatePitch = 0;
 static void update_gain(Axis axis, f32 req_rate, f32 act_rate, f32 setpoint, f32 act_angle) {
     u32 *tDiff       = (axis == AXIS_ROLL) ? &tDiffRoll       : &tDiffPitch;
     u32 *tLastUpdate = (axis == AXIS_ROLL) ? &tLastUpdateRoll  : &tLastUpdatePitch;
+    u32 *tReversal   = (axis == AXIS_ROLL) ? &tReversalRoll    : &tReversalPitch;
 
     u32 now = time_ms();
     if (*tLastUpdate != 0 && now - *tLastUpdate < GAIN_UPDATE_COOLDOWN_MS) {
         return; // Update rate throttled
     }
 
-    // If commanded and actual rates are strongly opposite in sign, axis is likely reversed
+    // Check for possible axis reversal
     if (fabsf(req_rate) > REVERSAL_DETECTION_THRESHOLD && fabsf(act_rate) > REVERSAL_DETECTION_THRESHOLD) {
+        // If commanded and actual rates are strongly opposite in sign, axis is likely reversed
         if ((req_rate > 0) != (act_rate > 0)) {
-            // Throw an error and bail out to prevent loss of control
-            printsys(aircraft, "%s axis is likely reversed! (req_rate=%.1f, act_rate=%.1f)",
-                     (axis == AXIS_ROLL) ? "ROLL" : "PITCH", req_rate, act_rate);
-            log_message(TYPE_ERROR, "Axis is likely reversed!", 1000, 0, false);
-            aircraft_change_mode(MODE_DIRECT);
-            return;
+            if (*tReversal == 0) {
+                *tReversal = now;
+            }
+            if (now - *tReversal > REVERSAL_CONFIRM_MS) {
+                // Throw an error and bail out to prevent loss of control
+                printsys(aircraft, "%s axis is likely reversed! (req_rate=%.1f, act_rate=%.1f)",
+                         (axis == AXIS_ROLL) ? "ROLL" : "PITCH", req_rate, act_rate);
+                log_message(TYPE_ERROR, "Axis is likely reversed!", 1000, 0, false);
+                aircraft_change_mode(MODE_DIRECT);
+                return;
+            }
         }
     }
+    *tReversal = 0; // Reset if condition clears
 
     // Scale the P threshold to 15% of the requested rate, with a minimum floor to prevent
     // sensor noise from keeping the threshold permanently exceeded at low stick inputs

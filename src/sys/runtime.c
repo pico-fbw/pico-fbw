@@ -39,7 +39,7 @@ static i32 calc_update_rate(void *data) {
             log_message(TYPE_WARNING, "Loop update rate is low. Performance may be degraded!", 250, 0, true);
             loopRateWarned = true;
         }
-        printsys(aircraft, "update rate: %u Hz", loopRate);
+        printsys(aircraft, "update rate: %lu Hz", loopRate);
     }
     return 1000; // Run again in 1s
     (void)data;

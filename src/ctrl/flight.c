@@ -83,12 +83,12 @@ static f32 compute_yaw_output(f64 roll, f64 yaw, bool yaw_override) {
         yawDamperOn = true;
     }
     if (yawDamperOn) {
-        pid_update(&yawC, 0.0, imu.yawRate);
+        pid_update(&yawC, 0.0, (f64)imu.yawRate);
         return (f32)yawC.out;
     }
 
-    // Yaw damper disabled, pass through roll OUTPUT coupled with our sensitivity gain
-    return (f32)(rollC.out * config.control[CONTROL_RUDDER_SENSITIVITY]);
+    // Yaw damper disabled, pass through active roll rate coupled with our sensitivity gain to create a coordinate turn
+    return (f32)(imu.rollRate * config.control[CONTROL_RUDDER_SENSITIVITY]);
 }
 
 // Applies PID output to servo position, accounting for reversal

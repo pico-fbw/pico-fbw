@@ -66,9 +66,11 @@ export default function ContentBlock({
                     className="fixed inset-0 z-2000 flex items-center justify-center bg-black/80"
                     onClick={() => setError?.("")}
                 >
-                    <Alert type="danger" onClose={() => setError?.("")} className="mx-4 sm:mx-8 lg:mx-0">
-                        {error}
-                    </Alert>
+                    <div className="bg-gray-900" onClick={e => e.stopPropagation()}>
+                        <Alert type="danger" onClose={() => setError?.("")} className="mx-4 sm:mx-8 lg:mx-0">
+                            {error}
+                        </Alert>
+                    </div>
                 </div>
             )}
             {/* Sidebar */}
