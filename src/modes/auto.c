@@ -150,15 +150,15 @@ void auto_update() {
     // Use GPS track instead of IMU heading because heading isn't always going to be navigational (more likely magnetic)
     f32 diff = control_get_heading_diff(bearing, gps.track);
 
+    // Nested PIDs to command bank/pitch angles
+    pid_update(&latGuid, 0.0, diff);
+    pid_update(&vertGuid, target.alt, gps.alt);
     // Predictive roll control adjustment to avoid overshooting
     if (fabs(diff) < ROLL_OVERSHOOT_THRESHOLD) {
         // Apply reverse input to dampen overshoot
         latGuid.out = -latGuid.out * (imu.rollRate / ROLL_OVERSHOOT_DAMPEN);
     }
 
-    // Nested PIDs to command bank/pitch angles
-    pid_update(&latGuid, 0.0, diff);
-    pid_update(&vertGuid, target.alt, gps.alt);
     flight_update(latGuid.out, vertGuid.out, 0, false);
     throttle_update();
 

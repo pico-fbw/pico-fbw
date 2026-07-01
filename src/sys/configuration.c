@@ -56,11 +56,11 @@ Config config = {
         CONFIG_END_MAGIC,
     },
     .control = {
-        40, 20, 1.5f, 2.f, // Control handling preferences
+        40, 20, 0.3f, 2.f, // Control handling preferences
         10, 30, 0.3f, // Autothrottle configuration
         180, 0, // Drop bay detent settings
         33, 67, -15, 30, // Control limits
-        25, 15, 20, // Physical control surface limits
+        40, 30, 35, // Physical control surface limits
         20, 0.5f, 1, 1, // Flying wing configuration
         CONFIG_END_MAGIC,
     },
@@ -110,11 +110,10 @@ Calibration calibration = {
     },
     .pid = {
         false,
-        // TODO: tune throttle pid, keep checking others (they're mostly tuned already)
-        0.7f, 0.2f, 1.5f, 0.75f, // Default roll PID parameters
-        0.7f, 0.2f, 1.5f, 0.75f, // Default pitch PID parameters
-        0.1f, 0.05f, 1.f, 0.5f, // Default yaw PID parameters
-        25.f, 0.11f, 40.f, // Default autothrottle PID parameters
+        1.f, 0.2f, 1.5f, 0.75f, // Default roll PID parameters
+        1.f, 0.2f, 1.5f, 0.75f, // Default pitch PID parameters
+        0.15f, 0.05f, 0.f, 1.5f, // Default yaw PID parameters
+        2.f, 0.3f, 0.f, // Default autothrottle PID parameters
         1.f, // Default PID tau
     },
     .version = CALIBRATION_VERSION,
@@ -176,7 +175,7 @@ static bool save_struct_to_file(const char *file, void *strct, size_t size) {
 void config_load() {
     load_file_to_struct(FILE_CONFIG, &config, sizeof(config));
     load_file_to_struct(FILE_CALIBRATION, &calibration, sizeof(calibration));
-    // Load print settings and set debug flag
+    // Load print settings
     shouldPrint.fbw = config.system[SYSTEM_PRINT_FBW];
     shouldPrint.imu = config.system[SYSTEM_PRINT_IMU];
     shouldPrint.aircraft = config.system[SYSTEM_PRINT_AIRCRAFT];

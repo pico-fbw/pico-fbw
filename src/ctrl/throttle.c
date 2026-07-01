@@ -131,6 +131,8 @@ void throttle_init() {
         };
         pid_init(&athr_c);
     }
+    stateChangeAt = time_s();
+    state = THRSTATE_NORMAL;
 }
 
 void throttle_update() {

@@ -189,7 +189,7 @@ const config: ConfigDatabase = {
         },
         {
             name: "Max Elevator Deflection",
-            id: "maxElevDeflection",
+            id: "maxEleDeflection",
             desc: "The maximum degree value the system is allowed to move the elevator servos to.",
         },
         {

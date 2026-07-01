@@ -21,6 +21,7 @@
 // Hysteresis thresholds for yaw damper engagement/disengagement
 #define YAW_DAMPER_ON_THRESHOLD  (config.control[CONTROL_DEADBAND])
 #define YAW_DAMPER_OFF_THRESHOLD (config.control[CONTROL_DEADBAND] * 2.f)
+#define YAW_DAMPER_RATE_THRESHOLD 5.f // deg/s, must be below this to consider "not actively rolling"
 
 static PIDController rollC, pitchC, yawC;
 static f32 ailOut, eleOut, rudOut;
@@ -78,7 +79,7 @@ static f32 compute_yaw_output(f64 roll, f64 yaw, bool yaw_override) {
         yawDamperOn = false;
     }
     // Turn damper on only if roll is below lower threshold
-    if (!yawDamperOn && fabs(roll) < YAW_DAMPER_ON_THRESHOLD) {
+    if (!yawDamperOn && fabs(roll) < YAW_DAMPER_ON_THRESHOLD && fabs(imu.rollRate) < YAW_DAMPER_RATE_THRESHOLD) {
         pid_init(&yawC); // Reset integrator on re-engage to avoid step
         yawDamperOn = true;
     }
@@ -96,18 +97,18 @@ static inline f32 apply_pid_output(f64 output, bool reversed) {
     return (reversed ? -1.f : 1.f) * (f32)output + 90.f;
 }
 
-// Handles control for 3-axis modes
-static void handle_mode_3axis(f64 roll, f64 yaw, bool yaw_override) {
-    rudOut = apply_pid_output(compute_yaw_output(roll, yaw, yaw_override), (bool)config.pins[PINS_REVERSE_YAW]);
-    servo_set((i16)config.pins[PINS_SERVO_RUD], rudOut);
-    servo_set((i16)config.pins[PINS_SERVO_AIL], ailOut);
-    servo_set((i16)config.pins[PINS_SERVO_ELE], eleOut);
-}
-
 // Handles control for 2-axis modes
 static void handle_mode_2axis() {
     servo_set((i16)config.pins[PINS_SERVO_AIL], ailOut);
     servo_set((i16)config.pins[PINS_SERVO_ELE], eleOut);
+}
+
+// Handles control for 3-axis modes
+static void handle_mode_3axis(f64 roll, f64 yaw, bool yaw_override) {
+    rudOut = apply_pid_output(compute_yaw_output(roll, yaw, yaw_override), (bool)config.pins[PINS_REVERSE_YAW]);
+    // printpre("flight", "rudOut: %.3f, roll: %.3f, yaw: %.3f, yawRate: %.3f, damperOn: %s", rudOut, roll, yaw, imu.yawRate, yawDamperOn ? "true" : "false");
+    servo_set((i16)config.pins[PINS_SERVO_RUD], rudOut);
+    handle_mode_2axis();
 }
 
 // Handles control for flying wing modes
@@ -184,7 +185,7 @@ void flight_init() {
 
 void flight_update(f64 roll, f64 pitch, f64 yaw, bool yaw_override) {
     // Check flight envelope for hard-coded irregularities
-    if (fabsf(imu.roll) > 72 || imu.pitch > 35 || imu.pitch < -20) {
+    if (fabsf(imu.roll) > 72 || imu.pitch > 35 || imu.pitch < -30) {
         printpre("flight", "WARNING: flight envelope exceeded! (roll: %.0f, pitch: %.0f, yaw: %.0f)", imu.roll,
                  imu.pitch, imu.yaw);
         aircraft_set_imu_safe(false);

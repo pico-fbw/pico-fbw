@@ -19,8 +19,8 @@ typedef struct PIDController {
 
     f64 T;
     f64 integrator;
-    f64 prevError;
     f64 differentiator;
+    f64 prevError;
     f64 prevMeasurement;
     f64 prevT;
 } PIDController;

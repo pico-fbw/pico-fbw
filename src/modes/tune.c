@@ -19,12 +19,12 @@
 #include "tune.h"
 
 // The difference between the resquested and actual axis travel rates that can trigger a possible P gain increase
-#define P_GAIN_DIFF_THRESHOLD 1.f
+#define P_GAIN_DIFF_THRESHOLD 2.f
 // The time (in milliseconds) that P_GAIN_DIFF_THRESHOLD must be exceeded to trigger a P gain increase
 #define P_GAIN_DIFF_TIME_MS 500
 // The amount to increase/decrease the P gain by
 #define P_GAIN_STEP 0.25f
-#define P_GAIN_MAX 14.f
+#define P_GAIN_MAX 20.f
 
 // The amount of overshoot past the setpoint required to trigger a D gain increase
 #define D_GAIN_OVERSHOOT_THRESHOLD 4.f
