@@ -24,7 +24,7 @@ typedef enum ThrottleState {
 static ThrottleMode currentMode = THRMODE_THRUST;
 static ThrottleMode supportedMode = THRMODE_THRUST;
 static f32 target = 0.0f;
-static PIDController athr_c;
+static PIDController athr;
 // throttle_update() state variables
 static f32 escTarget = 0.0f;
 static f32 prevEscTarget = 0.0f;
@@ -40,8 +40,8 @@ static f32 calculate_esc_target() {
         case THRMODE_THRUST:
             return target;
         case THRMODE_SPEED:
-            pid_update(&athr_c, (f64)target, (f64)gps.speed);
-            return (f32)athr_c.out;
+            pid_update(&athr, (f64)target, (f64)gps.speed);
+            return (f32)athr.out;
         default:
             return target;
     }
@@ -121,7 +121,7 @@ void throttle_init() {
     // GPS is required for speed mode, as we need to know the aircraft's current speed
     supportedMode = gps.is_supported() ? THRMODE_SPEED : THRMODE_THRUST;
     if (supportedMode == THRMODE_SPEED) {
-        athr_c = (PIDController){
+        athr = (PIDController){
             .kp = calibration.pid[PID_THROTTLE_KP],
             .ki = calibration.pid[PID_THROTTLE_KI],
             .kd = calibration.pid[PID_THROTTLE_KD],
@@ -129,7 +129,7 @@ void throttle_init() {
             .limMin = calibration.esc[ESC_DETENT_IDLE],
             .limMax = calibration.esc[ESC_DETENT_MAX],
         };
-        pid_init(&athr_c);
+        pid_init(&athr);
     }
     stateChangeAt = time_s();
     state = THRSTATE_NORMAL;
@@ -163,10 +163,11 @@ f32 throttle_get_target() {
 
 void throttle_set_mode(ThrottleMode mode) {
     currentMode = mode;
-    if (mode == THRMODE_THRUST) {
-        // Prime throttle with current value so that we don't get a big jump on first update
-        escTarget = receiver_get((i16)config.pins[PINS_INPUT_THROTTLE], RECEIVER_MODE_PERCENT);
-        prevEscTarget = escTarget;
+    // Prime throttle with current value so that we don't get a big jump on first update
+    escTarget = receiver_get((i16)config.pins[PINS_INPUT_THROTTLE], RECEIVER_MODE_PERCENT);
+    prevEscTarget = escTarget;
+    if (mode == THRMODE_SPEED) {
+        athr.out = escTarget; // Avoid a big jump in the PID
     }
 }
 

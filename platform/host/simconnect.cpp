@@ -13,7 +13,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "platform/helpers.h"
+extern "C" {
+    #include "platform/helpers.h"
+    #include "platform/time.h"
+}
 
 #include "platform/simconnect.h"
 
@@ -26,6 +29,8 @@
     printf("\033[38;2;0;181;255m[MSFS]\x1b[0m ");                                                                              \
     printf(__VA_ARGS__);                                                                                                       \
     printf("\n");
+
+#define GPS_UPDATE_MS 200 // Amount of time that must pass between GPS updates, in ms (5hz)
 
 #define GRAVITY 9.81
 
@@ -72,15 +77,17 @@ SC_GPS scGPS = {
     .speed = -1.f,
     .track = -1.f,
 };
-i32 numEngines = 0; // Will be filled in later
 
-f32 ailPos = 0.f, elePos = 0.f, rudPos = 0.f, thrPos = 0.f; // Last retrieved control surface positions
+static i32 numEngines = 0; // Will be filled in later
+static f32 ailPos = 0.f, elePos = 0.f, rudPos = 0.f, thrPos = 0.f; // Last retrieved control surface positions
+static Timestamp lastGpsUpdate;
 
 /**
  * Simulates readings from a MEMS accelerometer based on available SimConnect data.
  * @param imu the IMU data to simulate/modify
  */
 static void simulate_accel(SC_IMU *imu) {
+    // FIXME: this calculation is wildly wrong
     f64 roll = radians(imu->roll);
     f64 pitch = radians(imu->pitch);
     // Compute gravity vector in aircraft body frame
@@ -175,7 +182,10 @@ static void on_SIMCONNECT_RECV_SIMOBJECT_DATA(SIMCONNECT_RECV_SIMOBJECT_DATA *pD
             simulate_accel(&scIMU);
             break;
         case ID_SC_GPS:
-            memcpy(&scGPS, &pData->dwData, sizeof(SC_GPS));
+            // Throttle gps updates to a more reasonable real-life rate
+            if (time_since_ms(&lastGpsUpdate) > GPS_UPDATE_MS) {
+                memcpy(&scGPS, &pData->dwData, sizeof(SC_GPS));
+            }
             break;
         case ID_NUM_ENG:
             numEngines = *(i32 *)&pData->dwData;
@@ -249,9 +259,8 @@ static bool configure_datadef_sc_gps() {
     SimConnect_AddToDataDefinition(hSimConnect, ID_SC_GPS, "GPS GROUND SPEED", "knots", SIMCONNECT_DATATYPE_FLOAT32);
     SimConnect_AddToDataDefinition(hSimConnect, ID_SC_GPS, "GPS GROUND TRUE HEADING", "degrees",
                                    SIMCONNECT_DATATYPE_FLOAT32);
-    // GPS data is updated every second (to simulate real GPS modules being somewhat slow)
     return SUCCEEDED(SimConnect_RequestDataOnSimObject(hSimConnect, ID_SC_GPS, ID_SC_GPS, SIMCONNECT_OBJECT_ID_USER,
-                                                       SIMCONNECT_PERIOD_SECOND));
+                                                       SIMCONNECT_PERIOD_SIM_FRAME));
 }
 
 /**

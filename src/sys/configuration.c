@@ -56,11 +56,11 @@ Config config = {
         CONFIG_END_MAGIC,
     },
     .control = {
-        40, 20, 0.3f, 2.f, // Control handling preferences
+        50, 20, 0.3f, 2.f, // Control handling preferences
         10, 30, 0.3f, // Autothrottle configuration
         180, 0, // Drop bay detent settings
         33, 67, -15, 30, // Control limits
-        40, 30, 35, // Physical control surface limits
+        60, 60, 40, // Physical control surface limits
         20, 0.5f, 1, 1, // Flying wing configuration
         CONFIG_END_MAGIC,
     },
@@ -110,10 +110,10 @@ Calibration calibration = {
     },
     .pid = {
         false,
-        1.f, 0.2f, 1.5f, 0.75f, // Default roll PID parameters
-        1.f, 0.2f, 1.5f, 0.75f, // Default pitch PID parameters
+        1.f, 0.2f, 1.f, 0.75f, // Default roll PID parameters
+        1.f, 0.2f, 1.f, 0.75f, // Default pitch PID parameters
         0.15f, 0.05f, 0.f, 1.5f, // Default yaw PID parameters
-        2.f, 0.3f, 0.f, // Default autothrottle PID parameters
+        6.f, 0.3f, 0.f, // Default autothrottle PID parameters
         1.f, // Default PID tau
     },
     .version = CALIBRATION_VERSION,

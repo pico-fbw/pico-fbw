@@ -54,17 +54,14 @@ void pid_update(PIDController *pid, f64 setpoint, f64 measurement) {
     // Compute output and apply limits
     f64 out = proportional + pid->integrator + pid->differentiator;
     if (out > pid->limMax) {
-        // Anti-wind-up for over-saturated output
-        if (pid->integrator != 0.0) {
-            pid->integrator += pid->limMax - out;
-        }
         out = pid->limMax;
     } else if (out < pid->limMin) {
-        // Anti-wind-up for under-saturated output
-        if (pid->integrator != 0.0) {
-            pid->integrator += pid->limMin - out;
-        }
         out = pid->limMin;
+    }
+    // Anti-windup: gradually correct integrator based on saturation error
+    if (pid->ki != 0.0) {
+        f64 satError = out - (proportional + pid->integrator + pid->differentiator);
+        pid->integrator += pid->T * (1.0 / pid->tau) * satError;
     }
 
     // Store output, error, measurement, and time for later use

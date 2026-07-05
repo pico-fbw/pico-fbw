@@ -5,6 +5,7 @@
 
 // TODO: refactor using new autopilot logic
 
+#include "platform/helpers.h"
 #include "platform/time.h"
 
 #include "ctrl/aircraft.h"
@@ -27,11 +28,6 @@
 #define INTERCEPT_BASE_SPEED 50  // INTERCEPT_BASE_RADIUS will apply at this speed, kts
 #define MIN_RADIUS 5             // The minimum radius that is possible (after being calculated), in meters
 
-#define ROLL_OVERSHOOT_THRESHOLD 8.0 // The threshold at which to apply reverse input to dampen roll overshoot, deg
-// The aircraft's current roll rate will be divided by this value and subsequently multiplied by
-// the reverse output of the lateral guidance controller
-#define ROLL_OVERSHOOT_DAMPEN 70.0 // The factor at which to dampen roll overshoot, deg/s
-
 typedef enum GuidanceSource {
     SOURCE_FLIGHTPLAN,
     SOURCE_EXTERNAL,
@@ -43,8 +39,9 @@ static bool autoComplete = false;
 static Waypoint currentWpt;
 static u32 currentWptIndex;
 
-static PIDController latGuid;  // lateral guidance
-static PIDController vertGuid; // vertical guidance
+static PIDController latGuid;  // Lateral guidance
+static PIDController vertGuid; // Vertical guidance
+static f32 rollOut, pitchOut; // Smoothed outputs from guidance PIDs
 
 // Allows auto mode to be externally controlled (by API setting a custom Waypoint and callback)
 static GuidanceSource guidanceSource = SOURCE_FLIGHTPLAN;
@@ -153,13 +150,12 @@ void auto_update() {
     // Nested PIDs to command bank/pitch angles
     pid_update(&latGuid, 0.0, diff);
     pid_update(&vertGuid, target.alt, gps.alt);
-    // Predictive roll control adjustment to avoid overshooting
-    if (fabs(diff) < ROLL_OVERSHOOT_THRESHOLD) {
-        // Apply reverse input to dampen overshoot
-        latGuid.out = -latGuid.out * (imu.rollRate / ROLL_OVERSHOOT_DAMPEN);
-    }
-
-    flight_update(latGuid.out, vertGuid.out, 0, false);
+    // lerp() the PID outputs in order to avoid jerkiness on the controls
+    // Invert lateral output because positive diff should mean positive bank (and vice versa)
+    rollOut = lerp(rollOut, -latGuid.out, GUIDANCE_SMOOTHING);
+    pitchOut = lerp(pitchOut, vertGuid.out, GUIDANCE_SMOOTHING);
+    
+    flight_update(rollOut, pitchOut, 0, false);
     throttle_update();
 
     // Calculate the radius at which to consider the Waypoint intercepted

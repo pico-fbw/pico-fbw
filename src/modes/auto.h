@@ -2,22 +2,22 @@
 
 #include "platform/types.h"
 
-// TODO: finish tuning these
-
-/* PID constants for the autopilot's lateral guidance. */
-#define LATGD_KP 0.8
-#define LATGD_KI 0
+// PID constants for the autopilot's lateral guidance
+#define LATGD_KP 0.5
+#define LATGD_KI 0.03
 #define LATGD_KD 0
 #define LATGD_TAU 1
 #define LATGD_LIM 20 // The maximum roll angle the autopilot can command
 
-/* PID constants for the autopilot's vertical guidance. */
-#define VERTGD_KP 0.1
-#define VERTGD_KI 0
-#define VERTGD_KD 0
+// PID constants for the autopilot's vertical guidance
+#define VERTGD_KP 0.4
+#define VERTGD_KI 0.05
+#define VERTGD_KD 0.02
 #define VERTGD_TAU 1
 #define VERTGD_LIM_MIN -5 // The minimum pitch angle the autopilot can command
 #define VERTGD_LIM_MAX 10 // The maximum pitch angle the autopilot can command
+
+#define GUIDANCE_SMOOTHING 0.005f // `t` coefficient for guidance controllers' output smoothing
 
 typedef struct Waypoint {
     f64 lat, lng;

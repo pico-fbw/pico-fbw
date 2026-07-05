@@ -3,6 +3,8 @@
  * Licensed under the MIT License
  */
 
+// TODO: keep tune mode always engaged, not a separate mode?
+
 #include <math.h>
 #include "platform/time.h"
 
@@ -19,18 +21,19 @@
 #include "tune.h"
 
 // The difference between the resquested and actual axis travel rates that can trigger a possible P gain increase
-#define P_GAIN_DIFF_THRESHOLD 2.f
+#define P_GAIN_DIFF_THRESHOLD 1.f
 // The time (in milliseconds) that P_GAIN_DIFF_THRESHOLD must be exceeded to trigger a P gain increase
 #define P_GAIN_DIFF_TIME_MS 500
 // The amount to increase/decrease the P gain by
 #define P_GAIN_STEP 0.25f
-#define P_GAIN_MAX 20.f
+#define P_GAIN_MAX 12.f
 
 // The amount of overshoot past the setpoint required to trigger a D gain increase
-#define D_GAIN_OVERSHOOT_THRESHOLD 4.f
+#define D_GAIN_OVERSHOOT_THRESHOLD 7.f
 // The amount to increase/decrease the D gain by
 #define D_GAIN_STEP 0.1f
-#define D_GAIN_MAX 6.f
+#define D_GAIN_MAX_ROLL 6.f
+#define D_GAIN_MAX_PITCH 3.f
 
 // Minimum time between gain updates for a single axis to prevent runaway tuning
 #define GAIN_UPDATE_COOLDOWN_MS 1000
@@ -125,12 +128,15 @@ static void update_gain(Axis axis, f32 req_rate, f32 act_rate, f32 setpoint, f32
         f64 kD;
         flight_tunings_get(axis, NULL, NULL, &kD);
         kD += D_GAIN_STEP;
-        if (kD > D_GAIN_MAX) {
+        if (axis == AXIS_ROLL && kD > D_GAIN_MAX_ROLL) {
+            return;
+        }
+        if (axis == AXIS_PITCH && kD > D_GAIN_MAX_PITCH) {
             return;
         }
         flight_tunings_update(axis, INFINITY, INFINITY, kD, false);
         *tLastUpdate = now;
-        lastTuneEvent = timestamp_now();
+        // lastTuneEvent = timestamp_now();
     }
 }
 
