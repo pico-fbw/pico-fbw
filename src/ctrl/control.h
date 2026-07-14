@@ -55,3 +55,10 @@ f32 control_mix_elevon(Elevon elevon, f64 roll, f64 pitch);
  * @note The result will be in the range [-180, 180].
  */
 f32 control_get_heading_diff(f32 target, f32 track);
+
+/**
+ * Applies an exponential (cubic) curve to a linear input.
+ * @param linear linear input [0, 180]
+ * @return the cubic-mapped value
+ */
+f32 control_apply_expo(f32 linear);

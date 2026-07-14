@@ -3,26 +3,28 @@
  * Licensed under the MIT License
  */
 
-// TODO: refactor, make logic less spaghetti and convoluted
-
 #include <math.h>
+#include "platform/helpers.h"
 #include "platform/time.h"
 
 #include "ctrl/aircraft.h"
 #include "ctrl/control.h"
 #include "ctrl/flight.h"
 #include "ctrl/throttle.h"
+#include "io/imu.h"
 #include "io/receiver.h"
 #include "io/servo.h"
 #include "sys/configuration.h"
 
 #include "normal.h"
 
-// The rate at which the roll setpoint returns to its limit from the hold limit (in deg)
+// The rate at which the roll setpoint returns to its limit from the hold limit
 // This is NOT in deg/s, think of it as someone holding the stick at the magnitude of this value
-#define CONTROL_ROLL_RETURN_DPS 45.f
+#define CONTROL_ROLL_RETURN 30.f
 // The threshold for how close to zero the roll must be to be considered zero (and auto-return to actual zero)
 #define CONTROL_ROLL_NEARZERO_THRESHOLD 2.f
+// `lerp()` `t` coefficient for auto-return to zero behavior
+#define CONTROL_ROLL_RETURN_SMOOTHING 6.f
 
 static f32 rollInput, pitchInput, yawInput;
 static f32 rollSet, pitchSet, throttleSet;
@@ -34,28 +36,37 @@ void normal_init() {
     flight_init();
     throttle_init();
     throttle_set_mode(THRMODE_THRUST);
+    // Seed setpoints with current angles to avoid a sudden jerk during engagement
+    rollSet = imu.roll;
+    pitchSet = imu.pitch;
 }
 
 void normal_update() {
     // Refresh input data from rx
-    rollInput = receiver_get((i16)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE) - 90.f;
-    pitchInput = receiver_get((i16)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEGREE) - 90.f;
+    rollInput = control_apply_expo(receiver_get((i16)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE)) - 90.f;
+    pitchInput = control_apply_expo(receiver_get((i16)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEGREE)) - 90.f;
     if (receiver_has_rud()) {
-        yawInput = receiver_get((i16)config.pins[PINS_INPUT_RUD], RECEIVER_MODE_DEGREE) - 90.f;
+        yawInput = control_apply_expo(receiver_get((i16)config.pins[PINS_INPUT_RUD], RECEIVER_MODE_DEGREE)) - 90.f;
     }
     throttleSet = receiver_get((i16)config.pins[PINS_INPUT_THROTTLE], RECEIVER_MODE_PERCENT);
 
-    // If the roll value is above the limit, we do allow setting up to to the hold limit but constant input is required
-    // for that, so if we don't have it, bring it back to the hold limit at the specified rate
-    if (fabsf(rollSet) > config.control[CONTROL_ROLL_LIMIT] && fabsf(rollInput) < fabsf(rollSet)) {
-        // Override the input to bring it back in the opposite direction at the specified rate
-        rollInput = rollSet < 0 ? CONTROL_ROLL_RETURN_DPS : -CONTROL_ROLL_RETURN_DPS;
+    // If the roll value is above the roll limit, we allow setting up to to the hold limit (enforced later),
+    // but constant input is required
+    f32 requiredInput = fabsf(rollSet) - config.control[CONTROL_ROLL_LIMIT];
+    // If there is no constant input, we need to slowly bring back roll to the non-hold limit
+    if (fabsf(rollSet) > config.control[CONTROL_ROLL_LIMIT] && fabsf(rollInput) < requiredInput) {
+        // Override the user's input to bring it back in the opposite direction at the return rate
+        rollInput = rollSet < 0 ? CONTROL_ROLL_RETURN : -CONTROL_ROLL_RETURN;
     }
-    // Also, if the roll value is near zero and we don't have any input, bring it back to zero automatically to level
-    if (fabsf(rollSet) < CONTROL_ROLL_NEARZERO_THRESHOLD && fabsf(rollInput) < config.control[CONTROL_DEADBAND]) {
-        rollSet = 0.f;
+    // Also, if the roll value is near zero and we don't have any input, gradually bring it back to zero
+    else if (fabsf(rollSet) < CONTROL_ROLL_NEARZERO_THRESHOLD && fabsf(rollInput) < config.control[CONTROL_DEADBAND]) {
+        rollInput = lerp(rollSet, 0, CONTROL_ROLL_RETURN_SMOOTHING);
+        // Close enough/too small of an output, we can snap cleanly without much jerk
+        if (fabsf(rollSet) < 0.1f || rollInput < config.control[CONTROL_DEADBAND]) {
+            rollSet = 0.f;
+        }
     }
-    
+
     // Calculate control adjustments based on input
     f32 rollAdj = control_calc_adjust(AXIS_ROLL, rollInput, pitchInput);
     f32 pitchAdj = control_calc_adjust(AXIS_PITCH, rollInput, pitchInput);
@@ -67,16 +78,15 @@ void normal_update() {
 
     if (!overrideSetpoints) {
         // Use the inputs from the receiver to calculate the setpoint values
-        // Take deadband into account so we don't get crazy setpoints due to PWM fluctuations
-        if (ROLL_INPUT()) {
+        // Take deadband into account to avoid noise from hardware fluctuations
+        if (fabsf(rollInput) > config.control[CONTROL_DEADBAND]) {
             rollSet += rollAdj;
         }
-        if (PITCH_INPUT()) {
+        if (fabsf(pitchInput) > config.control[CONTROL_DEADBAND]) {
             pitchSet += pitchAdj;
         }
 
-        // Make sure the setpoints aren't set to unsafe values so we don't get weird outputs from PID,
-        // this is also where our bank/pitch protections come in.
+        // Enforce bank/pitch protections
         if (fabsf(rollSet) > config.control[CONTROL_ROLL_LIMIT]) {
             if (rollSet > config.control[CONTROL_ROLL_LIMIT_HOLD]) {
                 rollSet = config.control[CONTROL_ROLL_LIMIT_HOLD];

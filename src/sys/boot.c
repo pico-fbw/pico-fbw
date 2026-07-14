@@ -93,6 +93,9 @@ void boot_init_servos() {
     i16 servos[numServos];
     servo_get_pins(servos, &numServos);
     servo_enable(servos, numServos);
+    if (boot_type() != BOOT_COLD) {
+        return; // Only test servos after a cold boot to prevent an in-flight activation
+    }
     const f32 degrees[] = DEFAULT_SERVO_TEST;
     servo_test(servos, numServos, degrees, count_of(degrees), DEFAULT_SERVO_TEST_PAUSE_MS);
 }

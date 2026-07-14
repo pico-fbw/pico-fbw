@@ -157,8 +157,8 @@ void tune_update() {
     }
 
     // Get the current inputs and use them to calculate the mapped ("requested") rates in dps
-    f32 rollInput = receiver_get((i16)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE) - 90.f;
-    f32 pitchInput = receiver_get((i16)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEGREE) - 90.f;
+    f32 rollInput = control_apply_expo(receiver_get((i16)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE)) - 90.f;
+    f32 pitchInput = control_apply_expo(receiver_get((i16)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEGREE)) - 90.f;
     f32 reqRollRate = control_get_dps(AXIS_ROLL, rollInput, pitchInput);
     f32 reqPitchRate = control_get_dps(AXIS_PITCH, rollInput, pitchInput);
     // Get current attitude setpoints from normal mode (to check for overshoot)

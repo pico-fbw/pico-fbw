@@ -103,7 +103,7 @@ bool auto_init() {
         .kp = LATGD_KP,
         .ki = LATGD_KI,
         .kd = LATGD_KD,
-        .tau = LATGD_TAU,
+        .tau = calibration.pid[PID_TAU],
         .limMin = -LATGD_LIM,
         .limMax = LATGD_LIM,
     };
@@ -111,7 +111,7 @@ bool auto_init() {
         .kp = VERTGD_KP,
         .ki = VERTGD_KI,
         .kd = VERTGD_KD,
-        .tau = VERTGD_TAU,
+        .tau = calibration.pid[PID_TAU],
         .limMin = VERTGD_LIM_MIN,
         .limMax = VERTGD_LIM_MAX,
     };

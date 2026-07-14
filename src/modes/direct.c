@@ -14,12 +14,12 @@
 #include "direct.h"
 
 void direct_update() {
-    f32 ail = receiver_get((i16)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE);
-    f32 ele = receiver_get((i16)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEGREE);
+    f32 ail = control_apply_expo(receiver_get((i16)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE));
+    f32 ele = control_apply_expo(receiver_get((i16)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEGREE));
     switch ((ControlMode)config.general[GENERAL_CONTROL_MODE]) {
         case CTRLMODE_3AXIS_ATHR:
         case CTRLMODE_3AXIS:
-            f32 rud = receiver_get((i16)config.pins[PINS_INPUT_RUD], RECEIVER_MODE_DEGREE);
+            f32 rud = control_apply_expo(receiver_get((i16)config.pins[PINS_INPUT_RUD], RECEIVER_MODE_DEGREE));
             servo_set((i16)config.pins[PINS_SERVO_RUD], rud);
             /* fall through */
         case CTRLMODE_2AXIS_ATHR:

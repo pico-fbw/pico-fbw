@@ -88,3 +88,10 @@ f32 control_get_heading_diff(f32 target, f32 track) {
     }
     return diff;
 }
+
+f32 control_apply_expo(f32 linear) {
+    f32 expo = (linear - 90.f) / 90.f;
+    expo = clampf(expo, -1.f, 1.f);
+    expo = (1.f - config.control[CONTROL_EXPO]) * expo + config.control[CONTROL_EXPO] * expo * expo * expo;
+    return expo * 90.f + 90.f;
+}

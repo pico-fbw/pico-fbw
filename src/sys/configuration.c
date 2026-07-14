@@ -56,7 +56,7 @@ Config config = {
         CONFIG_END_MAGIC,
     },
     .control = {
-        50, 20, 0.3f, 2.f, // Control handling preferences
+        50, 20, 0.4f, 0.3f, 2.f, // Control handling preferences
         10, 30, 0.3f, // Autothrottle configuration
         180, 0, // Drop bay detent settings
         33, 67, -15, 30, // Control limits
@@ -210,6 +210,7 @@ void config_reset() {
 #define CONTROL_KEY_LIST                                                                                               \
     X("maxRollRate", CONTROL_MAX_ROLL_RATE)                                                                            \
     X("maxPitchRate", CONTROL_MAX_PITCH_RATE)                                                                          \
+    X("expo", CONTROL_EXPO)                                                                                            \
     X("rudderSensitivity", CONTROL_RUDDER_SENSITIVITY)                                                                 \
     X("controlDeadband", CONTROL_DEADBAND)                                                                             \
     X("throttleMaxTime", CONTROL_THROTTLE_MAX_TIME)                                                                    \
@@ -468,6 +469,10 @@ bool config_validate(char *error, size_t error_size) {
         prevPin = pin;
     }
     // Limit validation
+    if (config.control[CONTROL_EXPO] < 0 || config.control[CONTROL_EXPO] > 1) {
+        snprintf(error, error_size, "Expo must be between 0 and 1.");
+        return false;
+    }
     if (config.control[CONTROL_ROLL_LIMIT] > 72 || config.control[CONTROL_ROLL_LIMIT] < 0) {
         snprintf(error, error_size, "Roll limit must be between 0 and 72 degrees.");
         return false;

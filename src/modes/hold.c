@@ -3,9 +3,8 @@
  * Licensed under the MIT License
  */
 
-// TODO: make holding not suck
-
 #include <math.h>
+#include "platform/helpers.h"
 #include "platform/time.h"
 #include "platform/types.h"
 
@@ -21,19 +20,22 @@
 #include "hold.h"
 
 // The amount of time (in seconds) that the aircraft will fly straight for in the holding pattern, before turning back
-// around 180 degrees.
+// around 180 degrees
 #define HOLD_TIME_PER_LEG_S 30
 
 // The bank angle to turn at when making a 180 in the holding pattern--needs to be positive!
-#define HOLD_TURN_BANK_ANGLE 25
+#define HOLD_TURN_BANK_ANGLE 20
 // The bank angle to turn at the end of the turn when we are about to intercept the heading--also needs to be positive!
 #define HOLD_TURN_SLOW_BANK_ANGLE 5
 
-// The value (in degrees) within which the bank angle will begin to be decreased.
+// The value (in degrees) within which the bank angle will begin to be decreased
 #define HOLD_HEADING_DECREASE_WITHIN 10
 
-// The value (in degrees) within which the heading will be considered intercepted.
+// The value (in degrees) within which the heading will be considered intercepted
 #define HOLD_HEADING_INTERCEPT_WITHIN 2
+
+// The value (in degrees) within which the commanded roll is considered to have converged on its target bank angle
+#define HOLD_ROLL_CONVERGED_WITHIN 1.5
 
 typedef enum HoldStatus {
     HOLD_AWAITING_TURN,
@@ -50,7 +52,10 @@ static f32 oldTrack;
 static f32 targetTrack;
 static i32 targetAlt;
 
-static f64 rollSet;
+// rollTarget is the bank angle we're currently working towards; rollOut/pitchOut are the smoothed,
+// actually-commanded values sent to flight_update() (mirrors the pattern used in auto.c)
+static f32 rollTarget;
+static f32 rollOut, pitchOut;
 
 static PIDController vertGuid;
 
@@ -69,44 +74,42 @@ static i32 turn_around(void *data) {
 }
 
 bool hold_init() {
-    flight_init();
-    throttle_init();
-    if (throttle_get_supported_mode() < THRMODE_SPEED) {
-        log_message(TYPE_WARNING, "SPEED mode required!", 2000, 0, false);
-        return false;
-    }
-    throttle_set_mode(THRMODE_SPEED);
-    // We try to maintain the speed of the aircraft as it was entering the holding pattern
-    throttle_set_target(gps.speed);
+    // flight_init() and throttle_init() are intentionally not called here
+    // Hold mode is only ever entered from auto mode, which already has flight and speed modes active and correctly
+    // tracking the last waypoint's target speed
+
     // We use a vertical guidance PID here so that we can keep the aircraft level; 0deg pitch does not equal 0 altitude
     // change (sadly)
     vertGuid = (PIDController){
         .kp = VERTGD_KP,
         .ki = VERTGD_KI,
         .kd = VERTGD_KD,
-        .tau = VERTGD_TAU,
+        .tau = calibration.pid[PID_TAU],
         .limMin = VERTGD_LIM_MIN,
         .limMax = VERTGD_LIM_MAX,
     };
     pid_init(&vertGuid);
     turnStatus = HOLD_TURN_UNSCHEDULED;
-    rollSet = 0.f;
+    rollTarget = 0.f;
+    rollOut = 0.f;
+    pitchOut = 0.f;
     targetAlt = gps.alt; // targetAlt is just the current alt from whenever we enter the mode
     return true;
 }
 
 void hold_update() {
     pid_update(&vertGuid, targetAlt, gps.alt);
-    flight_update(rollSet, vertGuid.out, 0, false);
+    // Smooth the commanded roll and pitch as done in auto.c
+    rollOut = lerp(rollOut, rollTarget, GUIDANCE_SMOOTHING);
+    pitchOut = lerp(pitchOut, (f32)vertGuid.out, GUIDANCE_SMOOTHING);
+    flight_update(rollOut, pitchOut, 0, false);
     throttle_update();
 
     switch (turnStatus) {
         case HOLD_TURN_BEGUN:
-            // Slowly ease into the turn
-            if (rollSet <= HOLD_TURN_BANK_ANGLE) {
-                rollSet += (HOLD_TURN_BANK_ANGLE * config.control[CONTROL_RUDDER_SENSITIVITY]);
-            } else {
-                // We've reached the desired angle, now we need to wait for the turn to complete
+            rollTarget = HOLD_TURN_BANK_ANGLE;
+            // Once the actual commanded roll has caught up to the target bank, the turn is properly established
+            if (fabsf(rollOut - HOLD_TURN_BANK_ANGLE) < HOLD_ROLL_CONVERGED_WITHIN) {
                 turnStatus = HOLD_TURN_INPROGRESS;
             }
             break;
@@ -117,21 +120,16 @@ void hold_update() {
             }
             break;
         case HOLD_TURN_ENDING:
-            // Slowly decrease the turn
-            if (rollSet >= HOLD_TURN_SLOW_BANK_ANGLE) {
-                rollSet -= (HOLD_TURN_BANK_ANGLE * config.control[CONTROL_RUDDER_SENSITIVITY]);
-            }
+            rollTarget = HOLD_TURN_SLOW_BANK_ANGLE;
             // Move on to stabilization once we've intercepted the target heading
             if (fabsf(control_get_heading_diff(targetTrack, gps.track)) <= HOLD_HEADING_INTERCEPT_WITHIN) {
                 turnStatus = HOLD_TURN_STABILIZING;
             }
             break;
         case HOLD_TURN_STABILIZING:
-            // Stabilize the turn back to 0 degrees of bank, then mark it as completed (unscheduled)
-            if (rollSet > 0) {
-                rollSet -= (HOLD_TURN_BANK_ANGLE * config.control[CONTROL_RUDDER_SENSITIVITY]);
-            } else {
-                rollSet = 0;
+            rollTarget = 0.f;
+            // Wait for the commanded roll to settle back to wings-level before considering the turn complete
+            if (fabsf(rollOut) < HOLD_ROLL_CONVERGED_WITHIN) {
                 turnStatus = HOLD_TURN_UNSCHEDULED;
             }
             break;

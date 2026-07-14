@@ -35,6 +35,7 @@ typedef enum ConfigControl {
     // Control handling preferences
     CONTROL_MAX_ROLL_RATE,
     CONTROL_MAX_PITCH_RATE,
+    CONTROL_EXPO,
     CONTROL_RUDDER_SENSITIVITY,
     CONTROL_DEADBAND,
     // Throttle detent/autothrottle configuration

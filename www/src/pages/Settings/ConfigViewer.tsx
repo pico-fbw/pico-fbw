@@ -128,6 +128,11 @@ const config: ConfigDatabase = {
             desc: "The maximum rate of pitch that the system will allow, in degrees per second.",
         },
         {
+            name: "Expo Factor",
+            id: "expo",
+            desc: "The cubic expo factor applied to control inputs. A value of 0 provides a linear response, while higher values reduce sensitivity near the center. Allowable values range from 0-1.0."
+        },
+        {
             name: "Rudder Sensitivity",
             id: "rudderSensitivity",
             desc: "When the yaw damper is disabled (or when turning), the aileron value will be multiplied by this value to determine the rudder value.",

@@ -18,9 +18,6 @@
 
 #include "receiver.h"
 
-/** @return true if the value is within the maximum calibration offset */
-#define WITHIN_MAX_CALIBRATION_OFFSET(value, offset) ((value) >= -offset && (value) <= offset)
-
 // Special offset threshold for the switch pin (can be more negative than other pins)
 #define SWITCH_MIN_OFFSET -200.0f
 
@@ -134,7 +131,7 @@ static bool validate_calibration_offset(i16 pin, f32 offset) {
         return true;
     }
     // All other pins must be within the standard limits
-    if (!WITHIN_MAX_CALIBRATION_OFFSET(offset, max_offset)) {
+    if (fabsf(offset) <= max_offset) {
         printpre("receiver", "ERROR: (FBW-500) pin %d's calibration value is too high!", pin);
         return false;
     }

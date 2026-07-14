@@ -3,17 +3,15 @@
 #include "platform/types.h"
 
 // PID constants for the autopilot's lateral guidance
-#define LATGD_KP 0.5
+#define LATGD_KP 0.45
 #define LATGD_KI 0.03
-#define LATGD_KD 0
-#define LATGD_TAU 1
+#define LATGD_KD 0.015
 #define LATGD_LIM 20 // The maximum roll angle the autopilot can command
 
 // PID constants for the autopilot's vertical guidance
-#define VERTGD_KP 0.4
+#define VERTGD_KP 0.40
 #define VERTGD_KI 0.05
-#define VERTGD_KD 0.02
-#define VERTGD_TAU 1
+#define VERTGD_KD 0 // Vertical controller cannot reasonably use a D term because GPS alt updates too infrequently/coarsely
 #define VERTGD_LIM_MIN -5 // The minimum pitch angle the autopilot can command
 #define VERTGD_LIM_MAX 10 // The maximum pitch angle the autopilot can command
 
