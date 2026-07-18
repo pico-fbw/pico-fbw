@@ -51,7 +51,7 @@ void launch_init(Mode return_to) {
     throttle_init();
     throttle_set_mode(THRMODE_THRUST);
     // Set idle thrust to indicate that we're ready to launch
-    throttle_set_target(calibration.esc[ESC_DETENT_IDLE]);
+    throttle_set_target(calibration.esc.detentIdle);
 }
 
 void launch_update() {
@@ -63,7 +63,7 @@ void launch_update() {
             // which indicates the user probably threw the aircraft
             if (has_launch_accel()) {
                 // Launch is happening right now, set max thrust
-                throttle_set_target(calibration.esc[ESC_DETENT_MAX]);
+                throttle_set_target(calibration.esc.detentMax);
                 // If we need to return to auto mode after launch, do so after a delay
                 if (afterLaunch == MODE_AUTO) {
                     callback_in_ms(AUTO_ENGAGE_DELAY_S * 1000, return_to_mode, NULL);

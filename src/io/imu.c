@@ -97,8 +97,7 @@ bool imu_init() {
 #if !SIMCONNECT
     // Set up I2C bus
     if (!i2cInitialized) {
-        if (!i2c_setup((i16)config.pins[PINS_I2C_SDA], (i16)config.pins[PINS_I2C_SCL],
-                       (u32)config.sensors[SENSORS_I2C_BUS_FREQ] * 1000)) {
+        if (!i2c_setup((i16)config.pins.i2cSda, (i16)config.pins.i2cScl, (u32)config.sensors.i2cBusFreq * 1000)) {
             printsys(imu, "failed to initialize I2C bus");
             return false;
         }
@@ -140,11 +139,9 @@ bool imu_init() {
     fusion_attitude_calibration_init(&fusionConfig, axisMap, axisSign);
 
     // Load calibration data if available
-    if (calibration.imu[IMU_CALIBRATED]) {
-        f32 gyroBias[3] = {calibration.imu[IMU_GYRO_BIAS_X], calibration.imu[IMU_GYRO_BIAS_Y],
-                           calibration.imu[IMU_GYRO_BIAS_Z]};
-        f32 accelOffset[3] = {calibration.imu[IMU_ACCEL_OFFSET_X], calibration.imu[IMU_ACCEL_OFFSET_Y],
-                              calibration.imu[IMU_ACCEL_OFFSET_Z]};
+    if ((bool)calibration.imu.calibrated) {
+        f32 gyroBias[3] = {calibration.imu.gyroBiasX, calibration.imu.gyroBiasY, calibration.imu.gyroBiasZ};
+        f32 accelOffset[3] = {calibration.imu.accelOffsetX, calibration.imu.accelOffsetY, calibration.imu.accelOffsetZ};
         fusion_load_calibration(&fusionConfig, gyroBias, accelOffset);
         if (!fusion_attitude_calibration_load_axis_remap(axisMap, axisSign)) {
             printsys(imu, "no valid fusion axis remap found, using identity axes");

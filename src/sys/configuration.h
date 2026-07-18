@@ -1,7 +1,8 @@
 #pragma once
 
-#include <stdbool.h>
-#include "platform/stdio.h"
+// <sys/config.h> is a standard C include, hence why this file is called configuration.h!
+
+#include "platform/types.h"
 
 /* The amount of time (in ms) to wait for any possible serial connections to be established before booting.
 This option is compiled in, as the config is not yet loaded when this value is needed. */
@@ -9,200 +10,183 @@ This option is compiled in, as the config is not yet loaded when this value is n
 
 // -- Config struct details --
 
-#define CONFIG_SECTION_SIZE 32
 #define CONFIG_STR_SIZE 128
-#define NUM_FLOAT_CONFIG_SECTIONS 5
-#define NUM_STRING_CONFIG_SECTIONS 1
-#define NUM_CONFIG_SECTIONS (NUM_FLOAT_CONFIG_SECTIONS + NUM_STRING_CONFIG_SECTIONS)
-#define CONFIG_END_MAGIC (-30.54245f) // Denotes the end of a config section
+#define CONFIG_SECTION_COUNT 6
 
-// -- Config section indices and definition --
+// -- Config section definitions --
 
-typedef enum ConfigGeneral {
-    GENERAL_CONTROL_MODE,
-    GENERAL_SWITCH_TYPE,
-    GENERAL_MAX_CALIBRATION_OFFSET,
-    GENERAL_SERVO_HZ,
-    GENERAL_ESC_HZ,
-    GENERAL_API_ENABLED,
-    GENERAL_WIFI_ENABLED,
-    GENERAL_LAUNCHASSIST_ENABLED,
-    GENERAL_AUTOTUNE_ENABLED,
-    GENERAL_SKIP_CALIBRATION,
-} ConfigGeneral;
+typedef struct ConfigGeneralSection {
+    f32 controlMode;
+    f32 switchType;
+    f32 maxCalibrationOffset;
+    f32 servoHz;
+    f32 escHz;
+    f32 apiEnabled;
+    f32 wifiEnabled;
+    f32 launchAssistEnabled;
+    f32 autoTuneEnabled;
+    f32 skipCalibration;
+} ConfigGeneralSection;
 
-typedef enum ConfigControl {
-    // Control handling preferences
-    CONTROL_MAX_ROLL_RATE,
-    CONTROL_MAX_PITCH_RATE,
-    CONTROL_EXPO,
-    CONTROL_RUDDER_SENSITIVITY,
-    CONTROL_DEADBAND,
-    // Throttle detent/autothrottle configuration
-    CONTROL_THROTTLE_MAX_TIME,
-    CONTROL_THROTTLE_COOLDOWN_TIME,
-    CONTROL_THROTTLE_SENSITIVITY,
-    // Drop bay detent settings
-    CONTROL_DROP_DETENT_CLOSED,
-    CONTROL_DROP_DETENT_OPEN,
-    // Control limits
-    CONTROL_ROLL_LIMIT,
-    CONTROL_ROLL_LIMIT_HOLD,
-    CONTROL_PITCH_LOWER_LIMIT,
-    CONTROL_PITCH_UPPER_LIMIT,
-    // Physical control surface limits
-    CONTROL_MAX_AIL_DEFLECTION,
-    CONTROL_MAX_ELE_DEFLECTION,
-    CONTROL_MAX_RUD_DEFLECTION,
-    // Flying wing configuration
-    CONTROL_MAX_ELEVON_DEFLECTION,
-    CONTROL_ELEVON_MIXING_GAIN,
-    CONTROL_AIL_MIXING_BIAS,
-    CONTROL_ELEV_MIXING_BIAS,
-} ConfigControl;
+typedef struct ConfigControlSection {
+    f32 maxRollRate;
+    f32 maxPitchRate;
+    f32 expo;
+    f32 rudderSensitivity;
+    f32 controlDeadband;
+    f32 throttleMaxTime;
+    f32 throttleCooldownTime;
+    f32 throttleSensitivity;
+    f32 dropDetentClosed;
+    f32 dropDetentOpen;
+    f32 rollLimit;
+    f32 rollLimitHold;
+    f32 pitchLowerLimit;
+    f32 pitchUpperLimit;
+    f32 maxAilDeflection;
+    f32 maxEleDeflection;
+    f32 maxRudDeflection;
+    f32 maxElevonDeflection;
+    f32 elevonMixingGain;
+    f32 ailMixingBias;
+    f32 elevMixingBias;
+} ConfigControlSection;
 
-typedef enum ConfigPins {
-    // Control IO pins
-    PINS_INPUT_AIL,
-    PINS_SERVO_AIL,
-    PINS_INPUT_ELE,
-    PINS_SERVO_ELE,
-    PINS_INPUT_RUD,
-    PINS_SERVO_RUD,
-    PINS_INPUT_THROTTLE,
-    PINS_ESC_THROTTLE,
-    PINS_INPUT_SWITCH,
-    PINS_SERVO_BAY,
-    // Sensor communications pins
-    PINS_I2C_SDA,
-    PINS_I2C_SCL,
-    PINS_GPS_TX,
-    PINS_GPS_RX,
-    // Servo reverse flags
-    PINS_REVERSE_ROLL,
-    PINS_REVERSE_PITCH,
-    PINS_REVERSE_YAW,
-} ConfigPins;
-#define S_PIN_MIN PINS_INPUT_AIL
-#define S_PIN_NOT_FLAG_MAX PINS_GPS_RX // Last entry in Pins that is actually a pin and not a flag
-#define S_PIN_MAX PINS_REVERSE_YAW
+typedef struct ConfigPinsSection {
+    f32 inputAil;
+    f32 servoAil;
+    f32 inputEle;
+    f32 servoEle;
+    f32 inputRud;
+    f32 servoRud;
+    f32 inputThrottle;
+    f32 escThrottle;
+    f32 inputSwitch;
+    f32 servoBay;
+    f32 i2cSda;
+    f32 i2cScl;
+    f32 gpsTx;
+    f32 gpsRx;
+    f32 reverseRoll;
+    f32 reversePitch;
+    f32 reverseYaw;
+} ConfigPinsSection;
 
-typedef enum ConfigSensors {
-    SENSORS_I2C_BUS_FREQ,
-    SENSORS_GPS_COMMAND_TYPE,
-    SENSORS_GPS_BAUDRATE,
-} ConfigSensors;
+typedef struct ConfigSensorsSection {
+    f32 i2cBusFreq;
+    f32 gpsCommandType;
+    f32 gpsBaudrate;
+} ConfigSensorsSection;
 
-typedef enum ConfigSystem {
-    SYSTEM_PRINT_FBW,
-    SYSTEM_PRINT_IMU,
-    SYSTEM_PRINT_AIRCRAFT,
-    SYSTEM_PRINT_GPS,
-    SYSTEM_PRINT_NETWORK,
-} ConfigSystem;
-
-typedef struct ConfigWifi {
+typedef struct ConfigSystemSection {
     char ssid[CONFIG_STR_SIZE];
     char pass[CONFIG_STR_SIZE];
-} ConfigWifi;
+    f32 printsys;
+    f32 printIMU;
+    f32 printAircraft;
+    f32 printGPS;
+    f32 printNetwork;
+} ConfigSystemSection;
+
+typedef struct ConfigWebUISection {
+    f32 altSamples;
+    f32 defaultSpeed;
+    f32 dropSecs;
+    char pilotName[CONFIG_STR_SIZE];
+    f32 defaultMap;
+    char lastMapPosition[CONFIG_STR_SIZE];
+    char lastMapZoom[CONFIG_STR_SIZE];
+    f32 setupComplete;
+} ConfigWebUISection;
 
 typedef struct Config {
-    f32 general[CONFIG_SECTION_SIZE];
+    ConfigGeneralSection general;
 #define CONFIG_GENERAL_STR "General"
-    f32 control[CONFIG_SECTION_SIZE];
+    ConfigControlSection control;
 #define CONFIG_CONTROL_STR "Control"
-    f32 pins[CONFIG_SECTION_SIZE];
+    ConfigPinsSection pins;
 #define CONFIG_PINS_STR "Pins"
-    f32 sensors[CONFIG_SECTION_SIZE];
+    ConfigSensorsSection sensors;
 #define CONFIG_SENSORS_STR "Sensors"
-    f32 system[CONFIG_SECTION_SIZE];
+    ConfigSystemSection system;
 #define CONFIG_SYSTEM_STR "System"
-    ConfigWifi wifi;
-#define CONFIG_WIFI_STR "WiFi"
+    ConfigWebUISection webui;
+#define CONFIG_WEBUI_STR "WebUI"
     const char *version; // Not a config section; identifier for this config struct's saved version
 } Config;
 
-// -- Calibration struct indices and definition --
+// -- Calibration section definitions --
 
-typedef enum CalibrationPWM {
-    PWM_CALIBRATED,
-    PWM_MODE,
-    PWM_OFFSET_AIL,
-    PWM_OFFSET_ELE,
-    PWM_OFFSET_RUD,
-    PWM_OFFSET_SW,
-    PWM_OFFSET_THR,
-} CalibrationPWM;
+typedef struct CalibrationPWMSection {
+    f32 calibrated;
+    f32 mode;
+    f32 offsetAil;
+    f32 offsetEle;
+    f32 offsetRud;
+    f32 offsetSw;
+    f32 offsetThr;
+} CalibrationPWMSection;
 
-typedef enum CalibrationESC {
-    ESC_CALIBRATED,
-    ESC_DETENT_IDLE,
-    ESC_DETENT_MCT,
-    ESC_DETENT_MAX,
-} CalibrationESC;
+typedef struct CalibrationESCSection {
+    f32 calibrated;
+    f32 detentIdle;
+    f32 detentMct;
+    f32 detentMax;
+} CalibrationESCSection;
 
-typedef enum CalibrationIMU {
-    IMU_CALIBRATED,
-    // Gyroscope bias calibration (deg/s)
-    IMU_GYRO_BIAS_X,
-    IMU_GYRO_BIAS_Y,
-    IMU_GYRO_BIAS_Z,
-    // Accelerometer offset calibration (g)
-    IMU_ACCEL_OFFSET_X,
-    IMU_ACCEL_OFFSET_Y,
-    IMU_ACCEL_OFFSET_Z,
-    // Axis remap (destination/body axis -> source sensor axis index)
-    IMU_AXIS_MAP_ROLL,
-    IMU_AXIS_MAP_PITCH,
-    IMU_AXIS_MAP_YAW,
-    // Axis sign (+1 or -1) after remap
-    IMU_AXIS_SIGN_ROLL,
-    IMU_AXIS_SIGN_PITCH,
-    IMU_AXIS_SIGN_YAW,
-} CalibrationIMU;
+typedef struct CalibrationIMUSection {
+    f32 calibrated;
+    f32 gyroBiasX;
+    f32 gyroBiasY;
+    f32 gyroBiasZ;
+    f32 accelOffsetX;
+    f32 accelOffsetY;
+    f32 accelOffsetZ;
+    f32 axisMapRoll;
+    f32 axisMapPitch;
+    f32 axisMapYaw;
+    f32 axisSignRoll;
+    f32 axisSignPitch;
+    f32 axisSignYaw;
+} CalibrationIMUSection;
 
-typedef enum CalibrationPID {
-    PID_TUNED,
-    // Roll PID parameters
-    PID_ROLL_KP,
-    PID_ROLL_KI,
-    PID_ROLL_KD,
-    PID_ROLL_DB,
-    // Pitch PID parameters
-    PID_PITCH_KP,
-    PID_PITCH_KI,
-    PID_PITCH_KD,
-    PID_PITCH_DB,
-    // Yaw PID parameters
-    PID_YAW_KP,
-    PID_YAW_KI,
-    PID_YAW_KD,
-    PID_YAW_DB,
-    // Throttle PID parameters
-    PID_THROTTLE_KP,
-    PID_THROTTLE_KI,
-    PID_THROTTLE_KD,
-    // tau constant for all PIDs
-    PID_TAU,
-} CalibrationPID;
+typedef struct CalibrationPIDSection {
+    f32 tuned;
+    f32 rollKp;
+    f32 rollKi;
+    f32 rollKd;
+    f32 rollDb;
+    f32 pitchKp;
+    f32 pitchKi;
+    f32 pitchKd;
+    f32 pitchDb;
+    f32 yawKp;
+    f32 yawKi;
+    f32 yawKd;
+    f32 yawDb;
+    f32 throttleKp;
+    f32 throttleKi;
+    f32 throttleKd;
+    f32 tau;
+} CalibrationPIDSection;
 
 typedef struct Calibration {
-    f32 pwm[CONFIG_SECTION_SIZE];
+    CalibrationPWMSection pwm;
 #define CONFIG_PWM_STR "PWM"
-    f32 esc[CONFIG_SECTION_SIZE];
+    CalibrationESCSection esc;
 #define CONFIG_ESC_STR "ESC"
-    f32 imu[CONFIG_SECTION_SIZE];
+    CalibrationIMUSection imu;
 #define CONFIG_IMU_STR "IMU"
-    f32 pid[CONFIG_SECTION_SIZE];
+    CalibrationPIDSection pid;
 #define CONFIG_PID_STR "PID"
     const char *version;
 } Calibration;
 
-// -- Config section type and enum conversion functions (for lookup functions) --
+// -- Config section types (for lookup functions) --
 
 typedef enum ConfigSectionType {
     SECTION_TYPE_NONE,
-    SECTION_TYPE_FLOAT,
+    SECTION_TYPE_NUMBER,
     SECTION_TYPE_STRING,
 } ConfigSectionType;
 
@@ -212,8 +196,21 @@ typedef enum ConfigSection {
     CONFIG_PINS,
     CONFIG_SENSORS,
     CONFIG_SYSTEM,
-    CONFIG_WIFI,
+    CONFIG_WEBUI,
 } ConfigSection;
+
+typedef struct ConfigEntry {
+    const char *key;
+    ConfigSectionType type;
+    void *value;
+} ConfigEntry;
+
+typedef struct ConfigSectionInfo {
+    const char *name;
+    ConfigSectionType type;
+    const ConfigEntry *entries;
+    size_t entryCount;
+} ConfigSectionInfo;
 
 // -- Config functions --
 
@@ -251,6 +248,21 @@ void config_reset();
 bool config_validate(char *error, size_t error_size);
 
 /**
+ * Gets the section metadata for a config section.
+ * @param section the section to inspect
+ * @return the metadata for the requested section, or NULL if it does not exist
+ */
+const ConfigSectionInfo *config_section_info(ConfigSection section);
+
+/**
+ * Finds a config entry by section/key name.
+ * @param section the section name to look in
+ * @param key the key name to look up
+ * @return the matching config entry, or NULL if it does not exist
+ */
+const ConfigEntry *config_find_entry(const char *section, const char *key);
+
+/**
  * Gets a value from the config based on its string representation.
  * @param section the name of the section to look in
  * @param key the name of the key to look up
@@ -279,14 +291,6 @@ void config_backup();
  * Restores the backed up config.
  */
 void config_restore();
-
-/**
- * Gets a string representation of a config section based on its (enum) index, as well as its type.
- * @param section the (enum) index of the section
- * @param str pointer to a string to store the result in
- * @return the type of the section
- */
-ConfigSectionType config_to_string(ConfigSection section, const char **str);
 
 extern Config config;
 extern Calibration calibration;

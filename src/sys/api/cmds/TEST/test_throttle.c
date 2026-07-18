@@ -60,9 +60,9 @@ i32 api_test_throttle(const char *args) {
         return 403;
     }
 
-    f32 *idle = &calibration.esc[ESC_DETENT_IDLE];
-    f32 *mct = &calibration.esc[ESC_DETENT_MCT];
-    f32 *max = &calibration.esc[ESC_DETENT_MAX];
+    f32 *idle = &calibration.esc.detentIdle;
+    f32 *mct = &calibration.esc.detentMct;
+    f32 *max = &calibration.esc.detentMax;
     f32 t_idle = 4, t_mct = 2, t_max = 1;
     if (args) {
         if (!parse_args(args, &t_idle, &t_mct, &t_max)) {

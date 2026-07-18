@@ -31,7 +31,7 @@ static u8 pendingCount = 0;
  * @return position of the mode switch based on the current switch type and "angle"
  */
 static SwitchPosition deg_to_pos(f32 deg, SwitchPosition last_pos) {
-    switch ((SwitchType)config.general[GENERAL_SWITCH_TYPE]) {
+    switch ((SwitchType)config.general.switchType) {
         case SWITCH_TYPE_2_POS:
             // Hysteresis: boundary changes based on the last position to prevent jitter
             // The switch must be moved past the expanded boundary to trigger a mode change
@@ -59,7 +59,7 @@ static SwitchPosition deg_to_pos(f32 deg, SwitchPosition last_pos) {
 }
 
 void switch_update() {
-    f32 switchDeg = receiver_get((i16)config.pins[PINS_INPUT_SWITCH], RECEIVER_MODE_DEGREE);
+    f32 switchDeg = receiver_get((i16)config.pins.inputSwitch, RECEIVER_MODE_DEGREE);
     SwitchPosition pos = deg_to_pos(switchDeg, lastPos);
     // The mode will only be changed when the user moves the switch;
     // the system's mode changes can persist and won't instantly be overrided by the switch
@@ -90,7 +90,7 @@ void switch_update() {
             aircraft_change_mode(MODE_NORMAL);
             break;
         case SWITCH_POSITION_HIGH:
-            switch ((SwitchType)config.general[GENERAL_SWITCH_TYPE]) {
+            switch ((SwitchType)config.general.switchType) {
                 case SWITCH_TYPE_2_POS:
                     // For 2-position switches, auto-select auto or normal mode based on if a flight plan is present
                     if (flightplan_get_active()) {

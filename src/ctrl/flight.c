@@ -19,8 +19,8 @@
 #include "flight.h"
 
 // Hysteresis thresholds for yaw damper engagement/disengagement
-#define YAW_DAMPER_ON_THRESHOLD  (config.control[CONTROL_DEADBAND])
-#define YAW_DAMPER_OFF_THRESHOLD (config.control[CONTROL_DEADBAND] * 2.f)
+#define YAW_DAMPER_ON_THRESHOLD (config.control.controlDeadband)
+#define YAW_DAMPER_OFF_THRESHOLD (config.control.controlDeadband * 2.f)
 #define YAW_DAMPER_RATE_THRESHOLD 5.f // deg/s, must be below this to consider "not actively rolling"
 
 static PIDController rollC, pitchC, yawC;
@@ -89,7 +89,7 @@ static f32 compute_yaw_output(f64 roll, f64 yaw, bool yaw_override) {
     }
 
     // Yaw damper disabled, pass through active roll rate coupled with our sensitivity gain to create a coordinate turn
-    return (f32)(imu.rollRate * config.control[CONTROL_RUDDER_SENSITIVITY]);
+    return (f32)(imu.rollRate * config.control.rudderSensitivity);
 }
 
 // Applies PID output to servo position, accounting for reversal
@@ -99,15 +99,14 @@ static inline f32 apply_pid_output(f64 output, bool reversed) {
 
 // Handles control for 2-axis modes
 static void handle_mode_2axis() {
-    servo_set((i16)config.pins[PINS_SERVO_AIL], ailOut);
-    servo_set((i16)config.pins[PINS_SERVO_ELE], eleOut);
+    servo_set((i16)config.pins.servoAil, ailOut);
+    servo_set((i16)config.pins.servoEle, eleOut);
 }
 
 // Handles control for 3-axis modes
 static void handle_mode_3axis(f64 roll, f64 yaw, bool yaw_override) {
-    rudOut = apply_pid_output(compute_yaw_output(roll, yaw, yaw_override), (bool)config.pins[PINS_REVERSE_YAW]);
-    // printpre("flight", "rudOut: %.3f, roll: %.3f, yaw: %.3f, yawRate: %.3f, damperOn: %s", rudOut, roll, yaw, imu.yawRate, yawDamperOn ? "true" : "false");
-    servo_set((i16)config.pins[PINS_SERVO_RUD], rudOut);
+    rudOut = apply_pid_output(compute_yaw_output(roll, yaw, yaw_override), (bool)config.pins.reverseYaw);
+    servo_set((i16)config.pins.servoRud, rudOut);
     handle_mode_2axis();
 }
 
@@ -117,30 +116,30 @@ static void handle_mode_flyingwing() {
     lElevonOut = control_mix_elevon(ELEVON_LEFT, ailOut, eleOut);
     rElevonOut = control_mix_elevon(ELEVON_RIGHT, ailOut, eleOut);
     // Limit elevon outputs
-    f32 minOut = 90.f - config.control[CONTROL_MAX_ELEVON_DEFLECTION]; // Bring into servo range
-    f32 maxOut = 90.f + config.control[CONTROL_MAX_ELEVON_DEFLECTION];
+    f32 minOut = 90.f - config.control.maxElevonDeflection; // Bring into servo range
+    f32 maxOut = 90.f + config.control.maxElevonDeflection;
     clampf(lElevonOut, minOut, maxOut);
     clampf(rElevonOut, minOut, maxOut);
 
-    servo_set((i16)config.pins[PINS_SERVO_AIL], lElevonOut);
-    servo_set((i16)config.pins[PINS_SERVO_ELE], rElevonOut);
+    servo_set((i16)config.pins.servoAil, lElevonOut);
+    servo_set((i16)config.pins.servoEle, rElevonOut);
 }
 
 void flight_init() {
     f32 rollLimit;
     f32 pitchLimit;
-    switch ((ControlMode)config.general[GENERAL_CONTROL_MODE]) {
+    switch ((ControlMode)config.general.controlMode) {
         case CTRLMODE_3AXIS_ATHR:
         case CTRLMODE_2AXIS_ATHR:
         case CTRLMODE_3AXIS:
         case CTRLMODE_2AXIS:
-            rollLimit = config.control[CONTROL_MAX_AIL_DEFLECTION];
-            pitchLimit = config.control[CONTROL_MAX_ELE_DEFLECTION];
+            rollLimit = config.control.maxAilDeflection;
+            pitchLimit = config.control.maxEleDeflection;
             break;
         case CTRLMODE_FLYINGWING_ATHR:
         case CTRLMODE_FLYINGWING:
-            rollLimit = config.control[CONTROL_MAX_ELEVON_DEFLECTION];
-            pitchLimit = config.control[CONTROL_MAX_ELEVON_DEFLECTION];
+            rollLimit = config.control.maxElevonDeflection;
+            pitchLimit = config.control.maxElevonDeflection;
             break;
         default:
             printpre("flight", "ERROR: unknown control mode!");
@@ -149,20 +148,20 @@ void flight_init() {
     }
     // Create PID controllers for the roll and pitch axes and initialize them
     rollC = (PIDController){
-        .kp = calibration.pid[PID_ROLL_KP],
-        .ki = calibration.pid[PID_ROLL_KI],
-        .kd = calibration.pid[PID_ROLL_KD],
-        .deadband = calibration.pid[PID_ROLL_DB],
-        .tau = calibration.pid[PID_TAU],
+        .kp = calibration.pid.rollKp,
+        .ki = calibration.pid.rollKi,
+        .kd = calibration.pid.rollKd,
+        .deadband = calibration.pid.rollDb,
+        .tau = calibration.pid.tau,
         .limMin = -rollLimit,
         .limMax = rollLimit,
     };
     pitchC = (PIDController){
-        .kp = calibration.pid[PID_PITCH_KP],
-        .ki = calibration.pid[PID_PITCH_KI],
-        .kd = calibration.pid[PID_PITCH_KD],
-        .deadband = calibration.pid[PID_PITCH_DB],
-        .tau = calibration.pid[PID_TAU],
+        .kp = calibration.pid.pitchKp,
+        .ki = calibration.pid.pitchKi,
+        .kd = calibration.pid.pitchKd,
+        .deadband = calibration.pid.pitchDb,
+        .tau = calibration.pid.tau,
         .limMin = -pitchLimit,
         .limMax = pitchLimit,
     };
@@ -171,13 +170,13 @@ void flight_init() {
     // Create yaw axis controller if applicable
     if (receiver_has_rud()) {
         yawC = (PIDController){
-            .kp = calibration.pid[PID_YAW_KP],
-            .ki = calibration.pid[PID_YAW_KI],
-            .kd = calibration.pid[PID_YAW_KD],
-            .deadband = calibration.pid[PID_YAW_DB],
-            .tau = calibration.pid[PID_TAU],
-            .limMin = -config.control[CONTROL_MAX_RUD_DEFLECTION],
-            .limMax = config.control[CONTROL_MAX_RUD_DEFLECTION],
+            .kp = calibration.pid.yawKp,
+            .ki = calibration.pid.yawKi,
+            .kd = calibration.pid.yawKd,
+            .deadband = calibration.pid.yawDb,
+            .tau = calibration.pid.tau,
+            .limMin = -config.control.maxRudDeflection,
+            .limMax = config.control.maxRudDeflection,
         };
         pid_init(&yawC);
     }
@@ -195,10 +194,10 @@ void flight_update(f64 roll, f64 pitch, f64 yaw, bool yaw_override) {
     pid_update(&rollC, roll, (f64)imu.roll);
     pid_update(&pitchC, pitch, (f64)imu.pitch);
     // All control modes require the roll/pitch PIDs to be mapped to a servo output (0-180)
-    ailOut = (((bool)config.pins[PINS_REVERSE_ROLL] ? -1 : 1) * (f32)rollC.out + 90.f);
-    eleOut = (((bool)config.pins[PINS_REVERSE_PITCH] ? -1 : 1) * (f32)pitchC.out + 90.f);
+    ailOut = (((bool)config.pins.reverseRoll ? -1 : 1) * (f32)rollC.out + 90.f);
+    eleOut = (((bool)config.pins.reversePitch ? -1 : 1) * (f32)pitchC.out + 90.f);
     // Now things get specific to each mode
-    switch ((ControlMode)config.general[GENERAL_CONTROL_MODE]) {
+    switch ((ControlMode)config.general.controlMode) {
         // Compute yaw damper output for 3axis (rudder-enabled) control modes
         case CTRLMODE_3AXIS_ATHR:
         case CTRLMODE_3AXIS:

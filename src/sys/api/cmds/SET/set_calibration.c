@@ -129,7 +129,7 @@ i32 api_set_calibration(const char *in, char **out) {
             break;
         }
         case CALIBRATION_ESCS:
-            completed = esc_calibrate((i16)config.pins[PINS_ESC_THROTTLE]);
+            completed = esc_calibrate((i16)config.pins.escThrottle);
             break;
         case CALIBRATION_IMU:
             IMUCalibrationStatus status = imu.calibrate();

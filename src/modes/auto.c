@@ -3,8 +3,6 @@
  * Licensed under the MIT License
  */
 
-// TODO: refactor using new autopilot logic
-
 #include "platform/helpers.h"
 #include "platform/time.h"
 
@@ -41,7 +39,7 @@ static u32 currentWptIndex;
 
 static PIDController latGuid;  // Lateral guidance
 static PIDController vertGuid; // Vertical guidance
-static f32 rollOut, pitchOut; // Smoothed outputs from guidance PIDs
+static f32 rollOut, pitchOut;  // Smoothed outputs from guidance PIDs
 
 // Allows auto mode to be externally controlled (by API setting a custom Waypoint and callback)
 static GuidanceSource guidanceSource = SOURCE_FLIGHTPLAN;
@@ -103,7 +101,7 @@ bool auto_init() {
         .kp = LATGD_KP,
         .ki = LATGD_KI,
         .kd = LATGD_KD,
-        .tau = calibration.pid[PID_TAU],
+        .tau = calibration.pid.tau,
         .limMin = -LATGD_LIM,
         .limMax = LATGD_LIM,
     };
@@ -111,7 +109,7 @@ bool auto_init() {
         .kp = VERTGD_KP,
         .ki = VERTGD_KI,
         .kd = VERTGD_KD,
-        .tau = calibration.pid[PID_TAU],
+        .tau = calibration.pid.tau,
         .limMin = VERTGD_LIM_MIN,
         .limMax = VERTGD_LIM_MAX,
     };
@@ -154,7 +152,7 @@ void auto_update() {
     // Invert lateral output because positive diff should mean positive bank (and vice versa)
     rollOut = lerp(rollOut, -latGuid.out, GUIDANCE_SMOOTHING);
     pitchOut = lerp(pitchOut, vertGuid.out, GUIDANCE_SMOOTHING);
-    
+
     flight_update(rollOut, pitchOut, 0, false);
     throttle_update();
 
@@ -200,11 +198,11 @@ void auto_set(Waypoint wpt, void (*callback)(void)) {
 void auto_set_bay_position(BayPosition pos) {
     switch (pos) {
         case POS_OPEN:
-            servo_set(config.pins[PINS_SERVO_BAY], config.control[CONTROL_DROP_DETENT_OPEN]);
+            servo_set((i16)config.pins.servoBay, config.control.dropDetentOpen);
             break;
         case POS_CLOSED:
         default:
-            servo_set(config.pins[PINS_SERVO_BAY], config.control[CONTROL_DROP_DETENT_CLOSED]);
+            servo_set((i16)config.pins.servoBay, config.control.dropDetentClosed);
             break;
     }
 }

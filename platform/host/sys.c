@@ -9,8 +9,8 @@
 #include "platform/time.h"
 #include "platform/types.h"
 #ifdef _WIN32
-    #include <windows.h>
     #include <timeapi.h>
+    #include <windows.h>
     #include "platform/simconnect.h"
 LARGE_INTEGER tStart, tFreq;
 #else
@@ -61,7 +61,7 @@ void sys_periodic() {
 #if SIMCONNECT
     simconnect_poll();
 #endif
-#ifndef _WIN32 // Windows is slow, so no sleep needed
+#ifndef _WIN32                          // Windows is slow, so no sleep needed
     sleep_ms_blocking(THREAD_SLEEP_MS); // Sadly we do not want to create pico-fbw OS
 #endif
 }

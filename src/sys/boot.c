@@ -104,7 +104,7 @@ void boot_init_escs() {
     if (!receiver_has_athr()) {
         return;
     }
-    esc_enable((i16)config.pins[PINS_ESC_THROTTLE]);
+    esc_enable((i16)config.pins.escThrottle);
 }
 
 void boot_init_imu() {
@@ -144,15 +144,15 @@ void boot_init_wifi() {
         goto fail;
     }
     printsys(network, "successfully mounted wifi filesystem");
-    switch ((WifiEnabled)config.general[GENERAL_WIFI_ENABLED]) {
+    switch ((WifiEnabled)config.general.wifiEnabled) {
         case WIFI_ENABLED_OPEN:
-            printsys(network, "setting up open wifi with ssid \"%s\"", config.wifi.ssid);
-            setup = wifi_setup(config.wifi.ssid, NULL);
+            printsys(network, "setting up open wifi with ssid \"%s\"", config.system.ssid);
+            setup = wifi_setup(config.system.ssid, NULL);
             break;
         case WIFI_ENABLED_PASS:
-            printsys(network, "setting up wifi with ssid \"%s\" and password \"%s\"", config.wifi.ssid,
-                     config.wifi.pass);
-            setup = wifi_setup(config.wifi.ssid, config.wifi.pass);
+            printsys(network, "setting up wifi with ssid \"%s\" and password \"%s\"", config.system.ssid,
+                     config.system.pass);
+            setup = wifi_setup(config.system.ssid, config.system.pass);
         /* fall through */
         default:
             break;

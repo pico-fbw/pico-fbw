@@ -4,8 +4,8 @@
 
 #include "sys/configuration.h"
 
-#define ASDA (i16) config.pins[PINS_I2C_SDA]
-#define ASCL (i16) config.pins[PINS_I2C_SCL]
+#define ASDA (i16) config.pins.i2cSda
+#define ASCL (i16) config.pins.i2cScl
 
 typedef struct FusionDriver FusionDriver; // Forward declaration
 typedef struct FusionDriver {

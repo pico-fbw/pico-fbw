@@ -13,27 +13,6 @@
 #include "get_config.h"
 
 /**
- * @param section The section to get the memory offset of
- * @return The memory offset of the section.
- */
-static f32 *get_section_mem(ConfigSection section) {
-    switch (section) {
-        case CONFIG_GENERAL:
-            return config.general;
-        case CONFIG_CONTROL:
-            return config.control;
-        case CONFIG_PINS:
-            return config.pins;
-        case CONFIG_SENSORS:
-            return config.sensors;
-        case CONFIG_SYSTEM:
-            return config.system;
-        default:
-            return NULL;
-    }
-}
-
-/**
  * Helper to parse command arguments.
  * @param args command arguments
  * @param section pointer to store the section
@@ -88,7 +67,7 @@ static char *get_config_value(const char *section_name, const char *key) {
     JSON_Value *valuesArr = json_value_init_array();
     JSON_Array *values = json_value_get_array(valuesArr);
     switch (type) {
-        case SECTION_TYPE_FLOAT:
+        case SECTION_TYPE_NUMBER:
             json_array_append_number(values, *(f32 *)value);
             break;
         case SECTION_TYPE_STRING:
@@ -116,46 +95,30 @@ static char *get_entire_config() {
     JSON_Object *obj = json_value_get_object(root);
     JSON_Value *sectionsArr = json_value_init_array();
     JSON_Array *sections = json_value_get_array(sectionsArr);
-    // For every config section...
-    for (ConfigSection s = 0; s < NUM_CONFIG_SECTIONS; s++) {
+    for (ConfigSection s = 0; s < CONFIG_SECTION_COUNT; s++) {
+        const ConfigSectionInfo *info = config_section_info(s);
+        if (!info) {
+            json_value_free(root);
+            return NULL;
+        }
         JSON_Value *sectionObj = json_value_init_object();
         JSON_Object *section = json_value_get_object(sectionObj);
-        const char *sectionStr;
-        ConfigSectionType type = config_to_string(s, &sectionStr);
-        json_object_set_string(section, "name", sectionStr);
+        json_object_set_string(section, "name", info->name);
         JSON_Value *valuesArr = json_value_init_array();
         JSON_Array *values = json_value_get_array(valuesArr);
-        // ...and for every key in the section, add it to the array
-        switch (type) {
-            case SECTION_TYPE_FLOAT: {
-                f32 *section = get_section_mem(s);
-                if (!section) {
+        for (size_t i = 0; i < info->entryCount; i++) {
+            const ConfigEntry *entry = &info->entries[i];
+            switch (entry->type) {
+                case SECTION_TYPE_NUMBER:
+                    json_array_append_number(values, *(f32 *)entry->value);
+                    break;
+                case SECTION_TYPE_STRING:
+                    json_array_append_string(values, (const char *)entry->value);
+                    break;
+                default:
+                    json_value_free(root);
                     return NULL;
-                }
-                for (u32 v = 0; v < CONFIG_SECTION_SIZE; v++) {
-                    if (section[v + 1] != CONFIG_END_MAGIC && v < CONFIG_SECTION_SIZE - 1) {
-                        json_array_append_number(values, section[v]);
-                    } else {
-                        json_array_append_number(values, section[v]);
-                        break;
-                    }
-                }
-                break;
             }
-            case SECTION_TYPE_STRING: {
-                // I didn't feel like looping this and plus, there's only one string section
-                switch (s) {
-                    case CONFIG_WIFI:
-                        json_array_append_string(values, config.wifi.ssid);
-                        json_array_append_string(values, config.wifi.pass);
-                        break;
-                    default:
-                        break;
-                }
-                break;
-            }
-            default:
-                return NULL; // This should never happen
         }
         json_object_set_value(section, "values", valuesArr);
         json_array_append_value(sections, sectionObj);

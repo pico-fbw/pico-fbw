@@ -64,12 +64,12 @@ void runtime_loop(bool update_aircraft) {
         aircraft_update();
     }
     // Respond to any new API calls
-    if (config.general[GENERAL_API_ENABLED]) {
+    if ((bool)config.general.apiEnabled) {
         api_poll();
     }
     // Platform-specific and system tasks
 #if PLATFORM_SUPPORTS_WIFI
-    if ((WifiEnabled)config.general[GENERAL_WIFI_ENABLED] != WIFI_DISABLED && !aircraft_wifi_deinitialized()) {
+    if ((WifiEnabled)config.general.wifiEnabled != WIFI_DISABLED && !aircraft_wifi_deinitialized()) {
         wifi_periodic();
     }
 #endif

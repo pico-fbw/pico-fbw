@@ -13,11 +13,11 @@
 static f32 lastRollUpdate = 0, lastPitchUpdate = 0;
 
 static f32 get_roll_dps(f32 roll) {
-    return mapf(roll, -90.f, 90.f, -config.control[CONTROL_MAX_ROLL_RATE], config.control[CONTROL_MAX_ROLL_RATE]);
+    return mapf(roll, -90.f, 90.f, -config.control.maxRollRate, config.control.maxRollRate);
 }
 
 static f32 get_pitch_dps(f32 pitch) {
-    return mapf(pitch, -90.f, 90.f, -config.control[CONTROL_MAX_PITCH_RATE], config.control[CONTROL_MAX_PITCH_RATE]);
+    return mapf(pitch, -90.f, 90.f, -config.control.maxPitchRate, config.control.maxPitchRate);
 }
 
 static f32 calc_roll_adjust(f32 roll) {
@@ -68,14 +68,12 @@ void control_reset() {
 }
 
 f32 control_mix_elevon(Elevon elevon, f64 roll, f64 pitch) {
-    f32 rollComponent =
-        ((bool)config.pins[PINS_REVERSE_ROLL] ? -1 : 1) * roll * config.control[CONTROL_AIL_MIXING_BIAS];
-    f32 pitchComponent =
-        ((bool)config.pins[PINS_REVERSE_PITCH] ? -1 : 1) * pitch * config.control[CONTROL_ELEV_MIXING_BIAS];
+    f32 rollComponent = ((bool)config.pins.reverseRoll ? -1 : 1) * roll * config.control.ailMixingBias;
+    f32 pitchComponent = ((bool)config.pins.reversePitch ? -1 : 1) * pitch * config.control.elevMixingBias;
     if (elevon == ELEVON_LEFT) {
-        return (rollComponent + pitchComponent) * config.control[CONTROL_ELEVON_MIXING_GAIN] + 90.f;
+        return (rollComponent + pitchComponent) * config.control.elevonMixingGain + 90.f;
     } else {
-        return (rollComponent - pitchComponent) * config.control[CONTROL_ELEVON_MIXING_GAIN] + 90.f;
+        return (rollComponent - pitchComponent) * config.control.elevonMixingGain + 90.f;
     }
 }
 
@@ -92,6 +90,6 @@ f32 control_get_heading_diff(f32 target, f32 track) {
 f32 control_apply_expo(f32 linear) {
     f32 expo = (linear - 90.f) / 90.f;
     expo = clampf(expo, -1.f, 1.f);
-    expo = (1.f - config.control[CONTROL_EXPO]) * expo + config.control[CONTROL_EXPO] * expo * expo * expo;
+    expo = (1.f - config.control.expo) * expo + config.control.expo * expo * expo * expo;
     return expo * 90.f + 90.f;
 }

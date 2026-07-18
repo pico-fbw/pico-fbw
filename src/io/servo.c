@@ -19,7 +19,7 @@
 
 void servo_enable(const i16 pins[], u32 num_pins) {
     printpre("servo", "setting up %lu servos", num_pins);
-    if (!pwm_setup_write(pins, num_pins, config.general[GENERAL_SERVO_HZ])) {
+    if (!pwm_setup_write(pins, num_pins, (u32)config.general.servoHz)) {
         log_message(TYPE_FATAL, "Failed to enable PWM output!", 500, 0, true);
     }
     for (u32 i = 0; i < num_pins; i++) {
@@ -35,11 +35,11 @@ void servo_set(i16 pin, f32 degree) {
     pwm_write_raw(pin, mapf(degree, 0.f, 180.f, 500.f, 2500.f));
 #else
     SCFlightControl control;
-    if (pin == (i16)config.pins[PINS_SERVO_AIL]) {
+    if (pin == (i16)config.pins.servoAil) {
         control = FCTRL_AIL;
-    } else if (pin == (i16)config.pins[PINS_SERVO_ELE]) {
+    } else if (pin == (i16)config.pins.servoEle) {
         control = FCTRL_ELE;
-    } else if (pin == (i16)config.pins[PINS_SERVO_RUD]) {
+    } else if (pin == (i16)config.pins.servoRud) {
         control = FCTRL_RUD;
     } else {
         return; // Not simulated
@@ -51,12 +51,12 @@ void servo_set(i16 pin, f32 degree) {
 void servo_test(i16 servos[], u32 num_servos, const f32 degrees[], u32 num_degrees, u32 pause_between_moves_ms) {
     for (u32 d = 0; d < num_degrees; d++) {
         for (u32 s = 0; s < num_servos; s++) {
-            if (servos[s] == (i16)config.pins[PINS_SERVO_BAY]) {
+            if (servos[s] == (i16)config.pins.servoBay) {
                 // The drop servo will be set to the configured detents so as not to possibly break it
                 if (d < (num_degrees / 2)) {
-                    servo_set(servos[s], config.control[CONTROL_DROP_DETENT_OPEN]);
+                    servo_set(servos[s], config.control.dropDetentOpen);
                 } else {
-                    servo_set(servos[s], config.control[CONTROL_DROP_DETENT_CLOSED]);
+                    servo_set(servos[s], config.control.dropDetentClosed);
                 }
             } else {
                 servo_set(servos[s], degrees[d]);
@@ -67,22 +67,22 @@ void servo_test(i16 servos[], u32 num_servos, const f32 degrees[], u32 num_degre
 }
 
 void servo_get_pins(i16 *servos, u32 *num_servos) {
-    switch ((ControlMode)config.general[GENERAL_CONTROL_MODE]) {
+    switch ((ControlMode)config.general.controlMode) {
         case CTRLMODE_3AXIS_ATHR:
         case CTRLMODE_3AXIS:
-            servos[0] = (i16)config.pins[PINS_SERVO_AIL];
-            servos[1] = (i16)config.pins[PINS_SERVO_ELE];
-            servos[2] = (i16)config.pins[PINS_SERVO_RUD];
-            servos[3] = (i16)config.pins[PINS_SERVO_BAY];
+            servos[0] = (i16)config.pins.servoAil;
+            servos[1] = (i16)config.pins.servoEle;
+            servos[2] = (i16)config.pins.servoRud;
+            servos[3] = (i16)config.pins.servoBay;
             *num_servos = 4;
             break;
         case CTRLMODE_2AXIS_ATHR:
         case CTRLMODE_2AXIS:
         case CTRLMODE_FLYINGWING_ATHR:
         case CTRLMODE_FLYINGWING:
-            servos[0] = (i16)config.pins[PINS_SERVO_AIL];
-            servos[1] = (i16)config.pins[PINS_SERVO_ELE];
-            servos[2] = (i16)config.pins[PINS_SERVO_BAY];
+            servos[0] = (i16)config.pins.servoAil;
+            servos[1] = (i16)config.pins.servoEle;
+            servos[2] = (i16)config.pins.servoBay;
             *num_servos = 3;
             break;
     }

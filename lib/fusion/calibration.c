@@ -26,9 +26,6 @@ static IMUCalibrationStatus calibrationStatus = IMU_CALIBRATION_NOT_STARTED;
 static FusionCalibrationContext calibrationCtx;
 static FusionCalibrationDetails calibrationDetails;
 
-static const CalibrationIMU axisMapSlots[3] = {IMU_AXIS_MAP_ROLL, IMU_AXIS_MAP_PITCH, IMU_AXIS_MAP_YAW};
-static const CalibrationIMU axisSignSlots[3] = {IMU_AXIS_SIGN_ROLL, IMU_AXIS_SIGN_PITCH, IMU_AXIS_SIGN_YAW};
-
 // Validates a full 3-axis remap/sign set for uniqueness and bounds.
 static bool axis_remap_valid(const i8 map[3], const i8 sign[3]) {
     bool used[3] = {false, false, false};
@@ -206,19 +203,19 @@ static bool finish_calibration() {
     memcpy(activeAxisSign, calibrationCtx.axisSign, 3 * sizeof(i8));
 
     // Persist calibration so it is restored on next boot
-    calibration.imu[IMU_CALIBRATED] = true;
-    calibration.imu[IMU_GYRO_BIAS_X] = activeFusionConfig->gyroBias[0];
-    calibration.imu[IMU_GYRO_BIAS_Y] = activeFusionConfig->gyroBias[1];
-    calibration.imu[IMU_GYRO_BIAS_Z] = activeFusionConfig->gyroBias[2];
-    calibration.imu[IMU_ACCEL_OFFSET_X] = activeFusionConfig->accelOffset[0];
-    calibration.imu[IMU_ACCEL_OFFSET_Y] = activeFusionConfig->accelOffset[1];
-    calibration.imu[IMU_ACCEL_OFFSET_Z] = activeFusionConfig->accelOffset[2];
-    calibration.imu[IMU_AXIS_MAP_ROLL] = (f32)activeAxisMap[0];
-    calibration.imu[IMU_AXIS_MAP_PITCH] = (f32)activeAxisMap[1];
-    calibration.imu[IMU_AXIS_MAP_YAW] = (f32)activeAxisMap[2];
-    calibration.imu[IMU_AXIS_SIGN_ROLL] = (f32)activeAxisSign[0];
-    calibration.imu[IMU_AXIS_SIGN_PITCH] = (f32)activeAxisSign[1];
-    calibration.imu[IMU_AXIS_SIGN_YAW] = (f32)activeAxisSign[2];
+    calibration.imu.calibrated = true;
+    calibration.imu.gyroBiasX = activeFusionConfig->gyroBias[0];
+    calibration.imu.gyroBiasY = activeFusionConfig->gyroBias[1];
+    calibration.imu.gyroBiasZ = activeFusionConfig->gyroBias[2];
+    calibration.imu.accelOffsetX = activeFusionConfig->accelOffset[0];
+    calibration.imu.accelOffsetY = activeFusionConfig->accelOffset[1];
+    calibration.imu.accelOffsetZ = activeFusionConfig->accelOffset[2];
+    calibration.imu.axisMapRoll = (f32)activeAxisMap[0];
+    calibration.imu.axisMapPitch = (f32)activeAxisMap[1];
+    calibration.imu.axisMapYaw = (f32)activeAxisMap[2];
+    calibration.imu.axisSignRoll = (f32)activeAxisSign[0];
+    calibration.imu.axisSignPitch = (f32)activeAxisSign[1];
+    calibration.imu.axisSignYaw = (f32)activeAxisSign[2];
     config_save();
 
     imu.isCalibrated = true;
@@ -241,17 +238,16 @@ void fusion_attitude_calibration_reset_axis_remap(i8 axisMap[3], i8 axisSign[3])
 }
 
 bool fusion_attitude_calibration_load_axis_remap(i8 axisMap[3], i8 axisSign[3]) {
-    i8 loadedMap[3] = {};
-    i8 loadedSign[3] = {};
-    for (u32 i = 0; i < 3; i++) {
-        f32 mapVal = calibration.imu[axisMapSlots[i]];
-        f32 signVal = calibration.imu[axisSignSlots[i]];
-        if (!isfinite(mapVal) || !isfinite(signVal)) {
-            return false;
-        }
-        loadedMap[i] = (i8)lroundf(mapVal);
-        loadedSign[i] = (i8)lroundf(signVal);
-    }
+    i8 loadedMap[3] = {
+        (i8)calibration.imu.axisMapRoll,
+        (i8)calibration.imu.axisSignPitch,
+        (i8)calibration.imu.axisMapYaw,
+    };
+    i8 loadedSign[3] = {
+        (i8)calibration.imu.axisSignRoll,
+        (i8)calibration.imu.axisSignPitch,
+        (i8)calibration.imu.axisSignYaw,
+    };
     if (!axis_remap_valid(loadedMap, loadedSign)) {
         return false;
     }

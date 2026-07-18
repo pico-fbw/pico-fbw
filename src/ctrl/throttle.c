@@ -53,7 +53,7 @@ static f32 calculate_esc_target() {
 static void handle_mct_exceeded() {
     switch (state) {
         case THRSTATE_MCT_EXCEEDED: {
-            u64 mctTime = (u64)config.control[CONTROL_THROTTLE_MAX_TIME];
+            u64 mctTime = (u64)config.control.throttleMaxTime;
             if ((time_s() - stateChangeAt) > mctTime && mctTime != 0) {
                 // MCT has been exceeded for too long, lock
                 state = THRSTATE_MCT_LOCK;
@@ -63,7 +63,7 @@ static void handle_mct_exceeded() {
         case THRSTATE_MCT_LOCK:
         case THRSTATE_MCT_COOLDOWN:
             // Lock back to MCT if being exceeded (for both lock and cooldown states)
-            escTarget = calibration.esc[ESC_DETENT_MCT];
+            escTarget = calibration.esc.detentMct;
             break;
         default:
             break;
@@ -76,7 +76,7 @@ static void handle_mct_exceeded() {
 static void validate_performance_limits() {
     // Below idle is valid--in THRUST mode this can be used to simply stop the electric motor, and the PID controller
     // will never bring the output below idle in SPEED mode, so thrust being below IDLE isn't validated
-    if (escTarget > calibration.esc[ESC_DETENT_MCT]) {
+    if (escTarget > calibration.esc.detentMct) {
         if (state == THRSTATE_NORMAL) {
             // We've just exceeded max continuous thrust, note the current time
             state = THRSTATE_MCT_EXCEEDED;
@@ -91,7 +91,7 @@ static void validate_performance_limits() {
  * Handles state transitions when thrust is reduced after exceeding MCT.
  */
 static void handle_mct_reduction() {
-    if (state == THRSTATE_MCT_LOCK && escTarget <= calibration.esc[ESC_DETENT_MCT]) {
+    if (state == THRSTATE_MCT_LOCK && escTarget <= calibration.esc.detentMct) {
         // Thrust has just been reduced back from exceeding MCT
         state = THRSTATE_MCT_COOLDOWN;
         stateChangeAt = time_s();
@@ -102,7 +102,7 @@ static void handle_mct_reduction() {
  * Handles cooldown period completion.
  */
 static void handle_cooldown_complete() {
-    if ((time_s() - stateChangeAt) > (u64)(config.control[CONTROL_THROTTLE_COOLDOWN_TIME])) {
+    if ((time_s() - stateChangeAt) > (u64)(config.control.throttleCooldownTime)) {
         state = THRSTATE_NORMAL; // Cooldown over
     }
 }
@@ -112,7 +112,7 @@ static void handle_cooldown_complete() {
  * @return the filtered ESC target value
  */
 static f32 apply_throttle_filtering() {
-    f32 filtered = lerp(prevEscTarget, escTarget, config.control[CONTROL_THROTTLE_SENSITIVITY]);
+    f32 filtered = lerp(prevEscTarget, escTarget, config.control.throttleSensitivity);
     prevEscTarget = filtered;
     return filtered;
 }
@@ -122,12 +122,12 @@ void throttle_init() {
     supportedMode = gps.is_supported() ? THRMODE_SPEED : THRMODE_THRUST;
     if (supportedMode == THRMODE_SPEED) {
         athr = (PIDController){
-            .kp = calibration.pid[PID_THROTTLE_KP],
-            .ki = calibration.pid[PID_THROTTLE_KI],
-            .kd = calibration.pid[PID_THROTTLE_KD],
-            .tau = calibration.pid[PID_TAU],
-            .limMin = calibration.esc[ESC_DETENT_IDLE],
-            .limMax = calibration.esc[ESC_DETENT_MAX],
+            .kp = calibration.pid.throttleKp,
+            .ki = calibration.pid.throttleKi,
+            .kd = calibration.pid.throttleKd,
+            .tau = calibration.pid.tau,
+            .limMin = calibration.esc.detentIdle,
+            .limMax = calibration.esc.detentMax,
         };
         pid_init(&athr);
     }
@@ -146,7 +146,7 @@ void throttle_update() {
     // Apply filtering to smooth out any rapid throttle changes
     escTarget = apply_throttle_filtering();
     // Send final value to ESC
-    esc_set((i16)config.pins[PINS_ESC_THROTTLE], (u16)(escTarget + 0.5f));
+    esc_set((i16)config.pins.escThrottle, (u16)(escTarget + 0.5f));
 }
 
 ThrottleMode throttle_get_mode() {
@@ -164,7 +164,7 @@ f32 throttle_get_target() {
 void throttle_set_mode(ThrottleMode mode) {
     currentMode = mode;
     // Prime throttle with current value so that we don't get a big jump on first update
-    escTarget = receiver_get((i16)config.pins[PINS_INPUT_THROTTLE], RECEIVER_MODE_PERCENT);
+    escTarget = receiver_get((i16)config.pins.inputThrottle, RECEIVER_MODE_PERCENT);
     prevEscTarget = escTarget;
     if (mode == THRMODE_SPEED) {
         athr.out = escTarget; // Avoid a big jump in the PID

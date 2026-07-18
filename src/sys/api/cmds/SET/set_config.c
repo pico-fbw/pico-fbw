@@ -19,7 +19,7 @@
 // {"error":""}
 
 // For example:
-// {"changes":[{"section":"GENERAL","key":"skipCalibration","value":"1"},{"section":"WIFI","key":"ssid","value":"coolwifiname"}],"save":true}
+// {"changes":[{"section":"GENERAL","key":"skipCalibration","value":"1"},{"section":"SYSTEM","key":"ssid","value":"coolwifiname"}],"save":true}
 // will set the skipCalibration key in the GENERAL section to 1 (true) and the ssid key in the WIFI section to
 // "coolwifiname", and save the changes to flash
 

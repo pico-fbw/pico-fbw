@@ -84,7 +84,7 @@ bool hold_init() {
         .kp = VERTGD_KP,
         .ki = VERTGD_KI,
         .kd = VERTGD_KD,
-        .tau = calibration.pid[PID_TAU],
+        .tau = calibration.pid.tau,
         .limMin = VERTGD_LIM_MIN,
         .limMax = VERTGD_LIM_MAX,
     };

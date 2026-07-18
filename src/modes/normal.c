@@ -43,26 +43,26 @@ void normal_init() {
 
 void normal_update() {
     // Refresh input data from rx
-    rollInput = control_apply_expo(receiver_get((i16)config.pins[PINS_INPUT_AIL], RECEIVER_MODE_DEGREE)) - 90.f;
-    pitchInput = control_apply_expo(receiver_get((i16)config.pins[PINS_INPUT_ELE], RECEIVER_MODE_DEGREE)) - 90.f;
+    rollInput = control_apply_expo(receiver_get((i16)config.pins.inputAil, RECEIVER_MODE_DEGREE)) - 90.f;
+    pitchInput = control_apply_expo(receiver_get((i16)config.pins.inputEle, RECEIVER_MODE_DEGREE)) - 90.f;
     if (receiver_has_rud()) {
-        yawInput = control_apply_expo(receiver_get((i16)config.pins[PINS_INPUT_RUD], RECEIVER_MODE_DEGREE)) - 90.f;
+        yawInput = control_apply_expo(receiver_get((i16)config.pins.inputRud, RECEIVER_MODE_DEGREE)) - 90.f;
     }
-    throttleSet = receiver_get((i16)config.pins[PINS_INPUT_THROTTLE], RECEIVER_MODE_PERCENT);
+    throttleSet = receiver_get((i16)config.pins.inputThrottle, RECEIVER_MODE_PERCENT);
 
     // If the roll value is above the roll limit, we allow setting up to to the hold limit (enforced later),
     // but constant input is required
-    f32 requiredInput = fabsf(rollSet) - config.control[CONTROL_ROLL_LIMIT];
+    f32 requiredInput = fabsf(rollSet) - config.control.rollLimit;
     // If there is no constant input, we need to slowly bring back roll to the non-hold limit
-    if (fabsf(rollSet) > config.control[CONTROL_ROLL_LIMIT] && fabsf(rollInput) < requiredInput) {
+    if (fabsf(rollSet) > config.control.rollLimit && fabsf(rollInput) < requiredInput) {
         // Override the user's input to bring it back in the opposite direction at the return rate
         rollInput = rollSet < 0 ? CONTROL_ROLL_RETURN : -CONTROL_ROLL_RETURN;
     }
     // Also, if the roll value is near zero and we don't have any input, gradually bring it back to zero
-    else if (fabsf(rollSet) < CONTROL_ROLL_NEARZERO_THRESHOLD && fabsf(rollInput) < config.control[CONTROL_DEADBAND]) {
+    else if (fabsf(rollSet) < CONTROL_ROLL_NEARZERO_THRESHOLD && fabsf(rollInput) < config.control.controlDeadband) {
         rollInput = lerp(rollSet, 0, CONTROL_ROLL_RETURN_SMOOTHING);
         // Close enough/too small of an output, we can snap cleanly without much jerk
-        if (fabsf(rollSet) < 0.1f || rollInput < config.control[CONTROL_DEADBAND]) {
+        if (fabsf(rollSet) < 0.1f || rollInput < config.control.controlDeadband) {
             rollSet = 0.f;
         }
     }
@@ -79,35 +79,34 @@ void normal_update() {
     if (!overrideSetpoints) {
         // Use the inputs from the receiver to calculate the setpoint values
         // Take deadband into account to avoid noise from hardware fluctuations
-        if (fabsf(rollInput) > config.control[CONTROL_DEADBAND]) {
+        if (fabsf(rollInput) > config.control.controlDeadband) {
             rollSet += rollAdj;
         }
-        if (fabsf(pitchInput) > config.control[CONTROL_DEADBAND]) {
+        if (fabsf(pitchInput) > config.control.controlDeadband) {
             pitchSet += pitchAdj;
         }
 
         // Enforce bank/pitch protections
-        if (fabsf(rollSet) > config.control[CONTROL_ROLL_LIMIT]) {
-            if (rollSet > config.control[CONTROL_ROLL_LIMIT_HOLD]) {
-                rollSet = config.control[CONTROL_ROLL_LIMIT_HOLD];
-            } else if (rollSet < -config.control[CONTROL_ROLL_LIMIT_HOLD]) {
-                rollSet = -config.control[CONTROL_ROLL_LIMIT_HOLD];
+        if (fabsf(rollSet) > config.control.rollLimit) {
+            if (rollSet > config.control.rollLimitHold) {
+                rollSet = config.control.rollLimitHold;
+            } else if (rollSet < -config.control.rollLimitHold) {
+                rollSet = -config.control.rollLimitHold;
             }
         }
-        if (pitchSet > config.control[CONTROL_PITCH_UPPER_LIMIT] ||
-            pitchSet < config.control[CONTROL_PITCH_LOWER_LIMIT]) {
+        if (pitchSet > config.control.pitchUpperLimit || pitchSet < config.control.pitchLowerLimit) {
             // Pitch is simply limited to the unsafe thresholds
-            if (pitchSet > config.control[CONTROL_PITCH_UPPER_LIMIT]) {
-                pitchSet = config.control[CONTROL_PITCH_UPPER_LIMIT];
-            } else if (pitchSet < config.control[CONTROL_PITCH_LOWER_LIMIT]) {
-                pitchSet = config.control[CONTROL_PITCH_LOWER_LIMIT];
+            if (pitchSet > config.control.pitchUpperLimit) {
+                pitchSet = config.control.pitchUpperLimit;
+            } else if (pitchSet < config.control.pitchLowerLimit) {
+                pitchSet = config.control.pitchLowerLimit;
             }
         }
     }
 
     // Yaw deadband calculation
     // If we detect any rudder input whatsoever, we wil override what PID wants with the user input
-    if (fabsf(yawInput) > config.control[CONTROL_DEADBAND]) {
+    if (fabsf(yawInput) > config.control.controlDeadband) {
         overrideYaw = true;
     } else {
         overrideYaw = false;

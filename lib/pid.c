@@ -43,7 +43,8 @@ void pid_update(PIDController *pid, f64 setpoint, f64 measurement) {
     // Derivative (band-limited differentiator)
     // Only recompute derivative when measurement has actually changed
     // This is mainly a problem in the sim where data updates much slower than the PID loop, and therefore
-    // != (exact floating point) is a valid check. In real life, sensor noise will almost always cause this check to fail
+    // != (exact floating point) is a valid check. In real life, sensor noise will almost always cause this check to
+    // fail
     if (measurement != pid->prevMeasurement) {
         // Derivative on measurement, therefore minus sign in front of equation
         pid->differentiator =

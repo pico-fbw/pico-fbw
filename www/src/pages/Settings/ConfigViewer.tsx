@@ -130,7 +130,7 @@ const config: ConfigDatabase = {
         {
             name: "Expo Factor",
             id: "expo",
-            desc: "The cubic expo factor applied to control inputs. A value of 0 provides a linear response, while higher values reduce sensitivity near the center. Allowable values range from 0-1.0."
+            desc: "The cubic expo factor applied to control inputs. A value of 0 provides a linear response, while higher values reduce sensitivity near the center. Allowable values range from 0-1.0.",
         },
         {
             name: "Rudder Sensitivity",
@@ -545,8 +545,7 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
                             onClick={() => toggleSection(sectionIndex)}
                         >
                             <span className="text-base font-semibold leading-7">
-                                {/* Slight change to the wifi section name */}
-                                {section.name === "WiFi" ? "Wi-Fi" : section.name}
+                                {section.name === "WiFi" ? "Wi-Fi" : section.name === "WebUI" ? "Web UI" : section.name}
                             </span>
                             <span className="ml-6 flex h-7 items-center">
                                 {sectionVisibility[sectionIndex] ? (

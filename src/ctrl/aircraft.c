@@ -85,7 +85,7 @@ static void deinit_mode(Mode old_mode) {
  * @return true if launch was initiated
  */
 static bool try_launch_assist(Mode next_mode) {
-    if (!(bool)config.general[GENERAL_LAUNCHASSIST_ENABLED]) {
+    if (!(bool)config.general.launchAssistEnabled) {
         return false;
     }
     if (!esc_is_calibrated()) {
@@ -103,7 +103,7 @@ static bool try_launch_assist(Mode next_mode) {
  * @return true if autotune was initiated
  */
 static bool try_autotune() {
-    if (tune_is_tuned() || !(bool)config.general[GENERAL_AUTOTUNE_ENABLED]) {
+    if (tune_is_tuned() || !(bool)config.general.autoTuneEnabled) {
         return false;
     }
     printsys(aircraft, "initiating autotune");

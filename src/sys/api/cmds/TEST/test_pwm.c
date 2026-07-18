@@ -74,10 +74,10 @@ i32 api_test_pwm(const char *args) {
     }
 
     // These pins should be bridged by the user
-    i16 in[] = {config.pins[PINS_INPUT_AIL], config.pins[PINS_INPUT_ELE], config.pins[PINS_INPUT_RUD],
-                config.pins[PINS_INPUT_THROTTLE], config.pins[PINS_INPUT_SWITCH]};
-    i16 out[] = {config.pins[PINS_SERVO_AIL], config.pins[PINS_SERVO_ELE], config.pins[PINS_SERVO_RUD],
-                 config.pins[PINS_ESC_THROTTLE], config.pins[PINS_SERVO_BAY]};
+    i16 in[] = {(i16)config.pins.inputAil, (i16)config.pins.inputEle, (i16)config.pins.inputRud,
+                (i16)config.pins.inputThrottle, (i16)config.pins.inputSwitch};
+    i16 out[] = {(i16)config.pins.servoAil, (i16)config.pins.servoEle, (i16)config.pins.servoRud,
+                 (i16)config.pins.escThrottle, (i16)config.pins.servoBay};
     u32 numBridges = 5;
     if (args) {
         // If the user specified any bridges, use those instead
@@ -100,7 +100,7 @@ i32 api_test_pwm(const char *args) {
         servo_set(out[i], deg);
         sleep_ms_blocking(100);
         f32 degRead = receiver_get(in[i], RECEIVER_MODE_DEGREE);
-        if (fabsf(deg - degRead) > config.control[CONTROL_DEADBAND]) {
+        if (fabsf(deg - degRead) > config.control.controlDeadband) {
             printpre("test", "failed! read %.0f, expected %.0f", degRead, deg);
             return 500;
         }

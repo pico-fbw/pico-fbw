@@ -71,8 +71,8 @@ i32 api_set_target(const char *in, char **out) {
         return 400;
     }
     // Ensure setpoints are within limits
-    if (fabsf(roll) > config.control[CONTROL_ROLL_LIMIT_HOLD] || pitch > config.control[CONTROL_PITCH_UPPER_LIMIT] ||
-        pitch < config.control[CONTROL_PITCH_LOWER_LIMIT] || fabsf(yaw) > config.control[CONTROL_MAX_RUD_DEFLECTION]) {
+    if (fabsf(roll) > config.control.rollLimitHold || pitch > config.control.pitchUpperLimit ||
+        pitch < config.control.pitchLowerLimit || fabsf(yaw) > config.control.maxRudDeflection) {
         return 400;
     }
     if (throttle < 0.f || throttle > 100.f) {

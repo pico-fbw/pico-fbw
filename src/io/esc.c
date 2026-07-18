@@ -32,10 +32,10 @@ static bool wait_for_detent(i16 pin, f32 *detent, u32 timeout_ms, u32 duration_m
     Timestamp wait = timestamp_in_ms(timeout_ms);
     u16 lastReading = receiver_get(pin, RECEIVER_MODE_PERCENT);
     bool hasMoved =
-        (abs(((u16)receiver_get(pin, RECEIVER_MODE_PERCENT) - lastReading)) > config.control[CONTROL_DEADBAND]);
+        (abs(((u16)receiver_get(pin, RECEIVER_MODE_PERCENT) - lastReading)) > config.control.controlDeadband);
     while (!hasMoved && !timestamp_reached(&wait)) {
         hasMoved =
-            (abs(((u16)receiver_get(pin, RECEIVER_MODE_PERCENT) - lastReading)) > config.control[CONTROL_DEADBAND]);
+            (abs(((u16)receiver_get(pin, RECEIVER_MODE_PERCENT) - lastReading)) > config.control.controlDeadband);
     }
     if (timestamp_reached(&wait)) {
         printpre("ESC", "ESC calibration timed out!");
@@ -43,14 +43,14 @@ static bool wait_for_detent(i16 pin, f32 *detent, u32 timeout_ms, u32 duration_m
     }
 
     while (true) {
-        esc_set((i16)config.pins[PINS_ESC_THROTTLE], (u16)receiver_get(pin, RECEIVER_MODE_PERCENT));
+        esc_set((i16)config.pins.escThrottle, (u16)receiver_get(pin, RECEIVER_MODE_PERCENT));
         hasMoved =
-            (abs(((u16)receiver_get(pin, RECEIVER_MODE_PERCENT) - lastReading)) > config.control[CONTROL_DEADBAND]);
+            (abs(((u16)receiver_get(pin, RECEIVER_MODE_PERCENT) - lastReading)) > config.control.controlDeadband);
         if (!hasMoved) {
             wait = timestamp_in_ms(duration_ms);
             while (!hasMoved && !timestamp_reached(&wait)) {
                 hasMoved = (abs(((u16)receiver_get(pin, RECEIVER_MODE_PERCENT) - lastReading)) >
-                            config.control[CONTROL_DEADBAND]);
+                            config.control.controlDeadband);
             }
             if (timestamp_reached(&wait)) {
                 break;
@@ -59,13 +59,13 @@ static bool wait_for_detent(i16 pin, f32 *detent, u32 timeout_ms, u32 duration_m
         lastReading = receiver_get(pin, RECEIVER_MODE_PERCENT);
     }
     *detent = (f32)lastReading;
-    esc_set((i16)config.pins[PINS_ESC_THROTTLE], 0);
+    esc_set((i16)config.pins.escThrottle, 0);
     return true;
 }
 
 void esc_enable(i16 pin) {
     printpre("ESC", "setting up ESC on pin %d", pin);
-    if (!pwm_setup_write((const i16[]){pin}, 1, (u32)config.general[GENERAL_ESC_HZ])) {
+    if (!pwm_setup_write((const i16[]){pin}, 1, (u32)config.general.escHz)) {
         log_message(TYPE_FATAL, "Failed to enable PWM output!", 500, 0, true);
     }
     esc_set(pin, 0.f); // Set initial position to 0 to be safe
@@ -85,18 +85,18 @@ void esc_set(i16 pin, f32 speed) {
 
 bool esc_calibrate(i16 pin) {
     log_message(TYPE_INFO, "Calibrating ESC", 200, 0, false);
-    if (!wait_for_detent(pin, &calibration.esc[ESC_DETENT_IDLE], (u32)20E3, 4000)) {
+    if (!wait_for_detent(pin, &calibration.esc.detentIdle, (u32)20E3, 4000)) {
         return false;
     }
-    if (!wait_for_detent(pin, &calibration.esc[ESC_DETENT_MCT], (u32)10E3, 2000)) {
+    if (!wait_for_detent(pin, &calibration.esc.detentMct, (u32)10E3, 2000)) {
         return false;
     }
-    if (!wait_for_detent(pin, &calibration.esc[ESC_DETENT_MAX], (u32)10E3, 1000)) {
+    if (!wait_for_detent(pin, &calibration.esc.detentMax, (u32)10E3, 1000)) {
         return false;
     }
-    printpre("ESC", "final detents: %d, %d, %d", (u16)calibration.esc[ESC_DETENT_IDLE],
-             (u16)calibration.esc[ESC_DETENT_MCT], (u16)calibration.esc[ESC_DETENT_MAX]);
-    calibration.esc[ESC_CALIBRATED] = true;
+    printpre("ESC", "final detents: %d, %d, %d", (u16)calibration.esc.detentIdle, (u16)calibration.esc.detentMct,
+             (u16)calibration.esc.detentMax);
+    calibration.esc.calibrated = true;
     printpre("ESC", "saving detents to flash");
     config_save();
     log_clear(TYPE_INFO);
@@ -104,5 +104,5 @@ bool esc_calibrate(i16 pin) {
 }
 
 bool esc_is_calibrated() {
-    return (bool)calibration.esc[ESC_CALIBRATED];
+    return (bool)calibration.esc.calibrated;
 }

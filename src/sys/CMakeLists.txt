@@ -1,6 +1,7 @@
 target_sources(${PROJECT_NAME} PRIVATE
     boot.c
     configuration.c
+    configuration_validation.c
     flightplan.c
     log.c
     runtime.c

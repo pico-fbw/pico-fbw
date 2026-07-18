@@ -22,9 +22,9 @@ void flight_init();
  * @note
  * The yaw damper functionality may be a bit confusing, I'll explain it here.
  * If `yaw_override` is set to true, the value from `yaw` will be passed directly to the rudder.
- * If `yaw_override` is set to false and roll is past the deadband, a "static damper" will be applied to the rudder (current
- * roll rate * `CONTROL_RUDDER_SENSITIVITY`). If `yaw_override` is set to false and roll is below the deadband, a "dynamic
- * damper" will be applied instead (uses PID to achieve a yaw rate of 0).
+ * If `yaw_override` is set to false and roll is past the deadband, a "static damper" will be applied to the rudder
+ * (current roll rate * `CONTROL_RUDDER_SENSITIVITY`). If `yaw_override` is set to false and roll is below the deadband,
+ * a "dynamic damper" will be applied instead (uses PID to achieve a yaw rate of 0).
  */
 void flight_update(f64 roll, f64 pitch, f64 yaw, bool yaw_override);
 

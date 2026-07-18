@@ -8,7 +8,7 @@ typedef struct PIDController {
     f64 kd; // Derivative gain (read-only)
 
     f64 deadband; // Error deadband for integrator, set to 0 to disable (read-only)
-    f64 tau; // Derivative low-pass filter time constant (read-only)
+    f64 tau;      // Derivative low-pass filter time constant (read-only)
 
     f64 limMin; // Minimum output value (read-only)
     f64 limMax; // Maximum output value (read-only)
