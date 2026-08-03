@@ -51,7 +51,7 @@ add_custom_command(
     # This command will also output an empty file whose modify timestamp can be used to check if/when the web interface has been built
     OUTPUT ${CMAKE_BINARY_DIR}/generated/www/built
     # Provide the DIST_DIR both as an environment variable and as an argument to the script
-    COMMAND ${CMAKE_COMMAND} -E env DIST_DIR=${DIST_DIR} ${BUILD_WWW_SCRIPT} ${CMAKE_SOURCE_DIR}/www ${PNPM_EXE} ${DIST_DIR}
+    COMMAND ${CMAKE_COMMAND} -E env DIST_DIR=${DIST_DIR} ${BUILD_WWW_SCRIPT} ${CMAKE_SOURCE_DIR}/www ${PNPM_EXE}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/generated/www
     COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_BINARY_DIR}/generated/www/built
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/www

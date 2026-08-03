@@ -67,60 +67,60 @@ def install_pico_sdk():
 # Dependencies needed for the build process and details on how to install them
 dependencies = {
     'arm-none-eabi-gcc': {
-        'version': '14.3.rel1',
+        'version': '15.3.rel1',
         'url': {
-            'linux-aarch64': 'https://developer.arm.com/-/media/Files/downloads/gnu/14.3.rel1/binrel/arm-gnu-toolchain-14.3.rel1-aarch64-arm-none-eabi.tar.xz',
-            'linux-x86_64': 'https://developer.arm.com/-/media/Files/downloads/gnu/14.3.rel1/binrel/arm-gnu-toolchain-14.3.rel1-x86_64-arm-none-eabi.tar.xz',
-            'win32-amd64': 'https://developer.arm.com/-/media/Files/downloads/gnu/14.3.rel1/binrel/arm-gnu-toolchain-14.3.rel1-mingw-w64-x86_64-arm-none-eabi.zip',
-            'darwin-arm64': 'https://developer.arm.com/-/media/Files/downloads/gnu/14.3.rel1/binrel/arm-gnu-toolchain-14.3.rel1-darwin-arm64-arm-none-eabi.tar.xz',
-            'darwin-x86_64': 'https://developer.arm.com/-/media/Files/downloads/gnu/14.3.rel1/binrel/arm-gnu-toolchain-14.3.rel1-darwin-x86_64-arm-none-eabi.tar.xz',
+            'linux-aarch64': 'https://gitlab.arm.com/api/v4/projects/tooling%2Fgnu-toolchains-for-arm/packages/generic/gnu-toolchain/15.3.rel1/arm-gnu-toolchain-15.3.rel1-aarch64-arm-none-eabi.tar.xz',
+            'linux-x86_64': 'https://gitlab.arm.com/api/v4/projects/tooling%2Fgnu-toolchains-for-arm/packages/generic/gnu-toolchain/15.3.rel1/arm-gnu-toolchain-15.3.rel1-x86_64-arm-none-eabi.tar.xz',
+            'win32-amd64': 'https://gitlab.arm.com/api/v4/projects/tooling%2Fgnu-toolchains-for-arm/packages/generic/gnu-toolchain/15.3.rel1/arm-gnu-toolchain-15.3.rel1-mingw-w64-x86_64-arm-none-eabi.zip',
+            'darwin-arm64': 'https://gitlab.arm.com/api/v4/projects/tooling%2Fgnu-toolchains-for-arm/packages/generic/gnu-toolchain/15.3.rel1/arm-gnu-toolchain-15.3.rel1-darwin-arm64-arm-none-eabi.tar.xz',
+            'darwin-x86_64': 'https://gitlab.arm.com/api/v4/projects/tooling%2Fgnu-toolchains-for-arm/packages/generic/gnu-toolchain/14.2.rel1/arm-gnu-toolchain-14.2.rel1-darwin-x86_64-arm-none-eabi.tar.xz',
         },
         'add_to_path': 'bin',
     },
     'cmake': {
-        'version': '4.1.2',
+        'version': '4.4.2',
         'url': {
-            'linux-aarch64': 'https://github.com/Kitware/CMake/releases/download/v4.1.2/cmake-4.1.2-linux-aarch64.tar.gz',
-            'linux-x86_64': 'https://github.com/Kitware/CMake/releases/download/v4.1.2/cmake-4.1.2-linux-x86_64.tar.gz',
-            'win32-amd64': 'https://github.com/Kitware/CMake/releases/download/v4.1.2/cmake-4.1.2-windows-x86_64.zip',
-            'darwin-arm64': 'https://github.com/Kitware/CMake/releases/download/v4.1.2/cmake-4.1.2-macos-universal.tar.gz',
-            'darwin-x86_64': 'https://github.com/Kitware/CMake/releases/download/v4.1.2/cmake-4.1.2-macos-universal.tar.gz',
+            'linux-aarch64': 'https://github.com/Kitware/CMake/releases/download/v4.4.2/cmake-4.4.2-linux-aarch64.tar.gz',
+            'linux-x86_64': 'https://github.com/Kitware/CMake/releases/download/v4.4.2/cmake-4.4.2-linux-x86_64.tar.gz',
+            'win32-amd64': 'https://github.com/Kitware/CMake/releases/download/v4.4.2/cmake-4.4.2-windows-x86_64.zip',
+            'darwin-arm64': 'https://github.com/Kitware/CMake/releases/download/v4.4.2/cmake-4.4.2-macos-universal.tar.gz',
+            'darwin-x86_64': 'https://github.com/Kitware/CMake/releases/download/v4.4.2/cmake-4.4.2-macos-universal.tar.gz',
         },
     },
     'ESP-IDF': {
-        'version': '5.5.1',
+        'version': '6.0.2',
         'independent': True,
-        'url': 'https://github.com/espressif/esp-idf/releases/download/v5.5.1/esp-idf-v5.5.1.zip',
+        'url': 'https://github.com/espressif/esp-idf/releases/download/v6.0.2/esp-idf-v6.0.2.zip',
         'install': install_esp_idf,
     },
     'ninja': {
-        'version': '1.13.1',
+        'version': '1.13.2',
         'url': {
-            'linux-aarch64': 'https://github.com/ninja-build/ninja/releases/download/v1.13.1/ninja-linux-aarch64.zip',
-            'linux-x86_64': 'https://github.com/ninja-build/ninja/releases/download/v1.13.1/ninja-linux.zip',
-            'win32-amd64': 'https://github.com/ninja-build/ninja/releases/download/v1.13.1/ninja-win.zip',
-            'darwin-arm64': 'https://github.com/ninja-build/ninja/releases/download/v1.13.1/ninja-mac.zip',
-            'darwin-x86_64': 'https://github.com/ninja-build/ninja/releases/download/v1.13.1/ninja-mac.zip',
+            'linux-aarch64': 'https://github.com/ninja-build/ninja/releases/download/v1.13.2/ninja-linux-aarch64.zip',
+            'linux-x86_64': 'https://github.com/ninja-build/ninja/releases/download/v1.13.2/ninja-linux.zip',
+            'win32-amd64': 'https://github.com/ninja-build/ninja/releases/download/v1.13.2/ninja-win.zip',
+            'darwin-arm64': 'https://github.com/ninja-build/ninja/releases/download/v1.13.2/ninja-mac.zip',
+            'darwin-x86_64': 'https://github.com/ninja-build/ninja/releases/download/v1.13.2/ninja-mac.zip',
         },
         'install': install_ninja,
         'add_to_path': '',
     },
     'node': {
-        'version': '22.17.1',
+        'version': '22.23.2',
         'url': {
-            'linux-aarch64': 'https://nodejs.org/dist/v22.17.1/node-v22.17.1-linux-arm64.tar.xz',
-            'linux-x86_64': 'https://nodejs.org/dist/v22.17.1/node-v22.17.1-linux-x64.tar.xz',
-            'win32-amd64': 'https://nodejs.org/dist/v22.17.1/node-v22.17.1-win-x64.zip',
-            'darwin-arm64': 'https://nodejs.org/dist/v22.17.1/node-v22.17.1-darwin-arm64.tar.gz',
-            'darwin-x86_64': 'https://nodejs.org/dist/v22.17.1/node-v22.17.1-darwin-x64.tar.gz',
+            'linux-aarch64': 'https://nodejs.org/dist/v22.23.2/node-v22.23.2-linux-arm64.tar.xz',
+            'linux-x86_64': 'https://nodejs.org/dist/v22.23.2/node-v22.23.2-linux-x64.tar.xz',
+            'win32-amd64': 'https://nodejs.org/dist/v22.23.2/node-v22.23.2-win-x64.zip',
+            'darwin-arm64': 'https://nodejs.org/dist/v22.23.2/node-v22.23.2-darwin-arm64.tar.gz',
+            'darwin-x86_64': 'https://nodejs.org/dist/v22.23.2/node-v22.23.2-darwin-x64.tar.gz',
         },
         'install': install_node,
         # node is actually added to PATH but has to be handled as an edge case (in run_prebuild_tasks)
     },
     'pico-sdk': {
-        'version': '2.2.0',
+        'version': '2.3.0',
         'independent': True,
-        'cmd': 'git clone https://github.com/raspberrypi/pico-sdk.git --branch 2.2.0 --depth 1',
+        'cmd': 'git clone https://github.com/raspberrypi/pico-sdk.git --branch 2.3.0 --depth 1',
         'install': install_pico_sdk,
     },
 }
@@ -302,7 +302,7 @@ def setup_host_tools():
             print("-- Setting up MSYS2")
             print("Downloading MSYS2")
             download = "msys2.exe"
-            f, _ = urlretrieve("https://github.com/msys2/msys2-installer/releases/download/2024-07-27/msys2-x86_64-20240727.exe", filename=download, reporthook=download_progress)
+            f, _ = urlretrieve("https://github.com/msys2/msys2-installer/releases/download/2026-06-11/msys2-x86_64-20260611.exe", filename=download, reporthook=download_progress)
             print()
             print("Installing MSYS2")
             subprocess.check_call(["msys2.exe", "in", "--confirm-command", "--accept-messages", "--root", "C:\\msys64"])

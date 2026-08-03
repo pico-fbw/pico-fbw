@@ -23,6 +23,10 @@ typedef x __callback_id_t;
 // These are also required and again depend on your platform.
 #define DEFAULT_PIN_I2C_SDA x
 #define DEFAULT_PIN_I2C_SCL x
+#define DEFAULT_PIN_SPI_CLK x
+#define DEFAULT_PIN_SPI_MOSI x
+#define DEFAULT_PIN_SPI_MISO x
+#define DEFAULT_PIN_SPI_CS x
 #define DEFAULT_PIN_GPS_TX x
 #define DEFAULT_PIN_GPS_RX x
 

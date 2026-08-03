@@ -5,6 +5,7 @@ add_library(platform_linux
     i2c.c
     pwm.c
     sock.c
+    spi.c
     ${CMAKE_SOURCE_DIR}/platform/host/stdio.c
     ${CMAKE_SOURCE_DIR}/platform/host/sys.c
     ${CMAKE_SOURCE_DIR}/platform/host/time.c

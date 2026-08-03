@@ -4,6 +4,7 @@ add_library(platform_esp
     gpio.c
     i2c.c
     pwm.c
+    spi.c
     stdio.c
     sys.c
     time.c
@@ -14,9 +15,11 @@ add_library(platform_esp
 )
 
 target_link_libraries(platform_esp
+    idf::esptool_py
     idf::esp_driver_gpio
     idf::esp_driver_i2c
     idf::esp_driver_mcpwm
+    idf::esp_driver_spi
     idf::esp_driver_uart
     idf::esp_event
     idf::esp_http_server

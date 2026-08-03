@@ -219,7 +219,7 @@ bool pwm_setup_write(const i16 pins[], u32 num_pins, u32 freq) {
         const mcpwm_comparator_config_t comparatorConfig = {
             .flags.update_cmp_on_tez = true,
         };
-        if (mcpwm_new_comparator(operator, & comparatorConfig, &comparator) != ESP_OK) {
+        if (mcpwm_new_comparator(operator, &comparatorConfig, &comparator) != ESP_OK) {
             return false;
         }
         channel->out = comparator;
@@ -228,7 +228,7 @@ bool pwm_setup_write(const i16 pins[], u32 num_pins, u32 freq) {
         const mcpwm_generator_config_t generatorConfig = {
             .gen_gpio_num = pins[i],
         };
-        if (mcpwm_new_generator(operator, & generatorConfig, &generator) != ESP_OK) {
+        if (mcpwm_new_generator(operator, &generatorConfig, &generator) != ESP_OK) {
             return false;
         }
         // Tell the generator what actions to take on timer and compare events (this will produce the correct PWM

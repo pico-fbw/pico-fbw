@@ -7,6 +7,7 @@
 #include <string.h>
 #include "platform/helpers.h"
 #include "platform/i2c.h"
+#include "platform/spi.h"
 #include "platform/time.h"
 #if SIMCONNECT
     #include "platform/simconnect.h"
@@ -29,7 +30,6 @@
 
 static FusionDevice *detected[MAX_DEVICES];
 static u32 detectedCount = 0; // Number of successfully detected devices
-static bool i2cInitialized = false;
 
 // Sensor fusion state
 static FusionConfig fusionConfig;
@@ -95,14 +95,27 @@ static bool imu_read_average_sensor_data(f32 accel_avg[3], f32 gyro_avg[3]) {
 
 bool imu_init() {
 #if !SIMCONNECT
-    // Set up I2C bus
-    if (!i2cInitialized) {
-        if (!i2c_setup((i16)config.pins.i2cSda, (i16)config.pins.i2cScl, (u32)config.sensors.i2cBusFreq * 1000)) {
-            printsys(imu, "failed to initialize I2C bus");
-            return false;
-        }
-        i2cInitialized = true;
+    // Set up I2C and/or SPI bus
+    switch ((BusType)config.sensors.busType) {
+        case BUS_ALL:
+        case BUS_I2C:
+            if (!i2c_setup((i16)config.pins.i2cSda, (i16)config.pins.i2cScl, (u32)(config.sensors.i2cBusFreq * 1000))) {
+                printsys(imu, "failed to initialize I2C bus");
+                return false;
+            }
+            if ((BusType)config.sensors.busType == BUS_I2C) {
+                break;
+            }
+            /* fall through */
+        case BUS_SPI:
+            if (!spi_setup((i16)config.pins.spiClk, (i16)config.pins.spiMosi, (i16)config.pins.spiMiso,
+                           (u32)(config.sensors.spiBusFreq * 1000000))) {
+                printsys(imu, "failed to initialize SPI bus");
+                return false;
+            }
+            break;
     }
+
     // Scan through all known sensors and attempt to init their drivers
     printsys(imu, "detecting sensors");
     bool detectedAcc = false, detectedGyro = false;

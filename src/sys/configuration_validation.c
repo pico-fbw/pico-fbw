@@ -11,6 +11,7 @@
 #include "ctrl/switch.h"
 #include "io/gps.h"
 #include "io/receiver.h"
+#include "lib/drivers/drivers.h"
 
 #include "configuration.h"
 
@@ -38,6 +39,11 @@ static bool validate_pin_uniqueness(char *error, size_t error_size) {
     const bool usesRudder = mode == CTRLMODE_3AXIS || mode == CTRLMODE_3AXIS_ATHR;
     const bool usesThrottle =
         mode == CTRLMODE_3AXIS_ATHR || mode == CTRLMODE_2AXIS_ATHR || mode == CTRLMODE_FLYINGWING_ATHR;
+
+    const BusType bus = (BusType)config.sensors.busType;
+    const bool usesI2c = (bus == BUS_ALL || bus == BUS_I2C);
+    const bool usesSpi = (bus == BUS_ALL || bus == BUS_SPI);
+
     // Skip checking pins if they are not utilized in our current control mode
     const PinCheck pins[] = {
         {(i16)config.pins.inputAil, true},
@@ -50,8 +56,14 @@ static bool validate_pin_uniqueness(char *error, size_t error_size) {
         {(i16)config.pins.escThrottle, usesThrottle},
         {(i16)config.pins.inputSwitch, true},
         {(i16)config.pins.servoBay, true},
-        {(i16)config.pins.i2cSda, true},
-        {(i16)config.pins.i2cScl, true},
+        {(i16)config.pins.i2cSda, usesI2c},
+        {(i16)config.pins.i2cScl, usesI2c},
+        {(i16)config.pins.spiClk, usesSpi},
+        {(i16)config.pins.spiMosi, usesSpi},
+        {(i16)config.pins.spiMiso, usesSpi},
+        {(i16)config.pins.spiCs0, usesSpi},
+        {(i16)config.pins.spiCs1, usesSpi},
+        {(i16)config.pins.spiCs2, usesSpi},
         {(i16)config.pins.gpsTx, true},
         {(i16)config.pins.gpsRx, true},
     };
@@ -90,6 +102,10 @@ bool config_validate(char *error, size_t error_size) {
         (WifiEnabled)config.general.wifiEnabled > WIFI_ENABLED_MAX) {
         snprintf(error, error_size, "Wi-Fi enable status must be between %d and %d.", WIFI_ENABLED_MIN,
                  WIFI_ENABLED_MAX);
+        return false;
+    }
+    if ((BusType)config.sensors.busType < BUSTYPE_MIN || (BusType)config.sensors.busType > BUSTYPE_MAX) {
+        snprintf(error, error_size, "Bus type must be between %d and %d.", BUSTYPE_MAX, BUSTYPE_MAX);
         return false;
     }
     if ((GPSCommandType)config.sensors.gpsCommandType < GPS_COMMAND_TYPE_MIN ||

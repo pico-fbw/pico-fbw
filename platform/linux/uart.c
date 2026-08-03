@@ -21,13 +21,13 @@ typedef struct UARTInstance {
     int fd;
 } UARTInstance;
 
-static UARTInstance instances[MAX_UARTS];
+static UARTInstance instances[MAX_UART_DEVICES];
 
 /**
  * @return a pointer to the UART instance that uses the given pins, or NULL if no such instance exists
  */
 static UARTInstance *uart_instance_from_pins(i16 tx, i16 rx) {
-    for (u32 i = 0; i < MAX_UARTS; i++) {
+    for (u32 i = 0; i < MAX_UART_DEVICES; i++) {
         UARTMapping mapping = UART_MAP[i];
         if (mapping.tx == tx && mapping.rx == rx) {
             instances[i].device = mapping.device;

@@ -31,8 +31,12 @@ typedef timer_t __callback_id_t;
 
 #define DEFAULT_PIN_I2C_SDA 11
 #define DEFAULT_PIN_I2C_SCL 12
-#define DEFAULT_PIN_GPS_TX 13
-#define DEFAULT_PIN_GPS_RX 14
+#define DEFAULT_PIN_SPI_CLK 13
+#define DEFAULT_PIN_SPI_MOSI 14
+#define DEFAULT_PIN_SPI_MISO 15
+#define DEFAULT_PIN_SPI_CS 16
+#define DEFAULT_PIN_GPS_TX 17
+#define DEFAULT_PIN_GPS_RX 18
 
 #if defined(_WIN32)
     #if SIMCONNECT

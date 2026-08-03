@@ -3,6 +3,7 @@ add_library(platform_host
     gpio.c
     i2c.c
     pwm.c
+    spi.c
     stdio.c
     sys.c
     time.c

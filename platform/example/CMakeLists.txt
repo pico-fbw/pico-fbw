@@ -6,6 +6,7 @@ add_library(platform_example
     gpio.c
     i2c.c
     pwm.c
+    spi.c
     stdio.c
     sys.c
     time.c

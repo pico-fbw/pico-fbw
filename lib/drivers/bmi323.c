@@ -9,7 +9,6 @@
  * Licensed under the MIT License
  */
 
-#include "platform/i2c.h"
 #include "platform/time.h"
 
 #include "drivers.h"
@@ -39,43 +38,36 @@
 // Using ±2000dps gyro range
 #define BMI323_RAW_TO_DPS(x) ((125 * (1 << (BMI323_GYR_RANGE_125 - BMI323_GYR_RANGE_500))) / 32768.f) * (x)
 
-bool bmi323_exists(FusionDriver *self) {
+// Helper to read the ID register of the BMI323; returns the third byte read from `reg`.
+static byte read_id_reg(BusConfig *bus, byte reg) {
     // Read 4 bytes (2 dummy bytes + ID register)
     byte data[4] = {};
-    if (!i2c_read(ASDA, ASCL, BMI323_ADDR_LOW, BMI323_REG_ID, data, sizeof(data))) {
-        return false;
+    if (!driver_read(bus, reg, data, sizeof(data))) {
+        return 0x00;
     }
-    // First (real) byte is the device ID (second is revision ID)
-    if (data[2] == BMI323_DEVICE_ID) {
-        self->addr = BMI323_ADDR_LOW;
-        return true;
-    }
-    // Main address failed, check the alternate address
-    if (!i2c_read(ASDA, ASCL, BMI323_ADDR_HIGH, BMI323_REG_ID, data, sizeof(data))) {
-        return false;
-    }
-    if (data[2] == BMI323_DEVICE_ID) {
-        self->addr = BMI323_ADDR_HIGH;
-        return true;
-    }
-    return false;
+    // First (non-dummy) byte is the device ID (second is revision ID)
+    return data[2];
+}
+
+bool bmi323_exists(FusionDriver *self) {
+    return check_devid(&self->bus, BMI323_ADDR_LOW, BMI323_ADDR_HIGH, BMI323_REG_ID, BMI323_DEVICE_ID, read_id_reg);
 }
 
 bool bmi323_init(FusionDriver *self) {
     bool success = true;
     // Reset device
-    success &= i2c_write_word(ASDA, ASCL, self->addr, BMI323_REG_CMD, BMI323_RESET_TRIGGER);
+    success &= driver_write_word(&self->bus, BMI323_REG_CMD, BMI323_RESET_TRIGGER);
     sleep_ms_blocking(2);
     // Accel: high performance mode, no averaging, filtering to ODR/4, ±8g range, 200hz ODR
-    success &= i2c_write_word(ASDA, ASCL, self->addr, BMI323_REG_ACC_CONF, 0b0111000010101001);
+    success &= driver_write_word(&self->bus, BMI323_REG_ACC_CONF, 0b0111000010101001);
     // Gyro: high performance mode, no averaging, filtering to ODR/4, ±500dps range, 200hz ODR
-    success &= i2c_write_word(ASDA, ASCL, self->addr, BMI323_REG_GYR_CONF, 0b0111000010101001);
+    success &= driver_write_word(&self->bus, BMI323_REG_GYR_CONF, 0b0111000010101001);
     return success;
 }
 
 bool bmi323_read_acc(FusionDriver *self, f32 data[]) {
     byte raw[8]; // 2 dummy bytes + 3 words (6 bytes)
-    if (!i2c_read(ASDA, ASCL, self->addr, BMI323_REG_ACC_X, raw, sizeof(raw))) {
+    if (!driver_read(&self->bus, BMI323_REG_ACC_X, raw, sizeof(raw))) {
         return false;
     }
     // Convert raw data to signed 16-bit and then to g's
@@ -87,7 +79,7 @@ bool bmi323_read_acc(FusionDriver *self, f32 data[]) {
 
 bool bmi323_read_gyro(FusionDriver *self, f32 data[]) {
     byte raw[8];
-    if (!i2c_read(ASDA, ASCL, self->addr, BMI323_REG_GYR_X, raw, sizeof(raw))) {
+    if (!driver_read(&self->bus, BMI323_REG_GYR_X, raw, sizeof(raw))) {
         return false;
     }
     data[0] = BMI323_RAW_TO_DPS((i16)(raw[3] << 8 | raw[2]));

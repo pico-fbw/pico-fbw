@@ -19,8 +19,7 @@ typedef struct ConfigGeneralSection {
     f32 controlMode;
     f32 switchType;
     f32 maxCalibrationOffset;
-    f32 servoHz;
-    f32 escHz;
+    f32 servoHz, escHz;
     f32 apiEnabled;
     f32 wifiEnabled;
     f32 launchAssistEnabled;
@@ -29,53 +28,37 @@ typedef struct ConfigGeneralSection {
 } ConfigGeneralSection;
 
 typedef struct ConfigControlSection {
-    f32 maxRollRate;
-    f32 maxPitchRate;
+    f32 maxRollRate, maxPitchRate;
     f32 expo;
     f32 rudderSensitivity;
     f32 controlDeadband;
-    f32 throttleMaxTime;
-    f32 throttleCooldownTime;
-    f32 throttleSensitivity;
-    f32 dropDetentClosed;
-    f32 dropDetentOpen;
-    f32 rollLimit;
-    f32 rollLimitHold;
-    f32 pitchLowerLimit;
-    f32 pitchUpperLimit;
-    f32 maxAilDeflection;
-    f32 maxEleDeflection;
-    f32 maxRudDeflection;
-    f32 maxElevonDeflection;
-    f32 elevonMixingGain;
-    f32 ailMixingBias;
-    f32 elevMixingBias;
+    f32 throttleMaxTime, throttleCooldownTime, throttleSensitivity;
+    f32 dropDetentClosed, dropDetentOpen;
+    f32 rollLimit, rollLimitHold;
+    f32 pitchLowerLimit, pitchUpperLimit;
+    f32 maxAilDeflection, maxEleDeflection, maxRudDeflection;
+    f32 maxElevonDeflection, elevonMixingGain;
+    f32 ailMixingBias, elevMixingBias;
 } ConfigControlSection;
 
 typedef struct ConfigPinsSection {
-    f32 inputAil;
-    f32 servoAil;
-    f32 inputEle;
-    f32 servoEle;
-    f32 inputRud;
-    f32 servoRud;
-    f32 inputThrottle;
-    f32 escThrottle;
+    f32 inputAil, servoAil;
+    f32 inputEle, servoEle;
+    f32 inputRud, servoRud;
+    f32 inputThrottle, escThrottle;
     f32 inputSwitch;
     f32 servoBay;
-    f32 i2cSda;
-    f32 i2cScl;
-    f32 gpsTx;
-    f32 gpsRx;
-    f32 reverseRoll;
-    f32 reversePitch;
-    f32 reverseYaw;
+    f32 i2cSda, i2cScl;
+    f32 spiClk, spiMosi, spiMiso;
+    f32 spiCs0, spiCs1, spiCs2;
+    f32 gpsTx, gpsRx;
+    f32 reverseRoll, reversePitch, reverseYaw;
 } ConfigPinsSection;
 
 typedef struct ConfigSensorsSection {
-    f32 i2cBusFreq;
-    f32 gpsCommandType;
-    f32 gpsBaudrate;
+    f32 busType;
+    f32 i2cBusFreq, spiBusFreq;
+    f32 gpsCommandType, gpsBaudrate;
 } ConfigSensorsSection;
 
 typedef struct ConfigSystemSection {

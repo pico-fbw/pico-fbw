@@ -23,8 +23,12 @@ typedef alarm_id_t __callback_id_t;
 // Sensor I/O pins
 #define DEFAULT_PIN_I2C_SDA 16
 #define DEFAULT_PIN_I2C_SCL 17
-#define DEFAULT_PIN_GPS_TX 21
-#define DEFAULT_PIN_GPS_RX 20
+#define DEFAULT_PIN_SPI_CLK 18
+#define DEFAULT_PIN_SPI_MOSI 19
+#define DEFAULT_PIN_SPI_MISO 20
+#define DEFAULT_PIN_SPI_CS 21
+#define DEFAULT_PIN_GPS_TX 13
+#define DEFAULT_PIN_GPS_RX 12
 
 // Status LED
 #ifdef PICO_DEFAULT_LED_PIN

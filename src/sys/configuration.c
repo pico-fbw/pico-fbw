@@ -15,6 +15,7 @@
 #include "ctrl/switch.h"
 #include "io/gps.h"
 #include "io/receiver.h"
+#include "lib/drivers/drivers.h"
 #include "lib/parson.h"
 #include "sys/print.h"
 #include "sys/runtime.h"
@@ -95,9 +96,15 @@ Config config = {
         .escThrottle = DEFAULT_PIN_ESC_THR,
         .inputSwitch = DEFAULT_PIN_INPUT_SWITCH,
         .servoBay = DEFAULT_PIN_SERVO_BAY,
-        // Sensor communications pins
+        // Sensor communication pins
         .i2cSda = DEFAULT_PIN_I2C_SDA,
         .i2cScl = DEFAULT_PIN_I2C_SCL,
+        .spiClk = DEFAULT_PIN_SPI_CLK,
+        .spiMosi = DEFAULT_PIN_SPI_MOSI,
+        .spiMiso = DEFAULT_PIN_SPI_MISO,
+        .spiCs0 = DEFAULT_PIN_SPI_CS,
+        .spiCs1 = -1,
+        .spiCs2 = -1,
         .gpsTx = DEFAULT_PIN_GPS_TX,
         .gpsRx = DEFAULT_PIN_GPS_RX,
         // Servo reverse flags
@@ -106,8 +113,10 @@ Config config = {
         .reverseYaw = false,
     },
     .sensors = {
-        // I2C configuration
+        // I2C/SPI configuration
+        .busType = BUS_I2C,
         .i2cBusFreq = 400,
+        .spiBusFreq = 1,
         // GPS configuration
         .gpsCommandType = GPS_COMMAND_TYPE_PMTK,
         .gpsBaudrate = 9600,
@@ -256,6 +265,12 @@ static ConfigEntry configPins[] = {
     {"servoBay", SECTION_TYPE_NUMBER, &config.pins.servoBay},
     {"i2cSda", SECTION_TYPE_NUMBER, &config.pins.i2cSda},
     {"i2cScl", SECTION_TYPE_NUMBER, &config.pins.i2cScl},
+    {"spiClk", SECTION_TYPE_NUMBER, &config.pins.spiClk},
+    {"spiMosi", SECTION_TYPE_NUMBER, &config.pins.spiMosi},
+    {"spiMiso", SECTION_TYPE_NUMBER, &config.pins.spiMiso},
+    {"spiCs0", SECTION_TYPE_NUMBER, &config.pins.spiCs0},
+    {"spiCs1", SECTION_TYPE_NUMBER, &config.pins.spiCs1},
+    {"spiCs2", SECTION_TYPE_NUMBER, &config.pins.spiCs2},
     {"gpsTx", SECTION_TYPE_NUMBER, &config.pins.gpsTx},
     {"gpsRx", SECTION_TYPE_NUMBER, &config.pins.gpsRx},
     {"reverseRoll", SECTION_TYPE_NUMBER, &config.pins.reverseRoll},
@@ -263,7 +278,9 @@ static ConfigEntry configPins[] = {
     {"reverseYaw", SECTION_TYPE_NUMBER, &config.pins.reverseYaw},
 };
 static ConfigEntry configSensors[] = {
+    {"busType", SECTION_TYPE_NUMBER, &config.sensors.busType},
     {"i2cBusFreq", SECTION_TYPE_NUMBER, &config.sensors.i2cBusFreq},
+    {"spiBusFreq", SECTION_TYPE_NUMBER, &config.sensors.spiBusFreq},
     {"gpsCommandType", SECTION_TYPE_NUMBER, &config.sensors.gpsCommandType},
     {"gpsBaudrate", SECTION_TYPE_NUMBER, &config.sensors.gpsBaudrate},
 };

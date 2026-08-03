@@ -18,7 +18,9 @@ if (NOT ESP_FLASH_SIZE IN_LIST ESP_FLASH_SIZE_VALUES)
     message(FATAL_ERROR "Invalid ESP_FLASH_SIZE: ${ESP_FLASH_SIZE}")
 endif()
 
-function(setup_before_subdirs)
+# We use a macro() here instead of a function to ensure that the idf functions run in the main project scope
+# This fixes lots of issues with missing config vars, etc. causing parts of the build to fail or be skipped
+macro(setup_before_subdirs)
     set(SDKCONFIG_DEFAULTS ${PLATFORM_PATH}/resources/sdkconfig.defaults)
     if (CMAKE_BUILD_TYPE STREQUAL "Debug")
         # For debug builds we use a different set of defaults (namely just with more logging enabled)
@@ -56,11 +58,12 @@ function(setup_before_subdirs)
             ${PICO_FBW_VERSION}
         COMPONENTS
             # See IDF_PATH/components/README.md for a list of available components
+            esptool_py
             esp_driver_gpio
             esp_driver_i2c
             esp_driver_mcpwm
+            esp_driver_spi
             esp_driver_uart
-            esptool_py
             esp_event
             esp_http_server
             esp_hw_support
@@ -78,13 +81,13 @@ function(setup_before_subdirs)
             ${CMAKE_BINARY_DIR}/sdkconfig.defaults
     )
     add_executable(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/src/main.c)
-endfunction()
+endmacro()
 
-function(setup_after_subdirs)
+macro(setup_after_subdirs)
     # FreeRTOS is multithreaded so we need to enable thread safety in littlefs
     target_compile_definitions(littlefs PUBLIC -DLFS_THREADSAFE=1)
     target_compile_definitions(platform_esp PRIVATE -DLFS_THREADSAFE=1)
     # Suppress warning about RWX segments
     target_link_options(${PROJECT_NAME} PUBLIC "-Wl,--no-warn-rwx-segments")
     idf_build_executable(${PROJECT_NAME})
-endfunction()
+endmacro()

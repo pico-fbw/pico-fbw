@@ -3,6 +3,7 @@ add_library(platform_pico
     gpio.c
     i2c.c
     pwm.c
+    spi.c
     stdio.c
     sys.c
     time.c
@@ -27,6 +28,7 @@ target_link_libraries(platform_pico
     hardware_pio
     hardware_pwm
     hardware_regs
+    hardware_spi
     hardware_sync
     hardware_timer
     hardware_uart

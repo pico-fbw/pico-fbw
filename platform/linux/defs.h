@@ -12,6 +12,11 @@ typedef struct I2CMapping {
     const char *device;
 } I2CMapping;
 
+typedef struct SPIMapping {
+    i16 clk, mosi, miso, cs;
+    const char *device;
+} SPIMapping;
+
 typedef struct UARTMapping {
     i16 tx, rx;
     const char *device;
@@ -35,6 +40,10 @@ typedef struct UARTMapping {
 // Sensor I/O pins
 #define DEFAULT_PIN_I2C_SDA 2
 #define DEFAULT_PIN_I2C_SCL 3
+#define DEFAULT_PIN_SPI_CLK 11
+#define DEFAULT_PIN_SPI_MOSI 10
+#define DEFAULT_PIN_SPI_MISO 9
+#define DEFAULT_PIN_SPI_CS 8
 #define DEFAULT_PIN_GPS_TX 14
 #define DEFAULT_PIN_GPS_RX 15
 
@@ -46,10 +55,15 @@ static const I2CMapping I2C_MAP[] = {
     {.sda = 2, .scl = 3, .device = "/dev/i2c-1"},
 };
 #define MAX_I2C_DEVICES count_of(I2C_MAP)
+static const SPIMapping SPI_MAP[] = {
+    {.clk = 11, .mosi = 10, .miso = 9, .cs = 8, .device = "/dev/spidev0.0"},
+    {.clk = 11, .mosi = 10, .miso = 9, .cs = 7, .device = "/dev/spidev0.1"},
+};
+#define MAX_SPI_DEVICES count_of(SPI_MAP)
 static const UARTMapping UART_MAP[] = {
     {.tx = 14, .rx = 15, .device = "/dev/serial0"},
 };
-#define MAX_UARTS count_of(UART_MAP)
+#define MAX_UART_DEVICES count_of(UART_MAP)
 
 // GPIO settings
 #define GPIOCHIP_DEVICE "gpiochip0"

@@ -14,6 +14,9 @@
 #define I2C_TIMEOUT_MS 50     // Timeout for all I2C operations
 #define MAX_DEVICES_PER_BUS 5 // Maximum number of devices that can exist on a single bus
 
+// Structs to hold info about each I2C device + the bus that it is a part of
+// We keep track of this info in order to provide the correct context back to the sdk when given only pin numbers
+
 typedef struct I2CDevice {
     byte addr;
     i2c_master_dev_handle_t handle;
@@ -27,7 +30,7 @@ typedef struct I2CBus {
     size_t numDevices;
 } I2CBus;
 
-static I2CBus buses[I2C_NUM_MAX];
+static I2CBus buses[SOC_I2C_NUM] = {};
 
 /**
  * Adds an `I2CDevice` to the given `I2CBus`.
@@ -63,7 +66,7 @@ static I2CDevice *add_device(I2CBus *bus, byte addr) {
  * or NULL if no such bus exists matching the given SDA and SCL pins
  * @note If no such device exists, it will be automatically added to the bus.
  */
-static I2CDevice *i2c_device_from_details(i16 sda, i16 scl, byte addr) {
+static I2CDevice *device_from_details(i16 sda, i16 scl, byte addr) {
     // Find the bus that matches the given SDA and SCL pins
     I2CBus *bus = NULL;
     for (size_t i = 0; i < count_of(buses); i++) {
@@ -107,13 +110,15 @@ bool i2c_setup(i16 sda, i16 scl, u32 freq) {
     if (i2c_new_master_bus(&config, &handle) != ESP_OK) {
         return false;
     }
+
     // Add the initialized bus to the array
     for (size_t i = 0; i < count_of(buses); i++) {
-        if (!buses[i].handle) {
-            buses[i].sda = sda;
-            buses[i].scl = scl;
-            buses[i].freq = freq;
-            buses[i].handle = handle;
+        I2CBus bus = buses[i];
+        if (!bus.handle) {
+            bus.sda = sda;
+            bus.scl = scl;
+            bus.freq = freq;
+            bus.handle = handle;
             return true;
         }
     }
@@ -121,7 +126,7 @@ bool i2c_setup(i16 sda, i16 scl, u32 freq) {
 }
 
 bool i2c_read(i16 sda, i16 scl, byte addr, byte reg, byte dest[], size_t len) {
-    I2CDevice *device = i2c_device_from_details(sda, scl, addr);
+    I2CDevice *device = device_from_details(sda, scl, addr);
     if (!device) {
         return false;
     }
@@ -129,7 +134,7 @@ bool i2c_read(i16 sda, i16 scl, byte addr, byte reg, byte dest[], size_t len) {
 }
 
 bool i2c_write(i16 sda, i16 scl, byte addr, byte reg, const byte src[], size_t len) {
-    I2CDevice *device = i2c_device_from_details(sda, scl, addr);
+    I2CDevice *device = device_from_details(sda, scl, addr);
     if (!device) {
         return false;
     }
