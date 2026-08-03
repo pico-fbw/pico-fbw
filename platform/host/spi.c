@@ -3,6 +3,8 @@
  * Licensed under the MIT License
  */
 
+#include <string.h>
+
 #include "platform/spi.h"
 
 bool spi_setup(i16 clk, i16 mosi, i16 miso, u32 freq) {

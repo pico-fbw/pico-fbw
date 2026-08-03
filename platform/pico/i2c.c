@@ -13,9 +13,7 @@
 #define I2C_TIMEOUT_US (I2C_TIMEOUT_MS * 1000)
 
 /**
- * @param sda the pin number of the SDA pin
- * @param scl the pin number of the SCL pin
- * @return the i2c instance that the pins lie on, or NULL if the pins do not form a valid i2c instance
+ * @return the I2C instance that the given pins lie on, or NULL if the pins do not form a valid I2C instance
  */
 static inline i2c_inst_t *i2c_inst_from_pins(i16 sda, i16 scl) {
     switch (sda) {
@@ -58,6 +56,7 @@ static inline i2c_inst_t *i2c_inst_from_pins(i16 sda, i16 scl) {
         default:
             return NULL;
     }
+    return NULL;
 }
 
 bool i2c_setup(i16 sda, i16 scl, u32 freq) {
