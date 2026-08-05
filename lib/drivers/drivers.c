@@ -15,6 +15,7 @@
 // Master device list; devices are defined in their respective driver source files
 FusionDevice *fusionDevices[] = {
     &bmi323,
+    &bmp581,
 };
 const u32 numFusionDevices = count_of(fusionDevices);
 
@@ -47,8 +48,13 @@ static bool check_devid_spi(BusConfig *bus, byte reg, byte expected, check_devid
     }
 
     bus->type = BUS_SPI;
+    // Execute check_fn() on all valid CS pins
     for (u32 i = 0; i < numCsPins; i++) {
         bus->spi.cs = csPins[i];
+        // Most devices require a dummy SPI read of 1-2 bytes to enter their SPI mode
+        byte word[2];
+        driver_read(bus, reg, word, sizeof(word));
+        // Now we can execute the actual check_fn
         if (check_fn(bus, reg) == expected) {
             return true;
         }

@@ -2,6 +2,7 @@ include(DriverFirmware)
 
 target_sources(${PROJECT_NAME} PRIVATE
     drivers/bmi323.c
+    drivers/bmp581.c
     drivers/drivers.c
     fusion/fusion.c
     fusion/calibration.c

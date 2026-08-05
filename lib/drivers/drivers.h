@@ -70,6 +70,7 @@ typedef struct FusionDevice {
 } FusionDevice;
 
 extern FusionDevice bmi323;
+extern FusionDevice bmp581;
 
 extern FusionDevice *fusionDevices[];
 extern const u32 numFusionDevices;

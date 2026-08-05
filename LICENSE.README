@@ -31,8 +31,8 @@ BSD 3-Clause License
 
 The following files (and their corresponding Header [.h] files, where applicable) of this project utilize code which is licensed under the BSD 3-Clause License:
 
-- lib/lfs_util.c
-- lib/lfs.c
+- lib/drivers/bmi323.c
+- lib/drivers/bmp581.c
 - platform/pico/flash.c
 - platform/pico/wifi/dns.c
 - platform/pico/wifi/tcp.c
