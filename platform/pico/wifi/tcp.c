@@ -405,7 +405,7 @@ static bool handle_request(TCPConnection *con_state, struct tcp_pcb *pcb, const 
                 res = handle_api_v1_request(pcb, request, api_set_target);
             } else if (strcmp(uri + strlen(API_V1_PATH), "set/waypoint") == 0) {
                 res = handle_api_v1_request(pcb, request, api_set_waypoint);
-            } else if (strcmp(uri + strlen(API_V1_PATH), "misc/reboot") == 0) {
+            } else if (strcmp(uri + strlen(API_V1_PATH), "reboot") == 0) {
                 res = handle_api_v1_request(pcb, request, api_misc_reboot);
             }
         }

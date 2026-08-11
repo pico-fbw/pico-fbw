@@ -320,15 +320,15 @@ static httpd_uri_t uris[] = {
         .user_ctx = api_set_waypoint,
     },
     {
-        .uri = "/api/v1/ping",
-        .method = HTTP_GET,
-        .handler = handle_api_v1_request,
-    },
-    {
-        .uri = "/api/v1/misc/reboot",
+        .uri = "/api/v1/reboot",
         .method = HTTP_POST,
         .handler = handle_api_v1_request,
         .user_ctx = api_misc_reboot,
+    },
+    {
+        .uri = "/api/v1/ping",
+        .method = HTTP_GET,
+        .handler = handle_api_v1_request,
     },
     // Common GET handler (for serving files)
     {

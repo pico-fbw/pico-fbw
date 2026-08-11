@@ -14,6 +14,8 @@ import Planner from "pages/Planner";
 import Settings from "pages/Settings";
 import Setup from "pages/Setup";
 
+import settings from "helpers/settings";
+
 import "./style.css";
 
 // 404 page
@@ -65,4 +67,6 @@ function App() {
     );
 }
 
-render(<App />, document.getElementById("root")!);
+void settings.load().catch(console.error).finally(() => {
+    render(<App />, document.getElementById("root")!);
+});

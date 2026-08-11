@@ -10,7 +10,6 @@
 typedef struct Flightplan {
     char *version;
     char *version_fw;
-    i32 alt_samples;
     Waypoint *waypoints;
     u32 waypoint_count;
     // Metadata

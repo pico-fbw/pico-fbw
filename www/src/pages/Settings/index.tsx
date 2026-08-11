@@ -38,7 +38,7 @@ function ConfigUI({ setError }: ConfigUIProps) {
 
 interface SettingItemProps {
     title: string;
-    id: "altSamples" | "defaultSpeed" | "dropSecs";
+    id: "defaultSpeed" | "dropSecs";
     value: number;
     setValue: (value: number) => void;
     minValue?: number;
@@ -56,7 +56,7 @@ function SettingItem({ title, id, value, setValue, minValue = 1, maxValue = 100,
                     type="number"
                     className="block sm:text-sm sm:leading-4 rounded-md border-0 bg-gray-300 px-2 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500"
                     value={value}
-                    onChange={e => {
+                    onBlur={e => {
                         let setting = Number((e.target as HTMLInputElement).value);
                         if (!isNaN(setting)) {
                             setting = Math.min(
@@ -74,7 +74,6 @@ function SettingItem({ title, id, value, setValue, minValue = 1, maxValue = 100,
 }
 
 function SettingsUI() {
-    const [altSamples, setAltSamples] = useState(Number(settings.get("altSamples")));
     const [defaultSpeed, setDefaultSpeed] = useState(Number(settings.get("defaultSpeed")));
     const [dropSecs, setDropSecs] = useState(Number(settings.get("dropSecs")));
 
@@ -84,16 +83,6 @@ function SettingsUI() {
                 <h2 className="text-3xl font-bold leading-7 text-sky-500 sm:tracking-tight sm:col-span-1 my-auto">
                     Settings
                 </h2>
-                <SettingItem
-                    title="Altitude Offset Samples"
-                    id="altSamples"
-                    value={altSamples}
-                    setValue={setAltSamples}
-                >
-                    The number of altitude readings to take when determining the autopilot's ground offset altitude.
-                    Note that higher values will require additional time before auto mode may be engaged, especially for
-                    systems that rely on GPS for altitude.
-                </SettingItem>
                 <SettingItem title="Default Speed" id="defaultSpeed" value={defaultSpeed} setValue={setDefaultSpeed}>
                     The default speed (in knots) to set at each waypoint. This is measured as the speed over the ground,
                     not as airspeed.

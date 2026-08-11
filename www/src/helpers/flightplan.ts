@@ -26,7 +26,6 @@ export interface Waypoint {
 export interface Flightplan {
     version: string;
     version_fw: string;
-    alt_samples: number;
     waypoints: Waypoint[];
     // waypoint_count is not included in JSON; it is set when parsed
 }
@@ -37,7 +36,6 @@ export interface Flightplan {
  * @returns the markers expressed as a Flightplan JSON string
  */
 export function markersToFlightplan(markers: Marker[]): string {
-    const altSamples = Number(settings.get("altSamples"));
     const dropSecs = Number(settings.get("dropSecs"));
     const waypoints: Waypoint[] = markers.map(marker => {
         if (marker.position.lat <= -90 || marker.position.lat >= 90) {
@@ -62,7 +60,6 @@ export function markersToFlightplan(markers: Marker[]): string {
     return JSON.stringify({
         version: generatorVersion,
         version_fw: firmwareVersion,
-        alt_samples: altSamples,
         waypoints,
     });
 }

@@ -4,11 +4,14 @@
  */
 
 import { useEffect, useState } from "preact/hooks";
+
 import ContentBlock from "elements/ContentBlock";
 import Modal from "elements/Modal";
+
 import { useFileDownload, useFileUpload } from "helpers/hooks";
 import { api } from "helpers/api";
 import { GET_CONFIG, GET_INFO } from "helpers/apiTypes";
+import settings from "helpers/settings";
 
 export default function Advanced() {
     const [error, setError] = useState("");
@@ -49,18 +52,13 @@ export default function Advanced() {
     };
 
     const rerunSetup = async () => {
-        try {
-            await api("set/config", { changes: [{ section: "WebUI", key: "setupComplete", value: "0" }], save: true });
-        } catch (e) {
-            setError((e as Error).message);
-        } finally {
-            setSetupModalOpen(false);
-        }
+        settings.set("setupComplete", "false");
+        setSetupModalOpen(false);
     };
 
     const reboot = async () => {
         try {
-            await api("misc/reboot");
+            await api("reboot");
         } catch (e) {
             setError((e as Error).message);
         } finally {

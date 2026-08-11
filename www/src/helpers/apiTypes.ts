@@ -113,5 +113,5 @@ export type EndpointMap = {
     "set/target": SET_TARGET;
     "set/waypoint": SET_WAYPOINT;
     ping: PING;
-    "misc/reboot": MISC_REBOOT;
+    reboot: MISC_REBOOT;
 };

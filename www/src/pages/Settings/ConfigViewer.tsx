@@ -285,6 +285,36 @@ const config: ConfigDatabase = {
             desc: "The SCL pin of the I2C sensor bus.",
         },
         {
+            name: "SPI CLK Pin",
+            id: "spiClk",
+            desc: "The CLK pin of the SPI sensor bus.",
+        },
+        {
+            name: "SPI MOSI Pin",
+            id: "spiMosi",
+            desc: "The MOSI pin of the SPI sensor bus.",
+        },
+        {
+            name: "SPI MISO Pin",
+            id: "spiMiso",
+            desc: "The MISO pin of the SPI sensor bus.",
+        },
+        {
+            name: "SPI CS0 Pin",
+            id: "spiCs0",
+            desc: "The CS0 pin of the SPI sensor bus.",
+        },
+        {
+            name: "SPI CS1 Pin",
+            id: "spiCs1",
+            desc: "The CS1 pin of the SPI sensor bus.",
+        },
+        {
+            name: "SPI CS2 Pin",
+            id: "spiCs2",
+            desc: "The CS2 pin of the SPI sensor bus.",
+        },
+        {
             name: "GPS TX Pin",
             id: "gpsTx",
             desc: "The TX pin of the GPS.",
@@ -327,7 +357,7 @@ const config: ConfigDatabase = {
         {
             name: "Bus Type",
             id: "busType",
-            desc: "The type of sensor bus used by the inertial system. I2C is the default, SPI can be used on supported hardware, and ALL enables both when supported.",
+            desc: "The type of sensor bus used. I2C is the default, SPI can be used on supported hardware, and ALL enables both when supported.",
             enumMap: {
                 0: "I2C",
                 1: "SPI",
@@ -373,7 +403,7 @@ const config: ConfigDatabase = {
         },
         {
             name: "Debug",
-            id: "printsys",
+            id: "print",
             desc: "Enables miscellaneous logs, warnings, and error statements.",
             enumMap: {
                 0: "Disabled",
@@ -548,7 +578,10 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
         data && (
             <div className="divide-y divide-white/5">
                 {/* Each section of the config gets a dropdown */}
-                {data.sections.map((section, sectionIndex) => (
+                {data.sections
+                    .map((section, sectionIndex) => ({ section, sectionIndex }))
+                    .filter(({ section }) => section.name !== "WebUI") // Ignore WebUI section as it is internal only
+                    .map(({ section, sectionIndex }) => (
                     <div key={sectionIndex} className="py-6">
                         {/* Section name and toggle button */}
                         <div

@@ -167,10 +167,10 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
         handle_api_v1_request(c, hm, api_set_target);
     } else if (mg_match(hm->uri, mg_str("/api/v1/set/waypoint"), NULL)) {
         handle_api_v1_request(c, hm, api_set_waypoint);
+    } else if (mg_match(hm->uri, mg_str("/api/v1/reboot"), NULL)) {
+        handle_api_v1_request(c, hm, api_misc_reboot);
     } else if (mg_match(hm->uri, mg_str("/api/v1/ping"), NULL)) {
         handle_api_v1_request(c, hm, NULL);
-    } else if (mg_match(hm->uri, mg_str("/api/v1/misc/reboot"), NULL)) {
-        handle_api_v1_request(c, hm, api_misc_reboot);
     } else {
         // No matching API request, serve static files instead
         struct mg_http_serve_opts opts = {

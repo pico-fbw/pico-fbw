@@ -20,19 +20,11 @@
 
 #define FLIGHTPLAN_STORAGE_DIR "flightplans"
 #define JSON_SCHEMA_V1                                                                                                 \
-    "{\"version\":\"\",\"version_fw\":\"\",\"alt_samples\":0,\"waypoints\":"                                           \
+    "{\"version\":\"\",\"version_fw\":\"\",\"waypoints\":"                                                             \
     "[{\"lat\":0,\"lng\":0,\"alt\":0,\"speed\":0,\"drop\":0}]}"
 
 static Flightplan active;
 static bool isActive = false;
-
-static inline bool state_is_error(FlightplanState state) {
-    return state == FLIGHTPLAN_ERR_PARSE || state == FLIGHTPLAN_ERR_VERSION || state == FLIGHTPLAN_ERR_MEM;
-}
-
-static inline bool state_is_warning(FlightplanState state) {
-    return state == FLIGHTPLAN_WARN_FW_VERSION;
-}
 
 bool waypoint_is_valid(Waypoint *wpt) {
     return fabs(wpt->lat) <= 90 && fabs(wpt->lng) <= 180 && wpt->alt >= 0 && wpt->alt <= 400 && wpt->speed >= 0 &&
@@ -207,20 +199,6 @@ FlightplanState flightplan_parse(const char *name, Flightplan *flightplan, bool 
     flightplan->version_fw = strdup(version_fw);
     if (!flightplan->version_fw) {
         goto oom;
-    }
-
-    // Altitude samples
-    flightplan->alt_samples = json_object_get_number(obj, "alt_samples");
-    if (flightplan->alt_samples < 0 || flightplan->alt_samples > 100) {
-        if (!silent) {
-            printpre("flightplan", "ERROR: invalid altitude samples");
-        }
-        state = FLIGHTPLAN_ERR_PARSE;
-        goto cleanup;
-    }
-    // Only replace the state if there have been no warnings/errors up to this point
-    if (flightplan->alt_samples != 0 && !state_is_warning(state) && !state_is_error(state)) {
-        state = FLIGHTPLAN_STATUS_GPS_OFFSET;
     }
 
     // Waypoint array

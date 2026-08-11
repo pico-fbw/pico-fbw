@@ -20,7 +20,8 @@ const configKeys = {
     Control: ["maxRollRate", "maxPitchRate", "expo", "rudderSensitivity", "controlDeadband", "throttleMaxTime", "throttleCooldownTime", "throttleSensitivity", "dropDetentClosed", "dropDetentOpen", "rollLimit", "rollLimitHold", "pitchLowerLimit", "pitchUpperLimit", "maxAilDeflection", "maxEleDeflection", "maxRudDeflection", "maxElevonDeflection", "elevonMixingGain", "ailMixingBias", "elevMixingBias"],
     Pins: ["inputAil", "servoAil", "inputEle", "servoEle", "inputRud", "servoRud", "inputThrottle", "escThrottle", "inputSwitch", "servoBay", "i2cSda", "i2cScl", "spiClk", "spiMosi", "spiMiso", "spiCs0", "spiCs1", "spiCs2", "gpsTx", "gpsRx", "reverseRoll", "reversePitch", "reverseYaw"],
     Sensors: ["busType", "i2cBusFreq", "spiBusFreq", "gpsCommandType", "gpsBaudrate"],
-    System: ["ssid", "pass", "printsys", "printIMU", "printAircraft", "printGPS", "printNetwork"],
+    System: ["ssid", "pass", "print", "printIMU", "printAircraft", "printGPS", "printNetwork"],
+    WebUI: ["defaultSpeed", "dropSecs", "pilotName", "defaultMap", "lastMapPosition", "lastMapZoom", "setupComplete"],
 } as const;
 
 const configSectionDefaults: { [key: string]: (number | string)[] } = {
@@ -29,6 +30,7 @@ const configSectionDefaults: { [key: string]: (number | string)[] } = {
     Pins: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, -1, -1, 17, 18, 0, 0, 0],
     Sensors: [0, 400, 1, 1, 9600],
     System: ["pico-fbw", "picodashfbw", 1, 0, 0, 0, 0],
+    WebUI: ["25", "10", "", "0", "", "", "0"],
 };
 
 let config: { sections: { name: string; values: (number | string)[] }[] } = {
@@ -38,6 +40,7 @@ let config: { sections: { name: string; values: (number | string)[] }[] } = {
         { name: "Pins", values: [...configSectionDefaults.Pins] },
         { name: "Sensors", values: [...configSectionDefaults.Sensors] },
         { name: "System", values: [...configSectionDefaults.System] },
+        { name: "WebUI", values: [...configSectionDefaults.WebUI] },
     ],
 };
 
@@ -89,7 +92,6 @@ let flightplans: { [name: string]: Flightplan } = {
     default: {
         version: "1.0",
         version_fw: "1.0.0",
-        alt_samples: 0,
         waypoints: [
             { lat: 35, lng: -140, alt: 100, speed: 20, drop: 0 },
             { lat: 35, lng: 140, alt: 100, speed: 20, drop: 0 },
@@ -100,6 +102,28 @@ let activeFlightplan: string | null = null; // Name of currently active flightpl
 let mode = "direct";
 
 export default (): MockHandler[] => [
+    {
+        pattern: "/api/v1/get/calibration",
+        handle: (req, res) => {
+            let dataReceived = false;
+            req.on("data", (bodyString: string) => {
+                dataReceived = true;
+                const body = JSON.parse(bodyString) as { system: string };
+                if (!["receiver", "esc", "imu", "pid"].includes(body.system)) {
+                    res.statusCode = 400;
+                    send_data(res, {});
+                    return;
+                }
+                send_data(res, { calibrated: false });
+            });
+            req.on("end", () => {
+                if (!dataReceived) {
+                    res.statusCode = 400;
+                    send_data(res, {});
+                }
+            });
+        },
+    },
     {
         pattern: "/api/v1/get/config",
         handle: (req, res) => {
@@ -266,6 +290,12 @@ export default (): MockHandler[] => [
         },
     },
     {
+        pattern: "/api/v1/set/calibration",
+        handle: (req, res) => {
+            send_data(res, {});
+        },
+    },
+    {
         pattern: "/api/v1/set/config",
         handle: (req, res) => {
             let dataReceived = false;
@@ -338,34 +368,6 @@ export default (): MockHandler[] => [
     },
     {
         pattern: "/api/v1/set/waypoint",
-        handle: (req, res) => {
-            send_data(res, {});
-        },
-    },
-    {
-        pattern: "/api/v1/get/calibration",
-        handle: (req, res) => {
-            let dataReceived = false;
-            req.on("data", (bodyString: string) => {
-                dataReceived = true;
-                const body = JSON.parse(bodyString) as { system: string };
-                if (!["receiver", "esc", "imu", "pid"].includes(body.system)) {
-                    res.statusCode = 400;
-                    send_data(res, {});
-                    return;
-                }
-                send_data(res, { calibrated: false });
-            });
-            req.on("end", () => {
-                if (!dataReceived) {
-                    res.statusCode = 400;
-                    send_data(res, {});
-                }
-            });
-        },
-    },
-    {
-        pattern: "/api/v1/set/calibration",
         handle: (req, res) => {
             send_data(res, {});
         },

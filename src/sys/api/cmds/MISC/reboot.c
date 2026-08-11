@@ -38,3 +38,8 @@ i32 api_reboot(const char *args) {
     json_value_free(root);
     return -1;
 }
+
+i32 api_misc_reboot(const char *in, char **out) {
+    return api_reboot(in);
+    (void)out;
+}

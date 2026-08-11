@@ -3,42 +3,86 @@
  * Licensed under the MIT License
  */
 
-// [ ] Move these settings out of local storage and into on-device config
+import { api } from "helpers/api";
+import { GET_CONFIG } from "helpers/apiTypes";
+
+const sectionName = "WebUI" as const;
+const webUIKeys = ["defaultSpeed", "dropSecs", "pilotName", "defaultMap", "lastMapPosition", "lastMapZoom", "setupComplete"] as const;
+type SettingKey = (typeof webUIKeys)[number];
+
+const cache: Partial<Record<SettingKey, string>> = {};
+let loadPromise: Promise<void> | null = null;
 
 export class settings {
-    static setting = {
-        altSamples: { default: "10" },
-        defaultSpeed: { default: "25" },
-        dropSecs: { default: "10" },
-        pilotName: { default: "" },
-        // Internal settings, cannot be changed by user
-        defaultMap: { default: "0" },
-        lastMapPosition: { default: "" },
-        lastMapZoom: { default: "" },
-        setupComplete: { default: "false" },
-    } as const;
-
     /**
-     * Get a setting from local storage, or the default value if it doesn't exist.
-     * @param key the setting to get
-     * @returns the value of the setting
+     * Load the on-device WebUI settings into memory.
      */
-    static get<K extends keyof typeof this.setting>(key: K): string {
-        const value = localStorage.getItem(key);
-        if (value) {
-            return value;
+    static async load(): Promise<void> {
+        if (loadPromise) {
+            return loadPromise;
         }
-        // No local storage entry found, return default value
-        return this.setting[key].default;
+
+        loadPromise = (async () => {
+            const response = (await api("get/config")) as GET_CONFIG;
+            const webUISection = response.sections.find(section => section.name === sectionName);
+            if (!webUISection) {
+                return;
+            }
+
+            webUIKeys.forEach((key, index) => {
+                const value = webUISection.values[index];
+                if (value !== undefined && value !== null) {
+                    cache[key] = String(value);
+                }
+            });
+        })();
+
+        try {
+            await loadPromise;
+        } finally {
+            loadPromise = null;
+        }
     }
 
     /**
-     * Set a setting in local storage.
+     * Get a setting from the cached on-device config.
+     * @param key the setting to get
+     * @returns the value of the setting
+     */
+    static get<K extends SettingKey>(key: K): string {
+        return cache[key] ?? "";
+    }
+
+    /**
+     * Set a setting in the on-device config.
      * @param key the setting to set
      * @param value the value to set the setting to
      */
-    static set<K extends keyof typeof this.setting>(key: K, value: string): void {
-        localStorage.setItem(key, value);
+    static set<K extends SettingKey>(key: K, value: string): void {
+        const previousValue = this.get(key);
+        cache[key] = value;
+
+        void (async () => {
+            try {
+                const response = await api("set/config", {
+                    changes: [
+                        {
+                            section: sectionName,
+                            key,
+                            value,
+                        },
+                    ],
+                    save: true,
+                });
+
+                if (response.error) {
+                    throw new Error(response.error);
+                }
+            } catch (error) {
+                cache[key] = previousValue;
+                console.error(`Failed to store ${key}:`, error);
+            }
+        })();
     }
 }
 

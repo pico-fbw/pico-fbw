@@ -9,7 +9,4 @@ i32 api_reboot(const char *args);
 i32 api_reset(const char *args);
 
 // Wrapper for `api_reboot()` to bring function signature inline with GET and SET commands (for external callage).
-inline i32 api_misc_reboot(const char *in, char **out) {
-    return api_reboot(in);
-    (void)out;
-}
+i32 api_misc_reboot(const char *in, char **out);

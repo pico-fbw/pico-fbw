@@ -64,7 +64,7 @@ typedef struct ConfigSensorsSection {
 typedef struct ConfigSystemSection {
     char ssid[CONFIG_STR_SIZE];
     char pass[CONFIG_STR_SIZE];
-    f32 printsys;
+    f32 print;
     f32 printIMU;
     f32 printAircraft;
     f32 printGPS;
@@ -72,14 +72,13 @@ typedef struct ConfigSystemSection {
 } ConfigSystemSection;
 
 typedef struct ConfigWebUISection {
-    f32 altSamples;
-    f32 defaultSpeed;
-    f32 dropSecs;
+    char defaultSpeed[CONFIG_STR_SIZE];
+    char dropSecs[CONFIG_STR_SIZE];
     char pilotName[CONFIG_STR_SIZE];
-    f32 defaultMap;
+    char defaultMap[CONFIG_STR_SIZE];
     char lastMapPosition[CONFIG_STR_SIZE];
     char lastMapZoom[CONFIG_STR_SIZE];
-    f32 setupComplete;
+    char setupComplete[CONFIG_STR_SIZE];
 } ConfigWebUISection;
 
 typedef struct Config {

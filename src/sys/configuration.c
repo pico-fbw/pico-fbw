@@ -125,21 +125,21 @@ Config config = {
         .ssid = "pico-fbw",
         .pass = "picodashfbw",
         // Default print settings, also found in PrintDefs below
-        .printsys = true,
+        .print = true,
         .printIMU = false,
         .printAircraft = false,
         .printGPS = false,
         .printNetwork = false,
     },
     .webui = {
-        .altSamples = 10,
-        .defaultSpeed = 25,
-        .dropSecs = 10,
+        .defaultSpeed = "25",
+        .dropSecs = "10",
+        // Internal settings, cannot be changed by user
         .pilotName = "",
-        .defaultMap = 0,
+        .defaultMap = "0",
         .lastMapPosition = "",
         .lastMapZoom = "",
-        .setupComplete = false,
+        .setupComplete = "false",
     },
     .version = CONFIG_VERSION,
 };
@@ -287,21 +287,20 @@ static ConfigEntry configSensors[] = {
 static ConfigEntry configSystem[] = {
     {"ssid", SECTION_TYPE_STRING, config.system.ssid},
     {"pass", SECTION_TYPE_STRING, config.system.pass},
-    {"printsys", SECTION_TYPE_NUMBER, &config.system.printsys},
+    {"print", SECTION_TYPE_NUMBER, &config.system.print},
     {"printIMU", SECTION_TYPE_NUMBER, &config.system.printIMU},
     {"printAircraft", SECTION_TYPE_NUMBER, &config.system.printAircraft},
     {"printGPS", SECTION_TYPE_NUMBER, &config.system.printGPS},
     {"printNetwork", SECTION_TYPE_NUMBER, &config.system.printNetwork},
 };
 static ConfigEntry configWebui[] = {
-    {"altSamples", SECTION_TYPE_NUMBER, &config.webui.altSamples},
-    {"defaultSpeed", SECTION_TYPE_NUMBER, &config.webui.defaultSpeed},
-    {"dropSecs", SECTION_TYPE_NUMBER, &config.webui.dropSecs},
+    {"defaultSpeed", SECTION_TYPE_STRING, &config.webui.defaultSpeed},
+    {"dropSecs", SECTION_TYPE_STRING, &config.webui.dropSecs},
     {"pilotName", SECTION_TYPE_STRING, config.webui.pilotName},
-    {"defaultMap", SECTION_TYPE_NUMBER, &config.webui.defaultMap},
+    {"defaultMap", SECTION_TYPE_STRING, &config.webui.defaultMap},
     {"lastMapPosition", SECTION_TYPE_STRING, config.webui.lastMapPosition},
     {"lastMapZoom", SECTION_TYPE_STRING, config.webui.lastMapZoom},
-    {"setupComplete", SECTION_TYPE_NUMBER, &config.webui.setupComplete},
+    {"setupComplete", SECTION_TYPE_STRING, &config.webui.setupComplete},
 };
 static const ConfigSectionInfo configSections[] = {
     {CONFIG_GENERAL_STR, SECTION_TYPE_NUMBER, configGeneral, count_of(configGeneral)},
@@ -615,7 +614,7 @@ void config_load() {
     read_json_storage(FILE_CONFIG, CONFIG_VERSION, configSections, count_of(configSections));
     read_json_storage(FILE_CALIBRATION, CALIBRATION_VERSION, calibrationSections, count_of(calibrationSections));
     // Load print settings
-    shouldPrint.fbw = config.system.printsys;
+    shouldPrint.fbw = config.system.print;
     shouldPrint.imu = config.system.printIMU;
     shouldPrint.aircraft = config.system.printAircraft;
     shouldPrint.gps = config.system.printGPS;
