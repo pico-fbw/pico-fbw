@@ -7,13 +7,7 @@
 
 #include "sys/print.h"
 
-#include "test_gps.h"
-#include "test_imu.h"
-#include "test_pwm.h"
-#include "test_servo.h"
-#include "test_throttle.h"
-
-#include "test_all.h"
+#include "test.h"
 
 i32 api_test_all(const char *args) {
     u32 status[5];

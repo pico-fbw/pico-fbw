@@ -18,10 +18,11 @@ void direct_update() {
     f32 ele = control_apply_expo(receiver_get((i16)config.pins.inputEle, RECEIVER_MODE_DEGREE));
     switch ((ControlMode)config.general.controlMode) {
         case CTRLMODE_3AXIS_ATHR:
-        case CTRLMODE_3AXIS:
+        case CTRLMODE_3AXIS: {
             f32 rud = control_apply_expo(receiver_get((i16)config.pins.inputRud, RECEIVER_MODE_DEGREE));
             servo_set((i16)config.pins.servoRud, rud);
             /* fall through */
+        }
         case CTRLMODE_2AXIS_ATHR:
         case CTRLMODE_2AXIS:
             servo_set((i16)config.pins.servoAil, ail);

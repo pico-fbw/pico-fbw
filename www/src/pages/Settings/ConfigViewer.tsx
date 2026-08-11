@@ -23,7 +23,6 @@ interface ConfigDatabase {
     Pins: ConfigDatabaseItem[];
     Sensors: ConfigDatabaseItem[];
     System: ConfigDatabaseItem[];
-    WiFi: ConfigDatabaseItem[];
 }
 
 // A database containing all configuration options.
@@ -326,9 +325,24 @@ const config: ConfigDatabase = {
 
     Sensors: [
         {
+            name: "Bus Type",
+            id: "busType",
+            desc: "The type of sensor bus used by the inertial system. I2C is the default, SPI can be used on supported hardware, and ALL enables both when supported.",
+            enumMap: {
+                0: "I2C",
+                1: "SPI",
+                2: "I2C + SPI",
+            },
+        },
+        {
             name: "I2C Bus Frequency",
             id: "i2cBusFreq",
             desc: "The frequency to be used on the I2C sensor bus, in KHz. The default is 400 KHz which should work for most devices, but you can try lowering it if you are experiencing issues.",
+        },
+        {
+            name: "SPI Bus Frequency",
+            id: "spiBusFreq",
+            desc: "The frequency to be used on the SPI sensor bus, in MHz. The default is 1 MHz which should work for most devices.",
         },
         {
             name: "GPS Command Type",
@@ -346,7 +360,7 @@ const config: ConfigDatabase = {
         },
     ],
 
-    WiFi: [
+    System: [
         {
             name: "Network Name",
             id: "ssid",
@@ -357,9 +371,6 @@ const config: ConfigDatabase = {
             id: "pass",
             desc: "The password for the wireless network that is created. Must be at least eight characters long, and will only be used if `Wi-Fi Enabled` is set to `Enabled (with password)`.",
         },
-    ],
-
-    System: [
         {
             name: "Debug",
             id: "printsys",
@@ -544,9 +555,7 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
                             className="flex w-full items-start justify-between text-left text-white cursor-pointer"
                             onClick={() => toggleSection(sectionIndex)}
                         >
-                            <span className="text-base font-semibold leading-7">
-                                {section.name === "WiFi" ? "Wi-Fi" : section.name === "WebUI" ? "Web UI" : section.name}
-                            </span>
+                            <span className="text-base font-semibold leading-7">{section.name}</span>
                             <span className="ml-6 flex h-7 items-center">
                                 {sectionVisibility[sectionIndex] ? (
                                     <MinusSolid className="h-6 w-6" aria-hidden="true" />

@@ -241,7 +241,7 @@ export default function EditDock() {
                             <button
                                 type="button"
                                 onClick={() => removeMarker(editing ?? -1)}
-                                className="sm:col-span-2 mt-auto rounded-md bg-red-500/60 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+                                className="sm:col-span-2 mt-auto rounded-md bg-red-500/70 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
                             >
                                 Delete
                             </button>

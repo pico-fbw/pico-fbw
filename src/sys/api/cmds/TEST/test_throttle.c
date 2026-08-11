@@ -14,7 +14,7 @@
 #include "sys/print.h"
 #include "sys/runtime.h"
 
-#include "test_throttle.h"
+#include "test.h"
 
 /**
  * Waits for a given number of seconds whilst updating the throttle.

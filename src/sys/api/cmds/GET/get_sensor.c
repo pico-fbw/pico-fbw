@@ -12,7 +12,7 @@
 #include "lib/parson.h"
 #include "sys/configuration.h"
 
-#include "get_sensor.h"
+#include "get.h"
 
 typedef enum SensorData {
     DATA_INVALID,

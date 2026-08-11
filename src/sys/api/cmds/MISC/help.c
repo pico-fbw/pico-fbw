@@ -6,7 +6,7 @@
 #include "sys/print.h"
 #include "sys/version.h"
 
-#include "help.h"
+#include "misc.h"
 
 i32 api_help(const char *args) {
     printraw("\npico-fbw API v%s\n"
@@ -22,6 +22,7 @@ i32 api_help(const char *args) {
              "SET_BAY - Set the current position of the drop bay\n"
              "SET_CALIBRATION - Initiate the calibration process for a system\n"
              "SET_CONFIG - Set system configuration value(s)\n"
+             "SET_CONFIG_FULL - Set the entire system configuration\n"
              "SET_FLIGHTPLAN - Set raw flightplan data\n"
              "SET_MODE - Set the current flight mode\n"
              "SET_TARGET - Set the desired attitude/thrust target\n"

@@ -8,7 +8,7 @@
 #include "ctrl/aircraft.h"
 #include "lib/parson.h"
 
-#include "set_mode.h"
+#include "set.h"
 
 /**
  * Helper to parse command arguments.

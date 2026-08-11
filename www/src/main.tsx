@@ -36,14 +36,30 @@ function App() {
     return (
         <main className="w-full h-full">
             <Switch>
-                <Route path="/"><Index /></Route>
-                <Route path="/advanced"><Advanced /></Route>
-                <Route path="/dashboard"><Dashboard /></Route>
-                <Route path="/planner"><Planner /></Route>
-                <Route path="/planner/*"><Planner /></Route>
-                <Route path="/settings"><Settings /></Route>
-                <Route path="/setup"><Setup /></Route>
-                <Route><NoMatch /></Route>
+                <Route path="/">
+                    <Index />
+                </Route>
+                <Route path="/advanced">
+                    <Advanced />
+                </Route>
+                <Route path="/dashboard">
+                    <Dashboard />
+                </Route>
+                <Route path="/planner">
+                    <Planner />
+                </Route>
+                <Route path="/planner/*">
+                    <Planner />
+                </Route>
+                <Route path="/settings">
+                    <Settings />
+                </Route>
+                <Route path="/setup">
+                    <Setup />
+                </Route>
+                <Route>
+                    <NoMatch />
+                </Route>
             </Switch>
         </main>
     );

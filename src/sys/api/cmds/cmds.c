@@ -68,6 +68,8 @@ i32 api_handle_set(const char *cmd, const char *args, api_output_func output_fun
         return api_wrap_handler(args, api_set_calibration, output_func, output_ctx);
     } else if (strcasecmp(cmd, "SET_CONFIG") == 0) {
         return api_wrap_handler(args, api_set_config, output_func, output_ctx);
+    } else if (strcasecmp(cmd, "SET_CONFIG_FULL") == 0) {
+        return api_wrap_handler(args, api_set_config_full, output_func, output_ctx);
     } else if (strcasecmp(cmd, "SET_FLIGHTPLAN") == 0) {
         return api_wrap_handler(args, api_set_flightplan, output_func, output_ctx);
     } else if (strcasecmp(cmd, "SET_MODE") == 0) {

@@ -157,6 +157,8 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
         handle_api_v1_request(c, hm, api_set_calibration);
     } else if (mg_match(hm->uri, mg_str("/api/v1/set/config"), NULL)) {
         handle_api_v1_request(c, hm, api_set_config);
+    } else if (mg_match(hm->uri, mg_str("/api/v1/set/config_full"), NULL)) {
+        handle_api_v1_request(c, hm, api_set_config_full);
     } else if (mg_match(hm->uri, mg_str("/api/v1/set/flightplan"), NULL)) {
         handle_api_v1_request(c, hm, api_set_flightplan);
     } else if (mg_match(hm->uri, mg_str("/api/v1/set/mode"), NULL)) {
@@ -167,6 +169,8 @@ static void ev_handler(struct mg_connection *c, int ev, void *ev_data) {
         handle_api_v1_request(c, hm, api_set_waypoint);
     } else if (mg_match(hm->uri, mg_str("/api/v1/ping"), NULL)) {
         handle_api_v1_request(c, hm, NULL);
+    } else if (mg_match(hm->uri, mg_str("/api/v1/misc/reboot"), NULL)) {
+        handle_api_v1_request(c, hm, api_misc_reboot);
     } else {
         // No matching API request, serve static files instead
         struct mg_http_serve_opts opts = {

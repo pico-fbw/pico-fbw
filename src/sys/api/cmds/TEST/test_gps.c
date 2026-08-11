@@ -9,7 +9,7 @@
 #include "sys/configuration.h"
 #include "sys/print.h"
 
-#include "test_gps.h"
+#include "test.h"
 
 i32 api_test_gps(const char *args) {
     if (!gps.is_supported()) {

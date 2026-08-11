@@ -12,7 +12,7 @@
 #include "sys/flightplan.h"
 #include "sys/print.h"
 
-#include "set_waypoint.h"
+#include "set.h"
 
 // Callback for when the created Waypoint is intercepted
 static void callback_intercept() {

@@ -104,7 +104,7 @@ bool driver_read(BusConfig *bus, byte reg, byte dest[], size_t len) {
             break;
         case BUS_I2C:
             return i2c_read((i16)config.pins.i2cSda, (i16)config.pins.i2cScl, bus->i2c.addr, reg, dest, len);
-        case BUS_SPI:
+        case BUS_SPI: {
             byte tx[1 + len];
             byte rx[1 + len];
             tx[0] = reg | 0x80; // Set read bit
@@ -115,6 +115,7 @@ bool driver_read(BusConfig *bus, byte reg, byte dest[], size_t len) {
             }
             memcpy(dest, &rx[1], len);
             return true;
+        }
     }
     return false;
 }
@@ -125,13 +126,14 @@ bool driver_write(BusConfig *bus, byte reg, const byte src[], size_t len) {
             break;
         case BUS_I2C:
             return i2c_write((i16)config.pins.i2cSda, (i16)config.pins.i2cScl, bus->i2c.addr, reg, src, len);
-        case BUS_SPI:
+        case BUS_SPI: {
             byte tx[1 + len];
             byte rx[1 + len];   // This will be discarded, but spi_transfer needs a buffer
             tx[0] = reg & 0x7F; // Set write bit
             memcpy(&tx[1], src, len);
             return spi_transfer((i16)config.pins.spiClk, (i16)config.pins.spiMosi, (i16)config.pins.spiMiso,
                                 bus->spi.cs, tx, rx, 1 + len);
+        }
     }
     return false;
 }

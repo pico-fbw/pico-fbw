@@ -212,7 +212,7 @@ export default function Planner() {
                     )}
                     {flightplans !== null && (
                         <div className="grow">
-                            <Explorer flightplans={flightplans} setFlightplans={setFlightplans} />
+                            <Explorer flightplans={flightplans} setFlightplans={setFlightplans} setError={setError} />
                         </div>
                     )}
                     <NewFlightplanModal
@@ -244,7 +244,7 @@ export default function Planner() {
                             <button
                                 type="button"
                                 onClick={() => setFlightplan(null)}
-                                className="flex-1 rounded-md bg-red-500/60 px-2.5 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-red-500/90 cursor-pointer"
+                                className="flex-1 rounded-md bg-red-500/70 px-2.5 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-red-500/80 cursor-pointer"
                             >
                                 Clear
                             </button>

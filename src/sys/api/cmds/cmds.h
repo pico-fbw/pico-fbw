@@ -3,37 +3,10 @@
 #include "platform/types.h"
 
 // Import all command headers so other files can import all commands simply by importing this file
-
-#include "GET/get_calibration.h"
-#include "GET/get_config.h"
-#include "GET/get_flightplan.h"
-#include "GET/get_info.h"
-#include "GET/get_input.h"
-#include "GET/get_logs.h"
-#include "GET/get_mode.h"
-#include "GET/get_sensor.h"
-
-#include "SET/set_active.h"
-#include "SET/set_bay.h"
-#include "SET/set_calibration.h"
-#include "SET/set_config.h"
-#include "SET/set_flightplan.h"
-#include "SET/set_mode.h"
-#include "SET/set_target.h"
-#include "SET/set_waypoint.h"
-
-#include "TEST/test_all.h"
-#include "TEST/test_gps.h"
-#include "TEST/test_imu.h"
-#include "TEST/test_pwm.h"
-#include "TEST/test_servo.h"
-#include "TEST/test_throttle.h"
-
-#include "MISC/about.h"
-#include "MISC/help.h"
-#include "MISC/ping.h"
-#include "MISC/reboot.h"
-#include "MISC/reset.h"
+#include "GET/get.h"
+#include "MISC/misc.h"
+#include "SET/set.h"
+#include "TEST/test.h"
 
 // Type for an API output function
 typedef int (*api_output_func)(void *ctx, const char *fmt, ...);

@@ -10,7 +10,7 @@
 #include "lib/parson.h"
 #include "sys/configuration.h"
 
-#include "get_config.h"
+#include "get.h"
 
 /**
  * Helper to parse command arguments.

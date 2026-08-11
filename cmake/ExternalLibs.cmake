@@ -24,7 +24,7 @@ message("Fetching littlefs")
 FetchContent_Declare(
     littlefs
     GIT_REPOSITORY https://github.com/littlefs-project/littlefs
-    GIT_TAG v2.11.2
+    GIT_TAG v2.11.3
 )
 FetchContent_MakeAvailable(littlefs)
 import_library(littlefs ${littlefs_SOURCE_DIR}
@@ -43,7 +43,6 @@ import_library(minmea ${minmea_SOURCE_DIR}
     minmea.c
 )
 # Most platforms don't support timegm, so fall back to mktime when compiling minmea
-# Also fix undefined uint type on some platforms
 target_compile_definitions(minmea PRIVATE timegm=mktime)
 if (FBW_PLATFORM STREQUAL "host")
     # Fix uint type on certain host platforms

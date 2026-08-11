@@ -395,6 +395,8 @@ static bool handle_request(TCPConnection *con_state, struct tcp_pcb *pcb, const 
                 res = handle_api_v1_request(pcb, request, api_set_calibration);
             } else if (strcmp(uri + strlen(API_V1_PATH), "set/config") == 0) {
                 res = handle_api_v1_request(pcb, request, api_set_config);
+            } else if (strcmp(uri + strlen(API_V1_PATH), "set/config_full") == 0) {
+                res = handle_api_v1_request(pcb, request, api_set_config_full);
             } else if (strcmp(uri + strlen(API_V1_PATH), "set/flightplan") == 0) {
                 res = handle_api_v1_request(pcb, request, api_set_flightplan);
             } else if (strcmp(uri + strlen(API_V1_PATH), "set/mode") == 0) {
@@ -403,6 +405,8 @@ static bool handle_request(TCPConnection *con_state, struct tcp_pcb *pcb, const 
                 res = handle_api_v1_request(pcb, request, api_set_target);
             } else if (strcmp(uri + strlen(API_V1_PATH), "set/waypoint") == 0) {
                 res = handle_api_v1_request(pcb, request, api_set_waypoint);
+            } else if (strcmp(uri + strlen(API_V1_PATH), "misc/reboot") == 0) {
+                res = handle_api_v1_request(pcb, request, api_misc_reboot);
             }
         }
     }

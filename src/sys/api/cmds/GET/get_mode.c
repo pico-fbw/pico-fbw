@@ -7,7 +7,7 @@
 
 #include "lib/parson.h"
 
-#include "get_mode.h"
+#include "get.h"
 
 // {"mode":"launch|direct|normal|auto|tune|hold"}
 

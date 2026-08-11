@@ -16,14 +16,14 @@
 #include "sys/configuration.h"
 #include "sys/print.h"
 
-#include "test_pwm.h"
+#include "test.h"
 
 /**
  * @return a pseudo-randomly generated number between 0 and 180
  */
 static f32 rand_180() {
     srand((u32)time_us());
-    return (f32)rand() / RAND_MAX * 180;
+    return (f32)rand() / (f32)RAND_MAX * 180.f;
 }
 
 /**

@@ -26,9 +26,10 @@ function formatBytes(bytes: number, decimals = 2) {
 interface ExplorerProps {
     flightplans: FlightplanList;
     setFlightplans: (flightplans: FlightplanList) => void;
+    setError: (error: string) => void;
 }
 
-export default function Explorer({ flightplans, setFlightplans }: ExplorerProps) {
+export default function Explorer({ flightplans, setFlightplans, setError }: ExplorerProps) {
     const [, setLocation] = useLocation();
 
     const [flightplanToDelete, setFlightplanToDelete] = useState("");
@@ -65,14 +66,14 @@ export default function Explorer({ flightplans, setFlightplans }: ExplorerProps)
                     <button
                         type="button"
                         onClick={() => setLocation(`/planner/${name}`)}
-                        className="grow px-4 py-2.5 lg:px-5 lg:py-4.5 border border-transparent text-xl leading-4 font-bold rounded-xl shadow-sm text-white bg-sky-500 hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500"
+                        className="grow px-4 py-2.5 lg:px-5 lg:py-4.5 border border-transparent text-xl leading-4 font-bold rounded-xl shadow-sm text-white bg-sky-500 hover:bg-sky-500/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500"
                     >
                         Edit
                     </button>
                     <button
                         type="button"
                         onClick={() => setFlightplanToDelete(name)}
-                        className="grow px-4 py-2.5 lg:px-5 lg:py-4.5 border border-transparent text-xl leading-4 font-bold rounded-xl shadow-sm text-white bg-red-500/60 hover:bg-red-500/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500/60"
+                        className="grow px-4 py-2.5 lg:px-5 lg:py-4.5 border border-transparent text-xl leading-4 font-bold rounded-xl shadow-sm text-white bg-red-500/70 hover:bg-red-500/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500/60"
                     >
                         Delete
                     </button>
@@ -90,6 +91,7 @@ export default function Explorer({ flightplans, setFlightplans }: ExplorerProps)
                 name={flightplanToDelete}
                 setName={setFlightplanToDelete}
                 deleteFlightplan={deleteFlightplan}
+                setError={setError}
             />
         </div>
     );

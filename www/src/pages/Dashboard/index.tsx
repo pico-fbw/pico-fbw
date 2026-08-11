@@ -15,6 +15,7 @@ import { api } from "helpers/api";
 import { GET_LOGS, GET_SENSOR, GET_INPUT, GET_MODE, GET_CONFIG, GET_INFO } from "helpers/apiTypes";
 import settings from "helpers/settings";
 
+// TODO: make this indicator stop/turn red if api data is ever interrupted
 function LiveIndicator() {
     return (
         <div className="flex items-center space-x-2 bg-gray-800 rounded-full px-4 py-2 border border-gray-700">
@@ -38,14 +39,26 @@ export default function Dashboard() {
 
     useEffect(() => {
         // Fetch initial data
-        api("get/logs").then(setLogs).catch(console.error);
-        api("get/config").then(setConfig).catch(console.error);
-        api("get/info").then(setInfo).catch(console.error);
+        api("get/logs")
+            .then(setLogs)
+            .catch(e => setError((e as Error).message));
+        api("get/config")
+            .then(setConfig)
+            .catch(e => setError((e as Error).message));
+        api("get/info")
+            .then(setInfo)
+            .catch(e => setError((e as Error).message));
         // Set up polling for real-time data
         const fetchRealtimeData = () => {
-            api("get/sensor", { data: "all" }).then(setSensorData).catch(console.error);
-            api("get/input").then(setInputData).catch(console.error);
-            api("get/mode").then(setMode).catch(console.error);
+            api("get/sensor", { data: "all" })
+                .then(setSensorData)
+                .catch(e => setError((e as Error).message));
+            api("get/input")
+                .then(setInputData)
+                .catch(e => setError((e as Error).message));
+            api("get/mode")
+                .then(setMode)
+                .catch(e => setError((e as Error).message));
         };
         // Initial fetch, then poll every second
         fetchRealtimeData();

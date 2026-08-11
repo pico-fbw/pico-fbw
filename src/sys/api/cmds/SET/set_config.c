@@ -10,7 +10,7 @@
 #include "lib/parson.h"
 #include "sys/configuration.h"
 
-#include "set_config.h"
+#include "set.h"
 
 // Input:
 // {"changes":[{"section":"","key":"","value":""}, ...], "save":boolean}

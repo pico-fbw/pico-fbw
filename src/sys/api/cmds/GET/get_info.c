@@ -9,7 +9,7 @@
 #include "lib/parson.h"
 #include "sys/version.h"
 
-#include "get_info.h"
+#include "get.h"
 
 // {"version":"","version_api":"","version_flightplan":"","platform":"","platform_version":""
 // "fs_used":number,"fs_total":number}

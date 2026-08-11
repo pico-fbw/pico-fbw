@@ -10,7 +10,7 @@
 
 #include "lib/parson.h"
 
-#include "reboot.h"
+#include "misc.h"
 
 // {"bootloader":boolean}
 

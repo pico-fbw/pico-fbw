@@ -9,7 +9,7 @@
 #include "io/servo.h"
 #include "lib/parson.h"
 
-#include "test_servo.h"
+#include "test.h"
 
 /**
  * Helper to parse command arguments.

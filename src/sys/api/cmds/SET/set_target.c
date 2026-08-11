@@ -11,7 +11,7 @@
 #include "modes/normal.h"
 #include "sys/configuration.h"
 
-#include "set_target.h"
+#include "set.h"
 
 /**
  * Helper to parse command arguments.

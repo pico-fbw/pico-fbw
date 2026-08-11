@@ -11,7 +11,7 @@
 #include "lib/parson.h"
 #include "sys/flightplan.h"
 
-#include "set_active.h"
+#include "set.h"
 
 // Input:
 // {"name":""}

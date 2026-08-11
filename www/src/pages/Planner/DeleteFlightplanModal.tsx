@@ -9,25 +9,31 @@ interface DeleteFlightplanModalProps {
     name: string;
     setName: (name: string) => void;
     deleteFlightplan: (name: string) => Promise<void>;
+    setError: (error: string) => void;
 }
 
-export default function DeleteFlightplanModal({ name, setName, deleteFlightplan }: DeleteFlightplanModalProps) {
+export default function DeleteFlightplanModal({
+    name,
+    setName,
+    deleteFlightplan,
+    setError,
+}: DeleteFlightplanModalProps) {
     return (
         <Modal title="Delete Flightplan" open={name !== ""}>
             <p className="mb-4 text-gray-300">Are you sure you want to delete this flightplan?</p>
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
                 <button
                     onClick={() => setName("")}
-                    className="mr-2 px-4 py-2 text-md font-semibold rounded-md shadow-sm text-white bg-gray-500 hover:bg-gray-500/50"
+                    className="mr-2 px-4 py-2 text-md font-semibold rounded-md shadow-sm text-white bg-gray-500 hover:bg-gray-500/90"
                 >
                     Cancel
                 </button>
                 <button
                     onClick={() => {
-                        deleteFlightplan(name).catch(console.error);
+                        deleteFlightplan(name).catch(e => setError((e as Error).message));
                         setName("");
                     }}
-                    className="px-4 py-2 text-md font-semibold rounded-md shadow-sm text-white bg-red-500/60 hover:bg-red-500/90"
+                    className="px-4 py-2 text-md font-semibold rounded-md shadow-sm text-white bg-red-500/70 hover:bg-red-500/80"
                 >
                     Delete
                 </button>

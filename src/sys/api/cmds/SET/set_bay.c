@@ -9,7 +9,7 @@
 #include "lib/parson.h"
 #include "modes/auto.h"
 
-#include "set_bay.h"
+#include "set.h"
 
 /**
  * Helper to parse command arguments.

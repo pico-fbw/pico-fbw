@@ -83,6 +83,9 @@ export type SET_BAY = EmptyResponse;
 export type SET_CONFIG = {
     error?: string;
 };
+export type SET_CONFIG_FULL = {
+    error?: string;
+};
 export type SET_FLIGHTPLAN = EmptyResponse;
 export type SET_MODE = EmptyResponse;
 export type SET_TARGET = EmptyResponse;
@@ -90,6 +93,7 @@ export type SET_WAYPOINT = EmptyResponse;
 
 // MISC endpoints
 export type PING = EmptyResponse;
+export type MISC_REBOOT = EmptyResponse;
 
 // Maps API URIs to their respective response types
 export type EndpointMap = {
@@ -103,9 +107,11 @@ export type EndpointMap = {
     "set/active": SET_ACTIVE;
     "set/bay": SET_BAY;
     "set/config": SET_CONFIG;
+    "set/config_full": SET_CONFIG_FULL;
     "set/flightplan": SET_FLIGHTPLAN;
     "set/mode": SET_MODE;
     "set/target": SET_TARGET;
     "set/waypoint": SET_WAYPOINT;
     ping: PING;
+    "misc/reboot": MISC_REBOOT;
 };

@@ -7,7 +7,7 @@
 
 #include "sys/log.h"
 
-#include "get_logs.h"
+#include "get.h"
 
 // {"logs":[{"type":number,"msg":"","code":number,"timestamp":number}]}
 

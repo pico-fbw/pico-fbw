@@ -8,6 +8,7 @@ import { LatLng } from "leaflet";
 import { Marker } from "pages/Planner/Map";
 
 import settings from "helpers/settings";
+// TODO: remove this firmwareVersion check, it's now useless because of various changes
 import { firmwareVersion } from "helpers/version";
 
 const generatorVersion = "1.0";

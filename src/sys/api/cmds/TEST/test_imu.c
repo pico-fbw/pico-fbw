@@ -13,7 +13,7 @@
 #include "sys/print.h"
 #include "sys/runtime.h"
 
-#include "test_imu.h"
+#include "test.h"
 
 /**
  * Waits up to timeout_ms for an IMU axis to move past the breakpoint.

@@ -15,7 +15,7 @@
 
 #include "sys/configuration.h"
 
-#include "set_calibration.h"
+#include "set.h"
 
 typedef enum CalibrationSystem {
     CALIBRATION_RECEIVER,
@@ -131,7 +131,7 @@ i32 api_set_calibration(const char *in, char **out) {
         case CALIBRATION_ESCS:
             completed = esc_calibrate((i16)config.pins.escThrottle);
             break;
-        case CALIBRATION_IMU:
+        case CALIBRATION_IMU: {
             IMUCalibrationStatus status = imu.calibrate();
             FusionCalibrationDetails details = {};
             fusion_attitude_calibration_get_details(&details);
@@ -148,6 +148,7 @@ i32 api_set_calibration(const char *in, char **out) {
                     return 202;
             }
             break;
+        }
         default:
             return 400;
     }

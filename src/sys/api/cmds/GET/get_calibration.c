@@ -13,7 +13,7 @@
 
 #include "modes/tune.h"
 
-#include "get_calibration.h"
+#include "get.h"
 
 typedef enum CalibrationSystem {
     CALIBRATION_RECEIVER,

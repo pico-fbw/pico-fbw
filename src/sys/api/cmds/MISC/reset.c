@@ -11,7 +11,7 @@
 #include "sys/print.h"
 #include "sys/runtime.h"
 
-#include "reset.h"
+#include "misc.h"
 
 i32 api_reset(const char *args) {
     printraw(

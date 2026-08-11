@@ -11,7 +11,7 @@
 #include "lib/parson.h"
 #include "sys/flightplan.h"
 
-#include "set_flightplan.h"
+#include "set.h"
 
 // Input:
 // {"flightplan":<SEE FLIGHTPLAN.C FOR SCHEMA>|null,"name":""}

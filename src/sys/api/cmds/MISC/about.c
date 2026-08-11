@@ -8,7 +8,7 @@
 #include "sys/print.h"
 #include "sys/version.h"
 
-#include "about.h"
+#include "misc.h"
 
 i32 api_about(const char *args) {
     printraw("pico-fbw [%s], API v%s\n", PICO_FBW_VERSION, API_VERSION);

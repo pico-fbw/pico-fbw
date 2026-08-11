@@ -15,34 +15,76 @@ function send_data(res: http.ServerResponse<http.IncomingMessage>, data: object)
     res.end(JSON.stringify(data));
 }
 
-let config = {
+const configKeys = {
+    General: ["controlMode", "switchType", "maxCalibrationOffset", "servoHz", "escHz", "apiEnabled", "wifiEnabled", "launchAssistEnabled", "autoTuneEnabled", "skipCalibration"],
+    Control: ["maxRollRate", "maxPitchRate", "expo", "rudderSensitivity", "controlDeadband", "throttleMaxTime", "throttleCooldownTime", "throttleSensitivity", "dropDetentClosed", "dropDetentOpen", "rollLimit", "rollLimitHold", "pitchLowerLimit", "pitchUpperLimit", "maxAilDeflection", "maxEleDeflection", "maxRudDeflection", "maxElevonDeflection", "elevonMixingGain", "ailMixingBias", "elevMixingBias"],
+    Pins: ["inputAil", "servoAil", "inputEle", "servoEle", "inputRud", "servoRud", "inputThrottle", "escThrottle", "inputSwitch", "servoBay", "i2cSda", "i2cScl", "spiClk", "spiMosi", "spiMiso", "spiCs0", "spiCs1", "spiCs2", "gpsTx", "gpsRx", "reverseRoll", "reversePitch", "reverseYaw"],
+    Sensors: ["busType", "i2cBusFreq", "spiBusFreq", "gpsCommandType", "gpsBaudrate"],
+    System: ["ssid", "pass", "printsys", "printIMU", "printAircraft", "printGPS", "printNetwork"],
+} as const;
+
+const configSectionDefaults: { [key: string]: (number | string)[] } = {
+    General: [2, 1, 20, 50, 50, 1, 2, 0, 1, 1],
+    Control: [50, 20, 0.4, 0.3, 2, 10, 30, 0.3, 180, 0, 33, 67, -15, 30, 60, 60, 40, 20, 0.5, 1, 1],
+    Pins: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, -1, -1, 17, 18, 0, 0, 0],
+    Sensors: [0, 400, 1, 1, 9600],
+    System: ["pico-fbw", "picodashfbw", 1, 0, 0, 0, 0],
+};
+
+let config: { sections: { name: string; values: (number | string)[] }[] } = {
     sections: [
-        {
-            name: "General",
-            values: [2, 1, 20, 50, 50, 1, 0, 0, 1, 0],
-        },
-        {
-            name: "Control",
-            values: [25, 15, 1.5, 2, 10, 30, 0.015, 180, 0, 33, 67, -15, 30, 25, 15, 20, 20, 0.5, 1, 1],
-        },
-        {
-            name: "Pins",
-            values: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        },
-        {
-            name: "Sensors",
-            values: [400, 1, 9600],
-        },
-        {
-            name: "System",
-            values: [1, 0, 0, 0, 0],
-        },
-        {
-            name: "WiFi",
-            values: ["pico-fbw", "picodashfbw"],
-        },
+        { name: "General", values: [...configSectionDefaults.General] },
+        { name: "Control", values: [...configSectionDefaults.Control] },
+        { name: "Pins", values: [...configSectionDefaults.Pins] },
+        { name: "Sensors", values: [...configSectionDefaults.Sensors] },
+        { name: "System", values: [...configSectionDefaults.System] },
     ],
 };
+
+function findSection(sectionName: string) {
+    return config.sections.find(section => section.name === sectionName);
+}
+
+function findValueIndex(sectionName: keyof typeof configKeys | string, key: string) {
+    const keys = configKeys[sectionName as keyof typeof configKeys] as readonly string[] | undefined;
+    return keys ? keys.indexOf(key) : -1;
+}
+
+function applyConfigChange(sectionName: string, key: string, value: string) {
+    const section = findSection(sectionName);
+    const valueIndex = findValueIndex(sectionName, key);
+    if (!section || valueIndex < 0) {
+        return false;
+    }
+    const currentValue = section.values[valueIndex];
+    if (typeof currentValue === "number") {
+        section.values[valueIndex] = parseFloat(value);
+    } else {
+        section.values[valueIndex] = value;
+    }
+    return true;
+}
+
+function applyFullConfigUpdate(nextConfig: { sections?: { name: string; values: (number | string)[] }[] }) {
+    if (!nextConfig.sections) {
+        return;
+    }
+    nextConfig.sections.forEach(section => {
+        const target = findSection(section.name);
+        if (!target) {
+            return;
+        }
+        const keys = configKeys[section.name as keyof typeof configKeys] as readonly string[] | undefined;
+        if (!keys) {
+            return;
+        }
+        keys.forEach((_, index) => {
+            if (index < section.values.length) {
+                target.values[index] = section.values[index];
+            }
+        });
+    });
+}
 let flightplans: { [name: string]: Flightplan } = {
     default: {
         version: "1.0",
@@ -64,21 +106,20 @@ export default (): MockHandler[] => [
             let dataReceived = false;
             req.on("data", (bodyString: string) => {
                 dataReceived = true;
-                const body = JSON.parse(bodyString) as { section: string; key: number };
-                const section = config.sections.find(s => s.name === body.section);
-                if (section) {
-                    const key = section.values[body.key];
-                    if (key !== undefined) {
-                        send_data(res, {
-                            sections: [
-                                {
-                                    name: body.section,
-                                    values: [key],
-                                },
-                            ],
-                        });
-                        return;
-                    }
+                const body = JSON.parse(bodyString) as { section: string; key: string };
+                const section = findSection(body.section);
+                const keyIndex = findValueIndex(body.section, body.key);
+                if (section && keyIndex >= 0) {
+                    const key = section.values[keyIndex];
+                    send_data(res, {
+                        sections: [
+                            {
+                                name: body.section,
+                                values: [key],
+                            },
+                        ],
+                    });
+                    return;
                 }
                 res.statusCode = 400;
                 send_data(res, {});
@@ -203,10 +244,18 @@ export default (): MockHandler[] => [
     {
         pattern: "/api/v1/set/active",
         handle: (req, res) => {
+            let dataReceived = false;
             req.on("data", (bodyString: string) => {
+                dataReceived = true;
                 const body = JSON.parse(bodyString) as { name: string };
                 activeFlightplan = body.name;
                 send_data(res, { error: "" });
+            });
+            req.on("end", () => {
+                if (!dataReceived) {
+                    res.statusCode = 400;
+                    send_data(res, { error: "" });
+                }
             });
         },
     },
@@ -219,25 +268,41 @@ export default (): MockHandler[] => [
     {
         pattern: "/api/v1/set/config",
         handle: (req, res) => {
+            let dataReceived = false;
             req.on("data", (bodyString: string) => {
+                dataReceived = true;
                 const body = JSON.parse(bodyString) as {
                     changes: { section: string; key: string; value: string }[];
                     save: boolean;
                 };
                 body.changes.forEach(change => {
-                    const section = config.sections.find(s => s.name === change.section);
-                    if (section) {
-                        // FIXME: I'm aware that this handling is improper and doesn't work,
-                        // but I'm waiting for the config system rewrite to bother fixing it
-                        const currentValue = section.values[change.key];
-                        if (typeof currentValue === "number") {
-                            section.values[change.key] = parseFloat(change.value);
-                        } else {
-                            section.values[change.key] = change.value;
-                        }
-                    }
+                    applyConfigChange(change.section, change.key, change.value);
                 });
                 send_data(res, { error: "" });
+            });
+            req.on("end", () => {
+                if (!dataReceived) {
+                    res.statusCode = 400;
+                    send_data(res, { error: "" });
+                }
+            });
+        },
+    },
+    {
+        pattern: "/api/v1/set/config_full",
+        handle: (req, res) => {
+            let dataReceived = false;
+            req.on("data", (bodyString: string) => {
+                dataReceived = true;
+                const body = JSON.parse(bodyString) as { sections?: { name: string; values: (number | string)[] }[]; save: boolean };
+                applyFullConfigUpdate(body);
+                send_data(res, { error: "" });
+            });
+            req.on("end", () => {
+                if (!dataReceived) {
+                    res.statusCode = 400;
+                    send_data(res, { error: "" });
+                }
             });
         },
     },
@@ -278,7 +343,41 @@ export default (): MockHandler[] => [
         },
     },
     {
+        pattern: "/api/v1/get/calibration",
+        handle: (req, res) => {
+            let dataReceived = false;
+            req.on("data", (bodyString: string) => {
+                dataReceived = true;
+                const body = JSON.parse(bodyString) as { system: string };
+                if (!["receiver", "esc", "imu", "pid"].includes(body.system)) {
+                    res.statusCode = 400;
+                    send_data(res, {});
+                    return;
+                }
+                send_data(res, { calibrated: false });
+            });
+            req.on("end", () => {
+                if (!dataReceived) {
+                    res.statusCode = 400;
+                    send_data(res, {});
+                }
+            });
+        },
+    },
+    {
+        pattern: "/api/v1/set/calibration",
+        handle: (req, res) => {
+            send_data(res, {});
+        },
+    },
+    {
         pattern: "/api/v1/ping",
+        handle: (req, res) => {
+            send_data(res, {});
+        },
+    },
+    {
+        pattern: "/api/v1/reboot",
         handle: (req, res) => {
             send_data(res, {});
         },

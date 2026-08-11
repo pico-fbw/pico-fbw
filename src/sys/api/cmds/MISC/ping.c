@@ -3,7 +3,7 @@
  * Licensed under the MIT License
  */
 
-#include "ping.h"
+#include "misc.h"
 
 // I know, this file is crazy, you can thank me later :)
 

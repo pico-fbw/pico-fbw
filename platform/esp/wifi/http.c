@@ -290,6 +290,12 @@ static httpd_uri_t uris[] = {
         .user_ctx = api_set_config,
     },
     {
+        .uri = "/api/v1/set/config_full",
+        .method = HTTP_POST,
+        .handler = handle_api_v1_request,
+        .user_ctx = api_set_config_full,
+    },
+    {
         .uri = "/api/v1/set/flightplan",
         .method = HTTP_POST,
         .handler = handle_api_v1_request,
@@ -317,6 +323,12 @@ static httpd_uri_t uris[] = {
         .uri = "/api/v1/ping",
         .method = HTTP_GET,
         .handler = handle_api_v1_request,
+    },
+    {
+        .uri = "/api/v1/misc/reboot",
+        .method = HTTP_POST,
+        .handler = handle_api_v1_request,
+        .user_ctx = api_misc_reboot,
     },
     // Common GET handler (for serving files)
     {

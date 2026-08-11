@@ -18,6 +18,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     cmds/SET/set_bay.c
     cmds/SET/set_calibration.c
     cmds/SET/set_config.c
+    cmds/SET/set_config_full.c
     cmds/SET/set_flightplan.c
     cmds/SET/set_mode.c
     cmds/SET/set_target.c

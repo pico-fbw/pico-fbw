@@ -8,7 +8,7 @@
 #include "lib/parson.h"
 #include "sys/configuration.h"
 
-#include "get_input.h"
+#include "get.h"
 
 // {"ail":number,"ele":number,"switch":number,"rud":number,"thr":number}
 // Only "ail", "ele", and "switch" are guaranteed to be present
