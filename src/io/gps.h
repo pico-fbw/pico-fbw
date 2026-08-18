@@ -6,9 +6,11 @@
 typedef enum GPSCommandType {
     GPS_COMMAND_TYPE_NONE,
     GPS_COMMAND_TYPE_PMTK,
+    GPS_COMMAND_TYPE_PQMT,
+    GPS_COMMAND_TYPE_QUECTEL_LC_26_76,
     // What is the command type used for ublox modules?
 } GPSCommandType;
-#define GPS_COMMAND_TYPE_MAX GPS_COMMAND_TYPE_PMTK
+#define GPS_COMMAND_TYPE_MAX GPS_COMMAND_TYPE_QUECTEL_LC_26_76
 
 typedef struct GPS {
     f64 lat;   // -90 to 90 deg. (Read-only)

@@ -113,12 +113,12 @@ bool i2c_setup(i16 sda, i16 scl, u32 freq) {
 
     // Add the initialized bus to the array
     for (size_t i = 0; i < count_of(buses); i++) {
-        I2CBus bus = buses[i];
-        if (!bus.handle) {
-            bus.sda = sda;
-            bus.scl = scl;
-            bus.freq = freq;
-            bus.handle = handle;
+        I2CBus *bus = &buses[i];
+        if (!bus->handle) {
+            bus->sda = sda;
+            bus->scl = scl;
+            bus->freq = freq;
+            bus->handle = handle;
             return true;
         }
     }

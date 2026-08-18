@@ -7,6 +7,7 @@
 #include <string.h>
 #include "driver/uart.h" // https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32/api-reference/peripherals/uart.html
 #include "driver/gpio.h"
+#include "freertos/FreeRTOS.h"
 
 #include "platform/stdio.h"
 
@@ -16,6 +17,8 @@
 #define UART_TX_BUFFER_SIZE UART_RX_BUFFER_SIZE
 // UART_NUM_0 is used by the console; on most devboards it is conenected to a USB bridge
 #define UART_PORT_START UART_NUM_1
+// Timeout between waiting for characters in milleseconds
+#define UART_TIMEOUT_MS 4
 
 typedef struct UARTInstance {
     i16 tx, rx;
@@ -72,12 +75,16 @@ char *uart_read(i16 tx, i16 rx) {
     if (!instance) {
         return NULL;
     }
+    size_t bufferedLen = 0;
+    if (uart_get_buffered_data_len(instance->port, &bufferedLen) != ESP_OK || bufferedLen <= 0) {
+        return NULL; // No data to read
+    }
     // Very similar to stdin_read() in pico/stdio.c, take a look at that for documentation
     char *buf = NULL;
     u32 i = 0;
     while (i < UART_RX_BUFFER_SIZE - 1) {
         char c;
-        if (uart_read_bytes(instance->port, (void *)&c, 1, 0) <= 0) {
+        if (uart_read_bytes(instance->port, (void *)&c, 1, pdMS_TO_TICKS(UART_TIMEOUT_MS)) <= 0) {
             break;
         }
         if (c == '\n' || c == '\r') {

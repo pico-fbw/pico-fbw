@@ -35,11 +35,12 @@ typedef struct PWMOutChannel {
     bool active;
 } PWMOutChannel;
 
-static PWMInChannel inChannels[NUM_PWM_IN_CHANNELS] = {[0 ... NUM_PWM_IN_CHANNELS - 1] = {.active = false}};
+static PWMInChannel inChannels[NUM_PWM_IN_CHANNELS] = {[0 ... NUM_PWM_IN_CHANNELS - 1] = {.pin = -1, .active = false}};
 static size_t numCaptureChannels = 0; // Number of MCPWM capture channels in use
 static int currentCaptureTimer = 0;   // Current capture timer being used to create channels
 
-static PWMOutChannel outChannels[NUM_PWM_OUT_CHANNELS] = {[0 ... NUM_PWM_OUT_CHANNELS - 1] = {.active = false}};
+static PWMOutChannel outChannels[NUM_PWM_OUT_CHANNELS] = {
+    [0 ... NUM_PWM_OUT_CHANNELS - 1] = {.pin = -1, .active = false}};
 static size_t numOperators = 0; // Number of MCPWM operators in use
 static int currentTimer = 0;    // Current timer being used to create operators
 
@@ -150,6 +151,7 @@ bool pwm_setup_read(const i16 pins[], u32 num_pins) {
             .flags.pos_edge = true,
         };
         if (mcpwm_new_capture_channel(timer, &captureConfig, &capture) != ESP_OK) {
+            channel->active = false;
             return false;
         }
         numCaptureChannels++;
@@ -158,17 +160,21 @@ bool pwm_setup_read(const i16 pins[], u32 num_pins) {
             .on_cap = pwm_read_callback,
         };
         if (mcpwm_capture_channel_register_event_callbacks(capture, &callbacks, channel) != ESP_OK) {
+            channel->active = false;
             return false;
         }
         // Enable the capture channel and start the timer if necessary
         if (mcpwm_capture_channel_enable(capture) != ESP_OK) {
+            channel->active = false;
             return false;
         }
         if (newTimerNeeded) {
             if (mcpwm_capture_timer_enable(timer) != ESP_OK) {
+                channel->active = false;
                 return false;
             }
             if (mcpwm_capture_timer_start(timer) != ESP_OK) {
+                channel->active = false;
                 return false;
             }
         }
@@ -201,6 +207,9 @@ bool pwm_setup_write(const i16 pins[], u32 num_pins, u32 freq) {
         }
 
         PWMOutChannel *channel = get_out_channel(pins[i], true);
+        if (!channel) {
+            return false;
+        }
         channel->period = period;
         // Create a new operator, comparator, and generator for the channel
         mcpwm_oper_handle_t operator;
@@ -208,10 +217,12 @@ bool pwm_setup_write(const i16 pins[], u32 num_pins, u32 freq) {
             .group_id = config.group_id,
         };
         if (mcpwm_new_operator(&operatorConfig, &operator) != ESP_OK) {
+            channel->active = false;
             return false;
         }
         numOperators++;
         if (mcpwm_operator_connect_timer(operator, timer) != ESP_OK) {
+            channel->active = false;
             return false;
         }
 
@@ -220,6 +231,7 @@ bool pwm_setup_write(const i16 pins[], u32 num_pins, u32 freq) {
             .flags.update_cmp_on_tez = true,
         };
         if (mcpwm_new_comparator(operator, &comparatorConfig, &comparator) != ESP_OK) {
+            channel->active = false;
             return false;
         }
         channel->out = comparator;
@@ -229,6 +241,7 @@ bool pwm_setup_write(const i16 pins[], u32 num_pins, u32 freq) {
             .gen_gpio_num = pins[i],
         };
         if (mcpwm_new_generator(operator, &generatorConfig, &generator) != ESP_OK) {
+            channel->active = false;
             return false;
         }
         // Tell the generator what actions to take on timer and compare events (this will produce the correct PWM
@@ -241,9 +254,11 @@ bool pwm_setup_write(const i16 pins[], u32 num_pins, u32 freq) {
         // If we created a new timer, enable and start it
         if (newTimerNeeded) {
             if (mcpwm_timer_enable(timer) != ESP_OK) {
+                channel->active = false;
                 return false;
             }
             if (mcpwm_timer_start_stop(timer, MCPWM_TIMER_START_NO_STOP) != ESP_OK) {
+                channel->active = false;
                 return false;
             }
         }

@@ -27,7 +27,9 @@ typedef struct SPIBus {
     size_t numDevices;
 } SPIBus;
 
-static SPIBus buses[SOC_SPI_PERIPH_NUM - 1] = {}; // SPI1 is unsupported
+// SPI1 is unsupported, hence 1 minus SOC_SPI_PERIPH_NUM
+// That also means we can use it as our sentinel
+static SPIBus buses[SOC_SPI_PERIPH_NUM - 1] = {[0 ... SOC_SPI_PERIPH_NUM - 2] = {.host = SPI1_HOST}};
 
 /**
  * Adds a `SPIDevice` to the given `SPIBus`.
@@ -114,15 +116,15 @@ bool spi_setup(i16 clk, i16 mosi, i16 miso, u32 freq) {
     }
 
     for (size_t i = 0; i < count_of(buses); i++) {
-        SPIBus bus = buses[i];
-        if (bus.host == 0) {
-            bus.clk = clk;
-            bus.mosi = mosi;
-            bus.miso = miso;
-            bus.freq = freq;
-            bus.host = availHost;
+        SPIBus *bus = &buses[i];
+        if (bus->host == SPI1_HOST) {
+            bus->clk = clk;
+            bus->mosi = mosi;
+            bus->miso = miso;
+            bus->freq = freq;
+            bus->host = availHost;
+            return true;
         }
-        return true;
     }
     return false;
 }

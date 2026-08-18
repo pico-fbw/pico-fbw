@@ -21,8 +21,9 @@
 
 #include "gps.h"
 
-// These are the DOP thresholds to accept for safe flying,
-// if any of the DOPs are larger than this the GPS will be considered unsafe
+#define TX (i16) config.pins.gpsTx
+#define RX (i16) config.pins.gpsRx
+// If any DOPs are larger than this the GPS will be considered unsafe
 #define GPS_SAFE_PDOP_THRESHOLD 4
 #define GPS_SAFE_HDOP_THRESHOLD 5
 #define GPS_SAFE_VDOP_THRESHOLD 3
@@ -60,19 +61,20 @@ static inline bool data_valid(f32 lat, f32 lng, i32 alt, f32 speed, f32 track, f
 }
 
 /**
- * Waits for and validates acknowledgement from PMTK GPS command.
+ * Waits for and validates acknowledgement from a GPS command.
+ * @param ack acknowledgement to look for
  * @return true if valid acknowledgement received
  */
-static bool wait_for_pmtk_ack(void) {
+static bool wait_for_ack(const char *ack) {
     u8 lines = 0;
     Timestamp timeout = timestamp_in_ms(ACK_TIMEOUT_MS);
     while (lines < MAX_ACK_LINES && !timestamp_reached(&timeout)) {
-        char *line = uart_read((i16)config.pins.gpsTx, (i16)config.pins.gpsRx);
+        char *line = uart_read(TX, RX);
         if (!line) {
             continue;
         }
         printsys(gps, "response %d: %s", lines, line);
-        bool result = (strncmp(line, "$PMTK001,314,3*36", 17) == 0); // Acknowledged and successful execution
+        bool result = (strncmp(line, ack, strlen(ack)) == 0);
         free(line);
         if (result) {
             return true;
@@ -87,19 +89,43 @@ static bool wait_for_pmtk_ack(void) {
     return false;
 }
 
-/**
- * Initializes GPS with PMTK command set.
- * @return true if successful
- */
-static bool init_pmtk_gps(void) {
+// Initializes a module using the PMTK command set.
+static bool init_pmtk() {
     // PMTK manual: https://cdn.sparkfun.com/assets/parts/1/2/2/8/0/PMTK_Packet_User_Manual.pdf
-    printsys(gps, "setting up query schedule");
-    // Enable the correct sentences
+    printsys(gps, "setting query schedule");
     sleep_ms_blocking(1800); // Acknowledgement is a hit or miss without a delay
     // VTG enabled 5x per fix (for fast track updates), GGA, GSA enabled once per fix
-    uart_write((i16)config.pins.gpsTx, (i16)config.pins.gpsRx, "$PMTK314,0,0,5,1,1,0,0,0,0,0,0,0,0,0,0,0,0*2D\r\n");
+    uart_write(TX, RX, "$PMTK314,0,0,5,1,1,0,0,0,0,0,0,0,0,0,0,0,0*2D\r\n");
     // Check up to 30 sentences or up to 3 seconds for the acknowledgement
-    return wait_for_pmtk_ack();
+    return wait_for_ack("$PMTK001,314,3*36");
+}
+
+// Initializes a module using the PQMT command set.
+static bool init_pqmt() {
+    // PQMT command set: https://github.com/sparkfun/SparkFun_GNSS_LG580P/blob/main/docs/pqmt_commands.md
+    printsys(gps, "setting fix interval");
+    uart_write(TX, RX, "$PQTMCFGFIXRATE,W,200*6A\r\n"); // 5Hz fixes
+    return wait_for_ack("$PQTMCFGFIXRATE,OK*27");
+}
+
+// Initializes a module using the Quectel LC260Z/LC76xZ proprietary command set.
+static bool init_quectel_lc_26_76() {
+    // Set 200ms (5Hz) fix interval
+    uart_write(TX, RX, (char[]){0xF1, 0xD9, 0x06, 0x42, 0x14, 0x00, 0x00, 0x01, 0x35, 0x32, 0xC8, 0x00, 0x00, 0x00,
+                                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x8C, 0xD5});
+    // Response should be F1 D9 05 01 02 00 06 42 50 79
+    // Enable VTG once per fix
+    uart_write(TX, RX, "$PQTMCFGMSGRATE,W,VTG,1*0E\r\n");
+    if (!wait_for_ack("$PQTMCFGMSGRATE,OK*29")) {
+        return false;
+    }
+    // Enable GGA and GSA once every 5 fixes
+    uart_write(TX, RX, "$PQTMCFGMSGRATE,W,GGA,5*0E\r\n");
+    if (!wait_for_ack("$PQTMCFGMSGRATE,OK*29")) {
+        return false;
+    }
+    uart_write(TX, RX, "$PQTMCFGMSGRATE,W,GSA,5*1A\r\n");
+    return wait_for_ack("$PQTMCFGMSGRATE,OK*29");
 }
 
 /**
@@ -180,33 +206,22 @@ static bool process_nmea_sentence(const char *line) {
     return true;
 }
 
-/**
- * Reads and processes GPS data from UART.
- */
-static void update_from_uart(void) {
-    char *line = uart_read((i16)config.pins.gpsTx, (i16)config.pins.gpsRx);
-    while (line) {
-        bool continueProcessing = process_nmea_sentence(line);
-        free(line);
-        if (!continueProcessing) {
-            return;
-        }
-        line = uart_read((i16)config.pins.gpsTx, (i16)config.pins.gpsRx);
-    }
-}
-
 bool gps_init() {
 #if !SIMCONNECT
-    printsys(gps, "initializing uart at baudrate %lu, on pins %d (tx) and %d (rx)", (u32)config.sensors.gpsBaudrate,
-             (i16)config.pins.gpsTx, (i16)config.pins.gpsRx);
-    uart_setup((i16)config.pins.gpsTx, (i16)config.pins.gpsRx, (u32)config.sensors.gpsBaudrate);
+    printsys(gps, "initializing uart at baudrate %lu, on pins %d (tx) and %d (rx)", (u32)config.sensors.gpsBaudrate, TX,
+             RX);
+    uart_setup(TX, RX, (u32)config.sensors.gpsBaudrate);
     printsys(gps, "configuring...");
 
     // Send a command and wait until UART is ready to read, then read back the command response
     // Useful tool for calculating command checksums: https://nmeachecksum.eqth.net/
     switch ((GPSCommandType)config.sensors.gpsCommandType) {
         case GPS_COMMAND_TYPE_PMTK:
-            return init_pmtk_gps();
+            return init_pmtk();
+        case GPS_COMMAND_TYPE_PQMT:
+            return init_pqmt();
+        case GPS_COMMAND_TYPE_QUECTEL_LC_26_76:
+            return init_quectel_lc_26_76();
         default:
             return false;
     }
@@ -217,7 +232,15 @@ bool gps_init() {
 
 void gps_update() {
 #if !SIMCONNECT
-    update_from_uart();
+    char *line = uart_read(TX, RX);
+    while (line) {
+        bool continueProcessing = process_nmea_sentence(line);
+        free(line);
+        if (!continueProcessing) {
+            return;
+        }
+        line = uart_read(TX, RX);
+    }
 #else
     gps.lat = scGPS.lat;
     gps.lng = scGPS.lng;
