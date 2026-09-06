@@ -1,5 +1,5 @@
 import { defineConfig } from "vite";
-import { compression } from 'vite-plugin-compression2'
+import { compression } from "vite-plugin-compression2";
 import mockServer from "vite-plugin-mock-server";
 import preact from "@preact/preset-vite";
 import tailwindcss from "@tailwindcss/vite";
@@ -12,7 +12,7 @@ export default defineConfig(() => {
         plugins: [
             compression({
                 algorithms: ["gzip"],
-                deleteOriginalAssets: true
+                deleteOriginalAssets: true,
             }),
             mockServer({
                 mockRootDir: "api",
