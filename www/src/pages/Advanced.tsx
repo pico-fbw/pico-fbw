@@ -51,7 +51,7 @@ export default function Advanced() {
         }
     };
 
-    const rerunSetup = async () => {
+    const rerunSetup = () => {
         settings.set("setupComplete", "false");
         setSetupModalOpen(false);
     };
@@ -81,8 +81,7 @@ export default function Advanced() {
                     <div className="flex gap-3">
                         <button
                             type="button"
-                            // eslint-disable-next-line @typescript-eslint/no-misused-promises
-                            onClick={downloadConfig}
+                            onClick={void downloadConfig}
                             className="inline-flex items-center px-4 py-2 border border-transparent text-md leading-4 font-semibold rounded-md shadow-sm text-white bg-gray-500 hover:bg-gray-500/50"
                         >
                             Download Config
@@ -165,7 +164,6 @@ export default function Advanced() {
                             Cancel
                         </button>
                         <button
-                            // eslint-disable-next-line @typescript-eslint/no-misused-promises
                             onClick={rerunSetup}
                             className="px-4 py-2 text-md font-semibold rounded-md shadow-sm text-white bg-red-500/70 hover:bg-red-500/80"
                         >
@@ -183,8 +181,7 @@ export default function Advanced() {
                             Cancel
                         </button>
                         <button
-                            // eslint-disable-next-line @typescript-eslint/no-misused-promises
-                            onClick={reboot}
+                            onClick={void reboot}
                             className="px-4 py-2 text-md font-semibold rounded-md shadow-sm text-white bg-red-500/70 hover:bg-red-500/80"
                         >
                             Reboot

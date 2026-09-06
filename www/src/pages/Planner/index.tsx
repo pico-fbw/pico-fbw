@@ -228,8 +228,7 @@ export default function Planner() {
                         <div className="flex flex-col md:flex-row gap-2">
                             <button
                                 type="button"
-                                // eslint-disable-next-line @typescript-eslint/no-misused-promises
-                                onClick={() => flightplanName !== null && setActiveFlightplan(flightplanName)}
+                                onClick={() => flightplanName !== null && void setActiveFlightplan(flightplanName)}
                                 className="flex-1 rounded-md bg-white/10 px-2.5 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-white/20 cursor-pointer"
                             >
                                 Set as Active

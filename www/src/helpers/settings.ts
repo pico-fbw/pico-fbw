@@ -4,10 +4,17 @@
  */
 
 import { api } from "helpers/api";
-import { GET_CONFIG } from "helpers/apiTypes";
 
 const sectionName = "WebUI" as const;
-const webUIKeys = ["defaultSpeed", "dropSecs", "pilotName", "defaultMap", "lastMapPosition", "lastMapZoom", "setupComplete"] as const;
+const webUIKeys = [
+    "defaultSpeed",
+    "dropSecs",
+    "pilotName",
+    "defaultMap",
+    "lastMapPosition",
+    "lastMapZoom",
+    "setupComplete",
+] as const;
 type SettingKey = (typeof webUIKeys)[number];
 
 const cache: Partial<Record<SettingKey, string>> = {};
@@ -23,7 +30,7 @@ export class settings {
         }
 
         loadPromise = (async () => {
-            const response = (await api("get/config")) as GET_CONFIG;
+            const response = await api("get/config");
             const webUISection = response.sections.find(section => section.name === sectionName);
             if (!webUISection) {
                 return;

@@ -453,21 +453,13 @@ interface ConfigViewerProps {
     setError: (status: string) => void;
 }
 
-function ConfigViewer({ setError }: ConfigViewerProps) {
+export default function ConfigViewer({ setError }: ConfigViewerProps) {
     const [data, setData] = useState<GET_CONFIG | null>(null);
     // Whether each section is visible or not (aka dropped down or not)
     const [sectionVisibility, setSectionVisibility] = useState<boolean[]>(
         data ? new Array(data.sections.length).fill(false) : [],
     );
 
-    /**
-     * Handle a change in the configuration.
-     * @param sectionName the name of the section where the change occurred
-     * @param sectionIndex the index of the section where the change occurred
-     * @param valueIndex the index of the value where the change occurred
-     * @param value the new value
-     * @param write whether or not to write the change to the API
-     */
     const handleConfigChange = async (
         sectionName: string,
         sectionIndex: number,
@@ -547,9 +539,6 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
         }
     };
 
-    /**
-     * Retrieves the configuration data from the API and sets it into the state.
-     */
     const getConfigData = async () => {
         try {
             const response = await api("get/config");
@@ -559,10 +548,6 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
         }
     };
 
-    /**
-     * Toggles the visibility of a section.
-     * @param sectionIndex the index of the section to toggle
-     */
     const toggleSection = (sectionIndex: number) => {
         const newSectionVisibility = [...sectionVisibility];
         newSectionVisibility[sectionIndex] = !newSectionVisibility[sectionIndex];
@@ -582,121 +567,118 @@ function ConfigViewer({ setError }: ConfigViewerProps) {
                     .map((section, sectionIndex) => ({ section, sectionIndex }))
                     .filter(({ section }) => section.name !== "WebUI") // Ignore WebUI section as it is internal only
                     .map(({ section, sectionIndex }) => (
-                    <div key={sectionIndex} className="py-6">
-                        {/* Section name and toggle button */}
-                        <div
-                            className="flex w-full items-start justify-between text-left text-white cursor-pointer"
-                            onClick={() => toggleSection(sectionIndex)}
-                        >
-                            <span className="text-base font-semibold leading-7">{section.name}</span>
-                            <span className="ml-6 flex h-7 items-center">
-                                {sectionVisibility[sectionIndex] ? (
-                                    <MinusSolid className="h-6 w-6" aria-hidden="true" />
-                                ) : (
-                                    <PlusSolid className="h-6 w-6" aria-hidden="true" />
-                                )}
-                            </span>
+                        <div key={sectionIndex} className="py-6">
+                            {/* Section name and toggle button */}
+                            <div
+                                className="flex w-full items-start justify-between text-left text-white cursor-pointer"
+                                onClick={() => toggleSection(sectionIndex)}
+                            >
+                                <span className="text-base font-semibold leading-7">{section.name}</span>
+                                <span className="ml-6 flex h-7 items-center">
+                                    {sectionVisibility[sectionIndex] ? (
+                                        <MinusSolid className="h-6 w-6" aria-hidden="true" />
+                                    ) : (
+                                        <PlusSolid className="h-6 w-6" aria-hidden="true" />
+                                    )}
+                                </span>
+                            </div>
+                            {/* Dropdown with all values */}
+                            {sectionVisibility[sectionIndex] && (
+                                <ul className="mt-4 space-y-4">
+                                    {/* Each key will get its id looked up and matched with more information from the database to create its box */}
+                                    {section.values.map(
+                                        (value, valueIndex) =>
+                                            value !== null && (
+                                                <li key={valueIndex} className="bg-gray-800 p-4 rounded-md shadow-md">
+                                                    <div className="text-xl font-semibold text-white">
+                                                        {
+                                                            config[section.name as keyof typeof config]?.[valueIndex]
+                                                                ?.name
+                                                        }
+                                                    </div>
+                                                    <div className="text-xs text-gray-400 mt-2">
+                                                        {
+                                                            config[section.name as keyof typeof config]?.[valueIndex]
+                                                                ?.desc
+                                                        }
+                                                    </div>
+                                                    <div className="mt-3">
+                                                        {config[section.name as keyof typeof config]?.[valueIndex]
+                                                            ?.enumMap ? (
+                                                            <select
+                                                                className="block w-full text-gray-900 border-gray-300 bg-gray-300 rounded-md shadow-sm p-2 focus:ring focus:ring-opacity-50"
+                                                                disabled={
+                                                                    config[section.name as keyof typeof config]?.[
+                                                                        valueIndex
+                                                                    ]?.readOnly
+                                                                }
+                                                                value={value.toString()}
+                                                                onChange={e =>
+                                                                    void handleConfigChange(
+                                                                        section.name,
+                                                                        sectionIndex,
+                                                                        valueIndex,
+                                                                        (e.target as HTMLInputElement).value,
+                                                                        false,
+                                                                    )
+                                                                }
+                                                                onBlur={e =>
+                                                                    void handleConfigChange(
+                                                                        section.name,
+                                                                        sectionIndex,
+                                                                        valueIndex,
+                                                                        (e.target as HTMLInputElement).value,
+                                                                        true,
+                                                                    )
+                                                                }
+                                                            >
+                                                                {Object.entries(
+                                                                    config[section.name as keyof typeof config]?.[
+                                                                        valueIndex
+                                                                    ]?.enumMap ?? {},
+                                                                ).map(([enumKey, enumValue]) => (
+                                                                    <option key={enumKey} value={enumKey}>
+                                                                        {enumValue}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        ) : (
+                                                            // Generic input for strings and numerical values
+                                                            <input
+                                                                type="text"
+                                                                className="block w-full text-gray-900 bg-gray-300 border-gray-300 rounded-md shadow-sm p-2 focus:ring focus:ring-opacity-50"
+                                                                value={value.toString()}
+                                                                // onChange will only update the value in the state, onBlur will write it to the API
+                                                                // This is so we don't spam the API with requests while the user is typing
+                                                                onChange={e =>
+                                                                    void handleConfigChange(
+                                                                        section.name,
+                                                                        sectionIndex,
+                                                                        valueIndex,
+                                                                        (e.target as HTMLInputElement).value,
+                                                                        false,
+                                                                    )
+                                                                }
+                                                                onBlur={e =>
+                                                                    void handleConfigChange(
+                                                                        section.name,
+                                                                        sectionIndex,
+                                                                        valueIndex,
+                                                                        (e.target as HTMLInputElement).value,
+                                                                        true,
+                                                                    )
+                                                                }
+                                                            />
+                                                        )}
+                                                    </div>
+                                                </li>
+                                            ),
+                                    )}
+                                </ul>
+                            )}
                         </div>
-                        {/* Dropdown with all values */}
-                        {sectionVisibility[sectionIndex] && (
-                            <ul className="mt-4 space-y-4">
-                                {/* Each key will get its id looked up and matched with more information from the database to create its box */}
-                                {section.values.map(
-                                    (value, valueIndex) =>
-                                        value !== null && (
-                                            <li key={valueIndex} className="bg-gray-800 p-4 rounded-md shadow-md">
-                                                <div className="text-xl font-semibold text-white">
-                                                    {config[section.name as keyof typeof config]?.[valueIndex]?.name}
-                                                </div>
-                                                <div className="text-xs text-gray-400 mt-2">
-                                                    {config[section.name as keyof typeof config]?.[valueIndex]?.desc}
-                                                </div>
-                                                <div className="mt-3">
-                                                    {config[section.name as keyof typeof config]?.[valueIndex]
-                                                        ?.enumMap ? (
-                                                        <select
-                                                            className="block w-full text-gray-900 border-gray-300 bg-gray-300 rounded-md shadow-sm p-2 focus:ring focus:ring-opacity-50"
-                                                            disabled={
-                                                                config[section.name as keyof typeof config]?.[
-                                                                    valueIndex
-                                                                ]?.readOnly
-                                                            }
-                                                            value={value.toString()}
-                                                            // eslint complains here about handleConfigChange returning a promise.
-                                                            // Wrapping it in an async arrow function fixes the error but breaks the code,
-                                                            // so the error is ignored (let me know if you have a better solution).
-                                                            // eslint-disable-next-line @typescript-eslint/no-misused-promises
-                                                            onChange={e =>
-                                                                handleConfigChange(
-                                                                    section.name,
-                                                                    sectionIndex,
-                                                                    valueIndex,
-                                                                    (e.target as HTMLInputElement).value,
-                                                                    false,
-                                                                )
-                                                            }
-                                                            // eslint-disable-next-line @typescript-eslint/no-misused-promises
-                                                            onBlur={e =>
-                                                                handleConfigChange(
-                                                                    section.name,
-                                                                    sectionIndex,
-                                                                    valueIndex,
-                                                                    (e.target as HTMLInputElement).value,
-                                                                    true,
-                                                                )
-                                                            }
-                                                        >
-                                                            {Object.entries(
-                                                                config[section.name as keyof typeof config]?.[
-                                                                    valueIndex
-                                                                ]?.enumMap ?? {},
-                                                            ).map(([enumKey, enumValue]) => (
-                                                                <option key={enumKey} value={enumKey}>
-                                                                    {enumValue}
-                                                                </option>
-                                                            ))}
-                                                        </select>
-                                                    ) : (
-                                                        // Generic input for strings and numerical values
-                                                        <input
-                                                            type="text"
-                                                            className="block w-full text-gray-900 bg-gray-300 border-gray-300 rounded-md shadow-sm p-2 focus:ring focus:ring-opacity-50"
-                                                            value={value.toString()}
-                                                            // onChange will only update the value in the state, onBlur will write it to the API
-                                                            // This is so we don't spam the API with requests while the user is typing
-                                                            // eslint-disable-next-line @typescript-eslint/no-misused-promises
-                                                            onChange={e =>
-                                                                handleConfigChange(
-                                                                    section.name,
-                                                                    sectionIndex,
-                                                                    valueIndex,
-                                                                    (e.target as HTMLInputElement).value,
-                                                                    false,
-                                                                )
-                                                            }
-                                                            // eslint-disable-next-line @typescript-eslint/no-misused-promises
-                                                            onBlur={e =>
-                                                                handleConfigChange(
-                                                                    section.name,
-                                                                    sectionIndex,
-                                                                    valueIndex,
-                                                                    (e.target as HTMLInputElement).value,
-                                                                    true,
-                                                                )
-                                                            }
-                                                        />
-                                                    )}
-                                                </div>
-                                            </li>
-                                        ),
-                                )}
-                            </ul>
-                        )}
-                    </div>
-                ))}
+                    ))}
             </div>
         )
     );
 }
-
-export default ConfigViewer;

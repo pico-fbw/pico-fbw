@@ -76,7 +76,7 @@ export default function ContentBlock({
             {/* Sidebar */}
             {!noSidebar && <Sidebar navigation={sidebarNav} isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />}
             {/* Main content */}
-            <div className={`${noSidebar ? "" : "lg:pl-72"} h-full`}>
+            <div className={noSidebar ? "" : "lg:pl-72 h-full"}>
                 {loading ? <FullPageSpinner /> : <div>{children}</div>}
             </div>
         </div>

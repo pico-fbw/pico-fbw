@@ -38,9 +38,6 @@ function getColors(type: AlertProps["type"]) {
 export default function Alert({ type, onClose, className = "", children }: AlertProps) {
     const [hidden, setHidden] = useState(false);
 
-    /**
-     * Handles the closure of the alert.
-     */
     const handleClose = () => {
         setHidden(true);
         onClose?.();

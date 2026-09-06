@@ -67,6 +67,9 @@ function App() {
     );
 }
 
-void settings.load().catch(console.error).finally(() => {
-    render(<App />, document.getElementById("root")!);
-});
+void settings
+    .load()
+    .catch(console.error)
+    .finally(() => {
+        render(<App />, document.getElementById("root")!);
+    });
