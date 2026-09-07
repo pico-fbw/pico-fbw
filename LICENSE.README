@@ -12,10 +12,7 @@ Users must comply with the respective licenses when using those parts of the cod
 
 The following files (and their corresponding Header [.h] files, where applicable) of this project utilize code which is licensed under the MIT License:
 
-- lib/minmea.c
-- lib/parson.c
 - lib/pid.c
-- lib/semver.c
 - platform/esp/flash.c
 - platform/pico/pwm.c
 - platform/pico/pwm.pio

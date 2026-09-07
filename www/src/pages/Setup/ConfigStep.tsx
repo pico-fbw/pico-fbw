@@ -149,7 +149,7 @@ export default function ConfigStep({ onNext, onBack, setError }: ConfigStepProps
                     Back
                 </button>
                 <button
-                    onClick={void handleNext}
+                    onClick={() => void handleNext()}
                     disabled={loading}
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-sky-600 hover:bg-sky-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
                 >

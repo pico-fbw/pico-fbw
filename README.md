@@ -16,8 +16,8 @@ That being said, pico-fbw is nonetheless quite a capable and robust flight contr
 - Safe and tested; automatic safety checks throughout the software + always-active manual overrides
 - Real-world fly-by-wire-like stabilization
 - Simple autopilot/autothrottle and accompanying flight planner
-- Easily plan flights, modify configuration, diagnose faults, and more, with just a smartphone/tablet/computer
-- Good out-of-box performance, with optional automatic tuning to further improve performance
+- Easily plan flights, modify configuration, diagnose faults, and more, with just a smartphone, tablet, or computer
+- Good out-of-box flight performance, with optional automatic tuning to further improve performance
 - Utilizes common and low-cost off-the-shelf microcontrollers and sensors
 - Easy hardware and software setup
 - Extensive documentation to make setup and usage easy
@@ -35,8 +35,6 @@ That being said, pico-fbw is nonetheless quite a capable and robust flight contr
 - The necessary sensors (IMU, barometer, GPS)
   - Again, take a look at the [supported sensors list]() to determine which to utilize or purchase.
 - A handful of female-to-female and male-to-female jumper wires
-
-If there is enough interest, the pico-fbw project will consider producing dedicated pico-fbw hardware to reduce setup complexity and cost.
 
 ## Setup
 
