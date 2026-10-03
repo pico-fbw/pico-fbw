@@ -75,6 +75,18 @@ export default function ConfigStep({ onNext, onBack, setError }: ConfigStepProps
         }
     };
 
+    useEffect(() => {
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Enter" && !e.repeat) {
+                e.preventDefault();
+                void handleNext();
+            }
+        };
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     if (loading) {
         return <Spinner>Loading configuration...</Spinner>;
     }

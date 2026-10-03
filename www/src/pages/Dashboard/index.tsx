@@ -3,7 +3,7 @@
  * Licensed under the MIT License
  */
 
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useMemo, useState } from "preact/hooks";
 
 import ContentBlock from "elements/ContentBlock";
 
@@ -14,6 +14,18 @@ import TransmitterDisplay from "./TransmitterDisplay";
 import { api } from "helpers/api";
 import { GET_LOGS, GET_SENSOR, GET_INPUT, GET_MODE, GET_CONFIG, GET_INFO } from "helpers/apiTypes";
 import settings from "helpers/settings";
+
+const welcomeTexts = [
+    ["Let's get flying", "!"],
+    ["Happy flying", "!"],
+    ["Take to the skies", "!"],
+    ["Prepare for takeoff", "!"],
+    ["Ready for takeoff", "?"],
+    ["Checklists complete", "?"],
+    ["May your skies be blue", "!"],
+    ["May your winds be low", "!"],
+    ["Checked your controls", "?"],
+];
 
 // TODO: make this indicator stop/turn red if api data is ever interrupted
 function LiveIndicator() {
@@ -66,12 +78,22 @@ export default function Dashboard() {
         return () => clearInterval(interval);
     }, []);
 
+    const welcomeText = useMemo(() => {
+        return welcomeTexts[Math.floor(Math.random() * welcomeTexts.length)];
+    }, []);
+
     return (
         <ContentBlock title="Dashboard" error={error} setError={setError}>
             <div className="min-h-screen bg-gray-900 p-4 sm:p-6 lg:p-8">
                 {/* Header */}
                 <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-3xl font-bold text-white">Let's get flying, {settings.get("pilotName")}!</h1>
+                    <h1 className="text-3xl font-bold text-white">
+                        {welcomeText[0]},{" "}
+                        <span className="font-normal">
+                            {settings.get("pilotName")}
+                            {welcomeText[1]}
+                        </span>
+                    </h1>
                     <LiveIndicator />
                 </div>
                 {/* System health summary */}

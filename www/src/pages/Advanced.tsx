@@ -119,7 +119,7 @@ export default function Advanced() {
 
                 <div className="pt-4">
                     <div className="text-center text-sm text-gray-300">
-                        <p>pico-fbw - lightweight flight-by-wire for hobby craft.</p>
+                        <p>pico-fbw - lightweight flight-by-wire for all.</p>
                         <p className="mt-2 text-sm text-gray-400">pico-fbw v{info?.version ?? "Unknown"}</p>
                         <p className="text-sm text-gray-400">API v{info?.version_api ?? "Unknown"}</p>
                         <p className="text-sm text-gray-400">

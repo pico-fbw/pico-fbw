@@ -17,7 +17,8 @@ export default function UserInfoStep({ onNext, onBack }: UserInfoStepProps) {
     const [pilotName, setPilotName] = useState(settings.get("pilotName"));
     const [isShaking, setIsShaking] = useState(false);
 
-    const handleNext = () => {
+    const handleNext = (e: Event) => {
+        e.preventDefault();
         if (!pilotName.trim()) {
             setIsShaking(true);
             setTimeout(() => setIsShaking(false), 500);
@@ -28,7 +29,7 @@ export default function UserInfoStep({ onNext, onBack }: UserInfoStepProps) {
     };
 
     return (
-        <div className="max-w-2xl mx-auto px-4 py-8">
+        <form onSubmit={handleNext} className="max-w-2xl mx-auto px-4 py-8">
             <div className="mb-8">
                 <UserCircleOutline className="h-12 w-12 text-sky-500 mx-auto mb-4" />
                 <h2 className="text-3xl font-bold text-white text-center mb-2">Personal Information</h2>
@@ -42,6 +43,7 @@ export default function UserInfoStep({ onNext, onBack }: UserInfoStepProps) {
                 <input
                     id="pilotName"
                     type="text"
+                    autoFocus
                     value={pilotName}
                     onInput={e => setPilotName((e.target as HTMLInputElement).value)}
                     placeholder="Enter your name"
@@ -59,6 +61,7 @@ export default function UserInfoStep({ onNext, onBack }: UserInfoStepProps) {
 
             <div className="flex justify-between">
                 <button
+                    type="button"
                     onClick={onBack}
                     className="inline-flex items-center px-4 py-2 border border-gray-600 text-sm font-medium rounded-md text-gray-300 bg-gray-800 hover:bg-gray-700 transition-colors duration-150"
                 >
@@ -66,13 +69,13 @@ export default function UserInfoStep({ onNext, onBack }: UserInfoStepProps) {
                     Back
                 </button>
                 <button
-                    onClick={handleNext}
+                    type="submit"
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-sky-600 hover:bg-sky-700 transition-colors duration-150"
                 >
                     Continue
                     <ChevronRightOutline className="ml-2 h-5 w-5" />
                 </button>
             </div>
-        </div>
+        </form>
     );
 }

@@ -47,6 +47,17 @@ export default function CalibrationStep({ onNext, onBack }: CalibrationStepProps
     ];
 
     useEffect(() => {
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Enter" && !e.repeat) {
+                e.preventDefault();
+                onNext();
+            }
+        };
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    }, [onNext]);
+
+    useEffect(() => {
         api("get/sensor", { data: "all" }).then(setSensorData).catch(console.log);
     }, []);
 

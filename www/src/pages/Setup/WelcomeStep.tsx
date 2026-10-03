@@ -3,6 +3,7 @@
  * Licensed under the MIT License
  */
 
+import { useEffect } from "preact/hooks";
 import {
     ChevronRightOutline,
     PaperAirplaneOutline,
@@ -16,6 +17,17 @@ interface WelcomeStepProps {
 }
 
 export default function WelcomeStep({ onNext }: WelcomeStepProps) {
+    useEffect(() => {
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Enter" && !e.repeat) {
+                e.preventDefault();
+                onNext();
+            }
+        };
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    }, [onNext]);
+
     return (
         <div className="max-w-3xl mx-auto px-4 py-12 text-center">
             <div className="mb-8 flex justify-center">

@@ -3,12 +3,27 @@
  * Licensed under the MIT License
  */
 
+import { useEffect } from "preact/hooks";
 import { CheckCircleOutline, ChevronRightOutline } from "preact-heroicons";
-import { Link } from "wouter-preact";
+import { Link, useLocation } from "wouter-preact";
 
 import settings from "helpers/settings";
 
 export default function CompletionStep() {
+    const [, setLocation] = useLocation();
+
+    useEffect(() => {
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Enter" && !e.repeat) {
+                e.preventDefault();
+                settings.set("setupComplete", "true");
+                setLocation("/");
+            }
+        };
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    }, [setLocation]);
+
     return (
         <div className="max-w-3xl mx-auto px-4 py-12 text-center">
             <div className="mb-8 flex justify-center">
